@@ -204,8 +204,13 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
             str(importObj.line)))
 
 
-def __resolveFrom(importObj, importName, basePath, result):
-    """Common resolution imports like 'from [.]x import y"""
+def __resolveFrom(importObj, importName, result):
+    """Common resolution imports like 'from [.]x import y.
+
+    Resolution uses sys.path (set by caller). The package parameter to
+    find_spec must be None for absolute resolution - passing a path causes
+    incorrect behavior (e.g. 'import os' fails).
+    """
     if importObj.name in sys.builtin_module_names:
         result.append(
             ImportResolution(importObj, None, True, None,
@@ -213,7 +218,7 @@ def __resolveFrom(importObj, importName, basePath, result):
         return
 
     try:
-        spec = importlib.util.find_spec(importName, basePath)
+        spec = importlib.util.find_spec(importName)
         if spec:
             if spec.has_location:
                 result.append(
@@ -238,7 +243,7 @@ def __resolveFrom(importObj, importName, basePath, result):
                     impName = importName + '.' + what.name
                     found = False
                     try:
-                        spec = importlib.util.find_spec(impName, basePath)
+                        spec = importlib.util.find_spec(impName)
                         if spec:
                             if spec.has_location:
                                 result.append(
@@ -276,7 +281,7 @@ def __resolveFromImport(importObj, basePath, baseAndProjectPaths, result):
     oldSysPath = sys.path
     sys.path = GlobalData().originalSysPath + baseAndProjectPaths
 
-    __resolveFrom(importObj, importObj.name, basePath, result)
+    __resolveFrom(importObj, importObj.name, result)
 
     sys.path = oldSysPath
 
@@ -319,7 +324,7 @@ def __resolveRelativeImport(importObj, basePath, result):
         oldSysPath = sys.path
         sys.path = [path]
 
-        __resolveFrom(importObj, current, path, result)
+        __resolveFrom(importObj, current, result)
 
         sys.path = oldSysPath
 

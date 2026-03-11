@@ -37,7 +37,8 @@ def getProjectPythonPath(project):
     """Returns the Python executable path for project analysis.
 
     When project has a configured interpreter (venv/bin/python or custom),
-    returns that path. Otherwise returns sys.executable.
+    returns that path. Otherwise tries to auto-detect .venv or venv in project
+    root. Falls back to sys.executable.
 
     Args:
         project: CodimensionProject instance or None.
@@ -50,6 +51,14 @@ def getProjectPythonPath(project):
 
     interp = project.props.get("pythoninterpreter", "").strip()
     if not interp:
+        # Auto-detect venv in project root
+        project_dir = project.getProjectDir()
+        if project_dir:
+            for venv_name in (".venv", "venv", "env"):
+                venv_path = os.path.join(project_dir, venv_name)
+                venv_python = _resolveVenvToPython(venv_path)
+                if venv_python:
+                    return venv_python
         return sys.executable
 
     if not os.path.isabs(interp):
