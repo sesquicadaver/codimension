@@ -120,18 +120,29 @@ cdmplugins/bandit/
 
 ---
 
-### Фаза 5: TODO/FIXME Panel — 2–3 дні
+### Фаза 5: TODO/FIXME Panel — 2–3 дні ✅
 **Пріоритет:** Середній. Anti-stub перевірка, Living Spec.
 
 | Крок | Опис | Результат |
 |------|------|-----------|
-| 5.1 | Створити `cdmplugins/todopanel/` | todopanel.cdmp, __init__.py |
-| 5.2 | Сканування проекту: grep TODO, FIXME, XXX, HACK | Регулярні вирази |
-| 5.3 | TodoPanelViewer: file:line → текст | Дерево, клік → goto |
-| 5.4 | Оновлення при збереженні / таймер | Сигнали IDE |
-| 5.5 | Фільтри: TODO only, FIXME only | Toolbar |
+| 5.1 | Створити `cdmplugins/todopanel/` | todopanel.cdmp, __init__.py ✅ |
+| 5.2 | Сканування проекту: grep TODO, FIXME, XXX, HACK | Регулярні вирази ✅ |
+| 5.3 | TodoPanelViewer: file:line → текст | Дерево, клік → goto ✅ |
+| 5.4 | Оновлення при збереженні / таймер | Сигнали IDE (TODO) |
+| 5.5 | Фільтри: TODO only, FIXME only | Toolbar ✅ |
 
 **Реалізація:** Без зовнішніх залежностей (вбудований пошук).
+
+**Файли:**
+
+```
+cdmplugins/todopanel/
+├── todopanel.cdmp
+├── __init__.py
+├── todopaneldriver.py
+├── todopanelviewer.py
+└── todoscanner.py
+```
 
 ---
 
