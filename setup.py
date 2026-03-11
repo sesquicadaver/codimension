@@ -93,7 +93,7 @@ def getDataFiles():
 def getPackageData():
     """Provides the data files"""
     extensions = ['.png', '.svg', '.svgz', '.json', '.css', '.md', '.jar',
-                  'README', 'COPYING']
+                  'README', 'COPYING', '.cdmp']
     package_data = [('codimension.pixmaps',
                      'codimension/pixmaps/'),
                     ('codimension.skins',
@@ -129,7 +129,13 @@ def getPackageData():
                     ('doc.project',
                      'doc/project'),
                     ('plantuml',
-                     'plantuml/')]
+                     'plantuml/'),
+                    ('cdmplugins.ruff',
+                     'cdmplugins/ruff/'),
+                    ('cdmplugins.mypy',
+                     'cdmplugins/mypy/'),
+                    ('cdmplugins.pytest',
+                     'cdmplugins/pytest/')]
 
     # If a skin needs to be added, then the following item should be also
     # appended:
@@ -175,7 +181,11 @@ def getPackages():
             'doc.complexity', 'doc.pyflakes', 'doc.disassembling',
             'doc.colorschemes', 'doc.editorsettings',
             'doc.dependencies', 'doc.project',
-            'plantuml']
+            'plantuml',
+            'cdmplugins',
+            'cdmplugins.ruff',
+            'cdmplugins.mypy',
+            'cdmplugins.pytest']
     # If a myskin skin is to be added as well, then one more package should
     # be mentioned: ..., 'codimension.skins.myskin']
 

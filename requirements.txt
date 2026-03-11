@@ -1,8 +1,11 @@
 # Python 3.11+ dependencies
-# NOTE: cdmpyparser/cdmcfparser use legacy parser C API (node.h), removed in Python 3.10.
-# Until upstream supports 3.11+, use pre-built wheels or build from forked sources.
-cdmpyparser>=3.3.2
-cdmcfparser>=2.4.0
+# cdmpyparser/cdmcfparser: C extensions for Python <3.11 only (node.h removed in 3.10+).
+# On 3.11+ codimension uses built-in pure-Python ast fallbacks (brief_ast, flow_ast).
+# setuptools: provides distutils for Python 3.12+ (distutils removed in stdlib).
+# setuptools: distutils for Python 3.12+; pkg_resources compat in codimension for setuptools 82+
+setuptools>=65.0; python_version >= "3.12"
+cdmpyparser>=3.3.2; python_version < "3.11"
+cdmcfparser>=2.4.0; python_version < "3.11"
 cdmgcplugin>=1.0.4
 cdmpylintplugin>=1.0.4
 cdmsysinfoplugin>=1.0.0
@@ -16,7 +19,12 @@ yapsy>=1.12.0
 jedi>=0.17.2
 vulture>=1.6
 gprof2dot>=2017.9.19
-mistune>=0.8.4
+# mistune 2+/3+ have incompatible API; codimension uses mistune.Renderer, mistune.Markdown
+mistune>=0.8.4,<2.0
 pygments>=2.7.4
 qdarkstyle>=2.8.1
 packaging>=21.0
+# Optional: ruff, mypy, pytest for cdmplugins (ruff, mypy, pytest)
+ruff>=0.1.0
+mypy>=1.0.0
+pytest>=7.0.0
