@@ -1,5 +1,17 @@
 2025 Mar 11
 
+* Documentation: full project docs update (fork status, GPL, Git standards):
+  - README.md: fork notice, original unmaintained 4+ years, clone this repo not upstream
+  - doc/index.md: fork attribution, Ukrainian
+  - doc/technology/technology.md: General Information — fork, pure-Python fallbacks
+  - FORK.md: new — fork status, changes, license
+  - CONTRIBUTING.md: new — contribution guide
+  - doc/LICENSE_COMPLIANCE.md: new — GPL v3 code changes (documented, not applied)
+  - NOTES.md: release steps, fork URL
+  - pyproject.toml: description, fork comment
+
+2025 Mar 11
+
 * Project tree: fix empty imports/classes/functions under Python files:
   - viewitems.py: TreeViewFileItem stores self.path (full path) for correct
     getPath() and populateFileItem; avoids parent-chain path resolution bugs

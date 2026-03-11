@@ -1,7 +1,7 @@
 # TODO_FIXME — Список виявлених проблем для виправлення
 
 **Дата перевірки:** 2025-03-11  
-**Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension)
+**Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
 ## Критичні (anti-stub перевірка)
 

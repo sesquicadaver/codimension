@@ -1,32 +1,30 @@
 # Codimension Documentation
 
-This documentation covers practical topics for the Codimension IDE (fork of
-[SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension)).
-Follow the links below to select a particular area.
+Документація IDE Codimension — форку [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Оригінальний проєкт не підтримується; активна розробка ведеться у форку.
 
-## General Topics
+## Загальні теми
 
-- [Technology](technology/technology.md)
-- [CML - Codimension Markup Language](cml/cml.md)
+- [Технологія](technology/technology.md)
+- [CML — Codimension Markup Language](cml/cml.md)
 
-## Graphics Pane
+## Графічна панель
 
-- [Smart zoom and other display options](smartzoom/smartzoom.md)
-- [Grouping](grouping/grouping.md)
+- [Smart zoom та інші опції відображення](smartzoom/smartzoom.md)
+- [Групування](grouping/grouping.md)
 
-## Code Analysis
+## Аналіз коду
 
 - [Dead code](deadcode/deadcode.md)
-- [Complexity](complexity/complexity.md)
+- [Складність](complexity/complexity.md)
 - [PyFlakes](pyflakes/pyflakes.md)
-- [Dependencies](dependencies/dependencies.md)
-- [Disassembling](disassembling/disassembling.md)
-- Profiling (the documentation is coming soon)
+- [Залежності](dependencies/dependencies.md)
+- [Дизасемблювання](disassembling/disassembling.md)
+- Профілювання (документація в розробці)
 
-## Miscellaneous
+## Інше
 
-- [Plugins](plugins/plugins.md)
-- [Markdown support (documenting your projects)](md/mdsupport.md)
-- [Project explained](project/project.md)
-- [IDE customization](editorsettings/editorsettings.md): mostly editor settings
-- [Color schemes](colorschemes/colorschemes.md)
+- [Плагіни](plugins/plugins.md)
+- [Підтримка Markdown](md/mdsupport.md)
+- [Проєкт](project/project.md)
+- [Налаштування IDE](editorsettings/editorsettings.md)
+- [Кольорові схеми](colorschemes/colorschemes.md)

@@ -1,42 +1,36 @@
 # Codimension Python 3 IDE
 
-**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension)** — experimental Python IDE with graphics-based code analysis.
+**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінальний проєкт не підтримується понад 4 роки. Цей форк — активна версія з підтримкою Python 3.11+.
 
-Essential links:
+Експериментальна Python IDE з графічним аналізом коду (flow diagram, algorithmic tree).
 
-- [Upstream project](https://github.com/SergeySatskiy/codimension)
-- [Presentation of the technology and the tool](http://codimension.org/documentation/visualization-technology/python-code-visualization.html)
-- [Project home page](http://codimension.org/)
-- [Packages and installation](http://codimension.org/download/linuxdownload.html)
-- [Running Codimension from a git clone](http://codimension.org/download/runfromgit.html)
-- [Hot keys cheat sheet](http://codimension.org/documentation/cheatsheet.html)
+## Посилання
+
+- **Цей репозиторій** — активний форк для розробки та встановлення
+- [Оригінальний проєкт (архів)](https://github.com/SergeySatskiy/codimension) — історичний, не підтримується
+- [Технологія та візуалізація](http://codimension.org/documentation/visualization-technology/python-code-visualization.html)
+- [Гарячі клавіші](http://codimension.org/documentation/cheatsheet.html)
+
+**Примітка:** Сайт codimension.org та оригінальні репозиторії (cdm-pythonparser, cdm-flowparser) більше не оновлюються. Клонувати або завантажувати з upstream немає сенсу — використовуйте цей форк.
 
 ---
 
-**Codimension** is a free experimental Python IDE licensed under GPL v3.
+**Codimension** — вільна експериментальна Python IDE під ліцензією GPL v3.
 
-Codimension aims to provide an integrated system for:
+Інтегрована система для:
 
-- traditional text-based code editing, and
-- diagram-based code analysis.
+- традиційного текстового редагування коду
+- діаграмного аналізу коду (flow diagram, imports, classes тощо)
 
-At the moment a few graphics oriented features are implemented.
-One of the major (and the most visible) is a generation of a control flow diagram
-while the code is typed. The screenshot below shows the main area divided into two parts.
-The left one is a traditional text editor while the right one is a generated diagram.
-The diagram is updated when the IDE detects a pause in typing the code.
+Головна особливість — автоматична генерація діаграми потоку керування під час набору коду. Ліва частина — текстовий редактор, права — діаграма, що оновлюється при паузі в наборі.
 
 ![Screenshot](doc/www/codimension.org/assets/cdm/images/habr/overview.png)
 
-The IDE implements many of the typical features to support the development process.
-The uniqueness of the IDE however is in the graphics representation of the code.
-Thus the main focus of the project is to implement more features for the graphics pane.
+## Встановлення
 
-## Installation
+**Потрібно:** Python 3.11+
 
-**Note:** Python 3.11+ is required
-
-Install in a virtual environment (recommended):
+Рекомендовано — у віртуальному середовищі:
 
 ```shell
 python -m venv .venv
@@ -44,48 +38,43 @@ python -m venv .venv
 .venv/bin/codimension
 ```
 
-Or see [Packages and installation](http://codimension.org/download/linuxdownload.html) for full instructions.
-
-The feature of building some diagrams e.g. a dependency diagram requires a graphviz
-package. The installation depends on a system. E.g. on Ubuntu you would need
-to do the following:
+Для діаграм залежностей потрібен graphviz:
 
 ```shell
 sudo apt-get install graphviz
 ```
 
-To have plantUML diagram support java needs to be installed. The installation depends
-on a system. E.g. on Ubuntu you would need to do the following:
+Для PlantUML — Java:
 
 ```shell
 sudo apt-get install default-jre
 ```
 
-## Development
+## Розробка
 
 ```shell
-# Clone and run from source (use venv)
-git clone https://github.com/SergeySatskiy/codimension.git
+# Клонувати цей форк (не оригінальний репозиторій)
+git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
 python -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/pip install -e .
 
-# Run
 .venv/bin/codimension
 ```
 
-**Note:** This fork may add features such as `excludeFromAnalysis` (project properties → exclude dirs/files from analysis) and automatic venv exclusion from the analysis graph.
+Додаткові можливості форку: `excludeFromAnalysis` (властивості проєкту), автоматичне виключення venv з аналізу.
+
+## Ліцензія
+
+GPL v3. Див. [LICENSE](LICENSE).
+
+Модифікована версія — див. [FORK.md](FORK.md) та [doc/LICENSE_COMPLIANCE.md](doc/LICENSE_COMPLIANCE.md).
 
 ## Troubleshooting
 
-The IDE depends on a couple of the binary modules which are compiled at the
-time of the installation. So your system needs a g++ compiler installed as well
-as python interpreter header files. To install the required packages on Ubuntu you
-would need to do the following:
+Потрібні: g++, python3-dev, libpcre3-dev (Ubuntu):
 
 ```shell
-sudo apt-get install g++
-sudo apt-get install python3-dev
-sudo apt-get install libpcre3-dev
+sudo apt-get install g++ python3-dev libpcre3-dev
 ```
