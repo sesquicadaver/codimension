@@ -36,7 +36,7 @@ from ui.qt import QObject, pyqtSignal
 
 from .config import DEFAULT_ENCODING
 from .debugenv import DebuggerEnvironment
-from .run import getProjectVenvDir
+from .venvutils import getProjectVenvDir
 from .filepositions import FilePositions
 from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
