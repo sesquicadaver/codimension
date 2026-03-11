@@ -22,6 +22,7 @@
 
 """Utility functions to support running scripts"""
 
+import glob
 import os.path
 import sys
 from shlex import quote
@@ -81,6 +82,27 @@ def _resolveVenvToPython(venv_dir):
     ):
         if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
             return os.path.abspath(candidate)
+    return None
+
+
+def getVenvSitePackages(python_path):
+    """Returns site-packages path for a venv, or None if not a venv.
+
+    Given /path/to/venv/bin/python, returns /path/to/venv/lib/pythonX.Y/site-packages.
+    """
+    if not python_path or python_path == sys.executable:
+        return None
+    # venv/bin/python -> venv_dir
+    bin_dir = os.path.dirname(python_path)
+    venv_dir = os.path.dirname(bin_dir)
+    if os.path.basename(bin_dir) not in ("bin", "Scripts"):
+        return None
+    # Find lib/pythonX.Y/site-packages or lib64/pythonX.Y/site-packages
+    for lib in ("lib", "lib64"):
+        pattern = os.path.join(venv_dir, lib, "python*", "site-packages")
+        matches = glob.glob(pattern)
+        if matches:
+            return matches[0]
     return None
 
 

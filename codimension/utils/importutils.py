@@ -32,6 +32,7 @@ from ui.qt import QApplication
 
 from .fileutils import isPythonFile
 from .globals import GlobalData
+from .run import getProjectPythonPath, getVenvSitePackages
 
 
 def getImportsList(fileContent):
@@ -348,6 +349,12 @@ def getImportResolutions(fileName, imports):
         for importDir in project.getImportDirsAsAbsolutePaths():
             if importDir not in baseAndProjectPaths:
                 baseAndProjectPaths.append(importDir)
+        # Add project venv site-packages for third-party imports
+        proj_python = getProjectPythonPath(project)
+        if proj_python != sys.executable:
+            site_pkg = getVenvSitePackages(proj_python)
+            if site_pkg and site_pkg not in baseAndProjectPaths:
+                baseAndProjectPaths.append(site_pkg)
 
     for importObj in imports:
         if not importObj.what:
