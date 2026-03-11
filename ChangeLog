@@ -1,5 +1,15 @@
 2025 Mar 11
 
+* Python 3.12 compatibility:
+  - imp_compat.py: shim for removed imp module (yapsy dependency)
+  - codimension.py: inject imp shim before imports on Python 3.12+
+  - requirements.txt: setuptools for distutils (Python 3.12), mistune<2.0 (API break)
+  - versions.py: pkg_resources -> importlib.metadata
+  - ui/qt.py: QSpacerItem, QGraphicsPixmapItem, QGraphicsSvgItem, QSvgGenerator,
+    QTextDocument, QFileInfo, QSizeF, QT_VERSION_STR, QtNetwork, QtSvg imports
+
+2025 Mar 11
+
 * Documentation audit and updates:
   - doc/project/project.md: typo ~/.codimesnion3/ -> ~/.codimension3/
   - doc/technology/technology.md: Visialization->Visualization, Python 3.11+

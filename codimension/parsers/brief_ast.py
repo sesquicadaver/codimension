@@ -398,7 +398,12 @@ class BriefModuleInfo:
         attributes.append(ClassAttribute(name, line, pos, absPosition))
 
     def _onInstanceAttribute(self, name, line, pos, absPosition, level):
-        attributes = self.objectsStack[level - 1].instanceAttributes
+        if level < 1:
+            return
+        parent = self.objectsStack[level - 1]
+        if not hasattr(parent, 'instanceAttributes'):
+            return  # Inside function: local variable, not instance attribute
+        attributes = parent.instanceAttributes
         for item in attributes:
             if item.name == name:
                 return

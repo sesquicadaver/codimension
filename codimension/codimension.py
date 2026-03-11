@@ -49,6 +49,11 @@ if srcDir not in sys.path:
 # Use the python parser in the qutepart component
 os.environ['QPART_CPARSER'] = 'N'
 
+# Python 3.12+: inject imp compatibility shim for yapsy (imp module was removed)
+if sys.version_info >= (3, 12) and 'imp' not in sys.modules:
+    import imp_compat as _imp_shim
+    sys.modules['imp'] = _imp_shim
+
 # Install cdmpyparser/cdmcfparser fallbacks for Python 3.11+ (before any imports)
 import parsers  # noqa: F401, E402
 from ui.application import CodimensionApplication  # noqa: E402

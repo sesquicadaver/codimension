@@ -22,19 +22,31 @@
 import logging
 import shutil
 import subprocess
+from importlib.metadata import PackageNotFoundError, distribution
 from os.path import abspath
-
-import pkg_resources
 
 from .plantumlcache import JAR_PATH
 
 
 def getPackageVersionAndLocation(name):
-    """Provides a package version"""
+    """Provides a package version and location using importlib.metadata."""
     try:
-        return pkg_resources.get_distribution(name).version, \
-               pkg_resources.get_distribution(name).location
-    except pkg_resources.DistributionNotFound as exc:
+        dist = distribution(name)
+        version = dist.version
+        location = None
+        if dist.files:
+            for f in dist.files:
+                s = str(f)
+                if "__init__.py" in s or (s.endswith(".py") and "/" in s):
+                    try:
+                        loc = f.locate().resolve().parent
+                        if "site-packages" in str(loc):
+                            location = str(loc)
+                            break
+                    except (OSError, ValueError):
+                        continue
+        return version, location
+    except PackageNotFoundError as exc:
         logging.error(str(exc))
         return None, None
 
