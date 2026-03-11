@@ -1,5 +1,13 @@
 2025 Mar 11
 
+* Project tree: fix empty imports/classes/functions under Python files:
+  - viewitems.py: TreeViewFileItem stores self.path (full path) for correct
+    getPath() and populateFileItem; avoids parent-chain path resolution bugs
+  - browsermodelbase.py: project browser populateDirectoryItem now excludes
+    venv and excludeFromAnalysis paths (consistent with project filesList)
+
+2025 Mar 11
+
 * Lazy load Classes/Functions/Globals browsers (optimization):
   - sidebar.py: sigCurrentTabChanged signal for tab visibility
   - classesbrowsermodel.py, functionsbrowsermodel.py, globalsbrowsermodel.py:

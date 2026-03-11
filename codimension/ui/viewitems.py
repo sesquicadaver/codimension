@@ -393,6 +393,14 @@ class TreeViewFileItem(TreeViewItem):
         self.itemType = FileItemType
         self.parsingErrors = False  # Used for python files only
         self.isLink = False
+        # Store full path for populateFileItem and getPath (avoids parent-chain bugs)
+        if path:
+            try:
+                self.path = os.path.realpath(path)
+            except OSError:
+                self.path = os.path.abspath(path)
+        else:
+            self.path = None
 
         self.fileType, self.icon, _ = getFileProperties(path)
         if self.fileType is None:
