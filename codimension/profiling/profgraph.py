@@ -42,6 +42,7 @@ from ui.qt import (
     QPainterPath,
     QPen,
     QPointF,
+    QRectF,
     QSizePolicy,
     QStyle,
     QStyleOptionGraphicsItem,
@@ -219,10 +220,13 @@ class Function(QGraphicsRectItem):
         # Draw text over the rectangle
         painter.setFont(self.__font)
         painter.setPen(QPen(QColor(255, 255, 255)))
-        painter.drawText(self.__node.posX - self.__node.width / 2.0,
-                         self.__node.posY - self.__node.height / 2.0,
-                         self.__node.width, self.__node.height,
-                         Qt.AlignCenter,
+        textRect = QRectF(
+            self.__node.posX - self.__node.width / 2.0,
+            self.__node.posY - self.__node.height / 2.0,
+            self.__node.width,
+            self.__node.height,
+        )
+        painter.drawText(textRect, Qt.AlignCenter,
                          self.__node.label.replace('\\n', '\n'))
 
         if self.__outside:
@@ -231,7 +235,9 @@ class Function(QGraphicsRectItem):
             pixmapPosY = self.__node.posY + self.__node.height / 2.0 - \
                 pixmap.height() - 2
             painter.setRenderHint(QPainter.SmoothPixmapTransform)
-            painter.drawPixmap(pixmapPosX, pixmapPosY, pixmap)
+            targetRect = QRectF(pixmapPosX, pixmapPosY,
+                                pixmap.width(), pixmap.height())
+            painter.drawPixmap(targetRect, pixmap)
 
     def mouseDoubleClickEvent(self, _):
         """Open the clicked file if it could be opened"""
