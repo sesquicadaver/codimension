@@ -1,5 +1,14 @@
 2025 Mar 11
 
+* Lazy load Classes/Functions/Globals browsers (optimization):
+  - sidebar.py: sigCurrentTabChanged signal for tab visibility
+  - classesbrowsermodel.py, functionsbrowsermodel.py, globalsbrowsermodel.py:
+    __needsPopulate flag, populateIfNeeded(), defer __populateModel until tab shown
+  - mainwindow.py: __onLeftSideBarTabChanged, __triggerLazyLoadForCurrentTab
+  - Parsing of all Python files deferred until user opens Classes/Functions/Globals tab
+
+2025 Mar 11
+
 * Startup: no auto-load of last project (fast startup for large projects).
   - codimension.py: skip loading recentProjects[0] at launch
   - mainwindow.py: activateRecentTab() — show Recent Projects when starting

@@ -354,6 +354,9 @@ class CodimensionMainWindow(QMainWindow):
         self._leftSideBar.addTab(self.globalsViewer, getIcon(''),
                                  'Globals', 'globals', 4)
 
+        self._leftSideBar.sigCurrentTabChanged.connect(
+            self.__onLeftSideBarTabChanged)
+
         # Create search results viewer
         self.searchResultsViewer = SearchResultsViewer()
         self._bottomSideBar.addTab(
@@ -481,6 +484,26 @@ class CodimensionMainWindow(QMainWindow):
         self.__horizontalSplitterSizes[1] = sum(newSizes) - \
             self.__horizontalSplitterSizes[0] - \
             self.__horizontalSplitterSizes[2]
+
+    def __onLeftSideBarTabChanged(self, index):
+        """Lazy-load Classes/Functions/Globals when their tab is first shown."""
+        self.__triggerLazyLoadForTabIndex(index)
+
+    def __triggerLazyLoadForCurrentTab(self):
+        """Triggers lazy load for the currently visible left sidebar tab."""
+        self.__triggerLazyLoadForTabIndex(self._leftSideBar.currentIndex())
+
+    def __triggerLazyLoadForTabIndex(self, index):
+        """Populates the model for the given tab if it is Classes/Functions/Globals."""
+        if index < 0:
+            return
+        tabName = self._leftSideBar.getTabName(index)
+        if tabName == 'classes':
+            self.classesViewer.clViewer.model().sourceModel().populateIfNeeded()
+        elif tabName == 'functions':
+            self.functionsViewer.funcViewer.model().sourceModel().populateIfNeeded()
+        elif tabName == 'globals':
+            self.globalsViewer.globalsViewer.model().sourceModel().populateIfNeeded()
 
     def __createToolBar(self):
         """creates the buttons bar"""
@@ -736,6 +759,8 @@ class CodimensionMainWindow(QMainWindow):
                 # chance to receive sigProjectChanged signal where it reads
                 # the plugin configuration
                 QTimer.singleShot(1, self.__delayedEditorsTabRestore)
+                # Lazy-load: if Classes/Functions/Globals tab is visible, populate it
+                QTimer.singleShot(0, self.__triggerLazyLoadForCurrentTab)
         self.updateRunDebugButtons()
 
         # Updating of the jedi library project should happen regardless

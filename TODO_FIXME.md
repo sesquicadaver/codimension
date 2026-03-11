@@ -38,6 +38,7 @@
 | **venv** | ruff/mypy не встановлені в .venv. Додати до dev-залежностей. |
 | **README vs pyproject** | Вирішено: README оновлено до Python 3.11+ |
 | **excludeFromAnalysis, venv exclusion** | Реалізовано: doc/project/project.md, README оновлено |
+| **Lazy load Classes/Functions/Globals** | Реалізовано: populateIfNeeded при першому показі вкладки |
 
 ## Рекомендації щодо CI
 

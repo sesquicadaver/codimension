@@ -386,20 +386,21 @@ class CodimensionProject(QObject,
         self.filesList = set()
         path = self.getProjectDir()
         self.filesList.add(path)
-        self.__scanDir(path)
+        venv_dir = getProjectVenvDir(self)
+        exclude_paths = self.getExcludeFromAnalysisAsAbsolutePaths()
+        self.__scanDir(path, venv_dir, exclude_paths)
 
-    def __scanDir(self, path):
-        """Recursive function to scan one dir"""
-        # The path is with '/' at the end
+    def __scanDir(self, path, venv_dir=None, exclude_paths=None):
+        """Recursive function to scan one dir.
+
+        venv_dir and exclude_paths are cached at top level to avoid repeated
+        computation for every file/dir during scan.
+        """
         for item in os.listdir(path):
             if self.shouldExclude(item):
                 continue
 
-            # Exclude symlinks if they point to the other project
-            # covered pieces
             candidate = path + item
-            # Exclude project venv (configured in pythoninterpreter) from analysis
-            venv_dir = getProjectVenvDir(self)
             if venv_dir and isdir(candidate):
                 cand_real = realpath(candidate)
                 venv_real = realpath(venv_dir)
@@ -409,9 +410,20 @@ class CodimensionProject(QObject,
                     venv_real += sep
                 if cand_real == venv_real or cand_real.startswith(venv_real):
                     continue
-            # Exclude user-configured paths (excludeFromAnalysis)
-            if self.__isExcludedFromAnalysis(candidate):
-                continue
+            if exclude_paths:
+                cand_real = realpath(candidate)
+                excluded = False
+                for excl in exclude_paths:
+                    excl_real = realpath(excl)
+                    if cand_real == excl_real:
+                        excluded = True
+                        break
+                    excl_prefix = excl_real.rstrip(sep) + sep
+                    if cand_real.startswith(excl_prefix):
+                        excluded = True
+                        break
+                if excluded:
+                    continue
             if islink(candidate):
                 realItem = realpath(candidate)
                 if isdir(realItem):
@@ -423,7 +435,7 @@ class CodimensionProject(QObject,
 
             if isdir(candidate):
                 self.filesList.add(candidate + sep)
-                self.__scanDir(candidate + sep)
+                self.__scanDir(candidate + sep, venv_dir, exclude_paths)
                 continue
             self.filesList.add(candidate)
 

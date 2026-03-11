@@ -41,6 +41,7 @@ class SideBar(QWidget):
     West = 3
 
     sigTabCloseRequested = pyqtSignal(int)
+    sigCurrentTabChanged = pyqtSignal(int)
 
     def __init__(self, orientation, parent=None):
         QWidget.__init__(self, parent)
@@ -77,6 +78,7 @@ class SideBar(QWidget):
 
         self.__tabBar.currentChanged.connect(
             self.__stackedWidget.setCurrentIndex)
+        self.__tabBar.currentChanged.connect(self.sigCurrentTabChanged.emit)
 
     def setSplitter(self, splitter):
         """Set the splitter managing the sidebar"""
