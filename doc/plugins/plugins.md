@@ -39,6 +39,13 @@ groups: system wide plugins and user plugins. So in the example above `plugin1`,
 `plugin2` and `plugin3` are **system wide** plugins while `plugin4`, `plugin5` and
 `plugin6` are **user** plugins.
 
+When running in a virtual environment, Codimension also looks for plugins in
+`site-packages/cdmplugins/`. The following plugins are bundled with Codimension
+and installed there: **Ruff** (Ctrl+Shift+R), **Mypy** (Ctrl+Shift+M),
+**Pytest** (Ctrl+Shift+T), **Coverage** (Ctrl+Shift+C),
+**Bandit** (Ctrl+Shift+B), **pip-audit** (Ctrl+Shift+A), **Ruff format** (Ctrl+Shift+F),
+**TODO panel** (Ctrl+Shift+O).
+
 The next pieces which are important for Codimension are a plugin name and a
 plugin version. A name and a version are stored in a plugin description file
 (it will be discussed later). That description file is what triggers loading a

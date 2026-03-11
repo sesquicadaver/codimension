@@ -1,0 +1,10 @@
+[Core]
+Name = Bandit
+Module = .
+
+[Documentation]
+Author = Codimension
+Version = 1.0.0
+Website = https://github.com/SergeySatskiy/codimension
+Description = Codimension IDE Bandit security linter plugin
+License = GPL v.3
