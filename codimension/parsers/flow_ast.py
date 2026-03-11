@@ -420,6 +420,9 @@ class _ControlFlow(_FragmentBase):
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
         self.leadingCMLComments: list = []
+        # C++ cdmcfparser API: scopeitems.getLineDistance/getDistance expect these
+        self.encodingLine: _Body | None = None
+        self.bangLine: _Body | None = None
         # flowuiwidget expects list of (line, col, msg) tuples
         self.errors: list[tuple[int, int, str]] = []
         self.warnings: list[tuple[int, int, str]] = []
