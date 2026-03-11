@@ -350,7 +350,7 @@ class ProfileGraphViewer(QWidget):
                                 modified[index] = '[arrowsize="0.0",'
                                 processed.append(' '.join(modified))
                             elif part.startswith('fontsize='):
-                                size = float(part.split('"')[1])
+                                size = int(float(part.split('"')[1]))
                                 if edgeFont:
                                     edgeFont.setPointSize(size)
                         lineModified = True
@@ -363,7 +363,7 @@ class ProfileGraphViewer(QWidget):
                                 pathLine = nodePath + ':' + str(lineno)
                                 tooltips[int(parts[0])] = pathLine
                             elif part.startswith('fontsize='):
-                                size = float(part.split('"')[1])
+                                size = int(float(part.split('"')[1]))
                                 if nodeFont:
                                     nodeFont.setPointSize(size)
                             elif part.startswith('label='):
