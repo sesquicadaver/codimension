@@ -94,6 +94,42 @@ def _resolveVenvToPython(venv_dir):
     return None
 
 
+def getProjectVenvDir(project):
+    """Returns the venv directory path for exclusion from project scan, or None.
+
+    Uses pythoninterpreter from project props. Returns absolute path to venv
+    directory (e.g. /proj/venv) so it can be excluded from file analysis.
+    """
+    if project is None or not project.isLoaded():
+        return None
+
+    interp = project.props.get("pythoninterpreter", "").strip()
+    project_dir = project.getProjectDir()
+
+    if interp:
+        if not os.path.isabs(interp) and project_dir:
+            interp = os.path.normpath(project_dir + interp)
+        if os.path.isfile(interp) and os.access(interp, os.X_OK):
+            # interp is python executable -> get venv dir
+            bin_dir = os.path.dirname(os.path.abspath(interp))
+            if os.path.basename(bin_dir) in ("bin", "Scripts"):
+                return os.path.dirname(bin_dir)
+            return None
+        if os.path.isdir(interp):
+            if _resolveVenvToPython(interp):
+                return os.path.abspath(interp)
+            return None
+        return None
+
+    # Auto-detect: try .venv, venv, env in project root
+    if project_dir:
+        for venv_name in (".venv", "venv", "env"):
+            venv_path = os.path.join(project_dir, venv_name)
+            if _resolveVenvToPython(venv_path):
+                return os.path.abspath(venv_path)
+    return None
+
+
 def getVenvSitePackages(python_path):
     """Returns site-packages path for a venv, or None if not a venv.
 

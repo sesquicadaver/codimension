@@ -36,6 +36,7 @@ from ui.qt import QObject, pyqtSignal
 
 from .config import DEFAULT_ENCODING
 from .debugenv import DebuggerEnvironment
+from .run import getProjectVenvDir
 from .filepositions import FilePositions
 from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
@@ -183,9 +184,16 @@ class CodimensionProject(QObject,
 
         self.saveProject()
 
-        # Update the watcher
-        self.__dirWatcher = Watcher(Settings()['projectFilesFilters'],
-                                    self.getProjectDir())
+        # Update the watcher (exclude project venv from watch list)
+        exclude_filters = list(Settings()['projectFilesFilters'])
+        venv_dir = getProjectVenvDir(self)
+        proj_real = realpath(self.getProjectDir()).rstrip(sep)
+        if venv_dir and (venv_dir == proj_real or
+                         venv_dir.startswith(proj_real + sep)):
+            venv_basename = basename(venv_dir.rstrip(sep))
+            if venv_basename:
+                exclude_filters.append('^' + re.escape(venv_basename) + '$')
+        self.__dirWatcher = Watcher(exclude_filters, self.getProjectDir())
         self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
 
         self.sigProjectChanged.emit(self.CompleteProject)
@@ -286,9 +294,16 @@ class CodimensionProject(QObject,
         # Update the recent list
         Settings().addRecentProject(self.fileName)
 
-        # Setup the new watcher
-        self.__dirWatcher = Watcher(Settings()['projectFilesFilters'],
-                                    self.getProjectDir())
+        # Setup the new watcher (exclude project venv from watch list)
+        exclude_filters = list(Settings()['projectFilesFilters'])
+        venv_dir = getProjectVenvDir(self)
+        proj_real = realpath(self.getProjectDir()).rstrip(sep)
+        if venv_dir and (venv_dir == proj_real or
+                         venv_dir.startswith(proj_real + sep)):
+            venv_basename = basename(venv_dir.rstrip(sep))
+            if venv_basename:
+                exclude_filters.append('^' + re.escape(venv_basename) + '$')
+        self.__dirWatcher = Watcher(exclude_filters, self.getProjectDir())
         self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
 
         self.sigProjectChanged.emit(self.CompleteProject)
@@ -348,6 +363,17 @@ class CodimensionProject(QObject,
             # Exclude symlinks if they point to the other project
             # covered pieces
             candidate = path + item
+            # Exclude project venv (configured in pythoninterpreter) from analysis
+            venv_dir = getProjectVenvDir(self)
+            if venv_dir and isdir(candidate):
+                cand_real = realpath(candidate)
+                venv_real = realpath(venv_dir)
+                if not cand_real.endswith(sep):
+                    cand_real += sep
+                if not venv_real.endswith(sep):
+                    venv_real += sep
+                if cand_real == venv_real or cand_real.startswith(venv_real):
+                    continue
             if islink(candidate):
                 realItem = realpath(candidate)
                 if isdir(realItem):
