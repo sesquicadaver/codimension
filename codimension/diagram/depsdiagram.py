@@ -19,10 +19,11 @@
 
 """Dependencies diagram"""
 
-import sys
 import os.path
-from utils.importutils import getImportsList, getImportResolutions
+import sys
+
 from utils.globals import GlobalData
+from utils.importutils import getImportResolutions, getImportsList
 
 
 def __isLocalOrProject(fName, resolvedPath):

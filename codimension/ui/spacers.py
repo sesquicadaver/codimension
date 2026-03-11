@@ -20,7 +20,7 @@
 """Spacers to be used on the toolbars"""
 
 
-from .qt import QWidget, QSizePolicy
+from .qt import QSizePolicy, QWidget
 
 
 class ToolBarHSpacer(QWidget):

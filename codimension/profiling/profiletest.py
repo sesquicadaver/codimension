@@ -37,7 +37,7 @@ raise Exception('dkdkdkd')
 
 try:
     raise Exception('hey')
-except Exception as exc:
+except Exception:
     import sys
     x1, x2, x3 = sys.exc_info()
 
@@ -45,7 +45,7 @@ class A:
     def __init__(self):
         self.__d = 10
         self.d = 20
-    def f():
+    def f(self):
         pass
     @property
     def x(self):

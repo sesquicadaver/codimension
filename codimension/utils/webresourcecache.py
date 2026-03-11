@@ -26,15 +26,18 @@
 # this facility needs to be implemented separately
 
 # cml 1 gb id=0 title="stdlib imports"
-import os.path
-import logging
 import datetime
 import hashlib
+import logging
+import os.path
 import urllib.request
+
 # cml 1 ge id=0
 # cml 1 gb id=1 title="project imports"
-from ui.qt import QThread, pyqtSignal, QObject
-from .fileutils import loadJSON, saveJSON, saveBinaryToFile
+from ui.qt import QObject, QThread, pyqtSignal
+
+from .fileutils import loadJSON, saveBinaryToFile, saveJSON
+
 # cml 1 ge id=1
 
 TIMEOUT = 5   # timeout in seconds to do a request
@@ -183,7 +186,7 @@ class WebResourceCache(QObject):
         try:
             thread.sigRetrieveOK.disconnect(self.onResourceSaved)
             thread.sigRetrieveError.disconnect(self.onResourceError)
-        except:
+        except Exception:
             pass
 
     def getResource(self, url, uuid):

@@ -21,14 +21,15 @@
 
 import logging
 import os.path
+
 from editor.mdwidget import MDViewer
-from utils.globals import GlobalData
 from utils.fileutils import getFileContent, getFileProperties, isMarkdownMime
+from utils.globals import GlobalData
 from utils.md import renderMarkdown
 from utils.pixmapcache import getIcon
-from .qt import (QWidget, Qt, pyqtSignal, QAction, QSize, QToolBar,
-                 QPrintDialog, QDialog, QHBoxLayout)
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import QAction, QDialog, QHBoxLayout, QPrintDialog, QSize, Qt, QToolBar, QWidget, pyqtSignal
 from .viewhistory import ViewEntry, ViewHistory
 
 

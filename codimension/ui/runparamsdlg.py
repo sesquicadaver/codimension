@@ -19,16 +19,34 @@
 
 """Run parameters dialog"""
 
+import copy
 import os
 import os.path
-import copy
-from utils.runparams import RunParameters, RUN, PROFILE, DEBUG
-from utils.run import parseCommandLineArguments, checkOutput
-from .qt import (Qt, QDoubleValidator, QDialog, QDialogButtonBox, QVBoxLayout,
-                 QSizePolicy, QLabel, QGridLayout, QHBoxLayout, QRadioButton,
-                 QGroupBox, QPushButton, QFileDialog, QLineEdit, QTreeWidget,
-                 QAbstractItemView, QTreeWidgetItem, QCheckBox)
+
+from utils.run import checkOutput, parseCommandLineArguments
+from utils.runparams import DEBUG, PROFILE, RUN, RunParameters
+
 from .itemdelegates import NoOutlineHeightDelegate
+from .qt import (
+    QAbstractItemView,
+    QCheckBox,
+    QDialog,
+    QDialogButtonBox,
+    QDoubleValidator,
+    QFileDialog,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QRadioButton,
+    QSizePolicy,
+    Qt,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+)
 
 
 class EnvVarDialog(QDialog):
@@ -606,7 +624,7 @@ class RunDialog(QDialog):
         try:
             parseCommandLineArguments(self.runParams['arguments'])
             return True
-        except:
+        except Exception:
             return False
 
     def __dirOK(self):
@@ -630,7 +648,7 @@ class RunDialog(QDialog):
             if output != '3':
                 return 'Only python series 3 is supported ' \
                     '(provided: series ' + output + ')'
-        except:
+        except Exception:
             return 'Error checking the provided interpreter'
 
     def __ioOK(self):
@@ -674,7 +692,7 @@ class RunDialog(QDialog):
                 value = float(txt)
                 if value < 0.0 or value > 100.0:
                     raise Exception("Out of range")
-            except:
+            except Exception:
                 self.__runButton.setEnabled(False)
                 self.__runButton.setToolTip("The given node limit "
                                             "is out of range")
@@ -686,7 +704,7 @@ class RunDialog(QDialog):
                 value = float(txt)
                 if value < 0.0 or value > 100.0:
                     raise Exception("Out of range")
-            except:
+            except Exception:
                 self.__runButton.setEnabled(False)
                 self.__runButton.setToolTip("The given edge limit "
                                             "is out of range")

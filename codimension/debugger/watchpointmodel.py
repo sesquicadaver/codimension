@@ -25,7 +25,7 @@
 
 """Module implementing the Watch expression model"""
 
-from ui.qt import QAbstractItemModel, Qt, QModelIndex
+from ui.qt import QAbstractItemModel, QModelIndex, Qt
 
 
 class WatchPointModel(QAbstractItemModel):

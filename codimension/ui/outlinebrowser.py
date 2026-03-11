@@ -19,21 +19,37 @@
 
 """File outline browser and its model"""
 
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
-from utils.settings import Settings
 from autocomplete.bufferutils import getItemForDisplayPath
-from .qt import QPalette, QTreeView
+from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
+from utils.settings import Settings
+
 from .browsermodelbase import BrowserModelBase
 from .filesbrowserbase import FilesBrowser
-from .viewitems import (DirectoryItemType, SysPathItemType, GlobalsItemType,
-                        ImportsItemType, FunctionsItemType, ClassesItemType,
-                        StaticAttributesItemType, InstanceAttributesItemType,
-                        CodingItemType, ImportItemType, FunctionItemType,
-                        ClassItemType, DecoratorItemType, AttributeItemType,
-                        GlobalItemType, ImportWhatItemType, TreeViewCodingItem,
-                        TreeViewGlobalsItem, TreeViewImportsItem,
-                        TreeViewFunctionsItem, TreeViewClassesItem)
+from .qt import QPalette, QTreeView
+from .viewitems import (
+    AttributeItemType,
+    ClassesItemType,
+    ClassItemType,
+    CodingItemType,
+    DecoratorItemType,
+    DirectoryItemType,
+    FunctionItemType,
+    FunctionsItemType,
+    GlobalItemType,
+    GlobalsItemType,
+    ImportItemType,
+    ImportsItemType,
+    ImportWhatItemType,
+    InstanceAttributesItemType,
+    StaticAttributesItemType,
+    SysPathItemType,
+    TreeViewClassesItem,
+    TreeViewCodingItem,
+    TreeViewFunctionsItem,
+    TreeViewGlobalsItem,
+    TreeViewImportsItem,
+)
 
 
 class OutlineBrowserModel(BrowserModelBase):

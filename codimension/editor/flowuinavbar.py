@@ -19,8 +19,8 @@
 
 """Control flow UI navigation bar"""
 
-from ui.qt import Qt, QHBoxLayout, QLabel, QFrame, QSizePolicy
 from ui.labels import HeaderFitLabel, HeaderLabel
+from ui.qt import QFrame, QHBoxLayout, QLabel, QSizePolicy, Qt
 from ui.spacers import ToolBarExpandingSpacer
 from utils.pixmapcache import getPixmap
 

@@ -19,7 +19,8 @@
 
 """Debugger break and watch point viewer"""
 
-from ui.qt import Qt, QVBoxLayout, QWidget, QSplitter
+from ui.qt import QSplitter, Qt, QVBoxLayout, QWidget
+
 from .bpointviewer import BreakPointViewer
 from .wpointviewer import WatchPointViewer
 

@@ -21,18 +21,17 @@
 """not used code analysis using vulture"""
 
 
+import logging
 import os
 import os.path
-import logging
 import tempfile
-from subprocess import Popen, PIPE
-from ui.qt import (QCursor, Qt, QTimer, QDialog, QDialogButtonBox, QVBoxLayout,
-                   QLabel, QApplication)
+from subprocess import PIPE, Popen
+
 from search.searchsupport import ItemToSearchIn, getSearchItemIndex
 from search.vultureprovider import VultureSearchProvider
-from utils.globals import GlobalData
+from ui.qt import QApplication, QCursor, QDialog, QDialogButtonBox, QLabel, Qt, QTimer, QVBoxLayout
 from utils.config import DEFAULT_ENCODING
-
+from utils.globals import GlobalData
 
 
 class NotUsedAnalysisProgress(QDialog):
@@ -145,7 +144,7 @@ class NotUsedAnalysisProgress(QDialog):
         process.wait()
         try:
             os.unlink(errTmp[1])
-        except:
+        except OSError:
             pass
         return processStdout.decode(DEFAULT_ENCODING), err.strip()
 
@@ -184,7 +183,7 @@ class NotUsedAnalysisProgress(QDialog):
                     fileName = os.path.abspath(line[:startIndex])
                     lineno = int(line[startIndex + 1:endIndex])
                     message = line[endIndex + 1:].strip()
-                except:
+                except (ValueError, IndexError):
                     continue
 
                 index = getSearchItemIndex(self.candidates, fileName)

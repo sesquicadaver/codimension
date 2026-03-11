@@ -20,11 +20,12 @@
 """Codimension main window status bar"""
 
 import os.path
-from utils.pixmapcache import getIcon
+
 from plugins.vcssupport.intervaldlg import VCSUpdateIntervalConfigDialog
-from .qt import Qt, QPalette, QColor, QMenu, QDialog, QApplication
-from .labels import (StatusBarPixmapLabel, StatusBarPathLabel,
-                     StatusBarFramedLabel)
+from utils.pixmapcache import getIcon
+
+from .labels import StatusBarFramedLabel, StatusBarPathLabel, StatusBarPixmapLabel
+from .qt import QApplication, QColor, QDialog, QMenu, QPalette, Qt
 
 
 class MainWindowStatusBarMixin:
@@ -176,7 +177,7 @@ class MainWindowStatusBarMixin:
             try:
                 QApplication.clipboard().setText(os.path.dirname(txt) +
                                                  os.path.sep)
-            except:
+            except Exception:
                 pass
 
     def _onCopyFileNameToClipboard(self):
@@ -185,7 +186,7 @@ class MainWindowStatusBarMixin:
         if txt.lower() not in ['', 'n/a']:
             try:
                 QApplication.clipboard().setText(os.path.basename(txt))
-            except:
+            except Exception:
                 pass
 
     def __getPathLabelFilePath(self):

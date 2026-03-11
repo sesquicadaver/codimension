@@ -20,12 +20,13 @@
 """Profiling results widget"""
 
 import pstats
-from ui.qt import (Qt, QSize, pyqtSignal, QWidget, QToolBar, QHBoxLayout,
-                   QAction)
+
 from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from ui.qt import QAction, QHBoxLayout, QSize, Qt, QToolBar, QWidget, pyqtSignal
 from utils.pixmapcache import getIcon
-from .proftable import ProfileTableViewer
+
 from .profgraph import ProfileGraphViewer
+from .proftable import ProfileTableViewer
 
 
 class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):

@@ -19,12 +19,11 @@
 
 """Control flow UI widget: handling keyboard events"""
 
-from ui.qt import Qt, QGraphicsScene
 from flowui.cellelement import CellElement
 from flowui.scopeitems import ScopeCellElement
-from utils.settings import Settings
+from ui.qt import QGraphicsScene, Qt
 from utils.limits import MAXINT_32
-
+from utils.settings import Settings
 
 CTRL_SHIFT = int(Qt.ShiftModifier | Qt.ControlModifier)
 SHIFT = int(Qt.ShiftModifier)

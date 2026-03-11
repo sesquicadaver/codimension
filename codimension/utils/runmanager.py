@@ -22,35 +22,51 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-import os.path
 import logging
+import os.path
 import time
 import uuid
-from subprocess import Popen
 from datetime import datetime
+from subprocess import Popen
+
+from debugger.client.cdm_dbg_utils import getParsedJSONMessage, sendJSONCommand
+from debugger.client.protocol_cdm_dbg import (
+    DISCONNECTED,
+    FAILED_TO_START,
+    KILLED,
+    METHOD_EPILOGUE_EXIT,
+    METHOD_EPILOGUE_EXIT_CODE,
+    METHOD_PROC_ID_INFO,
+    METHOD_PROLOGUE_CONTINUE,
+    METHOD_STDERR,
+    METHOD_STDIN,
+    METHOD_STDOUT,
+    STOPPED_BY_REQUEST,
+    SYNTAX_ERROR_AT_START,
+    UNHANDLED_EXCEPTION,
+)
 from editor.ioconsolewidget import IOConsoleWidget
 from editor.redirectedmsg import printableTimestamp
-from debugger.client.protocol_cdm_dbg import (METHOD_PROC_ID_INFO,
-                                              METHOD_PROLOGUE_CONTINUE,
-                                              METHOD_EPILOGUE_EXIT_CODE,
-                                              METHOD_EPILOGUE_EXIT,
-                                              METHOD_STDOUT, METHOD_STDERR,
-                                              METHOD_STDIN, KILLED,
-                                              DISCONNECTED, FAILED_TO_START,
-                                              STOPPED_BY_REQUEST,
-                                              SYNTAX_ERROR_AT_START,
-                                              UNHANDLED_EXCEPTION)
-from debugger.client.cdm_dbg_utils import getParsedJSONMessage, sendJSONCommand
+from ui.qt import (
+    QAbstractSocket,
+    QApplication,
+    QCursor,
+    QDialog,
+    QHostAddress,
+    QObject,
+    Qt,
+    QTcpServer,
+    QTimer,
+    pyqtSignal,
+)
 from ui.runparamsdlg import RunDialog
-from ui.qt import (QObject, Qt, QTimer, QDialog, QApplication, QCursor,
-                   QTcpServer, QHostAddress, QAbstractSocket, pyqtSignal)
-from .run import getCwdCmdEnv
-from .runparams import RUN, PROFILE, DEBUG
-from .procfeedback import killProcess
-from .globals import GlobalData
-from .settings import Settings, CLEAR_AND_REUSE, NO_REUSE
-from .diskvaluesrelay import getRunParameters, addRunParams
 
+from .diskvaluesrelay import addRunParams, getRunParameters
+from .globals import GlobalData
+from .procfeedback import killProcess
+from .run import getCwdCmdEnv
+from .runparams import DEBUG, PROFILE, RUN
+from .settings import CLEAR_AND_REUSE, NO_REUSE, Settings
 
 IDE_DEBUG = False
 HANDSHAKE_TIMEOUT = 15
@@ -157,7 +173,7 @@ class RemoteProcessWrapper(QObject):
                     self.__parseClientLine)
                 self.__clientSocket.disconnected.disconnect(
                     self.__disconnected)
-            except:
+            except Exception:
                 pass
 
     def __closeSocket(self):
@@ -165,7 +181,7 @@ class RemoteProcessWrapper(QObject):
         if self.__clientSocket:
             try:
                 self.__clientSocket.close()
-            except:
+            except Exception:
                 pass
             self.__clientSocket = None
 
@@ -175,7 +191,7 @@ class RemoteProcessWrapper(QObject):
         if self.__proc is not None:
             try:
                 self.__proc.wait()
-            except:
+            except Exception:
                 # E.g. wait timeout
                 pass
 
@@ -185,7 +201,7 @@ class RemoteProcessWrapper(QObject):
             if self.__proc.poll() is not None:
                 self.__proc.wait()
                 return True
-        except:
+        except Exception:
             return True
         return False
 
@@ -194,7 +210,7 @@ class RemoteProcessWrapper(QObject):
         if self.__proc is not None:
             try:
                 self.__proc.kill()
-            except:
+            except Exception:
                 pass
 
         childPID = self.__getChildPID()
@@ -202,7 +218,7 @@ class RemoteProcessWrapper(QObject):
             try:
                 # Throws an exception if cannot kill the process
                 killProcess(childPID)
-            except:
+            except Exception:
                 pass
             nextPID = self.__getChildPID()
             if nextPID == childPID:
@@ -237,7 +253,7 @@ class RemoteProcessWrapper(QObject):
                                 if '--procuuid' in content:
                                     if self.procuuid in content:
                                         return int(item)
-                except:
+                except Exception:
                     pass
         return None
 
@@ -369,7 +385,7 @@ class RunManager(QObject):
         """Handles new incoming connections"""
         try:
             self.__newConnectionTimer.stop()
-        except:
+        except Exception:
             pass
 
         clientSocket = self.__tcpServer.nextPendingConnection()
@@ -378,7 +394,7 @@ class RunManager(QObject):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             self.__waitForHandshake(clientSocket)
-        except:
+        except Exception:
             QApplication.restoreOverrideCursor()
             raise
         QApplication.restoreOverrideCursor()
@@ -398,7 +414,7 @@ class RunManager(QObject):
                                   METHOD_PROC_ID_INFO, str(method))
                     self.__safeSocketClose(clientSocket)
                     return None
-            except (TypeError, ValueError) as exc:
+            except (TypeError, ValueError):
                 self.__mainWindow.showStatusBarMessage(
                     'Unsolicited connection to the RunManager. Ignoring...')
                 self.__safeSocketClose(clientSocket)

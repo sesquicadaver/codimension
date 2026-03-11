@@ -23,11 +23,13 @@
 # pylint: disable=W0703
 
 import os
-from os.path import sep, realpath, isdir, exists, isfile
-from distutils.spawn import find_executable
+import shutil
+from os.path import exists, isdir, isfile, realpath, sep
+
 from plugins.manager.pluginmanager import CDMPluginManager
-from .project import CodimensionProject
+
 from .briefmodinfocache import BriefModuleInfoCache
+from .project import CodimensionProject
 from .settings import SETTINGS_DIR
 
 
@@ -48,7 +50,7 @@ def getSubdirs(path, baseNamesOnly=True, excludePythonModulesDirs=True):
                     subdirs.append(item)
                 else:
                     subdirs.append(candidate)
-    except:
+    except Exception:
         pass
     return subdirs
 
@@ -130,7 +132,7 @@ class GlobalDataWrapper:
                 found, docstring = checkFuncObject(item, line)
                 if found:
                     return docstring
-        except:
+        except Exception:
             pass
         return ''
 
@@ -148,17 +150,17 @@ class GlobalDataWrapper:
     @staticmethod
     def __checkGraphviz():
         """Checks if graphviz is available"""
-        return find_executable('dot') is not None
+        return shutil.which('dot') is not None
 
     @staticmethod
     def __checkJava():
         """Checks if java is available"""
-        return find_executable('java') is not None
+        return shutil.which('java') is not None
 
     @staticmethod
     def __checkHexdump():
         """Checks if hexdump is available"""
-        return find_executable('hexdump') is not None
+        return shutil.which('hexdump') is not None
 
 
 globalsSingleton = GlobalDataWrapper()

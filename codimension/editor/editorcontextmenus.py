@@ -21,18 +21,20 @@
 
 
 import os.path
-from cdmpyparser import getBriefModuleInfoFromMemory
-from ui.qt import QMenu, QActionGroup, QApplication, QMessageBox
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
-from utils.encoding import (SUPPORTED_CODECS,
-                            getNormalizedEncoding,
-                            detectEncodingOnClearExplicit,
-                            detectNewFileWriteEncoding)
-from utils.diskvaluesrelay import getFileEncoding, setFileEncoding
+
+from analysis.disasm import OPT_NO_OPTIMIZATION, OPT_OPTIMIZE_ASSERT, OPT_OPTIMIZE_DOCSTRINGS
 from autocomplete.bufferutils import getContext
-from analysis.disasm import (OPT_NO_OPTIMIZATION, OPT_OPTIMIZE_ASSERT,
-                             OPT_OPTIMIZE_DOCSTRINGS)
+from cdmpyparser import getBriefModuleInfoFromMemory
+from ui.qt import QActionGroup, QApplication, QMenu, QMessageBox
+from utils.diskvaluesrelay import getFileEncoding, setFileEncoding
+from utils.encoding import (
+    SUPPORTED_CODECS,
+    detectEncodingOnClearExplicit,
+    detectNewFileWriteEncoding,
+    getNormalizedEncoding,
+)
+from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 
 
 class EditorContextMenuMixin:

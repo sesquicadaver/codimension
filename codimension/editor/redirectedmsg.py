@@ -20,6 +20,7 @@
 """Redirected IO console messages implementation"""
 
 from datetime import datetime
+
 from utils.settings import Settings
 
 

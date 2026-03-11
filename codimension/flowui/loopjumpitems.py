@@ -23,11 +23,12 @@
 # pylint: disable=R0902
 # pylint: disable=R0913
 
-from ui.qt import QGraphicsRectItem, QPen, Qt, QGraphicsItem, QBrush
+from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, Qt
+
+from .auxitems import Connector
 from .cellelement import CellElement
 from .colormixin import ColorMixin
 from .textmixin import TextMixin
-from .auxitems import Connector
 
 
 class LoopJumpBase(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):

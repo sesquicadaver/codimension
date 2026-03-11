@@ -20,8 +20,9 @@
 """Find in files search result providers"""
 
 import logging
-from .resultprovideriface import SearchResultProviderIFace
+
 from .findinfilesdialog import FindInFilesDialog
+from .resultprovideriface import SearchResultProviderIFace
 
 
 class FindInFilesSearchProvider(SearchResultProviderIFace):

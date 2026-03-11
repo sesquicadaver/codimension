@@ -20,10 +20,11 @@
 """debugger context viewer"""
 
 
+from ui.qt import QSplitter, Qt, QVBoxLayout, QWidget
+
 from .stackviewer import StackViewer
 from .threadsviewer import ThreadsViewer
 from .variablesviewer import VariablesViewer
-from ui.qt import Qt, QVBoxLayout, QWidget, QSplitter
 
 
 class DebuggerContext(QWidget):

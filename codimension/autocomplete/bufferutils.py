@@ -21,10 +21,10 @@
 
 import re
 import time
+
 from cdmpyparser import getBriefModuleInfoFromMemory
 
-
-WORD_PATTERN = '\w+'
+WORD_PATTERN = r'\w+'
 WORD_REGEXP = re.compile(WORD_PATTERN)
 EDITOR_TAG_TIMEOUT = 0.5
 
@@ -339,12 +339,18 @@ def getItemForDisplayPath(info, displayPath):
     The method provides the certain item from the info if it is still there
     """
     # Ugly but helps to avoid initialization obstacles
-    from ui.viewitems import (FunctionItemType, ClassesItemType,
-                              FunctionsItemType, ImportsItemType,
-                              InstanceAttributesItemType,
-                              StaticAttributesItemType, GlobalsItemType,
-                              CodingItemType, ImportWhatItemType,
-                              DecoratorItemType)
+    from ui.viewitems import (
+        ClassesItemType,
+        CodingItemType,
+        DecoratorItemType,
+        FunctionItemType,
+        FunctionsItemType,
+        GlobalsItemType,
+        ImportsItemType,
+        ImportWhatItemType,
+        InstanceAttributesItemType,
+        StaticAttributesItemType,
+    )
     for (itemType, pathItem) in displayPath:
         if itemType == ClassesItemType:
             info = info.classes

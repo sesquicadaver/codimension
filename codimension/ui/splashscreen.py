@@ -27,7 +27,8 @@
 """Splash screen implementation"""
 
 from utils.pixmapcache import getPixmap
-from .qt import (Qt, QColor, QApplication, QSplashScreen)
+
+from .qt import QApplication, QColor, QSplashScreen, Qt
 
 
 class SplashScreen(QSplashScreen):

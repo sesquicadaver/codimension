@@ -20,14 +20,26 @@
 """Stack viewer"""
 
 import os.path
-from ui.qt import (Qt, QSizePolicy, QFrame, QTreeWidget, QToolButton,
-                   QTreeWidgetItem, QHeaderView, QVBoxLayout, QWidget,
-                   QAbstractItemView, QMenu, QToolBar, QCursor, QSize)
+
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitLabel
-from utils.pixmapcache import getIcon
+from ui.qt import (
+    QAbstractItemView,
+    QCursor,
+    QHeaderView,
+    QMenu,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from utils.globals import GlobalData
-from utils.settings import Settings
+from utils.pixmapcache import getIcon
 
 
 class StackFrameItem(QTreeWidgetItem):

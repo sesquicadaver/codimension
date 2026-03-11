@@ -20,8 +20,8 @@
 """Occurrences search result providers"""
 
 import logging
+
 from .resultprovideriface import SearchResultProviderIFace
-from autocomplete.completelists import getOccurrences
 
 
 class OccurrencesSearchProvider(SearchResultProviderIFace):

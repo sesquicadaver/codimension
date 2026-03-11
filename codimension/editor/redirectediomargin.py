@@ -20,11 +20,13 @@
 """Redirected IO margin"""
 
 from html import escape
-from ui.qt import QWidget, QPainter, Qt, QToolTip
+
 from qutepart.margins import MarginBase
-from utils.misc import extendInstance
-from utils.globals import GlobalData
+from ui.qt import QPainter, Qt, QToolTip, QWidget
 from utils.colorfont import getZoomedMarginFont
+from utils.globals import GlobalData
+from utils.misc import extendInstance
+
 from .redirectedmsg import IOConsoleMsg
 
 

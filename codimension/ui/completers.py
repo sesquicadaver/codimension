@@ -26,7 +26,7 @@
 """Various kinds of completers"""
 
 
-from .qt import QDir, QStringListModel, QCompleter, QDirModel
+from .qt import QCompleter, QDir, QDirModel, QStringListModel
 
 
 class FileCompleter(QCompleter):

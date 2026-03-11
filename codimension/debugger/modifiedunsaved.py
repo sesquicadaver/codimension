@@ -19,13 +19,23 @@
 
 """Dialog with a list of modified but unsaved files"""
 
-from ui.qt import (Qt, QDialog, QDialogButtonBox, QVBoxLayout, QSizePolicy,
-                   QLabel, QHBoxLayout, QTreeWidget, QAbstractItemView,
-                   QTreeWidgetItem, QWidget)
 from ui.itemdelegates import NoOutlineHeightDelegate
-from utils.pixmapcache import getIcon, getPixmap
+from ui.qt import (
+    QAbstractItemView,
+    QDialog,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    Qt,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from utils.fileutils import getFileProperties, isPythonMime
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon, getPixmap
 
 
 class ModifiedUnsavedDialog(QDialog):

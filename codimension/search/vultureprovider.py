@@ -20,6 +20,7 @@
 """Vulture search result providers"""
 
 import logging
+
 from .resultprovideriface import SearchResultProviderIFace
 
 

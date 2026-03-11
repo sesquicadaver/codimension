@@ -19,10 +19,8 @@
 
 """Dependencies UI graphics scene and a view"""
 
-from ui.qt import (Qt, QRectF, QPoint, QPainter, QGraphicsView, QApplication,
-                   QGraphicsScene)
+from ui.qt import QApplication, QGraphicsScene, QGraphicsView, QPainter, QPoint, QRectF, Qt
 from utils.settings import Settings
-
 
 
 class DepsGraphicsScene(QGraphicsScene):

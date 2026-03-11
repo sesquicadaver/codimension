@@ -21,8 +21,20 @@
 
 
 from utils.globals import GlobalData
-from .qt import (Qt, QEventLoop, pyqtSignal, QColor, QFontMetrics, QSizePolicy,
-                 QFrame, QLabel, QPushButton, QApplication, QGridLayout)
+
+from .qt import (
+    QApplication,
+    QColor,
+    QEventLoop,
+    QFontMetrics,
+    QFrame,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    Qt,
+    pyqtSignal,
+)
 
 
 class OutsideChangeWidget(QFrame):

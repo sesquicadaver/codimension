@@ -21,7 +21,8 @@
 """Varous specialized labels used in the IDE"""
 
 from utils.fileutils import compactPath
-from .qt import Qt, QLabel, QApplication, pyqtSignal
+
+from .qt import QApplication, QLabel, Qt, pyqtSignal
 
 
 class FitLabel(QLabel):

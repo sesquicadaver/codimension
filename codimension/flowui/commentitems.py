@@ -22,14 +22,13 @@
 # pylint: disable=C0305
 # pylint: disable=R0902
 
-from ui.qt import (Qt, QPen, QBrush, QPainterPath, QGraphicsPathItem,
-                   QGraphicsItem, QStyleOptionGraphicsItem, QStyle)
+from ui.qt import QBrush, QGraphicsItem, QGraphicsPathItem, QPainterPath, QPen, QStyle, QStyleOptionGraphicsItem, Qt
 from utils.limits import MAXINT_32
+
 from .auxitems import Connector
 from .cellelement import CellElement
 from .routines import distance, getCommentBoxPath
 from .textmixin import TextMixin
-
 
 
 class CommentCellBase(CellElement, TextMixin):

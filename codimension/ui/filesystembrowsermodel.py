@@ -28,9 +28,10 @@
 from utils.globals import GlobalData
 from utils.project import CodimensionProject
 from utils.settings import Settings
-from .qt import QModelIndex, QDir
-from .viewitems import TreeViewDirectoryItem, TreeViewSysPathItem
+
 from .browsermodelbase import BrowserModelBase
+from .qt import QDir, QModelIndex
+from .viewitems import TreeViewDirectoryItem, TreeViewSysPathItem
 
 
 class FileSystemBrowserModel(BrowserModelBase):

@@ -19,14 +19,25 @@
 
 """Plugins manager dialog"""
 
-import os.path
 import logging
-from ui.qt import (Qt, pyqtSignal, QDialog, QTreeWidgetItem, QTreeWidget,
-                   QVBoxLayout, QTextEdit, QDialogButtonBox, QLabel,
-                   QFontMetrics, QHeaderView, QPushButton)
-from ui.itemdelegates import NoOutlineHeightDelegate
-from utils.pixmapcache import getIcon
+import os.path
 
+from ui.itemdelegates import NoOutlineHeightDelegate
+from ui.qt import (
+    QDialog,
+    QDialogButtonBox,
+    QFontMetrics,
+    QHeaderView,
+    QLabel,
+    QPushButton,
+    Qt,
+    QTextEdit,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    pyqtSignal,
+)
+from utils.pixmapcache import getIcon
 
 STATE_COL = 0       # Enabled/disabled
 CONFLICT_COL = 1    # Exclamation sign
@@ -68,7 +79,7 @@ class PluginItem(QTreeWidgetItem):
         ver = self.plugin.getVersion()
         QTreeWidgetItem.__init__(self, ["", "", "", name, ver])
 
-        if not self.plugin.conflictType in [pluginManager.NO_CONFLICT,
+        if self.plugin.conflictType not in [pluginManager.NO_CONFLICT,
                                             pluginManager.USER_DISABLED]:
             self.setIcon(CONFLICT_COL, getIcon('pluginconflict.png'))
             self.setToolTip(CONFLICT_COL, self.plugin.conflictMessage)
@@ -236,7 +247,7 @@ class PluginsDialog(QDialog):
                         self.__configFuncs[index] = configFunction
                         settingsButton.index = index
                         index += 1
-                except:
+                except Exception:
                     settingsButton.setToolTip("Bad plugin interface. No "
                                               "configuration function "
                                               "received.")
@@ -384,7 +395,7 @@ class PluginsDialog(QDialog):
             self.__errorsText.setText(
                 "Error activating the plugin, exception is generated:\n" +
                 str(exc))
-        except:
+        except Exception:
             item.setCheckState(STATE_COL, Qt.Unchecked)
             self.__errorsText.setText(
                 "Error activating the plugin, unknown exception")

@@ -20,19 +20,23 @@
 """Wrapper to profile a script with redirected IO"""
 
 
-import sys
-import socket
-import traceback
 import os.path
+import socket
+import sys
+import traceback
 import types
 from cProfile import runctx
-from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress
-from outredir_cdm_dbg import OutStreamRedirector
-from cdm_dbg_utils import sendJSONCommand, waitForIDEMessage
-from protocol_cdm_dbg import (METHOD_PROC_ID_INFO, METHOD_PROLOGUE_CONTINUE,
-                              METHOD_EPILOGUE_EXIT, METHOD_EPILOGUE_EXIT_CODE,
-                              METHOD_STDIN)
 
+from cdm_dbg_utils import sendJSONCommand, waitForIDEMessage
+from outredir_cdm_dbg import OutStreamRedirector
+from protocol_cdm_dbg import (
+    METHOD_EPILOGUE_EXIT,
+    METHOD_EPILOGUE_EXIT_CODE,
+    METHOD_PROC_ID_INFO,
+    METHOD_PROLOGUE_CONTINUE,
+    METHOD_STDIN,
+)
+from PyQt5.QtNetwork import QAbstractSocket, QHostAddress, QTcpSocket
 
 # If set to true then the client prints debug messages on the original stderr
 CLIENT_DEBUG = False
@@ -118,17 +122,17 @@ class RedirectedIOProfileWrapper():
             else:
                 retCode = 1
                 print(str(exc.code), file=sys.stderr)
-        except KeyboardInterrupt as exc:
+        except KeyboardInterrupt:
             if CLIENT_DEBUG:
                 print(traceback.format_exc(), file=sys.__stderr__)
             retCode = 1
             print(traceback.format_exc(), file=sys.stderr)
-        except Exception as exc:
+        except Exception:
             if CLIENT_DEBUG:
                 print(traceback.format_exc(), file=sys.__stderr__)
             retCode = 1
             print(traceback.format_exc(), file=sys.stderr)
-        except:
+        except Exception:
             if CLIENT_DEBUG:
                 print(traceback.format_exc(), file=sys.__stderr__)
             retCode = 1

@@ -26,10 +26,12 @@
 """Globals browser model"""
 
 from os.path import basename, realpath
-from utils.project import CodimensionProject
+
 from utils.fileutils import isPythonFile
-from .viewitems import TreeViewGlobalItem
+from utils.project import CodimensionProject
+
 from .browsermodelbase import BrowserModelBase
+from .viewitems import TreeViewGlobalItem
 
 
 class GlobalsBrowserModel(BrowserModelBase):
@@ -77,7 +79,7 @@ class GlobalsBrowserModel(BrowserModelBase):
         for path in addedPythonFiles:
             try:
                 info = self.globalData.briefModinfoCache.get(path)
-            except:
+            except Exception:
                 # It could be that a file was created and deleted straight
                 # away. In this case the cache will generate an exception.
                 continue

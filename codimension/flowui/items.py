@@ -21,14 +21,15 @@
 
 # pylint: disable=C0305
 
-from ui.qt import Qt, QPointF, QPen, QBrush, QGraphicsRectItem, QGraphicsItem
-from .auxitems import Connector, BadgeItem, DecorBadgeItem
-from .cml import CMLVersion, CMLsw
+from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, QPointF, Qt
+
+from .abovebadges import AboveBadgesSpacer
+from .auxitems import BadgeItem, Connector, DecorBadgeItem
+from .cellelement import CellElement
+from .cml import CMLsw, CMLVersion
 from .colormixin import ColorMixin
 from .iconmixin import IconMixin
-from .cellelement import CellElement
 from .textmixin import TextMixin
-from .abovebadges import AboveBadgesDivider, AboveBadgesSpacer
 
 
 class CodeBlockCell(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):

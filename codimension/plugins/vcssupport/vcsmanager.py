@@ -20,17 +20,19 @@
 """VCS plugin support:
    manager to keep track of the VCS plugins and file status"""
 
-import os.path
-import logging
 import datetime
-from utils.settings import Settings
+import logging
+import os.path
+
+from plugins.categories.vcsiface import VersionControlSystemInterface
+from ui.qt import QObject, QTimer, pyqtSignal
 from utils.globals import GlobalData
 from utils.project import CodimensionProject
-from ui.qt import QObject, QTimer, pyqtSignal
-from plugins.categories.vcsiface import VersionControlSystemInterface
-from .statuscache import VCSStatusCache, VCSStatus
+from utils.settings import Settings
+
 from .indicator import VCSIndicator
-from .vcspluginthread import VCSPluginThread, IND_VCS_ERROR
+from .statuscache import VCSStatus, VCSStatusCache
+from .vcspluginthread import IND_VCS_ERROR, VCSPluginThread
 
 
 class VCSPluginDescriptor(QObject):
@@ -69,7 +71,7 @@ class VCSPluginDescriptor(QObject):
         """Safe plugin name"""
         try:
             return self.plugin.getName()
-        except:
+        except Exception:
             return "Unknown (could not retrieve)"
 
     def __getPluginIndicators(self):
@@ -399,7 +401,7 @@ class VCSManager(QObject):
                     vcsLabel.setToolTip("VCS plugin provided undefined "
                                         "indicator (id is " +
                                         str(status.indicatorID) + ")")
-                except:
+                except Exception:
                     # No way to display indicator
                     vcsLabel.setVisible(False)
             return

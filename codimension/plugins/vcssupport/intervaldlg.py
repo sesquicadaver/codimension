@@ -19,8 +19,7 @@
 
 """Update interval settings dialog"""
 
-from ui.qt import (Qt, QDialog, QVBoxLayout, QDialogButtonBox, QHBoxLayout,
-                   QLabel, QLineEdit, QIntValidator)
+from ui.qt import QDialog, QDialogButtonBox, QHBoxLayout, QIntValidator, QLabel, QLineEdit, Qt, QVBoxLayout
 
 
 class VCSUpdateIntervalConfigDialog(QDialog):

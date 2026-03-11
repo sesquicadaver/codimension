@@ -26,6 +26,7 @@
 """Globals browser with hierarchy browsing capabilities"""
 
 from utils.pixmapcache import getIcon
+
 from .globalsbrowsermodel import GlobalsBrowserModel
 from .objectsbrowserbase import ObjectsBrowser
 

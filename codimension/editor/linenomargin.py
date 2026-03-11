@@ -25,11 +25,11 @@
 
 """Line numbers margin"""
 
-from ui.qt import QWidget, QPainter, Qt
 from qutepart.margins import MarginBase
-from utils.misc import extendInstance
-from utils.globals import GlobalData
+from ui.qt import QPainter, Qt, QWidget
 from utils.colorfont import getZoomedMarginFont
+from utils.globals import GlobalData
+from utils.misc import extendInstance
 
 
 class CDMLineNumberMargin(QWidget):

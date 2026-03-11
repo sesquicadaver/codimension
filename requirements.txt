@@ -1,18 +1,22 @@
-cdmpyparser==3.3.2
-cdmcfparser==2.4.0
-cdmgcplugin==1.0.4
-cdmpylintplugin==1.0.4
-cdmsysinfoplugin==1.0.0
-pyflakes==2.1.1
-flake8==3.7.7
-radon==4.1.0
-PyQt5==5.11.3
-python-magic==0.4.15
-qutepart==3.3.0.post1
-yapsy==1.12.0
-jedi==0.17.2
-vulture==1.6
-gprof2dot==2017.9.19
-mistune==0.8.4
-pygments==2.7.4
-qdarkstyle==2.8.1
+# Python 3.11+ dependencies
+# NOTE: cdmpyparser/cdmcfparser use legacy parser C API (node.h), removed in Python 3.10.
+# Until upstream supports 3.11+, use pre-built wheels or build from forked sources.
+cdmpyparser>=3.3.2
+cdmcfparser>=2.4.0
+cdmgcplugin>=1.0.4
+cdmpylintplugin>=1.0.4
+cdmsysinfoplugin>=1.0.0
+pyflakes>=2.1.1
+flake8>=3.7.7
+radon>=4.1.0
+PyQt5>=5.15.9
+python-magic>=0.4.15
+qutepart>=3.3.0
+yapsy>=1.12.0
+jedi>=0.17.2
+vulture>=1.6
+gprof2dot>=2017.9.19
+mistune>=0.8.4
+pygments>=2.7.4
+qdarkstyle>=2.8.1
+packaging>=21.0

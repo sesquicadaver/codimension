@@ -20,7 +20,8 @@
 
 """codimension brief module info cache"""
 
-from os.path import realpath, getmtime, exists
+from os.path import exists, getmtime, realpath
+
 from cdmpyparser import getBriefModuleInfoFromFile
 
 

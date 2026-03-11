@@ -19,14 +19,10 @@
 
 """ast related utils"""
 
-import sys
 import ast
 
-def parseSourceToAST(source, filename):
-    """Parses the source code to an ast tree"""
 
-    # type_comments parameter was introduced in python 3.8
-    if sys.version_info >= (3, 8):
-        return ast.parse(source, filename, mode='exec', type_comments=True)
-    return ast.parse(source, filename, mode='exec')
+def parseSourceToAST(source, filename):
+    """Parses the source code to an ast tree."""
+    return ast.parse(source, filename, mode='exec', type_comments=True)
 

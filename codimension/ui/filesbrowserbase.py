@@ -19,29 +19,48 @@
 
 """Base and auxiliary classes for FS and project browsers"""
 
-import os.path
 import logging
-from utils.globals import GlobalData
-from utils.pixmapcache import getIcon
-from utils.fileutils import isPythonMime, isCDMProjectMime, getFileProperties
-from utils.project import getProjectFileTooltip
+import os.path
+
 from search.findinfilesdialog import FindInFilesDialog
 from search.findinfilesprovider import FindInFilesSearchProvider
-from .qt import (Qt, QModelIndex, QSortFilterProxyModel, QAbstractItemView,
-                 QApplication, QTreeView, pyqtSignal)
-from .viewitems import (DirectoryItemType, SysPathItemType, GlobalsItemType,
-                        ImportsItemType, FunctionsItemType, ClassesItemType,
-                        StaticAttributesItemType, InstanceAttributesItemType,
-                        CodingItemType, ImportItemType, FileItemType,
-                        FunctionItemType, ClassItemType, DecoratorItemType,
-                        AttributeItemType, GlobalItemType, ImportWhatItemType,
-                        TreeViewDirectoryItem, TreeViewFileItem,
-                        TreeViewCodingItem, TreeViewGlobalsItem,
-                        TreeViewGlobalItem, TreeViewImportsItem,
-                        TreeViewImportItem, TreeViewWhatItem,
-                        TreeViewFunctionsItem, TreeViewClassesItem)
+from utils.fileutils import getFileProperties, isCDMProjectMime, isPythonMime
+from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
+from utils.project import getProjectFileTooltip
+
 from .itemdelegates import NoOutlineHeightDelegate
 from .parsererrors import ParserErrorsDialog
+from .qt import QAbstractItemView, QApplication, QModelIndex, QSortFilterProxyModel, Qt, QTreeView, pyqtSignal
+from .viewitems import (
+    AttributeItemType,
+    ClassesItemType,
+    ClassItemType,
+    CodingItemType,
+    DecoratorItemType,
+    DirectoryItemType,
+    FileItemType,
+    FunctionItemType,
+    FunctionsItemType,
+    GlobalItemType,
+    GlobalsItemType,
+    ImportItemType,
+    ImportsItemType,
+    ImportWhatItemType,
+    InstanceAttributesItemType,
+    StaticAttributesItemType,
+    SysPathItemType,
+    TreeViewClassesItem,
+    TreeViewCodingItem,
+    TreeViewDirectoryItem,
+    TreeViewFileItem,
+    TreeViewFunctionsItem,
+    TreeViewGlobalItem,
+    TreeViewGlobalsItem,
+    TreeViewImportItem,
+    TreeViewImportsItem,
+    TreeViewWhatItem,
+)
 
 
 class FilesBrowserSortFilterProxyModel(QSortFilterProxyModel):

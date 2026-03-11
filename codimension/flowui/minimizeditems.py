@@ -22,12 +22,14 @@
 # pylint: disable=C0305
 
 from html import escape
-from ui.qt import Qt, QBrush, QGraphicsRectItem, QGraphicsItem, QPainterPath, QPen
+
+from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem
 from utils.limits import MAXINT_32
+
 from .auxitems import Connector, SVGItem
-from .colormixin import ColorMixin
 from .cellelement import CellElement
-from .routines import distance, getDoclinkIconAndTooltip
+from .colormixin import ColorMixin
+from .routines import getDoclinkIconAndTooltip
 
 
 class MinimizedIndependentCommentCell(CellElement, QGraphicsRectItem):

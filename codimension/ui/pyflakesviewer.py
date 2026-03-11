@@ -20,13 +20,14 @@
 """Pyflakes results viewer"""
 
 from html import escape
-from radon.complexity import cc_rank
-from utils.pixmapcache import getIcon, getPixmap
-from utils.fileutils import isPythonMime, isPythonFile
-from analysis.ierrors import getBufferErrors
-from .qt import QTimer, QObject, Qt, QMenu
-from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
 
+from analysis.ierrors import getBufferErrors
+from radon.complexity import cc_rank
+from utils.fileutils import isPythonFile, isPythonMime
+from utils.pixmapcache import getIcon, getPixmap
+
+from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import QMenu, QObject, Qt, QTimer
 
 COMPLEXITY_PIXMAPS = {
     'A': 'complexity-a.png',

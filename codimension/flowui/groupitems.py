@@ -23,11 +23,22 @@
 # pylint: disable=R0902
 # pylint: disable=R0913
 
-from ui.qt import (Qt, QPen, QBrush, QGraphicsRectItem, QGraphicsItem, QFrame,
-                   QLabel, QVBoxLayout, QPalette, QApplication)
+from ui.qt import (
+    QApplication,
+    QBrush,
+    QFrame,
+    QGraphicsItem,
+    QGraphicsRectItem,
+    QLabel,
+    QPalette,
+    QPen,
+    Qt,
+    QVBoxLayout,
+)
 from utils.globals import GlobalData
-from .cellelement import CellElement
+
 from .auxitems import Connector, SpacerCell
+from .cellelement import CellElement
 from .colormixin import ColorMixin
 from .textmixin import TextMixin
 

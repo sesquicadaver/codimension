@@ -27,7 +27,7 @@
 """Line edit which shows specific text when inactive"""
 
 
-from .qt import Qt, QLineEdit, QStyleOptionFrame, QStyle, QPainter, QPalette
+from .qt import QLineEdit, QPainter, QPalette, QStyle, QStyleOptionFrame, Qt
 
 
 class InactiveLineEdit(QLineEdit):

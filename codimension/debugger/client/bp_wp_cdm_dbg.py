@@ -37,9 +37,9 @@ class Breakpoint:
     Breakpoint class
     """
 
-    BREAKS = {}             # (filename, lineno) -> Breakpoint
-    BREAK_IN_FILE = {}      # filename -> lineno
-    BREAK_IN_FRAME_CACHE = {}
+    BREAKS: dict[tuple[str, int], "Breakpoint"] = {}
+    BREAK_IN_FILE: dict[str, list[int]] = {}
+    BREAK_IN_FRAME_CACHE: dict[str, object] = {}
 
     def __init__(self, filename, lineno, temporary=False, cond=None):
         filename = os.path.abspath(filename)
@@ -143,7 +143,7 @@ class Watch:
     Watch class
     """
 
-    WATCHES = []
+    WATCHES: list["Watch"] = []
 
     def __init__(self, cond, compiledCond, flag, temporary=False):
         if cond:

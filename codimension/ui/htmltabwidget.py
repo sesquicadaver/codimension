@@ -20,10 +20,12 @@
 """HTML viewer tab widget"""
 
 import os.path
-from utils.fileutils import getFileContent
+
 from utils.colorfont import getZoomedMonoFont
-from .qt import QFrame, QHBoxLayout, QTextBrowser, Qt, pyqtSignal
+from utils.fileutils import getFileContent
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import QFrame, QHBoxLayout, Qt, QTextBrowser, pyqtSignal
 
 
 class HTMLViewer(QTextBrowser):

@@ -19,20 +19,20 @@
 
 """Disassembling files and buffers"""
 
-import sys
+import binascii
 import dis
+import marshal
 import os
 import os.path
-import py_compile
-import marshal
 import platform
-import binascii
+import py_compile
 import struct
+import sys
 import time
-from types import CodeType
 from io import StringIO
-from utils.fileutils import makeTempFile, saveToFile
+from types import CodeType
 
+from utils.fileutils import makeTempFile, saveToFile
 
 OPT_NO_OPTIMIZATION = 0
 OPT_OPTIMIZE_ASSERT = 1
@@ -54,7 +54,7 @@ def safeUnlink(path):
     """No exception unlink"""
     try:
         os.unlink(path)
-    except:
+    except OSError:
         pass
 
 
@@ -92,7 +92,7 @@ def recursiveDisassembly(codeObject, name=None):
 
     res = '\n\nDisassembly of ' + what + ':\n' + disassembly
     for item in codeObject.co_consts:
-        if type(item) == CodeType:
+        if isinstance(item, CodeType):
             itemName = item.co_name
             if name:
                 itemName = name + '.' + itemName
@@ -111,22 +111,12 @@ def getCompiledfileDisassembled(pycPath, pyPath, optimization,
 
     pycFile = open(pycPath, 'rb')
 
+    # Python 3.7+ .pyc header: magic (4) + flags (4) + timestamp (4) + size (4)
     magic = pycFile.read(4)
+    pycFile.read(4)  # flags (unused)
     timestamp = pycFile.read(4)
-
-    if sys.version_info.major == 3 and sys.version_info.minor >= 3:
-        size = pycFile.read(4)
-        size = struct.unpack('I', size)[0]
-        # Strange: the size is decoded as abnormally large and I don't
-        # know why. So suppress it.
-        # props.append(('Code size', str(size)))
-
-    if sys.version_info.major == 3 and sys.version_info.minor >= 7:
-        flags = pycFile.read(4)
-        flags = struct.unpack('I', flags)[0]
-        # The flags do not seem to be of a much interest
-        # Suppress them
-        # props.append(('Flags', hex(flags)))
+    size = pycFile.read(4)
+    size = struct.unpack('I', size)[0]
 
     code = marshal.load(pycFile)
     magic = binascii.hexlify(magic).decode('utf-8')
@@ -179,7 +169,7 @@ def _getFileDisassembled(path, optimization):
     try:
         props, disassembly = getCompiledfileDisassembled(tempPycFile, path,
                                                          optimization)
-    except:
+    except Exception:
         safeUnlink(tempPycFile)
         raise
 
@@ -212,7 +202,7 @@ def _getBufferDisassembled(content, encoding, path, optimization):
     try:
         props, disassembly = getCompiledfileDisassembled(tempPycFile, path,
                                                          optimization, True)
-    except:
+    except Exception:
         safeUnlink(tempSrcFile)
         safeUnlink(tempPycFile)
         raise
@@ -242,28 +232,10 @@ def getCompiledfileBinary(pycPath, pyPath, optimization, forBuffer=False):
 
     pycFile = open(pycPath, 'rb')
     content = pycFile.read()
-    shift = 0
 
-    magic = content[shift:shift + 4]
-    shift += 4
-    timestamp = content[shift:shift + 4]
-    shift += 4
-
-    if sys.version_info.major == 3 and sys.version_info.minor >= 3:
-        size = content[shift:shift + 4]
-        shift += 4
-        size = struct.unpack('I', size)[0]
-        # Strange: the size is decoded as abnormally large and I don't
-        # know why. So suppress it.
-        # props.append(('Code size', str(size)))
-
-    if sys.version_info.major == 3 and sys.version_info.minor >= 7:
-        flags = content[shift:shift + 4]
-        shift += 4
-        flags = struct.unpack('I', flags)[0]
-        # The flags do not seem to be of a much interest
-        # Suppress them
-        # props.append(('Flags', hex(flags)))
+    # Python 3.7+ .pyc header: magic (4) + flags (4) + timestamp (4) + size (4)
+    magic = content[0:4]
+    timestamp = content[8:12]
 
     magic = binascii.hexlify(magic).decode('utf-8')
     timestamp = time.asctime(
@@ -301,7 +273,7 @@ def getFileBinary(path, optimization):
 
     try:
         props, content = getCompiledfileBinary(tempPycFile, path, optimization)
-    except:
+    except Exception:
         safeUnlink(tempPycFile)
         raise
 
@@ -327,7 +299,7 @@ def getBufferBinary(content, encoding, path, optimization):
     try:
         props, content = getCompiledfileBinary(tempPycFile, path,
                                                optimization, True)
-    except:
+    except Exception:
         safeUnlink(tempSrcFile)
         safeUnlink(tempPycFile)
         raise

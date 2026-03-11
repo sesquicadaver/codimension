@@ -25,10 +25,11 @@
 
 """File system browser with module browsing capabilities"""
 
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
-from .filesystembrowsermodel import FileSystemBrowserModel
+from utils.pixmapcache import getIcon
+
 from .filesbrowserbase import FilesBrowser
+from .filesystembrowsermodel import FileSystemBrowserModel
 
 
 class FileSystemBrowser(FilesBrowser):

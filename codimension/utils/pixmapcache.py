@@ -23,9 +23,10 @@
 # pylint: disable=W0703
 # pylint: disable=C0305
 
-from os.path import dirname, realpath, sep, isabs, exists
 import sys
-from ui.qt import QPixmap, QIcon
+from os.path import dirname, exists, isabs, realpath, sep
+
+from ui.qt import QIcon, QPixmap
 
 
 class PixmapCache():
@@ -97,7 +98,7 @@ class PixmapCache():
 
             try:
                 pixmap = QPixmap(path)
-            except:
+            except Exception:
                 pixmap = QPixmap()
             self.__cache[name] = pixmap
             return pixmap

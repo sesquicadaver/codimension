@@ -19,21 +19,37 @@
 
 """list viewer base class for classes/func etc list viewers"""
 
-import os.path
 import logging
-from utils.pixmapcache import getIcon
-from utils.settings import Settings
-from utils.project import CodimensionProject, getProjectFileTooltip
+import os.path
+
+from utils.diskvaluesrelay import getRecentFiles, removeRecentFile
+from utils.fileutils import getFileProperties, isCDMProjectMime, isImageViewable, isPythonMime
 from utils.globals import GlobalData
-from utils.fileutils import (getFileProperties, isPythonMime,
-                             isCDMProjectMime, isImageViewable)
-from utils.diskvaluesrelay import removeRecentFile, getRecentFiles
-from .qt import (Qt, QSize, QTreeWidget, QTreeWidgetItem, QHeaderView, QMenu,
-                 QToolButton, QWidget, QAction, QDialog, QVBoxLayout,
-                 QSizePolicy, QToolBar, QApplication, QSplitter, QCursor)
-from .projectproperties import ProjectPropertiesDialog
+from utils.pixmapcache import getIcon
+from utils.project import CodimensionProject, getProjectFileTooltip
+from utils.settings import Settings
+
 from .itemdelegates import NoOutlineHeightDelegate
 from .labels import HeaderFitLabel
+from .projectproperties import ProjectPropertiesDialog
+from .qt import (
+    QAction,
+    QApplication,
+    QCursor,
+    QDialog,
+    QHeaderView,
+    QMenu,
+    QSize,
+    QSizePolicy,
+    QSplitter,
+    Qt,
+    QToolBar,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from .spacers import ToolBarExpandingSpacer
 
 
@@ -71,7 +87,7 @@ class RecentProjectViewItem(QTreeWidgetItem):
                 self.setText(0, "")
                 if fileName == GlobalData().project.fileName:
                     self.__markCurrent()
-            except:
+            except Exception:
                 # Cannot get project properties. Mark broken.
                 self.__isValid = False
                 self.setToolTip(0, 'Broken project file')
@@ -155,7 +171,7 @@ class RecentFileViewItem(QTreeWidgetItem):
                 else:
                     self.setToolTip(1, "")
                 self.setText(0, "")
-            except:
+            except Exception:
                 # cannot get project properties. Mark broken.
                 self.__isValid = False
                 self.setToolTip(0, 'Broken project file')

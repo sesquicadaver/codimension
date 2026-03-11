@@ -19,7 +19,7 @@
 
 """Color button"""
 
-from .qt import pyqtSignal, QPushButton, QColorDialog
+from .qt import QColorDialog, QPushButton, pyqtSignal
 
 
 class ColorButton(QPushButton):

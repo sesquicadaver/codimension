@@ -28,13 +28,13 @@ It performs necessery initialization and starts the Qt main loop.
 # pylint: disable=C0415
 # pylint: disable=C0413
 
-import sys
+import datetime
+import gc
+import logging
 import os
 import os.path
-import gc
+import sys
 import traceback
-import logging
-import datetime
 from optparse import OptionParser
 
 # Workaround if link is used
@@ -49,14 +49,16 @@ if srcDir not in sys.path:
 # Use the python parser in the qutepart component
 os.environ['QPART_CPARSER'] = 'N'
 
-from ui.qt import QTimer, QMessageBox
-from ui.application import CodimensionApplication
-from ui.splashscreen import SplashScreen
-from utils.project import CodimensionProject
-from utils.skin import Skin, populateSampleSkin
-from utils.config import DEFAULT_ENCODING
-from utils.settings import Settings, SETTINGS_DIR
-from utils.globals import GlobalData
+# Install cdmpyparser/cdmcfparser fallbacks for Python 3.11+ (before any imports)
+import parsers  # noqa: F401, E402
+from ui.application import CodimensionApplication  # noqa: E402
+from ui.qt import QMessageBox, QTimer  # noqa: E402
+from ui.splashscreen import SplashScreen  # noqa: E402
+from utils.config import DEFAULT_ENCODING  # noqa: E402
+from utils.globals import GlobalData  # noqa: E402
+from utils.project import CodimensionProject  # noqa: E402
+from utils.settings import SETTINGS_DIR, Settings  # noqa: E402
+from utils.skin import Skin, populateSampleSkin  # noqa: E402
 
 # Need for the correct import resolution
 GlobalData().originalSysPath = originalSysPath
@@ -65,7 +67,7 @@ GlobalData().originalSysPath = originalSysPath
 try:
     import cdmverspec
     VER = cdmverspec.version
-except:
+except ImportError:
     VER = '0.0.0'
 
 
@@ -344,7 +346,7 @@ def exceptionHook(excType, excValue, tracebackObj):
             else:
                 diskfile.write('Has not been created yet\n')
             diskfile.write('------\n\n')
-    except:
+    except OSError:
         savedOK = False
 
     # This output will be to a console if the application has not started yet

@@ -25,11 +25,23 @@
 
 """The log viewer implementation"""
 
-from utils.pixmapcache import getIcon
 from utils.colorfont import getZoomedMonoFont
-from .qt import (Qt, QSize, QColor, QBrush, QTextCursor, QCursor,
-                 QPlainTextEdit, QMenu, QHBoxLayout, QWidget, QAction,
-                 QToolBar)
+from utils.pixmapcache import getIcon
+
+from .qt import (
+    QAction,
+    QBrush,
+    QColor,
+    QCursor,
+    QHBoxLayout,
+    QMenu,
+    QPlainTextEdit,
+    QSize,
+    Qt,
+    QTextCursor,
+    QToolBar,
+    QWidget,
+)
 from .spacers import ToolBarExpandingSpacer
 
 MAX_LINES = 10000

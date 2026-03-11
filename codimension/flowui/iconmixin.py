@@ -23,6 +23,7 @@
 
 from .auxitems import SVGItem
 
+
 class IconMixin:
 
     """Icon (svg) mixin for items like import"""

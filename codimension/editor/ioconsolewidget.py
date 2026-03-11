@@ -21,11 +21,11 @@
 """Redirected IO console widget for running/profiling/debugging scripts"""
 
 
-from ui.qt import (Qt, QSize, pyqtSignal, QToolBar, QHBoxLayout, QWidget,
-                   QAction, QSizePolicy, QMenu, QToolButton)
+from ui.qt import QAction, QHBoxLayout, QMenu, QSize, QSizePolicy, Qt, QToolBar, QToolButton, QWidget, pyqtSignal
+from utils.pixmapcache import getIcon
 from utils.runparams import DEBUG
 from utils.settings import Settings
-from utils.pixmapcache import getIcon
+
 from .redirectedioconsole import RedirectedIOConsole
 
 

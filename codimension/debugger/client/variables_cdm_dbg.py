@@ -442,15 +442,7 @@ def _initTypeMap():
         (list, listResolver),
         (dict, dictResolver)]
 
-    try:
-        _TypeMap.append((long, None))               # pylint: disable=E0602
-    except Exception:
-        pass    # not available on all python versions
-
-    try:
-        _TypeMap.append((unicode, None))            # pylint: disable=E0602
-    except Exception:
-        pass    # not available on all python versions
+    # Python 3.11+: long and unicode unified with int and str (already in _TypeMap)
 
     try:
         _TypeMap.append((set, setResolver))         # pylint: disable=E0602

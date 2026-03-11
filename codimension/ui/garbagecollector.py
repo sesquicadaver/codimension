@@ -27,6 +27,7 @@
 
 import gc
 import logging
+
 from .qt import QObject, QTimer
 
 

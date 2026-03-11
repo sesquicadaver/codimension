@@ -19,11 +19,11 @@
 
 """The diff viewer implementation"""
 
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
-from .qt import (Qt, QSize, QHBoxLayout, QWidget, QAction, QToolBar,
-                 QSizePolicy, QVBoxLayout)
+from utils.pixmapcache import getIcon
+
 from .htmltabwidget import HTMLTabWidget
+from .qt import QAction, QHBoxLayout, QSize, QSizePolicy, Qt, QToolBar, QVBoxLayout, QWidget
 
 
 class DiffViewer(QWidget):
@@ -44,7 +44,7 @@ class DiffViewer(QWidget):
         self.__inClear = False
 
         paperColor = GlobalData().skin['nolexerPaper'].name()
-        NODIFF = '<html><body bgcolor="' + paperColor + '"></body></html>'
+        '<html><body bgcolor="' + paperColor + '"></body></html>'
         self.viewer.setHTML(self.NODIFF)
         self.__updateToolbarButtons()
 

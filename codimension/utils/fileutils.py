@@ -24,22 +24,21 @@
 # pylint: disable=W0703
 
 
-import os
-from os.path import (islink, exists, split, join, sep, basename, realpath,
-                     normpath, isabs, dirname, isdir)
-import logging
 import json
-from errno import EACCES, ENOENT
+import logging
+import os
 import tempfile
+from errno import EACCES, ENOENT
+from os.path import basename, dirname, exists, isabs, isdir, islink, join, normpath, realpath, sep, split
+
 import magic
 
 # Qutepart has a few maps which help to map a file to a syntax.
 from qutepart import Qutepart
-
 from ui.qt import QImageReader
-from .pixmapcache import getIcon
-from .config import DEFAULT_ENCODING
 
+from .config import DEFAULT_ENCODING
+from .pixmapcache import getIcon
 
 __QTSupportedImageFormats = [fmt.data().decode(DEFAULT_ENCODING) for fmt in
                              QImageReader.supportedImageFormats()]
@@ -511,7 +510,7 @@ def getMagicMimeFromBuffer(txt):
     """Guesses the buffer text mime type"""
     try:
         return __magic.from_buffer(txt)
-    except:
+    except Exception:
         return None
 
 
@@ -576,7 +575,7 @@ def getFileProperties(fName, checkForBrokenLink=True, skipCache=False):
         # If a file exists then it could be a symbolic link to
         # a different name file
         fBaseName = basename(realpath(fName))
-    except:
+    except Exception:
         # File may not exist
         fBaseName = basename(fName)
 

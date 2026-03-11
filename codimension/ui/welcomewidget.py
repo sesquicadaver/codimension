@@ -22,8 +22,10 @@
 
 import os.path
 import sys
+
 from utils.globals import GlobalData
 from utils.project import CodimensionProject
+
 from .texttabwidget import TextTabWidget
 
 

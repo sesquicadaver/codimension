@@ -20,17 +20,17 @@
 """Utilities to build completeion lists to suggest to the user"""
 
 
+import logging
 import os
 import os.path
-import sys
-import logging
+
 import jedi
 from jedi.api.project import Project
-from utils.globals import GlobalData
-from utils.fileutils import getFileContent
 from ui.qt import QDir
-from .bufferutils import getEditorTags
+from utils.fileutils import getFileContent
+from utils.globals import GlobalData
 
+from .bufferutils import getEditorTags
 
 # Global variables to avoid creating a jedi project every time
 jediProject = None

@@ -29,12 +29,12 @@ Module implementing the multithreaded version of the debug client
 """
 
 import sys
-import traceback
 import time
+import traceback
+
 from base_cdm_dbg import DebugBase
 from clientbase_cdm_dbg import DebugClientBase
 from threadextension_cdm_dbg import ThreadExtension
-
 
 CLIENT_DEBUG = False
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     debugClient = DebugClient()
     try:
         debugClient.main()
-    except Exception as exc:
+    except Exception:
         if CLIENT_DEBUG:
             print(traceback.format_exc(), file=sys.__stderr__)
             if sys.__stderr__ != sys.stderr:

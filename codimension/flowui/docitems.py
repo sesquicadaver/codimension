@@ -22,15 +22,25 @@
 # pylint: disable=C0305
 # pylint: disable=R0913
 
-from html import escape
-from ui.qt import (Qt, QPen, QBrush, QPainterPath, QGraphicsItem, QFont,
-                   QGraphicsRectItem, QCursor, QDesktopServices, QUrl)
+from ui.qt import (
+    QBrush,
+    QCursor,
+    QDesktopServices,
+    QFont,
+    QGraphicsItem,
+    QGraphicsRectItem,
+    QPainterPath,
+    QPen,
+    Qt,
+    QUrl,
+)
 from utils.globals import GlobalData
 from utils.misc import resolveLinkPath
+
 from .auxitems import Connector
 from .cellelement import CellElement
-from .commentitems import CommentCellBase
 from .colormixin import ColorMixin
+from .commentitems import CommentCellBase
 from .iconmixin import IconMixin
 from .routines import getDoclinkIconAndTooltip
 
@@ -175,7 +185,7 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
         painter.setPen(self.getPainterPen(self.isSelected(), self.borderColor))
         painter.setBrush(QBrush(self.bgColor))
 
-        rectWidth = self.minWidth - 2 * settings.hCellPadding
+        self.minWidth - 2 * settings.hCellPadding
         rectHeight = self.minHeight - 2 * settings.vCellPadding
 
         # Bottom adjustment

@@ -20,17 +20,20 @@
 """The debugger namespace viewer implementation"""
 
 
-from ui.qt import (Qt, QRegExp, QAbstractItemView, QHeaderView, QTreeWidget)
 from ui.itemdelegates import NoOutlineHeightDelegate
+from ui.qt import QAbstractItemView, QHeaderView, QRegExp, Qt, QTreeWidget
 from utils.settings import Settings
-from .variableitems import (VariableItem, SpecialVariableItem,
-                            ArrayElementVariableItem,
-                            SpecialArrayElementVariableItem,
-                            INDICATORS)
-from .varfilters import VARIABLE_FILTERS
-from .viewvariable import ViewVariableDialog
-from .client.protocol_cdm_dbg import VAR_TYPE_DISP_STRINGS
 
+from .client.protocol_cdm_dbg import VAR_TYPE_DISP_STRINGS
+from .varfilters import VARIABLE_FILTERS
+from .variableitems import (
+    INDICATORS,
+    ArrayElementVariableItem,
+    SpecialArrayElementVariableItem,
+    SpecialVariableItem,
+    VariableItem,
+)
+from .viewvariable import ViewVariableDialog
 
 INDICATOR_PATTERN = "|".join([QRegExp.escape(indicator)
                               for indicator in INDICATORS])
@@ -327,7 +330,7 @@ class VariablesBrowser(QTreeWidget):
                 try:
                     stringValue = eval(varValue)
                     displayType += " (chars: " + str(len(stringValue)) + ")"
-                except:
+                except Exception:
                     stringValue = varValue
             return self.__generateItem(parentItem, isGlobal,
                                        varName, stringValue,

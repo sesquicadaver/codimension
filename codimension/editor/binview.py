@@ -17,13 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from ui.qt import (QWidget, QSizePolicy,QVBoxLayout, QPlainTextEdit, QTimer,
-                   Qt, QApplication, QEvent)
+from analysis.disasm import getBufferBinary, getFileBinary
 from ui.labels import HeaderLabel
+from ui.qt import QApplication, QEvent, QPlainTextEdit, QSizePolicy, Qt, QTimer, QVBoxLayout, QWidget
 from utils.colorfont import getZoomedMonoFont
-from utils.settings import Settings
 from utils.misc import splitThousands
-from analysis.disasm import getFileBinary, getBufferBinary
+from utils.settings import Settings
 
 
 class BinViewTextEditor(QPlainTextEdit):

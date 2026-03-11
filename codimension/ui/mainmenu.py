@@ -21,14 +21,16 @@
 
 
 import os.path
-from utils.pixmapcache import getIcon
-from utils.skin import getSkinsList
+
+from utils.diskvaluesrelay import getRecentFiles
 from utils.globals import GlobalData
 from utils.misc import getIDETemplateFile, getProjectTemplateFile
+from utils.pixmapcache import getIcon
 from utils.settings import CLEAR_AND_REUSE, NO_CLEAR_AND_REUSE, NO_REUSE
-from utils.diskvaluesrelay import getRecentFiles
-from .qt import QApplication, QMenu, QStyleFactory, QActionGroup, QFontDialog
+from utils.skin import getSkinsList
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import QActionGroup, QApplication, QFontDialog, QMenu, QStyleFactory
 
 
 def getAccelerator(count):

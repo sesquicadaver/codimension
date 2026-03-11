@@ -22,18 +22,32 @@
 
 import logging
 import os.path
-from ui.qt import (Qt, QSize, QTimer, QToolBar, QWidget, QHBoxLayout,
-                   QLabel, QVBoxLayout, QSizePolicy, QFrame,
-                   pyqtSignal, QPrintDialog, QDialog, QAction, QPixmap,
-                   QTextDocument)
-from ui.texttabwidget import TextViewer
-from utils.fileutils import isMarkdownMime
-from utils.pixmapcache import getPixmap, getIcon
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.diskvaluesrelay import getFilePosition
-from utils.md import renderMarkdown
 
+from ui.qt import (
+    QAction,
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPixmap,
+    QPrintDialog,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QTextDocument,
+    QTimer,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
+from ui.texttabwidget import TextViewer
+from utils.diskvaluesrelay import getFilePosition
+from utils.fileutils import isMarkdownMime
+from utils.globals import GlobalData
+from utils.md import renderMarkdown
+from utils.pixmapcache import getIcon, getPixmap
+from utils.settings import Settings
 
 IDLE_TIMEOUT = 1500
 
@@ -92,7 +106,7 @@ class MDViewer(TextViewer):
             if url.startswith('cdm-image:'):
                 try:
                     return getPixmap(url[10:])
-                except Exception as exc:
+                except Exception:
                     logging.error('Unknown Codimension cache image: ' +
                                   url[10:])
                 return None

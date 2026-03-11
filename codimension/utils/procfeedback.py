@@ -20,10 +20,10 @@
 
 """Process related utility functions"""
 
-import os
 import errno
+import os
 import time
-from signal import SIGTERM, SIGINT, SIGHUP, SIGKILL
+from signal import SIGHUP, SIGINT, SIGKILL, SIGTERM
 
 
 def isProcessAlive(pid):

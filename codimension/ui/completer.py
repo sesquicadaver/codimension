@@ -20,9 +20,8 @@
 """completer selection widget"""
 
 
-from .qt import (Qt, QEvent, QModelIndex, QStringListModel, QAction,
-                 QAbstractItemView, QCompleter, QListView)
 from .itemdelegates import NoOutlineHeightDelegate
+from .qt import QAbstractItemView, QAction, QCompleter, QEvent, QListView, QModelIndex, QStringListModel, Qt
 
 
 class CompleterPopup(QListView):

@@ -19,20 +19,20 @@
 
 """The file outline viewer implementation"""
 
-import os.path
 import logging
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.fileutils import isPythonMime, isPythonFile
+import os.path
+
 from cdmpyparser import getBriefModuleInfoFromMemory
-from .qt import (Qt, QSize, QTimer, QCursor, QPalette, QMenu, QWidget, QAction,
-                 QVBoxLayout, QToolBar, QFrame, QLabel)
-from .outlinebrowser import OutlineBrowser
-from .viewitems import (FunctionItemType, ClassItemType, AttributeItemType,
-                        GlobalItemType)
+from utils.fileutils import isPythonFile, isPythonMime
+from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
+from utils.settings import Settings
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .outlinebrowser import OutlineBrowser
 from .parsererrors import ParserErrorsDialog
+from .qt import QAction, QCursor, QFrame, QLabel, QMenu, QPalette, QSize, Qt, QTimer, QToolBar, QVBoxLayout, QWidget
+from .viewitems import AttributeItemType, ClassItemType, FunctionItemType, GlobalItemType
 
 
 class OutlineAttributes:
@@ -236,7 +236,7 @@ class FileOutlineViewer(QWidget):
             self.__outlineBrowsers[self.__currentUUID].browser.show()
 
             info = self.__outlineBrowsers[self.__currentUUID].info
-            self.showParsingErrorsButton.setEnabled(info.isOK != True)
+            self.showParsingErrorsButton.setEnabled(not info.isOK)
             return
 
         # It is first time we are here, create a new
@@ -245,11 +245,11 @@ class FileOutlineViewer(QWidget):
         editor.cursorPositionChanged.connect(self.__cursorPositionChanged)
         info = getBriefModuleInfoFromMemory(editor.text)
 
-        self.showParsingErrorsButton.setEnabled(info.isOK != True)
+        self.showParsingErrorsButton.setEnabled(not info.isOK)
 
         shortFileName = widget.getShortName()
         browser = OutlineBrowser(uuid, shortFileName, info, self)
-        browser.setHeaderHighlight(info.isOK != True)
+        browser.setHeaderHighlight(not info.isOK)
         self.__connectOutlineBrowser(browser)
         self.__layout.addWidget(browser)
         if self.__currentUUID is not None:
@@ -311,10 +311,10 @@ class FileOutlineViewer(QWidget):
         if info is None:
             return
 
-        self.showParsingErrorsButton.setEnabled(info.isOK != True)
+        self.showParsingErrorsButton.setEnabled(not info.isOK)
         browser = self.__outlineBrowsers[self.__currentUUID].browser
         fName = self.__outlineBrowsers[self.__currentUUID].shortFileName
-        browser.setHeaderHighlight(info.isOK != True)
+        browser.setHeaderHighlight(not info.isOK)
 
         if not info.isOK:
             title = self.__modifiedFormat % fName
@@ -414,7 +414,7 @@ class FileOutlineViewer(QWidget):
 
     def highlightContextItem(self, context, line):
         """Highlights the context item"""
-        if not self.__currentUUID in self.__outlineBrowsers:
+        if self.__currentUUID not in self.__outlineBrowsers:
             return False
         browser = self.__outlineBrowsers[self.__currentUUID].browser
         info = self.__outlineBrowsers[self.__currentUUID].info

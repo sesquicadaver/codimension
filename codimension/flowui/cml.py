@@ -19,9 +19,16 @@
 
 """CML utilities"""
 
-from cdmcfparser import (IF_FRAGMENT, FOR_FRAGMENT, WHILE_FRAGMENT,
-                         TRY_FRAGMENT, CONTROL_FLOW_FRAGMENT, CLASS_FRAGMENT,
-                         FUNCTION_FRAGMENT, CML_COMMENT_FRAGMENT)
+from cdmcfparser import (
+    CLASS_FRAGMENT,
+    CML_COMMENT_FRAGMENT,
+    CONTROL_FLOW_FRAGMENT,
+    FOR_FRAGMENT,
+    FUNCTION_FRAGMENT,
+    IF_FRAGMENT,
+    TRY_FRAGMENT,
+    WHILE_FRAGMENT,
+)
 from utils.colorfont import buildColor, cssLikeColor
 from utils.limits import MAXINT_32
 

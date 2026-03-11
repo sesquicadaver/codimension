@@ -20,9 +20,9 @@
 """VCS plugin support: indicators for the status bar and project viewer"""
 
 import os.path
-from ui.qt import QColor, QPixmap, QFrame, QLabel, QPalette, QSize, Qt
-from utils.pixmapcache import getPixmapLocation, getPixmap
 
+from ui.qt import QColor, QFrame, QLabel, QPalette, QPixmap, QSize, Qt
+from utils.pixmapcache import getPixmap, getPixmapLocation
 
 MAX_TEXT_INDICATOR_LENGTH = 2
 MAX_PIXMAP_INDICATOR_WIDTH = 16
@@ -92,7 +92,7 @@ class VCSIndicator:
                 self.pixmap = getPixmap(pluginIndicator[1])
             else:
                 self.__setText(pluginIndicator[1])
-        except:
+        except Exception:
             self.__setBrokenIndicator("Failed to get plugin indicator "
                                       "pixmap. Indicator id: " +
                                       str(self.identifier))
@@ -102,7 +102,7 @@ class VCSIndicator:
         if pluginIndicator[2] is None:
             self.foregroundColor = None
         else:
-            if type(pluginIndicator[2]) == str:
+            if isinstance(pluginIndicator[2], str):
                 self.foregroundColor = buildColor(pluginIndicator[2])
             else:
                 self.foregroundColor = QColor(pluginIndicator[2])
@@ -111,7 +111,7 @@ class VCSIndicator:
         if pluginIndicator[3] is None:
             self.backgroundColor = None
         else:
-            if type(pluginIndicator[3]) == str:
+            if isinstance(pluginIndicator[3], str):
                 self.backgroundColor = buildColor(pluginIndicator[3])
             else:
                 self.backgroundColor = QColor(pluginIndicator[3])

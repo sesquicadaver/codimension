@@ -22,8 +22,9 @@
 # pylint: disable=C0305
 
 from html import escape
-from .cml import CMLVersion, CMLrt
+
 from .cellelement import CellElement
+from .cml import CMLrt, CMLVersion
 
 
 class TextMixin:

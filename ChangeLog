@@ -1,3 +1,27 @@
+2025 Mar 11
+
+* Full project re-check: ruff passed, TODO_FIXME.md created, README Python version
+  aligned with pyproject.toml (3.11+)
+
+2025 Mar 11
+
+* cdmpyparser/cdmcfparser: pure-Python ast-based fallbacks for Python 3.11+
+* codimension.parsers: brief_ast (full), flow_ast (stub - constants only)
+* sys.modules injection when C extensions unavailable
+
+2025 Mar 11
+
+* Python 3.11+ migration
+* setup.py: python_requires >=3.11
+* Replaced deprecated imp with types.ModuleType
+* Removed Python 2 compatibility checks (clientbase_cdm_dbg, base_cdm_dbg)
+* disasm.py: simplified .pyc header for Python 3.7+ format
+* astutils.py: always use type_comments (Python 3.8+)
+* Replaced distutils.spawn.find_executable with shutil.which
+* Replaced distutils.version.StrictVersion with packaging.version.Version
+* versions.py: subprocess.getstatusoutput -> subprocess.run
+* requirements.txt: packaging, PyQt5>=5.15.9 for 3.11+
+
 2022 Jul 29 Sergey Satskiy <sergey.satskiy@tuta.io>
 
 * Version 4.10.0

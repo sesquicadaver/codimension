@@ -21,12 +21,23 @@
 """imports/definitions selection widget"""
 
 import os.path
-from utils.globals import GlobalData
+
 from utils.fileutils import isPythonFile
-from .qt import (Qt, QEventLoop, QSizePolicy, QFrame, QTreeWidget,
-                 QApplication, QTreeWidgetItem, QHeaderView, QVBoxLayout,
-                 QAbstractItemView)
+from utils.globals import GlobalData
+
 from .itemdelegates import NoOutlineHeightDelegate
+from .qt import (
+    QAbstractItemView,
+    QApplication,
+    QEventLoop,
+    QFrame,
+    QHeaderView,
+    QSizePolicy,
+    Qt,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+)
 
 
 class ImportsList(QTreeWidget):

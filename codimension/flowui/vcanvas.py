@@ -30,35 +30,55 @@ The whole canvas is split into independent sections. The growing in one section
 does not affect all the other sections.
 """
 
-from ui.qt import QColor, QPen, QBrush
-from cdmcfparser import (CODEBLOCK_FRAGMENT, FUNCTION_FRAGMENT, CLASS_FRAGMENT,
-                         BREAK_FRAGMENT, CONTINUE_FRAGMENT, RETURN_FRAGMENT,
-                         RAISE_FRAGMENT, ASSERT_FRAGMENT, SYSEXIT_FRAGMENT,
-                         IMPORT_FRAGMENT, COMMENT_FRAGMENT,
-                         WHILE_FRAGMENT, FOR_FRAGMENT, IF_FRAGMENT,
-                         WITH_FRAGMENT, TRY_FRAGMENT, CML_COMMENT_FRAGMENT)
-from .cml import CMLVersion, CMLsw, CMLgb, CMLge, CMLdoc
-from .cellelement import CellElement
-from .items import (CodeBlockCell, ReturnCell, RaiseCell, AssertCell,
-                    SysexitCell, ImportCell,  IfCell, DecoratorCell)
-from .minimizeditems import (MinimizedIndependentCommentCell,
-                             MinimizedIndependentDocCell)
-from .auxitems import ConnectorCell, VacantCell, VSpacerCell, Rectangle
-from .loopjumpitems import BreakCell, ContinueCell
-from .scopeitems import (ScopeCellElement, FileScopeCell, FunctionScopeCell,
-                         ClassScopeCell, ForScopeCell, WhileScopeCell,
-                         TryScopeCell, WithScopeCell,
-                         ExceptScopeCell, FinallyScopeCell,
-                         ForElseScopeCell, WhileElseScopeCell,
-                         TryElseScopeCell, ElseScopeCell,
-                         ScopeHSideEdge, ScopeVSideEdge, ScopeSpacer)
-from .commentitems import (AboveCommentCell, LeadingCommentCell,
-                           SideCommentCell, IndependentCommentCell)
-from .groupitems import (EmptyGroup, OpenedGroupBegin, OpenedGroupEnd,
-                         CollapsedGroup, HGroupSpacerCell)
-from .docitems import IndependentDocCell, LeadingDocCell, AboveDocCell
-from .routines import getDocComment
+from cdmcfparser import (
+    ASSERT_FRAGMENT,
+    BREAK_FRAGMENT,
+    CLASS_FRAGMENT,
+    CML_COMMENT_FRAGMENT,
+    CODEBLOCK_FRAGMENT,
+    COMMENT_FRAGMENT,
+    CONTINUE_FRAGMENT,
+    FOR_FRAGMENT,
+    FUNCTION_FRAGMENT,
+    IF_FRAGMENT,
+    IMPORT_FRAGMENT,
+    RAISE_FRAGMENT,
+    RETURN_FRAGMENT,
+    SYSEXIT_FRAGMENT,
+    TRY_FRAGMENT,
+    WHILE_FRAGMENT,
+    WITH_FRAGMENT,
+)
+from ui.qt import QBrush, QColor, QPen
 
+from .auxitems import ConnectorCell, Rectangle, VacantCell, VSpacerCell
+from .cellelement import CellElement
+from .cml import CMLdoc, CMLgb, CMLge, CMLsw, CMLVersion
+from .commentitems import AboveCommentCell, IndependentCommentCell, LeadingCommentCell, SideCommentCell
+from .docitems import AboveDocCell, IndependentDocCell, LeadingDocCell
+from .groupitems import CollapsedGroup, EmptyGroup, HGroupSpacerCell, OpenedGroupBegin, OpenedGroupEnd
+from .items import AssertCell, CodeBlockCell, DecoratorCell, IfCell, ImportCell, RaiseCell, ReturnCell, SysexitCell
+from .loopjumpitems import BreakCell, ContinueCell
+from .minimizeditems import MinimizedIndependentCommentCell, MinimizedIndependentDocCell
+from .routines import getDocComment
+from .scopeitems import (
+    ClassScopeCell,
+    ElseScopeCell,
+    ExceptScopeCell,
+    FileScopeCell,
+    FinallyScopeCell,
+    ForElseScopeCell,
+    ForScopeCell,
+    FunctionScopeCell,
+    ScopeCellElement,
+    ScopeHSideEdge,
+    ScopeSpacer,
+    TryElseScopeCell,
+    TryScopeCell,
+    WhileElseScopeCell,
+    WhileScopeCell,
+    WithScopeCell,
+)
 
 CONN_N_S = [(ConnectorCell.NORTH, ConnectorCell.SOUTH)]
 CONN_W_E = [(ConnectorCell.WEST, ConnectorCell.EAST)]
@@ -271,7 +291,7 @@ class VirtualCanvas:
                     # half a connector from NORTH to CENTER
                     return True
             return cell.kind in _terminalCellTypes
-        except:
+        except Exception:
             return False
 
     def __isCollapsedGroupTerminal(self, group):
@@ -287,7 +307,7 @@ class VirtualCanvas:
         """Tells if a cell is a vacant one"""
         try:
             return self.cells[row][column].kind == CellElement.VACANT
-        except:
+        except Exception:
             return True
 
     def __allocateCell(self, row, column, needScopeEdge=True):
@@ -414,7 +434,7 @@ class VirtualCanvas:
 
     def __getGroups(self, item):
         """Provides a list of group begins and ends as they are in the item"""
-        if type(item) == list:
+        if isinstance(item, list):
             # this is a list of CML comments
             return self.__checkLeadingCMLComments(item)
 
@@ -543,8 +563,8 @@ class VirtualCanvas:
                 vacantRow = self.__onGroupEnd(item, groupComment,
                                               vacantRow, column)
 
-        # type(item) != list protects from dealing with a list of CML comments
-        if self.__groupStack and type(item) != list:
+        # not isinstance(item, list) protects from dealing with a list of CML comments
+        if self.__groupStack and not isinstance(item, list):
             # We are in some kind of a group
             needToAdd = True
             if item.kind == CML_COMMENT_FRAGMENT:
@@ -963,11 +983,10 @@ class VirtualCanvas:
 
     def layoutDecorators(self, item, scopeItem):
         """Lays out decorators"""
-        isClass = item.kind == CLASS_FRAGMENT
 
         vacantRow = 0
         column = 0
-        lastIndex = len(item.decorators) - 1
+        len(item.decorators) - 1
         for index, dec in enumerate(item.decorators):
             if index > 0:
                 # The very first decorator comments are allocated together with
@@ -986,7 +1005,6 @@ class VirtualCanvas:
                         comment = self.__createAboveComment(dec, self, column, vacantRow)
                         comment.needConnector = leadingDoc is not None
                         comment.smallBadge = True
-                        hanging = True
                         self.__allocateAndSet(vacantRow, column, comment)
                         vacantRow += 1
 
@@ -1674,7 +1692,7 @@ class VirtualCanvas:
         """True if it has a scope"""
         try:
             return self.cells[0][0].scopedItem()
-        except:
+        except Exception:
             return False
 
     def render(self):
@@ -1770,7 +1788,7 @@ class VirtualCanvas:
                                     # The rhs connector has been deleted, so the
                                     # x address is changed
                                     sideCommentCell.addr = [cellIndex + 1, rowIndex]
-                            except:
+                            except Exception:
                                 pass
 
                             # Finishing connector if so, should be adjusted too
@@ -1779,7 +1797,7 @@ class VirtualCanvas:
                                 if closingCell.kind == CellElement.CONNECTOR:
                                     if closingCell.hasVertical() and closingCell.hasHorizontal():
                                         closingCell.width -= shift
-                            except:
+                            except Exception:
                                 pass
                             break
 
@@ -1896,7 +1914,7 @@ def formatFlow(s):
                     pos += 1
             continue
         if sym == "<":
-            if nextIsList == False:
+            if not nextIsList:
                 shifts.append(pos)
             else:
                 nextIsList = False

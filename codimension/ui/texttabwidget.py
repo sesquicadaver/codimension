@@ -19,13 +19,14 @@
 
 """Text viewer tab widget"""
 
-import os.path
 import logging
-from .qt import (QTextBrowser, QHBoxLayout, QWidget, Qt, pyqtSignal,
-                 QDesktopServices)
-from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from utils.misc import resolveLinkPath
+import os.path
+
 from utils.globals import GlobalData
+from utils.misc import resolveLinkPath
+
+from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import QDesktopServices, QHBoxLayout, Qt, QTextBrowser, QWidget, pyqtSignal
 
 
 class TextViewer(QTextBrowser):

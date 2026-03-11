@@ -21,12 +21,11 @@
 
 # pylint: disable=W0702
 
-from flowui.scopeitems import ScopeCellElement
-from flowui.cellelement import CellElement, kindToString
 from flowui.auxitems import RubberBandItem
-from ui.qt import Qt, QTransform, QRect, QSize, QGraphicsScene
+from flowui.cellelement import CellElement
+from flowui.scopeitems import ScopeCellElement
+from ui.qt import QGraphicsScene, QRect, QSize, Qt, QTransform
 from utils.limits import MAXINT_32
-
 
 # The default mouse behavior of the QT library is sometimes inconsistent.
 # For example, selecting of the items is done on mousePressEvent however
@@ -103,7 +102,7 @@ class CFSceneMouseMixin:
             try:
                 # Sometimes there is a race of the rubber band destruction
                 self.rubberBand.hide()
-            except:
+            except Exception:
                 pass
             self.rubberBand = None
         self.lmbOrigin = None
@@ -146,7 +145,7 @@ class CFSceneMouseMixin:
                     if abs(rect.left() - rect.right()) >= RUBBER_BAND_MIN_SIZE or \
                        abs(rect.top() - rect.bottom()) >= RUBBER_BAND_MIN_SIZE:
                         self.rubberBand.show()
-            except:
+            except Exception:
                 # Sometimes there is a race and the rubber band has already
                 # been destroyed
                 pass
@@ -158,7 +157,7 @@ class CFSceneMouseMixin:
             # Sometimes there is a race somewhere so that the wrapped C++
             # object is already destroyed, so make the test in a try block
             return self.rubberBand and self.rubberBand.isVisible()
-        except:
+        except Exception:
             self.__destroyRubberBand()
             return False
 

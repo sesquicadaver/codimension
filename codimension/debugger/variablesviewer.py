@@ -20,16 +20,15 @@
 """Variables viewer"""
 
 
-from ui.qt import (Qt, QFrame, QVBoxLayout, QWidget, QSizePolicy, QMenu,
-                   QSpacerItem, QGridLayout, QToolButton, QPushButton,
-                   QToolBar, QSize)
 from ui.combobox import CDMComboBox
 from ui.labels import HeaderFitLabel
+from ui.qt import QGridLayout, QMenu, QPushButton, QSize, QSizePolicy, Qt, QToolBar, QToolButton, QVBoxLayout, QWidget
+from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
 from utils.settings import Settings
-from utils.globals import GlobalData
-from .variablesbrowser import VariablesBrowser
+
 from .varfilters import VARIABLE_FILTERS
+from .variablesbrowser import VariablesBrowser
 
 
 class VariablesViewer(QWidget):

@@ -20,8 +20,7 @@
 """ItemDelegate which helps changing the standard row height"""
 
 
-from .qt import (QItemDelegate, QStyledItemDelegate, QStyleOptionViewItem,
-                 QStyle)
+from .qt import QItemDelegate, QStyle, QStyledItemDelegate, QStyleOptionViewItem
 
 
 class ChangingHeightItemDelegate(QItemDelegate):

@@ -19,11 +19,13 @@
 
 """ Provides versions of various components used by codimension """
 
-from os.path import abspath
-from distutils.spawn import find_executable
-from subprocess import getstatusoutput
 import logging
+import shutil
+import subprocess
+from os.path import abspath
+
 import pkg_resources
+
 from .plantumlcache import JAR_PATH
 
 
@@ -39,8 +41,9 @@ def getPackageVersionAndLocation(name):
 
 def getCodimensionVersion():
     """Provides the IDE version"""
-    from .globals import GlobalData
     import sys
+
+    from .globals import GlobalData
     return GlobalData().version, abspath(sys.argv[0])
 
 
@@ -64,12 +67,14 @@ def getGraphvizVersion():
     if not GlobalData().graphvizAvailable:
         return "Not installed", None
 
-    path = find_executable("dot")
+    path = shutil.which("dot")
     if not path:
         return "Not installed", None
 
     try:
-        status, output = getstatusoutput(path + ' -V')
+        result = subprocess.run(
+            [path, '-V'], capture_output=True, text=True, timeout=5)
+        status, output = result.returncode, result.stdout + result.stderr
         if status != 0:
             return "Not installed", None
 
@@ -81,7 +86,7 @@ def getGraphvizVersion():
                 parts = line.split(" ")
                 if len(parts) == 2 and parts[0][0].isdigit():
                     return parts[0], path
-    except:
+    except Exception:
         return "Not installed", None
     return "could not determine", path
 
@@ -92,12 +97,14 @@ def getJavaVersion():
     if not GlobalData().javaAvailable:
         return "Not installed", None
 
-    path = find_executable("java")
+    path = shutil.which("java")
     if not path:
         return "Not installed", None
 
     try:
-        status, output = getstatusoutput(path + ' -version')
+        result = subprocess.run(
+            [path, '-version'], capture_output=True, text=True, timeout=5)
+        status, output = result.returncode, result.stdout + result.stderr
         if status != 0:
             return "Not installed", None
 
@@ -109,7 +116,7 @@ def getJavaVersion():
                 if ver.startswith('"') and ver.endswith('"'):
                     ver = ver[1:-1]
                 return ver, path
-    except:
+    except Exception:
         return "Not installed", None
     return "could not determine", path
 
@@ -120,7 +127,10 @@ def getPlantUMLVersion():
         return "n/a", None
 
     try:
-        status, output = getstatusoutput('java -jar ' + JAR_PATH + ' -version')
+        result = subprocess.run(
+            ['java', '-jar', JAR_PATH, '-version'],
+            capture_output=True, text=True, timeout=5)
+        status, output = result.returncode, result.stdout + result.stderr
         if status != 0:
             return "n/a", None
 
@@ -129,7 +139,7 @@ def getPlantUMLVersion():
             line = line.strip()
             if line.startswith('PlantUML version'):
                 return line.split('version', 1)[1].strip(), JAR_PATH
-    except:
+    except Exception:
         return "n/a", None
     return "could not determine", JAR_PATH
 

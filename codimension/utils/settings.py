@@ -22,24 +22,25 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-import os
-import os.path
 import datetime
 import json
 import logging
+import os
+import os.path
 from copy import deepcopy
-from ui.qt import QObject, QDir, pyqtSignal
-from .config import SETTINGS_ENCODING, CONFIG_DIR
-from .runparamscache import RunParametersCache
-from .debugenv import DebuggerEnvironment
-from .searchenv import SearchEnvironment
-from .fsenv import FileSystemEnvironment
-from .filepositions import FilePositions
-from .userencodings import FileEncodings
-from .flowgroups import FlowUICollapsedGroups
-from .webresourcecache import WebResourceCache
-from .plantumlcache import PlantUMLCache
 
+from ui.qt import QDir, QObject, pyqtSignal
+
+from .config import CONFIG_DIR, SETTINGS_ENCODING
+from .debugenv import DebuggerEnvironment
+from .filepositions import FilePositions
+from .flowgroups import FlowUICollapsedGroups
+from .fsenv import FileSystemEnvironment
+from .plantumlcache import PlantUMLCache
+from .runparamscache import RunParametersCache
+from .searchenv import SearchEnvironment
+from .userencodings import FileEncodings
+from .webresourcecache import WebResourceCache
 
 SETTINGS_DIR = os.path.join(os.path.realpath(QDir.homePath()),
                             CONFIG_DIR) + os.path.sep
@@ -320,7 +321,7 @@ class SettingsWrapper(QObject,
 
         for item, val in diskValues.items():
             if item in self.__values:
-                if type(self.__values[item]) != type(val):
+                if type(self.__values[item]) is not type(val):
                     readErrors.append("Settings '" + item +
                                       "' type from the disk file " +
                                       self.__fullFileName +
@@ -351,7 +352,7 @@ class SettingsWrapper(QObject,
                                str(datetime.datetime.now()) + '\n')
                 diskfile.write(message)
                 diskfile.write('\n------\n\n')
-        except:
+        except Exception:
             # This is not that important
             pass
 

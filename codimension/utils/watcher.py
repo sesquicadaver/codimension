@@ -30,7 +30,8 @@ The watcher will ignore the directories which do not exist.
 import os
 import os.path
 import re
-from ui.qt import QObject, QFileSystemWatcher, pyqtSignal
+
+from ui.qt import QFileSystemWatcher, QObject, pyqtSignal
 
 
 class Watcher(QObject):
@@ -208,7 +209,7 @@ class Watcher(QObject):
             if itemsToReport:
                 self.sigFSChanged.emit(itemsToReport)
             return
-        except:
+        except Exception:
             # it is not a top level dir - no key
             pass
 
@@ -272,7 +273,7 @@ class Watcher(QObject):
 
             # Report
             self.sigFSChanged.emit(itemsToReport)
-        except:
+        except Exception:
             # It could be a queued signal about what was already reported
             pass
 

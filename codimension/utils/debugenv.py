@@ -21,8 +21,8 @@
 
 import os.path
 from copy import deepcopy
-from .fileutils import loadJSON, saveJSON
 
+from .fileutils import loadJSON, saveJSON
 
 _DEFAULT_DEBUGGER_PROPS = {'breakpoints': [],   # [{'file': <str>,
                                                 #   'line': <int>,

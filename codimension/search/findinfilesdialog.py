@@ -20,21 +20,39 @@
 """find in files dialog"""
 
 
-from os import listdir
-from os.path import sep, isdir, normpath, isfile, realpath
+import logging
 import re
 import time
-import logging
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.fileutils import isFileSearchable, resolveLink
-from utils.diskvaluesrelay import getFindInFilesHistory, setFindInFilesHistory
-from ui.qt import (QCursor, Qt, QDialog, QDialogButtonBox, QVBoxLayout,
-                   QSizePolicy, QLabel, QProgressBar, QApplication, QComboBox,
-                   QGridLayout, QHBoxLayout, QCheckBox, QRadioButton,
-                   QGroupBox, QPushButton, QFileDialog, QTimer)
+from os import listdir
+from os.path import isdir, isfile, normpath, realpath, sep
+
 from ui.labels import FitPathLabel
 from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from ui.qt import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QCursor,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QRadioButton,
+    QSizePolicy,
+    Qt,
+    QTimer,
+    QVBoxLayout,
+)
+from utils.diskvaluesrelay import getFindInFilesHistory, setFindInFilesHistory
+from utils.fileutils import isFileSearchable, resolveLink
+from utils.globals import GlobalData
+from utils.settings import Settings
+
 from .searchsupport import ItemToSearchIn
 
 
@@ -487,7 +505,7 @@ class FindInFilesDialog(QDialog):
         # Need to check the files match
         try:
             filters = self.__compileFilters()
-        except:
+        except Exception:
             self.findButton.setEnabled(False)
             self.findButton.setToolTip("Incorrect files "
                                        "filter regular expression")
@@ -820,7 +838,7 @@ class FindInFilesDialog(QDialog):
 
             QApplication.processEvents()
 
-        if numberOfMatches > 0 or self.__newSearch == False:
+        if numberOfMatches > 0 or not self.__newSearch:
             # If it is redo then close the dialog anyway
             self.close()
         else:

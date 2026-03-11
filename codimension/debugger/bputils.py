@@ -35,7 +35,7 @@ def getBreakpointLine(userLine, isEmptyLine, srcCode):
         if validLines is None:
             # If there is a compile error, let the user decide
             return userLine
-    except:
+    except Exception:
         # If there is a compile error, let the user decide
         return userLine
 
@@ -87,7 +87,7 @@ def getBreakpointLines(fileName, srcCode,
         if saveToCache:
             validBreakPointLinesCache[fileName] = lines
         return lines
-    except:
+    except Exception:
         return None
 
 
@@ -97,28 +97,28 @@ def calcBreakpointLines(sourceCode):
         """Exception safe ord"""
         try:
             return ord(char)
-        except:
+        except Exception:
             return char
 
     def __calcValidLines(code, validLines):
         """Calculates valid breakpoint lines"""
-        l = code.co_firstlineno
-        validLines.add(l)
+        line_no = code.co_firstlineno
+        validLines.add(line_no)
         bl = [__safeOrd(c) for c in code.co_lnotab[2::2]]
         sl = [__safeOrd(c) for c in code.co_lnotab[1::2]]
         for (bi, si) in zip(bl, sl):
-            l += si
+            line_no += si
             if bi == 0:
                 continue
-            validLines.add(l)
+            validLines.add(line_no)
         if sl:
-            l += sl[-1]
-            validLines.add(l)
+            line_no += sl[-1]
+            validLines.add(line_no)
 
     def __calcSubCodesList(code):
         """Adds nested fragments"""
         tc = type(code)
-        t = [(c.co_firstlineno, c) for c in code.co_consts if type(c) == tc]
+        t = [(c.co_firstlineno, c) for c in code.co_consts if isinstance(c, tc)]
         t.sort()
         scl = [c[1] for c in t]
         return scl

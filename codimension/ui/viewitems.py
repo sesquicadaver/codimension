@@ -32,11 +32,12 @@
 
 import os
 import os.path
-from utils.pixmapcache import getIcon
-from utils.fileutils import getFileProperties, isPythonMime, isCDMProjectMime
-from utils.project import getProjectFileTooltip
-from .qt import Qt
 
+from utils.fileutils import getFileProperties, isCDMProjectMime, isPythonMime
+from utils.pixmapcache import getIcon
+from utils.project import getProjectFileTooltip
+
+from .qt import Qt
 
 NoItemType = -1
 
@@ -152,7 +153,7 @@ class TreeViewItem():
         """Sets the new data"""
         try:
             self.itemData[column] = value
-        except:
+        except Exception:
             pass
 
     def parent(self):
@@ -297,7 +298,7 @@ class TreeViewItem():
         rowPath = []
         child = self
         current = self.parentItem
-        while not current is None:
+        while current is not None:
             for index in range(0, len(current.childItems)):
                 if current.childItems[index] == child:
                     rowPath = [index] + rowPath
@@ -421,7 +422,7 @@ class TreeViewFileItem(TreeViewItem):
             # Get the project properties
             try:
                 self.toolTip = getProjectFileTooltip(path)
-            except:
+            except Exception:
                 # cannot get project properties
                 self.toolTip = 'Broken project file'
             return

@@ -19,12 +19,12 @@
 
 """About dialog implementation"""
 
-from utils.pixmapcache import getPixmap
-from utils.globals import GlobalData
-from utils.versions import getComponentInfo
 from flowui.cml import CMLVersion
-from .qt import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QTabWidget,
-                 QTextBrowser, QDialogButtonBox, QSizePolicy, Qt)
+from utils.globals import GlobalData
+from utils.pixmapcache import getPixmap
+from utils.versions import getComponentInfo
+
+from .qt import QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QSizePolicy, Qt, QTabWidget, QTextBrowser, QVBoxLayout
 
 
 class AboutDialog(QDialog):

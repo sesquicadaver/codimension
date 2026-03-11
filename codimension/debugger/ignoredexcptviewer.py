@@ -19,15 +19,29 @@
 
 """Ignored exceptions viewer"""
 
-from ui.qt import (Qt, QSize, QSizePolicy, QFrame, QTreeWidget, QToolButton,
-                   QTreeWidgetItem, QVBoxLayout, QToolBar, QLabel, QWidget,
-                   QAbstractItemView, QMenu, QHBoxLayout,
-                   QCursor, QLineEdit, QPushButton, QAction)
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitLabel
+from ui.qt import (
+    QAbstractItemView,
+    QAction,
+    QCursor,
+    QHBoxLayout,
+    QLineEdit,
+    QMenu,
+    QPushButton,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from ui.spacers import ToolBarExpandingSpacer, ToolBarHSpacer
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 from utils.project import CodimensionProject
 from utils.settings import Settings
 

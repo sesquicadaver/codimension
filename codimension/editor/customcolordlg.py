@@ -19,12 +19,22 @@
 
 """custom colors dialog"""
 
-from ui.qt import (QDialog, QVBoxLayout, QGridLayout, QLabel, QDialogButtonBox,
-                   Qt, QGraphicsRectItem, QPen, QBrush, QGraphicsScene,
-                   QGraphicsView, QTimer)
-from ui.colorbutton import ColorButton
 from flowui.cflowsettings import getCflowSettings
-from utils.pixmapcache import getIcon
+from ui.colorbutton import ColorButton
+from ui.qt import (
+    QBrush,
+    QDialog,
+    QDialogButtonBox,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QGridLayout,
+    QLabel,
+    QPen,
+    Qt,
+    QTimer,
+    QVBoxLayout,
+)
 from utils.limits import MAXINT_32
 
 

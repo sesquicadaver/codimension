@@ -23,14 +23,16 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-import sys
-import subprocess
-import os.path
-import logging
 import datetime
 import hashlib
-from distutils.spawn import find_executable
-from ui.qt import QThread, pyqtSignal, QObject
+import logging
+import os.path
+import shutil
+import subprocess
+import sys
+
+from ui.qt import QObject, QThread, pyqtSignal
+
 from .fileutils import loadJSON, saveJSON, saveToFile
 
 CACHE_FILE_NAME = 'cachemap.json'
@@ -38,7 +40,7 @@ CACHE_FILE_NAME = 'cachemap.json'
 
 def getPlantUMLJarPath():
     """Provides the full path to the plantUML jar file"""
-    if find_executable('java') is None:
+    if shutil.which('java') is None:
         return None
     exeDir = os.path.dirname(os.path.realpath(sys.argv[0]))
     plantUMLPath = os.path.sep.join([os.path.dirname(exeDir), 'plantuml'])
@@ -140,7 +142,7 @@ class PlantUMLRenderer(QThread):
         """Safe file removal"""
         try:
             os.unlink(fName)
-        except:
+        except Exception:
             pass
 
     def run(self):
@@ -275,7 +277,7 @@ class PlantUMLCache(QObject):
         try:
             thread.sigFinishedOK.disconnect(self.onRenderOK)
             thread.sigFinishedError.disconnect(self.onRenderError)
-        except:
+        except Exception:
             pass
 
     def getResource(self, source, uuid):

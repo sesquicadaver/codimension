@@ -28,18 +28,18 @@
 Module implementing the debug base class
 """
 
-import sys
-import os
-import types
+import _thread
 import atexit
-import inspect
 import ctypes
+import inspect
+import os
+import sys
 import time
+import types
 from inspect import CO_GENERATOR
+
 from bp_wp_cdm_dbg import Breakpoint, Watch
 from cdm_dbg_utils import formatArgValues, getArgValues, printerr
-import _thread
-
 
 RECURSION_LIMIT = 64
 
@@ -106,8 +106,7 @@ class DebugBase(object):
         # Use it like this:
         # if hasattr(sys, 'breakpoint): sys.breakpoint()
         sys.breakpoint = self.set_trace
-        if sys.version_info[:2] >= (3, 7):
-            sys.breakpointhook = self.set_trace
+        sys.breakpointhook = self.set_trace
 
     def __eventPollTimer(self):
         """Sets a flag every 0.5 sec to check for new messages"""
@@ -283,10 +282,7 @@ class DebugBase(object):
         if frame is None:
             frame = sys._getframe().f_back  # Skip set_trace method
 
-        if sys.version_info[0] == 2:
-            stopOnHandleLine = self._dbgClient.handleLine.func_code
-        else:
-            stopOnHandleLine = self._dbgClient.handleLine.__code__
+        stopOnHandleLine = self._dbgClient.handleLine.__code__
 
         frame.f_trace = self.trace_dispatch
         while frame.f_back is not None:
@@ -439,10 +435,7 @@ class DebugBase(object):
             lineNo = frame.f_code.co_firstlineno
             lineNumbers = [lineNo]
 
-            if sys.version_info[0] == 2:
-                co_lnotab = map(ord, frame.f_code.co_lnotab[1::2])
-            else:
-                co_lnotab = frame.f_code.co_lnotab[1::2]
+            co_lnotab = frame.f_code.co_lnotab[1::2]
 
             # No need to handle special case if a lot of lines between
             # (e.g. closure), because the additional lines won't cause a bp
@@ -497,7 +490,7 @@ class DebugBase(object):
         """Provides the stack"""
         if frame is None:
             fr = self.getCurrentFrame()
-        elif type(frame) == list:
+        elif isinstance(frame, list):
             fr = frame.pop(0)
         else:
             fr = frame
@@ -540,7 +533,7 @@ class DebugBase(object):
             stack.append([fname, fline, ffunc, fargs])
 
             # is it a stack frame or exception list?
-            if type(frame) == list:
+            if isinstance(frame, list):
                 if frame != []:
                     fr = frame.pop(0)
                 else:
@@ -573,22 +566,17 @@ class DebugBase(object):
         """Reimplemented to report an exception to the debug server"""
         exctype, excval, exctb = excinfo
 
-        if ((exctype in [GeneratorExit, StopIteration] and unhandled == False)
-            or exctype == SystemExit):
+        if ((exctype in [GeneratorExit, StopIteration] and not unhandled)
+            or exctype is SystemExit):
             # ignore these
             return
 
         if exctype in [SyntaxError, IndentationError]:
             try:
-                # tuple could only occure on Python 2, but not always!
-                if type(excval) == tuple:
-                    message, details = excval
-                    filename, lineno, charno, text = details
-                else:
-                    message = excval.msg
-                    filename = excval.filename
-                    lineno = excval.lineno
-                    charno = excval.offset
+                message = excval.msg
+                filename = excval.filename
+                lineno = excval.lineno
+                charno = excval.offset
 
                 if filename is None:
                     realSyntaxError = False
@@ -613,10 +601,9 @@ class DebugBase(object):
                 return
 
         self.skipFrames = 0
-        if (exctype == RuntimeError and
+        if (exctype is RuntimeError and
                 str(excval).startswith('maximum recursion depth exceeded') or
-                sys.version_info >= (3, 5) and
-                exctype == RecursionError):
+                exctype is RecursionError):
             excval = 'maximum recursion depth exceeded'
             depth = 0
             tb = exctb

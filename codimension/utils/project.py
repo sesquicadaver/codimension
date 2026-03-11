@@ -23,27 +23,27 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-import logging
-import uuid
-import re
 import copy
 import json
-import shutil
+import logging
 import os
-from os.path import (realpath, islink, isdir, sep, exists, dirname, isabs,
-                     join, relpath, isfile, basename)
+import re
+import shutil
+import uuid
+from os.path import basename, dirname, exists, isabs, isdir, isfile, islink, join, realpath, relpath, sep
+
 from ui.qt import QObject, pyqtSignal
-from .settings import Settings, SETTINGS_DIR
-from .watcher import Watcher
+
 from .config import DEFAULT_ENCODING
 from .debugenv import DebuggerEnvironment
-from .searchenv import SearchEnvironment
+from .filepositions import FilePositions
+from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
 from .runparamscache import RunParametersCache
-from .filepositions import FilePositions
+from .searchenv import SearchEnvironment
+from .settings import SETTINGS_DIR, Settings
 from .userencodings import FileEncodings
-from .flowgroups import FlowUICollapsedGroups
-
+from .watcher import Watcher
 
 # Saved in .cdm3 file
 _DEFAULT_PROJECT_PROPS = {'scriptname': '',    # Script to run the project
@@ -248,7 +248,7 @@ class CodimensionProject(QObject,
         try:
             with open(path, 'r', encoding=DEFAULT_ENCODING) as diskfile:
                 props = json.load(diskfile)
-        except:
+        except Exception:
             # Bad error - cannot load project file at all
             raise Exception('Bad project file ' + projectFile)
 
@@ -311,7 +311,7 @@ class CodimensionProject(QObject,
                     self.filesList.add(item[1:])
                 else:
                     self.filesList.remove(item[1:])
-            except:
+            except Exception:
                 pass
         self.sigFSChanged.emit(items)
 

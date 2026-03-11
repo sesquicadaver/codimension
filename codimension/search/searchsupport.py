@@ -20,13 +20,14 @@
 """Search support"""
 
 
-from os.path import isabs, exists
-import re
 import logging
+import re
 from html import escape
-from utils.globals import GlobalData
-from utils.fileutils import isPythonFile, getFileContent
+from os.path import exists, isabs
+
 from cdmpyparser import getBriefModuleInfoFromMemory
+from utils.fileutils import getFileContent, isPythonFile
+from utils.globals import GlobalData
 
 
 class Match:
