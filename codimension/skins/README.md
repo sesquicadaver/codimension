@@ -3,6 +3,7 @@
 Individual directories hold all the files required to set a codimension skin.
 
 A skin is composed of:
+
 - application style sheet (app.css)
 - general settings (skin.json)
 - control flow diagram settings (cflow.json)
@@ -19,6 +20,7 @@ Note: do not create a directory called 'default'. The default skin is created
 Sometimes settings need to be platform specific, e.g. different platforms may
 have different monospace fonts available. To cover these cases Codimension does
 the following when it copies the skin files:
+
 - a platform specific suffix is formed as '.' + sys.platform.lower()
 - for each file in the skin directory:
   - presence of the platform specific file is checked as <file name><suffix>

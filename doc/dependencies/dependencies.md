@@ -12,6 +12,7 @@ shown on the generated diagram (at least at the time of writing).
 
 To invoke the functionality of building an imports diagram a few options are
 supported. The options for an individual file are:
+
 - Click on the vertical toolbar button when a python file is loaded
 - Click on the vertical toolbar button when a python file is
   loaded and keep it pressed for a moment. A context menu will appear with the
@@ -32,9 +33,9 @@ If a fine tuned diagram option is selected then the following dialog will appear
 
 There are a few options of what to include to the generated diagram.
 
-
 To invoke the functionality of building an imports diagram for a group of files
 please use:
+
 - All files in a directory: open a context menu for a directory in the project
   viewer. Select `Imports diagram` or `Fine tuned imports diagram` option.
 - All project files: click on the main toolbar button (connected blocks icon)
@@ -46,12 +47,12 @@ please use:
 - All project files: select the main menu `Diagrams -> Project imports diagram...`
   option.
 
-
 The generated imports diagram looks similar to the following:
 
 ![Imports diagram](importsdiagram.png "Imports diagram")
 
 The diagram has color coding. Different colors are used for
+
 - the modules (files) which were analyzed for dependencies
 - the standard modules
 - the modules pathes to which could not be resolved
@@ -62,4 +63,3 @@ Some interactivity on the diagram is also supported. The modules' docstrings
 are shown as tooltips for the upper right corner icons. Double click on a
 module opens the corresponding file if possible. Similarly double click on
 what is imported also opens a file.
-

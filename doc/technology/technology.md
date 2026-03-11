@@ -1,10 +1,10 @@
-Visialization Technology
+Visualization Technology
 ========================
 
 Introduction
 ------------
 
-The technology makes it possible to implement developer tools similar to the 
+The technology makes it possible to implement developer tools similar to the
 shown below.
 
 ![Common view](overview.png "Common view")
@@ -22,8 +22,7 @@ well.
 However, before digging into the details of the suggested technology let’s
 discuss some general questions of the software development.
 
-###Flow Charts in the Wild
-
+### Flow Charts in the Wild
 
 The most essential related question is: do we need flow charts at all?
 
@@ -81,7 +80,7 @@ and could bring a significant benefit.
 
 *Example of a DRAKON diagram (from drakon.su)*
 
-###Available Tools
+### Available Tools
 
 My understanding of the software engineering is that sometimes it makes more
 sense to work with the code in a text editor while sometimes it is graphics
@@ -108,8 +107,7 @@ lets to look at the existing projects as at text and as at graphics with an
 automatic synchronization between the views. The implementation is done for
 Python and mostly in Python.
 
-
-##Graphics Primitives
+## Graphics Primitives
 
 A good start point for the discussion could be a set of graphics primitives
 that will be used to represent an arbitrary python code. Let's talk first of
@@ -121,8 +119,7 @@ should be drawn on a flowchart-like diagram?
 
 The next chapters will discuss all the required graphics primitives one by one.
 
-
-###Code Blocks
+### Code Blocks
 
 Certainly not all the language statements affect the control flow directly.
 The statements which do not affect it could be drawn as code blocks.
@@ -161,8 +158,7 @@ print c
 
 *Two code blocks one after another*
 
-
-###Comments
+### Comments
 If a closer look is taken, it is easy to notice that a few types of comments
 could be identified basing on how a developer located the comments in the code.
 Similarly to the code blocks, empty lines should be respected because they
@@ -199,8 +195,7 @@ decided not to introduce a trailing type of comments.
 
 So, how could these three distinguished types of comments be drawn on a diagram?
 
-
-###Independent Comments
+### Independent Comments
 
 ```python
 a = 154
@@ -221,7 +216,7 @@ connector between the blocks on the diagram. So a reasonable graphics for
 independent comments would be a note rectangle with a horizontal connector
 to the appropriate inter block connector.
 
-###Side Comments
+### Side Comments
 
 ```python
 a = 154
@@ -251,8 +246,7 @@ the side comment to be continued on a separate line could be as follows:
 - the comment continue line is the very next one and
 - the # character is at the same position in the line as in the line above
 
-
-###Imports
+### Imports
 
 Essentially imports denote dependencies. The dependencies in their turn can
 become very difficult to control in large projects. So it would be valuable if
@@ -278,8 +272,7 @@ from x import ( y,         # side for y
 The second and the third imports in the example occupy more than one line and
 some of the lines also have side comments.
 
-
-###If Statement
+### If Statement
 
 Let’s discuss how the if statement should look on a graphics diagram. A
 traditionally recommended shape is a diamond. The diamond shape probably works
@@ -289,7 +282,7 @@ into a reasonably sized diamond. The diamond will either occupy too much
 precious vertical space on the screen or the font size will be too small if
 readable at all or the original condition text needs to be shortened. So the
 suggestion is to use compromise graphics which have the left and right edges
-resembling a diamond with the top and bottom edges flat to better use the 
+resembling a diamond with the top and bottom edges flat to better use the
 screen pixel estate. That shape can be easily and naturally scaled to
 accommodate a condition of an arbitrary complexity.
 
@@ -353,8 +346,7 @@ represented as a connector. So the leading comment for else looks exactly as an
 independent comment. However there is nothing damaging here. The graphics still
 represents the code correctly.
 
-
-###Functions
+### Functions
 
 A Python file may contain many function definitions and even nested function
 definitions. A commonly accepted graphics for the flowchart diagrams however
@@ -417,8 +409,7 @@ cases of the correct Python code and does not leave space for ambiguities.
 To accommodate docstrings the header is extended with one more horizontal
 section which follows the prototype section.
 
-
-###Return Statement
+### Return Statement
 
 The flowchart diagrams offer a nice graphics for the return statements and this
 shape could be used with a minor improvement. Let’s take a simple example.
@@ -452,8 +443,7 @@ def f( x ):
 
 *Return statement with comments*
 
-
-###Classes
+### Classes
 
 Coming from functions to classes, it seems only logical to use the same idea of
 scopes for classes. The class graphics layout could be very similar to the
@@ -474,8 +464,7 @@ class C( ClassA,      # Side
 
 *Class graphics*
 
-
-###Decorators
+### Decorators
 
 One more Python entity which may appear in the context of Python functions and
 classes is a decorator. Essentially a decorator is a wrapper function so a scope
@@ -496,9 +485,7 @@ def f():
 
 *Decorator with comments*
 
-
-
-###Loops
+### Loops
 
 Python supports two types of loops: for and while. Both of them have a
 condition, may have break and continue statements inside as well as probably
@@ -541,7 +528,6 @@ for x in [ 1, 17, 42, 154 ]:
 
 *For loop*
 
-
 A more elaborated example below features leading and side comments as well as
 an else part.
 
@@ -560,7 +546,6 @@ else:              # else side comment
 
 *While loop with else part and comments*
 
-
 The else part has its own scope and is drawn at the right hand side. To
 emphasize the association between the loop and the else part the graphics has a
 dotted connector between the scopes. Both the leading a side comments are shown
@@ -568,8 +553,7 @@ in a way similar to what was done for the other scopes. The last detail is that
 the else part badge was moved into the header area because there is nothing to
 draw there and it seems to look better this way.
 
-
-###Break and Continue
+### Break and Continue
 
 Traditional flowchart diagrams do not offer any graphics for the break and
 continue statements. These statements correspond to connectors and that
@@ -601,7 +585,6 @@ while True:
 
 *Break and continue*
 
-
 Certainly break and continue could have comments. An example below demonstrates
 how they could be drawn unambiguously showing what statement they belong to.
 
@@ -619,9 +602,7 @@ while True:
 
 *Break and continue with comments*
 
-
-
-###Try, Except, Else, Finally
+### Try, Except, Else, Finally
 
 This is probably the most complicated language statement. It may have try, many
 except, finally and else blocks. As soon as all these parts have their own suits
@@ -642,7 +623,6 @@ finally:
 
 *Try-except-else-finally example*
 
-
 The except scopes are for error handling which are usually not on the main path
 of a program execution. That is why they are on the right hand side. The else
 and finally blocks on the other hand are rather on the main line of execution
@@ -656,8 +636,7 @@ could have both leading and side comments and if so then the comments will be
 shown the very same way as for the other statements which use the scope shape
 graphics.
 
-
-###With
+### With
 
 The with statement defines a context in which its suit is executed. Thus the
 idea of a scope for the with statement looks very appropriate.
@@ -673,8 +652,7 @@ with open( "my-data.txt" ) as f:    # Side
 
 *With*
 
-
-###Raise
+### Raise
 
 Undoubtedly, an exception generation affects the control flow considerably. So
 the graphics for it should be identifiable at first glance. The other
@@ -696,8 +674,7 @@ raise Exception( "first line "     # Side 1
 
 *Raise*
 
-
-###Assert
+### Assert
 
 Asserts generate exceptions conditionally i.e. they affect the control flow
 similarly to the raise statements. That is why it seems reasonable to keep the
@@ -716,15 +693,12 @@ assert type( x ) is IntType, \
 
 *Two assert statements*
 
-
 The conditional nature of the assert statements is shown via a diamond shape on
 the left which shares the icon with the raise statements. Certainly asserts may
 have leading and side comments and this case is covered by the second statement
 in the example above.
 
-
-
-###sys.exit()
+### sys.exit()
 
 Strictly speaking the sys.exit() call is not a part of the language but a
 library function. It however affects the control flow no less than exceptions
@@ -755,7 +729,6 @@ else:
 
 *sys.exit() example*
 
-
 Of course there is a possibility to call sys.exit() through the eval("...")
 call as well and it is very difficult (if possible at all) to cover this case.
 In practice however handling the most common cases is better than nothing.
@@ -765,8 +738,7 @@ considered as a return which passes by all the intermediate levels. So the
 graphics shape for sys.exit() is borrowed from the return statements with a
 specific icon which reflects the nature of it.
 
-
-###File
+### File
 
 The last required primitive is for a file. A Python file has a few attributes
 which should be shown. Namely, a file may have:
@@ -790,14 +762,11 @@ a few lines
 print "Hello flowcharts"
 ```
 
-
 ![Python file](module.png "Python file")
 
 *Python file*
 
-
-
-##Proof of Concept: Codimension Python IDE
+## Proof of Concept: Codimension Python IDE
 
 So, having a good idea of what information should be collected from a source
 code and how to draw it, a tool development can be started. An important
@@ -818,7 +787,6 @@ place. The idea was to consider development of a plugin - in opposite to
 developing a whole tool - which adds graphics capabilities to an existing
 project. Unfortunately nothing suitable was found. So a new experimental
 project called Codimension Python IDE was started.
-
 
 ![Common view](overview.png "Common view")
 
@@ -846,8 +814,7 @@ mentioned here and more features are planned for the graphics view.
 
 Now, let’s talk about the implementation details.
 
-
-###General Information
+### General Information
 
 [Codimension](http://codimension.org/) is implemented as an open source project
 licensed under GPL v.3 and its source code resides in three repositories on
@@ -861,10 +828,9 @@ implemented using Python QT library bindings - PyQT.
 The development is done on Linux and for Linux. In particular Ubuntu
 distribution was used most of the time.
 
-The IDE targets projects written in Python 2 (update: the current Codimension versions are for Python 3).
+The IDE targets projects written in Python 3.11+.
 
-
-###Architecture
+### Architecture
 
 The diagram below shows the most important components of the IDE.
 
@@ -902,15 +868,13 @@ was used to calculate graphics layout of a dependency diagram and some others.
 Also many third party pure Python packages were used: pyflakes, pylint,
 filemagic, rope, gprof2dot etc.
 
-
-##Code to Graphics Pipeline
+## Code to Graphics Pipeline
 
 An implementation of the transition from text to graphics is built as a
 pipeline. Each stage of the pipeline is responsible for a certain piece of work
 and the results are passed to the next stage. A diagram below shows all the
 pipeline stages. The input - a text - is on the left hand side and the output -
 a graphical representation - is on the right hand side.
-
 
 ![Code to graphics pipeline](pipeline.png "Code to graphics pipeline")
 
@@ -937,8 +901,7 @@ are drawn on the screen appropriately.
 
 Let’s discuss all these stages in details.
 
-
-###Syntax Tree
+### Syntax Tree
 
 This is the very first stage on the way from text to graphics. The purpose of
 the stage is to parse the source code and to build a hierarchical data structure
@@ -1004,8 +967,7 @@ in terms of fragments: where a piece of text starts and where it ends.
 The formal output of the tree walking stage is an instance of the ControlFlow
 class which has all the recognized elements stored hierarchically.
 
-
-###Collecting Comments
+### Collecting Comments
 
 Due to the fact that the comments are not in the syntax tree (obviously, the
 Python interpreter does not need them) but they are needed for a lossless
@@ -1037,8 +999,7 @@ Line: 2 Pos: 1 ...
 Line: 5 Pos: 5 ...
 ```
 
-
-###Merging Comments with Code
+### Merging Comments with Code
 
 At this moment of the pipeline there are two data structures populated: a
 control flow and a list of comments. However when a diagram is laid out it is
@@ -1058,7 +1019,6 @@ a = 10  # side comment 1
 
 *Merging comments with code*
 
-
 A syntax tree walk for the code in the example will in particular produce an
 instance of the CodeBlock class. The class instance has among the others the
 body, leadingComment and sideComment attributes which describe the
@@ -1076,8 +1036,7 @@ So the output of the merging stage is a fully populated hierarchical data
 structure which describes a file or a buffer content without any information
 loss.
 
-
-###Module Performance
+### Module Performance
 
 The pipeline stages described above are written in C/C++ and packaged into a
 Python extension module. The idea was to achieve the best possible performance
@@ -1093,8 +1052,7 @@ time depends on the size however an average result of about 1 ms per file on
 not the best ever equipment is more than acceptable. In practice the text which
 needs to be parsed is already in memory and it reduces the processing time too.
 
-
-###Laying Out on a Virtual Canvas
+### Laying Out on a Virtual Canvas
 
 The purpose of this pipeline stage is to allocate all the required elements on
 a virtual canvas respecting the relationships between them. A virtual canvas
@@ -1126,7 +1084,6 @@ a = 10    # side comment 1
 ![Allocation of graphics elements on a virtual canvas](layout.png "Allocation of graphics elements on a virtual canvas")
 
 *Allocation of graphics elements on a virtual canvas*
-
 
 The figure above shows a data structure on the left which was formed as a
 result of the code analysis. An instance of the ControlFlow class has a few
@@ -1163,8 +1120,7 @@ module scope could be skipped because of the reasons similar to the described
 above. The omitted elements just need to be considered when the sizes are
 calculated.
 
-
-###Rendering
+### Rendering
 
 The purpose of this stage is to calculate the sizes of all the graphics elements
 which will be drawn on the screen. It is done via visiting all the allocated
@@ -1211,9 +1167,7 @@ calculated sizes respect various settings: font metrics, text padding, spacing
 etc. When the rendering stage is completed there is everything ready for drawing
 on the screen.
 
-
-
-###Drawing
+### Drawing
 
 The drawing stage is very simple. Since the implementation uses the QT library
 a graphics scene is created of the size calculated on a previous stage. Then a
@@ -1229,9 +1183,7 @@ coordinate value.
 At this moment the graphics representation of the code is drawn on the screen
 and ready to use.
 
-
-
-##Present and Future
+## Present and Future
 
 Now it is time to discuss what functionality has already been implemented and
 what could be added in the future.
@@ -1311,8 +1263,7 @@ fantasy. So the only most obvious are mentioned below.
   considered as adding a third dimension to the diagram. (Update: implemented in
   the current IDE version)
 
-
-##CML v.1
+## CML v.1
 
 The features mentioned in the previous section could be split into two groups:
 
@@ -1379,8 +1330,7 @@ requirement to make an auxiliary information available for text-only users is
 covered. The only not enforced convention between the team members is not to
 break CML comments.
 
-
-###CML: Text Replacement
+### CML: Text Replacement
 
 The recognition of the CML comments for text replacement has already been
 implemented. These comments may appear as a leading comment for any recognized
@@ -1400,8 +1350,7 @@ such a comment could be added only from a text editor. The ‘text’ parameter
 purpose is most probably obvious, while the comment type ‘rt’ is chosen as a
 short for ‘replace text’. (Update: it is implemented in the current IDE version)
 
-
-###CML: Switching If Branches
+### CML: Switching If Branches
 
 The recognition of the CML comments for switching if branches has already been
 implemented too. There is a support on both, via a text editor and via a
@@ -1421,16 +1370,13 @@ else:
 
 *If statement with the N branch on the right*
 
-
 If there was no CML sw comment for the if statement in the example above then
 the Y branch would be shown on the right.
 
 The comment does not need any parameters and its type ‘sw’ is chosen as short
 for ‘switch’.
 
-
-
-###CML: Custom Colors
+### CML: Custom Colors
 
 The recognition of the CML comments for changing graphics elements colors has
 already been implemented. It may appear as a leading comment for any recognized
@@ -1447,7 +1393,6 @@ print("Danger! Someone has damaged False")
 
 *Block with individual colors*
 
-
 The comment can override a background color (parameter ‘background’), a font
 color (parameter ‘foreground’) and a border color (parameter ‘border’). Its
 type ‘cc’ stands for ‘custom colors’.
@@ -1456,8 +1401,7 @@ So far there is no support of the comment on the graphics pane but a full
 support via text is in place. (Update: it is implemented in the current IDE
 version)
 
-
-###CML: Grouping Items
+### CML: Grouping Items
 
 There is no support of this CML comment at the moment neither via text nor via
 graphics. It is however clear how it could be implemented.
@@ -1490,8 +1434,7 @@ the comments in a pair could be accidentally removed. Another example of the
 ‘uuid’ parameter usage is memorizing the groups which should be shown as
 expanded (or collapsed) when a file is opened in the IDE next time.
 
-
-##Side Effects
+## Side Effects
 
 The practice of using Codimension revealed that the technology has a few
 interesting side effects which were not predicted at the design and development
@@ -1520,12 +1463,10 @@ technology can be applied to other programming languages as well. Python was
 chosen for experiments because of a few reasons: it is a popular language with
 a simple formal grammar.
 
-
-##Acknowledgements
+## Acknowledgements
 
 Thanks to Dmitry Kazimirov, Ilya Loginov, David McElhany and Sergey Fukanchik
 who helped to work on various aspects of the project on various stages.
 
 Special thanks to the authors and developers of open source Python packages
 which were used in the Codimension project.
-

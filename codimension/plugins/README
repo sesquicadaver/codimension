@@ -1,6 +1,6 @@
 Codimension plugins subsystem.
 
-Codimension plugins sybsystem is built on top of the yapsy library:
+Codimension plugins subsystem is built on top of the yapsy library:
 http://yapsy.sourceforge.net/ released under simplified BSD license.
 So some terms (e.g. plugin category) and file formats (e.g. plugin
 description file format) are borrowed from the library and their
@@ -11,7 +11,7 @@ description could be found on the library web site.
 There are two places where codimension looks for plugins:
 - system wide: /usr/share/codimension3-plugins/
   The system-wide plugins location is separate to the location of the IDE
-  in order to simplfy plugins packaging for the developers
+  in order to simplify plugins packaging for the developers
 - user: ~/.codimension3/plugins/
 
 Each plugin occupies a designated directory. The directory must reside at one of
@@ -57,7 +57,7 @@ Implementation wise a plugin category means deriving from a plugin category
 interface class and implementing the required methods. A plugin from codimension
 point of view is an instance of class which belongs to a supported plugin category.
 The supported interface classes are located at
-codimension/src/plugins/categories/ directory.
+codimension/plugins/categories/ directory.
 
 A plugin developer could follow the steps below:
 - Create a separate directory for a new plugin with an appropriate name.

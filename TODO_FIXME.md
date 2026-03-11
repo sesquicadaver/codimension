@@ -35,7 +35,7 @@
 | **Відсутність тестів** | Немає pytest/unittest у проекті. Додати CI з тестами. |
 | **mypy** | Не знаходить .py файли (можлива конфігурація). Перевірити mypy. |
 | **venv** | ruff/mypy не встановлені в .venv. Додати до dev-залежностей. |
-| **README vs pyproject** | README: Python 3.5–3.9; pyproject: >=3.11. Розбіжність. |
+| **README vs pyproject** | Вирішено: README оновлено до Python 3.11+ |
 
 ## Рекомендації щодо CI
 

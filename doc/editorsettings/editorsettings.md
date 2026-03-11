@@ -42,7 +42,7 @@ are available on a particular system. On a Linux system users may add fonts so
 that they are available for them in Codimension by copying the font files into
 their `~/.fonts` directory. Here are a few links to fonts which may be of
 interest:
+
 - [Iosevka](https://github.com/be5invis/Iosevka) monospace font
 - [Ubuntu](http://font.ubuntu.com/) mono font
 - [Cascadia](https://github.com/microsoft/cascadia-code) monospace font
-

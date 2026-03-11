@@ -27,9 +27,7 @@ button pressed for a second then a menu with more options will appear.
 
 ![Disassembly button menu](disasmbuttonmenu.png "Disassembly button menu")
 
-
 Regardless how the analysis is invoked the results will be presented in the
 same way. Codimension will open another tab with the disassembly results:
 
 ![Disassembly results](disasmresult.png "Disassembly results")
-

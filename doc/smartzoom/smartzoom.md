@@ -2,6 +2,7 @@ Traditional and Smart Zoom
 ==========================
 
 Codimension supports two types of zoom on the graphics pane for python code:
+
 - Traditional zoom or simply zoom
 - Smart zoom
 
@@ -15,9 +16,9 @@ diagram is redrawn.
 
 To invoke the traditional zoom the following ways could be used when the focus
 is on the graphics pane:
+
 - Keyboard shortcuts: 'Ctrl' + '-' and 'Ctrl' + '='
 - Keeping the 'Ctrl' keyboard button pressed rotate the mouse wheel
-
 
 Smart Zoom
 ----------
@@ -33,7 +34,6 @@ a tooltip with a hint of what is shown on the current level.
 The number of levels may be extended in the future. So far there are four levels
 available.
 
-
 Smart Zoom Level 0
 ------------------
 
@@ -41,16 +41,14 @@ Level 0 shows everything what is found in the source code.
 
 ![Smart zoom level 0](level0.png "Smart zoom level 0")
 
-
 Smart Zoom Level 1
 ------------------
 
-Level 1 shows the same set of elements on the generated diagram as level 0 
+Level 1 shows the same set of elements on the generated diagram as level 0
 but the text inside the boxes is suppressed. The same source code on level 1
 will look as follows.
 
 ![Smart zoom level 1](level1.png "Smart zoom level 1")
-
 
 Smart Zoom Level 2
 ------------------
@@ -62,7 +60,6 @@ Note: the decorator scopes are not shown either.
 
 ![Smart zoom level 2](level2.png "Smart zoom level 2")
 
-
 Smart Zoom Level 3
 ------------------
 
@@ -70,7 +67,6 @@ Level 3 reduces the number of shown elemnts further. The only classes and functi
 are shown.
 
 ![Smart zoom level 3](level3.png "Smart zoom level 3")
-
 
 Other Display Options
 =====================
@@ -95,15 +91,13 @@ On the picture above the docstring section has been collapsed and a small
 icon appeared instead. The icon has a tooltip with the original text of the
 docstring.
 
-
 The hide comments button will make changes with all the comments.
 
 ![Hide comments](hidecomment.png "Hide comments")
 
-All the comment elements were replaced with a smaller element with eactly one 
+All the comment elements were replaced with a smaller element with eactly one
 character `c`. These smaller elements also have tooltips with the original
 comment text.
-
 
 The hide exception button will suppress all the except blocks as follows.
 
@@ -112,4 +106,3 @@ The hide exception button will suppress all the except blocks as follows.
 All the except block scopes together with their content have been replaced with
 a small element with exactly one character `e`. Their tooltips will show the types
 of the handled exceptions.
-

@@ -1,6 +1,5 @@
 # CML - Codimension Markup Language
 
-
 CML is a micro markup language which uses Python comments to store the
 additional information which is used at the time the graphics code
 representation is generated.
@@ -25,7 +24,6 @@ diagram is drawn. A type is a string identifier, e.g. ‘rt’ (stands for ‘re
 text’). Key=value pairs in turn let to have an arbitrary number of arguments
 for the CML comments.
 
-
 ## CML v.1
 
 ### Key - Value pairs
@@ -34,7 +32,7 @@ The keys must be valid identifiers.
 
 The values are arbitrary strings. If the value contains spaces then it must be
 in double quotes otherwise the double quotes are optional. The double quote
-charater inside values has to be escaped with the backslash character. 
+charater inside values has to be escaped with the backslash character.
 
 ### Colors
 
@@ -50,8 +48,6 @@ background. The color value can be specifies in one of the following ways:
 | ddd,ddd,ddd     | decimal RGB          |
 | ddd,ddd,ddd,ddd | decimal RGBA         |
 
-
-
 ### cc
 
 The 'cc' comment is used for custom colors of most of the graphics items.
@@ -64,8 +60,8 @@ Supported properties:
 | fg       | foreground color for the item, optional |
 | border   | border color for the item, optional     |
 
-
 Example:
+
 ```python
 # cml 1 cc bg=#f6f4e4 fg=#000 border=#fff
 ```
@@ -86,8 +82,8 @@ Supported properties:
 | fg       | foreground color for the item, optional                 |
 | border   | border color for the item, optional                     |
 
-
 Example:
+
 ```python
 # cml 1 gb id="1234-5678-444444" title="MD5 calculation"
 ```
@@ -97,19 +93,17 @@ Example:
 The 'ge' comment is used to indicate the end of the visual group. It needs a
 counterpart 'gb' CML comment which indicates the beginning of the visual group.
 
-
 Supported properties:
 
 | Property | Description                                      |
 | :------: | ------------------------------------------------ |
 | id       | unique identifier of the visual group, mandatory |
 
-
 Example:
+
 ```python
 # cml 1 ge id="1234-5678-444444"
 ```
-
 
 ### rt
 
@@ -120,8 +114,8 @@ Supported properties:
 | :------: | ---------------------------------------------------- |
 | text     | text to be shown instead of the real code, mandatory |
 
-
 Example:
+
 ```python
 # cml 1 rt text="Reset the dictionary"
 ```
@@ -133,24 +127,22 @@ location i.e. to have the 'No' branch at the right.
 
 Supported properties: none
 
-
 Example:
+
 ```python
 # cml 1 sw
 ```
-
-
 
 ### doc
 
 The 'doc' comment is used for links to some sort of documentation.
 This comment may appear as:
+
 - independent comment
 - leading comment
 - trailing comment
 
 It is not recognized in side comments.
-
 
 Supported properties:
 
@@ -166,6 +158,7 @@ Supported properties:
 At least one: a link or an anchor must be provided.
 
 The link supports the following formats:
+
 - http://... an external browser will be invoked
 - https://... an external browser will be invoked
 - [file:]absolute path[#anchorOrLine]
@@ -173,10 +166,8 @@ The link supports the following formats:
 
 An anchor should follow this rule: [_a-zA-Z0-9]+
 
-
 Example:
+
 ```python
 # cml 1 doc link="http://codimension.org"
 ```
-
-

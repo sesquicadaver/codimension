@@ -11,6 +11,7 @@ Suppose there is a diagram like that:
 Now wsuppose we want to group the standard imports so that there one box drawn
 instead of two. To do so we select the corresponding import boxes on the graphics
 pane using:
+
 - a rubber band selection: holding the left mouse button pressed move the mouse
   so that the necessry items are within the highlighted area
 - an individually added items into the selection: having the keyboard Ctrl key
@@ -30,7 +31,7 @@ Let's do the same with the project specific imports:
 
 ![Project import group](prjimportgroup.png "Project import group")
 
-Groups can be also grouped similarly to all other items. Let's select the 
+Groups can be also grouped similarly to all other items. Let's select the
 two groups we just created and group them into one item with the title `Imports`:
 
 ![All import group](allimportgroup.png "All import group")

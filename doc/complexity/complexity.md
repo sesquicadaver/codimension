@@ -22,6 +22,7 @@ calculated from A to F as follows:
 The ranking is provided for functions, classes and class methods.
 
 Codimension presents the ranking results in two ways:
+
 - Individually for each function, class and class method.
 - Summary for the current editing buffer.
 
@@ -31,15 +32,12 @@ is not A:
 
 ![Individual CC results](individualcc.png "Individual CC results")
 
-
 The summary is displayed on the status bar. The worst rank for the current
 editing buffer is calculated and the corresponding letter is displayed.
 
 ![Summary CC results](summarycc.png "Summary CC results")
 
-
 The status bar cyclomatic complexity rank icon supports a context menu.
 Click the right mouse button on it and a list of the items in the current editing
 buffer will appear together with their ranking. The items are sorted in the
 menu starting from the worst rank. The items with rank A are not shown.
-

@@ -10,6 +10,7 @@ it explicitly. Codimension detects pauses in typing and re-checks the code
 if necessary.
 
 The check results appear for the current editing buffer in two ways:
+
 - Each pyflakes message is shown on the editor margin
 - All pyflakes messages are shown at the Codimension status bar
 
@@ -20,7 +21,6 @@ This is how pyflakes messages appear on the editor margin:
 Each message is associated with the line number so a red dot icon appears at
 the appropriate line. When a mouse cursor hovers the pyflakes message icon a tooltip
 with the full text appears.
-
 
 This is how the status bar report looks like:
 
@@ -36,5 +36,3 @@ If pyflakes has no messages for the current editing buffer then a green icon wil
 be displayed instead.
 
 ![Pyflakes OK](flakesok.png "Pyflakes OK")
-
-

@@ -17,21 +17,21 @@ Before the implementation details are discussed it makes sense to introduce a
 few terms Codimension uses while it works with plugins.
 
 At the start time Codimension looks for plugins in two places. The first one is
-`/usr/share/codimension-plugins/`. The second one is the directory called
-`.codimension/plugins` located in the user home directory. So on Linux system
-the latter most probably will be `~/.codimension/plugins`. It is highly
+`/usr/share/codimension3-plugins/`. The second one is the directory called
+`.codimension3/plugins` located in the user home directory. So on Linux system
+the latter most probably will be `~/.codimension3/plugins`. It is highly
 recommended that each plugin occupies a designated directory where it keeps all
 the required files. So on a certain system the related directories structure
 may look as follows:
 
 ~~~
-/usr/share/codimension-plugins/plugin1/...
-                               plugin2/...
-                               plugin3/...
+/usr/share/codimension3-plugins/plugin1/...
+                                 plugin2/...
+                                 plugin3/...
 
-/home/mike/.codimension/plugins/plugin4/...
-                                plugin5/...
-                                plugin6/...
+/home/mike/.codimension3/plugins/plugin4/...
+                                  plugin5/...
+                                  plugin6/...
 ~~~
 
 Depending on a plugin location Codimension splits all the found plugins into two
@@ -40,7 +40,7 @@ groups: system wide plugins and user plugins. So in the example above `plugin1`,
 `plugin6` are **user** plugins.
 
 The next pieces which are important for Codimension are a plugin name and a
-plugin version. A name and a version are stored in a plugin description file 
+plugin version. A name and a version are stored in a plugin description file
 (it will be discussed later). That description file is what triggers loading a
 plugin.
 
@@ -49,7 +49,7 @@ of other terms activated/deactivated is also used further with the same
 meaning). While loading plugins Codimension initially treats all plugins enabled
 so a newly installed plugin will be automatically enabled next time Codimension
 starts. It is possible however that a plugin conflicts with another plugin.
-Certain types of conflicts can be detected by Codimension automatically and 
+Certain types of conflicts can be detected by Codimension automatically and
 Codimension can disable some plugins to resolve a conflict. The following rules
 are used for automatic conflict resolution:
 
@@ -58,7 +58,7 @@ are used for automatic conflict resolution:
 - If there are two plugins with the same name and both of them are either user
   or system wide then their versions are taken into consideration. The higher
   version wins.
-- If names, vaersions and locations of two plugins match then an arbitrary one
+- If names, versions and locations of two plugins match then an arbitrary one
   wins.
 
 There are a few other cases when Codimension disables a plugin automatically. A
@@ -72,7 +72,7 @@ stay in memory till Codimension is closed.
 The user is always able to enable or disable plugins manually and in particular
 resolve detected conflicts the required way if automatic resolution is not what
 is needed. The manual control of plugin states is done in the plugin manager.
-The manager user interface is available via main menu **Options->Plugin 
+The manager user interface is available via main menu **Options->Plugin
 Manager** menu item as shown below.
 
 ![Plugin Manager](pluginmanager.png "Plugin Manager")
@@ -91,7 +91,6 @@ implements a regular expression visual testing facility does not need text
 editing support at all. A plugin category defines an interface variation between
 Codimension and a plugin. The categories come in a form of predefined base
 classes and each plugin must derive from one of them.
-
 
 Plugin Files
 ------------
@@ -127,12 +126,12 @@ License = GPL v.3
 The `[Core].Name` value is an arbitrary string however it is better to keep it
 relatively short. The `[Core].Module` value is a directory path where
 Codimension plugin resides. It is recommended that all the plugin files are
-sitting in a designated directory including the plugin description file and 
+sitting in a designated directory including the plugin description file and
 therefore the `[Core].Module` value refers to the very directory it is sitting
 in. The '.' value is the recommended value for all the Codimension plugins.
 
 The `[Documentation]` section has self explanatory values. A plugin can add any
-values to this section and all of them will be displayed in the **Detailed 
+values to this section and all of them will be displayed in the **Detailed
 information** box in the plugin manager dialog when a plugin is selected.
 
 The `__init__.py` file is the one where a plugin class definition must reside.
@@ -167,18 +166,17 @@ class which implements the plugin interface. The plugin developer does not need
 and should not make any changes in any other classes shown on the diagram.
 
 The `WizardInterface` class is a Codimension provided plugin category base
-class. The class is defined in `codimension/src/`
-`plugins/categories/wizardiface.py`. The class has a set of member functions
+class. The class is defined in `codimension/plugins/categories/wizardiface.py`. The class has a set of member functions
 some of which have to be implemented by the plugin of this category. The member
 function documentation strings describe in details what is expected by
-Codimension. At the time of writing (Codimension v.4.3.1) the `WizardInterface`
+Codimension. At the time of writing (Codimension v.4.10+) the `WizardInterface`
 and the `VersionControlSystemInterface` are the only supported plugin categories.
 When a new plugin category is introduced its base class will appear in the
-`codimension/src/plugins/categories/` directory.
+`codimension/plugins/categories/` directory.
 
 The `CDMPluginBase` class is a Codimension provided convenience class which
 simplifies access to the major IDE objects. The class definition resides in the
-`codimension/src/plugins/categories/cdmpluginbase.py` file. Having
+`codimension/plugins/categories/cdmpluginbase.py` file. Having
 `CDMPluginBase` class in the hierarchy makes it possible for a plugin class to
 use easy to read statements similar to the following:
 
@@ -197,8 +195,8 @@ Access to all the IDE objects should start with:
 self.ide. ...
 ~~~
 
-See the `IDEAccess` class in the 
-`codimension/src/plugins/categories/cdmpluginbase.py` file for a full list of
+See the `IDEAccess` class in the
+`codimension/plugins/categories/cdmpluginbase.py` file for a full list of
 provided IDE objects.
 
 Codimension uses thirdparty library called
@@ -216,7 +214,6 @@ may have the following code:
 self.ide.project.projectChanged.connect(self.__onProjectChanged)
 ~~~
 
-
 Plugin Example: Garbage Collector Plugin
 ----------------------------------------
 
@@ -224,6 +221,7 @@ The idea of an example plugin is quite simple. The Python garbage collector
 triggers objects collection at pretty much unknown moments and the plugin will
 make it more predictable. The garbage collector plugin (GC plugin) will call
 the `collect()` method of the `gc` Python module when:
+
 - a tab is closed
 - a project is changed
 - new files appeared in a project
@@ -233,6 +231,7 @@ The `gc.collect()` call provides an information of how many objects were
 collected and this could be interesting to see. So a
 message should be shown somewhere. To make it more user friendly the GC plugin
 should provide a configuration dialog with options where to show the message:
+
 - in the log tab
 - on the status bar
 - do not show anything
@@ -268,7 +267,6 @@ The GC plugin will belong to the wizard plugin category so it must derive from
 the `WizardInterface` class. The definition of the class must be in the
 `__init__.py` file:
 
-
 ~~~python
 from plugins.categories.wizardiface import WizardInterface
 
@@ -292,7 +290,6 @@ by the plugin and for the GC plugin it is trivial, all the versions are supporte
     def isIDEVersionCompatible(ideVersion):
         return True
 ~~~
-
 
 The next pair of methods which must be implemented in a plugin is `activate` and
 `deactivate`. Obviously, the `activate` method will be called when a plugin is activated. It
@@ -369,7 +366,7 @@ choice and one member variable. The member variable will be initialized in the p
 class constructor with "do not show anything".
 
 ~~~python
-import ConfigParser
+import configparser
 
 class GCPlugin(WizardInterface):
 
@@ -382,7 +379,7 @@ class GCPlugin(WizardInterface):
 
     def __getConfiguredWhere(self):
         try:
-            config = ConfigParser.ConfigParser()
+            config = configparser.ConfigParser()
             config.read([self.__getConfigFile()])
             value = int(config.get("general", "where"))
             if value < GCPluginConfigDialog.SILENT or \
@@ -411,7 +408,6 @@ the following:
 ~~~
 
 Now we can complete implementation of the configuration function:
-
 
 ~~~python
     def configure( self ):
@@ -504,16 +500,14 @@ is not specific to the Codimension plugin subsystem.
 
 Full plugin source code is available here:
 
-* [`garbagecollector.cdmp`](https://github.com/SergeySatskiy/cdm-gc-plugin/blob/master/cdmplugins/gc/garbagecollector.cdmp)
-* [`__init__.py`](https://github.com/SergeySatskiy/cdm-gc-plugin/blob/master/cdmplugins/gc/__init__.py)
-* [`configdlg.py`](https://github.com/SergeySatskiy/cdm-gc-plugin/blob/master/cdmplugins/gc/configdlg.py)
-
-
+- [`garbagecollector.cdmp`](https://github.com/SergeySatskiy/cdm-gc-plugin/blob/master/cdmplugins/gc/garbagecollector.cdmp)
+- [`__init__.py`](https://github.com/SergeySatskiy/cdm-gc-plugin/blob/master/cdmplugins/gc/__init__.py)
+- [`configdlg.py`](https://github.com/SergeySatskiy/cdm-gc-plugin/blob/master/cdmplugins/gc/configdlg.py)
 
 Miscellaneous
 -------------
 
-###Printing and Logging
+### Printing and Logging
 Plugins are running in Codimension context so everything what is done in
 Codimension for the IDE is applicable to plugins. In particular Codimension
 intercepts printing to **stdout** and to **stderr**. If a plugin prints on **stdout**:
@@ -550,8 +544,7 @@ logging.debug("Debug message")    # Will be shown only if Codimension started as
                                   # > codimension --debug
 ~~~
 
-
-###Globals and Settings
+### Globals and Settings
 When a plugin is activated references to the IDE global data singleton and to
 the IDE settings singleton are passed to the plugin. Using these singletons a
 plugin can get access to pretty much everything in the IDE. It is also possible
@@ -562,4 +555,3 @@ most important IDE objects. The other IDE objects could be accessible using
 direct access to the globals and settings members. If you feel more syntactic
 shugar should be added to `CDMPluginBase` (or something is not accessible)
 please feel free to contact Sergey Satskiy at <sergey.satskiy@gmail.com>.
-

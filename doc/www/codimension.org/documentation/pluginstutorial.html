@@ -93,9 +93,9 @@
    Codimension uses while it works with plugins.
 </p>
 <p>At the start time Codimension looks for plugins in two places. The first one 
-   is <code>/usr/share/codimension-plugins/</code>. The second one is the directory called
-   <code>.codimension/plugins</code> located in the user home directory. So on Linux system
-   the latter most probably will be <code>~/.codimension/plugins</code>. It is highly
+   is <code>/usr/share/codimension3-plugins/</code>. The second one is the directory called
+   <code>.codimension3/plugins</code> located in the user home directory. So on Linux system
+   the latter most probably will be <code>~/.codimension3/plugins</code>. It is highly
    recommended that each plugin occupies a designated directory where it keeps all the
    required files. So on a certain system the related directories structure may look as
    follows:
@@ -103,13 +103,13 @@
 
 <div>
     <pre>
-/usr/share/codimension-plugins/plugin1/...
-                               plugin2/...
-                               plugin3/...
+/usr/share/codimension3-plugins/plugin1/...
+                                 plugin2/...
+                                 plugin3/...
 
-/home/mike/.codimension/plugins/plugin4/...
-                                plugin5/...
-                                plugin6/...
+/home/mike/.codimension3/plugins/plugin4/...
+                                  plugin5/...
+                                  plugin6/...
 </pre>
 </div>
 
@@ -186,7 +186,7 @@
 </p>
 
 <div>
-<pre>/home/mike/.codimension/plugins/pdfexporter/pdfexporter.cdmp
+<pre>/home/mike/.codimension3/plugins/pdfexporter/pdfexporter.cdmp
                                             __init__.py
                                             util_functions.py
                                             config_dialog.py

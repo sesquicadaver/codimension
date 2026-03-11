@@ -3,9 +3,11 @@ Codimension Color Schemes
 
 Introduction
 ------------
+
 Codimension uses skins to define how certain elements of the user interface
 will look like. A skin is a set of files which reside in a designated directory.
 The files are:
+
 - app.css: the application style sheet
 - skin.json: general settings
 - cflow.json: control flow diagram settings
@@ -18,9 +20,11 @@ dictionaries to store various settings. The keys in dictionaries are case
 sensitive strings.
 
 When Codimension starts it looks for the available skins in the
+
 ```
 ~/.codimension3/skins/
 ```
+
 Codimension expects that for each skin there will be a directory with the
 mentioned above files.
 
@@ -32,7 +36,9 @@ analysed when a list of available skins is built.
 
 Creating New Skin
 -----------------
+
 One of the options is to follow these steps:
+
 - create a new directory for the new skin, e.g. `~/.codimension3/skins/myskin`
 - copy skin.json, cflow.json and app.css from
   `~/.codimension3/skins/sample` to `~/.codimension3/skins/myskin`
@@ -46,6 +52,7 @@ the IDE needs to be restarted because the files are read at the start only.
 
 Color and Font Formats
 ----------------------
+
 The skin.json and cflow.json let to configure fonts and colors for many items.
 The color format is a string with four comma separated values. Each value is from
 0 to 255 and describes red, green, blue and alpha components of the color.
@@ -55,9 +62,9 @@ The font format is a string which QT library provides as the
 [QFont.toString()](https://doc.qt.io/qt-5/qfont.html#toString) return value.
 Here is an example: "Iosevka Term SS01,12,-1,5,50,0,0,0,0,0"
 
-
 skin.json
 ---------
+
 Here is a description of some settings (may be incomplete) stored in skin.json
 
 | Name                          | Value |
@@ -105,28 +112,27 @@ Here is a description of some settings (may be incomplete) stored in skin.json
 | ioconsoleMarginIDEMsgColor    | The I/O console margin background color for the lines with the IDE messages |
 | invalidInputPaper             | The background color of the input fields if the current input is invalid |
 
-
-
-
 cflow.json
 ----------
+
 The file contains the settings for the control flow - colors for the individual
 graphics items, fonts, paddings etc. All the efforts were made to have the key
 names intuitively understood so there is no description for them. At any rate,
 experiment and see how the graphics representation is affected.
 
-
 app.css
 -------
+
 The file contains adjustments to the standard QT library widgets like QToolTip,
 QLineEdit etc. The documentation what and how can be adjusted is available
 [here](https://doc.qt.io/qt-5/stylesheet.html).
 
-
 Include New Skin Into the Package
 ---------------------------------
+
 If a skin needs to be included into a distribution package so that all the users
 may benefit of it then the following steps need to be taken:
+
 - the skin directory needs to be included into the project
   `codimension/skins/` directory
 - platform specific needs to be considered (e.g. fonts availability)
@@ -144,7 +150,6 @@ When Codimension starts and copies the package provided skins into the user
 home directory it first looks for a platform specific file. If found then
 it is copied with stripped suffix.
 
-
 Overwriting Individual Skin Values
 ----------------------------------
 
@@ -154,4 +159,3 @@ want to overwrite. The values from this file will update the skin dictionary.
 
 Also, the skin directory can have pixmaps (png and svg) which will take priority
 when Codimension loads a pixmap.
-

@@ -3,18 +3,15 @@
 This documentation does not cover everything.
 It rather covers some practical topics. Please follow the links in the list below to select a particular area.
 
-
 ## General Topics
 
 - [Technology](technology/technology.md)
 - [CML - Codimension Markup Language](cml/cml.md)
 
-
 ## Graphics Pane
 
 - [Smart zoom and other display options](smartzoom/smartzoom.md)
 - [Grouping](grouping/grouping.md)
-
 
 ## Code Analysis
 
@@ -24,7 +21,6 @@ It rather covers some practical topics. Please follow the links in the list belo
 - [Dependencies](dependencies/dependencies.md)
 - [Disassembling](disassembling/disassembling.md)
 - Profiling (the documentation is coming soon)
-
 
 ## Miscellaneous
 
