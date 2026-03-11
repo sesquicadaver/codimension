@@ -1,0 +1,10 @@
+[Core]
+Name = Pytest
+Module = .
+
+[Documentation]
+Author = Codimension
+Version = 1.0.0
+Website = https://github.com/SergeySatskiy/codimension
+Description = Codimension IDE pytest test runner plugin
+License = GPL v.3
