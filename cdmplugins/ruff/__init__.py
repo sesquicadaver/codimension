@@ -16,10 +16,11 @@ import os.path
 
 from packaging.version import Version
 from plugins.categories.wizardiface import WizardInterface
-from ui.qt import QWidget, QIcon, QTabBar, QApplication, QCursor, Qt, QShortcut, QKeySequence, QAction, QMenu
 from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from ui.qt import QAction, QApplication, QCursor, QKeySequence, QMenu, QShortcut, Qt, QTabBar
 from utils.fileutils import isPythonMime
 from utils.pixmapcache import getIcon
+
 from .ruffdriver import RuffDriver
 from .ruffresultviewer import RuffResultViewer
 
