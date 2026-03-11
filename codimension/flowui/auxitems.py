@@ -397,8 +397,8 @@ class RubberBandItem(CellElement, QGraphicsRectItem):
         pen = QPen(self.__settings.rubberBandBorderColor)
         painter.setPen(pen)
         painter.setBrush(QBrush(self.__settings.rubberBandFGColor))
-        painter.drawRect(self.__x, self.__y,
-                         self.__width, self.__height)
+        rect = QRectF(self.__x, self.__y, self.__width, self.__height)
+        painter.drawRect(rect)
 
 
 

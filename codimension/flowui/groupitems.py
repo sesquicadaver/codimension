@@ -185,7 +185,8 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
                    rectNum * settings.emptyGroupXShift
             yPos = self.baseY + settings.vCellPadding + \
                    (self.N_BACK_RECT - rectNum) * settings.emptyGroupYShift
-            painter.drawRect(xPos, yPos, rectWidth, rectHeight)
+            rect = QRectF(xPos, yPos, rectWidth, rectHeight)
+            painter.drawRect(rect)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -194,14 +195,15 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
 
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (rectWidth - textWidth) / 2
-        painter.drawText(
+        textRect = QRectF(
             self.baseX + settings.hCellPadding +
-            settings.hTextPadding +
-            textShift,
+            settings.hTextPadding + textShift,
             self.baseY + settings.vCellPadding + settings.vTextPadding +
             self.N_BACK_RECT * settings.emptyGroupYShift,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
 
 class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
@@ -436,7 +438,8 @@ class CollapsedGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
                    rectNum * settings.collapsedGroupXShift
             yPos = self.baseY + settings.vCellPadding + \
                    (self.N_BACK_RECT - rectNum) * settings.collapsedGroupYShift
-            painter.drawRect(xPos, yPos, rectWidth, rectHeight)
+            rect = QRectF(xPos, yPos, rectWidth, rectHeight)
+            painter.drawRect(rect)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -445,14 +448,15 @@ class CollapsedGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
 
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (rectWidth - textWidth) / 2
-        painter.drawText(
+        textRect = QRectF(
             self.baseX + settings.hCellPadding +
-            settings.hTextPadding +
-            textShift,
+            settings.hTextPadding + textShift,
             self.baseY + settings.vCellPadding + settings.vTextPadding +
             self.N_BACK_RECT * settings.collapsedGroupYShift,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
 
 

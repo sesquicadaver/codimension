@@ -121,8 +121,13 @@ class CodeBlockCell(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
             yPos += badgeShift
             rectHeight -= badgeShift
 
-        painter.drawRect(self.baseX + settings.hCellPadding,
-                         yPos, rectWidth, rectHeight)
+        rect = QRectF(
+            self.baseX + settings.hCellPadding,
+            yPos,
+            rectWidth,
+            rectHeight,
+        )
+        painter.drawRect(rect)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -557,10 +562,13 @@ class AssertCell(CellElement,
                             QPointF(dx3, dy3), QPointF(dx4, dy4),
                             QPointF(dx5, dy5), QPointF(dx6, dy6))
 
-        painter.drawRect(dx4 + 1, self.baseY + settings.vCellPadding + takenByBadges,
-                         self.minWidth - 2 * settings.hCellPadding -
-                         self.__diamondWidth,
-                         self.minHeight - 2 * settings.vCellPadding - takenByBadges)
+        rect = QRectF(
+            dx4 + 1,
+            self.baseY + settings.vCellPadding + takenByBadges,
+            self.minWidth - 2 * settings.hCellPadding - self.__diamondWidth,
+            self.minHeight - 2 * settings.vCellPadding - takenByBadges,
+        )
+        painter.drawRect(rect)
 
 
         # Draw the text in the rectangle
@@ -835,7 +843,8 @@ class ImportCell(CellElement,
             yPos += badgeShift
             rectHeight -= badgeShift
 
-        painter.drawRect(xPos, yPos, rectWidth, rectHeight)
+        rect = QRectF(xPos, yPos, rectWidth, rectHeight)
+        painter.drawRect(rect)
         lineXPos = xPos + self.iconItem.iconWidth() + \
                    2 * settings.hTextPadding
         line = QLineF(lineXPos, yPos, lineXPos, yPos + rectHeight)
