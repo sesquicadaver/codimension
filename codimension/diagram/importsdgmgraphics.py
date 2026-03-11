@@ -375,9 +375,11 @@ class ImportsDgmDetailedModuleBase(QGraphicsRectItem):
         for index in range(len(self.__lines) - 1, 0, -1):
             if self.__lines[index] is None:
                 # Draw a separation line
-                painter.drawLine(posX + 1, posY + self.__pixelsPerLine / 2.0,
-                                 posX + self.__node.width,
-                                 posY + self.__pixelsPerLine / 2.0)
+                yMid = posY + self.__pixelsPerLine / 2.0
+                painter.drawLine(
+                    int(posX + 1), int(yMid),
+                    int(posX + self.__node.width), int(yMid),
+                )
             elif self.__lines[index] != "":
                 # Draw a text line
                 # Sometimes the bottom part of 'g' is not drawn so I add 2
