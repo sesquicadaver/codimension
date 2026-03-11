@@ -32,6 +32,7 @@ from ui.qt import (
     QLabel,
     QPalette,
     QPen,
+    QRectF,
     Qt,
     QVBoxLayout,
 )
@@ -299,11 +300,17 @@ class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
         # Group rectangle
         fullWidth = self.groupWidth + 2 * settings.openGroupHSpacer
         fullHeight = self.groupHeight + 2 * settings.openGroupVSpacer
-        painter.drawRoundedRect(self.baseX + settings.openGroupHSpacer,
-                                self.baseY + settings.openGroupVSpacer,
-                                fullWidth, fullHeight,
-                                settings.openGroupVSpacer,
-                                settings.openGroupVSpacer)
+        rect = QRectF(
+            self.baseX + settings.openGroupHSpacer,
+            self.baseY + settings.openGroupVSpacer,
+            fullWidth,
+            fullHeight,
+        )
+        painter.drawRoundedRect(
+            rect,
+            settings.openGroupVSpacer,
+            settings.openGroupVSpacer,
+        )
 
 
 class OpenedGroupEnd(GroupItemBase):
@@ -489,9 +496,8 @@ class GroupCornerControl(CellElement, QGraphicsRectItem):
         painter.setPen(pen)
         painter.setBrush(QBrush(settings.openGroupControlBGColor))
 
-        painter.drawRoundedRect(self.x(), self.y(),
-                                self.__width, self.__height,
-                                1, 1)
+        rect = QRectF(self.x(), self.y(), self.__width, self.__height)
+        painter.drawRoundedRect(rect, 1, 1)
 
     def hoverEnterEvent(self, event):
         """Handles the mouse in event"""

@@ -24,7 +24,7 @@
 # pylint: disable=W0702
 # pylint: disable=R0913
 
-from ui.qt import QBrush, QColor, QGraphicsItem, QGraphicsRectItem, QPen, QPointF, Qt
+from ui.qt import QBrush, QColor, QGraphicsItem, QGraphicsRectItem, QLineF, QPen, QPointF, QRectF, Qt
 from utils.limits import MAXINT_32
 
 from .abovebadges import AboveBadgesSpacer
@@ -361,11 +361,13 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
             yPos += halfDeclHeight
             height -= halfDeclHeight
 
-        painter.drawRoundedRect(self.baseX + s.hCellPadding,
-                                yPos,
-                                self.canvas.minWidth - 2 * s.hCellPadding,
-                                height,
-                                s.scopeRectRadius, s.scopeRectRadius)
+        rect = QRectF(
+            self.baseX + s.hCellPadding,
+            yPos,
+            self.canvas.minWidth - 2 * s.hCellPadding,
+            height,
+        )
+        painter.drawRoundedRect(rect, s.scopeRectRadius, s.scopeRectRadius)
 
         if self.kind in [CellElement.FOR_SCOPE, CellElement.WHILE_SCOPE]:
             # Brush
@@ -411,10 +413,14 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
             correction = 0.0
             if topLeftCell.isSelected():
                 correction = s.selectPenWidth - 1
-            painter.drawLine(canvasLeft + correction, self.baseY + self.height,
-                             canvasLeft + self.canvas.minWidth -
-                             2 * s.hCellPadding - correction,
-                             self.baseY + self.height)
+            line = QLineF(
+                canvasLeft + correction,
+                self.baseY + self.height,
+                canvasLeft + self.canvas.minWidth -
+                2 * s.hCellPadding - correction,
+                self.baseY + self.height,
+            )
+            painter.drawLine(line)
 
         pen = QPen(self.fgColor)
         painter.setFont(s.monoFont)
@@ -424,15 +430,21 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
             availWidth = topLeftCell.x3 - topLeftCell.x2
             textWidth = self.textRect.width() + 2 * s.hTextPadding
             textShift = (availWidth - textWidth) / 2
-            painter.drawText(topLeftCell.x2 + s.hTextPadding + textShift,
-                             canvasTop + s.vHeaderPadding,
-                             self.textRect.width(), self.textRect.height(),
-                             Qt.AlignLeft | Qt.AlignVCenter, self.text)
+            textRect = QRectF(
+                topLeftCell.x2 + s.hTextPadding + textShift,
+                canvasTop + s.vHeaderPadding,
+                self.textRect.width(),
+                self.textRect.height(),
+            )
+            painter.drawText(textRect, Qt.AlignLeft | Qt.AlignVCenter, self.text)
         else:
-            painter.drawText(canvasLeft + s.hHeaderPadding,
-                             canvasTop + s.vHeaderPadding,
-                             self.textRect.width(), self.textRect.height(),
-                             Qt.AlignLeft, self.text)
+            textRect = QRectF(
+                canvasLeft + s.hHeaderPadding,
+                canvasTop + s.vHeaderPadding,
+                self.textRect.width(),
+                self.textRect.height(),
+            )
+            painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def __paintDocstring(self, painter):
         """Paints the docstring"""
@@ -446,9 +458,13 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
             selectPen.setWidth(s.selectPenWidth)
             selectPen.setJoinStyle(Qt.RoundJoin)
             painter.setPen(selectPen)
-            painter.drawRect(canvasLeft, self.baseY,
-                             self.canvas.minWidth - 2 * s.hCellPadding,
-                             self.height)
+            rect = QRectF(
+                canvasLeft,
+                self.baseY,
+                self.canvas.minWidth - 2 * s.hCellPadding,
+                self.height,
+            )
+            painter.drawRect(rect)
         else:
             # If the scope is selected then the line may need to be shorter
             # to avoid covering the outline
@@ -468,29 +484,37 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
             if self.canvas.cells[row][column].isSelected():
                 dsCorr = float(s.selectPenWidth) / 2.0 + \
                     float(s.boxLineWidth) / 2.0
-            painter.drawRect(float(canvasLeft) + dsCorr,
-                             self.baseY + s.boxLineWidth,
-                             float(self.canvas.minWidth) -
-                             2.0 * float(s.hCellPadding) - 2.0 * dsCorr,
-                             self.height - 2 * s.boxLineWidth)
+            rect = QRectF(
+                float(canvasLeft) + dsCorr,
+                self.baseY + s.boxLineWidth,
+                float(self.canvas.minWidth) -
+                2.0 * float(s.hCellPadding) - 2.0 * dsCorr,
+                self.height - 2 * s.boxLineWidth,
+            )
+            painter.drawRect(rect)
 
             pen = QPen(self.borderColor)
             pen.setWidth(s.boxLineWidth)
             painter.setPen(pen)
-            painter.drawLine(canvasLeft + correction,
-                             self.baseY + self.height,
-                             canvasLeft + self.canvas.minWidth -
-                             2 * s.hCellPadding - correction,
-                             self.baseY + self.height)
+            line = QLineF(
+                canvasLeft + correction,
+                self.baseY + self.height,
+                canvasLeft + self.canvas.minWidth -
+                2 * s.hCellPadding - correction,
+                self.baseY + self.height,
+            )
+            painter.drawLine(line)
 
         pen = QPen(self.fgColor)
         painter.setFont(s.monoFont)
         painter.setPen(pen)
-        painter.drawText(canvasLeft + s.hHeaderPadding,
-                         self.baseY + s.vHeaderPadding,
-                         self.canvas.width - 2 * s.hHeaderPadding,
-                         self.height - 2 * s.vHeaderPadding,
-                         Qt.AlignLeft, self.text)
+        textRect = QRectF(
+            canvasLeft + s.hHeaderPadding,
+            self.baseY + s.vHeaderPadding,
+            self.canvas.width - 2 * s.hHeaderPadding,
+            self.height - 2 * s.vHeaderPadding,
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def paint(self, painter, option, widget):
         """Draws the corresponding scope element"""

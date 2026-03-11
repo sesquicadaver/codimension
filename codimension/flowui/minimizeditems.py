@@ -23,7 +23,7 @@
 
 from html import escape
 
-from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem
+from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QRectF
 from utils.limits import MAXINT_32
 
 from .auxitems import Connector, SVGItem
@@ -135,11 +135,13 @@ class MinimizedIndependentCommentCell(CellElement, QGraphicsRectItem):
         # xPos matches the connector (which could be drawn in any direction)
         xPos = max(self.connector.getFirstPoint()[0],
                    self.connector.getLastPoint()[0])
-        painter.drawRoundedRect(xPos,
-                                self.baseY + settings.vCellPadding,
-                                self.badgeWidth, self.badgeHeight,
-                                settings.badgeRadius,
-                                settings.badgeRadius)
+        rect = QRectF(
+            xPos,
+            self.baseY + settings.vCellPadding,
+            self.badgeWidth,
+            self.badgeHeight,
+        )
+        painter.drawRoundedRect(rect, settings.badgeRadius, settings.badgeRadius)
 
     def adjustWidth(self):
         """No need to adjust the width"""
@@ -254,11 +256,13 @@ class MinimizedIndependentDocCell(CellElement, ColorMixin, QGraphicsRectItem):
         # xPos matches the connector (which could be drawn in any direction)
         xPos = max(self.connector.getFirstPoint()[0],
                    self.connector.getLastPoint()[0])
-        painter.drawRoundedRect(xPos,
-                                self.baseY + settings.vCellPadding,
-                                self.badgeWidth, self.badgeHeight,
-                                settings.badgeRadius,
-                                settings.badgeRadius)
+        rect = QRectF(
+            xPos,
+            self.baseY + settings.vCellPadding,
+            self.badgeWidth,
+            self.badgeHeight,
+        )
+        painter.drawRoundedRect(rect, settings.badgeRadius, settings.badgeRadius)
 
     def adjustWidth(self):
         """No need to adjust the width"""

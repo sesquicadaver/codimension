@@ -31,6 +31,7 @@ from ui.qt import (
     QGraphicsRectItem,
     QPainterPath,
     QPen,
+    QRectF,
     Qt,
     QUrl,
 )
@@ -192,9 +193,13 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
         yShift = self.height - self.minHeight
         baseY = self.baseY + yShift
 
-        painter.drawRoundedRect(self._leftEdge + settings.hCellPadding,
-                                baseY + settings.vCellPadding,
-                                self.boxWidth, rectHeight, 0, 0)
+        rect = QRectF(
+            self._leftEdge + settings.hCellPadding,
+            baseY + settings.vCellPadding,
+            self.boxWidth,
+            rectHeight,
+        )
+        painter.drawRoundedRect(rect, 0, 0)
 
         if self.text:
             # Draw the text in the rectangle
@@ -203,13 +208,15 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
             painter.setFont(font)
             pen = QPen(self.fgColor)
             painter.setPen(pen)
-            painter.drawText(
+            textRect = QRectF(
                 self._leftEdge + settings.hCellPadding +
                 settings.hDocLinkPadding + self.iconItem.iconWidth() +
                 settings.hDocLinkPadding,
                 baseY + settings.vCellPadding + settings.vDocLinkPadding,
-                self.textRect.width(), self.textRect.height(),
-                Qt.AlignLeft, self.text)
+                self.textRect.width(),
+                self.textRect.height(),
+            )
+            painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def getAbsPosRange(self):
         """Provides the absolute position range"""
