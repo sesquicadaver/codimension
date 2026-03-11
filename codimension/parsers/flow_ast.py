@@ -155,30 +155,59 @@ class _ElifPart(_FragmentBase):
         bpos: int,
         epos: int,
         condition: _Body | None = None,
+        display_value: str = '',
     ) -> None:
         super().__init__(ELIF_PART_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.condition = condition
         self.nsuite: list[_FragmentBase] = []
+        self._display_value = display_value
+
+    def getDisplayValue(self) -> str:
+        return self._display_value
 
 
 class _CodeBlock(_FragmentBase):
     """Simple statement block."""
 
     def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
+        self,
+        begin: int,
+        end: int,
+        bln: int,
+        eln: int,
+        bpos: int,
+        epos: int,
+        display_value: str = '',
     ) -> None:
         super().__init__(CODEBLOCK_FRAGMENT, begin, end, bln, eln, bpos, epos)
+        self._display_value = display_value
+
+    def getDisplayValue(self) -> str:
+        return self._display_value
 
 
 class _ImportFrag(_FragmentBase):
     """Import statement."""
 
     def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
+        self,
+        begin: int,
+        end: int,
+        bln: int,
+        eln: int,
+        bpos: int,
+        epos: int,
+        display_value: str = '',
+        from_part: _Body | None = None,
+        what_part: _Body | None = None,
     ) -> None:
         super().__init__(IMPORT_FRAGMENT, begin, end, bln, eln, bpos, epos)
-        self.fromPart = None
-        self.whatPart = None
+        self._display_value = display_value
+        self.fromPart = from_part
+        self.whatPart = what_part
+
+    def getDisplayValue(self) -> str:
+        return self._display_value
 
 
 class _ReturnFrag(_FragmentBase):
@@ -281,6 +310,11 @@ class _FunctionFrag(_FragmentBase):
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
 
+    def getDisplayValue(self) -> str:
+        if hasattr(self, 'name') and self.name is not None:
+            return self.name.getContent()
+        return ''
+
 
 class _ClassFrag(_FragmentBase):
     """Class definition."""
@@ -292,6 +326,11 @@ class _ClassFrag(_FragmentBase):
         self.decorators: list[_FragmentBase] = []
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
+
+    def getDisplayValue(self) -> str:
+        if hasattr(self, 'name') and self.name is not None:
+            return self.name.getContent()
+        return ''
 
 
 class _ForFrag(_FragmentBase):
@@ -584,7 +623,14 @@ class _FlowBuilder(ast.NodeVisitor):
         else:
             b, e, bln, eln, bpos, epos = 0, 0, 1, 1, 1, 1
         cond = self._make_body(condition_node) if condition_node else None
-        part = _ElifPart(b, e, bln, eln, bpos, epos, condition=cond)
+        if condition_node is None:
+            display_value = 'else'
+        elif self.source and cond:
+            display_value = self.source[cond.begin:cond.end + 1].strip().rstrip(':')
+        else:
+            display_value = ''
+        part = _ElifPart(b, e, bln, eln, bpos, epos, condition=cond,
+                        display_value=display_value)
         self._visit_suite(body, part.nsuite)
         return part
 
@@ -661,9 +707,35 @@ class _FlowBuilder(ast.NodeVisitor):
     def _visit_import(
         self, node: ast.Import | ast.ImportFrom
     ) -> _ImportFrag:
-        """Build Import fragment."""
+        """Build Import fragment with display text and fromPart/whatPart."""
         b, e, bln, eln, bpos, epos = self._pos(node)
-        return _ImportFrag(b, e, bln, eln, bpos, epos)
+        display_value: str
+        from_part: _Body | None = None
+        what_part: _Body | None = None
+
+        if isinstance(node, ast.Import):
+            names = [alias.name if alias.asname is None else
+                     f'{alias.name} as {alias.asname}' for alias in node.names]
+            display_value = 'import ' + ', '.join(names)
+            what_part = _Body(b, e, bln, eln, bpos, epos)
+        else:
+            module = node.module or ''
+            names = []
+            for alias in node.names:
+                if alias.asname is None:
+                    names.append(alias.name)
+                else:
+                    names.append(f'{alias.name} as {alias.asname}')
+            what_str = ', '.join(names)
+            display_value = f'from {module} import {what_str}' if module else f'import {what_str}'
+            if node.module:
+                mod_b, mod_e, mod_bln, mod_eln, mod_bpos, mod_epos = self._pos(node.module)
+                from_part = _Body(mod_b, mod_e, mod_bln, mod_eln, mod_bpos, mod_epos)
+            what_part = _Body(b, e, bln, eln, bpos, epos)
+
+        return _ImportFrag(b, e, bln, eln, bpos, epos,
+                          display_value=display_value,
+                          from_part=from_part, what_part=what_part)
 
     def _visit_sysexit(
         self, node: ast.Expr
@@ -684,7 +756,9 @@ class _FlowBuilder(ast.NodeVisitor):
     def _visit_code_block(self, node: ast.AST) -> _CodeBlock:
         """Build CodeBlock fragment for generic statement."""
         b, e, bln, eln, bpos, epos = self._pos(node)
-        return _CodeBlock(b, e, bln, eln, bpos, epos)
+        display_value = self.source[b:e + 1] if self.source and e >= b else ''
+        return _CodeBlock(b, e, bln, eln, bpos, epos,
+                          display_value=display_value)
 
     def visit(self, node: ast.AST | None) -> None:
         """Override to collect into control_flow.nsuite."""
@@ -704,9 +778,12 @@ def _build_control_flow(source: str, filename: str) -> _ControlFlow:
     """Parse source and build ControlFlow fragment tree."""
     try:
         tree = ast.parse(source, filename, mode='exec', type_comments=True)
-    except SyntaxError:
+    except SyntaxError as exc:
         cf = _ControlFlow(source)
-        cf.errors.append('Syntax error')
+        # flowuiwidget expects (line, col, msg) tuples
+        line = getattr(exc, 'lineno', -1)
+        col = getattr(exc, 'offset', -1)
+        cf.errors.append((line, col, str(exc.msg) if exc.msg else 'Syntax error'))
         return cf
     builder = _FlowBuilder(source)
     builder.visit(tree)
