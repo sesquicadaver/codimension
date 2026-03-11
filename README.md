@@ -62,7 +62,7 @@ sudo apt-get install default-jre
 
 ```shell
 # Clone and run from source (use venv)
-git clone https://github.com/SergeySatskiy/codimension.git
+git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
 python -m venv .venv
 .venv/bin/pip install -r requirements.txt
