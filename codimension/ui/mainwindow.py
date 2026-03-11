@@ -2216,6 +2216,12 @@ class CodimensionMainWindow(QMainWindow):
         self._leftSideBar.setCurrentTab('project')
         self._leftSideBar.raise_()
 
+    def activateRecentTab(self):
+        """Activates the Recent Projects tab (for picking a project to load)"""
+        self._leftSideBar.show()
+        self._leftSideBar.setCurrentTab('recent')
+        self._leftSideBar.raise_()
+
     def activateOutlineTab(self):
         """Activates the outline tab"""
         self._rightSideBar.show()

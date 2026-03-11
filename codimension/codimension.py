@@ -281,20 +281,9 @@ class CodimensionUILauncher:
             for fName in self.__args:
                 mainWindow.openFile(os.path.abspath(fName), -1)
         elif settings['projectLoaded']:
-            if not settings['recentProjects']:
-                # Some project was loaded but now it is not available.
-                pass
-            else:
-                self.__splash.showMessage('Loading project...')
-                if os.path.exists(settings['recentProjects'][0]):
-                    globalData.project.loadProject(
-                        settings['recentProjects'][0])
-                    needSignal = False
-                else:
-                    self.__delayedWarnings.append(
-                        'Cannot open the most recent project: ' +
-                        settings['recentProjects'][0] +
-                        '. Ignore and continue.')
+            # Do not auto-load last project (fast startup for large projects).
+            # User can pick one from Recent Projects tab.
+            pass
         else:
             mainWindow.em.restoreTabs(settings.tabStatus)
 
@@ -302,6 +291,9 @@ class CodimensionUILauncher:
         if needSignal:
             globalData.project.sigProjectChanged.emit(
                 CodimensionProject.CompleteProject)
+            # Show Recent Projects tab when starting without project
+            if settings['recentProjects']:
+                mainWindow.activateRecentTab()
 
         # The editors positions can be restored properly only when the editors
         # have actually been drawn. Otherwise the first visible line is

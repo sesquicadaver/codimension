@@ -1,5 +1,12 @@
 2025 Mar 11
 
+* Startup: no auto-load of last project (fast startup for large projects).
+  - codimension.py: skip loading recentProjects[0] at launch
+  - mainwindow.py: activateRecentTab() — show Recent Projects when starting
+    without project so user can pick one to load
+
+2025 Mar 11
+
 * Documentation audit (fork attribution, excludeFromAnalysis, venv):
   - README.md: fork of SergeySatskiy/codimension, upstream links, excludeFromAnalysis note
   - doc/index.md: fork attribution

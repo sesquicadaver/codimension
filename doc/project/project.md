@@ -3,6 +3,10 @@ Project
 
 Codimension supports working with and without a project.
 
+**Startup:** The IDE starts without auto-loading the last project (for fast
+startup with large projects). Use the **Recent** tab in the left sidebar to
+pick a project to load (double-click or Load button).
+
 If there is no project then all open files are treated as independent with no
 relation to each other. Some IDE functionality will not be available in this
 case, e.g. running dependencies diagram for all the python files in a project.
