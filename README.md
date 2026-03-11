@@ -33,11 +33,15 @@ Thus the main focus of the project is to implement more features for the graphic
 
 **Note:** Python 3.11+ is required
 
-The IDE is pip installable:
+Install in a virtual environment (recommended):
 
 ```shell
-pip install codimension
+python -m venv .venv
+.venv/bin/pip install codimension
+.venv/bin/codimension
 ```
+
+Or see [Packages and installation](http://codimension.org/download/linuxdownload.html) for full instructions.
 
 The feature of building some diagrams e.g. a dependency diagram requires a graphviz
 package. The installation depends on a system. E.g. on Ubuntu you would need
