@@ -546,6 +546,10 @@ class RecentProjectsViewer(QWidget):
                 for index in range(dlg.importDirList.count()):
                     importDirs.append(dlg.importDirList.item(index).text())
 
+                excludeFromAnalysis = []
+                for index in range(dlg.excludeDirList.count()):
+                    excludeFromAnalysis.append(dlg.excludeDirList.item(index).text())
+
                 scriptName = dlg.scriptEdit.text().strip()
                 relativePath = os.path.relpath(scriptName,
                                                project.getProjectDir())
@@ -570,7 +574,9 @@ class RecentProjectsViewer(QWidget):
                      'description': dlg.descriptionEdit.toPlainText().strip(),
                      'uuid': dlg.uuidEdit.text().strip(),
                      'importdirs': importDirs,
-                     'encoding': dlg.encodingCombo.currentText().strip()})
+                     'excludeFromAnalysis': excludeFromAnalysis,
+                     'encoding': dlg.encodingCombo.currentText().strip(),
+                     'pythoninterpreter': dlg.venvEdit.text().strip()})
         else:
             # This is not the current project - it can be viewed
             fName = self.__projectContextItem.getFilename()

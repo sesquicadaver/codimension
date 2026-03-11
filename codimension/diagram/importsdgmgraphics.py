@@ -40,6 +40,7 @@ from ui.qt import (
     QPainterPath,
     QPen,
     QPointF,
+    QRectF,
     QSize,
     QStyle,
     QStyleOptionGraphicsItem,
@@ -218,10 +219,13 @@ class ImportsDgmUnknownModule(QGraphicsRectItem):
         font.setBold(True)
         painter.setFont(font)
         painter.setPen(QPen(QColor(90, 90, 88)))
-        painter.drawText(self.__node.posX - self.__node.width / 2.0,
-                         self.__node.posY - self.__node.height / 2.0,
-                         self.__node.width, self.__node.height,
-                         Qt.AlignCenter, self.__node.label)
+        rect = QRectF(
+            self.__node.posX - self.__node.width / 2.0,
+            self.__node.posY - self.__node.height / 2.0,
+            self.__node.width,
+            self.__node.height,
+        )
+        painter.drawText(rect, Qt.AlignCenter, self.__node.label)
 
 
 class ImportsDgmBuiltInModule(QGraphicsRectItem):
@@ -252,10 +256,13 @@ class ImportsDgmBuiltInModule(QGraphicsRectItem):
         font.setBold(True)
         painter.setFont(font)
         painter.setPen(QPen(QColor(90, 90, 88)))
-        painter.drawText(self.__node.posX - self.__node.width / 2.0,
-                         self.__node.posY - self.__node.height / 2.0,
-                         self.__node.width, self.__node.height,
-                         Qt.AlignCenter, self.__node.label)
+        rect = QRectF(
+            self.__node.posX - self.__node.width / 2.0,
+            self.__node.posY - self.__node.height / 2.0,
+            self.__node.width,
+            self.__node.height,
+        )
+        painter.drawText(rect, Qt.AlignCenter, self.__node.label)
 
 
 class ImportsDgmSystemWideModule(QGraphicsRectItem):
@@ -295,10 +302,13 @@ class ImportsDgmSystemWideModule(QGraphicsRectItem):
         font = QFont("Arial", 10)
         font.setBold(True)
         painter.setFont(font)
-        painter.drawText(self.__node.posX - self.__node.width / 2.0,
-                         self.__node.posY - self.__node.height / 2.0,
-                         self.__node.width, self.__node.height,
-                         Qt.AlignCenter, self.__node.label)
+        rect = QRectF(
+            self.__node.posX - self.__node.width / 2.0,
+            self.__node.posY - self.__node.height / 2.0,
+            self.__node.width,
+            self.__node.height,
+        )
+        painter.drawText(rect, Qt.AlignCenter, self.__node.label)
 
     def mouseDoubleClickEvent(self, event):
         """Open the clicked file as the new one"""
@@ -365,16 +375,18 @@ class ImportsDgmDetailedModuleBase(QGraphicsRectItem):
         for index in range(len(self.__lines) - 1, 0, -1):
             if self.__lines[index] is None:
                 # Draw a separation line
-                painter.drawLine(posX + 1, posY + self.__pixelsPerLine / 2.0,
-                                 posX + self.__node.width,
-                                 posY + self.__pixelsPerLine / 2.0)
+                yMid = posY + self.__pixelsPerLine / 2.0
+                painter.drawLine(
+                    int(posX + 1), int(yMid),
+                    int(posX + self.__node.width), int(yMid),
+                )
             elif self.__lines[index] != "":
                 # Draw a text line
                 # Sometimes the bottom part of 'g' is not drawn so I add 2
                 # spare pixels.
-                painter.drawText(int(posX), int(posY),
-                                 int(self.__node.width), self.__pixelsPerLine + 2,
-                                 Qt.AlignCenter, self.__lines[index])
+                rect = QRectF(posX, posY, self.__node.width,
+                              self.__pixelsPerLine + 2)
+                painter.drawText(rect, Qt.AlignCenter, self.__lines[index])
             occupiedPixels += self.__pixelsPerLine
             posY -= self.__pixelsPerLine
 
@@ -384,9 +396,8 @@ class ImportsDgmDetailedModuleBase(QGraphicsRectItem):
 
         available = self.__node.height - occupiedPixels
         posY = self.__node.posY - self.__node.height / 2.0
-        painter.drawText(int(posX), int(posY),
-                         int(self.__node.width), int(available),
-                         Qt.AlignCenter, self.__lines[0])
+        rect = QRectF(posX, posY, self.__node.width, available)
+        painter.drawText(rect, Qt.AlignCenter, self.__lines[0])
 
     def mouseDoubleClickEvent(self, event):
         """Open the clicked file as the new one"""
@@ -451,11 +462,13 @@ class ImportsDgmDocNote(QGraphicsRectItem):
         painter.setFont(font)
         hSpacer = 10
         ySpacer = 5
-        painter.drawText(self.__node.posX - self.__node.width / 2.0 + hSpacer,
-                         self.__node.posY - self.__node.height / 2.0 + ySpacer,
-                         self.__node.width - hSpacer,
-                         self.__node.height - ySpacer,
-                         Qt.AlignLeft, self.__srcobj.text)
+        rect = QRectF(
+            self.__node.posX - self.__node.width / 2.0 + hSpacer,
+            self.__node.posY - self.__node.height / 2.0 + ySpacer,
+            self.__node.width - hSpacer,
+            self.__node.height - ySpacer,
+        )
+        painter.drawText(rect, Qt.AlignLeft, self.__srcobj.text)
 
     def mouseDoubleClickEvent(self, event):
         """Open the clicked file as the new one"""

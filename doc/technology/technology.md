@@ -816,19 +816,14 @@ Now, let’s talk about the implementation details.
 
 ### General Information
 
-[Codimension](http://codimension.org/) is implemented as an open source project
-licensed under GPL v.3 and its source code resides in three repositories on
-[github](https://github.com/): two Python extension
-modules [cdm-pythonparser](https://github.com/SergeySatskiy/cdm-pythonparser)
-and [cdm-flowparser](https://github.com/SergeySatskiy/cdm-flowparser) plus the
-[IDE](https://github.com/SergeySatskiy/codimension). The extension modules
-are mostly written in C/C++ while the IDE is written in Python. The UI is
-implemented using Python QT library bindings - PyQT.
+Codimension — відкритий проєкт під GPL v3. Оригінальна архітектура: два C/C++ розширення
+[cdm-pythonparser](https://github.com/SergeySatskiy/cdm-pythonparser) та
+[cdm-flowparser](https://github.com/SergeySatskiy/cdm-flowparser) плюс
+[IDE](https://github.com/SergeySatskiy/codimension). Оригінальні репозиторії не підтримуються понад 4 роки.
 
-The development is done on Linux and for Linux. In particular Ubuntu
-distribution was used most of the time.
+**Цей форк** використовує pure-Python fallback-парсери (`brief_ast`, `flow_ast`) коли C-розширення недоступні (наприклад, Python 3.11+ без збірки). UI — PyQt5.
 
-The IDE targets projects written in Python 3.11+.
+Розробка ведеться на Linux (Ubuntu). Підтримується Python 3.11+.
 
 ### Architecture
 

@@ -20,6 +20,7 @@ import sys
 
 from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
+from utils.run import getProjectPythonPath
 
 
 class BanditDriver(QWidget):
@@ -32,6 +33,7 @@ class BanditDriver(QWidget):
         self.__ide = ide
         self.__process = None
         self.__args = None
+        self.__pythonPath = sys.executable
         self.__stdout = ""
         self.__stderr = ""
         self.__fileName = ""
@@ -115,7 +117,7 @@ class BanditDriver(QWidget):
             "ExitStatus": exitStatus,
             "FileName": self.__fileName,
             "Timestamp": getLocaleDateTime(),
-            "CommandLine": [sys.executable] + self.__args,
+            "CommandLine": [self.__pythonPath] + self.__args,
             "Diagnostics": [],
             "StdOut": self.__stdout,
             "StdErr": self.__stderr,

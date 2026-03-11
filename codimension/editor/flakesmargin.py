@@ -27,7 +27,7 @@ from html import escape
 import qutepart
 from qutepart.margins import MarginBase
 from radon.complexity import cc_rank
-from ui.qt import QPainter, QToolTip, QWidget
+from ui.qt import QPainter, QRectF, QToolTip, QWidget
 from utils.fileutils import isPythonMime
 from utils.globals import GlobalData
 from utils.misc import extendInstance
@@ -131,8 +131,12 @@ class CDMFlakesMargin(QWidget):
                         # Not enough vertical space, width is fixed
                         xPos += math.ceil((pixmapSide - oneLineHeight) / 2)
                         pixmapSide = oneLineHeight
-                    painter.drawPixmap(xPos, yPos,
-                                       pixmapSide, pixmapSide, pixmap)
+                    targetRect = QRectF(
+                        float(xPos), float(yPos),
+                        float(pixmapSide), float(pixmapSide),
+                    )
+                    sourceRect = QRectF(0, 0, pixmap.width(), pixmap.height())
+                    painter.drawPixmap(targetRect, pixmap, sourceRect)
             top += height
 
     def mouseMoveEvent(self, event):

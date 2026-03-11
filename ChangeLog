@@ -1,5 +1,52 @@
 2025 Mar 11
 
+* Documentation: full project docs update (fork status, GPL, Git standards):
+  - README.md: fork notice, original unmaintained 4+ years, clone this repo not upstream
+  - doc/index.md: fork attribution, Ukrainian
+  - doc/technology/technology.md: General Information — fork, pure-Python fallbacks
+  - FORK.md: new — fork status, changes, license
+  - CONTRIBUTING.md: new — contribution guide
+  - doc/LICENSE_COMPLIANCE.md: new — GPL v3 code changes (documented, not applied)
+  - NOTES.md: release steps, fork URL
+  - pyproject.toml: description, fork comment
+
+2025 Mar 11
+
+* Project tree: fix empty imports/classes/functions under Python files:
+  - viewitems.py: TreeViewFileItem stores self.path (full path) for correct
+    getPath() and populateFileItem; avoids parent-chain path resolution bugs
+  - browsermodelbase.py: project browser populateDirectoryItem now excludes
+    venv and excludeFromAnalysis paths (consistent with project filesList)
+
+2025 Mar 11
+
+* Lazy load Classes/Functions/Globals browsers (optimization):
+  - sidebar.py: sigCurrentTabChanged signal for tab visibility
+  - classesbrowsermodel.py, functionsbrowsermodel.py, globalsbrowsermodel.py:
+    __needsPopulate flag, populateIfNeeded(), defer __populateModel until tab shown
+  - mainwindow.py: __onLeftSideBarTabChanged, __triggerLazyLoadForCurrentTab
+  - Parsing of all Python files deferred until user opens Classes/Functions/Globals tab
+
+2025 Mar 11
+
+* Startup: no auto-load of last project (fast startup for large projects).
+  - codimension.py: skip loading recentProjects[0] at launch
+  - mainwindow.py: activateRecentTab() — show Recent Projects when starting
+    without project so user can pick one to load
+
+2025 Mar 11
+
+* Documentation audit (fork attribution, excludeFromAnalysis, venv):
+  - README.md: fork of SergeySatskiy/codimension, upstream links, excludeFromAnalysis note
+  - doc/index.md: fork attribution
+  - doc/project/project.md: Python interpreter (venv), Exclude from analysis table rows,
+    new section "Excluding paths from analysis"
+  - doc/dependencies/dependencies.md: cross-reference to project exclude
+  - pyproject.toml: description, fork comment
+  - TODO_FIXME.md, NOTES.md: fork attribution, excludeFromAnalysis status
+
+2025 Mar 11
+
 * Python 3.12 compatibility:
   - imp_compat.py: shim for removed imp module (yapsy dependency)
   - pkg_resources_compat.py: shim for pkg_resources (removed in setuptools 82+)

@@ -42,8 +42,19 @@ class FunctionsBrowserModel(BrowserModelBase):
     def __init__(self, parent=None):
         BrowserModelBase.__init__(self, ["Name", "File name", "Line"], parent)
         self.setTooltips(Settings()['functionsTooltips'])
+        self.__needsPopulate = False
         self.globalData.project.sigProjectChanged.connect(
             self.__onProjectChanged)
+
+    def populateIfNeeded(self):
+        """Populates the model when the tab is first shown (lazy loading)."""
+        if not self.__needsPopulate:
+            return
+        project = self.globalData.project
+        if not project.isLoaded():
+            return
+        self.__needsPopulate = False
+        self.__populateModel()
 
     def __populateModel(self):
         """Populates the project browser model"""
@@ -62,7 +73,8 @@ class FunctionsBrowserModel(BrowserModelBase):
     def __onProjectChanged(self, what):
         """Triggered when a project is changed"""
         if what == CodimensionProject.CompleteProject:
-            self.__populateModel()
+            self.__needsPopulate = True
+            self.clear()
 
     def onFSChanged(self, addedPythonFiles, deletedPythonFiles):
         """Triggered when some files appeared or disappeared"""

@@ -32,6 +32,7 @@ import sys
 from utils.fileutils import isPythonFile, isPythonMime
 from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
+from utils.venvutils import getProjectVenvDir
 
 from .qt import QAbstractItemModel, QApplication, QCursor, QModelIndex, Qt
 from .viewitems import (
@@ -285,8 +286,36 @@ class BrowserModelBase(QAbstractItemModel):
         items = [itm for itm in items if itm not in excludes]
         if parentItem.needVCSStatus:
             # That's the project browser. Filter out what not needed.
-            excludeFunctor = GlobalData().project.shouldExclude
+            project = GlobalData().project
+            excludeFunctor = project.shouldExclude
             items = [itm for itm in items if not excludeFunctor(itm)]
+            # Also exclude venv and excludeFromAnalysis paths
+            path_real = os.path.realpath(path)
+            if not path_real.endswith(os.path.sep):
+                path_real += os.path.sep
+            venv_dir = getProjectVenvDir(project)
+            exclude_paths = project.getExcludeFromAnalysisAsAbsolutePaths()
+            exclude_paths_real = {os.path.realpath(p).rstrip(os.path.sep)
+                                 for p in exclude_paths} if exclude_paths else set()
+            venv_real = os.path.realpath(venv_dir).rstrip(os.path.sep) if venv_dir else None
+
+            def _should_skip(candidate_path, is_dir):
+                cand_real = os.path.realpath(candidate_path)
+                if venv_real and is_dir:
+                    cand_sep = cand_real + os.path.sep if not cand_real.endswith(os.path.sep) else cand_real
+                    venv_sep = venv_real + os.path.sep
+                    if cand_real == venv_real or cand_sep.startswith(venv_sep):
+                        return True
+                if exclude_paths_real:
+                    if cand_real in exclude_paths_real:
+                        return True
+                    for excl in exclude_paths_real:
+                        if cand_real.startswith(excl + os.path.sep):
+                            return True
+                return False
+
+            items = [itm for itm in items if not _should_skip(path_real + itm,
+                                                             os.path.isdir(path_real + itm))]
 
         pathsToRequest = []
         if items:

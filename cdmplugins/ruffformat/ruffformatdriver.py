@@ -19,6 +19,7 @@ import os.path
 import sys
 
 from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
+from utils.run import getProjectPythonPath
 
 
 class RuffFormatDriver(QWidget):
@@ -68,7 +69,8 @@ class RuffFormatDriver(QWidget):
         processEnvironment = QProcessEnvironment()
         processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
-        self.__process.start(sys.executable, self.__args)
+        pythonPath = getProjectPythonPath(self.__ide.project)
+        self.__process.start(pythonPath, self.__args)
 
         if not self.__process.waitForStarted():
             self.__process = None

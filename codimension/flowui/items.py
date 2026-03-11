@@ -21,7 +21,7 @@
 
 # pylint: disable=C0305
 
-from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, QPointF, Qt
+from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QLineF, QPen, QPointF, QRectF, Qt
 
 from .abovebadges import AboveBadgesSpacer
 from .auxitems import BadgeItem, Connector, DecorBadgeItem
@@ -121,8 +121,13 @@ class CodeBlockCell(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
             yPos += badgeShift
             rectHeight -= badgeShift
 
-        painter.drawRect(self.baseX + settings.hCellPadding,
-                         yPos, rectWidth, rectHeight)
+        rect = QRectF(
+            self.baseX + settings.hCellPadding,
+            yPos,
+            rectWidth,
+            rectHeight,
+        )
+        painter.drawRect(rect)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -131,12 +136,14 @@ class CodeBlockCell(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
 
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (rectWidth - textWidth) / 2
-        painter.drawText(
+        textRect = QRectF(
             self.baseX + settings.hCellPadding +
             settings.hTextPadding + textShift,
             yPos + settings.vTextPadding,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def getSelectTooltip(self):
         """Provides the tooltip"""
@@ -246,12 +253,16 @@ class ReturnCell(CellElement,
             yPos += badgeShift
             rectHeight -= badgeShift
 
+        rect = QRectF(xPos, yPos, rectWidth, rectHeight)
         painter.drawRoundedRect(
-            xPos, yPos, rectWidth, rectHeight,
-            settings.returnRectRadius, settings.returnRectRadius)
+            rect,
+            settings.returnRectRadius,
+            settings.returnRectRadius,
+        )
         lineXPos = xPos + self.iconItem.iconWidth() + \
                    2 * settings.hTextPadding
-        painter.drawLine(lineXPos, yPos, lineXPos, yPos + rectHeight)
+        line = QLineF(lineXPos, yPos, lineXPos, yPos + rectHeight)
+        painter.drawLine(line)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -262,12 +273,14 @@ class ReturnCell(CellElement,
                      self.iconItem.iconWidth() - 2 * settings.hTextPadding - \
                      settings.hTextPadding - settings.returnRectRadius
         textShift = (availWidth - self.textRect.width()) / 2
-        painter.drawText(
+        textRect = QRectF(
             xPos + self.iconItem.iconWidth() +
             3 * settings.hTextPadding + textShift,
             yPos + settings.vTextPadding,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def getLineRange(self):
         """Provides the item line range"""
@@ -385,13 +398,17 @@ class RaiseCell(CellElement,
             yPos += badgeShift
             rectHeight -= badgeShift
 
+        rect = QRectF(xPos, yPos, rectWidth, rectHeight)
         painter.drawRoundedRect(
-            xPos, yPos, rectWidth, rectHeight,
-            settings.returnRectRadius, settings.returnRectRadius)
+            rect,
+            settings.returnRectRadius,
+            settings.returnRectRadius,
+        )
 
         lineXPos = xPos + self.iconItem.iconWidth() + \
                    2 * settings.hTextPadding
-        painter.drawLine(lineXPos, yPos, lineXPos, yPos + rectHeight)
+        line = QLineF(lineXPos, yPos, lineXPos, yPos + rectHeight)
+        painter.drawLine(line)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -401,12 +418,14 @@ class RaiseCell(CellElement,
                      self.iconItem.iconWidth() - 2 * settings.hTextPadding - \
                      settings.hTextPadding - settings.returnRectRadius
         textShift = (availWidth - self.textRect.width()) / 2
-        painter.drawText(
+        textRect = QRectF(
             xPos + self.iconItem.iconWidth() +
             3 * settings.hTextPadding + textShift,
             yPos + settings.vTextPadding,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def getLineRange(self):
         """Provides the line range"""
@@ -543,10 +562,13 @@ class AssertCell(CellElement,
                             QPointF(dx3, dy3), QPointF(dx4, dy4),
                             QPointF(dx5, dy5), QPointF(dx6, dy6))
 
-        painter.drawRect(dx4 + 1, self.baseY + settings.vCellPadding + takenByBadges,
-                         self.minWidth - 2 * settings.hCellPadding -
-                         self.__diamondWidth,
-                         self.minHeight - 2 * settings.vCellPadding - takenByBadges)
+        rect = QRectF(
+            dx4 + 1,
+            self.baseY + settings.vCellPadding + takenByBadges,
+            self.minWidth - 2 * settings.hCellPadding - self.__diamondWidth,
+            self.minHeight - 2 * settings.vCellPadding - takenByBadges,
+        )
+        painter.drawRect(rect)
 
 
         # Draw the text in the rectangle
@@ -557,11 +579,13 @@ class AssertCell(CellElement,
             self.minWidth - 2 * settings.hCellPadding - self.__diamondWidth
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (availWidth - textWidth) / 2
-        painter.drawText(
+        textRect = QRectF(
             dx4 + settings.hTextPadding + textShift,
             self.baseY + settings.vCellPadding + settings.vTextPadding + takenByBadges,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def getLineRange(self):
         """Provides the line range"""
@@ -684,12 +708,16 @@ class SysexitCell(CellElement,
             yPos += badgeShift
             rectHeight -= badgeShift
 
+        rect = QRectF(xPos, yPos, rectWidth, rectHeight)
         painter.drawRoundedRect(
-            xPos, yPos, rectWidth, rectHeight,
-            settings.returnRectRadius, settings.returnRectRadius)
+            rect,
+            settings.returnRectRadius,
+            settings.returnRectRadius,
+        )
         lineXPos = xPos + self.iconItem.iconWidth() + \
                    2 * settings.hTextPadding
-        painter.drawLine(lineXPos, yPos, lineXPos, yPos + rectHeight)
+        line = QLineF(lineXPos, yPos, lineXPos, yPos + rectHeight)
+        painter.drawLine(line)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -701,12 +729,14 @@ class SysexitCell(CellElement,
             2 * settings.hTextPadding - \
             settings.hTextPadding - settings.returnRectRadius
         textShift = (availWidth - self.textRect.width()) / 2
-        painter.drawText(
+        textRect = QRectF(
             xPos + self.iconItem.iconWidth() +
             3 * settings.hTextPadding + textShift,
             yPos + settings.vTextPadding,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def getSelectTooltip(self):
         """Provides tooltip"""
@@ -813,10 +843,12 @@ class ImportCell(CellElement,
             yPos += badgeShift
             rectHeight -= badgeShift
 
-        painter.drawRect(xPos, yPos, rectWidth, rectHeight)
+        rect = QRectF(xPos, yPos, rectWidth, rectHeight)
+        painter.drawRect(rect)
         lineXPos = xPos + self.iconItem.iconWidth() + \
                    2 * settings.hTextPadding
-        painter.drawLine(lineXPos, yPos, lineXPos, yPos + rectHeight)
+        line = QLineF(lineXPos, yPos, lineXPos, yPos + rectHeight)
+        painter.drawLine(line)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -825,12 +857,14 @@ class ImportCell(CellElement,
         textRectWidth = self.minWidth - 2 * settings.hCellPadding - \
                         4 * settings.hTextPadding - self.iconItem.iconWidth()
         textShift = (textRectWidth - self.textRect.width()) / 2
-        painter.drawText(
+        textRect = QRectF(
             xPos + self.iconItem.iconWidth() +
             3 * settings.hTextPadding + textShift,
             yPos + settings.vTextPadding,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def getSelectTooltip(self):
         """Provides the select tooltip"""
@@ -976,19 +1010,24 @@ class DecoratorCell(CellElement,
         rectWidth = self.minWidth - 2 * settings.hCellPadding
         rectHeight = self.minHeight - 2 * settings.vCellPadding - takenByBadges
 
-        painter.drawRoundedRect(xPos, yPos, rectWidth, rectHeight,
-                                settings.decorRectRadius,
-                                settings.decorRectRadius)
+        rect = QRectF(xPos, yPos, rectWidth, rectHeight)
+        painter.drawRoundedRect(
+            rect,
+            settings.decorRectRadius,
+            settings.decorRectRadius,
+        )
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
         painter.setFont(settings.monoFont)
         painter.setPen(pen)
-        painter.drawText(
+        textRect = QRectF(
             xPos + settings.hTextPadding,
             yPos + settings.vTextPadding,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
     def getSelectTooltip(self):
         """Provides the select tooltip"""
@@ -1158,11 +1197,13 @@ class IfCell(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
         availWidth = self.x3 - self.x2
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (availWidth - textWidth) / 2
-        painter.drawText(
+        textRect = QRectF(
             self.x2 + settings.hTextPadding + textShift,
             self.baseY + settings.vCellPadding + settings.vTextPadding + takenByBadges,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft | Qt.AlignVCenter, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft | Qt.AlignVCenter, self.text)
 
     def getSelectTooltip(self):
         """Provides the tooltip"""

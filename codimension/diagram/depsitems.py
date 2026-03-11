@@ -25,7 +25,7 @@ from flowui.abovebadges import AboveBadgesSpacer
 from flowui.auxitems import BadgeItem, Connector
 from flowui.cellelement import CellElement
 from flowui.textmixin import TextMixin
-from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, Qt
+from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, QRectF, Qt
 from utils.globals import GlobalData
 
 
@@ -132,12 +132,14 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
 
         textWidth = self.textRect.width() + 2 * settings.hDepsTextPadding
         textShift = (rectWidth - textWidth) / 2
-        painter.drawText(
+        rect = QRectF(
             self.baseX + settings.hDepsCellPadding +
             settings.hDepsTextPadding + textShift,
             yPos + settings.vDepsTextPadding,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(rect, Qt.AlignLeft, self.text)
 
     def mouseDoubleClickEvent(self, event):
         if event.buttons() != Qt.LeftButton:

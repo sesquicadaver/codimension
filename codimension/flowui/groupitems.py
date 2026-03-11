@@ -32,6 +32,7 @@ from ui.qt import (
     QLabel,
     QPalette,
     QPen,
+    QRectF,
     Qt,
     QVBoxLayout,
 )
@@ -184,7 +185,8 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
                    rectNum * settings.emptyGroupXShift
             yPos = self.baseY + settings.vCellPadding + \
                    (self.N_BACK_RECT - rectNum) * settings.emptyGroupYShift
-            painter.drawRect(xPos, yPos, rectWidth, rectHeight)
+            rect = QRectF(xPos, yPos, rectWidth, rectHeight)
+            painter.drawRect(rect)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -193,14 +195,15 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
 
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (rectWidth - textWidth) / 2
-        painter.drawText(
+        textRect = QRectF(
             self.baseX + settings.hCellPadding +
-            settings.hTextPadding +
-            textShift,
+            settings.hTextPadding + textShift,
             self.baseY + settings.vCellPadding + settings.vTextPadding +
             self.N_BACK_RECT * settings.emptyGroupYShift,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
 
 class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
@@ -299,11 +302,17 @@ class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
         # Group rectangle
         fullWidth = self.groupWidth + 2 * settings.openGroupHSpacer
         fullHeight = self.groupHeight + 2 * settings.openGroupVSpacer
-        painter.drawRoundedRect(self.baseX + settings.openGroupHSpacer,
-                                self.baseY + settings.openGroupVSpacer,
-                                fullWidth, fullHeight,
-                                settings.openGroupVSpacer,
-                                settings.openGroupVSpacer)
+        rect = QRectF(
+            self.baseX + settings.openGroupHSpacer,
+            self.baseY + settings.openGroupVSpacer,
+            fullWidth,
+            fullHeight,
+        )
+        painter.drawRoundedRect(
+            rect,
+            settings.openGroupVSpacer,
+            settings.openGroupVSpacer,
+        )
 
 
 class OpenedGroupEnd(GroupItemBase):
@@ -429,7 +438,8 @@ class CollapsedGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
                    rectNum * settings.collapsedGroupXShift
             yPos = self.baseY + settings.vCellPadding + \
                    (self.N_BACK_RECT - rectNum) * settings.collapsedGroupYShift
-            painter.drawRect(xPos, yPos, rectWidth, rectHeight)
+            rect = QRectF(xPos, yPos, rectWidth, rectHeight)
+            painter.drawRect(rect)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -438,14 +448,15 @@ class CollapsedGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
 
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (rectWidth - textWidth) / 2
-        painter.drawText(
+        textRect = QRectF(
             self.baseX + settings.hCellPadding +
-            settings.hTextPadding +
-            textShift,
+            settings.hTextPadding + textShift,
             self.baseY + settings.vCellPadding + settings.vTextPadding +
             self.N_BACK_RECT * settings.collapsedGroupYShift,
-            self.textRect.width(), self.textRect.height(),
-            Qt.AlignLeft, self.text)
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
 
 
@@ -489,9 +500,8 @@ class GroupCornerControl(CellElement, QGraphicsRectItem):
         painter.setPen(pen)
         painter.setBrush(QBrush(settings.openGroupControlBGColor))
 
-        painter.drawRoundedRect(self.x(), self.y(),
-                                self.__width, self.__height,
-                                1, 1)
+        rect = QRectF(self.x(), self.y(), self.__width, self.__height)
+        painter.drawRoundedRect(rect, 1, 1)
 
     def hoverEnterEvent(self, event):
         """Handles the mouse in event"""

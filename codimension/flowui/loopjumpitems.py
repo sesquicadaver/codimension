@@ -23,7 +23,7 @@
 # pylint: disable=R0902
 # pylint: disable=R0913
 
-from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, Qt
+from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, QRectF, Qt
 
 from .auxitems import Connector
 from .cellelement import CellElement
@@ -127,9 +127,8 @@ class LoopJumpBase(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
         painter.setPen(self.getPainterPen(self.isSelected(), self.borderColor))
         painter.setBrush(QBrush(self.bgColor))
 
-        painter.drawRoundedRect(self.xPos, self.yPos,
-                                self.rectWidth, self.rectHeight,
-                                rectRadius, rectRadius)
+        rect = QRectF(self.xPos, self.yPos, self.rectWidth, self.rectHeight)
+        painter.drawRoundedRect(rect, rectRadius, rectRadius)
 
         # Draw the text in the rectangle
         pen = QPen(self.fgColor)
@@ -138,9 +137,13 @@ class LoopJumpBase(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
 
         hShift = (self.rectWidth - self.textRect.width()) / 2
         vShift = (self.rectHeight - self.textRect.height()) / 2
-        painter.drawText(self.xPos + hShift, self.yPos + vShift,
-                         self.textRect.width(), self.textRect.height(),
-                         Qt.AlignLeft, self.text)
+        textRect = QRectF(
+            self.xPos + hShift,
+            self.yPos + vShift,
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(textRect, Qt.AlignLeft, self.text)
 
 
 class BreakCell(LoopJumpBase):

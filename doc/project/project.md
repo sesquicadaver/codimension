@@ -3,6 +3,10 @@ Project
 
 Codimension supports working with and without a project.
 
+**Startup:** The IDE starts without auto-loading the last project (for fast
+startup with large projects). Use the **Recent** tab in the left sidebar to
+pick a project to load (double-click or Load button).
+
 If there is no project then all open files are treated as independent with no
 relation to each other. Some IDE functionality will not be available in this
 case, e.g. running dependencies diagram for all the python files in a project.
@@ -38,22 +42,24 @@ The project creation dialog looks as follows:
 
 Basically it is a set of input fields to provide the project properties.
 
-| Input field        | Description |
-|:-------------------| ----------- |
-| Project name       | Mandatory. The project name |
-| Project directory  | Mandatory. The project directory |
-| Main script        | Optional. If provided it must be a python script. It will be used when project debugging or profiling is invoked. |
-| Markdown doc file  | Optional. If provided it must be a markdown file. It will be shown when a project documentation is requested. |
-| Import directories | Optional. A list of directories where the python files are located and available for non-relative importing from the other project files. It is used when Codimension resolves imports to files (e.g. for dependencies diagram). |
-| Version            | Optional. The project version. |
-| Author             | Optional. The project author. |
-| E-mail             | Optional. The author e-mail. |
-| License            | Optional. The project license. |
-| Copyright          | Optional. The code copyright. |
-| Description        | Optional. The project description. |
-| Default encoding   | Optional. The project default encoding. It is used e.g. when a file is opened for editing. |
-| Creation date      | Automatically generated, not for editing |
-| UUID               | Automatically generated, not for editing |
+| Input field          | Description |
+|:---------------------| ----------- |
+| Project name         | Mandatory. The project name |
+| Project directory    | Mandatory. The project directory |
+| Main script          | Optional. If provided it must be a python script. It will be used when project debugging or profiling is invoked. |
+| Markdown doc file    | Optional. If provided it must be a markdown file. It will be shown when a project documentation is requested. |
+| Python interpreter   | Optional. Path to venv directory or python executable for project analysis (ruff, mypy, pytest, etc.). Leave empty to use IDE Python. Auto-detects `.venv`, `venv`, `env` in project root if not set. The venv is excluded from analysis automatically. |
+| Import directories   | Optional. A list of directories where the python files are located and available for non-relative importing from the other project files. It is used when Codimension resolves imports to files (e.g. for dependencies diagram). |
+| Exclude from analysis | Optional. Directories or files to exclude from analysis (imports diagram, outline, Classes/Functions/Globals tabs). Paths may be relative to project or absolute. The venv is excluded automatically. |
+| Version              | Optional. The project version. |
+| Author               | Optional. The project author. |
+| E-mail               | Optional. The author e-mail. |
+| License              | Optional. The project license. |
+| Copyright            | Optional. The code copyright. |
+| Description          | Optional. The project description. |
+| Default encoding     | Optional. The project default encoding. It is used e.g. when a file is opened for editing. |
+| Creation date        | Automatically generated, not for editing |
+| UUID                 | Automatically generated, not for editing |
 
 Almost all the project properties are available for substitution in the project
 new file template. Such a template can be created separately.
@@ -82,3 +88,11 @@ project. Codimension watches the project directories for changes and updates
 the project tabs accordingly. The new files can be created in the IDE or
 copied/created using the other ways outside of the IDE. The same is applied to
 the file or directory removal.
+
+### Excluding paths from analysis
+
+Paths listed in **Exclude from analysis** (project properties) and the project
+venv (Python interpreter) are excluded from the analysis graph, imports diagram,
+Classes/Functions/Globals tabs, and file watcher. They do not clutter the
+analysis. The project browser still shows the full directory tree; only the
+analysis scope is reduced.

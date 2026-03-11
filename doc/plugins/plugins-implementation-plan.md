@@ -1,5 +1,7 @@
 # План імплементації плагінів Codimension IDE
 
+<!-- markdownlint-disable MD060 -->
+
 **Версія:** 1.0  
 **Дата:** 2025-03  
 **Статус:** План
@@ -26,9 +28,9 @@
 ### 1.3 Референсні плагіни
 
 | Плагін | Driver | Viewer | Гаряча клавіша |
-|--------|--------|--------|----------------|
-| ruff   | QProcess, JSON output | QTreeWidget | Ctrl+Shift+R |
-| mypy   | QProcess, JSON output | QTreeWidget | Ctrl+Shift+M |
+| ------ | ------ | ------ | --------------- |
+| ruff | QProcess, JSON output | QTreeWidget | Ctrl+Shift+R |
+| mypy | QProcess, JSON output | QTreeWidget | Ctrl+Shift+M |
 | pytest | QProcess, text parse | QTreeWidget | Ctrl+Shift+T |
 
 ---
@@ -45,7 +47,7 @@
 **Пріоритет:** Високий. Потрібен для CI та Living Specification.
 
 | Крок | Опис | Результат |
-|------|------|-----------|
+| ---- | ---- | --------- |
 | 1.1 | Створити `cdmplugins/coverage/` | coverage.cdmp, __init__.py ✅ |
 | 1.2 | CoverageDriver: `pytest --cov --cov-report=json` | JSON з coverage ✅ |
 | 1.3 | CoverageResultViewer: дерево файлів + % покриття | Вкладка в bottom panel ✅ |
@@ -70,7 +72,7 @@ cdmplugins/coverage/
 **Пріоритет:** Високий. Security static analysis.
 
 | Крок | Опис | Результат |
-|------|------|-----------|
+| ---- | ---- | --------- |
 | 2.1 | Створити `cdmplugins/bandit/` | bandit.cdmp, __init__.py ✅ |
 | 2.2 | BanditDriver: `bandit -f json -q <file>` | JSON output ✅ |
 | 2.3 | BanditResultViewer: file → severity → message | Аналог ruff/mypy ✅ |
@@ -94,7 +96,7 @@ cdmplugins/bandit/
 **Пріоритет:** Високий. Перевірка вразливостей залежностей.
 
 | Крок | Опис | Результат |
-|------|------|-----------|
+| ---- | ---- | --------- |
 | 3.1 | Створити `cdmplugins/pipaudit/` | pipaudit.cdmp, __init__.py ✅ |
 | 3.2 | PipAuditDriver: `pip_audit --format json` | JSON ✅ |
 | 3.3 | PipAuditResultViewer: package → vuln → CVE | Вкладка ✅ |
@@ -110,7 +112,7 @@ cdmplugins/bandit/
 **Пріоритет:** Середній. Форматування коду.
 
 | Крок | Опис | Результат |
-|------|------|-----------|
+| ---- | ---- | --------- |
 | 4.1 | Створити `cdmplugins/ruffformat/` | cdmp, __init__.py ✅ |
 | 4.2 | FormatDriver: `ruff format` | In-place format ✅ |
 | 4.3 | Результат: success/error у status bar | Без окремої вкладки ✅ |
@@ -124,7 +126,7 @@ cdmplugins/bandit/
 **Пріоритет:** Середній. Anti-stub перевірка, Living Spec.
 
 | Крок | Опис | Результат |
-|------|------|-----------|
+| ---- | ---- | --------- |
 | 5.1 | Створити `cdmplugins/todopanel/` | todopanel.cdmp, __init__.py ✅ |
 | 5.2 | Сканування проекту: grep TODO, FIXME, XXX, HACK | Регулярні вирази ✅ |
 | 5.3 | TodoPanelViewer: file:line → текст | Дерево, клік → goto ✅ |
@@ -166,9 +168,18 @@ cdmplugins/todopanel/
 
 ---
 
-## 4. Технічні вимоги
+## 4. Віртуальне середовище проекту
 
-### 4.1 Структура кожного плагіна
+Опціонально в Project Properties можна вказати **Python interpreter (venv)** — шлях до venv-директорії або виконуваного Python. Якщо вказано, плагіни (ruff, mypy, pytest, coverage, bandit, pip-audit, ruff format) використовують цей інтерпретатор для аналізу замість системного.
+
+- Порожнє поле = використовується Python IDE (sys.executable).
+- Підтримуються: venv/bin/python, venv/Scripts/python.exe, або шлях до Python.
+
+---
+
+## 5. Технічні вимоги
+
+### 5.1 Структура кожного плагіна
 
 - Наслідування `WizardInterface`
 - `activate()` / `deactivate()` з коректним cleanup
@@ -177,7 +188,7 @@ cdmplugins/todopanel/
 - Вкладка в `sideBars['bottom']` (де доречно)
 - Гаряча клавіша (унікальна)
 
-### 4.2 Оновлення setup.py
+### 5.2 Оновлення setup.py
 
 ```python
 # getPackages()
@@ -193,7 +204,7 @@ cdmplugins/todopanel/
 ...
 ```
 
-### 4.3 Оновлення requirements.txt
+### 5.3 Оновлення requirements.txt
 
 ```
 pytest-cov>=4.0.0
@@ -202,34 +213,34 @@ pip-audit>=2.0.0
 # ruff format — ruff вже є
 ```
 
-### 4.4 Гарячі клавіші (пропозиція)
+### 5.4 Гарячі клавіші (пропозиція)
 
-| Плагін   | Клавіша        |
-|----------|----------------|
-| Coverage | Ctrl+Shift+C    |
-| Bandit   | Ctrl+Shift+B    |
-| pip-audit| Ctrl+Shift+A    |
-| Format   | Ctrl+Shift+F    |
-| TODO     | Ctrl+Shift+O    |
+| Плагін | Клавіша |
+| ------ | ------- |
+| Coverage | Ctrl+Shift+C |
+| Bandit | Ctrl+Shift+B |
+| pip-audit | Ctrl+Shift+A |
+| Format | Ctrl+Shift+F |
+| TODO | Ctrl+Shift+O |
 
 ---
 
-## 5. Тестування
+## 6. Тестування
 
-### 5.1 Per-plugin
+### 6.1 Per-plugin
 
 - Запуск плагіна на тестовому файлі
 - Перевірка вкладки результатів
 - Перевірка меню та гарячих клавіш
 - Deactivate без падіння
 
-### 5.2 Інтеграційне
+### 6.2 Інтеграційне
 
 - Усі плагіни активні одночасно
 - Перемикання вкладок
 - Запуск з різних контекстів (файл, директорія, проект)
 
-### 5.3 CI
+### 6.3 CI
 
 - `pip install -e .` у venv
 - Запуск codimension, перевірка завантаження плагінів
@@ -249,7 +260,7 @@ pip-audit>=2.0.0
 ## 7. Ризики та обмеження
 
 | Ризик | Мітигація |
-|-------|-----------|
+| ----- | --------- |
 | Конфлікт гарячих клавіш | Перевірка існуючих біндингів |
 | pip-audit без JSON | Парсинг text output |
 | Coverage тільки з pytest | Документувати обмеження |

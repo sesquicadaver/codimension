@@ -32,6 +32,7 @@ from ui.qt import QApplication
 
 from .fileutils import isPythonFile
 from .globals import GlobalData
+from .run import getProjectPythonPath, getVenvSitePackages
 
 
 def getImportsList(fileContent):
@@ -167,6 +168,14 @@ class ImportResolution:
         return name
 
 
+def __getBaseSysPath():
+    """Returns sys.path for import resolution (original or current as fallback)."""
+    orig = GlobalData().originalSysPath
+    if orig and len(orig) > 0:
+        return list(orig)
+    return list(sys.path)
+
+
 def __resolveImport(importObj, baseAndProjectPaths, result):
     """Resolves imports like: 'import x'"""
 
@@ -180,9 +189,8 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
             ImportResolution(importObj, None, True, None, None))
         return
 
-
     oldSysPath = sys.path
-    sys.path = GlobalData().originalSysPath + baseAndProjectPaths
+    sys.path = __getBaseSysPath() + baseAndProjectPaths
 
     try:
         spec = importlib.util.find_spec(importObj.name)
@@ -203,8 +211,13 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
             str(importObj.line)))
 
 
-def __resolveFrom(importObj, importName, basePath, result):
-    """Common resolution imports like 'from [.]x import y"""
+def __resolveFrom(importObj, importName, result):
+    """Common resolution imports like 'from [.]x import y.
+
+    Resolution uses sys.path (set by caller). The package parameter to
+    find_spec must be None for absolute resolution - passing a path causes
+    incorrect behavior (e.g. 'import os' fails).
+    """
     if importObj.name in sys.builtin_module_names:
         result.append(
             ImportResolution(importObj, None, True, None,
@@ -212,7 +225,7 @@ def __resolveFrom(importObj, importName, basePath, result):
         return
 
     try:
-        spec = importlib.util.find_spec(importName, basePath)
+        spec = importlib.util.find_spec(importName)
         if spec:
             if spec.has_location:
                 result.append(
@@ -237,7 +250,7 @@ def __resolveFrom(importObj, importName, basePath, result):
                     impName = importName + '.' + what.name
                     found = False
                     try:
-                        spec = importlib.util.find_spec(impName, basePath)
+                        spec = importlib.util.find_spec(impName)
                         if spec:
                             if spec.has_location:
                                 result.append(
@@ -273,9 +286,9 @@ def __resolveFromImport(importObj, basePath, baseAndProjectPaths, result):
     # IV:   <dir>/x/y/z.py
 
     oldSysPath = sys.path
-    sys.path = GlobalData().originalSysPath + baseAndProjectPaths
+    sys.path = __getBaseSysPath() + baseAndProjectPaths
 
-    __resolveFrom(importObj, importObj.name, basePath, result)
+    __resolveFrom(importObj, importObj.name, result)
 
     sys.path = oldSysPath
 
@@ -318,7 +331,7 @@ def __resolveRelativeImport(importObj, basePath, result):
         oldSysPath = sys.path
         sys.path = [path]
 
-        __resolveFrom(importObj, current, path, result)
+        __resolveFrom(importObj, current, result)
 
         sys.path = oldSysPath
 
@@ -345,9 +358,18 @@ def getImportResolutions(fileName, imports):
 
     project = GlobalData().project
     if project.isLoaded():
+        # Add project root for project-internal imports
+        proj_dir = project.getProjectDir()
+        if proj_dir and proj_dir not in baseAndProjectPaths:
+            baseAndProjectPaths.append(proj_dir)
         for importDir in project.getImportDirsAsAbsolutePaths():
             if importDir not in baseAndProjectPaths:
                 baseAndProjectPaths.append(importDir)
+        # Add project venv site-packages for third-party imports (numpy, etc.)
+        proj_python = getProjectPythonPath(project)
+        site_pkg = getVenvSitePackages(proj_python)
+        if site_pkg and site_pkg not in baseAndProjectPaths:
+            baseAndProjectPaths.append(site_pkg)
 
     for importObj in imports:
         if not importObj.what:

@@ -535,7 +535,8 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                     mod_info._onAs(alias.asname)
         elif isinstance(node, ast.ImportFrom):
             ln, p, ap = pos(node)
-            mod_name = node.module or ''
+            level = getattr(node, 'level', 0) or 0
+            mod_name = ('.' * level) + (node.module or '')
             mod_info._onImport(mod_name, ln, p, ap)
             for alias in node.names:
                 mod_info._onWhat(alias.name, ln, p, ap)

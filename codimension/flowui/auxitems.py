@@ -36,6 +36,7 @@ from ui.qt import (
     QGraphicsSvgItem,
     QPainterPath,
     QPen,
+    QRectF,
     Qt,
 )
 from utils.limits import MAXINT_32
@@ -219,10 +220,8 @@ class BadgeItemBase(CellElement):
         painter.setPen(pen)
 
         painter.setBrush(QBrush(bgColor))
-        painter.drawRoundedRect(self.x(), self.y(),
-                                self.width, self.height,
-                                s.badgeRadius, s.badgeRadius)
-
+        rect = QRectF(self.x(), self.y(), self.width, self.height)
+        painter.drawRoundedRect(rect, s.badgeRadius, s.badgeRadius)
 
 
 class BadgeItem(BadgeItemBase, QGraphicsRectItem):
@@ -270,19 +269,20 @@ class BadgeItem(BadgeItemBase, QGraphicsRectItem):
             pen.setWidth(s.badgeLineWidth)
             painter.setPen(pen)
             painter.setBrush(QBrush(self.__bgColor))
-            painter.drawRoundedRect(self.x(), self.y(),
-                                    self.width, self.height,
-                                    s.badgeRadius, s.badgeRadius)
+            rect = QRectF(self.x(), self.y(), self.width, self.height)
+            painter.drawRoundedRect(rect, s.badgeRadius, s.badgeRadius)
 
         if self.__drawText:
             pen = QPen(self.__fgColor)
             painter.setPen(pen)
             painter.setFont(s.badgeFont)
-            painter.drawText(
+            rect = QRectF(
                 self.x() + s.badgeHSpacing + (self.width - self.minWidth) / 2,
                 self.y() + s.badgeVSpacing,
-                self.textRect.width(), self.textRect.height(),
-                Qt.AlignCenter, self.text)
+                self.textRect.width(),
+                self.textRect.height(),
+            )
+            painter.drawText(rect, Qt.AlignCenter, self.text)
 
     def getSelectTooltip(self):
         """Provides the tooltip"""
@@ -397,8 +397,8 @@ class RubberBandItem(CellElement, QGraphicsRectItem):
         pen = QPen(self.__settings.rubberBandBorderColor)
         painter.setPen(pen)
         painter.setBrush(QBrush(self.__settings.rubberBandFGColor))
-        painter.drawRect(self.__x, self.__y,
-                         self.__width, self.__height)
+        rect = QRectF(self.__x, self.__y, self.__width, self.__height)
+        painter.drawRect(rect)
 
 
 
@@ -710,11 +710,13 @@ class DocstringBadgeItem(BadgeItemBase, ColorMixin, QGraphicsRectItem):
         pen = QPen(self.fgColor)
         painter.setPen(pen)
         painter.setFont(s.badgeFont)
-        painter.drawText(self.x() + s.badgeHSpacing + (self.width - self.minWidth) / 2,
-                         self.y() + s.badgeVSpacing,
-                         self.textRect.width(),
-                         self.textRect.height(),
-                         Qt.AlignCenter, self.text)
+        rect = QRectF(
+            self.x() + s.badgeHSpacing + (self.width - self.minWidth) / 2,
+            self.y() + s.badgeVSpacing,
+            self.textRect.width(),
+            self.textRect.height(),
+        )
+        painter.drawText(rect, Qt.AlignCenter, self.text)
 
     def getSelectTooltip(self):
         """Provides the tooltip"""

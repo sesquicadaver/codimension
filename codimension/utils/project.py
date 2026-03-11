@@ -36,6 +36,7 @@ from ui.qt import QObject, pyqtSignal
 
 from .config import DEFAULT_ENCODING
 from .debugenv import DebuggerEnvironment
+from .venvutils import getProjectVenvDir
 from .filepositions import FilePositions
 from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
@@ -57,7 +58,9 @@ _DEFAULT_PROJECT_PROPS = {'scriptname': '',    # Script to run the project
                           'description': '',
                           'uuid': '',
                           'importdirs': [],
-                          'encoding': ''}
+                          'excludeFromAnalysis': [],  # Dirs/files to exclude from analysis
+                          'encoding': '',
+                          'pythoninterpreter': ''}  # Optional venv/python path
 
 
 class CodimensionProject(QObject,
@@ -182,8 +185,8 @@ class CodimensionProject(QObject,
 
         self.saveProject()
 
-        # Update the watcher
-        self.__dirWatcher = Watcher(Settings()['projectFilesFilters'],
+        # Update the watcher (exclude venv and excludeFromAnalysis from watch)
+        self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(),
                                     self.getProjectDir())
         self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
 
@@ -285,13 +288,32 @@ class CodimensionProject(QObject,
         # Update the recent list
         Settings().addRecentProject(self.fileName)
 
-        # Setup the new watcher
-        self.__dirWatcher = Watcher(Settings()['projectFilesFilters'],
+        # Setup the new watcher (exclude venv and excludeFromAnalysis from watch)
+        self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(),
                                     self.getProjectDir())
         self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
 
         self.sigProjectChanged.emit(self.CompleteProject)
         self.sigRestoreProjectExpandedDirs.emit()
+
+    def __getWatcherExcludeFilters(self):
+        """Build exclude filters for Watcher (venv + excludeFromAnalysis)."""
+        exclude_filters = list(Settings()['projectFilesFilters'])
+        proj_real = realpath(self.getProjectDir()).rstrip(sep)
+        venv_dir = getProjectVenvDir(self)
+        if venv_dir and (venv_dir == proj_real or
+                         venv_dir.startswith(proj_real + sep)):
+            venv_basename = basename(venv_dir.rstrip(sep))
+            if venv_basename:
+                exclude_filters.append('^' + re.escape(venv_basename) + '$')
+        added_basenames = set()
+        for excl_path in self.getExcludeFromAnalysisAsAbsolutePaths():
+            if excl_path.startswith(proj_real + sep) or excl_path == proj_real:
+                excl_basename = basename(excl_path.rstrip(sep))
+                if excl_basename and excl_basename not in added_basenames:
+                    added_basenames.add(excl_basename)
+                    exclude_filters.append('^' + re.escape(excl_basename) + '$')
+        return exclude_filters
 
     def getImportDirsAsAbsolutePaths(self):
         """Provides a list of import dirs as absolute paths"""
@@ -302,6 +324,35 @@ class CodimensionProject(QObject,
             else:
                 result.append(self.getProjectDir() + path)
         return result
+
+    def getExcludeFromAnalysisAsAbsolutePaths(self):
+        """Provides a list of absolute paths to exclude from analysis."""
+        result = []
+        proj_dir = self.getProjectDir()
+        for path in self.props.get('excludeFromAnalysis', []):
+            path = path.strip()
+            if not path:
+                continue
+            if isabs(path):
+                result.append(realpath(path))
+            else:
+                result.append(realpath(proj_dir + path))
+        return result
+
+    def __isExcludedFromAnalysis(self, candidate_path):
+        """True if candidate_path should be excluded from analysis."""
+        exclude_paths = self.getExcludeFromAnalysisAsAbsolutePaths()
+        if not exclude_paths:
+            return False
+        cand_real = realpath(candidate_path)
+        for excl in exclude_paths:
+            excl_real = realpath(excl)
+            if cand_real == excl_real:
+                return True
+            excl_prefix = excl_real.rstrip(sep) + sep
+            if cand_real.startswith(excl_prefix):
+                return True
+        return False
 
     def onFSChanged(self, items):
         """Triggered when the watcher detects changes"""
@@ -335,18 +386,44 @@ class CodimensionProject(QObject,
         self.filesList = set()
         path = self.getProjectDir()
         self.filesList.add(path)
-        self.__scanDir(path)
+        venv_dir = getProjectVenvDir(self)
+        exclude_paths = self.getExcludeFromAnalysisAsAbsolutePaths()
+        self.__scanDir(path, venv_dir, exclude_paths)
 
-    def __scanDir(self, path):
-        """Recursive function to scan one dir"""
-        # The path is with '/' at the end
+    def __scanDir(self, path, venv_dir=None, exclude_paths=None):
+        """Recursive function to scan one dir.
+
+        venv_dir and exclude_paths are cached at top level to avoid repeated
+        computation for every file/dir during scan.
+        """
         for item in os.listdir(path):
             if self.shouldExclude(item):
                 continue
 
-            # Exclude symlinks if they point to the other project
-            # covered pieces
             candidate = path + item
+            if venv_dir and isdir(candidate):
+                cand_real = realpath(candidate)
+                venv_real = realpath(venv_dir)
+                if not cand_real.endswith(sep):
+                    cand_real += sep
+                if not venv_real.endswith(sep):
+                    venv_real += sep
+                if cand_real == venv_real or cand_real.startswith(venv_real):
+                    continue
+            if exclude_paths:
+                cand_real = realpath(candidate)
+                excluded = False
+                for excl in exclude_paths:
+                    excl_real = realpath(excl)
+                    if cand_real == excl_real:
+                        excluded = True
+                        break
+                    excl_prefix = excl_real.rstrip(sep) + sep
+                    if cand_real.startswith(excl_prefix):
+                        excluded = True
+                        break
+                if excluded:
+                    continue
             if islink(candidate):
                 realItem = realpath(candidate)
                 if isdir(realItem):
@@ -358,7 +435,7 @@ class CodimensionProject(QObject,
 
             if isdir(candidate):
                 self.filesList.add(candidate + sep)
-                self.__scanDir(candidate + sep)
+                self.__scanDir(candidate + sep, venv_dir, exclude_paths)
                 continue
             self.filesList.add(candidate)
 
@@ -386,9 +463,21 @@ class CodimensionProject(QObject,
     def updateProperties(self, props):
         """Updates the project properties"""
         if self.props != props:
+            analysis_props = ('excludeFromAnalysis', 'importdirs', 'pythoninterpreter')
+            need_rescan = any(self.props.get(p) != props.get(p) for p in analysis_props)
             self.props = props
             self.saveProject()
-            self.sigProjectChanged.emit(self.Properties)
+            if need_rescan:
+                self.__generateFilesList()
+                if self.__dirWatcher is not None:
+                    self.__dirWatcher.deleteLater()
+                    self.__dirWatcher = Watcher(
+                        self.__getWatcherExcludeFilters(),
+                        self.getProjectDir())
+                    self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
+            # Emit CompleteProject when analysis scope changed so all consumers refresh
+            self.sigProjectChanged.emit(
+                self.CompleteProject if need_rescan else self.Properties)
 
     def onProjectFileUpdated(self):
         """Called when a project file is updated via direct editing"""

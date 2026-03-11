@@ -22,6 +22,7 @@
 
 """Utility functions to support running scripts"""
 
+import glob
 import os.path
 import sys
 from shlex import quote
@@ -30,6 +31,71 @@ from subprocess import STDOUT, check_output
 from .config import DEFAULT_ENCODING
 from .encoding import detectFileEncodingToRead
 from .runparams import DEBUG, PROFILE, RUN
+from .venvutils import resolveVenvToPython
+
+
+def getProjectPythonPath(project):
+    """Returns the Python executable path for project analysis.
+
+    When project has a configured interpreter (venv/bin/python or custom),
+    returns that path. Otherwise tries to auto-detect .venv or venv in project
+    root. Falls back to sys.executable.
+
+    Args:
+        project: CodimensionProject instance or None.
+
+    Returns:
+        str: Absolute path to Python executable.
+    """
+    if project is None or not project.isLoaded():
+        return sys.executable
+
+    interp = project.props.get("pythoninterpreter", "").strip()
+    if not interp:
+        # Auto-detect venv in project root
+        project_dir = project.getProjectDir()
+        if project_dir:
+            for venv_name in (".venv", "venv", "env"):
+                venv_path = os.path.join(project_dir, venv_name)
+                venv_python = resolveVenvToPython(venv_path)
+                if venv_python:
+                    return venv_python
+        return sys.executable
+
+    if not os.path.isabs(interp):
+        project_dir = project.getProjectDir()
+        if project_dir:
+            interp = os.path.normpath(project_dir + interp)
+
+    if os.path.isfile(interp) and os.access(interp, os.X_OK):
+        return os.path.abspath(interp)
+
+    venv_python = resolveVenvToPython(interp)
+    if venv_python:
+        return venv_python
+
+    return sys.executable
+
+
+def getVenvSitePackages(python_path):
+    """Returns site-packages path for a venv, or None if not a venv.
+
+    Given /path/to/venv/bin/python, returns /path/to/venv/lib/pythonX.Y/site-packages.
+    """
+    if not python_path or python_path == sys.executable:
+        return None
+    # venv/bin/python -> venv_dir
+    bin_dir = os.path.dirname(python_path)
+    venv_dir = os.path.dirname(bin_dir)
+    if os.path.basename(bin_dir) not in ("bin", "Scripts"):
+        return None
+    # Find lib/pythonX.Y/site-packages or lib64/pythonX.Y/site-packages
+    for lib in ("lib", "lib64"):
+        pattern = os.path.join(venv_dir, lib, "python*", "site-packages")
+        matches = glob.glob(pattern)
+        if matches:
+            return matches[0]
+    return None
 
 
 def prepareArguments(arguments):
