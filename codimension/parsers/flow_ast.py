@@ -263,7 +263,7 @@ class _ContinueFrag(_FragmentBase):
 
 
 class _AssertFrag(_FragmentBase):
-    """Assert statement."""
+    """Assert statement. C++ cdmcfparser API: flowui expects ref.test."""
 
     def __init__(
         self,
@@ -277,7 +277,7 @@ class _AssertFrag(_FragmentBase):
         message: _Body | None = None,
     ) -> None:
         super().__init__(ASSERT_FRAGMENT, begin, end, bln, eln, bpos, epos)
-        self.tst = test
+        self.test = test
         self.message = message
 
 
@@ -420,8 +420,9 @@ class _ControlFlow(_FragmentBase):
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
         self.leadingCMLComments: list = []
-        self.errors: list[str] = []
-        self.warnings: list[str] = []
+        # flowuiwidget expects list of (line, col, msg) tuples
+        self.errors: list[tuple[int, int, str]] = []
+        self.warnings: list[tuple[int, int, str]] = []
 
     def __str__(self) -> str:
         """String representation for formatFlow() - uses < > for nesting.
