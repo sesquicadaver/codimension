@@ -34,3 +34,8 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 exclude = ["doc/", ".*"]
+
+[tool.pyright]
+# cdmplugins import plugins, ui, utils — resolved when codimension pkg dir is in path
+extraPaths = ["codimension"]
+reportMissingImports = "warning"
