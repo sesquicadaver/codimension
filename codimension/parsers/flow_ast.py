@@ -423,10 +423,16 @@ _KIND_NAMES = {
 
 
 class _DocstringFrag:
-    """Docstring fragment for getDisplayValue()."""
+    """Docstring fragment for getDisplayValue().
+
+    CML validation expects leadingCMLComments and sideCMLComments;
+    flow_ast docstrings have none, so these are empty lists.
+    """
 
     def __init__(self, text: str | None) -> None:
         self._text = text or ''
+        self.leadingCMLComments: list = []
+        self.sideCMLComments: list = []
 
     def getDisplayValue(self) -> str:
         return self._text
