@@ -269,6 +269,7 @@ class _FunctionFrag(_FragmentBase):
         super().__init__(FUNCTION_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.decorators: list[_FragmentBase] = []
         self.nsuite: list[_FragmentBase] = []
+        self.docstring: _DocstringFrag | None = None
 
 
 class _ClassFrag(_FragmentBase):
@@ -280,6 +281,7 @@ class _ClassFrag(_FragmentBase):
         super().__init__(CLASS_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.decorators: list[_FragmentBase] = []
         self.nsuite: list[_FragmentBase] = []
+        self.docstring: _DocstringFrag | None = None
 
 
 class _ForFrag(_FragmentBase):
