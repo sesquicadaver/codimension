@@ -168,6 +168,14 @@ class ImportResolution:
         return name
 
 
+def __getBaseSysPath():
+    """Returns sys.path for import resolution (original or current as fallback)."""
+    orig = GlobalData().originalSysPath
+    if orig and len(orig) > 0:
+        return list(orig)
+    return list(sys.path)
+
+
 def __resolveImport(importObj, baseAndProjectPaths, result):
     """Resolves imports like: 'import x'"""
 
@@ -181,9 +189,8 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
             ImportResolution(importObj, None, True, None, None))
         return
 
-
     oldSysPath = sys.path
-    sys.path = GlobalData().originalSysPath + baseAndProjectPaths
+    sys.path = __getBaseSysPath() + baseAndProjectPaths
 
     try:
         spec = importlib.util.find_spec(importObj.name)
@@ -279,7 +286,7 @@ def __resolveFromImport(importObj, basePath, baseAndProjectPaths, result):
     # IV:   <dir>/x/y/z.py
 
     oldSysPath = sys.path
-    sys.path = GlobalData().originalSysPath + baseAndProjectPaths
+    sys.path = __getBaseSysPath() + baseAndProjectPaths
 
     __resolveFrom(importObj, importObj.name, result)
 
@@ -351,15 +358,18 @@ def getImportResolutions(fileName, imports):
 
     project = GlobalData().project
     if project.isLoaded():
+        # Add project root for project-internal imports
+        proj_dir = project.getProjectDir()
+        if proj_dir and proj_dir not in baseAndProjectPaths:
+            baseAndProjectPaths.append(proj_dir)
         for importDir in project.getImportDirsAsAbsolutePaths():
             if importDir not in baseAndProjectPaths:
                 baseAndProjectPaths.append(importDir)
-        # Add project venv site-packages for third-party imports
+        # Add project venv site-packages for third-party imports (numpy, etc.)
         proj_python = getProjectPythonPath(project)
-        if proj_python != sys.executable:
-            site_pkg = getVenvSitePackages(proj_python)
-            if site_pkg and site_pkg not in baseAndProjectPaths:
-                baseAndProjectPaths.append(site_pkg)
+        site_pkg = getVenvSitePackages(proj_python)
+        if site_pkg and site_pkg not in baseAndProjectPaths:
+            baseAndProjectPaths.append(site_pkg)
 
     for importObj in imports:
         if not importObj.what:
