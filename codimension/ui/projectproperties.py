@@ -171,6 +171,12 @@ class ProjectPropertiesDialog(QDialog):
                 self.importDirList.setCurrentRow(0)
                 self.delImportDirButton.setEnabled(True)
 
+            for item in project.props.get('excludeFromAnalysis', []):
+                self.excludeDirList.addItem(item)
+            if self.excludeDirList.count() > 0:
+                self.excludeDirList.setCurrentRow(0)
+                self.delExcludeButton.setEnabled(True)
+
             # The project could be the one belonging to another user
             # so there might be no write permissions.
             if not os.access(project.fileName, os.W_OK):
@@ -265,68 +271,93 @@ class ProjectPropertiesDialog(QDialog):
         vLayout.addStretch(0)
         gridLayout.addLayout(vLayout, 5, 2, 1, 1)
 
+        # Exclude from analysis
+        excludeLabel = QLabel("Exclude from analysis:", self)
+        excludeLabel.setAlignment(Qt.AlignTop)
+        gridLayout.addWidget(excludeLabel, 6, 0, 1, 1)
+        self.excludeDirList = QListWidget(self)
+        self.excludeDirList.setAlternatingRowColors(True)
+        self.excludeDirList.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.excludeDirList.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.excludeDirList.setItemDelegate(NoOutlineHeightDelegate(4))
+        self.excludeDirList.setToolTip("Directories or files to exclude from "
+                                       "analysis (imports diagram, outline). "
+                                       "Relative to project or absolute path.")
+        gridLayout.addWidget(self.excludeDirList, 6, 1, 1, 1)
+
+        self.addExcludeButton = QPushButton(self)
+        self.addExcludeButton.setText("Add")
+        self.delExcludeButton = QPushButton(self)
+        self.delExcludeButton.setText("Delete")
+        self.delExcludeButton.setEnabled(False)
+        vLayoutExcl = QVBoxLayout()
+        vLayoutExcl.addWidget(self.addExcludeButton)
+        vLayoutExcl.addWidget(self.delExcludeButton)
+        vLayoutExcl.addStretch(0)
+        gridLayout.addLayout(vLayoutExcl, 6, 2, 1, 1)
+
         # Version
         versionLabel = QLabel("Version:", self)
-        gridLayout.addWidget(versionLabel, 6, 0, 1, 1)
+        gridLayout.addWidget(versionLabel, 7, 0, 1, 1)
         self.versionEdit = QLineEdit(self)
         gridLayout.addWidget(self.versionEdit, 6, 1, 1, 1)
 
         # Author
         authorLabel = QLabel("Author:", self)
-        gridLayout.addWidget(authorLabel, 7, 0, 1, 1)
+        gridLayout.addWidget(authorLabel, 8, 0, 1, 1)
         self.authorEdit = QLineEdit(self)
-        gridLayout.addWidget(self.authorEdit, 7, 1, 1, 1)
+        gridLayout.addWidget(self.authorEdit, 8, 1, 1, 1)
 
         # E-mail
         emailLabel = QLabel("E-mail:", self)
-        gridLayout.addWidget(emailLabel, 8, 0, 1, 1)
+        gridLayout.addWidget(emailLabel, 9, 0, 1, 1)
         self.emailEdit = QLineEdit(self)
-        gridLayout.addWidget(self.emailEdit, 8, 1, 1, 1)
+        gridLayout.addWidget(self.emailEdit, 9, 1, 1, 1)
 
         # License
         licenseLabel = QLabel("License:", self)
-        gridLayout.addWidget(licenseLabel, 9, 0, 1, 1)
+        gridLayout.addWidget(licenseLabel, 10, 0, 1, 1)
         self.licenseEdit = QLineEdit(self)
-        gridLayout.addWidget(self.licenseEdit, 9, 1, 1, 1)
+        gridLayout.addWidget(self.licenseEdit, 10, 1, 1, 1)
 
         # Copyright
         copyrightLabel = QLabel("Copyright:", self)
-        gridLayout.addWidget(copyrightLabel, 10, 0, 1, 1)
+        gridLayout.addWidget(copyrightLabel, 11, 0, 1, 1)
         self.copyrightEdit = QLineEdit(self)
-        gridLayout.addWidget(self.copyrightEdit, 10, 1, 1, 1)
+        gridLayout.addWidget(self.copyrightEdit, 11, 1, 1, 1)
 
         # Description
         descriptionLabel = QLabel("Description:", self)
         descriptionLabel.setAlignment(Qt.AlignTop)
-        gridLayout.addWidget(descriptionLabel, 11, 0, 1, 1)
+        gridLayout.addWidget(descriptionLabel, 12, 0, 1, 1)
         self.descriptionEdit = QTextEdit(self)
         self.descriptionEdit.setTabChangesFocus(True)
         self.descriptionEdit.setAcceptRichText(False)
-        gridLayout.addWidget(self.descriptionEdit, 11, 1, 1, 1)
+        gridLayout.addWidget(self.descriptionEdit, 12, 1, 1, 1)
 
         # Default encoding
         encodingLabel = QLabel('Default encoding:', self)
-        gridLayout.addWidget(encodingLabel, 12, 0, 1, 1)
+        gridLayout.addWidget(encodingLabel, 13, 0, 1, 1)
         self.encodingCombo = QComboBox(self)
         self.encodingCombo.addItem('')
         self.encodingCombo.addItems(sorted(SUPPORTED_CODECS))
         self.encodingCombo.setEditable(True)
-        gridLayout.addWidget(self.encodingCombo, 12, 1, 1, 1)
+        gridLayout.addWidget(self.encodingCombo, 13, 1, 1, 1)
 
         # Creation date
         creationDateLabel = QLabel("Creation date:", self)
-        gridLayout.addWidget(creationDateLabel, 13, 0, 1, 1)
+        gridLayout.addWidget(creationDateLabel, 14, 0, 1, 1)
         self.creationDateEdit = FramedLabel(parent=self)
         self.creationDateEdit.setToolTip("Double click to copy")
-        gridLayout.addWidget(self.creationDateEdit, 13, 1, 1, 1)
+        gridLayout.addWidget(self.creationDateEdit, 14, 1, 1, 1)
 
         # Project UUID
         uuidLabel = QLabel("UUID:", self)
-        gridLayout.addWidget(uuidLabel, 14, 0, 1, 1)
+        gridLayout.addWidget(uuidLabel, 15, 0, 1, 1)
         self.uuidEdit = FramedLabel(text='',
                                     callback=self.__copyProjectPath,
                                     parent=self)
-        gridLayout.addWidget(self.uuidEdit, 14, 1, 1, 1)
+        gridLayout.addWidget(self.uuidEdit, 15, 1, 1, 1)
 
         verticalLayout.addLayout(gridLayout)
 
@@ -355,6 +386,9 @@ class ProjectPropertiesDialog(QDialog):
         self.importDirList.currentRowChanged.connect(self.onImportDirRowChanged)
         self.addImportDirButton.clicked.connect(self.onAddImportDir)
         self.delImportDirButton.clicked.connect(self.onDelImportDir)
+        self.excludeDirList.currentRowChanged.connect(self.onExcludeRowChanged)
+        self.addExcludeButton.clicked.connect(self.onAddExclude)
+        self.delExcludeButton.clicked.connect(self.onDelExclude)
         self.nameEdit.textEdited.connect(self.onProjectNameChanged)
 
         self.setTabOrder(self.nameEdit, self.dirEdit)
@@ -368,7 +402,10 @@ class ProjectPropertiesDialog(QDialog):
         self.setTabOrder(self.venvButton, self.importDirList)
         self.setTabOrder(self.importDirList, self.addImportDirButton)
         self.setTabOrder(self.addImportDirButton, self.delImportDirButton)
-        self.setTabOrder(self.delImportDirButton, self.versionEdit)
+        self.setTabOrder(self.delImportDirButton, self.excludeDirList)
+        self.setTabOrder(self.excludeDirList, self.addExcludeButton)
+        self.setTabOrder(self.addExcludeButton, self.delExcludeButton)
+        self.setTabOrder(self.delExcludeButton, self.versionEdit)
         self.setTabOrder(self.versionEdit, self.authorEdit)
         self.setTabOrder(self.authorEdit, self.emailEdit)
         self.setTabOrder(self.emailEdit, self.licenseEdit)
@@ -490,13 +527,55 @@ class ProjectPropertiesDialog(QDialog):
     def onDelImportDir(self):
         """Triggered when an import dir should be deleted"""
         rowToDelete = self.importDirList.currentRow()
-        if  rowToDelete == -1:
+        if rowToDelete == -1:
             self.delImportDirButton.setEnabled(False)
             return
 
         self.importDirList.takeItem(rowToDelete)
         if self.importDirList.count() == 0:
             self.delImportDirButton.setEnabled(False)
+
+    def onExcludeRowChanged(self, row):
+        """Triggered when a current row in the exclude list is changed"""
+        self.delExcludeButton.setEnabled(row != -1)
+
+    def onAddExclude(self):
+        """Add a directory or file to exclude from analysis."""
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog | QFileDialog.ShowDirsOnly
+        startDir = self.dirEdit.text()
+        pathToAdd = QFileDialog.getExistingDirectory(
+            self, 'Select directory to exclude from analysis',
+            startDir, options=options)
+        if not pathToAdd:
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
+            pathToAdd, _ = QFileDialog.getOpenFileName(
+                self, 'Or select file to exclude', startDir,
+                'All Files (*)', options=options)
+        if not pathToAdd:
+            return
+
+        pathToAdd = os.path.normpath(pathToAdd)
+        if self.__project and self.__project.isProjectDir(pathToAdd):
+            pathToAdd = relpath(pathToAdd, self.dirEdit.text())
+
+        for i in range(self.excludeDirList.count()):
+            if self.excludeDirList.item(i).text() == pathToAdd:
+                return
+        self.excludeDirList.addItem(pathToAdd)
+        self.excludeDirList.setCurrentRow(self.excludeDirList.count() - 1)
+
+    def onDelExclude(self):
+        """Triggered when an exclude path should be deleted"""
+        rowToDelete = self.excludeDirList.currentRow()
+        if rowToDelete == -1:
+            self.delExcludeButton.setEnabled(False)
+            return
+
+        self.excludeDirList.takeItem(rowToDelete)
+        if self.excludeDirList.count() == 0:
+            self.delExcludeButton.setEnabled(False)
         else:
             self.importDirList.setCurrentRow(self.importDirList.count() - 1)
 
@@ -613,6 +692,9 @@ class ProjectPropertiesDialog(QDialog):
         self.venvEdit.setFocusPolicy(Qt.NoFocus)
         self.venvEdit.setDisabled(True)
         self.venvButton.setDisabled(True)
+        self.excludeDirList.setDisabled(True)
+        self.addExcludeButton.setDisabled(True)
+        self.delExcludeButton.setDisabled(True)
 
     def disableEditing(self):
         """Disables all the editing"""
@@ -628,6 +710,9 @@ class ProjectPropertiesDialog(QDialog):
         self.importDirList.setDisabled(True)
         self.addImportDirButton.setDisabled(True)
         self.delImportDirButton.setDisabled(True)
+        self.excludeDirList.setDisabled(True)
+        self.addExcludeButton.setDisabled(True)
+        self.delExcludeButton.setDisabled(True)
         self.versionEdit.setDisabled(True)
         self.authorEdit.setDisabled(True)
         self.emailEdit.setDisabled(True)
