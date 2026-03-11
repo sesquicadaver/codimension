@@ -98,6 +98,16 @@ class _Body:
         return (self.begin, self.end)
 
 
+class _NameContent:
+    """Name wrapper with getContent() for C++ Fragment compatibility."""
+
+    def __init__(self, content: str) -> None:
+        self._content = content
+
+    def getContent(self) -> str:
+        return self._content
+
+
 class _FragmentBase:
     """Base for all fragments. Has kind, body, comment placeholders."""
 
@@ -517,6 +527,7 @@ class _FlowBuilder(ast.NodeVisitor):
         """Build Function fragment."""
         b, e, bln, eln, bpos, epos = self._pos(node)
         frag = _FunctionFrag(b, e, bln, eln, bpos, epos)
+        frag.name = _NameContent(node.name)
         for dec in node.decorator_list:
             db, de, dbln, deln, dbpos, depos = self._pos(dec)
             dec_frag = _FragmentBase(DECORATOR_FRAGMENT, db, de, dbln, deln,
@@ -529,6 +540,7 @@ class _FlowBuilder(ast.NodeVisitor):
         """Build Class fragment."""
         b, e, bln, eln, bpos, epos = self._pos(node)
         frag = _ClassFrag(b, e, bln, eln, bpos, epos)
+        frag.name = _NameContent(node.name)
         for dec in node.decorator_list:
             db, de, dbln, deln, dbpos, depos = self._pos(dec)
             dec_frag = _FragmentBase(DECORATOR_FRAGMENT, db, de, dbln, deln,
