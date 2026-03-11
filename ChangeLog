@@ -2,7 +2,8 @@
 
 * Python 3.12 compatibility:
   - imp_compat.py: shim for removed imp module (yapsy dependency)
-  - codimension.py: inject imp shim before imports on Python 3.12+
+  - pkg_resources_compat.py: shim for pkg_resources (removed in setuptools 82+)
+  - codimension.py: inject imp/pkg_resources shims before imports; suppress pkg_resources deprecation warning
   - requirements.txt: setuptools for distutils (Python 3.12), mistune<2.0 (API break)
   - versions.py: pkg_resources -> importlib.metadata
   - ui/qt.py: QSpacerItem, QGraphicsPixmapItem, QGraphicsSvgItem, QSvgGenerator,

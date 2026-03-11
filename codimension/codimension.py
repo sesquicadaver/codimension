@@ -35,7 +35,11 @@ import os
 import os.path
 import sys
 import traceback
+import warnings
 from optparse import OptionParser
+
+# Suppress pkg_resources deprecation from external plugins (cdmpylintplugin, etc.)
+warnings.filterwarnings('ignore', message='.*pkg_resources.*deprecated.*', category=UserWarning)
 
 # Workaround if link is used
 sys.argv[0] = os.path.realpath(__file__)
@@ -53,6 +57,14 @@ os.environ['QPART_CPARSER'] = 'N'
 if sys.version_info >= (3, 12) and 'imp' not in sys.modules:
     import imp_compat as _imp_shim
     sys.modules['imp'] = _imp_shim
+
+# Inject pkg_resources compat when unavailable (setuptools 82+ removed it)
+if 'pkg_resources' not in sys.modules:
+    try:
+        import pkg_resources  # noqa: F401
+    except ImportError:
+        import pkg_resources_compat as _pkg_resources_shim
+        sys.modules['pkg_resources'] = _pkg_resources_shim
 
 # Install cdmpyparser/cdmcfparser fallbacks for Python 3.11+ (before any imports)
 import parsers  # noqa: F401, E402
