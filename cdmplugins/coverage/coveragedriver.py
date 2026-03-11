@@ -22,6 +22,7 @@ import tempfile
 
 from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
+from utils.run import getProjectPythonPath
 
 
 class CoverageDriver(QWidget):
@@ -80,7 +81,8 @@ class CoverageDriver(QWidget):
         processEnvironment = QProcessEnvironment()
         processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
-        self.__process.start(sys.executable, self.__args)
+        self.__pythonPath = getProjectPythonPath(self.__ide.project)
+        self.__process.start(self.__pythonPath, self.__args)
 
         if not self.__process.waitForStarted():
             self.__process = None
@@ -134,7 +136,7 @@ class CoverageDriver(QWidget):
             "ExitStatus": exitStatus,
             "FileName": self.__fileName,
             "Timestamp": getLocaleDateTime(),
-            "CommandLine": [sys.executable] + self.__args,
+            "CommandLine": [self.__pythonPath] + self.__args,
             "Files": [],
             "Totals": {},
             "StdOut": self.__stdout,

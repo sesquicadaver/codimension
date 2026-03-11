@@ -57,7 +57,8 @@ _DEFAULT_PROJECT_PROPS = {'scriptname': '',    # Script to run the project
                           'description': '',
                           'uuid': '',
                           'importdirs': [],
-                          'encoding': ''}
+                          'encoding': '',
+                          'pythoninterpreter': ''}  # Optional venv/python path
 
 
 class CodimensionProject(QObject,

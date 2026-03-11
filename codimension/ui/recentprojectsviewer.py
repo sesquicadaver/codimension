@@ -570,7 +570,8 @@ class RecentProjectsViewer(QWidget):
                      'description': dlg.descriptionEdit.toPlainText().strip(),
                      'uuid': dlg.uuidEdit.text().strip(),
                      'importdirs': importDirs,
-                     'encoding': dlg.encodingCombo.currentText().strip()})
+                     'encoding': dlg.encodingCombo.currentText().strip(),
+                     'pythoninterpreter': dlg.venvEdit.text().strip()})
         else:
             # This is not the current project - it can be viewed
             fName = self.__projectContextItem.getFilename()

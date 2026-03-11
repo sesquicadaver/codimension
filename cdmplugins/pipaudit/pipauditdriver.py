@@ -21,6 +21,7 @@ import sys
 
 from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
+from utils.run import getProjectPythonPath
 
 
 class PipAuditDriver(QWidget):
@@ -33,6 +34,7 @@ class PipAuditDriver(QWidget):
         self.__ide = ide
         self.__process = None
         self.__args = None
+        self.__pythonPath = sys.executable
         self.__stdout = ""
         self.__stderr = ""
         self.__encoding = "utf-8"
@@ -68,7 +70,8 @@ class PipAuditDriver(QWidget):
         processEnvironment = QProcessEnvironment()
         processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
-        self.__process.start(sys.executable, self.__args)
+        self.__pythonPath = getProjectPythonPath(self.__ide.project)
+        self.__process.start(self.__pythonPath, self.__args)
 
         if not self.__process.waitForStarted():
             self.__process = None
@@ -110,7 +113,7 @@ class PipAuditDriver(QWidget):
             "ExitCode": exitCode,
             "ExitStatus": exitStatus,
             "Timestamp": getLocaleDateTime(),
-            "CommandLine": [sys.executable] + self.__args,
+            "CommandLine": [self.__pythonPath] + self.__args,
             "Packages": [],
             "StdOut": self.__stdout,
             "StdErr": self.__stderr,

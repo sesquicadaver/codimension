@@ -32,6 +32,58 @@ from .encoding import detectFileEncodingToRead
 from .runparams import DEBUG, PROFILE, RUN
 
 
+def getProjectPythonPath(project):
+    """Returns the Python executable path for project analysis.
+
+    When project has a configured interpreter (venv/bin/python or custom),
+    returns that path. Otherwise returns sys.executable.
+
+    Args:
+        project: CodimensionProject instance or None.
+
+    Returns:
+        str: Absolute path to Python executable.
+    """
+    if project is None or not project.isLoaded():
+        return sys.executable
+
+    interp = project.props.get("pythoninterpreter", "").strip()
+    if not interp:
+        return sys.executable
+
+    if not os.path.isabs(interp):
+        project_dir = project.getProjectDir()
+        if project_dir:
+            interp = os.path.normpath(project_dir + interp)
+
+    if os.path.isfile(interp) and os.access(interp, os.X_OK):
+        return os.path.abspath(interp)
+
+    venv_python = _resolveVenvToPython(interp)
+    if venv_python:
+        return venv_python
+
+    return sys.executable
+
+
+def _resolveVenvToPython(venv_dir):
+    """Resolves venv directory to python executable.
+
+    Supports: venv/bin/python (Linux), venv/Scripts/python.exe (Windows).
+    """
+    if not venv_dir or not os.path.isdir(venv_dir):
+        return None
+
+    for candidate in (
+        os.path.join(venv_dir, "bin", "python"),
+        os.path.join(venv_dir, "bin", "python3"),
+        os.path.join(venv_dir, "Scripts", "python.exe"),
+    ):
+        if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            return os.path.abspath(candidate)
+    return None
+
+
 def prepareArguments(arguments):
     """Prepares arguments for the command line"""
     args = []

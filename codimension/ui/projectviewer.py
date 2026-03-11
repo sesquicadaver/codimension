@@ -540,6 +540,7 @@ class ProjectViewer(QWidget):
                 if not relativePath.startswith('..'):
                     mdDocFile = relativePath
 
+            venvPath = dialog.venvEdit.text().strip()
             project.updateProperties(
                 {'scriptname': scriptName,
                  'mddocfile': mdDocFile,
@@ -551,8 +552,9 @@ class ProjectViewer(QWidget):
                  'email': dialog.emailEdit.text().strip(),
                  'description': dialog.descriptionEdit.toPlainText().strip(),
                  'uuid': dialog.uuidEdit.text().strip(),
-                 'importdirs':  importDirs,
-                 'encoding': dialog.encodingCombo.currentText().strip()})
+                 'importdirs': importDirs,
+                 'encoding': dialog.encodingCombo.currentText().strip(),
+                 'pythoninterpreter': venvPath})
 
             self.sigFileUpdated.emit(project.fileName, "")
             self.onFileUpdated(project.fileName, "")

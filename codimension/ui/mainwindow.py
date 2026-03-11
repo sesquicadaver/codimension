@@ -2013,7 +2013,8 @@ class CodimensionMainWindow(QMainWindow):
              'email': dialog.emailEdit.text().strip(),
              'description': dialog.descriptionEdit.toPlainText().strip(),
              'encoding': dialog.encodingCombo.currentText().strip(),
-             'importdirs': importDirs})
+             'importdirs': importDirs,
+             'pythoninterpreter': dialog.venvEdit.text().strip()})
 
         QApplication.restoreOverrideCursor()
         self.settings.addRecentProject(dialog.absProjectFileName)
