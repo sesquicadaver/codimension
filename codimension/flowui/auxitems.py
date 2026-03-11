@@ -25,13 +25,25 @@
 
 
 from html import escape
-from ui.qt import (QPen, QBrush, QPainterPath, Qt, QGraphicsSvgItem,
-                   QGraphicsSimpleTextItem, QGraphicsRectItem,
-                   QGraphicsPathItem, QGraphicsLineItem, QGraphicsItem)
+
+from ui.qt import (
+    QBrush,
+    QGraphicsItem,
+    QGraphicsLineItem,
+    QGraphicsPathItem,
+    QGraphicsRectItem,
+    QGraphicsSimpleTextItem,
+    QGraphicsSvgItem,
+    QPainterPath,
+    QPen,
+    Qt,
+)
 from utils.limits import MAXINT_32
+
 from .cellelement import CellElement
 from .colormixin import ColorMixin
 from .routines import getDocComment, getDoclinkIconAndTooltip
+
 
 class SpacerCell(CellElement):
 

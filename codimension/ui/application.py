@@ -20,11 +20,11 @@
 """definition of the codimension QT based application class"""
 
 import qdarkstyle
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
-from .garbagecollector import GarbageCollector
-from .qt import Qt, QEvent, QApplication, QMenuBar
+from utils.pixmapcache import getIcon
 
+from .garbagecollector import GarbageCollector
+from .qt import QApplication, QEvent, QMenuBar, Qt
 
 KEY_PRESS = QEvent.KeyPress
 APP_ACTIVATE = QEvent.ApplicationActivate
@@ -141,7 +141,7 @@ class CodimensionApplication(QApplication):
                     self.__lastFocus = None
                 else:
                     self.__lastFocus = QApplication.focusWidget()
-        except:
+        except Exception:
             pass
         return False
 

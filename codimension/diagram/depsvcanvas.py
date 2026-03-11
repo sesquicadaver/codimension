@@ -19,11 +19,13 @@
 
 """Dependency diagram virtual canvas"""
 
-from ui.qt import QColor, QPen, QBrush
+from flowui.auxitems import Rectangle, VacantCell, VSpacerCell
 from flowui.cellelement import CellElement
-from flowui.auxitems import VSpacerCell, Rectangle, VacantCell
 from flowui.scopeitems import ScopeHSideEdge
+from ui.qt import QBrush, QColor, QPen
+
 from .depsitems import SelfModule
+
 
 class DepsVirtualCanvas:
 
@@ -79,7 +81,7 @@ class DepsVirtualCanvas:
         """True if it has a scope"""
         try:
             return self.cells[0][0].scopedItem()
-        except:
+        except Exception:
             return False
 
     def layoutTopLevel(self, fileName, depClasses):

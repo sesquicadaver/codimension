@@ -20,8 +20,8 @@
 """New nested project directory dialog"""
 
 import os
-from .qt import (Qt, QEvent, QObject, QDialog, QLineEdit, QLabel,
-                 QDialogButtonBox, QVBoxLayout)
+
+from .qt import QDialog, QDialogButtonBox, QEvent, QLabel, QLineEdit, QObject, Qt, QVBoxLayout
 
 
 class NewProjectDirDialog(QDialog):

@@ -21,9 +21,9 @@
 
 import ast
 import logging
-from ui.qt import (QTreeWidget, QTreeWidgetItem, QAbstractItemView,
-                   QHeaderView, pyqtSignal)
+
 from ui.itemdelegates import NoOutlineHeightDelegate
+from ui.qt import QAbstractItemView, QHeaderView, QTreeWidget, QTreeWidgetItem, pyqtSignal
 from utils.astutils import parseSourceToAST
 
 
@@ -176,7 +176,7 @@ class ASTView(QTreeWidget):
         while node is not None:
             text = node.text(1)
             if text:
-                if not 'item' in text:
+                if 'item' not in text:
                     firstRegion = text.split('-')[0].strip()
                     try:
                         parts = firstRegion.split(':')
@@ -185,7 +185,7 @@ class ASTView(QTreeWidget):
                         if len(parts) == 2:
                             pos = int(parts[1])
                         return line, pos
-                    except:
+                    except Exception:
                         pass
             node = node.parent()
         # Not found, e.g. it is a module

@@ -27,14 +27,15 @@
 Module implementing an import hook patching thread modules to get debugged too
 """
 
+import _thread
+import importlib
 import os.path
 import sys
-import importlib
 import threading
-import _thread
-from protocol_cdm_dbg import METHOD_THREAD_LIST
+
 from base_cdm_dbg import DebugBase
 from cdm_dbg_utils import sendJSONCommand
+from protocol_cdm_dbg import METHOD_THREAD_LIST
 
 _qtThreadNumber = 1
 

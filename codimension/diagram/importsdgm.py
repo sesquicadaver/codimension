@@ -19,25 +19,41 @@
 
 """imports diagram dialog"""
 
+import logging
 import os
 import os.path
-import logging
-from ui.qt import (Qt, QTimer, QDialog, QDialogButtonBox, QVBoxLayout, QLabel,
-                   QCheckBox, QProgressBar, QApplication, QGraphicsScene,
-                   QGraphicsPixmapItem)
-from utils.globals import GlobalData
+
+from cdmpyparser import getBriefModuleInfoFromMemory
+from ui.qt import (
+    QApplication,
+    QCheckBox,
+    QDialog,
+    QDialogButtonBox,
+    QGraphicsPixmapItem,
+    QGraphicsScene,
+    QLabel,
+    QProgressBar,
+    Qt,
+    QTimer,
+    QVBoxLayout,
+)
 from utils.fileutils import isPythonFile
+from utils.globals import GlobalData
 from utils.importutils import resolveImports
 from utils.pixmapcache import getPixmap
-from cdmpyparser import getBriefModuleInfoFromMemory
+
+from .importsdgmgraphics import (
+    ImportsDgmBuiltInModule,
+    ImportsDgmDependConn,
+    ImportsDgmDocConn,
+    ImportsDgmDocNote,
+    ImportsDgmEdgeLabel,
+    ImportsDgmModuleOfInterest,
+    ImportsDgmOtherPrjModule,
+    ImportsDgmSystemWideModule,
+    ImportsDgmUnknownModule,
+)
 from .plaindotparser import getGraphFromDescriptionData
-from .importsdgmgraphics import (ImportsDgmDocConn, ImportsDgmDependConn,
-                                 ImportsDgmSystemWideModule,
-                                 ImportsDgmUnknownModule,
-                                 ImportsDgmBuiltInModule,
-                                 ImportsDgmModuleOfInterest,
-                                 ImportsDgmOtherPrjModule,
-                                 ImportsDgmDocNote, ImportsDgmEdgeLabel)
 
 
 class DgmConnection:
@@ -581,7 +597,7 @@ class ImportsDiagramProgress(QDialog):
                 info = GlobalData().briefModinfoCache.get(path)
                 if info.docstring is not None:
                     return info.docstring.text
-            except:
+            except Exception:
                 pass
         return ''
 

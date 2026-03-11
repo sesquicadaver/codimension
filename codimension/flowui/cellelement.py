@@ -21,13 +21,14 @@
 
 # pylint: disable=C0305
 
-from ui.qt import QMimeData, Qt, QApplication, QPen
-from utils.globals import GlobalData
+from ui.qt import QApplication, QMimeData, QPen, Qt
 from utils.config import DEFAULT_ENCODING
+from utils.globals import GlobalData
 from utils.limits import MAXINT_32
+
+from .abovebadges import AboveBadges, AboveBadgesDivider, AboveBadgesSpacer
 from .cml import CMLVersion
 from .routines import distance, getDocComment
-from .abovebadges import AboveBadges, AboveBadgesDivider, AboveBadgesSpacer
 
 
 class CellElement:
@@ -145,7 +146,7 @@ class CellElement:
 
     def appendCommentBadges(self):
         """Appends the comment badges (regular, non scope items)"""
-        from .auxitems import DocLinkBadgeItem, CommentBadgeItem
+        from .auxitems import CommentBadgeItem, DocLinkBadgeItem
 
         settings = self.canvas.settings
         if settings.hidecomments and not settings.noComment:

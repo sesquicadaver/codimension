@@ -19,16 +19,27 @@
 
 """The classes viewer implementation"""
 
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 from utils.project import CodimensionProject
-from .qt import (Qt, QSize, QRect, QItemSelectionModel, QMenu, QWidget,
-                 QAction, QVBoxLayout, QToolBar, QLabel, QSizePolicy,
-                 QCursor)
-from .combobox import CDMComboBox
+
 from .classesbrowser import ClassesBrowser
-from .viewitems import (DecoratorItemType, FunctionItemType, ClassItemType,
-                        AttributeItemType, GlobalItemType)
+from .combobox import CDMComboBox
+from .qt import (
+    QAction,
+    QCursor,
+    QItemSelectionModel,
+    QLabel,
+    QMenu,
+    QRect,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
+from .viewitems import AttributeItemType, ClassItemType, DecoratorItemType, FunctionItemType, GlobalItemType
 
 
 class ClassesViewer(QWidget):

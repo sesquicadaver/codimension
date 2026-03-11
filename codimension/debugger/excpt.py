@@ -19,7 +19,8 @@
 
 """Debugger exceptions viewer"""
 
-from ui.qt import Qt, pyqtSignal, QVBoxLayout, QWidget, QSplitter
+from ui.qt import QSplitter, Qt, QVBoxLayout, QWidget, pyqtSignal
+
 from .clientexcptviewer import ClientExceptionsViewer
 from .ignoredexcptviewer import IgnoredExceptionsViewer
 

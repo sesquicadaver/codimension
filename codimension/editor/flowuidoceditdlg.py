@@ -18,13 +18,23 @@
 #
 
 import os.path
-from ui.qt import (Qt, QDialog, QDialogButtonBox, QVBoxLayout, QLabel,
-                   QPushButton, QGridLayout, QLineEdit, QTextEdit, QCheckBox,
-                   QFileDialog)
-from utils.colorfont import setLineEditBackground, getZoomedMonoFont
+
+from ui.qt import (
+    QCheckBox,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    Qt,
+    QTextEdit,
+    QVBoxLayout,
+)
+from utils.colorfont import getZoomedMonoFont, setLineEditBackground
 from utils.globals import GlobalData
 from utils.misc import preResolveLinkPath
-
 
 """Dialog to enter a new text for a graphics item"""
 

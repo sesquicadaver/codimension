@@ -24,18 +24,27 @@
 # pylint: disable=W0702
 # pylint: disable=R0913
 
-from html import escape
-from ui.qt import Qt, QPen, QBrush, QGraphicsRectItem, QGraphicsItem, QPointF, QColor
+from ui.qt import QBrush, QColor, QGraphicsItem, QGraphicsRectItem, QPen, QPointF, Qt
 from utils.limits import MAXINT_32
-from .auxitems import (BadgeItem, Connector, HSpacerCell, VSpacerCell,
-                       SpacerCell, DocstringBadgeItem, CommentBadgeItem,
-                       ExceptBadgeItem, ScopeDecorBadgeItem, DocLinkBadgeItem)
+
+from .abovebadges import AboveBadgesSpacer
+from .auxitems import (
+    BadgeItem,
+    CommentBadgeItem,
+    Connector,
+    DocLinkBadgeItem,
+    DocstringBadgeItem,
+    ExceptBadgeItem,
+    HSpacerCell,
+    ScopeDecorBadgeItem,
+    SpacerCell,
+    VSpacerCell,
+)
 from .cellelement import CellElement
-from .routines import distance, getNoCellCommentBoxPath, getDocComment
 from .cml import CMLVersion
 from .colormixin import ColorMixin
+from .routines import distance, getDocComment
 from .textmixin import TextMixin
-from .abovebadges import AboveBadgesSpacer
 
 
 class ScopeHSideEdge(HSpacerCell):
@@ -181,7 +190,7 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
                 return cells[row][column].cells[0][0].kind \
                     in [CellElement.FOR_SCOPE, CellElement.WHILE_SCOPE]
             return False
-        except:
+        except Exception:
             return False
 
     def __needConnector(self):

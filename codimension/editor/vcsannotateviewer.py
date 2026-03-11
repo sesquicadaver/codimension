@@ -20,17 +20,29 @@
 """Annotated VCS viewer implementation"""
 
 
-import os.path
-from ui.qt import (Qt, QSize, QPoint, pyqtSignal, QToolBar, QFont,
-                   QFontMetrics, QHBoxLayout, QWidget, QAction, QSizePolicy,
-                   QToolTip)
-from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from utils.fileutils import getFileProperties, isPythonMime
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.importutils import getImportsList, resolveImports
 from ui.importlist import ImportListWidget
+from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from ui.qt import (
+    QAction,
+    QFont,
+    QFontMetrics,
+    QHBoxLayout,
+    QPoint,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QToolTip,
+    QWidget,
+    pyqtSignal,
+)
+from utils.encoding import decode
+from utils.fileutils import isPythonMime
+from utils.globals import GlobalData
+from utils.importutils import getImportsList, resolveImports
+from utils.pixmapcache import getIcon
+from utils.settings import Settings
+
 from .texteditor import TextEditor
 
 
@@ -53,6 +65,7 @@ class VCSAnnotateViewer(TextEditor):
 
     def __initAlterRevisionMarker(self):
         skin = GlobalData().skin
+        from PyQt5.Qsci import QsciScintilla
         self.__alterMarker = self.markerDefine(QsciScintilla.Background)
         self.setMarkerBackgroundColor(skin.revisionAlterPaper,
                                       self.__alterMarker)
@@ -62,9 +75,11 @@ class VCSAnnotateViewer(TextEditor):
         self.__lineRevisions = lineRevisions
         self.__revisionInfo = revisionInfo
 
-        fileType = self._parent.getFileType()
-        if fileType in [DesignerFileType, LinguistFileType]:
-            # special treatment for Qt-Linguist and Qt-Designer files
+        fileType = getattr(self._parent, 'getFileType', lambda: None)()
+        # Qt Designer (.ui) and Qt Linguist (.ts) use latin-1
+        qt_binary_mimes = ('application/x-designer', 'application/x-linguist',
+                           'text/x-designer', 'text/x-linguist')
+        if fileType and fileType in qt_binary_mimes:
             self.encoding = 'latin-1'
         else:
             text, self.encoding = decode(text)
@@ -90,6 +105,7 @@ class VCSAnnotateViewer(TextEditor):
                 self.__revisionInfo[revNumber]['shortAuthor'] = author
 
         skin = GlobalData().skin
+        from PyQt5.Qsci import QsciStyle
         revisionMarginFont = QFont(skin.lineNumFont)
         revisionMarginFont.setItalic(True)
         style = QsciStyle(-1, "Revision margin style",
@@ -158,7 +174,7 @@ class VCSAnnotateViewer(TextEditor):
     def __getRevisionMarginTooltip(self, lineNumber):
         """lineNumber is zero based"""
         revisionNumber = self.__lineRevisions[lineNumber]
-        if not revisionNumber in self.__revisionInfo:
+        if revisionNumber not in self.__revisionInfo:
             return None
 
         tooltip = "Revision: " + \

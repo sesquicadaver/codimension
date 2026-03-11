@@ -19,25 +19,42 @@
 
 """Profiling results as a graph"""
 
-from subprocess import PIPE, Popen
+import io
+import math
 import os
 import os.path
-import math
-import io
+from subprocess import PIPE, Popen
+
 import gprof2dot
-from ui.qt import (Qt, QPointF, pyqtSignal, QFont, QPen, QColor,
-                   QFontMetrics, QPainterPath, QPainter, QWidget, QLabel,
-                   QVBoxLayout, QGraphicsScene, QGraphicsPathItem,
-                   QStyle, QGraphicsTextItem, QStyleOptionGraphicsItem,
-                   QGraphicsItem, QGraphicsRectItem, QSizePolicy)
+from diagram.importsdgmgraphics import DiagramWidget
+from diagram.plaindotparser import getGraphFromPlainDotData
 from ui.labels import HeaderFitLabel
-from utils.settings import Settings
+from ui.qt import (
+    QColor,
+    QFont,
+    QFontMetrics,
+    QGraphicsItem,
+    QGraphicsPathItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsTextItem,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPointF,
+    QSizePolicy,
+    QStyle,
+    QStyleOptionGraphicsItem,
+    Qt,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
 from utils.globals import GlobalData
 from utils.pixmapcache import getPixmap
-from diagram.plaindotparser import getGraphFromPlainDotData
-from diagram.importsdgmgraphics import DiagramWidget
-from .proftable import FLOAT_FORMAT
+from utils.settings import Settings
 
+from .proftable import FLOAT_FORMAT
 
 DEFAULT_FONT = QFont("Arial", 10)
 
@@ -352,7 +369,7 @@ class ProfileGraphViewer(QWidget):
                             elif part.startswith('label='):
                                 try:
                                     lineno = int(part.split(':')[1])
-                                except:
+                                except Exception:
                                     pass
             if not lineModified:
                 processed.append(line)
@@ -408,7 +425,7 @@ class ProfileGraphViewer(QWidget):
                     fileName = parts[0]
                     if parts[1].isdigit():
                         lineNumber = int(parts[1])
-            except:
+            except Exception:
                 pass
 
             self.__scene.addItem(Function(node, fileName, lineNumber,

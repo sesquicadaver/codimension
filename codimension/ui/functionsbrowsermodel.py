@@ -26,11 +26,13 @@
 """Functions browser model"""
 
 from os.path import basename, realpath
-from utils.project import CodimensionProject
+
 from utils.fileutils import isPythonFile
+from utils.project import CodimensionProject
 from utils.settings import Settings
-from .viewitems import TreeViewFunctionItem
+
 from .browsermodelbase import BrowserModelBase
+from .viewitems import TreeViewFunctionItem
 
 
 class FunctionsBrowserModel(BrowserModelBase):
@@ -78,7 +80,7 @@ class FunctionsBrowserModel(BrowserModelBase):
         for path in addedPythonFiles:
             try:
                 info = self.globalData.briefModinfoCache.get(path)
-            except:
+            except Exception:
                 # It could be that a file was created and deleted straight
                 # away. In this case the cache will generate an exception.
                 continue

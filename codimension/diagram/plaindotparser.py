@@ -21,7 +21,8 @@
 
 import os
 import os.path
-from utils.fileutils import getFileContent, saveToFile, makeTempFile
+
+from utils.fileutils import getFileContent, makeTempFile, saveToFile
 from utils.run import checkOutput
 
 

@@ -21,27 +21,41 @@
 
 import logging
 import os.path
-from ui.qt import (pyqtSignal, QTimer, QObject, QModelIndex,
-                   QMessageBox, QDialog)
+
+from ui.qt import QDialog, QMessageBox, QModelIndex, QObject, QTimer, pyqtSignal
 from utils.pixmapcache import getIcon
-from .client.protocol_cdm_dbg import (METHOD_LINE, METHOD_STACK, METHOD_STEP,
-                                      METHOD_THREAD_LIST, METHOD_VARIABLES,
-                                      METHOD_CONTINUE, METHOD_DEBUG_STARTUP,
-                                      METHOD_FORK_TO, METHOD_CLEAR_BP,
-                                      METHOD_SYNTAX_ERROR, METHOD_EXCEPTION,
-                                      METHOD_VARIABLE, METHOD_STEP_OVER,
-                                      METHOD_BP_CONDITION_ERROR,
-                                      METHOD_SET_BP, METHOD_STEP_OUT,
-                                      METHOD_BP_ENABLE, METHOD_BP_IGNORE,
-                                      METHOD_STEP_QUIT, METHOD_CALL_TRACE,
-                                      METHOD_EXECUTE_STATEMENT,
-                                      METHOD_EXEC_STATEMENT_ERROR,
-                                      METHOD_EXEC_STATEMENT_OUTPUT,
-                                      METHOD_SIGNAL, METHOD_THREAD_SET)
+
 from .bputils import getBreakpointLines
 from .breakpointmodel import BreakPointModel
-from .watchpointmodel import WatchPointModel
+from .client.protocol_cdm_dbg import (
+    METHOD_BP_CONDITION_ERROR,
+    METHOD_BP_ENABLE,
+    METHOD_BP_IGNORE,
+    METHOD_CALL_TRACE,
+    METHOD_CLEAR_BP,
+    METHOD_CONTINUE,
+    METHOD_DEBUG_STARTUP,
+    METHOD_EXCEPTION,
+    METHOD_EXEC_STATEMENT_ERROR,
+    METHOD_EXEC_STATEMENT_OUTPUT,
+    METHOD_EXECUTE_STATEMENT,
+    METHOD_FORK_TO,
+    METHOD_LINE,
+    METHOD_SET_BP,
+    METHOD_SIGNAL,
+    METHOD_STACK,
+    METHOD_STEP,
+    METHOD_STEP_OUT,
+    METHOD_STEP_OVER,
+    METHOD_STEP_QUIT,
+    METHOD_SYNTAX_ERROR,
+    METHOD_THREAD_LIST,
+    METHOD_THREAD_SET,
+    METHOD_VARIABLE,
+    METHOD_VARIABLES,
+)
 from .editbreakpoint import BreakpointEditDialog
+from .watchpointmodel import WatchPointModel
 
 
 class CodimensionDebugger(QObject):

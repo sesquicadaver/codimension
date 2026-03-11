@@ -20,13 +20,30 @@
 """Pixmap widget"""
 
 import os.path
+
 from utils.pixmapcache import getIcon
-from .qt import (QPalette, QSizePolicy, QScrollArea, QImage, QPixmap, QAction,
-                 QLabel, QToolBar, QWidget, QHBoxLayout, QApplication, QMenu,
-                 QCursor, QShortcut, Qt, QSize, pyqtSignal)
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
 from .outsidechanges import OutsideChangeWidget
-
+from .qt import (
+    QAction,
+    QApplication,
+    QCursor,
+    QHBoxLayout,
+    QImage,
+    QLabel,
+    QMenu,
+    QPalette,
+    QPixmap,
+    QScrollArea,
+    QShortcut,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QWidget,
+    pyqtSignal,
+)
 
 FORMAT_STRINGS = {
     QImage.Format_Invalid: "invalid",
@@ -92,7 +109,7 @@ class PixmapWidget(QScrollArea):
             str(image.height()) + "px/" + fileSizeString
         try:
             self.formatInfo = FORMAT_STRINGS[image.format()]
-        except:
+        except Exception:
             self.formatInfo = "Unknown"
 
     def setPixmap(self, pixmap):

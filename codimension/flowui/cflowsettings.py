@@ -30,9 +30,10 @@
 
 
 from math import ceil
+
 from ui.qt import QFontMetrics
+from utils.colorfont import getZoomedCFBadgeFont, getZoomedCFMonoFont
 from utils.globals import GlobalData
-from utils.colorfont import getZoomedCFMonoFont, getZoomedCFBadgeFont
 from utils.settings import Settings
 
 NEED_NORMALIZE = ('ifWidth', 'commentCorner', 'hCellPadding',

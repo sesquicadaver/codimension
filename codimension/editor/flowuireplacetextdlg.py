@@ -20,8 +20,7 @@
 """Dialog to enter a new text for a graphics item"""
 
 
-from ui.qt import (Qt, QDialog, QDialogButtonBox, QVBoxLayout, QLabel,
-                   QTextEdit)
+from ui.qt import QDialog, QDialogButtonBox, QLabel, Qt, QTextEdit, QVBoxLayout
 from utils.colorfont import getZoomedMonoFont
 
 

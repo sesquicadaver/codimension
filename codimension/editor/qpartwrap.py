@@ -20,22 +20,21 @@
 """qutepart text editor component wrapper"""
 
 
-import re
 import logging
 import os.path
+import re
 import socket
 import urllib.request
+
 from qutepart import Qutepart
-from ui.qt import (QPalette, pyqtSignal, QTextCursor, QApplication,
-                   QCursor, Qt, QDesktopServices, QUrl)
-from utils.globals import GlobalData
-from utils.settings import Settings
+from ui.qt import QApplication, QCursor, QDesktopServices, QPalette, Qt, QTextCursor, QUrl, pyqtSignal
 from utils.colorfont import getZoomedMonoFont
 from utils.encoding import decodeURLContent
+from utils.globals import GlobalData
+from utils.settings import Settings
 
-
-WORD_AT_END_REGEXP = re.compile("\w+$")
-WORD_AT_START_REGEXP = re.compile("^\w+")
+WORD_AT_END_REGEXP = re.compile(r"\w+$")
+WORD_AT_START_REGEXP = re.compile(r"^\w+")
 
 
 class QutepartWrapper(Qutepart):

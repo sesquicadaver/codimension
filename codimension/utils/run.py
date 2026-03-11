@@ -22,13 +22,14 @@
 
 """Utility functions to support running scripts"""
 
-import sys
 import os.path
-from subprocess import check_output, STDOUT
+import sys
 from shlex import quote
+from subprocess import STDOUT, check_output
+
 from .config import DEFAULT_ENCODING
-from .runparams import RUN, PROFILE, DEBUG
 from .encoding import detectFileEncodingToRead
+from .runparams import DEBUG, PROFILE, RUN
 
 
 def prepareArguments(arguments):

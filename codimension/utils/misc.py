@@ -22,18 +22,18 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-import os.path
-import re
+import datetime
+import gc
 import getpass
 import locale
-import datetime
 import logging
+import os.path
+import re
 import traceback
-import gc
+
+from .fileutils import getFileContent, isCreatable, isFileOpenable
 from .globals import GlobalData
 from .settings import SETTINGS_DIR
-from .fileutils import getFileContent, isFileOpenable, isCreatable
-
 
 # File name of the template for any new file.
 # The file is searched nearby the project file.
@@ -56,7 +56,7 @@ def getLocaleDate():
     try:
         date_format = locale.nl_langinfo(locale.D_FMT)
         return now.strftime(date_format)
-    except:
+    except Exception:
         return now.strftime('%Y-%m-%d')
 
 
@@ -66,7 +66,7 @@ def getLocaleTime():
     try:
         time_format = locale.nl_langinfo(locale.T_FMT)
         return now.strftime(time_format)
-    except:
+    except Exception:
         return now.strftime('%H:%M:%S')
 
 

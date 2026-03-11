@@ -28,6 +28,7 @@ Implementation of an asynchronous file like socket interface for the debugger
 """
 
 import socket
+
 from cdm_dbg_utils import prepareJSONMessage
 from protocol_cdm_dbg import METHOD_CLIENT_OUTPUT
 

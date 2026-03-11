@@ -26,6 +26,7 @@
 """Functions browser with hierarchy browsing capabilities"""
 
 from utils.pixmapcache import getIcon
+
 from .functionsbrowsermodel import FunctionsBrowserModel
 from .objectsbrowserbase import ObjectsBrowser
 

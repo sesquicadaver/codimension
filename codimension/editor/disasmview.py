@@ -19,14 +19,21 @@
 
 """Disassembly view"""
 
-from ui.qt import (QTreeWidget, QTreeWidgetItem, QAbstractItemView,
-                   QHeaderView, pyqtSignal, QWidget, QSizePolicy,
-                   QVBoxLayout, Qt)
+from analysis.disasm import getBufferDisassembled, getFileDisassembled
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderLabel
+from ui.qt import (
+    QAbstractItemView,
+    QHeaderView,
+    QSizePolicy,
+    Qt,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
 from utils.settings import Settings
-from analysis.disasm import getFileDisassembled, getBufferDisassembled
-
 
 # https://stackoverflow.com/questions/12673074/how-should-i-understand-the-output-of-dis-dis
 # The output of the disassembly basically looks like that (3.6 and up):

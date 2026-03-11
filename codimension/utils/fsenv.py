@@ -21,8 +21,8 @@
 
 import os.path
 from copy import deepcopy
-from .fileutils import loadJSON, saveJSON
 
+from .fileutils import loadJSON, saveJSON
 
 # toplevel dirs: those which are added to the file system browser
 # filebrowserexpandeddirs: dirs in the project browser which were expanded when

@@ -20,9 +20,9 @@
 """Goto line widget implementation"""
 
 from utils.pixmapcache import getIcon
-from .qt import (QHBoxLayout, QToolButton, QLabel, QSizePolicy, QComboBox,
-                 QWidget, QIntValidator, Qt)
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import QComboBox, QHBoxLayout, QIntValidator, QLabel, QSizePolicy, Qt, QToolButton, QWidget
 
 
 class GotoLineWidget(QWidget):
@@ -127,8 +127,7 @@ class GotoLineWidget(QWidget):
             return
 
         currentWidget = self.editorsManager.currentWidget()
-        if not currentWidget.getType() in \
-           [MainWindowTabWidgetBase.PlainTextEditor,
+        if currentWidget.getType() not in [MainWindowTabWidgetBase.PlainTextEditor,
             MainWindowTabWidgetBase.VCSAnnotateViewer]:
             return
 

@@ -20,12 +20,14 @@
 """Dependency diagram grphics items"""
 
 import os
-from ui.qt import Qt, QPointF, QPen, QBrush, QGraphicsRectItem, QGraphicsItem
+
+from flowui.abovebadges import AboveBadgesSpacer
+from flowui.auxitems import BadgeItem, Connector
 from flowui.cellelement import CellElement
 from flowui.textmixin import TextMixin
-from flowui.auxitems import BadgeItem, Connector
-from flowui.abovebadges import AboveBadgesSpacer
+from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, Qt
 from utils.globals import GlobalData
+
 
 class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
 

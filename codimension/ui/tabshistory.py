@@ -20,8 +20,9 @@
 """Tabs history support implementation"""
 
 import os.path
-from .qt import QObject, pyqtSignal
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import QObject, pyqtSignal
 
 
 class TabHistoryEntry:

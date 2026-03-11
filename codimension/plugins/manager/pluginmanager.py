@@ -22,11 +22,11 @@
 import logging
 import os.path
 import sys
-from ui.qt import QObject, pyqtSignal
-from yapsy.PluginManager import PluginManager
-from utils.settings import SETTINGS_DIR, Settings
-from distutils.version import StrictVersion
 
+from packaging.version import Version
+from ui.qt import QObject, pyqtSignal
+from utils.settings import SETTINGS_DIR, Settings
+from yapsy.PluginManager import PluginManager
 
 # List of the supported plugin categories, i.e. base class names
 CATEGORIES = ["VersionControlSystemInterface",
@@ -75,7 +75,7 @@ class CDMPluginManager(PluginManager, QObject):
                 if path.endswith('/site-packages'):
                     candidate = path + '/cdmplugins'
                     if os.path.exists(candidate):
-                        if not candidate in searchPaths:
+                        if candidate not in searchPaths:
                             searchPaths.append(candidate)
 
         PluginManager.__init__(self, None, searchPaths, "cdmp")
@@ -326,7 +326,7 @@ class CDMPluginManager(PluginManager, QObject):
         indexVersion = []
         for index in indexes:
             indexVersion.append((index,
-                                 StrictVersion(plugins[index].getVersion())))
+                                 Version(plugins[index].getVersion())))
 
         # Sort basing on version
         indexVersion.sort(key=lambda indexVer: indexVer[1])
@@ -393,7 +393,7 @@ class CDMPluginManager(PluginManager, QObject):
             ideVer = GlobalData().version
             if not cdmPlugin.getObject().isIDEVersionCompatible(ideVer):
                 return "Plugin requires the other IDE version"
-        except:
+        except Exception:
             # Could not successfully call the interface method
             return "Error checking IDE version compatibility"
 

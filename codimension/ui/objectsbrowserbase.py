@@ -20,16 +20,25 @@
 """Base and auxiliary classes for G/F/C browsers"""
 
 import os
+
+from utils.fileutils import isPythonFile
 from utils.globals import GlobalData
 from utils.project import CodimensionProject
-from utils.fileutils import isPythonFile
-from .qt import (Qt, QModelIndex, QRegExp, pyqtSignal, QSortFilterProxyModel,
-                 QAbstractItemView, QApplication, QTreeView)
+
 from .itemdelegates import NoOutlineHeightDelegate
-from .viewitems import (DirectoryItemType, SysPathItemType, GlobalsItemType,
-                        ImportsItemType, FunctionsItemType, ClassesItemType,
-                        StaticAttributesItemType, InstanceAttributesItemType,
-                        FunctionItemType, ClassItemType)
+from .qt import QAbstractItemView, QApplication, QModelIndex, QRegExp, QSortFilterProxyModel, Qt, QTreeView, pyqtSignal
+from .viewitems import (
+    ClassesItemType,
+    ClassItemType,
+    DirectoryItemType,
+    FunctionItemType,
+    FunctionsItemType,
+    GlobalsItemType,
+    ImportsItemType,
+    InstanceAttributesItemType,
+    StaticAttributesItemType,
+    SysPathItemType,
+)
 
 
 class ObjectsBrowserSortFilterProxyModel(QSortFilterProxyModel):
@@ -98,9 +107,9 @@ class ObjectsBrowserSortFilterProxyModel(QSortFilterProxyModel):
             return False
 
         sitem = self.sourceModel().item(sindex)
-        if not sitem is None:
+        if sitem is not None:
             parent = sitem.parent()
-            if not parent is None:
+            if parent is not None:
                 if parent.parentItem is None:
                     # Filter top level items only
                     nameToMatch = sitem.sourceObj.name

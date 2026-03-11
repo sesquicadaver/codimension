@@ -28,30 +28,56 @@
 import logging
 import os
 import os.path
-from utils.pixmapcache import getIcon
-from utils.misc import getNewFileTemplate, getDefaultProjectDoc
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.fileutils import (getFileProperties, isImageViewable,
-                             isPythonMime, isPythonFile,
-                             getXmlSyntaxFileByMime, isFileSearchable,
-                             isMarkdownMime)
-from utils.diskvaluesrelay import (getFilePosition, updateFilePosition,
-                                   addRecentFile, getCollapsedGroups,
-                                   setCollapsedGroups)
-from utils.encoding import detectEolString
+
 from diagram.importsdgmgraphics import ImportDgmTabWidget
-from editor.vcsannotateviewer import VCSAnnotateViewerTabWidget
 from editor.texteditortabwidget import TextEditorTabWidget
-from .qt import (Qt, QDir, QUrl, pyqtSignal, QIcon, QTabWidget,
-                 QDialog, QMessageBox, QWidget, QHBoxLayout, QMenu,
-                 QToolButton, QShortcut, QFileDialog, QApplication, QTabBar)
-from .welcomewidget import WelcomeWidget
+from editor.vcsannotateviewer import VCSAnnotateViewerTabWidget
+from utils.diskvaluesrelay import (
+    addRecentFile,
+    getCollapsedGroups,
+    getFilePosition,
+    setCollapsedGroups,
+    updateFilePosition,
+)
+from utils.encoding import detectEolString
+from utils.fileutils import (
+    getFileProperties,
+    getXmlSyntaxFileByMime,
+    isFileSearchable,
+    isImageViewable,
+    isMarkdownMime,
+    isPythonFile,
+    isPythonMime,
+)
+from utils.globals import GlobalData
+from utils.misc import getDefaultProjectDoc, getNewFileTemplate
+from utils.pixmapcache import getIcon
+from utils.settings import Settings
+
 from .helpwidget import QuickHelpWidget
-from .pixmapwidget import PixmapTabWidget
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from .tabshistory import TabsHistory
 from .mdviewer import MarkdownTabWidget
+from .pixmapwidget import PixmapTabWidget
+from .qt import (
+    QApplication,
+    QDialog,
+    QDir,
+    QFileDialog,
+    QHBoxLayout,
+    QIcon,
+    QMenu,
+    QMessageBox,
+    QShortcut,
+    Qt,
+    QTabBar,
+    QTabWidget,
+    QToolButton,
+    QUrl,
+    QWidget,
+    pyqtSignal,
+)
+from .tabshistory import TabsHistory
+from .welcomewidget import WelcomeWidget
 
 
 class ClickableTabBar(QTabBar):
@@ -618,7 +644,7 @@ class EditorsManager(QTabWidget):
                     QMessageBox.Save)
 
                 if res == QMessageBox.Save:
-                    if self.onSave(-1, True) != True:
+                    if not self.onSave(-1, True):
                         # Failed to save
                         return
                 if res == QMessageBox.Cancel:
@@ -638,7 +664,7 @@ class EditorsManager(QTabWidget):
                         QMessageBox.Save),
                     QMessageBox.Save)
                 if res == QMessageBox.Save:
-                    if self.onSave() != True:
+                    if not self.onSave():
                         # Failed to save
                         return
                 if res == QMessageBox.Cancel:
@@ -920,7 +946,7 @@ class EditorsManager(QTabWidget):
                 info = GlobalData().briefModinfoCache.get(fileName)
                 if info.docstring is not None:
                     return info.docstring.text
-            except:
+            except Exception:
                 pass
         return ""
 
@@ -972,7 +998,7 @@ class EditorsManager(QTabWidget):
                     self.setTabToolTip(widgetIndex, info.docstring.text)
                 else:
                     self.setTabToolTip(widgetIndex, "")
-        except:
+        except Exception:
             self.setTabToolTip(widgetIndex, "")
             icon = getIcon('filepythonbroken.png')
             self.setTabIcon(widgetIndex, icon)
@@ -1153,7 +1179,7 @@ class EditorsManager(QTabWidget):
         if lineOrAnchor is None:
             return None
 
-        if type(lineOrAnchor) == int:
+        if isinstance(lineOrAnchor, int):
             if lineOrAnchor > 0:
                 widget.getEditor().gotoLine(lineOrAnchor, pos)
                 return True
@@ -1177,7 +1203,7 @@ class EditorsManager(QTabWidget):
             if lineNo > 0:
                 editor.gotoLine(lineNo)
                 return True
-        except:
+        except Exception:
             pass
         return None
 

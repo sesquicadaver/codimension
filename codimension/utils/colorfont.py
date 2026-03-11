@@ -20,6 +20,7 @@
 """QT color and font general utils"""
 
 from ui.qt import QColor, QFont, QFontComboBox
+
 from .globals import GlobalData
 from .settings import Settings
 
@@ -77,7 +78,7 @@ def buildColor(color):
             alpha = int(normColor[6:8], 16)
             checkColorRange(alpha)
             return QColor(red, green, blue, alpha)
-        except:
+        except Exception:
             raise Exception("Invalid hexadecimal color format: #" + color)
 
     parts = color.split(',')
@@ -98,7 +99,7 @@ def buildColor(color):
         alpha = int(parts[3].strip())
         checkColorRange(alpha)
         return QColor(red, green, blue, alpha)
-    except:
+    except Exception:
         raise Exception("Invalid decimal color format: " + color)
 
 

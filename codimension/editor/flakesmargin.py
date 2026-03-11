@@ -20,20 +20,21 @@
 
 """Pyflakes margin"""
 
-import math
 import logging
+import math
 from html import escape
+
 import qutepart
 from qutepart.margins import MarginBase
 from radon.complexity import cc_rank
-from ui.qt import QWidget, QPainter, QToolTip
-from utils.misc import extendInstance
-from utils.globals import GlobalData
+from ui.qt import QPainter, QToolTip, QWidget
 from utils.fileutils import isPythonMime
+from utils.globals import GlobalData
+from utils.misc import extendInstance
 from utils.pixmapcache import getPixmap
 
 # Pixmaps for the margin - populated once
-MARKS = {}
+MARKS: dict[int, object] = {}
 
 class CDMFlakesMargin(QWidget):
 

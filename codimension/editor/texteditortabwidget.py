@@ -20,23 +20,36 @@
 """Text editor tab widget"""
 
 
-import os.path
 import logging
-from ui.qt import (Qt, QFileInfo, QSize, pyqtSignal, QToolBar, QHBoxLayout,
-                   QWidget, QAction, QMenu, QToolButton, QDialog,
-                   QVBoxLayout, QSplitter)
-from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
+import os.path
+
+from diagram.importsdgm import ImportDiagramOptions, ImportsDiagramDialog, ImportsDiagramProgress
 from ui.importlist import ImportListWidget
+from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
 from ui.outsidechanges import OutsideChangeWidget
+from ui.qt import (
+    QAction,
+    QDialog,
+    QFileInfo,
+    QHBoxLayout,
+    QMenu,
+    QSize,
+    QSplitter,
+    Qt,
+    QToolBar,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
 from ui.spacers import ToolBarExpandingSpacer, ToolBarVSpacer
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.misc import extendInstance
 from utils.fileutils import isPythonMime
+from utils.globals import GlobalData
 from utils.importutils import getImportsList, resolveImports
-from diagram.importsdgm import (ImportsDiagramDialog, ImportDiagramOptions,
-                                ImportsDiagramProgress)
+from utils.misc import extendInstance
+from utils.pixmapcache import getIcon
+from utils.settings import Settings
+
 from .flowuiwidget import FlowUIWidget
 from .mdwidget import MDWidget
 from .navbar import NavigationBar

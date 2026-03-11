@@ -20,13 +20,14 @@
 """Python code parser errors dialog"""
 
 
-from os.path import exists, basename
-from utils.globals import GlobalData
-from utils.fileutils import isPythonFile
+from os.path import basename, exists
+
 from utils.colorfont import getZoomedMonoFont
-from .qt import (Qt, QDialog, QTextEdit, QDialogButtonBox, QVBoxLayout,
-                 QSizePolicy)
+from utils.fileutils import isPythonFile
+from utils.globals import GlobalData
+
 from .labels import FitLabel
+from .qt import QDialog, QDialogButtonBox, QSizePolicy, Qt, QTextEdit, QVBoxLayout
 
 
 class ParserErrorsDialog(QDialog):

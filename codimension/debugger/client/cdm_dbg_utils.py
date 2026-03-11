@@ -30,10 +30,10 @@ Various debug utilities
 import json
 import sys
 from collections import namedtuple
-from inspect import iscode, isframe
 from dis import COMPILER_FLAG_NAMES
-from PyQt5.QtNetwork import QAbstractSocket
+from inspect import CO_VARARGS, CO_VARKEYWORDS, iscode, isframe
 
+from PyQt5.QtNetwork import QAbstractSocket
 
 MAX_TRIES = 3
 

@@ -20,16 +20,29 @@
 """Find and replace widgets implementation"""
 
 import re
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.project import CodimensionProject
-from utils.diskvaluesrelay import getFindHistory, setFindHistory
+
 from utils.colorfont import setLineEditBackground
-from .qt import (QToolButton, QLabel, QSizePolicy, QComboBox,
-                 QGridLayout, QWidget, QCheckBox, QKeySequence, Qt, QSize,
-                 QEvent, pyqtSignal)
+from utils.diskvaluesrelay import getFindHistory, setFindHistory
+from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
+from utils.project import CodimensionProject
+from utils.settings import Settings
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import (
+    QCheckBox,
+    QComboBox,
+    QEvent,
+    QGridLayout,
+    QKeySequence,
+    QLabel,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolButton,
+    QWidget,
+    pyqtSignal,
+)
 
 
 class ComboBoxNoUndo(QComboBox):
@@ -751,7 +764,7 @@ class FindReplaceWidget(QWidget):
                         self.onQuickHighlight)
                     self.__editor.cursorPositionChanged.disconnect(
                         self.__cursorPositionChanged)
-                except:
+                except Exception:
                     pass
             self.__subscribedToCursor = False
 

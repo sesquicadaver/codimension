@@ -23,7 +23,8 @@
 # provides a set of the functions to relay a call to the appropriate
 # location
 
-from os.path import relpath, dirname
+from os.path import dirname, relpath
+
 from .globals import GlobalData
 from .settings import Settings
 

@@ -25,27 +25,47 @@
 
 """Common functionality of various browser models"""
 
-import sys
-import os
 import logging
+import os
+import sys
+
 from utils.fileutils import isPythonFile, isPythonMime
 from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
-from .qt import Qt, QAbstractItemModel, QModelIndex, QApplication, QCursor
-from .viewitems import (TreeViewItem, TreeViewDirectoryItem, TreeViewFileItem,
-                        TreeViewGlobalsItem, TreeViewImportsItem,
-                        TreeViewFunctionsItem, TreeViewClassesItem,
-                        TreeViewStaticAttributesItem, GlobalsItemType,
-                        TreeViewInstanceAttributesItem, FileItemType,
-                        TreeViewCodingItem, TreeViewImportItem,
-                        TreeViewFunctionItem, TreeViewClassItem,
-                        TreeViewDecoratorItem, TreeViewAttributeItem,
-                        TreeViewGlobalItem, TreeViewWhatItem,
-                        DirectoryItemType, SysPathItemType,
-                        ImportsItemType, FunctionsItemType,
-                        ClassesItemType, StaticAttributesItemType,
-                        InstanceAttributesItemType, DecoratorItemType,
-                        FunctionItemType, ClassItemType, ImportItemType)
+
+from .qt import QAbstractItemModel, QApplication, QCursor, QModelIndex, Qt
+from .viewitems import (
+    ClassesItemType,
+    ClassItemType,
+    DecoratorItemType,
+    DirectoryItemType,
+    FileItemType,
+    FunctionItemType,
+    FunctionsItemType,
+    GlobalsItemType,
+    ImportItemType,
+    ImportsItemType,
+    InstanceAttributesItemType,
+    StaticAttributesItemType,
+    SysPathItemType,
+    TreeViewAttributeItem,
+    TreeViewClassesItem,
+    TreeViewClassItem,
+    TreeViewCodingItem,
+    TreeViewDecoratorItem,
+    TreeViewDirectoryItem,
+    TreeViewFileItem,
+    TreeViewFunctionItem,
+    TreeViewFunctionsItem,
+    TreeViewGlobalItem,
+    TreeViewGlobalsItem,
+    TreeViewImportItem,
+    TreeViewImportsItem,
+    TreeViewInstanceAttributesItem,
+    TreeViewItem,
+    TreeViewStaticAttributesItem,
+    TreeViewWhatItem,
+)
 
 
 class BrowserModelBase(QAbstractItemModel):
@@ -293,7 +313,7 @@ class BrowserModelBase(QAbstractItemModel):
                         if modInfo.docstring is not None:
                             node.toolTip = modInfo.docstring.text
 
-                        if modInfo.isOK == False:
+                        if not modInfo.isOK:
                             # Substitute icon and change the tooltip
                             node.icon = getIcon('filepythonbroken.png')
                             if node.toolTip != "":

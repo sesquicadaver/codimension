@@ -19,36 +19,57 @@
 
 """Control flow UI widget"""
 
-import os.path
 import logging
+import os.path
 import uuid
 from math import ceil
 from timeit import default_timer as timer
-from ui.qt import (Qt, QSize, QTimer, QDir, QUrl, QSizeF, QPainter, QImage,
-                   QToolBar, QWidget, QPrinter, QApplication, QHBoxLayout,
-                   QLabel, QVBoxLayout, QFileDialog, QActionGroup, QAction,
-                   QDialog, QMenu, QToolButton, QMessageBox, QSvgGenerator,
-                   QStackedWidget)
-from ui.spacers import ToolBarExpandingSpacer, ToolBarVSpacer
+
 from cdmcfparser import getControlFlowFromMemory
-from flowui.vcanvas import VirtualCanvas, formatFlow
+from diagram.depsdiagram import collectImportResolutions
 from diagram.depsvcanvas import DepsVirtualCanvas
 from flowui.cflowsettings import getCflowSettings
 from flowui.cml import CMLVersion
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
+from flowui.vcanvas import VirtualCanvas, formatFlow
+from ui.qt import (
+    QAction,
+    QActionGroup,
+    QApplication,
+    QDialog,
+    QDir,
+    QFileDialog,
+    QHBoxLayout,
+    QImage,
+    QLabel,
+    QMenu,
+    QMessageBox,
+    QPainter,
+    QPrinter,
+    QSize,
+    QSizeF,
+    QStackedWidget,
+    QSvgGenerator,
+    Qt,
+    QTimer,
+    QToolBar,
+    QToolButton,
+    QUrl,
+    QVBoxLayout,
+    QWidget,
+)
+from ui.spacers import ToolBarExpandingSpacer, ToolBarVSpacer
+from utils.diskvaluesrelay import getCollapsedGroups, getFilePosition, setCollapsedGroups
 from utils.fileutils import isPythonMime
+from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 from utils.settings import Settings
-from utils.diskvaluesrelay import (getFilePosition, getCollapsedGroups,
-                                   setCollapsedGroups)
-from diagram.depsdiagram import collectImportResolutions
+
+from .astview import ASTView
+from .binview import BinView
+from .depssceneview import DepsGraphicsView
+from .disasmview import DisassemblyView
 from .flowuinavbar import ControlFlowNavigationBar
 from .flowuisceneview import CFGraphicsView
-from .depssceneview import DepsGraphicsView
-from .astview import ASTView
-from .disasmview import DisassemblyView
-from .binview import BinView
-
 
 IDLE_TIMEOUT = 1500
 
@@ -129,7 +150,7 @@ def getSmartZoomDescription(smartZoomLevel):
     prefix = 'Smart zoom level: '
     try:
         return prefix + ZOOM_PROPS[smartZoomLevel].description
-    except:
+    except Exception:
         return 'Unknown smart zoom level'
 
 def getSelectionAvailable(viewIndex):
@@ -885,7 +906,7 @@ class FlowUIWidget(QWidget):
         # and generate an integer id which is shorter
         for vacantGroupId in range(1000):
             groupId = str(vacantGroupId)
-            if not groupId in self.__allGroupId:
+            if groupId not in self.__allGroupId:
                 return groupId
         # Last resort
         return str(uuid.uuid1())

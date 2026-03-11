@@ -19,13 +19,12 @@
 
 """Control flow UI graphics scene and a view"""
 
-from ui.qt import (Qt, QRectF, QPoint, QPainter, QGraphicsView, QApplication,
-                   QGraphicsScene)
+from ui.qt import QApplication, QGraphicsScene, QGraphicsView, QPainter, QPoint, QRectF, Qt
 from utils.settings import Settings
-from .flowuicontextmenus import CFSceneContextMenuMixin
-from .flowuimouse import CFSceneMouseMixin
-from .flowuikeyboard import CFSceneKeyboardMixin
 
+from .flowuicontextmenus import CFSceneContextMenuMixin
+from .flowuikeyboard import CFSceneKeyboardMixin
+from .flowuimouse import CFSceneMouseMixin
 
 
 class CFGraphicsScene(QGraphicsScene,

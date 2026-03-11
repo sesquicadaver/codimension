@@ -21,14 +21,24 @@
 
 import logging
 import os.path
-from ui.qt import (Qt, pyqtSignal, QCursor,
-                   QTreeWidgetItem, QTreeWidget, QLabel, QWidget, QVBoxLayout,
-                   QHeaderView, QMenu, QAbstractItemView, QSizePolicy)
+
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitLabel
+from ui.qt import (
+    QAbstractItemView,
+    QCursor,
+    QHeaderView,
+    QMenu,
+    QSizePolicy,
+    Qt,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
 from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
-
 
 FLOAT_FORMAT = "%8.6f"
 MAX_CALLS_IN_TOOLTIP = 32
@@ -394,7 +404,7 @@ class ProfileTableViewer(QWidget):
             if line == 0 or not os.path.isabs(fileName):
                 return
             GlobalData().mainWindow.openFile(fileName, line)
-        except:
+        except Exception:
             logging.error("Could not jump to function location")
 
     @staticmethod

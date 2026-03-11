@@ -21,9 +21,9 @@
 
 import time
 from collections import deque
-from ui.qt import QThread, QMutex, QWaitCondition, pyqtSignal
-from plugins.categories.vcsiface import VersionControlSystemInterface
 
+from plugins.categories.vcsiface import VersionControlSystemInterface
+from ui.qt import QMutex, QThread, QWaitCondition, pyqtSignal
 
 # Indicator used by IDE to display errors while retrieving item status
 IND_VCS_ERROR = -2
@@ -80,7 +80,7 @@ class VCSPluginThread(QThread):
                 path, IND_VCS_ERROR,
                 "Exception in " + self.__plugin.getName() +
                 " plugin while retrieving VCS status: " + str(exc))
-        except:
+        except Exception:
             self.VCSStatus.emit(
                 path, IND_VCS_ERROR,
                 "Unknown exception in " + self.__plugin.getName() +

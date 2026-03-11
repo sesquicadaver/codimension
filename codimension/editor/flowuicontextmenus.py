@@ -20,24 +20,25 @@
 """Sets up and handles the flow UI context menus"""
 
 
+import logging
 import os.path
 import uuid
-import logging
-from ui.qt import QMenu, QApplication
+
 from flowui.cellelement import CellElement
+from flowui.cml import CMLcc, CMLdoc, CMLgb, CMLge, CMLrt, CMLsw, CMLVersion
+from flowui.groupitems import CollapsedGroup, EmptyGroup, OpenedGroupBegin
 from flowui.items import IfCell
 from flowui.scopeitems import ScopeCellElement
-from flowui.groupitems import OpenedGroupBegin, CollapsedGroup, EmptyGroup
-from flowui.docitems import IndependentDocCell, LeadingDocCell, AboveDocCell
-from flowui.cml import CMLVersion, CMLsw, CMLcc, CMLrt, CMLgb, CMLge, CMLdoc
-from utils.pixmapcache import getIcon
+from ui.qt import QApplication, QMenu
 from utils.diskvaluesrelay import addCollapsedGroup, removeCollapsedGroup
-from utils.settings import Settings
 from utils.globals import GlobalData
-from utils.misc import preResolveLinkPath, getDefaultFileDoc
-from .flowuireplacetextdlg import ReplaceTextDialog
+from utils.misc import getDefaultFileDoc, preResolveLinkPath
+from utils.pixmapcache import getIcon
+from utils.settings import Settings
+
 from .customcolordlg import CustomColorsDialog
 from .flowuidoceditdlg import DocLinkAnchorDialog
+from .flowuireplacetextdlg import ReplaceTextDialog
 
 
 class CFSceneContextMenuMixin:
@@ -323,7 +324,7 @@ class CFSceneContextMenuMixin:
         selection = self.serializeSelection()
 
         bgcolor, fgcolor, bordercolor = self.selectedItems()[0].getColors()
-        hasDocstring = self.isDocstringInSelection()
+        self.isDocstringInSelection()
         dlg = CustomColorsDialog(bgcolor, fgcolor, bordercolor, self.parent())
         if dlg.exec_():
             bgcolor = dlg.backgroundColor()
@@ -638,7 +639,7 @@ class CFSceneContextMenuMixin:
 
         try:
             os.makedirs(os.path.dirname(fName), exist_ok=True)
-            with open(fName, 'w') as f:
+            with open(fName, 'w'):
                 pass
         except Exception as exc:
             logging.error('Error creating the documentation file ' +
@@ -752,7 +753,7 @@ class CFSceneContextMenuMixin:
             # Create file and populate with the default content
             try:
                 os.makedirs(os.path.dirname(docFileName), exist_ok=True)
-                with open(docFileName, 'w') as f:
+                with open(docFileName, 'w'):
                     pass
             except Exception as exc:
                 logging.error('Error creating the documentation file ' +

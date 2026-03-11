@@ -77,26 +77,20 @@ a = 10      # Side
 #
 
 
-import sys, \
-       os.path
+import sys
 
 # cml 1 doc link=000 title="Some link"
 # Leading
-import sys      # Side
                 # Side last
 
 # Leading
-from sys import path        # Side
                             # Side last
 
 
 # cml 1 cc bg=#000000 fg=#eaeaea border=#ffffff
-import sys, \
-       os.path
 
 # cml 1 cc bg=#eaeaea fg=#000000
 # Leading
-from sys import path        # Side
                             # Side last
 
 
@@ -180,7 +174,7 @@ class C3( B1,       # Side 1
 class C4( C5 ):
     def member1( self ):
         pass
-    # cml 1 cc bg=#777777 
+    # cml 1 cc bg=#777777
     # Leading 1
     # Leading 2
     def member2( self,      # Side 1
@@ -324,7 +318,7 @@ if True:
     # cml 1 cc bg=#1dd21a fg=#000 border=#969696
     except Exception:
         pass
-    except Exception as ex:
+    except Exception:
         pass
     except:
         pass
@@ -344,7 +338,7 @@ try:        # Side 1
 except Exception:   # Side 2
                     # Side 2.1
     pass
-except Exception as ex:
+except Exception:
     pass
 # cml 1 doc anchor=000 title="Some anchor"
 # Leading 4
@@ -361,7 +355,7 @@ try:
 except Exception:   # Side 2
                     # Side 2.1
     pass
-except Exception as ex:
+except Exception:
     pass
 # Leading 4
 except:         # Side 4
@@ -517,7 +511,7 @@ exit( 0 +   # Side 1
       0 )   # Side 2
             # Side 3
 
-from sys import os, exit as EXIT
+from sys import exit as EXIT
 
 EXIT( 0 )
 

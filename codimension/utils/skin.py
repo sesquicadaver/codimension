@@ -24,18 +24,18 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-import sys
+import json
 import logging
 import os.path
-import json
+import sys
 from copy import deepcopy
-from ui.qt import QColor, QFont
-from .colorfont import (buildFont, buildColor,
-                        colorFontToJSON, colorFontFromJSON)
-from .fileutils import saveToFile, getFileContent
-from .config import DEFAULT_ENCODING
-from .settings import SETTINGS_DIR
 
+from ui.qt import QColor, QFont
+
+from .colorfont import buildColor, buildFont, colorFontFromJSON, colorFontToJSON
+from .config import DEFAULT_ENCODING
+from .fileutils import getFileContent, saveToFile
+from .settings import SETTINGS_DIR
 
 PACKAGE_SKIN_DIR = os.path.dirname(os.path.realpath(sys.argv[0])) + \
                    os.path.sep + 'skins' + os.path.sep
@@ -616,7 +616,7 @@ class Skin:
             if oldFormat:
                 try:
                     self.flush(fName, diskContent)
-                except:
+                except Exception:
                     pass
             return diskContent
         except Exception as exc:
@@ -634,7 +634,7 @@ class Skin:
             if oldFormat:
                 try:
                     self.flushCFlow(fName, diskContent)
-                except:
+                except Exception:
                     pass
             return diskContent
         except Exception as exc:
@@ -758,7 +758,7 @@ def getSkinName(dName):
             # the skin name is read and no font/color conversion needed
             values = json.load(diskfile)
             return values['name']
-    except:
+    except Exception:
         return None
 
 

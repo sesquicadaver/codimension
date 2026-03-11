@@ -19,23 +19,40 @@
 
 """project properties dialog"""
 
-import os
-from os.path import relpath
-import pwd
-import socket
 import datetime
 import logging
-from utils.project import getProjectProperties
-from utils.misc import getLocaleDate
-from utils.settings import SETTINGS_DIR
+import os
+import pwd
+import socket
+from os.path import relpath
+
 from utils.encoding import SUPPORTED_CODECS, isValidEncoding
-from .qt import (Qt, QEvent, QObject, QDialog, QLineEdit, QGridLayout, QLabel,
-                 QTextEdit, QDialogButtonBox, QVBoxLayout, QPushButton,
-                 QFileDialog, QMessageBox, QListWidget, QAbstractItemView,
-                 QApplication, QComboBox)
-from .labels import FramedLabel
-from .itemdelegates import NoOutlineHeightDelegate
+from utils.misc import getLocaleDate
+from utils.project import getProjectProperties
+from utils.settings import SETTINGS_DIR
+
 from .completers import DirCompleter, FileCompleter
+from .itemdelegates import NoOutlineHeightDelegate
+from .labels import FramedLabel
+from .qt import (
+    QAbstractItemView,
+    QApplication,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QEvent,
+    QFileDialog,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMessageBox,
+    QObject,
+    QPushButton,
+    Qt,
+    QTextEdit,
+    QVBoxLayout,
+)
 
 
 class ProjectPropertiesDialog(QDialog):
@@ -73,7 +90,7 @@ class ProjectPropertiesDialog(QDialog):
             try:
                 self.emailEdit.setText(userRecord[0] + "@" +
                                        socket.gethostname())
-            except:
+            except Exception:
                 pass
 
             self.versionEdit.setText("0.0.1")

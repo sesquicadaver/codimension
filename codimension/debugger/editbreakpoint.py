@@ -20,10 +20,10 @@
 """Dialog to edit a single breakpoint"""
 
 
-from ui.qt import (Qt, QDialog, QDialogButtonBox, QVBoxLayout,
-                   QLabel, QGridLayout, QSpinBox, QCheckBox)
-from utils.pixmapcache import getIcon
 from ui.combobox import CDMComboBox
+from ui.qt import QCheckBox, QDialog, QDialogButtonBox, QGridLayout, QLabel, QSpinBox, Qt, QVBoxLayout
+from utils.pixmapcache import getIcon
+
 from .breakpoint import Breakpoint
 
 

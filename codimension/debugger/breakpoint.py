@@ -19,7 +19,9 @@
 
 """Debugger breakpoint"""
 
-import os, os.path
+import os
+import os.path
+
 from utils.globals import GlobalData
 
 

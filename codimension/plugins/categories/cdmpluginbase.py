@@ -20,9 +20,10 @@
 """Base class for all codimension plugins"""
 
 import logging
-from yapsy.IPlugin import IPlugin
+
 from ui.qt import QObject, pyqtSignal
 from utils.settings import SETTINGS_DIR
+from yapsy.IPlugin import IPlugin
 
 
 class CDMPluginBase(IPlugin, QObject):

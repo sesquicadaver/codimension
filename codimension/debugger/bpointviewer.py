@@ -20,21 +20,38 @@
 """Break points viewer"""
 
 import logging
-from ui.qt import (Qt, pyqtSignal, QSize, QSizePolicy, QFrame, QTreeView,
-                   QHeaderView, QVBoxLayout, QSortFilterProxyModel,
-                   QWidget, QAbstractItemView, QMenu, QAction, QModelIndex,
-                   QCursor, QItemSelectionModel, QDialog, QToolBar)
+
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitLabel
-from ui.spacers import ToolBarHSpacer, ToolBarExpandingSpacer
-from utils.pixmapcache import getIcon
+from ui.qt import (
+    QAbstractItemView,
+    QAction,
+    QCursor,
+    QDialog,
+    QHeaderView,
+    QItemSelectionModel,
+    QMenu,
+    QModelIndex,
+    QSize,
+    QSizePolicy,
+    QSortFilterProxyModel,
+    Qt,
+    QToolBar,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
+from ui.spacers import ToolBarExpandingSpacer, ToolBarHSpacer
 from utils.globals import GlobalData
-from utils.settings import Settings
+from utils.pixmapcache import getIcon
 from utils.project import CodimensionProject
-from .editbreakpoint import BreakpointEditDialog
-from .breakpoint import Breakpoint
+from utils.settings import Settings
+
 from .bputils import getBreakpointLines
-from .breakpointmodel import COLUMN_TEMPORARY, COLUMN_ENABLED, COLUMN_LOCATION
+from .breakpoint import Breakpoint
+from .breakpointmodel import COLUMN_ENABLED, COLUMN_LOCATION, COLUMN_TEMPORARY
+from .editbreakpoint import BreakpointEditDialog
 
 
 class BreakPointView(QTreeView):
@@ -433,7 +450,7 @@ class BreakPointViewer(QWidget):
                 if not newBpoint.deserialize(bpoint):
                     # Non valid
                     continue
-            except:
+            except Exception:
                 continue
             # Need to check if it still points to a breakable line
             line = newBpoint.getLineNumber()

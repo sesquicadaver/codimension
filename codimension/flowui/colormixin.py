@@ -21,7 +21,7 @@
 
 # pylint: disable=C0305
 
-from .cml import CMLVersion, CMLcc
+from .cml import CMLcc, CMLVersion
 
 # There are a few options of how the colors could be specified:
 # - the item may have a leading CML cc comment

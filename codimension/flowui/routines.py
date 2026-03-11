@@ -22,6 +22,7 @@
 # pylint: disable=C0305
 
 from ui.qt import QPainterPath
+
 from .cml import CMLdoc
 
 

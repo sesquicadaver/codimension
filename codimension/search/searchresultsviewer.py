@@ -21,21 +21,38 @@
 
 import logging
 from uuid import uuid1
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
-from utils.fileutils import getFileProperties
-from utils.project import CodimensionProject
-from utils.misc import getLocaleDateTime
-from ui.qt import (Qt, QSize, QToolBar, QBrush, QHBoxLayout, QWidget, QAction,
-                   QLabel, QFrame, QTreeWidget, QApplication, QTreeWidgetItem,
-                   QHeaderView, QPalette, QColor, QStackedWidget, QSizePolicy,
-                   QVBoxLayout)
+
 from ui.itemdelegates import NoOutlineHeightDelegate
+from ui.labels import HeaderFitLabel, HeaderLabel
+from ui.qt import (
+    QAction,
+    QApplication,
+    QBrush,
+    QColor,
+    QFrame,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QPalette,
+    QSize,
+    QSizePolicy,
+    QStackedWidget,
+    Qt,
+    QToolBar,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from ui.spacers import ToolBarExpandingSpacer
-from ui.labels import HeaderLabel, HeaderFitLabel
+from utils.fileutils import getFileProperties
+from utils.globals import GlobalData
+from utils.misc import getLocaleDateTime
+from utils.pixmapcache import getIcon
+from utils.project import CodimensionProject
+
 from .matchtooltip import MatchTooltip
 from .occurrencesprovider import OccurrencesSearchProvider
-
 
 MAX_RESULTS = 32
 

@@ -25,8 +25,7 @@
 
 """Module implementing the Breakpoint model"""
 
-from ui.qt import pyqtSignal, QAbstractItemModel, Qt, QModelIndex
-
+from ui.qt import QAbstractItemModel, QModelIndex, Qt, pyqtSignal
 
 COLUMN_LOCATION = 2
 COLUMN_CONDITION = 3

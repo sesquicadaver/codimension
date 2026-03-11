@@ -22,18 +22,19 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-import re
 import encodings
 import logging
 import os.path
+import re
 from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF32
+
 from cdmpyparser import getBriefModuleInfoFromMemory
+
+from .config import DEFAULT_ENCODING
 from .diskvaluesrelay import getFileEncoding
 from .fileutils import isPythonFile
 from .globals import GlobalData
 from .settings import Settings
-from .config import DEFAULT_ENCODING
-
 
 # There is no way to query a complete list of the supported codecs at run-time.
 # So there is the list below.
@@ -180,7 +181,7 @@ def encodingSanityCheck(fName, decodedText, expectedEncoding):
                                 " does not match encoding " + modEncoding.name +
                                 " found in the file " + fName)
                 return False
-    except:
+    except Exception:
         pass
     return True
 
@@ -268,6 +269,34 @@ def detectFileEncodingToRead(fName, text=None):
 
     # Step 6: default
     return DEFAULT_ENCODING
+
+
+def decode(content):
+    """Decode bytes to (text, encoding). For VCS annotate etc.
+    content: bytes to decode (or str, returned as-is)
+    Returns: (decoded_text, encoding_name)
+    """
+    if isinstance(content, str):
+        return content, DEFAULT_ENCODING
+    if content.startswith(BOM_UTF8):
+        content = content[len(BOM_UTF8):]
+        enc = 'bom-utf-8'
+    elif content.startswith(BOM_UTF16):
+        content = content[len(BOM_UTF16):]
+        enc = 'bom-utf-16'
+    elif content.startswith(BOM_UTF32):
+        content = content[len(BOM_UTF32):]
+        enc = 'bom-utf-32'
+    else:
+        enc = getCodingFromBytes(content)
+        if not enc:
+            project = GlobalData().project
+            if project.isLoaded() and project.props.get('encoding'):
+                enc = project.props['encoding']
+            else:
+                enc = Settings()['encoding'] or DEFAULT_ENCODING
+    norm_enc = encodings.normalize_encoding(enc)
+    return content.decode(norm_enc), enc
 
 
 def readEncodedFile(fName):

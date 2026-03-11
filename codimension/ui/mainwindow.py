@@ -23,73 +23,99 @@
 # pylint: disable=W0703
 
 # cml 1 gb id=0 title="System imports"
+import gc
+import logging
 import os.path
 import sys
-import logging
-import gc
-# cml 1 ge id=0
-# cml 1 gb id=1 title="Project imports"
-from utils.globals import GlobalData
-from utils.project import CodimensionProject
-from utils.misc import (getDefaultTemplate, getIDETemplateFile,
-                        getProjectTemplateFile, extendInstance)
-from utils.pixmapcache import getIcon
-from utils.fileutils import (getFileProperties, isImageViewable, isImageFile,
-                             isFileSearchable, isCDMProjectFile)
-from utils.diskvaluesrelay import getRunParameters
-from utils.runmanager import RunManager, getWorkingDir
-from utils.run import parseCommandLineArguments, getNoArgsEnvironment
-from utils.fileutils import isPythonMime
-from diagram.importsdgm import (ImportsDiagramDialog, ImportsDiagramProgress,
-                                ImportDiagramOptions)
+
+from analysis.disasm import getBufferDisassembled, getCompiledfileDisassembled, getFileDisassembled
+from analysis.notused import NotUsedAnalysisProgress
+from autocomplete.completelists import getJediProject, getOccurrences
+from debugger.bputils import clearValidBreakpointLinesCache
+from debugger.bpwp import DebuggerBreakWatchPoints
+from debugger.calltraceviewer import CallTraceViewer
+from debugger.client.protocol_cdm_dbg import UNHANDLED_EXCEPTION
 from debugger.context import DebuggerContext
+from debugger.excpt import DebuggerExceptions
 from debugger.modifiedunsaved import ModifiedUnsavedDialog
 from debugger.server import CodimensionDebugger
-from debugger.excpt import DebuggerExceptions
-from debugger.calltraceviewer import CallTraceViewer
-from debugger.bpwp import DebuggerBreakWatchPoints
-from debugger.bputils import clearValidBreakpointLinesCache
-from debugger.client.protocol_cdm_dbg import UNHANDLED_EXCEPTION
-from autocomplete.completelists import getOccurrences, getJediProject
-from analysis.disasm import (getFileDisassembled, getCompiledfileDisassembled,
-                             getBufferDisassembled)
-from analysis.notused import NotUsedAnalysisProgress
+from diagram.importsdgm import ImportDiagramOptions, ImportsDiagramDialog, ImportsDiagramProgress
 from plugins.manager.pluginmanagerdlg import PluginsDialog
 from plugins.vcssupport.vcsmanager import VCSManager
 from profiling.profwidget import ProfileResultsWidget
 from search.findinfilesdialog import FindInFilesDialog
-from search.searchsupport import ItemToSearchIn, getSearchItemIndex
-from search.searchresultsviewer import SearchResultsViewer, hideSearchTooltip
 from search.findinfilesprovider import FindInFilesSearchProvider
-from search.vultureprovider import VultureSearchProvider
 from search.occurrencesprovider import OccurrencesSearchProvider
-from .qt import (Qt, QSize, QTimer, QDir, QUrl, pyqtSignal, QToolBar, QWidget,
-                 QVBoxLayout, QSplitter, QSizePolicy, QAction,
-                 QMainWindow, QApplication, QCursor, QToolButton, QTabBar,
-                 QToolTip, QFileDialog, QDialog, QMenu, QDesktopServices)
+from search.searchresultsviewer import SearchResultsViewer, hideSearchTooltip
+from search.searchsupport import ItemToSearchIn, getSearchItemIndex
+from search.vultureprovider import VultureSearchProvider
+from utils.diskvaluesrelay import getRunParameters
+from utils.fileutils import (
+    getFileProperties,
+    isCDMProjectFile,
+    isFileSearchable,
+    isImageFile,
+    isImageViewable,
+    isPythonMime,
+)
+
+# cml 1 ge id=0
+# cml 1 gb id=1 title="Project imports"
+from utils.globals import GlobalData
+from utils.misc import extendInstance, getDefaultTemplate, getIDETemplateFile, getProjectTemplateFile
+from utils.pixmapcache import getIcon
+from utils.project import CodimensionProject
+from utils.run import getNoArgsEnvironment, parseCommandLineArguments
+from utils.runmanager import RunManager, getWorkingDir
+
 from .about import AboutDialog
-from .sidebar import SideBar
-from .logviewer import LogViewer
-from .redirector import Redirector
+from .classesviewer import ClassesViewer
+from .editorsmanager import EditorsManager
+from .findfile import FindFileDialog
+from .findname import FindNameDialog
+from .findreplacewidget import FindReplaceWidget
+from .floatingrendererwindow import DetachedRendererWindow
 from .functionsviewer import FunctionsViewer
 from .globalsviewer import GlobalsViewer
-from .classesviewer import ClassesViewer
-from .recentprojectsviewer import RecentProjectsViewer
-from .projectviewer import ProjectViewer
-from .outline import FileOutlineViewer
-from .pyflakesviewer import PyflakesViewer
-from .editorsmanager import EditorsManager
-from .projectproperties import ProjectPropertiesDialog
-from .findreplacewidget import FindReplaceWidget
 from .gotolinewidget import GotoLineWidget
-from .findname import FindNameDialog
-from .findfile import FindFileDialog
-from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from .mainstatusbar import MainWindowStatusBarMixin
+from .logviewer import LogViewer
 from .mainmenu import MainWindowMenuMixin
 from .mainredirectedio import MainWindowRedirectedIOMixin
-from .floatingrendererwindow import DetachedRendererWindow
+from .mainstatusbar import MainWindowStatusBarMixin
+from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .outline import FileOutlineViewer
+from .projectproperties import ProjectPropertiesDialog
+from .projectviewer import ProjectViewer
+from .pyflakesviewer import PyflakesViewer
+from .qt import (
+    QAction,
+    QApplication,
+    QCursor,
+    QDesktopServices,
+    QDialog,
+    QDir,
+    QFileDialog,
+    QMainWindow,
+    QMenu,
+    QSize,
+    QSizePolicy,
+    QSplitter,
+    Qt,
+    QTabBar,
+    QTimer,
+    QToolBar,
+    QToolButton,
+    QToolTip,
+    QUrl,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
+from .recentprojectsviewer import RecentProjectsViewer
+from .redirector import Redirector
+from .sidebar import SideBar
 from .spacers import ToolBarExpandingSpacer, ToolBarHSpacer
+
 # cml 1 ge id=1
 
 
@@ -1712,7 +1738,7 @@ class CodimensionMainWindow(QMainWindow):
                 url = QUrl.fromLocalFile(dirName)
                 if url not in urls:
                     urls.append(url)
-        except:
+        except Exception:
             pass
 
         project = GlobalData().project

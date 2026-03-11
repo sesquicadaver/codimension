@@ -21,8 +21,8 @@
 
 # pylint: disable=no-self-use, unused-argument
 
-from protocol_cdm_dbg import METHOD_STDOUT, METHOD_STDERR
 from cdm_dbg_utils import sendJSONCommand
+from protocol_cdm_dbg import METHOD_STDERR, METHOD_STDOUT
 
 
 class OutStreamRedirector():
@@ -53,7 +53,7 @@ class OutStreamRedirector():
         """Provides the file number"""
         try:
             return self.sock.socketDescriptor()
-        except Exception as exc:
+        except Exception:
             return -1
 
     def read_p(self, size=-1):

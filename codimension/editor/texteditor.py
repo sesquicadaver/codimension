@@ -20,33 +20,29 @@
 """Text editor implementation"""
 
 
-import os.path
 import logging
+import os.path
+
+from autocomplete.bufferutils import getContext
+from autocomplete.completelists import getCallSignatures, getCompletionList, getDefinitions, getOccurrences
 from cdmpyparser import getBriefModuleInfoFromMemory
-from ui.qt import (Qt, QTimer, pyqtSignal, QEvent, QToolTip,
-                   QCursor, QApplication, QTextOption, QAction,
-                   QPlainTextEdit)
-from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from ui.completer import CodeCompleter
-from ui.calltip import Calltip
-from search.searchsupport import ItemToSearchIn, getSearchItemIndex
 from search.occurrencesprovider import OccurrencesSearchProvider
+from search.searchsupport import ItemToSearchIn, getSearchItemIndex
+from ui.calltip import Calltip
+from ui.completer import CodeCompleter
+from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from ui.qt import QAction, QApplication, QCursor, QEvent, QPlainTextEdit, Qt, QTextOption, QTimer, QToolTip, pyqtSignal
+from utils.diskvaluesrelay import getFileEncoding, setFileEncoding
+from utils.encoding import detectEolString, detectWriteEncoding, readEncodedFile, writeEncodedFile
+from utils.fileutils import getFileProperties, isMarkdownMime, isPythonMime
 from utils.globals import GlobalData
 from utils.settings import Settings
-from utils.encoding import (readEncodedFile, detectEolString,
-                            detectWriteEncoding, writeEncodedFile)
-from utils.fileutils import getFileProperties, isPythonMime, isMarkdownMime
-from utils.diskvaluesrelay import setFileEncoding, getFileEncoding
-from autocomplete.bufferutils import getContext
-from autocomplete.completelists import (getCompletionList,
-                                        getDefinitions, getOccurrences,
-                                        getCallSignatures)
-from .qpartwrap import QutepartWrapper
-from .editorcontextmenus import EditorContextMenuMixin
-from .linenomargin import CDMLineNumberMargin
-from .flakesmargin import CDMFlakesMargin
-from .bpmargin import CDMBreakpointMargin
 
+from .bpmargin import CDMBreakpointMargin
+from .editorcontextmenus import EditorContextMenuMixin
+from .flakesmargin import CDMFlakesMargin
+from .linenomargin import CDMLineNumberMargin
+from .qpartwrap import QutepartWrapper
 
 CTRL_SHIFT = int(Qt.ShiftModifier | Qt.ControlModifier)
 SHIFT = int(Qt.ShiftModifier)
@@ -302,7 +298,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
                 self.detectSyntax(xmlSyntaxFile)
 
             self.document().setModified(False)
-        except:
+        except Exception:
             QApplication.restoreOverrideCursor()
             raise
 

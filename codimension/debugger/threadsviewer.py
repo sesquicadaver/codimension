@@ -20,13 +20,22 @@
 """Thread viewer"""
 
 
-from ui.qt import (Qt, QTreeWidget, QToolButton, QTreeWidgetItem,
-                   QHeaderView, QVBoxLayout, QWidget, QSize, QToolBar,
-                   QAbstractItemView, QSizePolicy)
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitLabel
+from ui.qt import (
+    QAbstractItemView,
+    QHeaderView,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from utils.pixmapcache import getIcon
-from utils.settings import Settings
 
 
 class ThreadItem(QTreeWidgetItem):

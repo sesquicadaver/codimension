@@ -21,8 +21,8 @@
 
 
 from utils.globals import GlobalData
-from .qt import (Qt, QEventLoop, QSizePolicy, QFrame, QLabel, QApplication,
-                 QGridLayout)
+
+from .qt import QApplication, QEventLoop, QFrame, QGridLayout, QLabel, QSizePolicy, Qt
 
 
 class Calltip(QFrame):
@@ -139,7 +139,7 @@ class Calltip(QFrame):
 
         try:
             begin = self.__text.index('(') + 1
-        except:
+        except Exception:
             self.__paramPositions = None
             return
 

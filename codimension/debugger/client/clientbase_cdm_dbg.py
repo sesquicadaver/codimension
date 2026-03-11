@@ -25,46 +25,74 @@
 
 """Module implementing a debug client base class"""
 
-import sys
-import socket
-import codeop
 import codecs
-import traceback
+import codeop
 import os
-import imp
 import re
 import signal
-from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress
-from protocol_cdm_dbg import (METHOD_PROC_ID_INFO, METHOD_PROLOGUE_CONTINUE,
-                              METHOD_STDIN, VAR_TYPE_DISP_STRINGS,
-                              METHOD_VARIABLES, METHOD_VARIABLE,
-                              METHOD_THREAD_LIST, METHOD_THREAD_SET,
-                              METHOD_FORK_TO,
-                              METHOD_CONTINUE, METHOD_DEBUG_STARTUP,
-                              METHOD_CALL_TRACE, METHOD_LINE,
-                              METHOD_EXCEPTION, METHOD_STACK, METHOD_STEP_QUIT,
-                              METHOD_STEP_OUT, METHOD_STEP_OVER, METHOD_STEP,
-                              METHOD_MOVE_IP, METHOD_SET_BP,
-                              METHOD_BP_CONDITION_ERROR, METHOD_BP_ENABLE,
-                              METHOD_BP_IGNORE, METHOD_SET_WP,
-                              METHOD_WP_CONDITION_ERROR, METHOD_WP_ENABLE,
-                              METHOD_WP_IGNORE, METHOD_CLEAR_BP,
-                              METHOD_CLEAR_WP, METHOD_SYNTAX_ERROR,
-                              METHOD_SET_ENVIRONMENT, METHOD_EXECUTE_STATEMENT,
-                              METHOD_SIGNAL, METHOD_SHUTDOWN,
-                              METHOD_SET_FILTER, METHOD_EPILOGUE_EXIT_CODE,
-                              METHOD_EPILOGUE_EXIT, SYNTAX_ERROR_AT_START,
-                              STOPPED_BY_REQUEST, METHOD_EXEC_STATEMENT_ERROR,
-                              METHOD_EXEC_STATEMENT_OUTPUT)
-from base_cdm_dbg import setRecursionLimit
-from asyncfile_cdm_dbg import AsyncFile
-from outredir_cdm_dbg import OutStreamRedirector, OutStreamCollector
-from bp_wp_cdm_dbg import Breakpoint, Watch
-from cdm_dbg_utils import (sendJSONCommand, formatArgValues, getArgValues,
-                           printerr, waitForIDEMessage,
-                           getParsedJSONMessage)
-from variables_cdm_dbg import getType, TOO_LARGE_ATTRIBUTE
+import socket
+import sys
+import traceback
+import types
 
+from asyncfile_cdm_dbg import AsyncFile
+from base_cdm_dbg import setRecursionLimit
+from bp_wp_cdm_dbg import Breakpoint, Watch
+from cdm_dbg_utils import (
+    formatArgValues,
+    getArgValues,
+    getParsedJSONMessage,
+    printerr,
+    sendJSONCommand,
+    waitForIDEMessage,
+)
+from outredir_cdm_dbg import OutStreamCollector, OutStreamRedirector
+from protocol_cdm_dbg import (
+    METHOD_BP_CONDITION_ERROR,
+    METHOD_BP_ENABLE,
+    METHOD_BP_IGNORE,
+    METHOD_CALL_TRACE,
+    METHOD_CLEAR_BP,
+    METHOD_CLEAR_WP,
+    METHOD_CONTINUE,
+    METHOD_DEBUG_STARTUP,
+    METHOD_EPILOGUE_EXIT,
+    METHOD_EPILOGUE_EXIT_CODE,
+    METHOD_EXCEPTION,
+    METHOD_EXEC_STATEMENT_ERROR,
+    METHOD_EXEC_STATEMENT_OUTPUT,
+    METHOD_EXECUTE_STATEMENT,
+    METHOD_FORK_TO,
+    METHOD_LINE,
+    METHOD_MOVE_IP,
+    METHOD_PROC_ID_INFO,
+    METHOD_PROLOGUE_CONTINUE,
+    METHOD_SET_BP,
+    METHOD_SET_ENVIRONMENT,
+    METHOD_SET_FILTER,
+    METHOD_SET_WP,
+    METHOD_SHUTDOWN,
+    METHOD_SIGNAL,
+    METHOD_STACK,
+    METHOD_STDIN,
+    METHOD_STEP,
+    METHOD_STEP_OUT,
+    METHOD_STEP_OVER,
+    METHOD_STEP_QUIT,
+    METHOD_SYNTAX_ERROR,
+    METHOD_THREAD_LIST,
+    METHOD_THREAD_SET,
+    METHOD_VARIABLE,
+    METHOD_VARIABLES,
+    METHOD_WP_CONDITION_ERROR,
+    METHOD_WP_ENABLE,
+    METHOD_WP_IGNORE,
+    STOPPED_BY_REQUEST,
+    SYNTAX_ERROR_AT_START,
+    VAR_TYPE_DISP_STRINGS,
+)
+from PyQt5.QtNetwork import QAbstractSocket, QHostAddress, QTcpSocket
+from variables_cdm_dbg import TOO_LARGE_ATTRIBUTE, getType
 
 # If set to true then the client prints debug messages on the original stderr
 CLIENT_DEBUG = False
@@ -173,7 +201,7 @@ class DebugClientBase(object):
         self.framenr = 0
 
         # The context to run the debugged program in.
-        self.debugMod = imp.new_module('__main__')
+        self.debugMod = types.ModuleType('__main__')
         self.debugMod.__dict__['__builtins__'] = __builtins__
 
         # The list of complete lines to execute.
@@ -243,7 +271,7 @@ class DebugClientBase(object):
         """Closes the session with the debugger and optionally terminate"""
         try:
             self.set_quit()
-        except:
+        except Exception:
             pass
 
         self.debugging = False
@@ -745,8 +773,6 @@ class DebugClientBase(object):
     def absPath(self, fileName):
         """Converts a filename to an absolute name"""
         if os.path.isabs(fileName):
-            if sys.version_info[0] == 2:
-                fileName = fileName.decode(sys.getfilesystemencoding())
             return fileName
 
         # Check the cache
@@ -759,9 +785,6 @@ class DebugClientBase(object):
             nafn = os.path.normcase(afn)
 
             if os.path.exists(nafn):
-                if sys.version_info[0] == 2:
-                    afn = afn.decode(sys.getfilesystemencoding())
-
                 self._fncache[fileName] = afn
                 aDir = os.path.dirname(afn)
                 if (aDir not in sys.path) and (aDir not in self.dircache):

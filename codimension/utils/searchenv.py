@@ -21,8 +21,8 @@
 
 import os.path
 from copy import deepcopy
-from .fileutils import loadJSON, saveJSON
 
+from .fileutils import loadJSON, saveJSON
 
 # The 'find' item is for the search in the buffer dialogue. Each item is a
 # dictionary of the following structure:

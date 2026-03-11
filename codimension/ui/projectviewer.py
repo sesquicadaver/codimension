@@ -22,35 +22,61 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
+import logging
 import os
 import os.path
-import logging
 import shutil
-from utils.pixmapcache import getIcon
+
+from analysis.disasm import OPT_NO_OPTIMIZATION, OPT_OPTIMIZE_ASSERT, OPT_OPTIMIZE_DOCSTRINGS
+from diagram.importsdgm import ImportDiagramOptions, ImportsDiagramDialog, ImportsDiagramProgress
+from utils.fileutils import isPythonCompiledFile, isPythonFile, isPythonMime
 from utils.globals import GlobalData
-from utils.settings import Settings
+from utils.pixmapcache import getIcon
 from utils.project import CodimensionProject
-from utils.fileutils import isPythonMime, isPythonFile, isPythonCompiledFile
-from diagram.importsdgm import (ImportsDiagramDialog, ImportDiagramOptions,
-                                ImportsDiagramProgress)
-from analysis.disasm import (OPT_NO_OPTIMIZATION, OPT_OPTIMIZE_ASSERT,
-                             OPT_OPTIMIZE_DOCSTRINGS)
-from .qt import (QSize, Qt, QWidget, QVBoxLayout, QSplitter, QToolBar,
-                 QAction, QToolButton, QSizePolicy, QDialog, QMenu,
-                 QMessageBox, QCursor, pyqtSignal)
-from .projectproperties import ProjectPropertiesDialog
+from utils.settings import Settings
+
 from .filesystembrowser import FileSystemBrowser
-from .projectbrowser import ProjectBrowser
-from .viewitems import (NoItemType, DirectoryItemType, SysPathItemType,
-                        FileItemType, GlobalsItemType, ImportsItemType,
-                        FunctionsItemType, ClassesItemType,
-                        StaticAttributesItemType, InstanceAttributesItemType,
-                        CodingItemType, ImportItemType, FunctionItemType,
-                        ClassItemType, DecoratorItemType, AttributeItemType,
-                        GlobalItemType, ImportWhatItemType)
-from .newnesteddir import NewProjectDirDialog
 from .labels import HeaderFitLabel
+from .newnesteddir import NewProjectDirDialog
+from .projectbrowser import ProjectBrowser
+from .projectproperties import ProjectPropertiesDialog
+from .qt import (
+    QAction,
+    QCursor,
+    QDialog,
+    QMenu,
+    QMessageBox,
+    QSize,
+    QSizePolicy,
+    QSplitter,
+    Qt,
+    QToolBar,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
 from .spacers import ToolBarExpandingSpacer
+from .viewitems import (
+    AttributeItemType,
+    ClassesItemType,
+    ClassItemType,
+    CodingItemType,
+    DecoratorItemType,
+    DirectoryItemType,
+    FileItemType,
+    FunctionItemType,
+    FunctionsItemType,
+    GlobalItemType,
+    GlobalsItemType,
+    ImportItemType,
+    ImportsItemType,
+    ImportWhatItemType,
+    InstanceAttributesItemType,
+    NoItemType,
+    StaticAttributesItemType,
+    SysPathItemType,
+)
 
 
 class ProjectViewer(QWidget):
@@ -609,7 +635,7 @@ class ProjectViewer(QWidget):
             # if it is a top level and not the project file containing dir then
             # the del button should be enabled
             if self.__prjContextItem.parentItem.itemType == NoItemType:
-                projectDir = os.path.dirname(GlobalData().project.fileName) + \
+                os.path.dirname(GlobalData().project.fileName) + \
                              os.path.sep
 
         if self.__prjContextItem.itemType == FileItemType:

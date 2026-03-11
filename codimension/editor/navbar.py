@@ -19,15 +19,13 @@
 
 """Navigation bar implementation"""
 
-from ui.qt import (QTimer, Qt, QEvent, pyqtSignal, QFrame, QHBoxLayout, QLabel,
-                   QWidget, QSizePolicy, QComboBox)
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.fileutils import isPythonMime
-from utils.pixmapcache import getPixmap, getIcon
-from cdmpyparser import getBriefModuleInfoFromMemory
 from autocomplete.bufferutils import getContext
-
+from cdmpyparser import getBriefModuleInfoFromMemory
+from ui.qt import QComboBox, QEvent, QFrame, QHBoxLayout, QLabel, QSizePolicy, Qt, QTimer, QWidget, pyqtSignal
+from utils.fileutils import isPythonMime
+from utils.globals import GlobalData
+from utils.pixmapcache import getPixmap
+from utils.settings import Settings
 
 IDLE_TIMEOUT = 1500
 

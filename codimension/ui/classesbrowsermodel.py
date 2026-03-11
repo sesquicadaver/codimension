@@ -21,11 +21,13 @@
 
 import os.path
 from os.path import basename
+
 from utils.fileutils import getFileProperties, isPythonMime
-from utils.settings import Settings
 from utils.project import CodimensionProject
-from .viewitems import TreeViewClassItem
+from utils.settings import Settings
+
 from .browsermodelbase import BrowserModelBase
+from .viewitems import TreeViewClassItem
 
 
 class ClassesBrowserModel(BrowserModelBase):
@@ -75,7 +77,7 @@ class ClassesBrowserModel(BrowserModelBase):
         for path in addedPythonFiles:
             try:
                 info = self.globalData.briefModinfoCache.get(path)
-            except:
+            except Exception:
                 # It could be that a file was created and deleted straight
                 # away. In this case the cache will generate an exception.
                 continue

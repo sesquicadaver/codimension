@@ -21,18 +21,30 @@
 
 
 import os.path
-from ui.qt import (Qt, pyqtSignal, QSize, QSizePolicy, QFrame, QTreeWidget,
-                   QTreeWidgetItem, QVBoxLayout, QLabel, QWidget,
-                   QAbstractItemView, QMenu, QHBoxLayout,
-                   QCursor, QAction, QToolBar)
+
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitLabel
+from ui.qt import (
+    QAbstractItemView,
+    QAction,
+    QCursor,
+    QMenu,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
 from ui.spacers import ToolBarExpandingSpacer
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 from utils.project import CodimensionProject
-from .variableitems import getDisplayValue, getTooltipValue
 
+from .variableitems import getDisplayValue, getTooltipValue
 
 STACK_FRAME_ITEM = 0
 EXCEPTION_ITEM = 1

@@ -20,21 +20,21 @@
 
 """Breakpoints margin: shows breakpoints and the current debug line"""
 
-import os.path
 import logging
 import math
-from qutepart.margins import MarginBase
+import os.path
+
 import qutepart
-from ui.qt import QWidget, QPainter, QModelIndex, QToolTip
-from utils.misc import extendInstance
-from utils.pixmapcache import getPixmap
-from utils.fileutils import isPythonMime
-from utils.globals import GlobalData
-from utils.settings import Settings
-from utils.limits import MAXINT_32
 from debugger.bputils import getBreakpointLines
 from debugger.breakpoint import Breakpoint
-
+from qutepart.margins import MarginBase
+from ui.qt import QModelIndex, QPainter, QToolTip, QWidget
+from utils.fileutils import isPythonMime
+from utils.globals import GlobalData
+from utils.limits import MAXINT_32
+from utils.misc import extendInstance
+from utils.pixmapcache import getPixmap
+from utils.settings import Settings
 
 # Note: it incorporates all the editor related breakpoints functionality:
 #       - creating a new one via a click

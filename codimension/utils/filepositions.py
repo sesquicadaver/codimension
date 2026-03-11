@@ -20,6 +20,7 @@
 """Provides the storage for the last position in a file"""
 
 import os.path
+
 from .fileutils import loadJSON, saveJSON
 
 

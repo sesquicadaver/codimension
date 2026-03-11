@@ -19,13 +19,29 @@
 
 """Watch points viewer"""
 
-from ui.qt import (Qt, pyqtSignal, QModelIndex, QSizePolicy, QFrame, QTreeView,
-                   QToolButton, QHeaderView, QVBoxLayout, QItemSelectionModel,
-                   QLabel, QWidget, QAbstractItemView, QMenu, QSpacerItem,
-                   QHBoxLayout, QPalette, QSortFilterProxyModel)
 from ui.itemdelegates import NoOutlineHeightDelegate
-from utils.pixmapcache import getIcon
+from ui.qt import (
+    QAbstractItemView,
+    QFrame,
+    QHBoxLayout,
+    QHeaderView,
+    QItemSelectionModel,
+    QLabel,
+    QMenu,
+    QModelIndex,
+    QPalette,
+    QSizePolicy,
+    QSortFilterProxyModel,
+    QSpacerItem,
+    Qt,
+    QToolButton,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
+    pyqtSignal,
+)
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 from utils.project import CodimensionProject
 from utils.settings import Settings
 
@@ -304,7 +320,7 @@ class WatchPointView(QTreeView):
         for index in self.selectedIndexes():
             sindex = self.__toSourceIndex(index)
             if sindex.isValid() and index.column() == 0:
-                lastrow = index.row()
+                index.row()
                 idxList.append(sindex)
         self.__model.deleteWatchPoints(idxList)
 
@@ -348,7 +364,7 @@ class WatchPointViewer(QWidget):
 
         GlobalData().project.sigProjectChanged.connect(self.__onProjectChanged)
 
-        if Settings()['showWatchPointViewer'] == False:
+        if not Settings()['showWatchPointViewer']:
             self.__onShowHide(True)
 
     def __createPopupMenu(self):

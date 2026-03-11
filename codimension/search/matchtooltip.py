@@ -19,9 +19,8 @@
 
 """Find in files viewer implementation"""
 
+from ui.qt import QApplication, QColor, QCursor, QFrame, QLabel, QPalette, Qt, QTimer, QToolTip, QVBoxLayout
 from utils.colorfont import getZoomedMonoFont
-from ui.qt import (Qt, QTimer, QCursor, QLabel, QFrame, QApplication,
-                   QToolTip, QPalette, QColor, QVBoxLayout)
 
 
 class MatchTooltip(QFrame):

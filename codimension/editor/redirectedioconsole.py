@@ -20,16 +20,16 @@
 """Redirected IO console implementation"""
 
 import logging
-from qutepart import Qutepart
-from ui.qt import (Qt, QEvent, pyqtSignal, QFontMetrics, QMenu,
-                   QApplication, QTextOption)
-from utils.pixmapcache import getIcon
-from utils.globals import GlobalData
-from utils.settings import Settings
-from .qpartwrap import QutepartWrapper
-from .redirectedmsg import IOConsoleMessages, IOConsoleMsg
-from .redirectediomargin import CDMRedirectedIOMargin
 
+from qutepart import Qutepart
+from ui.qt import QApplication, QEvent, QFontMetrics, QMenu, Qt, QTextOption, pyqtSignal
+from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
+from utils.settings import Settings
+
+from .qpartwrap import QutepartWrapper
+from .redirectediomargin import CDMRedirectedIOMargin
+from .redirectedmsg import IOConsoleMessages, IOConsoleMsg
 
 CTRL_SHIFT = int(Qt.ShiftModifier | Qt.ControlModifier)
 SHIFT = int(Qt.ShiftModifier)

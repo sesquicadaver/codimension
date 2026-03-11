@@ -20,6 +20,7 @@
 """Classes browser with hierarchy browsing capabilities"""
 
 from utils.pixmapcache import getIcon
+
 from .classesbrowsermodel import ClassesBrowserModel
 from .objectsbrowserbase import ObjectsBrowser
 

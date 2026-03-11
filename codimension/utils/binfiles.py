@@ -20,6 +20,7 @@
 """Utils to work with binary files"""
 
 import logging
+
 from .globals import GlobalData
 
 
@@ -29,4 +30,5 @@ def getHexdump(fileName):
         logging.error('hexdump is not available')
         return None
 
-    process = QProcess()
+    # TODO: implement hexdump via subprocess when hexdumpAvailable
+    return None

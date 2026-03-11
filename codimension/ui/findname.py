@@ -21,16 +21,29 @@
 
 
 from cdmpyparser import getBriefModuleInfoFromMemory
+from utils.diskvaluesrelay import getFindNameHistory, setFindNameHistory
+from utils.fileutils import isPythonFile
 from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
 from utils.settings import Settings
-from utils.fileutils import isPythonFile
-from utils.diskvaluesrelay import getFindNameHistory, setFindNameHistory
-from .qt import (Qt, QAbstractItemModel, QRegExp, QModelIndex,
-                 QTreeView, QAbstractItemView, QDialog, QVBoxLayout, QCursor,
-                 QComboBox, QSizePolicy, QSortFilterProxyModel, QApplication)
+
 from .combobox import EnterSensitiveComboBox
 from .itemdelegates import NoOutlineHeightDelegate
+from .qt import (
+    QAbstractItemModel,
+    QAbstractItemView,
+    QApplication,
+    QComboBox,
+    QCursor,
+    QDialog,
+    QModelIndex,
+    QRegExp,
+    QSizePolicy,
+    QSortFilterProxyModel,
+    Qt,
+    QTreeView,
+    QVBoxLayout,
+)
 
 
 class NameItem():

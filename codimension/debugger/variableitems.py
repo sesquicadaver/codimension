@@ -58,7 +58,7 @@ def getDisplayValue(displayValue):
         if len(lines[0]) > 128:
             displayValue = lines[0][:128] + "<...>"
         else:
-            value = lines[0]
+            lines[0]
     return displayValue
 
 

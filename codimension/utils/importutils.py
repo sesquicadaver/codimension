@@ -22,14 +22,16 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-import sys
+import importlib
 import os
 import os.path
-import importlib
+import sys
+
 from cdmpyparser import getBriefModuleInfoFromMemory
 from ui.qt import QApplication
-from .globals import GlobalData
+
 from .fileutils import isPythonFile
+from .globals import GlobalData
 
 
 def getImportsList(fileContent):
@@ -190,7 +192,7 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
                     ImportResolution(importObj, None, False, spec.origin, None))
                 return
             # Something unknown; it's not clear what to do
-    except:
+    except Exception:
         pass
     finally:
         sys.path = oldSysPath
@@ -242,7 +244,7 @@ def __resolveFrom(importObj, importName, basePath, result):
                                     ImportResolution(importObj, index, False,
                                                      spec.origin, None))
                                 found = True
-                    except:
+                    except Exception:
                         pass
                     if not found:
                         result.append(
@@ -252,7 +254,7 @@ def __resolveFrom(importObj, importName, basePath, result):
                                 " import " + what.name + "' at line " +
                                 str(importObj.line)))
                 return
-    except:
+    except Exception:
         pass
 
     result.append(ImportResolution(importObj, None, False, None, None,

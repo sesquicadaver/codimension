@@ -20,6 +20,7 @@
 """Provides the storage for the flow UI collapsed groups"""
 
 import os.path
+
 from .fileutils import loadJSON, saveJSON
 
 

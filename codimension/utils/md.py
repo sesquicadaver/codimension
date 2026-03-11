@@ -23,13 +23,14 @@
 # pylint: disable=W0703
 
 import os.path
+
 import mistune
 from pygments import highlight
-from pygments.lexers import get_lexer_by_name, get_lexer_for_mimetype
 from pygments.formatters import HtmlFormatter
+from pygments.lexers import get_lexer_by_name, get_lexer_for_mimetype
 from utils.fileutils import getMagicMimeFromBuffer
-from .settings import Settings
 
+from .settings import Settings
 
 # Notes:
 # QTextBrowser is used to display the generated HTML. Unfortunately,
@@ -58,7 +59,7 @@ def get_lexer(text, lang):
     if lang:
         try:
             return get_lexer_by_name(lang, stripall=False)
-        except:
+        except Exception:
             pass
         return None
 
@@ -67,7 +68,7 @@ def get_lexer(text, lang):
     if mime:
         try:
             return get_lexer_for_mimetype(mime, stripall=False)
-        except:
+        except Exception:
             pass
 
         # The pygments data sometimes miss mime options provided by python magic
@@ -77,7 +78,7 @@ def get_lexer(text, lang):
                 return get_lexer_for_mimetype(mime.replace('text/',
                                                            'application/'),
                                               stripall=False)
-            except:
+            except Exception:
                 pass
 
     return None
@@ -114,7 +115,7 @@ def block_code(uuid, text, lang, inlinestyles=False, linenos=False):
             return ''.join([PRE_WRAP_START, '<pre>',
                             code.replace('125%', '100%'), '</pre>',
                             PRE_WRAP_END, '\n'])
-        except:
+        except Exception:
             pass
 
     return ''.join([PRE_WRAP_START, '<pre>', mistune.escape(text),
@@ -181,6 +182,6 @@ def renderMarkdown(uuid, text, fileName):
         renderedText = markdown(text)
     except Exception as exc:
         errors.append(str(exc))
-    except:
+    except Exception:
         errors.append('Unknown markdown rendering exception')
     return renderedText, errors, warnings

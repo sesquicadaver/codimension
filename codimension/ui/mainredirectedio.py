@@ -20,7 +20,8 @@
 """Codimension main window redirected io support"""
 
 from utils.pixmapcache import getIcon
-from utils.runparams import RUN, PROFILE, DEBUG
+from utils.runparams import DEBUG, PROFILE, RUN
+
 from .qt import QApplication, QCursor, Qt, QTabBar
 
 

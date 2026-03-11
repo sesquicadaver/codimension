@@ -21,7 +21,6 @@
 
 from copy import deepcopy
 
-
 # These constants are used throughout the code to identify the type of run
 RUN = 0
 PROFILE = 1

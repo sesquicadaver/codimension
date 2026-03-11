@@ -20,12 +20,11 @@
 """Dialog to show a single variable"""
 
 
-from ui.qt import (Qt, QDialog, QDialogButtonBox, QVBoxLayout, QLabel,
-                   QGridLayout, QTextEdit)
-from utils.pixmapcache import getIcon
 from ui.labels import HeaderLabel
-from utils.globals import GlobalData
+from ui.qt import QDialog, QDialogButtonBox, QGridLayout, QLabel, Qt, QTextEdit, QVBoxLayout
 from utils.colorfont import getZoomedMonoFont
+from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 
 
 class ViewVariableDialog(QDialog):

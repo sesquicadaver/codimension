@@ -21,17 +21,31 @@
 
 import os
 import os.path
+
 from cdmpyparser import getBriefModuleInfoFromMemory
-from utils.globals import GlobalData
-from utils.fileutils import getFileProperties, isPythonMime
-from utils.settings import Settings
 from utils.diskvaluesrelay import getFindFileHistory, setFindFileHistory
-from .qt import (Qt, QAbstractItemModel, QRegExp, QModelIndex,
-                 QTreeView, QAbstractItemView, QDialog, QVBoxLayout,
-                 QCursor, QSizePolicy, QHeaderView, QComboBox,
-                 QSortFilterProxyModel, QApplication)
-from .itemdelegates import NoOutlineHeightDelegate
+from utils.fileutils import getFileProperties, isPythonMime
+from utils.globals import GlobalData
+from utils.settings import Settings
+
 from .combobox import EnterSensitiveComboBox
+from .itemdelegates import NoOutlineHeightDelegate
+from .qt import (
+    QAbstractItemModel,
+    QAbstractItemView,
+    QApplication,
+    QComboBox,
+    QCursor,
+    QDialog,
+    QHeaderView,
+    QModelIndex,
+    QRegExp,
+    QSizePolicy,
+    QSortFilterProxyModel,
+    Qt,
+    QTreeView,
+    QVBoxLayout,
+)
 
 
 class FileItemRoot():
@@ -51,7 +65,7 @@ class FileItemRoot():
         """Provides a value of the given column"""
         try:
             return self.itemData[column]
-        except:
+        except Exception:
             return ''
 
     def appendChild(self, child):
@@ -82,7 +96,7 @@ class FileItemRoot():
         """Check, if the item is less than another"""
         try:
             return self.itemData[column] < other.itemData[column]
-        except:
+        except Exception:
             return False
 
 

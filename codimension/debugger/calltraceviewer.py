@@ -21,16 +21,28 @@
 
 
 import logging
-from ui.qt import (QTreeWidget, QAbstractItemView, QWidget, QVBoxLayout, Qt,
-                   QFrame, QAction, QToolBar, QSize, QSizePolicy, QRegExp,
-                   QTreeWidgetItem, QApplication)
+
 from ui.itemdelegates import NoOutlineHeightDelegate
-from ui.spacers import ToolBarHSpacer, ToolBarExpandingSpacer
 from ui.labels import HeaderFitLabel
-from utils.settings import Settings
+from ui.qt import (
+    QAbstractItemView,
+    QAction,
+    QApplication,
+    QRegExp,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+from ui.spacers import ToolBarExpandingSpacer, ToolBarHSpacer
 from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
 from utils.project import CodimensionProject
+from utils.settings import Settings
 
 
 class CallTraceBrowser(QTreeWidget):

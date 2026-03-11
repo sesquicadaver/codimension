@@ -21,9 +21,9 @@
 
 
 from utils.globals import GlobalData
-from .qt import (QMainWindow, QTimer, QStackedWidget, QLabel, QVBoxLayout,
-                 QWidget, QPalette, Qt, QFrame)
+
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from .qt import QFrame, QLabel, QMainWindow, QPalette, QStackedWidget, Qt, QTimer, QVBoxLayout, QWidget
 
 
 class DetachedRendererWindow(QMainWindow):

@@ -20,6 +20,7 @@
 """Provides the storage for the user assigned file encoding"""
 
 import os.path
+
 from .fileutils import loadJSON, saveJSON
 
 

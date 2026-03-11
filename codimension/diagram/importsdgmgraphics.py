@@ -21,15 +21,35 @@
 """imports diagram graphics objects"""
 
 import math
-from ui.qt import (QFont, QPen, QColor, QPainterPath, QFontMetrics, QPainter,
-                   QImage, QGraphicsRectItem, QGraphicsPathItem, QWidget,
-                   QGraphicsView, QToolBar, QHBoxLayout, QAction,
-                   QGraphicsItem, QGraphicsTextItem, QApplication,
-                   QStyleOptionGraphicsItem, QStyle, Qt, QSize, QPointF,
-                   pyqtSignal)
+
 from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from utils.pixmapcache import getIcon
+from ui.qt import (
+    QAction,
+    QApplication,
+    QColor,
+    QFont,
+    QFontMetrics,
+    QGraphicsItem,
+    QGraphicsPathItem,
+    QGraphicsRectItem,
+    QGraphicsTextItem,
+    QGraphicsView,
+    QHBoxLayout,
+    QImage,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPointF,
+    QSize,
+    QStyle,
+    QStyleOptionGraphicsItem,
+    Qt,
+    QToolBar,
+    QWidget,
+    pyqtSignal,
+)
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 
 
 class ImportsDgmEdgeLabel(QGraphicsTextItem):

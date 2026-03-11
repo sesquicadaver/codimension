@@ -26,8 +26,9 @@ import json
 import logging
 import os.path
 from copy import deepcopy
-from .runparams import RunParameters, runParamsToJSON, runParamsFromJSON
+
 from .config import DEFAULT_ENCODING
+from .runparams import RunParameters, runParamsFromJSON, runParamsToJSON
 
 
 class RunParametersCache:

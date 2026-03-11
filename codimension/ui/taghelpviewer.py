@@ -19,11 +19,24 @@
 
 """The tag help viewer implementation"""
 
+from utils.colorfont import HEADER_HEIGHT, getLabelStyle, getZoomedMonoFont
 from utils.pixmapcache import getIcon
-from utils.colorfont import getZoomedMonoFont, getLabelStyle, HEADER_HEIGHT
-from .qt import (Qt, QSize, QPlainTextEdit, QMenu, QApplication, QHBoxLayout,
-                 QWidget, QAction, QToolBar, QSizePolicy, QLabel, QVBoxLayout,
-                 QCursor)
+
+from .qt import (
+    QAction,
+    QApplication,
+    QCursor,
+    QHBoxLayout,
+    QLabel,
+    QMenu,
+    QPlainTextEdit,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class TagHelpViewer(QWidget):
