@@ -131,8 +131,12 @@ class CDMFlakesMargin(QWidget):
                         # Not enough vertical space, width is fixed
                         xPos += math.ceil((pixmapSide - oneLineHeight) / 2)
                         pixmapSide = oneLineHeight
-                    targetRect = QRectF(xPos, yPos, pixmapSide, pixmapSide)
-                    painter.drawPixmap(targetRect, pixmap)
+                    targetRect = QRectF(
+                        float(xPos), float(yPos),
+                        float(pixmapSide), float(pixmapSide),
+                    )
+                    sourceRect = QRectF(0, 0, pixmap.width(), pixmap.height())
+                    painter.drawPixmap(targetRect, pixmap, sourceRect)
             top += height
 
     def mouseMoveEvent(self, event):
