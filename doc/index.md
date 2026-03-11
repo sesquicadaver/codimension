@@ -1,7 +1,8 @@
 # Codimension Documentation
 
-This documentation does not cover everything.
-It rather covers some practical topics. Please follow the links in the list below to select a particular area.
+This documentation covers practical topics for the Codimension IDE (fork of
+[SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension)).
+Follow the links below to select a particular area.
 
 ## General Topics
 

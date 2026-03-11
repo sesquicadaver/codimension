@@ -47,6 +47,9 @@ please use:
 - All project files: select the main menu `Diagrams -> Project imports diagram...`
   option.
 
+**Note:** Paths in *Exclude from analysis* (project properties) and the project
+venv are excluded from the project files set. See [Project](../project/project.md).
+
 The generated imports diagram looks similar to the following:
 
 ![Imports diagram](importsdiagram.png "Imports diagram")

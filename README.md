@@ -1,7 +1,10 @@
 # Codimension Python 3 IDE
 
+**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension)** — experimental Python IDE with graphics-based code analysis.
+
 Essential links:
 
+- [Upstream project](https://github.com/SergeySatskiy/codimension)
 - [Presentation of the technology and the tool](http://codimension.org/documentation/visualization-technology/python-code-visualization.html)
 - [Project home page](http://codimension.org/)
 - [Packages and installation](http://codimension.org/download/linuxdownload.html)
@@ -10,7 +13,7 @@ Essential links:
 
 ---
 
-**Codimension** is yet another free experimental Python IDE licensed under GPL v3.
+**Codimension** is a free experimental Python IDE licensed under GPL v3.
 
 Codimension aims to provide an integrated system for:
 
@@ -62,7 +65,7 @@ sudo apt-get install default-jre
 
 ```shell
 # Clone and run from source (use venv)
-git clone https://github.com/sesquicadaver/codimension.git
+git clone https://github.com/SergeySatskiy/codimension.git
 cd codimension
 python -m venv .venv
 .venv/bin/pip install -r requirements.txt
@@ -71,6 +74,8 @@ python -m venv .venv
 # Run
 .venv/bin/codimension
 ```
+
+**Note:** This fork may add features such as `excludeFromAnalysis` (project properties → exclude dirs/files from analysis) and automatic venv exclusion from the analysis graph.
 
 ## Troubleshooting
 

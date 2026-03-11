@@ -1,5 +1,16 @@
 2025 Mar 11
 
+* Documentation audit (fork attribution, excludeFromAnalysis, venv):
+  - README.md: fork of SergeySatskiy/codimension, upstream links, excludeFromAnalysis note
+  - doc/index.md: fork attribution
+  - doc/project/project.md: Python interpreter (venv), Exclude from analysis table rows,
+    new section "Excluding paths from analysis"
+  - doc/dependencies/dependencies.md: cross-reference to project exclude
+  - pyproject.toml: description, fork comment
+  - TODO_FIXME.md, NOTES.md: fork attribution, excludeFromAnalysis status
+
+2025 Mar 11
+
 * Python 3.12 compatibility:
   - imp_compat.py: shim for removed imp module (yapsy dependency)
   - pkg_resources_compat.py: shim for pkg_resources (removed in setuptools 82+)

@@ -1,6 +1,7 @@
 # TODO_FIXME — Список виявлених проблем для виправлення
 
-**Дата перевірки:** 2025-03-11
+**Дата перевірки:** 2025-03-11  
+**Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension)
 
 ## Критичні (anti-stub перевірка)
 
@@ -36,6 +37,7 @@
 | **mypy** | Не знаходить .py файли (можлива конфігурація). Перевірити mypy. |
 | **venv** | ruff/mypy не встановлені в .venv. Додати до dev-залежностей. |
 | **README vs pyproject** | Вирішено: README оновлено до Python 3.11+ |
+| **excludeFromAnalysis, venv exclusion** | Реалізовано: doc/project/project.md, README оновлено |
 
 ## Рекомендації щодо CI
 

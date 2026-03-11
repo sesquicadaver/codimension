@@ -1,9 +1,10 @@
 [project]
 name = "codimension"
 version = "0.0.1"
-description = "Experimental Python 3 IDE"
+description = "Experimental Python 3 IDE with graphics-based code analysis"
 readme = "README.md"
 requires-python = ">=3.11"
+# Fork of https://github.com/SergeySatskiy/codimension
 
 [project.gui-scripts]
 codimension = "codimension.codimension:main"

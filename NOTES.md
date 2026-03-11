@@ -1,3 +1,10 @@
+# Project Notes
+
+**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).**  
+Extended features: `excludeFromAnalysis`, venv auto-exclusion from analysis.
+
+---
+
 # How to prepare a release
 
 ## Prepare the pypi config file `~/.pypirc`
@@ -102,7 +109,7 @@ git tag -a 4.0.0 -m "Release 4.0.0"
 git push --tags
 ```
 
-16. Publish the release on github at [releases](https://github.com/SergeySatskiy/codimension/releases)
+16. Publish the release on github at [releases](https://github.com/SergeySatskiy/codimension/releases) (upstream)
 
 ## Development
 
