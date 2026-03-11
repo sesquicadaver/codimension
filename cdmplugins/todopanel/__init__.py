@@ -27,6 +27,7 @@ from ui.qt import (
     QShortcut,
     Qt,
     QTabBar,
+    QTimer,
 )
 from utils.pixmapcache import getIcon
 
@@ -39,6 +40,9 @@ PLUGIN_HOME_DIR = os.path.dirname(os.path.abspath(__file__)) + os.path.sep
 class TodoPanelPlugin(WizardInterface):
     """Codimension TODO panel plugin."""
 
+    SAVE_DEBOUNCE_MS = 500
+    PERIODIC_INTERVAL_MS = 30000
+
     def __init__(self):
         WizardInterface.__init__(self)
         self.__driver = None
@@ -48,6 +52,8 @@ class TodoPanelPlugin(WizardInterface):
         self.__mainMenu = None
         self.__mainMenuSeparator = None
         self.__mainRunAction = None
+        self.__saveDebounceTimer = None
+        self.__periodicTimer = None
 
     @staticmethod
     def isIDEVersionCompatible(ideVersion):
@@ -95,9 +101,36 @@ class TodoPanelPlugin(WizardInterface):
         toolsMenu.addMenu(self.__mainMenu)
         self.__mainMenu.aboutToShow.connect(self.__mainMenuAboutToShow)
 
+        self.ide.editorsManager.sigFileUpdated.connect(self.__onFileSaved)
+        self.ide.editorsManager.sigBufferSavedAs.connect(self.__onFileSaved)
+
+        self.__saveDebounceTimer = QTimer(self)
+        self.__saveDebounceTimer.setSingleShot(True)
+        self.__saveDebounceTimer.timeout.connect(self.__run)
+
+        self.__periodicTimer = QTimer(self)
+        self.__periodicTimer.timeout.connect(self.__onPeriodicRefresh)
+        self.__periodicTimer.start(self.PERIODIC_INTERVAL_MS)
+
     def deactivate(self):
         """Deactivates the plugin."""
         self.__globalShortcut.setKey(0)
+
+        try:
+            self.ide.editorsManager.sigFileUpdated.disconnect(self.__onFileSaved)
+        except TypeError:
+            pass
+        try:
+            self.ide.editorsManager.sigBufferSavedAs.disconnect(self.__onFileSaved)
+        except TypeError:
+            pass
+
+        if self.__saveDebounceTimer is not None:
+            self.__saveDebounceTimer.stop()
+            self.__saveDebounceTimer = None
+        if self.__periodicTimer is not None:
+            self.__periodicTimer.stop()
+            self.__periodicTimer = None
 
         self.__viewer = None
         self.ide.sideBars["bottom"].removeTab("todopanel")
@@ -177,3 +210,22 @@ class TodoPanelPlugin(WizardInterface):
         """The buffer context menu is about to show."""
         if self.__bufferRunAction is not None:
             self.__bufferRunAction.setEnabled(self.__canRun())
+
+    def __onFileSaved(self, fileName, uuid):
+        """Triggered when a file is saved. Debounces and runs scan for .py."""
+        del uuid
+        if not fileName or not fileName.lower().endswith(".py"):
+            return
+        if self.__saveDebounceTimer is None:
+            return
+        self.__saveDebounceTimer.stop()
+        self.__saveDebounceTimer.start(self.SAVE_DEBOUNCE_MS)
+
+    def __onPeriodicRefresh(self):
+        """Periodic timer: refresh only when panel has results and not busy."""
+        if (
+            self.__viewer is not None
+            and self.__viewer.hasResults()
+            and self.__canRun()
+        ):
+            self.__run()

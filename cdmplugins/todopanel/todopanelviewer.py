@@ -195,6 +195,10 @@ class TodoPanelViewer(QWidget):
 
         self.__resultsTree.header().resizeSections(QHeaderView.ResizeToContents)
 
+    def hasResults(self):
+        """True if the panel has scan results."""
+        return bool(self.__results)
+
     def showResults(self, results):
         """Populates the panel with scan results."""
         self.__results = results

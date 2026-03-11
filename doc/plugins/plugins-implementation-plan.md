@@ -128,7 +128,7 @@ cdmplugins/bandit/
 | 5.1 | Створити `cdmplugins/todopanel/` | todopanel.cdmp, __init__.py ✅ |
 | 5.2 | Сканування проекту: grep TODO, FIXME, XXX, HACK | Регулярні вирази ✅ |
 | 5.3 | TodoPanelViewer: file:line → текст | Дерево, клік → goto ✅ |
-| 5.4 | Оновлення при збереженні / таймер | Сигнали IDE (TODO) |
+| 5.4 | Оновлення при збереженні / таймер | Сигнали IDE ✅ |
 | 5.5 | Фільтри: TODO only, FIXME only | Toolbar ✅ |
 
 **Реалізація:** Без зовнішніх залежностей (вбудований пошук).
