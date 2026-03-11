@@ -2,6 +2,7 @@
 name = "codimension"
 version = "0.0.1"
 description = "Experimental Python 3 IDE"
+readme = "README.md"
 requires-python = ">=3.11"
 
 [tool.ruff]
