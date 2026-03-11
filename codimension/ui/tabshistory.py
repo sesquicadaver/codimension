@@ -85,6 +85,8 @@ class TabsHistory(QObject):
     def addCurrent(self):
         """Adds the current editors manager tab to the history"""
         currentWidget = self.__editorsManger.currentWidget()
+        if currentWidget is None:
+            return
 
         newEntry = TabHistoryEntry()
         newEntry.tabType = currentWidget.getType()
@@ -150,6 +152,9 @@ class TabsHistory(QObject):
         # different type, so update everything
         uuid = self.__history[self.__index].uuid
         widget = self.__editorsManger.getWidgetByUUID(uuid)
+        if widget is None:
+            # Tab was closed or no longer exists, skip update
+            return
 
         self.__history[self.__index].tabType = widget.getType()
         self.__history[self.__index].displayName = widget.getShortName()
