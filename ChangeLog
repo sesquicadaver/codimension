@@ -1,5 +1,16 @@
 2025 Mar 11
 
+* Documentation audit and updates:
+  - doc/project/project.md: typo ~/.codimesnion3/ -> ~/.codimension3/
+  - doc/technology/technology.md: Visialization->Visualization, Python 3.11+
+  - doc/plugins/plugins.md: vaersions->versions, plugin paths (~/.codimension3/),
+    codimension/src/ -> codimension/, ConfigParser->configparser, v.4.3.1->v.4.10+
+  - codimension/plugins/README: sybsystem->subsystem, simplfy->simplify
+  - NOTES.md: modern build (python -m build, twine), pypy->PyPI
+  - README.md: Development section (venv, pip install -e .)
+
+2025 Mar 11
+
 * Full project re-check: ruff passed, TODO_FIXME.md created, README Python version
   aligned with pyproject.toml (3.11+)
 

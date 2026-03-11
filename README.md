@@ -29,16 +29,19 @@ The IDE implements many of the typical features to support the development proce
 The uniqueness of the IDE however is in the graphics representation of the code.
 Thus the main focus of the project is to implement more features for the graphics pane.
 
-
 ## Installation
 
 **Note:** Python 3.11+ is required
 
-The IDE is pip installable:
+Install in a virtual environment (recommended):
 
 ```shell
-pip install codimension
+python -m venv .venv
+.venv/bin/pip install codimension
+.venv/bin/codimension
 ```
+
+Or see [Packages and installation](http://codimension.org/download/linuxdownload.html) for full instructions.
 
 The feature of building some diagrams e.g. a dependency diagram requires a graphviz
 package. The installation depends on a system. E.g. on Ubuntu you would need
@@ -51,11 +54,23 @@ sudo apt-get install graphviz
 To have plantUML diagram support java needs to be installed. The installation depends
 on a system. E.g. on Ubuntu you would need to do the following:
 
-
 ```shell
 sudo apt-get install default-jre
 ```
 
+## Development
+
+```shell
+# Clone and run from source (use venv)
+git clone https://github.com/SergeySatskiy/codimension.git
+cd codimension
+python -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -e .
+
+# Run
+.venv/bin/codimension
+```
 
 ## Troubleshooting
 
@@ -69,4 +84,3 @@ sudo apt-get install g++
 sudo apt-get install python3-dev
 sudo apt-get install libpcre3-dev
 ```
-

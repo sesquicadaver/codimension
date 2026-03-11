@@ -14,7 +14,7 @@ The rendering facilities are based on (and limited by respectively) on a few com
   Python. It also renders the source to an html
 * [Pygments](http://pygments.org/) python library to highlight the code
   fragments in the documentation
-* QT library [QTextBrowser](https://doc.qt.io/Qt-5/qtextbrowser.html) widget 
+* QT library [QTextBrowser](https://doc.qt.io/Qt-5/qtextbrowser.html) widget
   to display the rendered html. The widget has major limitations on what html
   can be shown so the rendered text is not always as perfect as it could be.
 
@@ -24,7 +24,6 @@ The supported flavor is defined by what is recognised by mistune and what
 Codimension adds. It will be highlighted what is added by Codimension.
 
 ### Headings
-
 
 ```markdown
 # Heading one
@@ -51,7 +50,6 @@ Heading two
 | \_Italic_ | _Italic_ |
 | \**Bold** | **Bold** |
 | \__Bold__ | __Bold__ |
-
 
 ### Thematic break
 
@@ -83,7 +81,6 @@ print('3 backticks or')
 print('indent 4 spaces')
 ```
 
-
 Indented code like
 <pre>
     # code block
@@ -97,13 +94,11 @@ will be rendered as:
     print('3 backticks or')
     print('indent 4 spaces')
 
-
 ### Inline code
 
 | Notation                         | Render                          |
 | -------------------------------- | ------------------------------- |
 | Inline \`keyword` is highlighted | Inline `keyword` is highlighted |
-
 
 ### UML diagram support
 
@@ -125,20 +120,18 @@ Class01 <|-- Class02
 @enduml
 ```
 
-
 Here is a list of what start/end tags could be:
-- @startuml / @enduml
-- @startgantt / @endgantt
-- @startsalt / @endsalt
-- @startmindmap / @endmindmap
-- @startwbs / @endwbs
-- @startditaa / @endditaa
-- @startjcckit / @endjcckit
+
+* @startuml / @enduml
+* @startgantt / @endgantt
+* @startsalt / @endsalt
+* @startmindmap / @endmindmap
+* @startwbs / @endwbs
+* @startditaa / @endditaa
+* @startjcckit / @endjcckit
 
 PlantUML may extend the list in the future, so please look at their web site for
 the complete language specs.
-
-
 
 ### Block quote
 
@@ -150,7 +143,6 @@ The notation like
     >> nested level
     >>> more nested level
     >>> text continues
-
 
 will be rendered as:
 
@@ -172,9 +164,8 @@ Unnumbered list items may use '-', '+' and '*' characters.
 will be rendered as:
 
 * List 1
-    * List 11
-        * List 111
-
+  * List 11
+    * List 111
 
     1. One
     2. Two
@@ -186,9 +177,7 @@ will be rendered as:
 2. Two
 3. Three
 
-
 ### Table
-
 
     | Default column alignment | Center column alignment | Left column alignment | Right column alignment |
     | ------------------------ |:-----------------------:|:----------------------|-----------------------:|
@@ -200,29 +189,30 @@ will be rendered as:
 | ------------------------ |:-----------------------:|:----------------------|-----------------------:|
 | Default alignment        | Center alignment        | Left alignment        | Right alignment        |
 
-
 ### Links
 
 ```markdown
 [Link to something](http://a.com)
 ```
+
 will be rendered as:
 
 [Link to something](http://a.com)
-
 
 ```markdown
 [Link with the URL provided later][1]
 [1]: http://b.org
 ```
+
 will be rendered as:
 
 [Link with the URL provided later][1]
 [1]: http://b.org
 
 Codimension extends the link format and uses the following approach:
-- if the http or https scheme is used then the external browser is invoked
-- otherwise the link is treated as a file with an optional line number
+
+* if the http or https scheme is used then the external browser is invoked
+* otherwise the link is treated as a file with an optional line number
 
 | Link format |
 | ----------- |
@@ -241,13 +231,13 @@ scrolled appropriately.
 
 An anchor should follow this rule: [_a-zA-Z0-9]+
 
-
 ### Images
 
 Pixmaps are supported as
-- local absolute path
-- local relative path
-- web resource
+
+* local absolute path
+* local relative path
+* web resource
 
 Here are examples:
 

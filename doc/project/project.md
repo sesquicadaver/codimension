@@ -62,7 +62,7 @@ The project UUID is used to identify a project. For each project Codimension
 creates a directory at
 
 ```
-~/.codimesnion3/<UUID>/
+~/.codimension3/<UUID>/
 ```
 
 where all the project environment is stored, e.g. search history, currently opened
@@ -82,4 +82,3 @@ project. Codimension watches the project directories for changes and updates
 the project tabs accordingly. The new files can be created in the IDE or
 copied/created using the other ways outside of the IDE. The same is applied to
 the file or directory removal.
-

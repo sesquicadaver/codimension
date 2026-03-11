@@ -24,7 +24,6 @@ The results will appear on the `Search results` tab at the bottom.
 The analysis is suggestive so the results should be carefully examined
 before anything is deleted.
 
-
 If a project is loaded then the dead code analysis can be invoked for all
 the python files in the project at once. Two ways could be used to do so:
 
@@ -35,4 +34,3 @@ the python files in the project at once. Two ways could be used to do so:
 
 Similarly, a modal progress dialog will appear and the results will be
 available on the `Search results` tab at the bottom.
-
