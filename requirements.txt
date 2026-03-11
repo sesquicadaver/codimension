@@ -1,8 +1,8 @@
 # Python 3.11+ dependencies
-# NOTE: cdmpyparser/cdmcfparser use legacy parser C API (node.h), removed in Python 3.10.
-# Until upstream supports 3.11+, use pre-built wheels or build from forked sources.
-cdmpyparser>=3.3.2
-cdmcfparser>=2.4.0
+# cdmpyparser/cdmcfparser: C extensions for Python <3.11 only (node.h removed in 3.10+).
+# On 3.11+ codimension uses built-in pure-Python ast fallbacks (brief_ast, flow_ast).
+cdmpyparser>=3.3.2; python_version < "3.11"
+cdmcfparser>=2.4.0; python_version < "3.11"
 cdmgcplugin>=1.0.4
 cdmpylintplugin>=1.0.4
 cdmsysinfoplugin>=1.0.0
