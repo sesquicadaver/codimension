@@ -106,17 +106,17 @@ cdmplugins/bandit/
 
 ---
 
-### Фаза 4: Ruff format / Black — 2–3 дні
+### Фаза 4: Ruff format / Black — 2–3 дні ✅
 **Пріоритет:** Середній. Форматування коду.
 
 | Крок | Опис | Результат |
 |------|------|-----------|
-| 4.1 | Створити `cdmplugins/ruffformat/` або `cdmplugins/black/` | cdmp, __init__.py |
-| 4.2 | FormatDriver: `ruff format` або `black` | In-place format |
-| 4.3 | Результат: success/error у status bar | Без окремої вкладки |
-| 4.4 | Опція: format on save (config) | getConfigFunction |
+| 4.1 | Створити `cdmplugins/ruffformat/` | cdmp, __init__.py ✅ |
+| 4.2 | FormatDriver: `ruff format` | In-place format ✅ |
+| 4.3 | Результат: success/error у status bar | Без окремої вкладки ✅ |
+| 4.4 | Опція: format on save (config) | getConfigFunction → None (TODO) |
 
-**Варіант:** Використати ruff format (ruff вже є) — менше залежностей.
+**Варіант:** Використано ruff format (ruff вже є) — менше залежностей.
 
 ---
 

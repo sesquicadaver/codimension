@@ -43,7 +43,7 @@ When running in a virtual environment, Codimension also looks for plugins in
 `site-packages/cdmplugins/`. The following plugins are bundled with Codimension
 and installed there: **Ruff** (Ctrl+Shift+R), **Mypy** (Ctrl+Shift+M),
 **Pytest** (Ctrl+Shift+T), **Coverage** (Ctrl+Shift+C),
-**Bandit** (Ctrl+Shift+B), **pip-audit** (Ctrl+Shift+A).
+**Bandit** (Ctrl+Shift+B), **pip-audit** (Ctrl+Shift+A), **Ruff format** (Ctrl+Shift+F).
 
 The next pieces which are important for Codimension are a plugin name and a
 plugin version. A name and a version are stored in a plugin description file

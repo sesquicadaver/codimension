@@ -141,7 +141,9 @@ def getPackageData():
                     ('cdmplugins.bandit',
                      'cdmplugins/bandit/'),
                     ('cdmplugins.pipaudit',
-                     'cdmplugins/pipaudit/')]
+                     'cdmplugins/pipaudit/'),
+                    ('cdmplugins.ruffformat',
+                     'cdmplugins/ruffformat/')]
 
     # If a skin needs to be added, then the following item should be also
     # appended:
@@ -194,7 +196,8 @@ def getPackages():
             'cdmplugins.pytest',
             'cdmplugins.coverage',
             'cdmplugins.bandit',
-            'cdmplugins.pipaudit']
+            'cdmplugins.pipaudit',
+            'cdmplugins.ruffformat']
     # If a myskin skin is to be added as well, then one more package should
     # be mentioned: ..., 'codimension.skins.myskin']
 

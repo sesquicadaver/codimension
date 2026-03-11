@@ -1,0 +1,10 @@
+[Core]
+Name = Ruff format
+Module = .
+
+[Documentation]
+Author = Codimension
+Version = 1.0.0
+Website = https://github.com/SergeySatskiy/codimension
+Description = Codimension IDE ruff format plugin (format Python code)
+License = GPL v.3
