@@ -10,18 +10,21 @@
 
 ### 1.1 Ціль
 Розширити систему плагінів Codimension інструментами для:
+
 - тестування та покриття коду (Coverage);
 - аналізу безпеки (Bandit, pip-audit);
 - форматування коду (Ruff format / Black);
 - контролю якості (TODO/FIXME panel).
 
 ### 1.2 Існуюча архітектура
+
 - **Категорії:** WizardInterface, VersionControlSystemInterface
 - **Шаблон плагіна:** `*.cdmp` + `__init__.py` + `*driver.py` + `*resultviewer.py`
 - **Розташування:** `cdmplugins/<name>/`
 - **Реєстрація:** `setup.py` getPackages(), package_data
 
 ### 1.3 Референсні плагіни
+
 | Плагін | Driver | Viewer | Гаряча клавіша |
 |--------|--------|--------|----------------|
 | ruff   | QProcess, JSON output | QTreeWidget | Ctrl+Shift+R |
@@ -33,22 +36,24 @@
 ## 2. Фази імплементації
 
 ### Фаза 0: Підготовка (1–2 дні)
+
 - [ ] Створити спільний базовий клас `LintDriverBase` (опціонально) для driver-ів
 - [ ] Перевірити сумісність з CI (ruff, mypy у venv)
 - [ ] Оновити Living Specification: матриця ТЗ → модуль → тести
 
-### Фаза 1: Coverage (pytest-cov) — 3–5 днів
+### Фаза 1: Coverage (pytest-cov) — 3–5 днів ✅
 **Пріоритет:** Високий. Потрібен для CI та Living Specification.
 
 | Крок | Опис | Результат |
 |------|------|-----------|
-| 1.1 | Створити `cdmplugins/coverage/` | coverage.cdmp, __init__.py |
-| 1.2 | CoverageDriver: `pytest --cov --cov-report=json` | JSON з coverage |
-| 1.3 | CoverageResultViewer: дерево файлів + % покриття | Вкладка в bottom panel |
-| 1.4 | Інтеграція з pytest: опція "Run with coverage" | Кнопка/меню |
-| 1.5 | Додати в setup.py, requirements.txt | pytest-cov |
+| 1.1 | Створити `cdmplugins/coverage/` | coverage.cdmp, __init__.py ✅ |
+| 1.2 | CoverageDriver: `pytest --cov --cov-report=json` | JSON з coverage ✅ |
+| 1.3 | CoverageResultViewer: дерево файлів + % покриття | Вкладка в bottom panel ✅ |
+| 1.4 | Інтеграція з pytest: опція "Run with coverage" | Кнопка/меню (Ctrl+Shift+C) ✅ |
+| 1.5 | Додати в setup.py, requirements.txt | pytest-cov ✅ |
 
 **Файли:**
+
 ```
 cdmplugins/coverage/
 ├── coverage.cdmp
@@ -61,17 +66,18 @@ cdmplugins/coverage/
 
 ---
 
-### Фаза 2: Bandit — 2–3 дні
+### Фаза 2: Bandit — 2–3 дні ✅
 **Пріоритет:** Високий. Security static analysis.
 
 | Крок | Опис | Результат |
 |------|------|-----------|
-| 2.1 | Створити `cdmplugins/bandit/` | bandit.cdmp, __init__.py |
-| 2.2 | BanditDriver: `bandit -f json -r <path>` | JSON output |
-| 2.3 | BanditResultViewer: file → severity → message | Аналог ruff/mypy |
-| 2.4 | Гаряча клавіша Ctrl+Shift+B | Меню, тулбар, контекст |
+| 2.1 | Створити `cdmplugins/bandit/` | bandit.cdmp, __init__.py ✅ |
+| 2.2 | BanditDriver: `bandit -f json -q <file>` | JSON output ✅ |
+| 2.3 | BanditResultViewer: file → severity → message | Аналог ruff/mypy ✅ |
+| 2.4 | Гаряча клавіша Ctrl+Shift+B | Меню, тулбар, контекст ✅ |
 
 **Файли:**
+
 ```
 cdmplugins/bandit/
 ├── bandit.cdmp
@@ -84,15 +90,15 @@ cdmplugins/bandit/
 
 ---
 
-### Фаза 3: pip-audit — 2–3 дні
+### Фаза 3: pip-audit — 2–3 дні ✅
 **Пріоритет:** Високий. Перевірка вразливостей залежностей.
 
 | Крок | Опис | Результат |
 |------|------|-----------|
-| 3.1 | Створити `cdmplugins/pipaudit/` | pipaudit.cdmp, __init__.py |
-| 3.2 | PipAuditDriver: `pip-audit --format json` | JSON (або text parse) |
-| 3.3 | PipAuditResultViewer: package → vuln → CVE | Вкладка |
-| 3.4 | Контекст: файл/project/directory | Запуск з різних точок |
+| 3.1 | Створити `cdmplugins/pipaudit/` | pipaudit.cdmp, __init__.py ✅ |
+| 3.2 | PipAuditDriver: `pip_audit --format json` | JSON ✅ |
+| 3.3 | PipAuditResultViewer: package → vuln → CVE | Вкладка ✅ |
+| 3.4 | Контекст: Tools menu, buffer, project dir | Запуск з різних точок ✅ |
 
 **Особливість:** Запуск на рівні проекту/venv, не окремого файлу.
 
@@ -152,6 +158,7 @@ cdmplugins/bandit/
 ## 4. Технічні вимоги
 
 ### 4.1 Структура кожного плагіна
+
 - Наслідування `WizardInterface`
 - `activate()` / `deactivate()` з коректним cleanup
 - `isIDEVersionCompatible(ideVersion)` — перевірка версії
@@ -160,6 +167,7 @@ cdmplugins/bandit/
 - Гаряча клавіша (унікальна)
 
 ### 4.2 Оновлення setup.py
+
 ```python
 # getPackages()
 'cdmplugins.coverage',
@@ -175,6 +183,7 @@ cdmplugins/bandit/
 ```
 
 ### 4.3 Оновлення requirements.txt
+
 ```
 pytest-cov>=4.0.0
 bandit>=1.7.0
@@ -183,6 +192,7 @@ pip-audit>=2.0.0
 ```
 
 ### 4.4 Гарячі клавіші (пропозиція)
+
 | Плагін   | Клавіша        |
 |----------|----------------|
 | Coverage | Ctrl+Shift+C    |
@@ -196,17 +206,20 @@ pip-audit>=2.0.0
 ## 5. Тестування
 
 ### 5.1 Per-plugin
+
 - Запуск плагіна на тестовому файлі
 - Перевірка вкладки результатів
 - Перевірка меню та гарячих клавіш
 - Deactivate без падіння
 
 ### 5.2 Інтеграційне
+
 - Усі плагіни активні одночасно
 - Перемикання вкладок
 - Запуск з різних контекстів (файл, директорія, проект)
 
 ### 5.3 CI
+
 - `pip install -e .` у venv
 - Запуск codimension, перевірка завантаження плагінів
 - ruff, mypy на коді плагінів
