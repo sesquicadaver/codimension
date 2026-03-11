@@ -679,7 +679,8 @@ class ProjectPropertiesDialog(QDialog):
             self.lastProjectName = newName
 
     def setReadOnly(self):
-        """Disables editing some fields"""
+        """Disables editing structural fields (name, dir). Venv and exclude
+        remain editable."""
         self.dirEdit.setReadOnly(True)
         self.dirEdit.setFocusPolicy(Qt.NoFocus)
         self.dirEdit.setDisabled(True)
@@ -688,13 +689,6 @@ class ProjectPropertiesDialog(QDialog):
         self.nameEdit.setReadOnly(True)
         self.nameEdit.setFocusPolicy(Qt.NoFocus)
         self.nameEdit.setDisabled(True)
-        self.venvEdit.setReadOnly(True)
-        self.venvEdit.setFocusPolicy(Qt.NoFocus)
-        self.venvEdit.setDisabled(True)
-        self.venvButton.setDisabled(True)
-        self.excludeDirList.setDisabled(True)
-        self.addExcludeButton.setDisabled(True)
-        self.delExcludeButton.setDisabled(True)
 
     def disableEditing(self):
         """Disables all the editing"""
