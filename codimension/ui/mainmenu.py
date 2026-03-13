@@ -531,6 +531,13 @@ class MainWindowMenuMixin:
         styleMenu.triggered.connect(self._onStyle)
         styleMenu.aboutToShow.connect(self.__styleAboutToShow)
 
+        optionsMenu.addSeparator()
+        optionsMenu.addAction(
+            getIcon("pluginsettings.png"),
+            "Git/GitHub settings...",
+            self._onGitSettings,
+        )
+
         fontIcon = getIcon("fontmenu.png")
         optionsMenu.addAction(fontIcon, "Text editor mono font...", self.__onEditorFont)
         optionsMenu.addAction(fontIcon, "Text editor margin font...", self.__onEditorMarginFont)
@@ -927,3 +934,22 @@ class MainWindowMenuMixin:
         if font is not None:
             GlobalData().skin.setFlowBadgeFont(font)
             self.em.onFlowZoomChanged()
+
+    def _onGitSettings(self):
+        """Open Git/GitHub configuration dialog."""
+        try:
+            from .qt import QDialog
+
+            from cdmplugins.git.gitconfig import GitConfigDialog, save_config
+
+            dlg = GitConfigDialog(self)
+            if dlg.exec_() == QDialog.Accepted:
+                save_config(*dlg.get_values())
+        except ImportError as exc:
+            from .qt import QMessageBox
+
+            QMessageBox.warning(
+                self,
+                "Git settings",
+                "Git plugin is not available. " + str(exc),
+            )
