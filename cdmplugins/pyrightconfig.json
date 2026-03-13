@@ -1,0 +1,7 @@
+{
+  "extraPaths": ["../codimension"],
+  "reportMissingImports": "warning",
+  "reportAttributeAccessIssue": "none",
+  "reportIncompatibleMethodOverride": "none",
+  "reportOptionalMemberAccess": "none"
+}
