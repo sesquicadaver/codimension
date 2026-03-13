@@ -17,7 +17,7 @@ Runs Bandit security linter with JSON output.
 import json
 import os.path
 
-from ..lintdriverbase import LintDriverBase
+from cdmplugins.lintdriverbase import LintDriverBase
 
 
 class BanditDriver(LintDriverBase):
