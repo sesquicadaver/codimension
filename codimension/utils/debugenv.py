@@ -24,22 +24,23 @@ from copy import deepcopy
 
 from .fileutils import loadJSON, saveJSON
 
-_DEFAULT_DEBUGGER_PROPS = {'breakpoints': [],   # [{'file': <str>,
-                                                #   'line': <int>,
-                                                #   'condition': <str>,
-                                                #   'temp': <bool>,
-                                                #   'enabled': <bool>,
-                                                #   'ignorecnt': <int>}, ...]
-                           'watchpoints': [],   # [{'condition': <str>,
-                                                #   'special': <bool>,
-                                                #   'temp': <bool>,
-                                                #   'enabled': <bool>,
-                                                #   'ignorecnt': <int>}, ...]
-                           'ignoredexceptions': []}    # [type name, ... ]
+_DEFAULT_DEBUGGER_PROPS = {
+    "breakpoints": [],  # [{'file': <str>,
+    #   'line': <int>,
+    #   'condition': <str>,
+    #   'temp': <bool>,
+    #   'enabled': <bool>,
+    #   'ignorecnt': <int>}, ...]
+    "watchpoints": [],  # [{'condition': <str>,
+    #   'special': <bool>,
+    #   'temp': <bool>,
+    #   'enabled': <bool>,
+    #   'ignorecnt': <int>}, ...]
+    "ignoredexceptions": [],
+}  # [type name, ... ]
 
 
 class DebuggerEnvironment:
-
     """Loads/stores/saves the debugger environment"""
 
     def __init__(self):
@@ -60,8 +61,9 @@ class DebuggerEnvironment:
         if not dirName.endswith(os.path.sep):
             dirName += os.path.sep
         if not os.path.isdir(dirName):
-            raise Exception('Directory name is expected for the debugger '
-                            'environment. The given ' + dirName + ' is not.')
+            raise Exception(
+                "Directory name is expected for the debugger environment. The given " + dirName + " is not."
+            )
 
         self.__deFileName = dirName + "debuggerenv.json"
         if os.path.exists(self.__deFileName):
@@ -71,80 +73,79 @@ class DebuggerEnvironment:
         """Loads the saved debugger environment"""
         if self.__deFileName:
             default = deepcopy(_DEFAULT_DEBUGGER_PROPS)
-            self.__props = loadJSON(self.__deFileName, 'debugger environment',
-                                    default)
+            self.__props = loadJSON(self.__deFileName, "debugger environment", default)
 
     def save(self):
         """Saves the debugger environment into a file"""
         if self.__deFileName:
-            saveJSON(self.__deFileName, self.__props, 'debugger environment')
+            saveJSON(self.__deFileName, self.__props, "debugger environment")
 
     @property
     def breakpoints(self):
         """Provides the breakpoints"""
-        return self.__props['breakpoints']
+        return self.__props["breakpoints"]
 
     @breakpoints.setter
     def breakpoints(self, bpointList):
-        self.__props['breakpoints'] = bpointList
+        self.__props["breakpoints"] = bpointList
         DebuggerEnvironment.save(self)
 
     @property
     def watchpoints(self):
         """Provides the watchpoints"""
-        return self.__props['watchpoints']
+        return self.__props["watchpoints"]
 
     @watchpoints.setter
     def watchpoints(self, wpointList):
-        self.__props['watchpoints'] = wpointList
+        self.__props["watchpoints"] = wpointList
         DebuggerEnvironment.save(self)
 
     @property
     def exceptionFilters(self):
         """Provides the ignored exceptions"""
-        return self.__props['ignoredexceptions']
+        return self.__props["ignoredexceptions"]
 
     @exceptionFilters.setter
     def exceptionFilters(self, newFilters):
-        self.__props['ignoredexceptions'] = newFilters
+        self.__props["ignoredexceptions"] = newFilters
         DebuggerEnvironment.save(self)
 
     def addExceptionFilter(self, excptType):
         """Adds a new ignored exception type"""
-        if excptType not in self.__props['ignoredexceptions']:
-            self.__props['ignoredexceptions'].append(excptType)
+        if excptType not in self.__props["ignoredexceptions"]:
+            self.__props["ignoredexceptions"].append(excptType)
             DebuggerEnvironment.save(self)
 
     def deleteExceptionFilter(self, excptType):
         """Remove ignored exception type"""
-        if excptType in self.__props['ignoredexceptions']:
-            self.__props['ignoredexceptions'].remove(excptType)
+        if excptType in self.__props["ignoredexceptions"]:
+            self.__props["ignoredexceptions"].remove(excptType)
             DebuggerEnvironment.save(self)
 
     def addBreakpoint(self, fName, line):
         """Adds serialized breakpoint"""
         value = [fName, line]
-        if value not in self.__props['breakpoints']:
-            self.__props['breakpoints'].append(value)
+        if value not in self.__props["breakpoints"]:
+            self.__props["breakpoints"].append(value)
             DebuggerEnvironment.save(self)
 
     def deleteBreakpoint(self, fName, line):
         """Deletes serialized breakpoint"""
         value = [fName, line]
-        if value in self.__props['breakpoints']:
-            self.__props['breakpoints'].remove(value)
+        if value in self.__props["breakpoints"]:
+            self.__props["breakpoints"].remove(value)
             DebuggerEnvironment.save(self)
 
     def addWatchpoint(self, fName, expression):
         """Adds serialized watchpoint"""
         value = [fName, expression]
-        if value not in self.__props['watchpoints']:
-            self.__props['watchpoints'].append(value)
+        if value not in self.__props["watchpoints"]:
+            self.__props["watchpoints"].append(value)
             DebuggerEnvironment.save(self)
 
     def deleteWatchpoint(self, fName, expression):
         """Deletes serialized watchpoint"""
         value = [fName, expression]
-        if value in self.__props['watchpoints']:
-            self.__props['watchpoints'].remove(value)
+        if value in self.__props["watchpoints"]:
+            self.__props["watchpoints"].remove(value)
             DebuggerEnvironment.save(self)

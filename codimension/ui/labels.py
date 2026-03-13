@@ -26,27 +26,24 @@ from .qt import QApplication, QLabel, Qt, pyqtSignal
 
 
 class FitLabel(QLabel):
-
     """a label that squeezes its contents to fit it's size"""
 
     def __init__(self, parent=None):
         QLabel.__init__(self, parent)
-        self.__text = ''
+        self.__text = ""
         self.__customTooltip = None
 
     def paintEvent(self, event):
         """Called when painting is required"""
         metric = self.fontMetrics()
         if metric.width(self.__text) > self.contentsRect().width():
-            QLabel.setText(self,
-                           metric.elidedText(self.__text,
-                                             Qt.ElideMiddle, self.width()))
+            QLabel.setText(self, metric.elidedText(self.__text, Qt.ElideMiddle, self.width()))
             if self.__customTooltip is None:
                 QLabel.setToolTip(self, self.__text)
         else:
             QLabel.setText(self, self.__text)
             if self.__customTooltip is None:
-                QLabel.setToolTip(self, '')
+                QLabel.setToolTip(self, "")
 
         QLabel.paintEvent(self, event)
 
@@ -59,12 +56,11 @@ class FitLabel(QLabel):
         """Sets the custom tooltip"""
         self.__customTooltip = tooltip
         if tooltip is None:
-            tooltip = ''
+            tooltip = ""
         QLabel.setToolTip(self, tooltip)
 
 
 class FramedFitLabel(FitLabel):
-
     """Subclassing for CSS styling"""
 
     def __init__(self, parent=None):
@@ -72,7 +68,6 @@ class FramedFitLabel(FitLabel):
 
 
 class HeaderFitLabel(FitLabel):
-
     """Subclassing for CSS styling"""
 
     def __init__(self, parent=None):
@@ -81,7 +76,6 @@ class HeaderFitLabel(FitLabel):
 
 # Default double click handler is to copy the text to the buffer
 class DoubleClickLabel(QLabel):
-
     """A label with double click event support"""
 
     doubleClicked = pyqtSignal()
@@ -100,14 +94,16 @@ class DoubleClickLabel(QLabel):
                 if txt:
                     QApplication.clipboard().setText(txt)
             elif isinstance(self.__callback, str):
-                if self.__callback.lower() == 'signal':
+                if self.__callback.lower() == "signal":
                     self.doubleClicked.emit()
-                elif self.__callback.lower() == 'ignore':
+                elif self.__callback.lower() == "ignore":
                     pass
                 else:
                     raise Exception(
-                        'Unsupported callback value "' + self.__callback +
-                        '". Supported values are: "signal" and "ignore".')
+                        'Unsupported callback value "'
+                        + self.__callback
+                        + '". Supported values are: "signal" and "ignore".'
+                    )
             else:
                 self.__callback()
         QLabel.mouseDoubleClickEvent(self, event)
@@ -119,7 +115,6 @@ class DoubleClickLabel(QLabel):
 # - spacing
 # Also implements the default double click copying
 class FramedLabel(DoubleClickLabel):
-
     """A label with a frame and double click for copy content to clipboard"""
 
     def __init__(self, text=None, callback=None, parent=None):
@@ -132,7 +127,6 @@ class FramedLabel(DoubleClickLabel):
 # - spacing
 # Also implements the default double click copying
 class HeaderLabel(DoubleClickLabel):
-
     """Subclassed for styling via CSS"""
 
     def __init__(self, text=None, callback=None, parent=None):
@@ -140,12 +134,11 @@ class HeaderLabel(DoubleClickLabel):
 
 
 class FitPathLabel(DoubleClickLabel):
-
     """a label showing a file path compacted to fit it's size"""
 
     def __init__(self, callback=None, parent=None):
         DoubleClickLabel.__init__(self, None, callback, parent)
-        self.__path = ''
+        self.__path = ""
 
     def setPath(self, path):
         """Set the path to be shown"""
@@ -162,14 +155,12 @@ class FitPathLabel(DoubleClickLabel):
         metric = self.fontMetrics()
         requiredWidth = metric.width(self.__path)
         if requiredWidth > self.contentsRect().width() - sparePixels:
-            compacted = compactPath(self.__path,
-                                    self.contentsRect().width() - sparePixels,
-                                    self.length)
+            compacted = compactPath(self.__path, self.contentsRect().width() - sparePixels, self.length)
             QLabel.setText(self, compacted)
             self.setToolTip(self.__path)
         else:
             QLabel.setText(self, self.__path)
-            self.setToolTip('')
+            self.setToolTip("")
         QLabel.paintEvent(self, event)
 
     def length(self, txt):
@@ -177,9 +168,7 @@ class FitPathLabel(DoubleClickLabel):
         return self.fontMetrics().width(txt)
 
 
-
 class FramedFitPathLabel(FitPathLabel):
-
     """a label showing a file path compacted to fit it's size"""
 
     def __init__(self, callback=None, parent=None):
@@ -187,7 +176,6 @@ class FramedFitPathLabel(FitPathLabel):
 
 
 class HeaderFitPathLabel(FitPathLabel):
-
     """a label showing a file path compacted to fit it's size"""
 
     def __init__(self, callback=None, parent=None):
@@ -196,25 +184,23 @@ class HeaderFitPathLabel(FitPathLabel):
 
 # Status bar items
 
+
 # Supposed to have styled:
 # - background color
 # - border color
 # - spacing
 # Also implements the default double click copying
 class StatusBarFramedLabel(FramedLabel):
-
     """Subclassed for styling via CSS"""
 
     def __init__(self, text=None, callback=None, parent=None):
         FramedLabel.__init__(self, text, callback, parent)
 
 
-
 # Supposed to have styled:
 # - background: transparent
 # - no border
 class StatusBarPixmapLabel(DoubleClickLabel):
-
     """Used for items which display an icon"""
 
     def __init__(self, callback, parent):
@@ -226,9 +212,7 @@ class StatusBarPixmapLabel(DoubleClickLabel):
 # - border color
 # - spacing
 class StatusBarPathLabel(FitPathLabel):
-
     """Subclassed for styling via CSS"""
 
     def __init__(self, callback, parent):
         FitPathLabel.__init__(self, callback, parent)
-

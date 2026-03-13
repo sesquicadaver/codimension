@@ -29,7 +29,6 @@ from .qt import QApplication, QColor, QDialog, QMenu, QPalette, Qt
 
 
 class MainWindowStatusBarMixin:
-
     """Main window status bar mixin"""
 
     def __init__(self):
@@ -53,15 +52,13 @@ class MainWindowStatusBarMixin:
         self.__statusBar = self.statusBar()
         self.__statusBar.setSizeGripEnabled(True)
 
-        self.sbVCSStatus = StatusBarPixmapLabel('ignore', self.__statusBar)
+        self.sbVCSStatus = StatusBarPixmapLabel("ignore", self.__statusBar)
         self.__statusBar.addPermanentWidget(self.sbVCSStatus)
         self.sbVCSStatus.setVisible(False)
         self.sbVCSStatus.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.sbVCSStatus.customContextMenuRequested.connect(
-            self._showVCSLabelContextMenu)
+        self.sbVCSStatus.customContextMenuRequested.connect(self._showVCSLabelContextMenu)
 
-        self.sbDebugState = StatusBarFramedLabel(
-            text='Debugger: unknown', callback=None, parent=self.__statusBar)
+        self.sbDebugState = StatusBarFramedLabel(text="Debugger: unknown", callback=None, parent=self.__statusBar)
         dbgPalette = self.sbDebugState.palette()
         dbgPalette.setColor(QPalette.Background, QColor(255, 255, 127))
         self.sbDebugState.setPalette(dbgPalette)
@@ -80,30 +77,25 @@ class MainWindowStatusBarMixin:
         self.sbWritable = StatusBarFramedLabel(parent=self.__statusBar)
         self.__statusBar.addPermanentWidget(self.sbWritable)
 
-        self.sbPyflakes = StatusBarPixmapLabel('signal', self.__statusBar)
+        self.sbPyflakes = StatusBarPixmapLabel("signal", self.__statusBar)
         self.__statusBar.addPermanentWidget(self.sbPyflakes)
 
-        self.sbCC = StatusBarPixmapLabel('signal', self.__statusBar)
+        self.sbCC = StatusBarPixmapLabel("signal", self.__statusBar)
         self.__statusBar.addPermanentWidget(self.sbCC)
 
-        self.sbFile = StatusBarPathLabel(
-            callback=self._onPathLabelDoubleClick,
-            parent=self.__statusBar)
+        self.sbFile = StatusBarPathLabel(callback=self._onPathLabelDoubleClick, parent=self.__statusBar)
         self.sbFile.setMaximumWidth(512)
         self.sbFile.setMinimumWidth(128)
         self.__statusBar.addPermanentWidget(self.sbFile, True)
         self.sbFile.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.sbFile.customContextMenuRequested.connect(
-            self._showPathLabelContextMenu)
+        self.sbFile.customContextMenuRequested.connect(self._showPathLabelContextMenu)
 
-        self.sbLine = StatusBarFramedLabel(callback=self.copyLine,
-                                           parent=self.__statusBar)
+        self.sbLine = StatusBarFramedLabel(callback=self.copyLine, parent=self.__statusBar)
         self.sbLine.setMinimumWidth(72)
         self.sbLine.setAlignment(Qt.AlignCenter)
         self.__statusBar.addPermanentWidget(self.sbLine)
 
-        self.sbPos = StatusBarFramedLabel(callback=self.copyPos,
-                                          parent=self.__statusBar)
+        self.sbPos = StatusBarFramedLabel(callback=self.copyPos, parent=self.__statusBar)
         self.sbPos.setMinimumWidth(72)
         self.sbPos.setAlignment(Qt.AlignCenter)
         self.__statusBar.addPermanentWidget(self.sbPos)
@@ -120,8 +112,8 @@ class MainWindowStatusBarMixin:
     def __copyLinePos(label):
         """Copies the line/pos label content to the buffer"""
         txt = label.text().strip().lower()
-        if not txt.endswith('n/a'):
-            txt = txt[txt.find(':') + 1:].strip()
+        if not txt.endswith("n/a"):
+            txt = txt[txt.find(":") + 1 :].strip()
             QApplication.clipboard().setText(txt)
 
     def showStatusBarMessage(self, msg, timeout=10000):
@@ -139,51 +131,45 @@ class MainWindowStatusBarMixin:
     def _showVCSLabelContextMenu(self, pos):
         """Triggered when a context menu is requested for a VCS label"""
         contextMenu = QMenu(self)
-        contextMenu.addAction(getIcon("vcsintervalmenu.png"),
-                              "Configure monitor interval",
-                              self.__onVCSMonitorInterval)
+        contextMenu.addAction(getIcon("vcsintervalmenu.png"), "Configure monitor interval", self.__onVCSMonitorInterval)
         contextMenu.popup(self.sbVCSStatus.mapToGlobal(pos))
 
     def __onVCSMonitorInterval(self):
         """Runs the VCS monitor interval setting dialog"""
-        dlg = VCSUpdateIntervalConfigDialog(
-            self.settings['vcsstatusupdateinterval'], self)
+        dlg = VCSUpdateIntervalConfigDialog(self.settings["vcsstatusupdateinterval"], self)
         if dlg.exec_() == QDialog.Accepted:
-            self.settings['vcsstatusupdateinterval'] = dlg.interval
+            self.settings["vcsstatusupdateinterval"] = dlg.interval
 
     def _showPathLabelContextMenu(self, pos):
         """Triggered when a context menu is requested for the path label"""
         contextMenu = QMenu(self)
-        contextMenu.addAction(getIcon('copymenu.png'),
-                              'Copy full path to clipboard (double click)',
-                              self._onPathLabelDoubleClick)
+        contextMenu.addAction(
+            getIcon("copymenu.png"), "Copy full path to clipboard (double click)", self._onPathLabelDoubleClick
+        )
         contextMenu.addSeparator()
-        contextMenu.addAction(getIcon(''), 'Copy directory path to clipboard',
-                              self._onCopyDirToClipboard)
-        contextMenu.addAction(getIcon(''), 'Copy file name to clipboard',
-                              self._onCopyFileNameToClipboard)
+        contextMenu.addAction(getIcon(""), "Copy directory path to clipboard", self._onCopyDirToClipboard)
+        contextMenu.addAction(getIcon(""), "Copy file name to clipboard", self._onCopyFileNameToClipboard)
         contextMenu.popup(self.sbFile.mapToGlobal(pos))
 
     def _onPathLabelDoubleClick(self):
         """Double click on the status bar path label"""
         txt = self.__getPathLabelFilePath()
-        if txt.lower() not in ['', 'n/a']:
+        if txt.lower() not in ["", "n/a"]:
             QApplication.clipboard().setText(txt)
 
     def _onCopyDirToClipboard(self):
         """Copies the dir path of the current file into the clipboard"""
         txt = self.__getPathLabelFilePath()
-        if txt.lower() not in ['', 'n/a']:
+        if txt.lower() not in ["", "n/a"]:
             try:
-                QApplication.clipboard().setText(os.path.dirname(txt) +
-                                                 os.path.sep)
+                QApplication.clipboard().setText(os.path.dirname(txt) + os.path.sep)
             except Exception:
                 pass
 
     def _onCopyFileNameToClipboard(self):
         """Copies the file name of the current file into the clipboard"""
         txt = self.__getPathLabelFilePath()
-        if txt.lower() not in ['', 'n/a']:
+        if txt.lower() not in ["", "n/a"]:
             try:
                 QApplication.clipboard().setText(os.path.basename(txt))
             except Exception:
@@ -192,6 +178,6 @@ class MainWindowStatusBarMixin:
     def __getPathLabelFilePath(self):
         """Provides undecorated path label content"""
         txt = str(self.sbFile.getPath())
-        if txt.startswith('File: '):
-            txt = txt.replace('File: ', '')
+        if txt.startswith("File: "):
+            txt = txt.replace("File: ", "")
         return txt

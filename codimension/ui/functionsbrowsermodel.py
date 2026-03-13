@@ -36,15 +36,13 @@ from .viewitems import TreeViewFunctionItem
 
 
 class FunctionsBrowserModel(BrowserModelBase):
-
     """Class implementing the project browser model"""
 
     def __init__(self, parent=None):
         BrowserModelBase.__init__(self, ["Name", "File name", "Line"], parent)
-        self.setTooltips(Settings()['functionsTooltips'])
+        self.setTooltips(Settings()["functionsTooltips"])
         self.__needsPopulate = False
-        self.globalData.project.sigProjectChanged.connect(
-            self.__onProjectChanged)
+        self.globalData.project.sigProjectChanged.connect(self.__onProjectChanged)
 
     def populateIfNeeded(self):
         """Populates the model when the tab is first shown (lazy loading)."""

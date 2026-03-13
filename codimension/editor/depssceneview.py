@@ -24,7 +24,6 @@ from utils.settings import Settings
 
 
 class DepsGraphicsScene(QGraphicsScene):
-
     """Reimplemented graphics scene"""
 
     def __init__(self, navBar, parent=None):
@@ -85,9 +84,7 @@ class DepsGraphicsScene(QGraphicsScene):
         self.clear()
 
 
-
 class DepsGraphicsView(QGraphicsView):
-
     """Central widget"""
 
     def __init__(self, navBar, parent):
@@ -125,8 +122,7 @@ class DepsGraphicsView(QGraphicsView):
     def getVisibleRect(self):
         """Provides the visible rectangle"""
         topLeft = self.mapToScene(QPoint(0, 0))
-        bottomRight = self.mapToScene(QPoint(self.viewport().width(),
-                                             self.viewport().height()))
+        bottomRight = self.mapToScene(QPoint(self.viewport().width(), self.viewport().height()))
         return QRectF(topLeft, bottomRight)
 
     def terminate(self):

@@ -59,12 +59,12 @@ from .proftable import FLOAT_FORMAT
 
 DEFAULT_FONT = QFont("Arial", 10)
 
-class FuncConnectionLabel(QGraphicsTextItem):
 
+class FuncConnectionLabel(QGraphicsTextItem):
     """Connector label"""
 
     def __init__(self, edge, edgeFont):
-        text = edge.label.replace('\\n', '\n')
+        text = edge.label.replace("\\n", "\n")
         QGraphicsTextItem.__init__(self, text)
 
         if edgeFont:
@@ -75,14 +75,13 @@ class FuncConnectionLabel(QGraphicsTextItem):
         metric = QFontMetrics(self.font())
         rec = metric.boundingRect(0, 0, 10000, 10000, Qt.AlignCenter, text)
 
-        self.setPos(edge.labelX - rec.width() / 2,
-                    edge.labelY - rec.height() / 2)
+        self.setPos(edge.labelX - rec.width() / 2, edge.labelY - rec.height() / 2)
 
         # To make double click not delivered
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
     def paint(self, painter, option, widget):
-        """ Draws the edge text """
+        """Draws the edge text"""
         # Hide the dotted outline
         itemOption = QStyleOptionGraphicsItem(option)
         if itemOption.state & QStyle.State_Selected != 0:
@@ -92,7 +91,6 @@ class FuncConnectionLabel(QGraphicsTextItem):
 
 
 class FuncConnection(QGraphicsPathItem):
-
     """Connection between functions"""
 
     def __init__(self, edge):
@@ -105,35 +103,43 @@ class FuncConnection(QGraphicsPathItem):
         index = 1
         while index + 3 <= len(edge.points):
             painterPath.cubicTo(
-                edge.points[index][0], edge.points[index][1],
-                edge.points[index + 1][0], edge.points[index + 1][1],
-                edge.points[index + 2][0], edge.points[index + 2][1])
+                edge.points[index][0],
+                edge.points[index][1],
+                edge.points[index + 1][0],
+                edge.points[index + 1][1],
+                edge.points[index + 2][0],
+                edge.points[index + 2][1],
+            )
             index = index + 3
         if index + 2 <= len(edge.points):
             painterPath.quadTo(
-                edge.points[index + 1][0], edge.points[index + 1][1],
-                edge.points[index + 2][0], edge.points[index + 2][1])
+                edge.points[index + 1][0],
+                edge.points[index + 1][1],
+                edge.points[index + 2][0],
+                edge.points[index + 2][1],
+            )
             index = index + 2
 
         if index + 1 <= len(edge.points):
-            painterPath.lineTo(edge.points[index + 1][0],
-                               edge.points[index + 1][1])
+            painterPath.lineTo(edge.points[index + 1][0], edge.points[index + 1][1])
 
         if edge.head != edge.tail:
             lastIndex = len(edge.points) - 1
-            self.addArrow(painterPath,
-                          edge.points[lastIndex - 1][0],
-                          edge.points[lastIndex - 1][1],
-                          edge.points[lastIndex][0],
-                          edge.points[lastIndex][1])
+            self.addArrow(
+                painterPath,
+                edge.points[lastIndex - 1][0],
+                edge.points[lastIndex - 1][1],
+                edge.points[lastIndex][0],
+                edge.points[lastIndex][1],
+            )
         self.setPath(painterPath)
 
     def addArrow(self, painterPath, startX, startY, endX, endY):
         """Add arrows to the edges
-           http://kapo-cpp.blogspot.com/2008/10/drawing-arrows-with-cairo.html
+        http://kapo-cpp.blogspot.com/2008/10/drawing-arrows-with-cairo.html
         """
         arrowLength = 12.0
-        arrowDegrees = 0.15      # Radian
+        arrowDegrees = 0.15  # Radian
 
         angle = math.atan2(endY - startY, endX - startX) + math.pi
         arrowX1 = endX + arrowLength * math.cos(angle - arrowDegrees)
@@ -157,7 +163,6 @@ class FuncConnection(QGraphicsPathItem):
 
 
 class Function(QGraphicsRectItem):
-
     """Rectangle for a function"""
 
     def __init__(self, node, fileName, lineNumber, outside, nodeFont):
@@ -173,29 +178,23 @@ class Function(QGraphicsRectItem):
 
         posX = node.posX - node.width / 2.0
         posY = node.posY - node.height / 2.0
-        QGraphicsRectItem.__init__(self, posX, posY,
-                                   node.width, node.height)
+        QGraphicsRectItem.__init__(self, posX, posY, node.width, node.height)
 
         self.setRectanglePen()
 
         # node.color is like "#fe0400"
         if node.color.startswith("#"):
-            color = QColor(int(node.color[1:3], 16),
-                           int(node.color[3:5], 16),
-                           int(node.color[5:], 16))
+            color = QColor(int(node.color[1:3], 16), int(node.color[3:5], 16), int(node.color[5:], 16))
         else:
             color = QColor(220, 255, 220)
         self.setBrush(color)
 
         # To make item selectable
-        self.setFlag(QGraphicsItem.ItemIsSelectable,
-                     os.path.isabs(self.__fileName) and
-                     self.__lineNumber > 0)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, os.path.isabs(self.__fileName) and self.__lineNumber > 0)
 
         # Set tooltip as a function docstring
         if fileName != "" and lineNumber != 0:
-            self.setToolTip(
-                GlobalData().getFileLineDocstring(fileName, lineNumber))
+            self.setToolTip(GlobalData().getFileLineDocstring(fileName, lineNumber))
 
     def setRectanglePen(self):
         """Sets the diagram pen"""
@@ -226,17 +225,14 @@ class Function(QGraphicsRectItem):
             self.__node.width,
             self.__node.height,
         )
-        painter.drawText(textRect, Qt.AlignCenter,
-                         self.__node.label.replace('\\n', '\n'))
+        painter.drawText(textRect, Qt.AlignCenter, self.__node.label.replace("\\n", "\n"))
 
         if self.__outside:
             pixmap = getPixmap("nonprojectentrydgm.png")
             pixmapPosX = self.__node.posX - self.__node.width / 2.0 + 2
-            pixmapPosY = self.__node.posY + self.__node.height / 2.0 - \
-                pixmap.height() - 2
+            pixmapPosY = self.__node.posY + self.__node.height / 2.0 - pixmap.height() - 2
             painter.setRenderHint(QPainter.SmoothPixmapTransform)
-            targetRect = QRectF(pixmapPosX, pixmapPosY,
-                                pixmap.width(), pixmap.height())
+            targetRect = QRectF(pixmapPosX, pixmapPosY, pixmap.width(), pixmap.height())
             painter.drawPixmap(targetRect, pixmap)
 
     def mouseDoubleClickEvent(self, _):
@@ -246,18 +242,15 @@ class Function(QGraphicsRectItem):
         if not os.path.isabs(self.__fileName):
             return
 
-        GlobalData().mainWindow.openFile(self.__fileName,
-                                         self.__lineNumber)
+        GlobalData().mainWindow.openFile(self.__fileName, self.__lineNumber)
 
 
 class ProfileGraphViewer(QWidget):
-
     """Profiling results as a graph"""
 
     sigEscapePressed = pyqtSignal()
 
-    def __init__(self, scriptName, params, reportTime,
-                 dataFile, stats, parent=None):
+    def __init__(self, scriptName, params, reportTime, dataFile, stats, parent=None):
         QWidget.__init__(self, parent)
 
         self.__dataFile = dataFile
@@ -294,12 +287,18 @@ class ProfileGraphViewer(QWidget):
         totalPrimitiveCalls = self.__stats.prim_calls
         totalTime = self.__stats.total_tt
 
-        txt = "<b>Script:</b> " + self.__script + " " + \
-              self.__params['arguments'] + "<br/>" \
-              "<b>Run at:</b> " + self.__reportTime + "<br/>" + \
-              str(totalCalls) + " function calls (" + \
-              str(totalPrimitiveCalls) + " primitive calls) in " + \
-              FLOAT_FORMAT % totalTime + " CPU seconds"
+        txt = (
+            "<b>Script:</b> " + self.__script + " " + self.__params["arguments"] + "<br/>"
+            "<b>Run at:</b> "
+            + self.__reportTime
+            + "<br/>"
+            + str(totalCalls)
+            + " function calls ("
+            + str(totalPrimitiveCalls)
+            + " primitive calls) in "
+            + FLOAT_FORMAT % totalTime
+            + " CPU seconds"
+        )
         summary = HeaderFitLabel(self)
         summary.setText(txt)
         summary.setToolTip(txt)
@@ -322,11 +321,11 @@ class ProfileGraphViewer(QWidget):
     def __getDotFont(parts):
         """Provides a QFont object if a font spec is found"""
         for part in parts:
-            if 'fontname=' in part:
-                fontName = part.replace('fontname=', '')
-                fontName = fontName.replace('[', '')
-                fontName = fontName.replace(']', '')
-                fontName = fontName.replace(',', '')
+            if "fontname=" in part:
+                fontName = part.replace("fontname=", "")
+                fontName = fontName.replace("[", "")
+                fontName = fontName.replace("]", "")
+                fontName = fontName.replace(",", "")
                 return QFont(fontName)
         return None
 
@@ -341,47 +340,46 @@ class ProfileGraphViewer(QWidget):
             parts = line.split()
             lineModified = False
             if parts:
-                if parts[0] == 'node':
+                if parts[0] == "node":
                     # need to extract the fontname
                     nodeFont = self.__getDotFont(parts)
-                elif parts[0] == 'edge':
+                elif parts[0] == "edge":
                     # need to extract the fontname
                     edgeFont = self.__getDotFont(parts)
                 elif parts[0].isdigit():
-                    if parts[1] == '->':
+                    if parts[1] == "->":
                         # certain edge spec: replace arrowsize and font size
                         for index, part in enumerate(parts):
-                            if part.startswith('[arrowsize='):
+                            if part.startswith("[arrowsize="):
                                 modified = parts[:]
                                 modified[index] = '[arrowsize="0.0",'
-                                processed.append(' '.join(modified))
-                            elif part.startswith('fontsize='):
+                                processed.append(" ".join(modified))
+                            elif part.startswith("fontsize="):
                                 size = int(float(part.split('"')[1]))
                                 if edgeFont:
                                     edgeFont.setPointSize(size)
                         lineModified = True
-                    elif parts[1].startswith('['):
+                    elif parts[1].startswith("["):
                         # certain node spec: pick the tooltip and font size
                         lineno = None
                         for part in parts:
-                            if part.startswith('tooltip='):
+                            if part.startswith("tooltip="):
                                 nodePath = part.split('"')[1]
-                                pathLine = nodePath + ':' + str(lineno)
+                                pathLine = nodePath + ":" + str(lineno)
                                 tooltips[int(parts[0])] = pathLine
-                            elif part.startswith('fontsize='):
+                            elif part.startswith("fontsize="):
                                 size = int(float(part.split('"')[1]))
                                 if nodeFont:
                                     nodeFont.setPointSize(size)
-                            elif part.startswith('label='):
+                            elif part.startswith("label="):
                                 try:
-                                    lineno = int(part.split(':')[1])
+                                    lineno = int(part.split(":")[1])
                                 except Exception:
                                     pass
             if not lineModified:
                 processed.append(line)
 
-        return '\n'.join(processed), tooltips, nodeFont, edgeFont
-
+        return "\n".join(processed), tooltips, nodeFont, edgeFont
 
     def __rungprof2dot(self):
         """Runs gprof2dot which produces a full dot spec"""
@@ -404,10 +402,8 @@ class ProfileGraphViewer(QWidget):
         """Runs external tools to get the diagram layout"""
         fullDotSpec, tooltips, nodeFont, edgeFont = self.__rungprof2dot()
 
-        dotProc = Popen(["dot", "-Tplain"],
-                        stdin=PIPE, stdout=PIPE, bufsize=1)
-        graphDescr = dotProc.communicate(
-            fullDotSpec.encode('utf-8'))[0].decode('utf-8')
+        dotProc = Popen(["dot", "-Tplain"], stdin=PIPE, stdout=PIPE, bufsize=1)
+        graphDescr = dotProc.communicate(fullDotSpec.encode("utf-8"))[0].decode("utf-8")
 
         graph = getGraphFromPlainDotData(graphDescr)
         graph.normalize(self.physicalDpiX(), self.physicalDpiY())
@@ -427,16 +423,14 @@ class ProfileGraphViewer(QWidget):
             try:
                 nodeNameAsInt = int(node.name)
                 if nodeNameAsInt in tooltips:
-                    parts = tooltips[nodeNameAsInt].rsplit(':', 1)
+                    parts = tooltips[nodeNameAsInt].rsplit(":", 1)
                     fileName = parts[0]
                     if parts[1].isdigit():
                         lineNumber = int(parts[1])
             except Exception:
                 pass
 
-            self.__scene.addItem(Function(node, fileName, lineNumber,
-                                          self.__isOutsideItem(fileName),
-                                          nodeFont))
+            self.__scene.addItem(Function(node, fileName, lineNumber, self.__isOutsideItem(fileName), nodeFont))
 
     def __onESC(self):
         """Triggered when ESC is clicked"""

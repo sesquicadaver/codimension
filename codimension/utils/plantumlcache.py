@@ -35,19 +35,21 @@ from ui.qt import QObject, QThread, pyqtSignal
 
 from .fileutils import loadJSON, saveJSON, saveToFile
 
-CACHE_FILE_NAME = 'cachemap.json'
+CACHE_FILE_NAME = "cachemap.json"
 
 
 def getPlantUMLJarPath():
     """Provides the full path to the plantUML jar file"""
-    if shutil.which('java') is None:
+    if shutil.which("java") is None:
         return None
     exeDir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    plantUMLPath = os.path.sep.join([os.path.dirname(exeDir), 'plantuml'])
+    plantUMLPath = os.path.sep.join([os.path.dirname(exeDir), "plantuml"])
     for item in os.listdir(plantUMLPath):
-        if item.startswith('plantuml.') and item.endswith('.jar'):
+        if item.startswith("plantuml.") and item.endswith(".jar"):
             return plantUMLPath + os.path.sep + item
     return None
+
+
 JAR_PATH = getPlantUMLJarPath()
 
 
@@ -75,18 +77,18 @@ def normalizePlantumlSource(source):
     lines = source.strip().splitlines()
     length = len(lines)
     if length == 1:
-        if lines[0].startswith('@start'):
+        if lines[0].startswith("@start"):
             # end is missed
-            return '\n'.join([lines[0], '@end' + lines[0][6:]])
-        if lines[0].startswith('@end'):
+            return "\n".join([lines[0], "@end" + lines[0][6:]])
+        if lines[0].startswith("@end"):
             # start is missed
-            return'\n'.join(['@start' + lines[0][4:], lines[0]])
+            return "\n".join(["@start" + lines[0][4:], lines[0]])
         # missed both
-        return '\n'.join(['@startuml', lines[0], '@enduml'])
+        return "\n".join(["@startuml", lines[0], "@enduml"])
 
     # More than one line
-    startFound = lines[0].startswith('@start')
-    endFound = lines[-1].lstrip().startswith('@end')
+    startFound = lines[0].startswith("@start")
+    endFound = lines[-1].lstrip().startswith("@end")
 
     if startFound and endFound:
         # both found
@@ -99,28 +101,27 @@ def normalizePlantumlSource(source):
         # start is here, end is missed
         __removeEmptyForward(lines, 1, length)
         lines[0] = lines[0].strip()
-        lines.append('@end' + lines[0][6:])
+        lines.append("@end" + lines[0][6:])
     elif endFound:
         # start is missed, end is here
         __removeEmptyBackward(lines, length - 2)
         lines[-1] = lines[-1].strip()
-        lines.insert(0, '@start' + lines[-1][4:])
+        lines.insert(0, "@start" + lines[-1][4:])
     else:
         # both missed
         __removeEmptyForward(lines, 0, length)
         __removeEmptyBackward(lines, len(lines) - 1)
-        lines.insert(0, '@startuml')
-        lines.append('@enduml')
+        lines.insert(0, "@startuml")
+        lines.append("@enduml")
 
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 class PlantUMLRenderer(QThread):
-
     """Runs plantuml"""
 
-    sigFinishedOK = pyqtSignal(str, str, str)       # md5, uuid, file
-    sigFinishedError = pyqtSignal(str, str)         # md5, file
+    sigFinishedOK = pyqtSignal(str, str, str)  # md5, uuid, file
+    sigFinishedError = pyqtSignal(str, str)  # md5, file
 
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
@@ -147,15 +148,15 @@ class PlantUMLRenderer(QThread):
 
     def run(self):
         """Runs plantUML"""
-        srcFile = self.__fName[:-3] + 'txt'
+        srcFile = self.__fName[:-3] + "txt"
         try:
             # Run plantUML
             saveToFile(srcFile, self.__source)
-            retCode = subprocess.call(['java', '-jar', JAR_PATH,
-                                       '-charset', 'utf-8', '-nometadata',
-                                       srcFile],
-                                      stdout=subprocess.DEVNULL,
-                                      stderr=subprocess.DEVNULL)
+            retCode = subprocess.call(
+                ["java", "-jar", JAR_PATH, "-charset", "utf-8", "-nometadata", srcFile],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
             self.safeUnlink(srcFile)
 
             if retCode == 0:
@@ -163,17 +164,15 @@ class PlantUMLRenderer(QThread):
             else:
                 self.sigFinishedError.emit(self.__md5, self.__fName)
         except Exception as exc:
-            logging.error('Cannot render a plantUML diagram: %s', str(exc))
+            logging.error("Cannot render a plantUML diagram: %s", str(exc))
             self.safeUnlink(srcFile)
             self.sigFinishedError.emit(self.__md5, self.__fName)
 
 
-
 class PlantUMLCache(QObject):
-
     """The plantUML render cache"""
 
-    sigRenderReady = pyqtSignal(str, str)    # uuid, file
+    sigRenderReady = pyqtSignal(str, str)  # uuid, file
 
     def __init__(self, cacheDir):
         QObject.__init__(self)
@@ -188,23 +187,28 @@ class PlantUMLCache(QObject):
                     self.__loadCache()
                     self.__saveCache()
                 else:
-                    logging.error('The plantUML render cache directory (%s) '
-                                  'does not have write permissions. There will '
-                                  'be no plantUML rendering', self.__cacheDir)
+                    logging.error(
+                        "The plantUML render cache directory (%s) "
+                        "does not have write permissions. There will "
+                        "be no plantUML rendering",
+                        self.__cacheDir,
+                    )
                     self.__cacheDir = None
             else:
-                logging.error('The plantUML render cache directory path (%s) '
-                              'exists and is not a directory. There will be no '
-                              'pluntUML rendering', self.__cacheDir)
+                logging.error(
+                    "The plantUML render cache directory path (%s) "
+                    "exists and is not a directory. There will be no "
+                    "pluntUML rendering",
+                    self.__cacheDir,
+                )
                 self.__cacheDir = None
         else:
             # Try to create the dir
             try:
                 os.mkdir(self.__cacheDir)
             except Exception as exc:
-                logging.error('Error creating pluntUML render cache directory '
-                              '%s: %s', self.__cacheDir, str(exc))
-                logging.error('There will be no plantUML rendering')
+                logging.error("Error creating pluntUML render cache directory %s: %s", self.__cacheDir, str(exc))
+                logging.error("There will be no plantUML rendering")
                 self.__cacheDir = None
 
     def __loadCache(self):
@@ -225,13 +229,12 @@ class PlantUMLCache(QObject):
                     try:
                         os.unlink(self.__cacheDir + item)
                     except Exception as exc:
-                        logging.error('Error removing obsolete plantUML '
-                                      'render file (%s): %s',
-                                      self.__cacheDir + item, str(exc))
+                        logging.error(
+                            "Error removing obsolete plantUML render file (%s): %s", self.__cacheDir + item, str(exc)
+                        )
 
         if os.path.exists(self.__cacheDir + CACHE_FILE_NAME):
-            prevCache = loadJSON(self.__cacheDir + CACHE_FILE_NAME,
-                                 'plantUML render cache map', None)
+            prevCache = loadJSON(self.__cacheDir + CACHE_FILE_NAME, "plantUML render cache map", None)
             for item in prevCache.items():
                 if os.path.exists(item[1]):
                     self.__md5ToFileName[item[0]] = item[1]
@@ -244,8 +247,7 @@ class PlantUMLCache(QObject):
         for item in self.__md5ToFileName.items():
             if item[1] is not None:
                 dictToSave[item[0]] = item[1]
-        saveJSON(self.__cacheDir + CACHE_FILE_NAME, dictToSave,
-                 'plantUML render cache map')
+        saveJSON(self.__cacheDir + CACHE_FILE_NAME, dictToSave, "plantUML render cache map")
 
     def onRenderOK(self, md5, uuid, fName):
         """Render saved successfully"""
@@ -290,11 +292,11 @@ class PlantUMLCache(QObject):
             return None
 
         normSource = normalizePlantumlSource(source)
-        md5 = hashlib.md5(normSource.encode('utf-8')).hexdigest()
+        md5 = hashlib.md5(normSource.encode("utf-8")).hexdigest()
         if md5 in self.__md5ToFileName:
             return self.__md5ToFileName[md5]
 
-        basename = md5 + '.png'
+        basename = md5 + ".png"
         fName = self.__cacheDir + basename
         if fName in self.__threads:
             # Reject double request

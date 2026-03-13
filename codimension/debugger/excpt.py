@@ -26,7 +26,6 @@ from .ignoredexcptviewer import IgnoredExceptionsViewer
 
 
 class DebuggerExceptions(QWidget):
-
     """Implements the debugger context viewer"""
 
     sigClientExceptionsCleared = pyqtSignal()
@@ -35,8 +34,7 @@ class DebuggerExceptions(QWidget):
         QWidget.__init__(self, parent)
 
         self.__createLayout()
-        self.clientExcptViewer.sigClientExceptionsCleared.connect(
-            self.__onClientExceptionsCleared)
+        self.clientExcptViewer.sigClientExceptionsCleared.connect(self.__onClientExceptionsCleared)
 
     def __createLayout(self):
         """Creates the widget layout"""
@@ -46,8 +44,7 @@ class DebuggerExceptions(QWidget):
         self.splitter = QSplitter(Qt.Vertical)
 
         self.ignoredExcptViewer = IgnoredExceptionsViewer(self.splitter)
-        self.clientExcptViewer = ClientExceptionsViewer(
-            self.splitter, self.ignoredExcptViewer)
+        self.clientExcptViewer = ClientExceptionsViewer(self.splitter, self.ignoredExcptViewer)
 
         self.splitter.addWidget(self.clientExcptViewer)
         self.splitter.addWidget(self.ignoredExcptViewer)
@@ -63,8 +60,7 @@ class DebuggerExceptions(QWidget):
 
     def addException(self, exceptionType, exceptionMessage, stackTrace):
         """Adds the exception to the view"""
-        self.clientExcptViewer.addException(exceptionType, exceptionMessage,
-                                            stackTrace)
+        self.clientExcptViewer.addException(exceptionType, exceptionMessage, stackTrace)
 
     def isIgnored(self, exceptionType):
         """Returns True if this exception type should be ignored"""

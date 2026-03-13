@@ -59,7 +59,6 @@ from .watchpointmodel import WatchPointModel
 
 
 class CodimensionDebugger(QObject):
-
     """Debugger server implementation"""
 
     sigDebuggerStateChanged = pyqtSignal(int)
@@ -97,15 +96,12 @@ class CodimensionDebugger(QObject):
         self.__breakpointModel = BreakPointModel(self)
         self.__watchpointModel = WatchPointModel(self)
 
-        self.__breakpointModel.rowsAboutToBeRemoved.connect(
-            self.__deleteBreakPoints)
-        self.__breakpointModel.sigDataAboutToBeChanged.connect(
-            self.__breakPointDataAboutToBeChanged)
+        self.__breakpointModel.rowsAboutToBeRemoved.connect(self.__deleteBreakPoints)
+        self.__breakpointModel.sigDataAboutToBeChanged.connect(self.__breakPointDataAboutToBeChanged)
         self.__breakpointModel.dataChanged.connect(self.__changeBreakPoints)
         self.__breakpointModel.rowsInserted.connect(self.__addBreakPoints)
         self.sigClientClearBreak.connect(self.__clientClearBreakPoint)
-        self.sigClientBreakConditionError.connect(
-            self.__clientBreakConditionError)
+        self.sigClientBreakConditionError.connect(self.__clientBreakConditionError)
 
         self.__handlers = {}
         self.__initHandlers()
@@ -128,7 +124,8 @@ class CodimensionDebugger(QObject):
             METHOD_EXEC_STATEMENT_ERROR: self.__handleExecStatementError,
             METHOD_EXEC_STATEMENT_OUTPUT: self.__handleExecuteStatementOutput,
             METHOD_SIGNAL: self.__handleSignal,
-            METHOD_THREAD_SET: self.__handleThreadSet}
+            METHOD_THREAD_SET: self.__handleThreadSet,
+        }
 
     def getScriptPath(self):
         """Provides the path to the debugged script"""
@@ -156,12 +153,10 @@ class CodimensionDebugger(QObject):
             self.__state = newState
             self.sigDebuggerStateChanged.emit(newState)
 
-    def onDebugSessionStarted(self, procWrapper, fileName,
-                              runParameters, debugSettings):
+    def onDebugSessionStarted(self, procWrapper, fileName, runParameters, debugSettings):
         """Starts debugging a script. Run manager informs about it."""
         if self.__state != self.STATE_STOPPED:
-            raise Exception('Logic error. Debugging session started while the '
-                            'previous one has not finished.')
+            raise Exception("Logic error. Debugging session started while the previous one has not finished.")
 
         self.__procWrapper = procWrapper
         self.__procuuid = procWrapper.procuuid
@@ -179,13 +174,14 @@ class CodimensionDebugger(QObject):
             try:
                 self.__handlers[method](params)
             except KeyError:
-                logging.error('Unhandled message received by the debugger. '
-                              'Method: ' + str(method) +
-                              ' Parameters: ' + repr(params))
+                logging.error(
+                    "Unhandled message received by the debugger. "
+                    "Method: " + str(method) + " Parameters: " + repr(params)
+                )
 
     def __handleLine(self, params):
         """Handles METHOD_LINE"""
-        stack = params['stack']
+        stack = params["stack"]
         if self.__stopAtFirstLine:
             topFrame = stack[0]
             self.sigClientLine.emit(topFrame[0], int(topFrame[1]), False)
@@ -198,7 +194,7 @@ class CodimensionDebugger(QObject):
 
     def __handleStack(self, params):
         """Handles METHOD_STACK"""
-        stack = params['stack']
+        stack = params["stack"]
         if self.__stopAtFirstLine:
             topFrame = stack[0]
             self.sigClientLine.emit(topFrame[0], int(topFrame[1]), True)
@@ -209,12 +205,11 @@ class CodimensionDebugger(QObject):
 
     def __handleThreadList(self, params):
         """Handles METHOD_THREAD_LIST"""
-        self.sigClientThreadList.emit(params['currentID'],
-                                      params['threadList'])
+        self.sigClientThreadList.emit(params["currentID"], params["threadList"])
 
     def __handleVariables(self, params):
         """Handles METHOD_VARIABLES"""
-        self.sigClientVariables.emit(params['scope'], params['variables'])
+        self.sigClientVariables.emit(params["scope"], params["variables"])
 
     def __handleStartup(self, params):
         """Handles METHOD_DEBUG_STARTUP"""
@@ -229,30 +224,27 @@ class CodimensionDebugger(QObject):
 
     def __handleClearBP(self, params):
         """Handles METHOD_CLEAR_BP"""
-        self.sigClientClearBreak.emit(params['filename'], params['line'])
+        self.sigClientClearBreak.emit(params["filename"], params["line"])
 
     def __handleSyntaxError(self, params):
         """Handles METHOD_SYNTAX_ERROR"""
-        self.sigClientSyntaxError.emit(self.__procuuid,
-                                       params['message'], params['filename'],
-                                       params['line'],
-                                       params['characternumber'])
+        self.sigClientSyntaxError.emit(
+            self.__procuuid, params["message"], params["filename"], params["line"], params["characternumber"]
+        )
 
     def __handleVariable(self, params):
         """Handles METHOD_VARIABLE"""
-        self.sigClientVariable.emit(params['scope'],
-                                    [params['variable']] + params['variables'])
+        self.sigClientVariable.emit(params["scope"], [params["variable"]] + params["variables"])
 
     def __handleBPConditionError(self, params):
         """Handles METHOD_BP_CONDITION_ERROR"""
-        self.sigClientBreakConditionError.emit(params['filename'],
-                                               params['line'])
+        self.sigClientBreakConditionError.emit(params["filename"], params["line"])
 
     def __handleException(self, params):
         """Handles METHOD_EXCEPTION"""
         self.__changeDebuggerState(self.STATE_IN_IDE)
         if params:
-            stack = params['stack']
+            stack = params["stack"]
             if stack:
                 if stack[0] and stack[0][0] == "<string>":
                     for stackEntry in stack:
@@ -260,50 +252,54 @@ class CodimensionDebugger(QObject):
                             stackEntry[0] = self.__fileName
                         else:
                             break
-            excType = params['type']
-            isUnhandled = excType is None or \
-                excType.lower().startswith('unhandled') or \
-                not stack
-            self.sigClientException.emit(excType, params['message'],
-                                         stack, isUnhandled)
+            excType = params["type"]
+            isUnhandled = excType is None or excType.lower().startswith("unhandled") or not stack
+            self.sigClientException.emit(excType, params["message"], stack, isUnhandled)
         else:
             isUnhandled = True
-            self.sigClientException.emit('', '', [], True)
+            self.sigClientException.emit("", "", [], True)
 
     def __handleCallTrace(self, params):
         """Handles METHOD_CALL_TRACE"""
-        isCall = params['event'] == 'c'
-        src = params['from']
-        dest = params['to']
+        isCall = params["event"] == "c"
+        src = params["from"]
+        dest = params["to"]
         self.sigClientCallTrace.emit(
-            isCall, src['filename'], src['linenumber'], src['codename'],
-            dest['filename'], dest['linenumber'], dest['codename'])
+            isCall,
+            src["filename"],
+            src["linenumber"],
+            src["codename"],
+            dest["filename"],
+            dest["linenumber"],
+            dest["codename"],
+        )
 
     @staticmethod
     def __handleExecStatementError(params):
         """Handles METHOD_EXEC_STATEMENT_ERROR"""
-        logging.error('Execute statement error:\n' + params['text'])
+        logging.error("Execute statement error:\n" + params["text"])
 
     @staticmethod
     def __handleExecuteStatementOutput(params):
         """Handles METHOD_EXEC_STATEMENT_OUTPUT"""
-        text = params['text']
+        text = params["text"]
         if text:
-            logging.info('Statement execution succeeded. Output:\n' + text)
+            logging.info("Statement execution succeeded. Output:\n" + text)
         else:
-            logging.info('Statement execution succeeded. No output generated.')
+            logging.info("Statement execution succeeded. No output generated.")
 
     def __handleSignal(self, params):
         """Handles METHOD_SIGNAL"""
-        message = params['message']
-        fileName = params['filename']
-        linenumber = params['linenumber']
+        message = params["message"]
+        fileName = params["filename"]
+        linenumber = params["linenumber"]
         # funcName = params['function']
         # arguments = params['arguments']
 
         self.sigClientLine.emit(fileName, linenumber, False)
-        logging.error('The program generated the signal "' + message + '"\n'
-                      'File: ' + fileName + ' Line: ' + str(linenumber))
+        logging.error(
+            'The program generated the signal "' + message + '"\nFile: ' + fileName + " Line: " + str(linenumber)
+        )
 
     def __handleThreadSet(self, params):
         """Handles METHOD_THREAD_SET"""
@@ -312,7 +308,7 @@ class CodimensionDebugger(QObject):
 
     def onProcessFinished(self, procuuid, retCode):
         """Process finished. The retCode may indicate a disconnection."""
-        del retCode     # unused argument
+        del retCode  # unused argument
 
         if self.__procuuid == procuuid:
             self.__procWrapper = None
@@ -326,27 +322,26 @@ class CodimensionDebugger(QObject):
             self.__mainWindow.switchDebugMode(False)
 
     def __askForkTo(self):
-        " Asks what to follow, a parent or a child "
-        dlg = QMessageBox(QMessageBox.Question, "Client forking",
-                          "Select the fork branch to follow")
+        "Asks what to follow, a parent or a child"
+        dlg = QMessageBox(QMessageBox.Question, "Client forking", "Select the fork branch to follow")
         dlg.addButton(QMessageBox.Ok)
         dlg.addButton(QMessageBox.Cancel)
 
         btn1 = dlg.button(QMessageBox.Ok)
         btn1.setText("&Child process")
-        btn1.setIcon(getIcon(''))
+        btn1.setIcon(getIcon(""))
 
         btn2 = dlg.button(QMessageBox.Cancel)
         btn2.setText("&Parent process")
-        btn2.setIcon(getIcon(''))
+        btn2.setIcon(getIcon(""))
 
         dlg.setDefaultButton(QMessageBox.Cancel)
         res = dlg.exec_()
 
         if res == QMessageBox.Cancel:
-            self.__sendJSONCommand(METHOD_FORK_TO, {'target': 'parent'})
+            self.__sendJSONCommand(METHOD_FORK_TO, {"target": "parent"})
         else:
-            self.__sendJSONCommand(METHOD_FORK_TO, {'target': 'child'})
+            self.__sendJSONCommand(METHOD_FORK_TO, {"target": "child"})
 
     def __validateBreakpoints(self):
         """Checks all the breakpoints validity and deletes invalid"""
@@ -359,26 +354,29 @@ class CodimensionDebugger(QObject):
             line = bpoint.getLineNumber()
 
             if not os.path.exists(fileName):
-                logging.warning("Breakpoint at " + fileName + ":" +
-                                str(line) + " is invalid (the file "
-                                "disappeared from the filesystem). "
-                                "The breakpoint is deleted.")
+                logging.warning(
+                    "Breakpoint at " + fileName + ":" + str(line) + " is invalid (the file "
+                    "disappeared from the filesystem). "
+                    "The breakpoint is deleted."
+                )
                 self.__breakpointModel.deleteBreakPointByIndex(index)
                 continue
 
             breakableLines = getBreakpointLines(fileName, None, True)
             if breakableLines is None:
-                logging.warning("Breakpoint at " + fileName + ":" +
-                                str(line) + " does not point to a breakable "
-                                "line (the file could not be compiled). "
-                                "The breakpoint is deleted.")
+                logging.warning(
+                    "Breakpoint at " + fileName + ":" + str(line) + " does not point to a breakable "
+                    "line (the file could not be compiled). "
+                    "The breakpoint is deleted."
+                )
                 self.__breakpointModel.deleteBreakPointByIndex(index)
                 continue
             if line not in breakableLines:
-                logging.warning("Breakpoint at " + fileName + ":" +
-                                str(line) + " does not point to a breakable "
-                                "line (the file was modified). "
-                                "The breakpoint is deleted.")
+                logging.warning(
+                    "Breakpoint at " + fileName + ":" + str(line) + " does not point to a breakable "
+                    "line (the file was modified). "
+                    "The breakpoint is deleted."
+                )
                 self.__breakpointModel.deleteBreakPointByIndex(index)
                 continue
 
@@ -388,8 +386,7 @@ class CodimensionDebugger(QObject):
     def __sendBreakpoints(self):
         """Sends the breakpoints to the debugged program"""
         self.__validateBreakpoints()
-        self.__addBreakPoints(QModelIndex(), 0,
-                              self.__breakpointModel.rowCount() - 1)
+        self.__addBreakPoints(QModelIndex(), 0, self.__breakpointModel.rowCount() - 1)
 
     def __addBreakPoints(self, parentIndex, start, end):
         """Adds breakpoints"""
@@ -401,15 +398,12 @@ class CodimensionDebugger(QObject):
             bpoint = self.__breakpointModel.getBreakPointByIndex(index)
             fileName = bpoint.getAbsoluteFileName()
             line = bpoint.getLineNumber()
-            self.remoteBreakpoint(fileName, line, True,
-                                  bpoint.getCondition(),
-                                  bpoint.isTemporary())
+            self.remoteBreakpoint(fileName, line, True, bpoint.getCondition(), bpoint.isTemporary())
             if not bpoint.isEnabled():
                 self.__remoteBreakpointEnable(fileName, line, False)
             ignoreCount = bpoint.getIgnoreCount()
             if ignoreCount > 0:
-                self.__remoteBreakpointIgnore(fileName, line,
-                                              ignoreCount)
+                self.__remoteBreakpointIgnore(fileName, line, ignoreCount)
 
     def __deleteBreakPoints(self, parentIndex, start, end):
         """Deletes breakpoints"""
@@ -425,8 +419,7 @@ class CodimensionDebugger(QObject):
 
     def __breakPointDataAboutToBeChanged(self, startIndex, endIndex):
         """Handles the sigDataAboutToBeChanged signal of the bpoint model"""
-        self.__deleteBreakPoints(QModelIndex(),
-                                 startIndex.row(), endIndex.row())
+        self.__deleteBreakPoints(QModelIndex(), startIndex.row(), endIndex.row())
 
     def __changeBreakPoints(self, startIndex, endIndex):
         """Sets changed breakpoints"""
@@ -438,15 +431,11 @@ class CodimensionDebugger(QObject):
 
     def __remoteBreakpointEnable(self, fileName, line, enable):
         """Sends the breakpoint enability"""
-        self.__sendJSONCommand(METHOD_BP_ENABLE,
-                               {'filename': fileName, 'line': line,
-                                'enable': enable})
+        self.__sendJSONCommand(METHOD_BP_ENABLE, {"filename": fileName, "line": line, "enable": enable})
 
     def __remoteBreakpointIgnore(self, fileName, line, ignoreCount):
         """Sends the breakpoint ignore count"""
-        self.__sendJSONCommand(METHOD_BP_IGNORE,
-                               {'filename': fileName, 'line': line,
-                                'count': ignoreCount})
+        self.__sendJSONCommand(METHOD_BP_IGNORE, {"filename": fileName, "line": line, "count": ignoreCount})
 
     def __clientClearBreakPoint(self, fileName, line):
         """Handles the sigClientClearBreak signal"""
@@ -459,9 +448,7 @@ class CodimensionDebugger(QObject):
 
     def __clientBreakConditionError(self, fileName, line):
         """Handles the condition error"""
-        logging.error("The condition of the breakpoint at " +
-                      fileName + ":" + str(line) +
-                      " contains a syntax error.")
+        logging.error("The condition of the breakpoint at " + fileName + ":" + str(line) + " contains a syntax error.")
         index = self.__breakpointModel.getBreakPointIndex(fileName, line)
         if not index.isValid():
             return
@@ -494,7 +481,7 @@ class CodimensionDebugger(QObject):
     def remoteContinue(self, special=False):
         """Continues the debugged program"""
         self.__changeDebuggerState(self.STATE_IN_CLIENT)
-        self.__sendJSONCommand(METHOD_CONTINUE, {'special': special})
+        self.__sendJSONCommand(METHOD_CONTINUE, {"special": special})
 
     def remoteThreadList(self):
         """Provides the threads list"""
@@ -507,36 +494,35 @@ class CodimensionDebugger(QObject):
         """
         if filters is None:
             filters = []
-        self.__sendJSONCommand(METHOD_VARIABLES,
-                               {'frameNumber': framenr,
-                                'scope': scope, 'filters': filters})
+        self.__sendJSONCommand(METHOD_VARIABLES, {"frameNumber": framenr, "scope": scope, "filters": filters})
 
     def remoteClientVariable(self, scope, var, framenr=0, filters=None):
         """Provides the client variable.
 
         scope - 0 => local, 1 => global
         """
-        self.__sendJSONCommand(METHOD_VARIABLE,
-                               {'frameNumber': framenr, 'variable': var,
-                                'scope': scope, 'filters': filters})
+        self.__sendJSONCommand(
+            METHOD_VARIABLE, {"frameNumber": framenr, "variable": var, "scope": scope, "filters": filters}
+        )
 
     def remoteExecuteStatement(self, statement, framenr):
         """Executes the expression in the current context of the debuggee"""
-        self.__sendJSONCommand(METHOD_EXECUTE_STATEMENT,
-                               {'statement': statement,
-                                'frameNumber': framenr})
+        self.__sendJSONCommand(METHOD_EXECUTE_STATEMENT, {"statement": statement, "frameNumber": framenr})
 
-    def remoteBreakpoint(self, fileName, line,
-                         isSetting, condition=None, temporary=False):
+    def remoteBreakpoint(self, fileName, line, isSetting, condition=None, temporary=False):
         """Sets or clears a breakpoint"""
-        params = {'filename': fileName, 'line': line,
-                  'setBreakpoint': isSetting, 'condition': condition,
-                  'temporary': temporary}
+        params = {
+            "filename": fileName,
+            "line": line,
+            "setBreakpoint": isSetting,
+            "condition": condition,
+            "temporary": temporary,
+        }
         self.__sendJSONCommand(METHOD_SET_BP, params)
 
     def remoteSetThread(self, tid):
         """Sets the given thread as the current"""
-        self.__sendJSONCommand(METHOD_THREAD_SET, {'threadID': tid})
+        self.__sendJSONCommand(METHOD_THREAD_SET, {"threadID": tid})
 
     def stopDebugging(self, exitCode=None):
         """Stops the debugging session"""
@@ -551,25 +537,25 @@ class CodimensionDebugger(QObject):
                 if exitCode is None:
                     self.__sendJSONCommand(METHOD_STEP_QUIT, None)
                 else:
-                    self.__sendJSONCommand(METHOD_STEP_QUIT,
-                                           {'exitCode': exitCode})
+                    self.__sendJSONCommand(METHOD_STEP_QUIT, {"exitCode": exitCode})
 
     def stopCalltrace(self):
         """Sends a message to stop call tracing"""
         if self.__procWrapper:
-            self.__sendJSONCommand(METHOD_CALL_TRACE, {'enable': False})
+            self.__sendJSONCommand(METHOD_CALL_TRACE, {"enable": False})
 
     def startCalltrace(self):
         """Sends a message to start call tracing"""
         if self.__procWrapper:
-            self.__sendJSONCommand(METHOD_CALL_TRACE, {'enable': True})
+            self.__sendJSONCommand(METHOD_CALL_TRACE, {"enable": True})
 
     def __sendJSONCommand(self, method, params):
         """Sends a message to the debuggee"""
         if self.__procWrapper:
             self.__procWrapper.sendJSONCommand(method, params)
         else:
-            raise Exception('Trying to send JSON command from the debugger '
-                            'to the debugged program wneh there is no remote '
-                            'process wrapper. Method: ' + str(method) +
-                            'Parameters: ' + repr(params))
+            raise Exception(
+                "Trying to send JSON command from the debugger "
+                "to the debugged program wneh there is no remote "
+                "process wrapper. Method: " + str(method) + "Parameters: " + repr(params)
+            )

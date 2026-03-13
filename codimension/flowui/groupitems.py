@@ -45,7 +45,6 @@ from .textmixin import TextMixin
 
 
 class HGroupSpacerCell(SpacerCell):
-
     """Represents a horizontal spacer cell used to shift items due to groups"""
 
     def __init__(self, ref, canvas, x, y):
@@ -65,7 +64,6 @@ class HGroupSpacerCell(SpacerCell):
 
 
 class GroupItemBase(CellElement, TextMixin):
-
     """Common functionality for the group items"""
 
     def __init__(self, groupBeginCMLRef, ref, canvas, x, y):
@@ -98,22 +96,24 @@ class GroupItemBase(CellElement, TextMixin):
 
     def getSelectTooltip(self):
         """Provides the tooltip"""
-        return 'Group at ' + CellElement.getLinesSuffix(self.getLineRange())
-
+        return "Group at " + CellElement.getLinesSuffix(self.getLineRange())
 
 
 class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
-
     """Represents an empty group"""
 
     N_BACK_RECT = 2
 
     def __init__(self, ref, groupBeginCMLRef, canvas, x, y):
         GroupItemBase.__init__(self, groupBeginCMLRef, ref, canvas, x, y)
-        ColorMixin.__init__(self, None, canvas.settings.emptyGroupBGColor,
-                            canvas.settings.emptyGroupFGColor,
-                            canvas.settings.emptyGroupBorderColor,
-                            colorSpec=groupBeginCMLRef)
+        ColorMixin.__init__(
+            self,
+            None,
+            canvas.settings.emptyGroupBGColor,
+            canvas.settings.emptyGroupFGColor,
+            canvas.settings.emptyGroupBorderColor,
+            colorSpec=groupBeginCMLRef,
+        )
         QGraphicsRectItem.__init__(self, canvas.scopeRectangle)
         self.kind = CellElement.EMPTY_GROUP
 
@@ -125,16 +125,12 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
     def render(self):
         """Renders the cell"""
         settings = self.canvas.settings
-        self.setupText(self, customText=self.getTitle(),
-                       customReplacement='')
+        self.setupText(self, customText=self.getTitle(), customReplacement="")
 
-        vPadding = 2 * (settings.vCellPadding + settings.vTextPadding) + \
-                   self.N_BACK_RECT * settings.emptyGroupYShift
+        vPadding = 2 * (settings.vCellPadding + settings.vTextPadding) + self.N_BACK_RECT * settings.emptyGroupYShift
         self.minHeight = self.textRect.height() + vPadding
-        hPadding = 2 * (settings.hCellPadding + settings.hTextPadding) + \
-                   self.N_BACK_RECT * settings.emptyGroupXShift
-        self.minWidth = max(self.textRect.width() + hPadding,
-                            settings.minWidth)
+        hPadding = 2 * (settings.hCellPadding + settings.hTextPadding) + self.N_BACK_RECT * settings.emptyGroupXShift
+        self.minWidth = max(self.textRect.width() + hPadding, settings.minWidth)
         self.height = self.minHeight
         self.width = self.minWidth
         return (self.width, self.height)
@@ -147,25 +143,26 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
         # Add the connector as a separate scene item to make the selection
         # working properly
         settings = self.canvas.settings
-        self.connector = Connector(self.canvas, baseX + settings.mainLine,
-                                   baseY,
-                                   baseX + settings.mainLine,
-                                   baseY + self.height)
+        self.connector = Connector(
+            self.canvas, baseX + settings.mainLine, baseY, baseX + settings.mainLine, baseY + self.height
+        )
         scene.addItem(self.connector)
 
         # Setting the rectangle is important for the selection and for
         # redrawing. Thus the selection pen with must be considered too.
         penWidth = settings.selectPenWidth - 1
-        self.setRect(baseX + settings.hCellPadding - penWidth,
-                     baseY + settings.vCellPadding - penWidth,
-                     self.minWidth - 2 * settings.hCellPadding + 2 * penWidth,
-                     self.minHeight - 2 * settings.vCellPadding + 2 * penWidth)
+        self.setRect(
+            baseX + settings.hCellPadding - penWidth,
+            baseY + settings.vCellPadding - penWidth,
+            self.minWidth - 2 * settings.hCellPadding + 2 * penWidth,
+            self.minHeight - 2 * settings.vCellPadding + 2 * penWidth,
+        )
         scene.addItem(self)
 
     def paint(self, painter, option, widget):
         """Draws the collapsed group"""
-        del option      # unused argument
-        del widget      # unused argument
+        del option  # unused argument
+        del widget  # unused argument
 
         settings = self.canvas.settings
         pen = self.getPainterPen(self.isSelected(), self.borderColor)
@@ -175,16 +172,12 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
         painter.setBrush(QBrush(self.bgColor))
 
         # Outer rectangle
-        rectWidth = self.minWidth - 2 * settings.hCellPadding - \
-                    self.N_BACK_RECT * settings.emptyGroupXShift
-        rectHeight = self.minHeight - 2 * settings.vCellPadding - \
-                     self.N_BACK_RECT * settings.emptyGroupYShift
+        rectWidth = self.minWidth - 2 * settings.hCellPadding - self.N_BACK_RECT * settings.emptyGroupXShift
+        rectHeight = self.minHeight - 2 * settings.vCellPadding - self.N_BACK_RECT * settings.emptyGroupYShift
 
         for rectNum in range(self.N_BACK_RECT, -1, -1):
-            xPos = self.baseX + settings.hCellPadding + \
-                   rectNum * settings.emptyGroupXShift
-            yPos = self.baseY + settings.vCellPadding + \
-                   (self.N_BACK_RECT - rectNum) * settings.emptyGroupYShift
+            xPos = self.baseX + settings.hCellPadding + rectNum * settings.emptyGroupXShift
+            yPos = self.baseY + settings.vCellPadding + (self.N_BACK_RECT - rectNum) * settings.emptyGroupYShift
             rect = QRectF(xPos, yPos, rectWidth, rectHeight)
             painter.drawRect(rect)
 
@@ -196,10 +189,8 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (rectWidth - textWidth) / 2
         textRect = QRectF(
-            self.baseX + settings.hCellPadding +
-            settings.hTextPadding + textShift,
-            self.baseY + settings.vCellPadding + settings.vTextPadding +
-            self.N_BACK_RECT * settings.emptyGroupYShift,
+            self.baseX + settings.hCellPadding + settings.hTextPadding + textShift,
+            self.baseY + settings.vCellPadding + settings.vTextPadding + self.N_BACK_RECT * settings.emptyGroupYShift,
             self.textRect.width(),
             self.textRect.height(),
         )
@@ -207,15 +198,18 @@ class EmptyGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
 
 
 class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
-
     """Represents beginning af a group which can be collapsed"""
 
     def __init__(self, ref, groupBeginCMLRef, canvas, x, y):
         GroupItemBase.__init__(self, groupBeginCMLRef, ref, canvas, x, y)
-        ColorMixin.__init__(self, None, canvas.settings.openGroupBGColor,
-                            canvas.settings.openGroupFGColor,
-                            canvas.settings.openGroupBorderColor,
-                            colorSpec=groupBeginCMLRef)
+        ColorMixin.__init__(
+            self,
+            None,
+            canvas.settings.openGroupBGColor,
+            canvas.settings.openGroupFGColor,
+            canvas.settings.openGroupBorderColor,
+            colorSpec=groupBeginCMLRef,
+        )
         QGraphicsRectItem.__init__(self, canvas.scopeRectangle)
         self.kind = CellElement.OPENED_GROUP_BEGIN
         self.connector = None
@@ -231,7 +225,7 @@ class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
         self.groupEndColumn = None
 
         self.selfAndDeeperNestLevel = None
-        self.selfMaxNestLevel = None    # Used in vcanvas.py
+        self.selfMaxNestLevel = None  # Used in vcanvas.py
 
         # To make double click delivered
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -265,11 +259,12 @@ class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
 
         groupWidth = self.groupWidth + 2 * settings.openGroupHSpacer
 
-        self.setRect(baseX - penWidth + settings.openGroupHSpacer,
-                     baseY - penWidth + settings.openGroupVSpacer,
-                     groupWidth + 2 * penWidth,
-                     self.groupHeight +
-                     2 * (penWidth + settings.openGroupVSpacer))
+        self.setRect(
+            baseX - penWidth + settings.openGroupHSpacer,
+            baseY - penWidth + settings.openGroupVSpacer,
+            groupWidth + 2 * penWidth,
+            self.groupHeight + 2 * (penWidth + settings.openGroupVSpacer),
+        )
         scene.addItem(self)
 
         # Add the connector as a separate scene item to make the selection
@@ -277,10 +272,8 @@ class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
         # otherwise a half of it is hidden by the group.
         if not self.isTerminal:
             xPos = baseX + settings.mainLine
-            xPos += \
-                self.selfAndDeeperNestLevel * (2 * settings.openGroupHSpacer)
-            self.connector = Connector(self.canvas, xPos, baseY, xPos,
-                                       baseY + settings.openGroupVSpacer * 2)
+            xPos += self.selfAndDeeperNestLevel * (2 * settings.openGroupHSpacer)
+            self.connector = Connector(self.canvas, xPos, baseY, xPos, baseY + settings.openGroupVSpacer * 2)
             scene.addItem(self.connector)
 
         # Top left corner control
@@ -289,8 +282,8 @@ class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
 
     def paint(self, painter, option, widget):
         """Draws the collapsed group"""
-        del option      # unused argument
-        del widget      # unused argument
+        del option  # unused argument
+        del widget  # unused argument
 
         settings = self.canvas.settings
         pen = self.getPainterPen(self.isSelected(), self.borderColor)
@@ -316,7 +309,6 @@ class OpenedGroupBegin(GroupItemBase, ColorMixin, QGraphicsRectItem):
 
 
 class OpenedGroupEnd(GroupItemBase):
-
     """Represents the end af a group which can be collapsed"""
 
     def __init__(self, ref, groupBeginCMLRef, canvas, x, y):
@@ -350,27 +342,25 @@ class OpenedGroupEnd(GroupItemBase):
         settings = self.canvas.settings
         xPos = baseX + settings.mainLine
         xPos += self.selfAndDeeperNestLevel * (2 * settings.openGroupHSpacer)
-        self.connector = Connector(self.canvas,
-                                   xPos,
-                                   baseY,
-                                   xPos,
-                                   baseY + settings.openGroupVSpacer * 2)
+        self.connector = Connector(self.canvas, xPos, baseY, xPos, baseY + settings.openGroupVSpacer * 2)
         scene.addItem(self.connector)
 
 
-
 class CollapsedGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
-
     """Represents a collapsed group"""
 
     N_BACK_RECT = 2
 
     def __init__(self, ref, groupBeginCMLRef, canvas, x, y):
         GroupItemBase.__init__(self, groupBeginCMLRef, ref, canvas, x, y)
-        ColorMixin.__init__(self, None, canvas.settings.collapsedGroupBGColor,
-                            canvas.settings.collapsedGroupFGColor,
-                            canvas.settings.collapsedGroupBorderColor,
-                            colorSpec=groupBeginCMLRef)
+        ColorMixin.__init__(
+            self,
+            None,
+            canvas.settings.collapsedGroupBGColor,
+            canvas.settings.collapsedGroupFGColor,
+            canvas.settings.collapsedGroupBorderColor,
+            colorSpec=groupBeginCMLRef,
+        )
         QGraphicsRectItem.__init__(self, canvas.scopeRectangle)
         self.kind = CellElement.COLLAPSED_GROUP
         self.connector = None
@@ -381,16 +371,16 @@ class CollapsedGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
     def render(self):
         """Renders the cell"""
         settings = self.canvas.settings
-        self.setupText(self, customText=self.getTitle(),
-                       customReplacement='')
+        self.setupText(self, customText=self.getTitle(), customReplacement="")
 
-        vPadding = 2 * (settings.vCellPadding + settings.vTextPadding) + \
-                   self.N_BACK_RECT * settings.collapsedGroupYShift
+        vPadding = (
+            2 * (settings.vCellPadding + settings.vTextPadding) + self.N_BACK_RECT * settings.collapsedGroupYShift
+        )
         self.minHeight = self.textRect.height() + vPadding
-        hPadding = 2 * (settings.hCellPadding + settings.hTextPadding) + \
-                   self.N_BACK_RECT * settings.collapsedGroupXShift
-        self.minWidth = max(self.textRect.width() + hPadding,
-                            settings.minWidth)
+        hPadding = (
+            2 * (settings.hCellPadding + settings.hTextPadding) + self.N_BACK_RECT * settings.collapsedGroupXShift
+        )
+        self.minWidth = max(self.textRect.width() + hPadding, settings.minWidth)
         self.height = self.minHeight
         self.width = self.minWidth
         return (self.width, self.height)
@@ -403,41 +393,38 @@ class CollapsedGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
         # Add the connector as a separate scene item to make the selection
         # working properly
         settings = self.canvas.settings
-        self.connector = Connector(self.canvas, baseX + settings.mainLine,
-                                   baseY,
-                                   baseX + settings.mainLine,
-                                   baseY + self.height)
+        self.connector = Connector(
+            self.canvas, baseX + settings.mainLine, baseY, baseX + settings.mainLine, baseY + self.height
+        )
         scene.addItem(self.connector)
 
         # Setting the rectangle is important for the selection and for
         # redrawing. Thus the selection pen with must be considered too.
         penWidth = settings.selectPenWidth - 1
-        self.setRect(baseX + settings.hCellPadding - penWidth,
-                     baseY + settings.vCellPadding - penWidth,
-                     self.minWidth - 2 * settings.hCellPadding + 2 * penWidth,
-                     self.minHeight - 2 * settings.vCellPadding + 2 * penWidth)
+        self.setRect(
+            baseX + settings.hCellPadding - penWidth,
+            baseY + settings.vCellPadding - penWidth,
+            self.minWidth - 2 * settings.hCellPadding + 2 * penWidth,
+            self.minHeight - 2 * settings.vCellPadding + 2 * penWidth,
+        )
         scene.addItem(self)
 
     def paint(self, painter, option, widget):
         """Draws the collapsed group"""
-        del option      # unused argument
-        del widget      # unused argument
+        del option  # unused argument
+        del widget  # unused argument
 
         settings = self.canvas.settings
         painter.setPen(self.getPainterPen(self.isSelected(), self.borderColor))
         painter.setBrush(QBrush(self.bgColor))
 
         # Outer rectangle
-        rectWidth = self.minWidth - 2 * settings.hCellPadding - \
-                    self.N_BACK_RECT * settings.collapsedGroupXShift
-        rectHeight = self.minHeight - 2 * settings.vCellPadding - \
-                     self.N_BACK_RECT * settings.collapsedGroupYShift
+        rectWidth = self.minWidth - 2 * settings.hCellPadding - self.N_BACK_RECT * settings.collapsedGroupXShift
+        rectHeight = self.minHeight - 2 * settings.vCellPadding - self.N_BACK_RECT * settings.collapsedGroupYShift
 
         for rectNum in range(self.N_BACK_RECT, -1, -1):
-            xPos = self.baseX + settings.hCellPadding + \
-                   rectNum * settings.collapsedGroupXShift
-            yPos = self.baseY + settings.vCellPadding + \
-                   (self.N_BACK_RECT - rectNum) * settings.collapsedGroupYShift
+            xPos = self.baseX + settings.hCellPadding + rectNum * settings.collapsedGroupXShift
+            yPos = self.baseY + settings.vCellPadding + (self.N_BACK_RECT - rectNum) * settings.collapsedGroupYShift
             rect = QRectF(xPos, yPos, rectWidth, rectHeight)
             painter.drawRect(rect)
 
@@ -449,19 +436,18 @@ class CollapsedGroup(GroupItemBase, ColorMixin, QGraphicsRectItem):
         textWidth = self.textRect.width() + 2 * settings.hTextPadding
         textShift = (rectWidth - textWidth) / 2
         textRect = QRectF(
-            self.baseX + settings.hCellPadding +
-            settings.hTextPadding + textShift,
-            self.baseY + settings.vCellPadding + settings.vTextPadding +
-            self.N_BACK_RECT * settings.collapsedGroupYShift,
+            self.baseX + settings.hCellPadding + settings.hTextPadding + textShift,
+            self.baseY
+            + settings.vCellPadding
+            + settings.vTextPadding
+            + self.N_BACK_RECT * settings.collapsedGroupYShift,
             self.textRect.width(),
             self.textRect.height(),
         )
         painter.drawText(textRect, Qt.AlignLeft, self.text)
 
 
-
 class GroupCornerControl(CellElement, QGraphicsRectItem):
-
     """Expanded group top left corner control"""
 
     def __init__(self, ref):
@@ -482,10 +468,10 @@ class GroupCornerControl(CellElement, QGraphicsRectItem):
         # This is a mistery. I do not understand why I need to divide by 2.0
         # however this works. I tried various combinations of initialization,
         # setting the position and mapping. Nothing works but ../2.0. Sick!
-        self.setPos((float(xPos) + settings.openGroupHSpacer - 1) / 2.0,
-                    (float(yPos) + settings.openGroupVSpacer - 1) / 2.0)
-        self.setRect(self.x(), self.y(),
-                     self.__width, self.__height)
+        self.setPos(
+            (float(xPos) + settings.openGroupHSpacer - 1) / 2.0, (float(yPos) + settings.openGroupVSpacer - 1) / 2.0
+        )
+        self.setRect(self.x(), self.y(), self.__width, self.__height)
 
     def paint(self, painter, option, widget):
         """Paints the control"""
@@ -530,17 +516,13 @@ class GroupCornerControl(CellElement, QGraphicsRectItem):
         return self.ref.getAbsPosRange()
 
 
-
 class GroupTitlePopup(QFrame):
-
     """Frameless panel to show the group title"""
 
     def __init__(self, parent):
         QFrame.__init__(self, parent)
 
-        self.setWindowFlags(Qt.SplashScreen |
-                            Qt.WindowStaysOnTopHint |
-                            Qt.X11BypassWindowManagerHint)
+        self.setWindowFlags(Qt.SplashScreen | Qt.WindowStaysOnTopHint | Qt.X11BypassWindowManagerHint)
 
         self.setFrameShape(QFrame.StyledPanel)
         self.setLineWidth(1)
@@ -556,7 +538,7 @@ class GroupTitlePopup(QFrame):
         self.__titleLabel = QLabel()
         self.__titleLabel.setAutoFillBackground(True)
         self.__titleLabel.setFrameShape(QFrame.StyledPanel)
-        self.__titleLabel.setStyleSheet('padding: 2px')
+        self.__titleLabel.setStyleSheet("padding: 2px")
         verticalLayout.addWidget(self.__titleLabel)
 
     def setTitleForGroup(self, group):
@@ -596,6 +578,6 @@ class GroupTitlePopup(QFrame):
         QApplication.processEvents()
         self.resize(controlItem)
 
+
 # One instance use for all
 groupTitlePopup = GroupTitlePopup(None)
-

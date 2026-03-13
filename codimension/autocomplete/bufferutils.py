@@ -24,7 +24,7 @@ import time
 
 from cdmpyparser import getBriefModuleInfoFromMemory
 
-WORD_PATTERN = r'\w+'
+WORD_PATTERN = r"\w+"
 WORD_REGEXP = re.compile(WORD_PATTERN)
 EDITOR_TAG_TIMEOUT = 0.5
 
@@ -56,13 +56,12 @@ def getEditorTags(editor, exclude=None, excludePythonKeywords=False):
 
     # If a cursor is in a middle of the word then the current word is not what
     # you need.
-    if editor.getWordAfterCursor() == '':
+    if editor.getWordAfterCursor() == "":
         result.discard(editor.getWordBeforeCursor())
     return result
 
 
 class TextCursorContext:
-
     """Holds the text cursor context for a python file"""
 
     GlobalScope = 1
@@ -71,7 +70,7 @@ class TextCursorContext:
     ClassMethodScope = 4
 
     def __init__(self):
-        self.levels = []    # Each item is [infoObj, scope type]
+        self.levels = []  # Each item is [infoObj, scope type]
         self.length = 0
 
     def addFunction(self, infoObj):
@@ -126,8 +125,7 @@ class TextCursorContext:
                 first = False
             else:
                 retval += " -> "
-            retval += self.__scopeToString(level[1]) + \
-                ":" + level[0].name + ":" + str(level[0].line)
+            retval += self.__scopeToString(level[1]) + ":" + level[0].name + ":" + str(level[0].line)
         return retval
 
     def getLastScopeLine(self):
@@ -173,18 +171,14 @@ def _IdentifyScope(infoObject, context, cursorLine, cursorPos, skipDef):
         if skipDef:
             if onDef:
                 return
-            if func.line > nearestClassLine and \
-               func.line > nearestFuncLine and \
-               func.line <= cursorLine:
+            if func.line > nearestClassLine and func.line > nearestFuncLine and func.line <= cursorLine:
                 nearestFuncLine = func.line
                 nearestFuncInfo = func
         else:
             if onDef:
                 context.addFunction(func)
                 return
-            if func.line > nearestClassLine and \
-               func.line > nearestFuncLine and \
-               func.line <= cursorLine:
+            if func.line > nearestClassLine and func.line > nearestFuncLine and func.line <= cursorLine:
                 nearestFuncLine = func.line
                 nearestFuncInfo = func
 
@@ -195,24 +189,21 @@ def _IdentifyScope(infoObject, context, cursorLine, cursorPos, skipDef):
     # Check nested objects
     if nearestClassLine > nearestFuncLine:
         context.addClass(nearestClassInfo)
-        _IdentifyScope(nearestClassInfo, context,
-                       cursorLine, cursorPos, skipDef)
+        _IdentifyScope(nearestClassInfo, context, cursorLine, cursorPos, skipDef)
     else:
         context.addFunction(nearestFuncInfo)
-        _IdentifyScope(nearestFuncInfo, context,
-                       cursorLine, cursorPos, skipDef)
+        _IdentifyScope(nearestFuncInfo, context, cursorLine, cursorPos, skipDef)
 
 
 def _getFirstNonSpacePos(text):
     """Provides the index of the first non-space character in the given line"""
     for pos in range(len(text)):
-        if text[pos] not in [' ', '\n', '\r']:
+        if text[pos] not in [" ", "\n", "\r"]:
             return pos
     return -1
 
 
-def getContext(editor, info=None,
-               skipBlankLinesBack=False, skipDef=True):
+def getContext(editor, info=None, skipBlankLinesBack=False, skipDef=True):
     """Detects the context at the text cursor position.
 
     skipBlankLinesBack == False => current cursor position is used
@@ -259,8 +250,7 @@ def getContext(editor, info=None,
 
     continueLine = False
     currentLine = context.getLastScopeLine() + 1
-    for currentLine in range(context.getLastScopeLine(),
-                             len(editor.lines)):
+    for currentLine in range(context.getLastScopeLine(), len(editor.lines)):
         if currentLine == line:
             break
 
@@ -277,8 +267,11 @@ def getContext(editor, info=None,
             if context.length == 0:
                 return context
 
-        if trimmedText.endswith(",") or trimmedText.endswith('\\') or \
-           (textLen > 0 and editor.isStringLiteral(currentLine, textLen - 1)):
+        if (
+            trimmedText.endswith(",")
+            or trimmedText.endswith("\\")
+            or (textLen > 0 and editor.isStringLiteral(currentLine, textLen - 1))
+        ):
             continueLine = True
         else:
             continueLine = False
@@ -351,7 +344,8 @@ def getItemForDisplayPath(info, displayPath):
         InstanceAttributesItemType,
         StaticAttributesItemType,
     )
-    for (itemType, pathItem) in displayPath:
+
+    for itemType, pathItem in displayPath:
         if itemType == ClassesItemType:
             info = info.classes
         elif itemType == FunctionsItemType:

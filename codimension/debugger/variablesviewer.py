@@ -19,7 +19,6 @@
 
 """Variables viewer"""
 
-
 from ui.combobox import CDMComboBox
 from ui.labels import HeaderFitLabel
 from ui.qt import QGridLayout, QMenu, QPushButton, QSize, QSizePolicy, Qt, QToolBar, QToolButton, QVBoxLayout, QWidget
@@ -32,7 +31,6 @@ from .variablesbrowser import VariablesBrowser
 
 
 class VariablesViewer(QWidget):
-
     """Implements the variables viewer for a debugger"""
 
     # First group of filters
@@ -59,14 +57,13 @@ class VariablesViewer(QWidget):
         verticalLayout.setSpacing(0)
 
         self.__headerLabel = HeaderFitLabel(self)
-        self.__headerLabel.setText('Variables')
-        self.__headerLabel.setSizePolicy(QSizePolicy.Expanding,
-                                         QSizePolicy.Fixed)
+        self.__headerLabel.setText("Variables")
+        self.__headerLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.__headerLabel.setMinimumWidth(10)
 
         self.__filterMenu = QMenu(self)
-        self.__showAllAct =  self.__filterMenu.addAction('Show all variables')
-        self.__showAllAct.setData('showall')
+        self.__showAllAct = self.__filterMenu.addAction("Show all variables")
+        self.__showAllAct.setData("showall")
         self.__filterMenu.addSeparator()
         self.__filters = []
         for title, settingName, _ in VARIABLE_FILTERS:
@@ -78,22 +75,18 @@ class VariablesViewer(QWidget):
         self.__filterMenu.triggered.connect(self.__filterMenuTriggered)
 
         self.__filterButton = QToolButton(self)
-        self.__filterButton.setIcon(getIcon('dbgvarflt.png'))
-        self.__filterButton.setToolTip('Variable filter')
+        self.__filterButton.setIcon(getIcon("dbgvarflt.png"))
+        self.__filterButton.setToolTip("Variable filter")
         self.__filterButton.setPopupMode(QToolButton.InstantPopup)
         self.__filterButton.setMenu(self.__filterMenu)
         self.__filterButton.setFocusPolicy(Qt.NoFocus)
-        self.__filterButton.setFixedSize(self.__headerLabel.height(),
-                                         self.__headerLabel.height())
+        self.__filterButton.setFixedSize(self.__headerLabel.height(), self.__headerLabel.height())
 
         self.__execStatement = CDMComboBox(True)
-        self.__execStatement.setSizePolicy(QSizePolicy.Expanding,
-                                           QSizePolicy.Expanding)
-        self.__execStatement.lineEdit().setToolTip(
-            "Execute statement")
+        self.__execStatement.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.__execStatement.lineEdit().setToolTip("Execute statement")
         self.__execStatement.setFixedHeight(26)
-        self.__execStatement.editTextChanged.connect(
-            self.__execStatementChanged)
+        self.__execStatement.editTextChanged.connect(self.__execStatementChanged)
         self.__execStatement.enterClicked.connect(self.__onEnterInExec)
         self.__execButton = QPushButton("Exec")
         self.__execButton.setEnabled(False)
@@ -124,7 +117,7 @@ class VariablesViewer(QWidget):
     def __filterMenuTriggered(self, act):
         """A filter has been changed"""
         name = act.data()
-        if name == 'showall':
+        if name == "showall":
             for _, settingName, _ in VARIABLE_FILTERS:
                 Settings()[settingName] = True
         else:
@@ -147,8 +140,7 @@ class VariablesViewer(QWidget):
         if shown == 0 and total == 0:
             self.__headerLabel.setText("Variables")
         else:
-            self.__headerLabel.setText("Variables (" + str(shown) +
-                                       " of " + str(total) + ")")
+            self.__headerLabel.setText("Variables (" + str(shown) + " of " + str(total) + ")")
 
     def __updateFilter(self):
         """Updates the current filter"""

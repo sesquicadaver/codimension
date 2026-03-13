@@ -28,7 +28,6 @@ from .qt import QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QSizePolicy, Qt,
 
 
 class AboutDialog(QDialog):
-
     """Codimension about dialog"""
 
     def __init__(self, parent=None):
@@ -48,13 +47,10 @@ class AboutDialog(QDialog):
         iconLabel.setScaledContents(False)
         hboxLayout.addWidget(iconLabel)
         versionLabel = QLabel(
-            "<b>Codimension IDE version " +
-            str(GlobalData().version) + "<br>"
-            "CML version " +
-            str(CMLVersion.VERSION) +
-            "</b><p>Copyright (c) Sergey Satskiy 2010-2019</p>")
-        versionLabel.setSizePolicy(QSizePolicy.Expanding,
-                                   QSizePolicy.Expanding)
+            "<b>Codimension IDE version " + str(GlobalData().version) + "<br>"
+            "CML version " + str(CMLVersion.VERSION) + "</b><p>Copyright (c) Sergey Satskiy 2010-2019</p>"
+        )
+        versionLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         versionLabel.setFixedHeight(versionLabel.minimumSizeHint().height())
         versionLabel.setAlignment(Qt.AlignCenter)
         hboxLayout.addWidget(versionLabel)
@@ -111,49 +107,48 @@ Codimension home page</a>.<br> Happy coding with Codimension!
     def __createVersioning():
         """Creates the versioning section"""
         components = getComponentInfo()
-        text = '<p>The major Codimension components are listed below:</p><ul>'
-        for (prettyName, version, homeURL,
-             patched, licenseName, licenseLink, localPath) in components:
+        text = "<p>The major Codimension components are listed below:</p><ul>"
+        for prettyName, version, homeURL, patched, licenseName, licenseLink, localPath in components:
             if homeURL is not None:
-                text += "<li><a href='" + homeURL + "'>" + \
-                        prettyName + "</a><br/>Version: "
+                text += "<li><a href='" + homeURL + "'>" + prettyName + "</a><br/>Version: "
             else:
-                text += '<li>' + prettyName + '<br/>Version: '
+                text += "<li>" + prettyName + "<br/>Version: "
 
             needRest = False
             if version is None:
-                text += 'not installed'
-            elif version == '':
-                text += 'n/a'
-            elif version.lower() == 'not installed':
-                text += 'not installed'
+                text += "not installed"
+            elif version == "":
+                text += "n/a"
+            elif version.lower() == "not installed":
+                text += "not installed"
             else:
                 text += str(version)
                 needRest = True
 
             if needRest:
                 if patched:
-                    text += ' (patched for codimension)'
+                    text += " (patched for codimension)"
 
                 if licenseLink is not None and licenseName is not None:
-                    text += '<br/>'
-                    text += 'License: '
-                    if licenseLink.startswith('http'):
-                        text += "<a href='" + licenseLink + "'>" + \
-                                licenseName + "</a>"
+                    text += "<br/>"
+                    text += "License: "
+                    if licenseLink.startswith("http"):
+                        text += "<a href='" + licenseLink + "'>" + licenseName + "</a>"
                     else:
-                        text += licenseName + ' (' + licenseLink + ')'
+                        text += licenseName + " (" + licenseLink + ")"
 
                 if localPath:
-                    text += '<br/>Local path: ' + localPath
+                    text += "<br/>Local path: " + localPath
 
-            text += '<br/></li>'
-        text += '<li>Some icons (svg and png) are made by ' \
-                '<a href="https://www.flaticon.com/authors/dave-gandy">' \
-                'Dave Gandy</a> from ' \
-                '<a href="https://www.flaticon.com/">www.flaticon.com</a>' \
-                '<br/></li>'
-        text += '</ul>'
+            text += "<br/></li>"
+        text += (
+            "<li>Some icons (svg and png) are made by "
+            '<a href="https://www.flaticon.com/authors/dave-gandy">'
+            "Dave Gandy</a> from "
+            '<a href="https://www.flaticon.com/">www.flaticon.com</a>'
+            "<br/></li>"
+        )
+        text += "</ul>"
         browser = QTextBrowser()
         browser.setHtml(text)
         browser.setOpenExternalLinks(True)
@@ -161,23 +156,21 @@ Codimension home page</a>.<br> Happy coding with Codimension!
 
     def __createAuthors(self):
         """Creates the authors section"""
-        addr1 = "<a href='mailto:sergey.satskiy@gmail.com'>" \
-                "sergey.satskiy@gmail.com</a>"
+        addr1 = "<a href='mailto:sergey.satskiy@gmail.com'>sergey.satskiy@gmail.com</a>"
         addr2 = "<a href='mailto:isloginov@gmail.com'>isloginov@gmail.com</a>"
         addr3 = "<a href='mailto:him@revl.org'>him@revl.org</a>"
         addr4 = "<a href='mailto:david@dm9606.com'>david@dm9606.com</a>"
         addr5 = "<a href='mailto:fukanchik@gmail.com'>fukanchik@gmail.com</a>"
-        text = "<p>Author: Sergey Satskiy &lt;" + addr1 + "&gt;</p>" \
-               "<p>Packaging and CI (travis): Sergey Fukanchik &lt;" + \
-               addr5 + "&gt;</p>" \
-               "<p>Packaging: Ilya Loginov &lt;" + addr2 + "&gt;</p>" \
-               "<p>Discussions, ideas, testing: David McElhany &lt;" + \
-               addr4 + "&gt;</p>" \
-               "<p>Initial packaging and logo: Dmitry Kazimirov &lt;" + \
-               addr3 + "&gt;</p>" \
-               "<p align='justify'>Special thanks: Detlev Offenbach - " \
-               "the author of the Eric Python IDE." \
-               " Codimension borrows some code and some ideas from Eric 4.</p>"
+        text = (
+            "<p>Author: Sergey Satskiy &lt;" + addr1 + "&gt;</p>"
+            "<p>Packaging and CI (travis): Sergey Fukanchik &lt;" + addr5 + "&gt;</p>"
+            "<p>Packaging: Ilya Loginov &lt;" + addr2 + "&gt;</p>"
+            "<p>Discussions, ideas, testing: David McElhany &lt;" + addr4 + "&gt;</p>"
+            "<p>Initial packaging and logo: Dmitry Kazimirov &lt;" + addr3 + "&gt;</p>"
+            "<p align='justify'>Special thanks: Detlev Offenbach - "
+            "the author of the Eric Python IDE."
+            " Codimension borrows some code and some ideas from Eric 4.</p>"
+        )
         browser = QTextBrowser()
         browser.setHtml(text)
         browser.setOpenExternalLinks(True)

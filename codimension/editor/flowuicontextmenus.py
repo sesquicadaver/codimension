@@ -19,7 +19,6 @@
 
 """Sets up and handles the flow UI context menus"""
 
-
 import logging
 import os.path
 import uuid
@@ -42,7 +41,6 @@ from .flowuireplacetextdlg import ReplaceTextDialog
 
 
 class CFSceneContextMenuMixin:
-
     """Encapsulates the context menu handling"""
 
     def __init__(self):
@@ -51,44 +49,33 @@ class CFSceneContextMenuMixin:
 
         # Scene menu preparation
         self.sceneMenu = QMenu()
-        self.sceneMenu.addAction(getIcon('filesvg.png'), 'Save as SVG...',
-                                 self.parent().onSaveAsSVG)
-        self.sceneMenu.addAction(getIcon('filepdf.png'), 'Save as PDF...',
-                                 self.parent().onSaveAsPDF)
-        self.sceneMenu.addAction(getIcon('filepixmap.png'), 'Save as PNG...',
-                                 self.parent().onSaveAsPNG)
+        self.sceneMenu.addAction(getIcon("filesvg.png"), "Save as SVG...", self.parent().onSaveAsSVG)
+        self.sceneMenu.addAction(getIcon("filepdf.png"), "Save as PDF...", self.parent().onSaveAsPDF)
+        self.sceneMenu.addAction(getIcon("filepixmap.png"), "Save as PNG...", self.parent().onSaveAsPNG)
         self.sceneMenu.addSeparator()
-        self.sceneMenu.addAction(getIcon('copymenu.png'),
-                                 'Copy image to clipboard',
-                                 self.parent().copyToClipboard)
+        self.sceneMenu.addAction(getIcon("copymenu.png"), "Copy image to clipboard", self.parent().copyToClipboard)
 
         # Common menu for all the individually selected items
         self.commonMenu = QMenu()
-        self.__ccSubmenuAction = self.commonMenu.addMenu(
-            self.__initCustomColorsContextMenu())
-        self.__rtSubmenuAction = self.commonMenu.addMenu(
-            self.__initReplaceTextContextMenu())
-        self.__docSubmenuAction = self.commonMenu.addMenu(
-            self.__initDocContextMenu())
-        self.__groupAction = self.commonMenu.addAction(
-            getIcon("cfgroup.png"), "Group...", self.onGroup)
+        self.__ccSubmenuAction = self.commonMenu.addMenu(self.__initCustomColorsContextMenu())
+        self.__rtSubmenuAction = self.commonMenu.addMenu(self.__initReplaceTextContextMenu())
+        self.__docSubmenuAction = self.commonMenu.addMenu(self.__initDocContextMenu())
+        self.__groupAction = self.commonMenu.addAction(getIcon("cfgroup.png"), "Group...", self.onGroup)
 
-        #self.commonMenu.addSeparator()
-        #self.__cutAction = self.commonMenu.addAction(
+        # self.commonMenu.addSeparator()
+        # self.__cutAction = self.commonMenu.addAction(
         #    getIcon("cutmenu.png"), "Cut (specific for graphics pane)",
         #    self.onCut)
-        #self.__copyAction = self.commonMenu.addAction(
+        # self.__copyAction = self.commonMenu.addAction(
         #    getIcon("copymenu.png"), "Copy (specific for graphics pane)",
         #    self.onCopy)
-        #self.commonMenu.addSeparator()
-        #self.commonMenu.addAction(
+        # self.commonMenu.addSeparator()
+        # self.commonMenu.addAction(
         #    getIcon("trash.png"), "Delete", self.onDelete)
 
         # Individual items specific menu: begin
         ifContextMenu = QMenu()
-        ifContextMenu.addAction(
-            getIcon("switchbranches.png"), "Switch branch layout",
-            self.onSwitchIfBranch)
+        ifContextMenu.addAction(getIcon("switchbranches.png"), "Switch branch layout", self.onSwitchIfBranch)
 
         self.individualMenus[IfCell] = ifContextMenu
         self.individualMenus[OpenedGroupBegin] = self.__initOpenGroupContextMenu()
@@ -125,45 +112,44 @@ class CFSceneContextMenuMixin:
 
     def __initCustomColorsContextMenu(self):
         """Create the custom colors submenu"""
-        self.__customColorsSubmenu = QMenu('Custom colors')
-        self.__customColorsSubmenu.setIcon(getIcon('customcolorsmenu.png'))
+        self.__customColorsSubmenu = QMenu("Custom colors")
+        self.__customColorsSubmenu.setIcon(getIcon("customcolorsmenu.png"))
         self.__ccAction = self.__customColorsSubmenu.addAction(
-            getIcon("customcolors.png"), "Custom colors...",
-            self.onCustomColors)
+            getIcon("customcolors.png"), "Custom colors...", self.onCustomColors
+        )
         self.__customColorsSubmenu.addSeparator()
         self.__removeCCAction = self.__customColorsSubmenu.addAction(
-            getIcon('trash.png'), 'Remove custom colors',
-            self.onRemoveCustomColors)
+            getIcon("trash.png"), "Remove custom colors", self.onRemoveCustomColors
+        )
         return self.__customColorsSubmenu
 
     def __initReplaceTextContextMenu(self):
         """Create the Replace text submenu"""
-        self.__replaceTextSubmenu = QMenu('Replace text')
-        self.__replaceTextSubmenu.setIcon(getIcon('replacetextmenu.png'))
+        self.__replaceTextSubmenu = QMenu("Replace text")
+        self.__replaceTextSubmenu.setIcon(getIcon("replacetextmenu.png"))
         self.__rtAction = self.__replaceTextSubmenu.addAction(
-            getIcon("replacetitle.png"), "Replace text...",
-            self.onReplaceText)
+            getIcon("replacetitle.png"), "Replace text...", self.onReplaceText
+        )
         self.__replaceTextSubmenu.addSeparator()
         self.__removeRTAction = self.__replaceTextSubmenu.addAction(
-            getIcon('trash.png'), 'Remove replacement text',
-            self.onRemoveReplacementText)
+            getIcon("trash.png"), "Remove replacement text", self.onRemoveReplacementText
+        )
         return self.__replaceTextSubmenu
 
     def __initDocContextMenu(self):
         """Create the Documentation submenu"""
-        self.__docSubmenu = QMenu('Documentation')
-        self.__docSubmenu.setIcon(getIcon('markdown.png'))
+        self.__docSubmenu = QMenu("Documentation")
+        self.__docSubmenu.setIcon(getIcon("markdown.png"))
         self.__editDocAction = self.__docSubmenu.addAction(
-            getIcon('replacetitle.png'), 'Add/edit doc link/anchor...',
-            self.onEditDoc)
+            getIcon("replacetitle.png"), "Add/edit doc link/anchor...", self.onEditDoc
+        )
         self.__autoDocActon = self.__docSubmenu.addAction(
-            getIcon('createdoc.png'),
-            'Create doc file, add link and open for editing',
-            self.onAutoAddDoc)
+            getIcon("createdoc.png"), "Create doc file, add link and open for editing", self.onAutoAddDoc
+        )
         self.__docSubmenu.addSeparator()
         self.__removeDocAction = self.__docSubmenu.addAction(
-            getIcon('trash.png'), 'Remove doc link/anchor',
-            self.onRemoveDoc)
+            getIcon("trash.png"), "Remove doc link/anchor", self.onRemoveDoc
+        )
         return self.__docSubmenu
 
     def onContextMenu(self, event):
@@ -223,12 +209,11 @@ class CFSceneContextMenuMixin:
         totalComments = self.countComments()
         hasComment = totalComments > 0
         hasDocstring = self.isDocstringInSelection()
-        hasMinimizedExcepts = self.isInSelected([(CellElement.SCOPE_EXCEPT_BADGE,
-                                                  None)])
+        hasMinimizedExcepts = self.isInSelected([(CellElement.SCOPE_EXCEPT_BADGE, None)])
         # Doc links are considered comments as well
-        totalDocLinks = self.countInSelected([(CellElement.INDEPENDENT_DOC, None),
-                                              (CellElement.LEADING_DOC, None),
-                                              (CellElement.ABOVE_DOC, None)])
+        totalDocLinks = self.countInSelected(
+            [(CellElement.INDEPENDENT_DOC, None), (CellElement.LEADING_DOC, None), (CellElement.ABOVE_DOC, None)]
+        )
         totalNonDocComments = totalComments - totalDocLinks
 
         totalGroups = sum(self.countGroups())
@@ -237,30 +222,21 @@ class CFSceneContextMenuMixin:
         totalCCDocs = self.countDocWithCustomColors()
         minimizedCount = self.countMinimizedItems()
 
-        self.__ccAction.setEnabled(totalNonDocComments == 0 and
-                                   not hasMinimizedExcepts)
-        self.__removeCCAction.setEnabled(
-            self.countItemsWithCML(CMLcc) + totalCCGroups + totalCCDocs == count)
-        self.__customColorsSubmenu.setEnabled(self.__ccAction.isEnabled() or
-                                              self.__removeCCAction.isEnabled())
+        self.__ccAction.setEnabled(totalNonDocComments == 0 and not hasMinimizedExcepts)
+        self.__removeCCAction.setEnabled(self.countItemsWithCML(CMLcc) + totalCCGroups + totalCCDocs == count)
+        self.__customColorsSubmenu.setEnabled(self.__ccAction.isEnabled() or self.__removeCCAction.isEnabled())
 
-        self.__rtAction.setEnabled(not hasComment and
-                                   not hasDocstring and
-                                   not hasMinimizedExcepts and
-                                   totalDocLinks == 0 and
-                                   totalGroups == 0)
-        self.__removeRTAction.setEnabled(
-            self.countItemsWithCML(CMLrt) == count)
-        self.__replaceTextSubmenu.setEnabled(self.__rtAction.isEnabled() or
-                                             self.__removeRTAction.isEnabled())
+        self.__rtAction.setEnabled(
+            not hasComment and not hasDocstring and not hasMinimizedExcepts and totalDocLinks == 0 and totalGroups == 0
+        )
+        self.__removeRTAction.setEnabled(self.countItemsWithCML(CMLrt) == count)
+        self.__replaceTextSubmenu.setEnabled(self.__rtAction.isEnabled() or self.__removeRTAction.isEnabled())
 
         self.__groupAction.setEnabled(self.__canBeGrouped())
 
         itemsWithDocCML = self.countItemsWithCML(CMLdoc)
-        self.__removeDocAction.setEnabled(
-            totalDocLinks + itemsWithDocCML == count)
-        if count != 1 or totalNonDocComments != 0 or hasDocstring or \
-                totalGroups != 0 or minimizedCount > 0:
+        self.__removeDocAction.setEnabled(totalDocLinks + itemsWithDocCML == count)
+        if count != 1 or totalNonDocComments != 0 or hasDocstring or totalGroups != 0 or minimizedCount > 0:
             self.__editDocAction.setEnabled(False)
             self.__autoDocActon.setEnabled(False)
         else:
@@ -269,14 +245,13 @@ class CFSceneContextMenuMixin:
             editor = self.selectedItems()[0].getEditor()
             if editor:
                 fileName = editor._parent.getFileName()
-            self.__autoDocActon.setEnabled(
-                fileName is not None and totalDocLinks + itemsWithDocCML == 0)
-        self.__docSubmenu.setEnabled(self.__removeDocAction.isEnabled() or
-                                     self.__editDocAction.isEnabled() or
-                                     self.__autoDocActon.isEnabled())
+            self.__autoDocActon.setEnabled(fileName is not None and totalDocLinks + itemsWithDocCML == 0)
+        self.__docSubmenu.setEnabled(
+            self.__removeDocAction.isEnabled() or self.__editDocAction.isEnabled() or self.__autoDocActon.isEnabled()
+        )
 
-        #self.__cutAction.setEnabled(count == 1)
-        #self.__copyAction.setEnabled(count == 1)
+        # self.__cutAction.setEnabled(count == 1)
+        # self.__copyAction.setEnabled(count == 1)
 
     def __actionPrerequisites(self):
         """True if an editor related action can be done"""
@@ -301,8 +276,7 @@ class CFSceneContextMenuMixin:
         with editor:
             for item in self.sortSelectedReverse():
                 if item.kind == CellElement.IF:
-                    cmlComment = CMLVersion.find(item.ref.leadingCMLComments,
-                                                 CMLsw)
+                    cmlComment = CMLVersion.find(item.ref.leadingCMLComments, CMLsw)
                     if cmlComment is None:
                         # Did not exist, so needs to be generated
                         line = CMLsw.generate(item.ref.body.beginPos)
@@ -340,26 +314,19 @@ class CFSceneContextMenuMixin:
                 for item in self.selectedItems():
                     if item.isCMLDoc():
                         # The doc always exists so just add/change the colors
-                        item.cmlRef.updateCustomColors(editor, bgcolor,
-                                                       fgcolor, bordercolor)
+                        item.cmlRef.updateCustomColors(editor, bgcolor, fgcolor, bordercolor)
                         continue
                     if item.isGroupItem():
                         # The group always exists so just add/change the colors
-                        item.groupBeginCMLRef.updateCustomColors(editor,
-                                                                 bgcolor,
-                                                                 fgcolor,
-                                                                 bordercolor)
+                        item.groupBeginCMLRef.updateCustomColors(editor, bgcolor, fgcolor, bordercolor)
 
                 for item in self.sortSelectedReverse():
                     if item.isCMLDoc() or item.isGroupItem():
                         continue
                     if item.isDocstring():
-                        cmlComment = CMLVersion.find(
-                            item.ref.docstring.leadingCMLComments,
-                            CMLcc)
+                        cmlComment = CMLVersion.find(item.ref.docstring.leadingCMLComments, CMLcc)
                     else:
-                        cmlComment = CMLVersion.find(
-                            item.ref.leadingCMLComments, CMLcc)
+                        cmlComment = CMLVersion.find(item.ref.leadingCMLComments, CMLcc)
                     if cmlComment is not None:
                         # Existed, so remove the old one first
                         lineNo = cmlComment.ref.beginLine
@@ -384,15 +351,14 @@ class CFSceneContextMenuMixin:
         # Memorize the current selection
         selection = self.serializeSelection()
 
-        dlg = ReplaceTextDialog('Replace text', 'Item caption:', self.parent())
+        dlg = ReplaceTextDialog("Replace text", "Item caption:", self.parent())
 
         # If it was one item selection and there was a previous text then
         # set it for editing
         previousText = None
         if len(self.selectedItems()) == 1:
-            previousText = ''
-            cmlComment = CMLVersion.find(
-                self.selectedItems()[0].ref.leadingCMLComments, CMLrt)
+            previousText = ""
+            cmlComment = CMLVersion.find(self.selectedItems()[0].ref.leadingCMLComments, CMLrt)
             if cmlComment is not None:
                 previousText = cmlComment.getText()
                 dlg.setText(previousText)
@@ -405,8 +371,7 @@ class CFSceneContextMenuMixin:
             editor = self.selectedItems()[0].getEditor()
             with editor:
                 for item in self.sortSelectedReverse():
-                    cmlComment = CMLVersion.find(
-                        item.ref.leadingCMLComments, CMLrt)
+                    cmlComment = CMLVersion.find(item.ref.leadingCMLComments, CMLrt)
                     if cmlComment is not None:
                         # Existed, so remove the old one first
                         lineNo = cmlComment.ref.beginLine
@@ -414,8 +379,7 @@ class CFSceneContextMenuMixin:
                     else:
                         lineNo = item.getFirstLine()
 
-                    line = CMLrt.generate(replacementText,
-                                          item.ref.body.beginPos)
+                    line = CMLrt.generate(replacementText, item.ref.body.beginPos)
                     editor.insertLines(line, lineNo)
             QApplication.processEvents()
             self.parent().redrawNow()
@@ -465,7 +429,7 @@ class CFSceneContextMenuMixin:
         # Memorize the current selection
         selection = self.serializeSelection()
 
-        dlg = ReplaceTextDialog('Group title', 'Group title:', self.parent())
+        dlg = ReplaceTextDialog("Group title", "Group title:", self.parent())
 
         # If it was one item selection and there was a previous text then
         # set it for editing
@@ -508,7 +472,7 @@ class CFSceneContextMenuMixin:
 
     def onGroup(self):
         """Groups items into a single one"""
-        dlg = ReplaceTextDialog('Group title', 'Group title:', self.parent())
+        dlg = ReplaceTextDialog("Group title", "Group title:", self.parent())
 
         if dlg.exec_():
             groupTitle = dlg.text()
@@ -519,8 +483,7 @@ class CFSceneContextMenuMixin:
             firstLine, lastLine, pos = self.__getLineRange(selected)
 
             groupid = self.parent().generateNewGroupId()
-            beginComment = CMLgb.generate(groupid, groupTitle,
-                                          None, None, None, pos)
+            beginComment = CMLgb.generate(groupid, groupTitle, None, None, None, pos)
             endComment = CMLge.generate(groupid, pos)
 
             with editor:
@@ -541,7 +504,7 @@ class CFSceneContextMenuMixin:
         selectedItems = self.selectedItems()
         if selectedItems:
             if len(selectedItems) > 1:
-                print('Copying multiple items has not been implemented yet')
+                print("Copying multiple items has not been implemented yet")
                 return
             selectedItems[0].copyToClipboard()
 
@@ -577,11 +540,9 @@ class CFSceneContextMenuMixin:
                 if item.isCMLDoc() or item.isGroupItem():
                     continue
                 if item.isDocstring():
-                    cmlComment = CMLVersion.find(
-                        item.ref.docstring.leadingCMLComments, CMLcc)
+                    cmlComment = CMLVersion.find(item.ref.docstring.leadingCMLComments, CMLcc)
                 else:
-                    cmlComment = CMLVersion.find(
-                        item.ref.leadingCMLComments, CMLcc)
+                    cmlComment = CMLVersion.find(item.ref.leadingCMLComments, CMLcc)
                 if cmlComment is not None:
                     cmlComment.removeFromText(editor)
         QApplication.processEvents()
@@ -597,8 +558,7 @@ class CFSceneContextMenuMixin:
             editor = self.selectedItems()[0].getEditor()
             with editor:
                 for item in self.sortSelectedReverse():
-                    cmlComment = CMLVersion.find(item.ref.leadingCMLComments,
-                                                 CMLrt)
+                    cmlComment = CMLVersion.find(item.ref.leadingCMLComments, CMLrt)
                     if cmlComment is not None:
                         cmlComment.removeFromText(editor)
             QApplication.processEvents()
@@ -639,11 +599,10 @@ class CFSceneContextMenuMixin:
 
         try:
             os.makedirs(os.path.dirname(fName), exist_ok=True)
-            with open(fName, 'w'):
+            with open(fName, "w"):
                 pass
         except Exception as exc:
-            logging.error('Error creating the documentation file ' +
-                          fName + ': ' + str(exc))
+            logging.error("Error creating the documentation file " + fName + ": " + str(exc))
             return None
         return fName
 
@@ -665,8 +624,7 @@ class CFSceneContextMenuMixin:
             # If not found then it means the doc link needs to be created
             cmlRef = self.__findCMLinItem(selectedItem, CMLdoc)
 
-        dlg = DocLinkAnchorDialog('Add' if cmlRef is None else 'Edit',
-                                  cmlRef, fileName, self.parent())
+        dlg = DocLinkAnchorDialog("Add" if cmlRef is None else "Edit", cmlRef, fileName, self.parent())
         if dlg.exec_():
             link = dlg.linkEdit.text().strip()
             anchor = dlg.anchorEdit.text().strip()
@@ -698,8 +656,7 @@ class CFSceneContextMenuMixin:
                     fgColor = None
                     border = None
 
-                line = CMLdoc.generate(link, anchor, title,
-                                       bgColor, fgColor, border, pos)
+                line = CMLdoc.generate(link, anchor, title, bgColor, fgColor, border, pos)
                 editor.insertLines(line, lineNo)
 
             QApplication.processEvents()
@@ -711,27 +668,21 @@ class CFSceneContextMenuMixin:
         """Forms the auto doc file name"""
         # Markdown is used as a default documentation format
         fBaseName = os.path.basename(fileName)
-        if '.' in fBaseName:
-            fileExtension = fBaseName.split('.')[-1]
-            fBaseName = fBaseName[:-len(fileExtension)] + 'md'
+        if "." in fBaseName:
+            fileExtension = fBaseName.split(".")[-1]
+            fBaseName = fBaseName[: -len(fileExtension)] + "md"
         else:
-            fBaseName += '.md'
+            fBaseName += ".md"
 
         project = GlobalData().project
         if project.isProjectFile(fileName):
             projectDir = project.getProjectDir()
-            relativePath = fileName[len(projectDir):]
+            relativePath = fileName[len(projectDir) :]
             projectName = project.getProjectName()
             if relativePath.startswith(projectName):
-                relativePath = relativePath.replace(projectName, '', 1)
-            return os.path.normpath(
-                os.path.sep.join([projectDir + 'doc',
-                                  os.path.dirname(relativePath),
-                                  fBaseName]))
-        return os.path.normpath(
-            os.path.sep.join([os.path.dirname(fileName),
-                              'doc',
-                               fBaseName]))
+                relativePath = relativePath.replace(projectName, "", 1)
+            return os.path.normpath(os.path.sep.join([projectDir + "doc", os.path.dirname(relativePath), fBaseName]))
+        return os.path.normpath(os.path.sep.join([os.path.dirname(fileName), "doc", fBaseName]))
 
     def onAutoAddDoc(self):
         """Create a doc file, add a link and open for editing"""
@@ -742,22 +693,21 @@ class CFSceneContextMenuMixin:
         editor = selectedItem.getEditor()
         fileName = editor._parent.getFileName()
         if not fileName:
-            logging.error('Save file before invoking auto doc')
+            logging.error("Save file before invoking auto doc")
             return
 
         needContent = False
-        newAnchor = 'doc' + str(uuid.uuid4().fields[-1])[-6:]
+        newAnchor = "doc" + str(uuid.uuid4().fields[-1])[-6:]
 
         docFileName = self.__getAutoDocFileName(fileName)
         if not os.path.exists(docFileName):
             # Create file and populate with the default content
             try:
                 os.makedirs(os.path.dirname(docFileName), exist_ok=True)
-                with open(docFileName, 'w'):
+                with open(docFileName, "w"):
                     pass
             except Exception as exc:
-                logging.error('Error creating the documentation file ' +
-                              docFileName + ': ' + str(exc))
+                logging.error("Error creating the documentation file " + docFileName + ": " + str(exc))
                 return
             needContent = True
 
@@ -767,14 +717,10 @@ class CFSceneContextMenuMixin:
             if project.isProjectFile(fileName):
                 linkFromDoc = project.getRelativePath(fileName)
             else:
-                linkFromDoc = os.path.relpath(fileName,
-                                              os.path.dirname(docFileName))
+                linkFromDoc = os.path.relpath(fileName, os.path.dirname(docFileName))
         else:
-            linkFromFile = os.path.relpath(docFileName,
-                                           os.path.dirname(fileName))
-            linkFromDoc = os.path.relpath(fileName,
-                                          os.path.dirname(docFileName))
-
+            linkFromFile = os.path.relpath(docFileName, os.path.dirname(fileName))
+            linkFromDoc = os.path.relpath(fileName, os.path.dirname(docFileName))
 
         # Insert a doc link
         with editor:
@@ -786,9 +732,9 @@ class CFSceneContextMenuMixin:
                     lineNo += 1
             else:
                 lineNo = selectedItem.getFirstLine()
-            line = CMLdoc.generate(linkFromFile, newAnchor, 'See documentation',
-                                   None, None, None,
-                                   selectedItem.ref.body.beginPos)
+            line = CMLdoc.generate(
+                linkFromFile, newAnchor, "See documentation", None, None, None, selectedItem.ref.body.beginPos
+            )
             editor.insertLines(line, lineNo)
 
             QApplication.processEvents()
@@ -810,8 +756,7 @@ class CFSceneContextMenuMixin:
         editor = self.selectedItems()[0].getEditor()
         with editor:
             for item in self.sortSelectedReverse():
-                cmlComment = CMLVersion.find(item.ref.leadingCMLComments,
-                                             CMLdoc)
+                cmlComment = CMLVersion.find(item.ref.leadingCMLComments, CMLdoc)
                 if cmlComment is not None:
                     cmlComment.removeFromText(editor)
         QApplication.processEvents()
@@ -882,11 +827,11 @@ class CFSceneContextMenuMixin:
             if cml is not None:
                 return cml
 
-        if hasattr(item.ref, 'leadingCMLComments'):
+        if hasattr(item.ref, "leadingCMLComments"):
             cml = CMLVersion.find(item.ref.leadingCMLComments, cmlType)
             if cml is not None:
                 return cml
-        if hasattr(item.ref, 'sideCMLComments'):
+        if hasattr(item.ref, "sideCMLComments"):
             cml = CMLVersion.find(item.ref.sideCMLComments, cmlType)
             if cml is not None:
                 return cml
@@ -912,12 +857,12 @@ class CFSceneContextMenuMixin:
         closeCount = 0
         openCount = 0
         for item in self.selectedItems():
-            if item.kind in [CellElement.EMPTY_GROUP,
-                             CellElement.COLLAPSED_GROUP,
-                             CellElement.OPENED_GROUP_BEGIN]:
-                if item.groupBeginCMLRef.bgColor is not None or \
-                   item.groupBeginCMLRef.fgColor is not None or \
-                   item.groupBeginCMLRef.border is not None:
+            if item.kind in [CellElement.EMPTY_GROUP, CellElement.COLLAPSED_GROUP, CellElement.OPENED_GROUP_BEGIN]:
+                if (
+                    item.groupBeginCMLRef.bgColor is not None
+                    or item.groupBeginCMLRef.fgColor is not None
+                    or item.groupBeginCMLRef.border is not None
+                ):
                     if item.kind == CellElement.EMPTY_GROUP:
                         emptyCount += 1
                     elif item.kind == CellElement.COLLAPSED_GROUP:
@@ -930,9 +875,7 @@ class CFSceneContextMenuMixin:
         count = 0
         for item in self.selectedItems():
             if item.isCMLDoc():
-                if item.cmlRef.bgColor is not None or \
-                   item.cmlRef.fgColor is not None or \
-                   item.cmlRef.border is not None:
+                if item.cmlRef.bgColor is not None or item.cmlRef.fgColor is not None or item.cmlRef.border is not None:
                     count += 1
         return count
 
@@ -983,8 +926,7 @@ class CFSceneContextMenuMixin:
         # Cannot import it at the top...
         from .flowuiwidget import SMART_ZOOM_ALL, SMART_ZOOM_NO_CONTENT
 
-        if Settings()['smartZoom'] not in [SMART_ZOOM_ALL,
-                                           SMART_ZOOM_NO_CONTENT]:
+        if Settings()["smartZoom"] not in [SMART_ZOOM_ALL, SMART_ZOOM_NO_CONTENT]:
             return False
         if self.__areAllSelectedDependentComments():
             return False
@@ -1015,8 +957,7 @@ class CFSceneContextMenuMixin:
         begin = selected[0].getAbsPosRange()[0]
         end = selected[-1].getAbsPosRange()[1]
 
-        if not self.__isSelectionContinuous(selected, scopeCoveredRegions,
-                                            begin, end):
+        if not self.__isSelectionContinuous(selected, scopeCoveredRegions, begin, end):
             return False
 
         if self.__moreThanOneIfBranchSelected(selected, scopeCoveredRegions):
@@ -1026,11 +967,13 @@ class CFSceneContextMenuMixin:
     def __areAllSelectedDependentComments(self):
         """True if all selected items are comments"""
         for item in self.selectedItems():
-            if item.kind not in [CellElement.SIDE_COMMENT,
-                                 CellElement.LEADING_COMMENT,
-                                 CellElement.ABOVE_COMMENT,
-                                 CellElement.LEADING_DOC,
-                                 CellElement.ABOVE_DOC]:
+            if item.kind not in [
+                CellElement.SIDE_COMMENT,
+                CellElement.LEADING_COMMENT,
+                CellElement.ABOVE_COMMENT,
+                CellElement.LEADING_DOC,
+                CellElement.ABOVE_DOC,
+            ]:
                 return False
         return True
 
@@ -1050,16 +993,20 @@ class CFSceneContextMenuMixin:
 
     def __areHangingDependentSelected(self):
         """True if e.g. a comment or doc is selected but the item is not"""
-        scopeBadges = (CellElement.SCOPE_EXCEPT_BADGE,
-                       CellElement.SCOPE_DOCSTRING_BADGE,
-                       CellElement.SCOPE_COMMENT_BADGE,
-                       CellElement.SCOPE_DECORATOR_BADGE,
-                       CellElement.SCOPE_DOCLINK_BADGE)
-        docAndComments = (CellElement.LEADING_COMMENT,
-                          CellElement.SIDE_COMMENT,
-                          CellElement.ABOVE_COMMENT,
-                          CellElement.LEADING_DOC,
-                          CellElement.ABOVE_DOC)
+        scopeBadges = (
+            CellElement.SCOPE_EXCEPT_BADGE,
+            CellElement.SCOPE_DOCSTRING_BADGE,
+            CellElement.SCOPE_COMMENT_BADGE,
+            CellElement.SCOPE_DECORATOR_BADGE,
+            CellElement.SCOPE_DOCLINK_BADGE,
+        )
+        docAndComments = (
+            CellElement.LEADING_COMMENT,
+            CellElement.SIDE_COMMENT,
+            CellElement.ABOVE_COMMENT,
+            CellElement.LEADING_DOC,
+            CellElement.ABOVE_DOC,
+        )
         for item in self.selectedItems():
             if item.kind in scopeBadges:
                 if not item.ref.isSelected():
@@ -1077,14 +1024,12 @@ class CFSceneContextMenuMixin:
     def __areIncompleteScopeSelected(self, selected):
         """True if an incomplete scope selected"""
         for item in selected:
-            if item.kind in [CellElement.FOR_SCOPE,
-                             CellElement.WHILE_SCOPE]:
+            if item.kind in [CellElement.FOR_SCOPE, CellElement.WHILE_SCOPE]:
                 if item.ref.elsePart:
                     for relatedItem in self.findItemsForRef(item.ref.elsePart):
                         if relatedItem not in selected:
                             return True
-            elif item.kind in [CellElement.FUNC_SCOPE,
-                               CellElement.CLASS_SCOPE]:
+            elif item.kind in [CellElement.FUNC_SCOPE, CellElement.CLASS_SCOPE]:
                 if item.ref.decorators:
                     s = item.canvas.settings
                     if not s.noDecor and not s.hidedecors:
@@ -1125,9 +1070,7 @@ class CFSceneContextMenuMixin:
                     for relatedItem in self.findItemsForRef(item.ref.finallyPart):
                         if relatedItem not in selected:
                             return True
-            elif item.kind in [CellElement.ELSE_SCOPE,
-                               CellElement.EXCEPT_SCOPE,
-                               CellElement.FINALLY_SCOPE]:
+            elif item.kind in [CellElement.ELSE_SCOPE, CellElement.EXCEPT_SCOPE, CellElement.FINALLY_SCOPE]:
                 for relatedItem in self.findItemsForRef(item.leaderRef):
                     if relatedItem not in selected:
                         return True
@@ -1160,9 +1103,7 @@ class CFSceneContextMenuMixin:
         """True if there are comments selected which have no main item selected"""
         for item in selected:
             if item.isComment():
-                if item.kind in [CellElement.SIDE_COMMENT,
-                                 CellElement.LEADING_COMMENT,
-                                 CellElement.ABOVE_COMMENT]:
+                if item.kind in [CellElement.SIDE_COMMENT, CellElement.LEADING_COMMENT, CellElement.ABOVE_COMMENT]:
                     for relatedItem in self.findItemsForRef(item.ref):
                         if relatedItem not in selected:
                             return True
@@ -1176,11 +1117,13 @@ class CFSceneContextMenuMixin:
             pos = first.groupBeginCMLRef.ref.parts[0].beginPos
         else:
             firstLine = first.getLineRange()[0]
-            if first.kind in [CellElement.SCOPE_DOCSTRING_BADGE,
-                              CellElement.SCOPE_COMMENT_BADGE,
-                              CellElement.SCOPE_EXCEPT_BADGE,
-                              CellElement.SCOPE_DECORATOR_BADGE,
-                              CellElement.SCOPE_DOCLINK_BADGE]:
+            if first.kind in [
+                CellElement.SCOPE_DOCSTRING_BADGE,
+                CellElement.SCOPE_COMMENT_BADGE,
+                CellElement.SCOPE_EXCEPT_BADGE,
+                CellElement.SCOPE_DECORATOR_BADGE,
+                CellElement.SCOPE_DOCLINK_BADGE,
+            ]:
                 pos = first.beginPos
             else:
                 pos = first.ref.beginPos
@@ -1190,8 +1133,7 @@ class CFSceneContextMenuMixin:
             if item.scopedItem():
                 lastLine = max(lastLine, item.ref.endLine)
             elif item.kind == CellElement.OPENED_GROUP_BEGIN:
-                lastLine = max(lastLine,
-                               item.groupEndCMLRef.ref.parts[-1].endLine)
+                lastLine = max(lastLine, item.groupEndCMLRef.ref.parts[-1].endLine)
             else:
                 lastLine = max(lastLine, item.getLineRange()[1])
 
@@ -1204,8 +1146,7 @@ class CFSceneContextMenuMixin:
             if item.scopedItem():
                 if item.subKind in [ScopeCellElement.TOP_LEFT]:
                     if item.ref.leadingComment:
-                        coveredRegions.append((item.ref.leadingComment.begin,
-                                               item.ref.end))
+                        coveredRegions.append((item.ref.leadingComment.begin, item.ref.end))
                     else:
                         coveredRegions.append((item.ref.begin, item.ref.end))
             elif item.kind == CellElement.OPENED_GROUP_BEGIN:
@@ -1224,8 +1165,7 @@ class CFSceneContextMenuMixin:
                     if item.isProxyItem():
                         continue
                     if item.scopedItem():
-                        if item.subKind not in [ScopeCellElement.TOP_LEFT,
-                                                ScopeCellElement.DOCSTRING]:
+                        if item.subKind not in [ScopeCellElement.TOP_LEFT, ScopeCellElement.DOCSTRING]:
                             continue
                     if item in selected:
                         continue
@@ -1254,8 +1194,7 @@ class CFSceneContextMenuMixin:
             if item.isProxyItem():
                 continue
             if item.scopedItem():
-                if item.subKind not in [ScopeCellElement.TOP_LEFT,
-                                        ScopeCellElement.DOCSTRING]:
+                if item.subKind not in [ScopeCellElement.TOP_LEFT, ScopeCellElement.DOCSTRING]:
                     continue
             if item in selected:
                 continue
@@ -1285,20 +1224,18 @@ class CFSceneContextMenuMixin:
                         #       open group or in a fully selected if
                         continue
                 # Test if an item belongs to an if statement branch
-                if item.kind in [CellElement.OPENED_GROUP_BEGIN,
-                                 CellElement.EMPTY_GROUP,
-                                 CellElement.COLLAPSED_GROUP]:
+                if item.kind in [CellElement.OPENED_GROUP_BEGIN, CellElement.EMPTY_GROUP, CellElement.COLLAPSED_GROUP]:
                     branchId = item.groupBeginCMLRef.ref.getParentIfID()
-                elif item.kind in [CellElement.INDEPENDENT_DOC,
-                                   CellElement.LEADING_DOC,
-                                   CellElement.ABOVE_DOC]:
+                elif item.kind in [CellElement.INDEPENDENT_DOC, CellElement.LEADING_DOC, CellElement.ABOVE_DOC]:
                     branchId = item.cmlRef.ref.getParentIfID()
-                elif item.kind in [CellElement.SCOPE_DOCSTRING_BADGE,
-                                   CellElement.SCOPE_COMMENT_BADGE,
-                                   CellElement.SCOPE_EXCEPT_BADGE,
-                                   CellElement.SCOPE_DECORATOR_BADGE,
-                                   CellElement.SCOPE_DOCLINK_BADGE,
-                                   CellElement.INDEPENDENT_MINIMIZED_DOC]:
+                elif item.kind in [
+                    CellElement.SCOPE_DOCSTRING_BADGE,
+                    CellElement.SCOPE_COMMENT_BADGE,
+                    CellElement.SCOPE_EXCEPT_BADGE,
+                    CellElement.SCOPE_DECORATOR_BADGE,
+                    CellElement.SCOPE_DOCLINK_BADGE,
+                    CellElement.INDEPENDENT_MINIMIZED_DOC,
+                ]:
                     branchId = item.ref.ref.getParentIfID()
                 else:
                     branchId = item.ref.getParentIfID()
@@ -1320,4 +1257,3 @@ class CFSceneContextMenuMixin:
 
         for menu in self.individualMenus.values():
             menu.deleteLater()
-

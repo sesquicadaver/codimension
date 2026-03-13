@@ -19,7 +19,6 @@
 
 """Detached renderer window"""
 
-
 from utils.globals import GlobalData
 
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
@@ -27,7 +26,6 @@ from .qt import QFrame, QLabel, QMainWindow, QPalette, QStackedWidget, Qt, QTime
 
 
 class DetachedRendererWindow(QMainWindow):
-
     """Detached flow ui/markdown renderer window"""
 
     def __init__(self, settings, em):
@@ -38,7 +36,7 @@ class DetachedRendererWindow(QMainWindow):
 
         self.__widgets = QStackedWidget(self)
         self.__widgets.setContentsMargins(1, 1, 1, 1)
-        self.__noRenderLabel = QLabel('\nNo rendering available for the current tab')
+        self.__noRenderLabel = QLabel("\nNo rendering available for the current tab")
         self.__noRenderLabel.setFrameShape(QFrame.StyledPanel)
         self.__noRenderLabel.setAlignment(Qt.AlignHCenter)
         self.__noRenderLabel.setAutoFillBackground(True)
@@ -46,8 +44,7 @@ class DetachedRendererWindow(QMainWindow):
         font.setPointSize(font.pointSize() + 4)
         self.__noRenderLabel.setFont(font)
         palette = self.__noRenderLabel.palette()
-        palette.setColor(QPalette.Background,
-                         GlobalData().skin['nolexerPaper'])
+        palette.setColor(QPalette.Background, GlobalData().skin["nolexerPaper"])
         self.__noRenderLabel.setPalette(palette)
         self.__widgets.addWidget(self.__noRenderLabel)
         self.setCentralWidget(self.__widgets)
@@ -59,25 +56,21 @@ class DetachedRendererWindow(QMainWindow):
         # This one is approximate, the one in restoreWindowPosition()
         # is precise
         screenSize = GlobalData().application.desktop().screenGeometry()
-        if screenSize.width() != settings['screenwidth'] or \
-           screenSize.height() != settings['screenheight']:
+        if screenSize.width() != settings["screenwidth"] or screenSize.height() != settings["screenheight"]:
             # The screen resolution has been changed, use the default pos
-            defXPos, defYpos, \
-            defWidth, defHeight = settings.getDefaultRendererWindowGeometry()
+            defXPos, defYpos, defWidth, defHeight = settings.getDefaultRendererWindowGeometry()
             self.resize(defWidth, defHeight)
             self.move(defXPos, defYpos)
         else:
             # No changes in the screen resolution
-            self.resize(settings['rendererwidth'], settings['rendererheight'])
-            self.move(settings['rendererxpos'] + settings['xdelta'],
-                      settings['rendererypos'] + settings['ydelta'])
-
+            self.resize(settings["rendererwidth"], settings["rendererheight"])
+            self.move(settings["rendererxpos"] + settings["xdelta"], settings["rendererypos"] + settings["ydelta"])
 
     def closeEvent(self, event):
         """Renderer is closed: explicit close via X or IDE is closed"""
         if not self.__ideClosing:
             # Update the IDE button and memorize the setting
-            self.settings['floatingRenderer'] = not self.settings['floatingRenderer']
+            self.settings["floatingRenderer"] = not self.settings["floatingRenderer"]
             GlobalData().mainWindow.floatingRendererButton.setChecked(False)
             self.hide()
             return
@@ -158,7 +151,7 @@ class DetachedRendererWindow(QMainWindow):
 
     def resizeEvent(self, resizeEv):
         """Triggered when the window is resized"""
-        del resizeEv    # unused argument
+        del resizeEv  # unused argument
         QTimer.singleShot(1, self.__resizeEventdelayed)
 
     def __resizeEventdelayed(self):
@@ -166,8 +159,8 @@ class DetachedRendererWindow(QMainWindow):
         if self.__initialisation or self.__guessMaximized():
             return
 
-        self.settings['rendererwidth'] = self.width()
-        self.settings['rendererheight'] = self.height()
+        self.settings["rendererwidth"] = self.width()
+        self.settings["rendererheight"] = self.height()
 
     def moveEvent(self, moveEv):
         """Triggered when the window is moved"""
@@ -177,8 +170,8 @@ class DetachedRendererWindow(QMainWindow):
     def __moveEventDelayed(self):
         """Memorizes the new window position"""
         if not self.__initialisation and not self.__guessMaximized():
-            self.settings['rendererxpos'] = self.x()
-            self.settings['rendererypos'] = self.y()
+            self.settings["rendererxpos"] = self.x()
+            self.settings["rendererypos"] = self.y()
 
     def __guessMaximized(self):
         """True if the window is maximized"""
@@ -188,34 +181,32 @@ class DetachedRendererWindow(QMainWindow):
         # So, make a wild guess instead and do not save the status if
         # maximized.
         availGeom = GlobalData().application.desktop().availableGeometry()
-        if self.width() + abs(self.settings['xdelta']) > availGeom.width() or \
-           self.height() + abs(self.settings['ydelta']) > availGeom.height():
+        if (
+            self.width() + abs(self.settings["xdelta"]) > availGeom.width()
+            or self.height() + abs(self.settings["ydelta"]) > availGeom.height()
+        ):
             return True
         return False
 
     def restoreWindowPosition(self):
         """Makes sure that the window frame delta is proper"""
         screenSize = GlobalData().application.desktop().screenGeometry()
-        if screenSize.width() != self.settings['screenwidth'] or \
-           screenSize.height() != self.settings['screenheight']:
+        if screenSize.width() != self.settings["screenwidth"] or screenSize.height() != self.settings["screenheight"]:
             # The screen resolution has been changed, save the new values
-            self.settings['screenwidth'] = screenSize.width()
-            self.settings['screenheight'] = screenSize.height()
-            self.settings['xdelta'] = self.settings['xpos'] - self.x()
-            self.settings['ydelta'] = self.settings['ypos'] - self.y()
-            self.settings['rendererxpos'] = self.x()
-            self.settings['rendererypos'] = self.y()
+            self.settings["screenwidth"] = screenSize.width()
+            self.settings["screenheight"] = screenSize.height()
+            self.settings["xdelta"] = self.settings["xpos"] - self.x()
+            self.settings["ydelta"] = self.settings["ypos"] - self.y()
+            self.settings["rendererxpos"] = self.x()
+            self.settings["rendererypos"] = self.y()
         else:
             # Screen resolution is the same as before
-            if self.settings['rendererxpos'] != self.x() or \
-               self.settings['rendererypos'] != self.y():
+            if self.settings["rendererxpos"] != self.x() or self.settings["rendererypos"] != self.y():
                 # The saved delta is incorrect, update it
-                self.settings['xdelta'] = self.settings['rendererxpos'] - self.x() + \
-                                          self.settings['xdelta']
-                self.settings['ydelta'] = self.settings['rendererypos'] - self.y() + \
-                                          self.settings['ydelta']
-                self.settings['rendererxpos'] = self.x()
-                self.settings['rendererypos'] = self.y()
+                self.settings["xdelta"] = self.settings["rendererxpos"] - self.x() + self.settings["xdelta"]
+                self.settings["ydelta"] = self.settings["rendererypos"] - self.y() + self.settings["ydelta"]
+                self.settings["rendererxpos"] = self.x()
+                self.settings["rendererypos"] = self.y()
         self.__initialisation = False
 
     def close(self):
@@ -235,7 +226,7 @@ class DetachedRendererWindow(QMainWindow):
 
     def __onCurrentTabChanged(self, index):
         """Triggered when the current tab is changed"""
-        del index   # :nused argument
+        del index  # :nused argument
         self.updateCurrent()
 
     def __onTextEditorTabAdded(self, index):
@@ -279,12 +270,12 @@ class DetachedRendererWindow(QMainWindow):
             isPython = editor.isPythonBuffer()
             isMarkdown = editor.isMarkdownBuffer()
             if isPython or isMarkdown:
-                title = 'Floating renderer: '
+                title = "Floating renderer: "
                 if isPython:
-                    title += 'python buffer ('
+                    title += "python buffer ("
                 else:
-                    title += 'markdown buffer ('
-                title += widget.getShortName() + ')'
+                    title += "markdown buffer ("
+                title += widget.getShortName() + ")"
                 self.setWindowTitle(title)
 
                 uuid = widget.getUUID()
@@ -296,4 +287,4 @@ class DetachedRendererWindow(QMainWindow):
 
         # Not python, not markdown, i.e. no renderer
         self.__widgets.setCurrentIndex(0)
-        self.setWindowTitle('Floating renderer: no renderer for the current tab')
+        self.setWindowTitle("Floating renderer: no renderer for the current tab")

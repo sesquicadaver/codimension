@@ -19,7 +19,6 @@
 
 """Python code parser errors dialog"""
 
-
 from os.path import basename, exists
 
 from utils.colorfont import getZoomedMonoFont
@@ -31,7 +30,6 @@ from .qt import QDialog, QDialogButtonBox, QSizePolicy, Qt, QTextEdit, QVBoxLayo
 
 
 class ParserErrorsDialog(QDialog):
-
     """Python code parser errors dialog implementation"""
 
     def __init__(self, fileName, info=None, parent=None):
@@ -39,14 +37,13 @@ class ParserErrorsDialog(QDialog):
 
         if info is None:
             if not exists(fileName):
-                raise Exception('Cannot open ' + fileName)
+                raise Exception("Cannot open " + fileName)
 
             if not isPythonFile(fileName):
-                raise Exception('Unexpected file type (' + fileName +
-                                '). A python file is expected.')
+                raise Exception("Unexpected file type (" + fileName + "). A python file is expected.")
 
         self.__createLayout(fileName, info)
-        self.setWindowTitle('Lexer/parser errors: ' + basename(fileName))
+        self.setWindowTitle("Lexer/parser errors: " + basename(fileName))
         self.show()
 
     def __createLayout(self, fileName, info):
@@ -61,10 +58,9 @@ class ParserErrorsDialog(QDialog):
         sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            infoLabel.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(infoLabel.sizePolicy().hasHeightForWidth())
         infoLabel.setSizePolicy(sizePolicy)
-        infoLabel.setText('Lexer/parser errors for ' + fileName)
+        infoLabel.setText("Lexer/parser errors for " + fileName)
         verticalLayout.addWidget(infoLabel)
 
         # Result window
@@ -78,10 +74,9 @@ class ParserErrorsDialog(QDialog):
         else:
             modInfo = GlobalData().briefModinfoCache.get(fileName)
         if modInfo.isOK:
-            resultEdit.setText('No errors found')
+            resultEdit.setText("No errors found")
         else:
-            resultEdit.setText('\n'.join(modInfo.lexerErrors +
-                                         modInfo.errors))
+            resultEdit.setText("\n".join(modInfo.lexerErrors + modInfo.errors))
         verticalLayout.addWidget(resultEdit)
 
         # Buttons

@@ -34,7 +34,6 @@ from .viewhistory import ViewEntry, ViewHistory
 
 
 class MDFullViewer(MDViewer):
-
     """Markdown viewer specific for non-editing mode (full view)"""
 
     def __init__(self, history, parent):
@@ -44,18 +43,18 @@ class MDFullViewer(MDViewer):
 
     def _onAnchorClicked(self, link):
         """Overwritten URL click handler"""
-        if link == 'javascript:history.back()' or link == 'history.back()':
+        if link == "javascript:history.back()" or link == "history.back()":
             if self.__parentWidget.viewerHistory.backAvailable():
                 self.__parentWidget.onBack()
             else:
-                logging.warning('No step back avaialable')
+                logging.warning("No step back avaialable")
             return
 
-        if link == 'javascript:history.forward()' or link == 'history.forward()':
+        if link == "javascript:history.forward()" or link == "history.forward()":
             if self.__parentWidget.viewerHistory.forwardAvailable():
                 self.__parentWidget.onForward()
             else:
-                logging.warning('No step forward available')
+                logging.warning("No step forward available")
             return
 
         fileName, anchorOrLine = self._resolveLink(link)
@@ -70,7 +69,6 @@ class MDFullViewer(MDViewer):
 
 
 class MarkdownTabWidget(QWidget, MainWindowTabWidgetBase):
-
     """Markdown widget"""
 
     sigEscapePressed = pyqtSignal()
@@ -94,28 +92,26 @@ class MarkdownTabWidget(QWidget, MainWindowTabWidgetBase):
 
     def __createLayout(self):
         """Creates the toolbar and layout"""
-        printButton = QAction(getIcon('printer.png'), 'Print', self)
+        printButton = QAction(getIcon("printer.png"), "Print", self)
         printButton.triggered.connect(self.__onPrint)
 
         fixedSpacer = QWidget()
         fixedSpacer.setFixedHeight(16)
 
-        self.__backButton = QAction(getIcon('mdback.png'), 'Back', self)
+        self.__backButton = QAction(getIcon("mdback.png"), "Back", self)
         self.__backButton.triggered.connect(self.onBack)
         self.__backButton.setEnabled(False)
 
-        self.__fwdButton = QAction(getIcon('mdfwd.png'), 'Forward', self)
+        self.__fwdButton = QAction(getIcon("mdfwd.png"), "Forward", self)
         self.__fwdButton.triggered.connect(self.onForward)
         self.__fwdButton.setEnabled(False)
 
         if not self.__readOnly:
-            self.__switchToEditButton = QAction(getIcon('switchtoedit.png'),
-                                                'Switch to Editing', self)
+            self.__switchToEditButton = QAction(getIcon("switchtoedit.png"), "Switch to Editing", self)
             self.__switchToEditButton.triggered.connect(self.__onSwitchToEdit)
             self.__switchToEditButton.setEnabled(True)
 
-            self.__reloadButton = QAction(getIcon('mdreload.png'),
-                                          'Reload content', self)
+            self.__reloadButton = QAction(getIcon("mdreload.png"), "Reload content", self)
             self.__reloadButton.triggered.connect(self.__onReload)
             self.__reloadButton.setEnabled(True)
 
@@ -236,8 +232,7 @@ class MarkdownTabWidget(QWidget, MainWindowTabWidgetBase):
             logging.error(str(exc))
             return
 
-        renderedText, errors, warnings = renderMarkdown(self.getUUID(),
-                                                        content, path)
+        renderedText, errors, warnings = renderMarkdown(self.getUUID(), content, path)
         if errors:
             for error in errors:
                 logging.error(error)
@@ -255,8 +250,7 @@ class MarkdownTabWidget(QWidget, MainWindowTabWidgetBase):
                 logging.warning(warning)
 
         mainWindow = GlobalData().mainWindow
-        mainWindow.em.setTabText(mainWindow.em.currentIndex(),
-                                 self.getShortName())
+        mainWindow.em.setTabText(mainWindow.em.currentIndex(), self.getShortName())
         mainWindow.em.updateStatusBar()
 
     def getFileName(self):
@@ -271,9 +265,8 @@ class MarkdownTabWidget(QWidget, MainWindowTabWidgetBase):
         """Tells the display name"""
         if self.__fName:
             return os.path.basename(self.__fName)
-        return 'n/a'
+        return "n/a"
 
     def setShortName(self, name):
         """Sets the display name - not applicable"""
-        raise Exception("Setting a short name for a markdown viewer "
-                        "is not applicable")
+        raise Exception("Setting a short name for a markdown viewer is not applicable")

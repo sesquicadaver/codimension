@@ -39,7 +39,6 @@ NO_MODIFIER = int(Qt.NoModifier)
 
 
 class RedirectedIOConsole(QutepartWrapper):
-
     """Widget which implements the redirected IO console"""
 
     sigUserInput = pyqtSignal(str)
@@ -71,28 +70,34 @@ class RedirectedIOConsole(QutepartWrapper):
 
     def __initHotKeys(self):
         """Initializes a map for the hot keys event filter"""
-        self.autoIndentLineAction.setShortcut('Ctrl+Shift+I')
+        self.autoIndentLineAction.setShortcut("Ctrl+Shift+I")
         self.invokeCompletionAction.setEnabled(False)
         self.__hotKeys = {
             CTRL_SHIFT: {Qt.Key_C: self.onCtrlShiftC},
-            SHIFT: {Qt.Key_End: self.onShiftEnd,
-                    Qt.Key_Home: self.onShiftHome,
-                    Qt.Key_Insert: self.onPasteText,
-                    Qt.Key_Delete: self.onShiftDel},
-            CTRL: {Qt.Key_V: self.onPasteText,
-                   Qt.Key_X: self.onShiftDel,
-                   Qt.Key_C: self.onCtrlC,
-                   Qt.Key_Insert: self.onCtrlC,
-                   Qt.Key_Minus: Settings().onTextZoomOut,
-                   Qt.Key_Equal: Settings().onTextZoomIn,
-                   Qt.Key_0: Settings().onTextZoomReset,
-                   Qt.Key_Home: self.onFirstChar,
-                   Qt.Key_End: self.onLastChar},
-            CTRL_KEYPAD: {Qt.Key_Minus: Settings().onTextZoomOut,
-                          Qt.Key_Plus: Settings().onTextZoomIn,
-                          Qt.Key_0: Settings().onTextZoomReset},
-            NO_MODIFIER: {Qt.Key_Home: self.onHome,
-                          Qt.Key_End: self.moveToLineEnd}}
+            SHIFT: {
+                Qt.Key_End: self.onShiftEnd,
+                Qt.Key_Home: self.onShiftHome,
+                Qt.Key_Insert: self.onPasteText,
+                Qt.Key_Delete: self.onShiftDel,
+            },
+            CTRL: {
+                Qt.Key_V: self.onPasteText,
+                Qt.Key_X: self.onShiftDel,
+                Qt.Key_C: self.onCtrlC,
+                Qt.Key_Insert: self.onCtrlC,
+                Qt.Key_Minus: Settings().onTextZoomOut,
+                Qt.Key_Equal: Settings().onTextZoomIn,
+                Qt.Key_0: Settings().onTextZoomReset,
+                Qt.Key_Home: self.onFirstChar,
+                Qt.Key_End: self.onLastChar,
+            },
+            CTRL_KEYPAD: {
+                Qt.Key_Minus: Settings().onTextZoomOut,
+                Qt.Key_Plus: Settings().onTextZoomIn,
+                Qt.Key_0: Settings().onTextZoomReset,
+            },
+            NO_MODIFIER: {Qt.Key_Home: self.onHome, Qt.Key_End: self.moveToLineEnd},
+        }
 
     def eventFilter(self, _, event):
         """Event filter to catch shortcuts on UBUNTU"""
@@ -121,14 +126,13 @@ class RedirectedIOConsole(QutepartWrapper):
             return
 
         if self.mode == self.MODE_OUTPUT:
-            if key in [Qt.Key_Left, Qt.Key_Up, Qt.Key_Right, Qt.Key_Down,
-                       Qt.Key_PageUp, Qt.Key_PageDown]:
+            if key in [Qt.Key_Left, Qt.Key_Up, Qt.Key_Right, Qt.Key_Down, Qt.Key_PageUp, Qt.Key_PageDown]:
                 QutepartWrapper.keyPressEvent(self, event)
             return
 
         # It is an input mode
         txt = event.text()
-        if len(txt) and txt >= ' ':
+        if len(txt) and txt >= " ":
             # Printable character
             if self.absCursorPosition < self.lastOutputPos:
                 # Out of the input zone
@@ -145,20 +149,18 @@ class RedirectedIOConsole(QutepartWrapper):
             userInput = self.__getUserInput()
             self.switchMode(self.MODE_OUTPUT)
             timestampLine, _ = self.getEndPosition()
-            self.append('\n')
+            self.append("\n")
             self.clearUndoRedoHistory()
             line, pos = self.getEndPosition()
             self.cursorPosition = line, pos
             self.ensureLineOnScreen(line)
-            msg = IOConsoleMsg(IOConsoleMsg.STDIN_MESSAGE,
-                               userInput + '\n')
+            msg = IOConsoleMsg(IOConsoleMsg.STDIN_MESSAGE, userInput + "\n")
             self.__messages.append(msg)
 
             # margin data
             timestamp = msg.getTimestamp()
-            margin = self.getMargin('cdm_redirected_io_margin')
-            margin.addData(timestampLine + 1, timestamp,
-                           timestamp, IOConsoleMsg.STDIN_MESSAGE)
+            margin = self.getMargin("cdm_redirected_io_margin")
+            margin.addData(timestampLine + 1, timestamp, timestamp, IOConsoleMsg.STDIN_MESSAGE)
 
             self.sigUserInput.emit(userInput)
             return
@@ -184,7 +186,7 @@ class RedirectedIOConsole(QutepartWrapper):
 
         # Check what is in the buffer
         text = QApplication.clipboard().text()
-        if '\n' in text or '\r' in text:
+        if "\n" in text or "\r" in text:
             return
 
         if not self.inputEcho:
@@ -196,7 +198,7 @@ class RedirectedIOConsole(QutepartWrapper):
     def __getUserInput(self):
         """Provides the collected user input"""
         if self.mode != self.MODE_INPUT:
-            return ''
+            return ""
         if self.inputEcho:
             _, endPos = self.getEndPosition()
             _, beginPos = self.mapToLineCol(self.lastOutputPos)
@@ -211,8 +213,8 @@ class RedirectedIOConsole(QutepartWrapper):
 
         self.updateSettings()
 
-        self.setPaper(skin['ioconsolePaper'])
-        self.setColor(skin['ioconsoleColor'])
+        self.setPaper(skin["ioconsolePaper"])
+        self.setColor(skin["ioconsoleColor"])
 
         self.currentLineColor = None
         self.lineLengthEdge = None
@@ -220,13 +222,13 @@ class RedirectedIOConsole(QutepartWrapper):
 
     def updateSettings(self):
         """Updates the IO console settings"""
-        if Settings()['ioconsolelinewrap']:
+        if Settings()["ioconsolelinewrap"]:
             self.setWordWrapMode(QTextOption.WrapAnywhere)
         else:
             self.setWordWrapMode(QTextOption.NoWrap)
 
-        self.drawAnyWhitespace = Settings()['ioconsoleshowspaces']
-        self.drawIncorrectIndentation = Settings()['ioconsoleshowspaces']
+        self.drawAnyWhitespace = Settings()["ioconsoleshowspaces"]
+        self.drawIncorrectIndentation = Settings()["ioconsoleshowspaces"]
 
     def setCursorStyle(self):
         """Sets the cursor style depending on the mode and the cursor pos"""
@@ -237,7 +239,7 @@ class RedirectedIOConsole(QutepartWrapper):
             if self.absCursorPosition >= self.lastOutputPos:
                 if self.cursorWidth() == 1:
                     fontMetrics = QFontMetrics(self.font(), self)
-                    self.setCursorWidth(fontMetrics.width('W'))
+                    self.setCursorWidth(fontMetrics.width("W"))
                     self.update()
             else:
                 if self.cursorWidth() != 1:
@@ -266,31 +268,26 @@ class RedirectedIOConsole(QutepartWrapper):
     def _initContextMenu(self):
         """Called to initialize a context menu"""
         self._menu = QMenu(self)
-        self.__menuUndo = self._menu.addAction(
-            getIcon('undo.png'), '&Undo', self.onUndo, "Ctrl+Z")
-        self.__menuRedo = self._menu.addAction(
-            getIcon('redo.png'), '&Redo', self.onRedo, "Ctrl+Y")
+        self.__menuUndo = self._menu.addAction(getIcon("undo.png"), "&Undo", self.onUndo, "Ctrl+Z")
+        self.__menuRedo = self._menu.addAction(getIcon("redo.png"), "&Redo", self.onRedo, "Ctrl+Y")
         self._menu.addSeparator()
-        self.__menuCut = self._menu.addAction(
-            getIcon('cutmenu.png'), 'Cu&t', self.onShiftDel, "Ctrl+X")
-        self.__menuCopy = self._menu.addAction(
-            getIcon('copymenu.png'), '&Copy', self.onCtrlC, "Ctrl+C")
+        self.__menuCut = self._menu.addAction(getIcon("cutmenu.png"), "Cu&t", self.onShiftDel, "Ctrl+X")
+        self.__menuCopy = self._menu.addAction(getIcon("copymenu.png"), "&Copy", self.onCtrlC, "Ctrl+C")
         self.__menucopyTimestamp = self._menu.addAction(
-            getIcon('copymenu.png'), '&Copy all with timestamps',
-            self.onCtrlShiftC, "Ctrl+Shift+C")
-        self.__menuPaste = self._menu.addAction(
-            getIcon('pastemenu.png'), '&Paste', self.onPasteText, "Ctrl+V")
+            getIcon("copymenu.png"), "&Copy all with timestamps", self.onCtrlShiftC, "Ctrl+Shift+C"
+        )
+        self.__menuPaste = self._menu.addAction(getIcon("pastemenu.png"), "&Paste", self.onPasteText, "Ctrl+V")
         self.__menuSelectAll = self._menu.addAction(
-            getIcon('selectallmenu.png'), 'Select &all',
-            self.selectAll, "Ctrl+A")
+            getIcon("selectallmenu.png"), "Select &all", self.selectAll, "Ctrl+A"
+        )
         self._menu.addSeparator()
-        self.__menuOpenAsFile = self._menu.addAction(
-            getIcon('filemenu.png'), 'O&pen as file', self.openAsFile)
+        self.__menuOpenAsFile = self._menu.addAction(getIcon("filemenu.png"), "O&pen as file", self.openAsFile)
         self.__menuDownloadAndShow = self._menu.addAction(
-            getIcon('filemenu.png'), 'Do&wnload and show',
-            self.downloadAndShow)
+            getIcon("filemenu.png"), "Do&wnload and show", self.downloadAndShow
+        )
         self.__menuOpenInBrowser = self._menu.addAction(
-            getIcon('homepagemenu.png'), 'Open in browser', self.openInBrowser)
+            getIcon("homepagemenu.png"), "Open in browser", self.openInBrowser
+        )
         self._menu.addSeparator()
 
         self._menu.aboutToShow.connect(self._contextMenuAboutToShow)
@@ -307,10 +304,9 @@ class RedirectedIOConsole(QutepartWrapper):
         self.__menuRedo.setEnabled(self.document().isRedoAvailable())
 
         pasteText = QApplication.clipboard().text()
-        pasteEnable = pasteText != "" and \
-                      '\n' not in pasteText and \
-                      '\r' not in pasteText and \
-                      self.mode != self.MODE_OUTPUT
+        pasteEnable = (
+            pasteText != "" and "\n" not in pasteText and "\r" not in pasteText and self.mode != self.MODE_OUTPUT
+        )
         if pasteEnable:
             if self.absCursorPosition < self.lastOutputPos:
                 pasteEnable = False
@@ -323,10 +319,8 @@ class RedirectedIOConsole(QutepartWrapper):
         self.__menuSelectAll.setEnabled(self.__messages.size > 0)
 
         self.__menuOpenAsFile.setEnabled(self.openAsFileAvailable())
-        self.__menuDownloadAndShow.setEnabled(
-            self.downloadAndShowAvailable())
-        self.__menuOpenInBrowser.setEnabled(
-            self.downloadAndShowAvailable())
+        self.__menuDownloadAndShow.setEnabled(self.downloadAndShowAvailable())
+        self.__menuOpenInBrowser.setEnabled(self.downloadAndShowAvailable())
 
     def _contextMenuAboutToHide(self):
         """IO console context menu is about to hide"""
@@ -371,8 +365,7 @@ class RedirectedIOConsole(QutepartWrapper):
 
     def onCtrlShiftC(self):
         """Copy all with timestamps"""
-        QApplication.clipboard().setText(
-            self.__messages.renderWithTimestamps())
+        QApplication.clipboard().setText(self.__messages.renderWithTimestamps())
 
     def appendIDEMessage(self, text):
         """Appends an IDE message"""
@@ -404,13 +397,13 @@ class RedirectedIOConsole(QutepartWrapper):
     def renderContent(self):
         """Regenerates the viewer content"""
         self.clear()
-        self.getMargin('cdm_redirected_io_margin').clear()
+        self.getMargin("cdm_redirected_io_margin").clear()
         for msg in self.__messages.msgs:
             self.__renderMessage(msg)
 
     def __renderMessage(self, msg):
         """Adds a single message"""
-        margin = self.getMargin('cdm_redirected_io_margin')
+        margin = self.getMargin("cdm_redirected_io_margin")
         timestamp = msg.getTimestamp()
         if msg.msgType == IOConsoleMsg.IDE_MESSAGE:
             line, pos = self.getEndPosition()
@@ -418,15 +411,14 @@ class RedirectedIOConsole(QutepartWrapper):
             txt = msg.msgText
             startMarkLine = line
             if pos != 0:
-                txt = '\n' + txt
+                txt = "\n" + txt
                 startMarkLine += 1
 
             self.append(txt)
 
             line, _ = self.getEndPosition()
             for lineNo in range(startMarkLine, line + 1):
-                margin.addData(lineNo + 1, timestamp,
-                               timestamp, IOConsoleMsg.IDE_MESSAGE)
+                margin.addData(lineNo + 1, timestamp, timestamp, IOConsoleMsg.IDE_MESSAGE)
         else:
             line, pos = self.getEndPosition()
             txt = msg.msgText
@@ -435,7 +427,7 @@ class RedirectedIOConsole(QutepartWrapper):
             if pos != 0:
                 lastMsgType = margin.getLineMessageType(line + 1)
                 if lastMsgType == IOConsoleMsg.IDE_MESSAGE:
-                    txt = '\n' + txt
+                    txt = "\n" + txt
                     startTimestampLine = line + 1
 
             self.append(txt)
@@ -444,18 +436,17 @@ class RedirectedIOConsole(QutepartWrapper):
                 endTimestampLine -= 1
 
             for lineNo in range(startTimestampLine, endTimestampLine + 1):
-                margin.addData(lineNo + 1, timestamp, timestamp,
-                               msg.msgType)
+                margin.addData(lineNo + 1, timestamp, timestamp, msg.msgType)
 
         self.clearUndoRedoHistory()
-        if Settings()['ioconsoleautoscroll']:
+        if Settings()["ioconsoleautoscroll"]:
             line, pos = self.getEndPosition()
             self.gotoLine(line + 1, pos + 1)
 
     def clearData(self):
         """Clears the collected data"""
         self.__messages.clear()
-        self.getMargin('cdm_redirected_io_margin').clear()
+        self.getMargin("cdm_redirected_io_margin").clear()
 
     def clearAll(self):
         """Clears both data and visible content"""

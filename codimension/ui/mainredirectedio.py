@@ -26,7 +26,6 @@ from .qt import QApplication, QCursor, Qt, QTabBar
 
 
 class MainWindowRedirectedIOMixin:
-
     """Main window redirected IO mixin"""
 
     def __init__(self):
@@ -63,28 +62,28 @@ class MainWindowRedirectedIOMixin:
         """Provides the tab caption, name and tooltip"""
         if kind == PROFILE:
             index = str(self.__getNewProfileIndex())
-            return ('Profiling #' + index, 'profiling#' + index,
-                    'Redirected IO profile console #' + index + ' (running)')
+            return (
+                "Profiling #" + index,
+                "profiling#" + index,
+                "Redirected IO profile console #" + index + " (running)",
+            )
         if kind == RUN:
             index = str(self.__getNewRunIndex())
-            return ('Run #' + index, 'running#' + index,
-                    'Redirected IO run console #' + index + ' (running)')
+            return ("Run #" + index, "running#" + index, "Redirected IO run console #" + index + " (running)")
         index = str(self.__getNewDebugIndex())
-        return ('Debug #' + index, 'debugging#' + index,
-                'Redirected IO debug console #' + index + ' (running)')
+        return ("Debug #" + index, "debugging#" + index, "Redirected IO debug console #" + index + " (running)")
 
     def addIOConsole(self, widget, consoleType):
         """Installs a new widget at the bottom"""
         if consoleType not in [RUN, PROFILE, DEBUG]:
-            raise Exception('Undefined redirected IO console type')
+            raise Exception("Undefined redirected IO console type")
 
         caption, name, tooltip = self.__getCaptionNameTooltip(consoleType)
 
         widget.sigKillIOConsoleProcess.connect(self.__onKillIOConsoleProcess)
         widget.sigSettingsUpdated.connect(self.onIOConsoleSettingsUpdated)
 
-        self._bottomSideBar.addTab(
-            widget, getIcon('ioconsole.png'), caption, name, None)
+        self._bottomSideBar.addTab(widget, getIcon("ioconsole.png"), caption, name, None)
         self._bottomSideBar.tabButton(widget, QTabBar.RightSide).hide()
         self._bottomSideBar.setTabToolTip(name, tooltip)
         self._bottomSideBar.show()
@@ -101,36 +100,36 @@ class MainWindowRedirectedIOMixin:
         index = self._bottomSideBar.count - 1
         while index >= 0:
             widget = self._bottomSideBar.widget(index)
-            if hasattr(widget, 'procuuid'):
-                if hasattr(widget, 'consoleSettingsUpdated'):
+            if hasattr(widget, "procuuid"):
+                if hasattr(widget, "consoleSettingsUpdated"):
                     widget.consoleSettingsUpdated()
             index -= 1
 
     def __onClientStdout(self, data):
         """Triggered when the client reports stdout"""
         self._bottomSideBar.show()
-        self._bottomSideBar.setCurrentTab('ioredirect')
+        self._bottomSideBar.setCurrentTab("ioredirect")
         self._bottomSideBar.raise_()
         self.redirectedIOConsole.appendStdoutMessage(data)
 
     def __onClientStderr(self, data):
         """Triggered when the client reports stderr"""
         self._bottomSideBar.show()
-        self._bottomSideBar.setCurrentTab('ioredirect')
+        self._bottomSideBar.setCurrentTab("ioredirect")
         self._bottomSideBar.raise_()
         self.redirectedIOConsole.appendStderrMessage(data)
 
     def __ioconsoleIDEMessage(self, message):
         """Sends an IDE message to the IO console"""
         self._bottomSideBar.show()
-        self._bottomSideBar.setCurrentTab('ioredirect')
+        self._bottomSideBar.setCurrentTab("ioredirect")
         self._bottomSideBar.raise_()
         self.redirectedIOConsole.appendIDEMessage(message)
 
     def __onClientRawInput(self, prompt, echo):
         """Triggered when the client input is requested"""
         self._bottomSideBar.show()
-        self._bottomSideBar.setCurrentTab('ioredirect')
+        self._bottomSideBar.setCurrentTab("ioredirect")
         self._bottomSideBar.raise_()
         self.redirectedIOConsole.rawInput(prompt, echo)
         self.redirectedIOConsole.setFocus()
@@ -170,7 +169,7 @@ class MainWindowRedirectedIOMixin:
         index = self._bottomSideBar.count - 1
         while index >= 0:
             widget = self._bottomSideBar.widget(index)
-            if hasattr(widget, 'procuuid'):
+            if hasattr(widget, "procuuid"):
                 if hasattr(widget, "stopAndClose"):
                     widget.stopAndClose()
             index -= 1
@@ -182,7 +181,7 @@ class MainWindowRedirectedIOMixin:
         index = self._bottomSideBar.count - 1
         while index >= 0:
             widget = self._bottomSideBar.widget(index)
-            if hasattr(widget, 'procuuid'):
+            if hasattr(widget, "procuuid"):
                 consoles.append(widget)
             index -= 1
         return consoles

@@ -12,10 +12,12 @@
 """Codimension ruff format plugin implementation.
 
 Formats Python code with ruff format. Result shown in status bar only.
+Supports format-on-save via config.
 """
 
 import logging
 import os.path
+import subprocess
 
 from packaging.version import Version
 from plugins.categories.wizardiface import WizardInterface
@@ -24,14 +26,18 @@ from ui.qt import (
     QAction,
     QApplication,
     QCursor,
+    QDialog,
     QKeySequence,
     QMenu,
     QShortcut,
     Qt,
 )
 from utils.fileutils import isPythonMime
+from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
+from utils.run import getProjectPythonPath
 
+from .ruffformatconfig import loadFormatOnSave, saveFormatOnSave
 from .ruffformatdriver import RuffFormatDriver
 
 
@@ -46,6 +52,8 @@ class RuffFormatPlugin(WizardInterface):
         self.__mainMenu = None
         self.__mainMenuSeparator = None
         self.__mainRunAction = None
+        self.__formatOnSave = False
+        self.__afterSaveCallback = None
 
     @staticmethod
     def isIDEVersionCompatible(ideVersion):
@@ -56,8 +64,14 @@ class RuffFormatPlugin(WizardInterface):
         """Activates the plugin."""
         WizardInterface.activate(self, ideSettings, ideGlobalData)
 
+        self.__formatOnSave = loadFormatOnSave()
         self.__formatDriver = RuffFormatDriver(self.ide)
         self.__formatDriver.sigFinished.connect(self.__formatFinished)
+
+        if self.__formatOnSave:
+            self.__afterSaveCallback = self.__onAfterSave
+            if self.__afterSaveCallback not in GlobalData().afterSaveCallbacks:
+                GlobalData().afterSaveCallbacks.append(self.__afterSaveCallback)
 
         if self.__globalShortcut is None:
             self.__globalShortcut = QShortcut(QKeySequence("Ctrl+Shift+F"), self.ide.mainWindow, self.__run)
@@ -83,6 +97,13 @@ class RuffFormatPlugin(WizardInterface):
     def deactivate(self):
         """Deactivates the plugin."""
         self.__globalShortcut.setKey(0)
+
+        if self.__afterSaveCallback is not None and GlobalData().afterSaveCallbacks:
+            try:
+                GlobalData().afterSaveCallbacks.remove(self.__afterSaveCallback)
+            except ValueError:
+                pass
+            self.__afterSaveCallback = None
 
         self.__formatDriver = None
 
@@ -129,8 +150,53 @@ class RuffFormatPlugin(WizardInterface):
         parentMenu.aboutToShow.connect(self.__bufferMenuAboutToShow)
 
     def getConfigFunction(self):
-        """No config required for now. Format-on-save could be added later."""
-        return None
+        """Returns the config dialog for format-on-save option."""
+        return self.__configure
+
+    def __configure(self):
+        """Opens the configuration dialog."""
+        from .ruffformatconfig import RuffFormatConfigDialog
+
+        dlg = RuffFormatConfigDialog(self.__formatOnSave, self.ide.mainWindow)
+        if dlg.exec_() == QDialog.Accepted:
+            newVal = dlg.getFormatOnSave()
+            if newVal != self.__formatOnSave:
+                self.__formatOnSave = newVal
+                saveFormatOnSave(newVal)
+                if newVal and self.__afterSaveCallback is None:
+                    self.__afterSaveCallback = self.__onAfterSave
+                    GlobalData().afterSaveCallbacks.append(self.__afterSaveCallback)
+                elif not newVal and self.__afterSaveCallback is not None:
+                    try:
+                        GlobalData().afterSaveCallbacks.remove(self.__afterSaveCallback)
+                    except ValueError:
+                        pass
+                    self.__afterSaveCallback = None
+
+    def __onAfterSave(self, widget, fileName):
+        """Called after file save. Formats Python files if format-on-save is enabled."""
+        if not self.__formatOnSave:
+            return
+        if widget.getType() != MainWindowTabWidgetBase.PlainTextEditor:
+            return
+        if not isPythonMime(widget.getMime()):
+            return
+        if not os.path.isabs(fileName):
+            return
+        try:
+            pythonPath = getProjectPythonPath(self.ide.project)
+            result = subprocess.run(
+                [pythonPath, "-m", "ruff", "format", fileName],
+                capture_output=True,
+                timeout=10,
+                cwd=os.path.dirname(fileName),
+            )
+            if result.returncode == 0:
+                widget.reload()
+            elif result.stderr:
+                logging.warning("ruff format on save: %s", result.stderr.decode("utf-8", errors="replace")[:200])
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            logging.warning("ruff format on save failed: %s", exc)
 
     def __canRun(self, editorWidget):
         """Tells if format can be run for the given editor widget."""

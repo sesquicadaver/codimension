@@ -31,7 +31,6 @@ IDLE_TIMEOUT = 1500
 
 
 class NavBarComboBox(QComboBox):
-
     """Navigation bar combo box"""
 
     jumpToLine = pyqtSignal(int)
@@ -77,23 +76,21 @@ class NavBarComboBox(QComboBox):
 
 
 class PathElement:
-
     """Single path element"""
 
     def __init__(self, parent=None):
         self.icon = QLabel()
-        self.icon.setPixmap(getPixmap('nbsep.png'))
+        self.icon.setPixmap(getPixmap("nbsep.png"))
         self.combo = NavBarComboBox(parent)
 
 
 class NavigationBar(QFrame):
-
     """Navigation bar at the top of the editor (python only)"""
 
-    STATE_OK_UTD = 0        # Parsed OK, context up to date
-    STATE_OK_CHN = 1        # Parsed OK, context changed
-    STATE_BROKEN_UTD = 2    # Parsed with errors, context up to date
-    STATE_BROKEN_CHN = 3    # Parsed with errors, context changed
+    STATE_OK_UTD = 0  # Parsed OK, context up to date
+    STATE_OK_CHN = 1  # Parsed OK, context changed
+    STATE_BROKEN_UTD = 2  # Parsed with errors, context up to date
+    STATE_BROKEN_CHN = 3  # Parsed with errors, context changed
     STATE_UNKNOWN = 4
 
     def __init__(self, editor, parent):
@@ -151,16 +148,14 @@ class NavigationBar(QFrame):
     def __connectEditorSignals(self):
         """When it is a python file - connect to the editor signals"""
         if not self.__connected:
-            self.__editor.cursorPositionChanged.connect(
-                self.__cursorPositionChanged)
+            self.__editor.cursorPositionChanged.connect(self.__cursorPositionChanged)
             self.__editor.textChanged.connect(self.__onBufferChanged)
             self.__connected = True
 
     def __disconnectEditorSignals(self):
         """Disconnect the editor signals when the file is not a python one"""
         if self.__connected:
-            self.__editor.cursorPositionChanged.disconnect(
-                self.__cursorPositionChanged)
+            self.__editor.cursorPositionChanged.disconnect(self.__cursorPositionChanged)
             self.__editor.textChanged.disconnect(self.__onBufferChanged)
             self.__connected = False
 
@@ -180,8 +175,7 @@ class NavigationBar(QFrame):
         self.__layout.addWidget(self.__globalScopeCombo)
 
         self.__spacer = QWidget()
-        self.__spacer.setSizePolicy(QSizePolicy.Expanding,
-                                    QSizePolicy.Expanding)
+        self.__spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.__layout.addWidget(self.__spacer)
         self.setFixedHeight(self.__globalScopeCombo.height())
 
@@ -189,24 +183,21 @@ class NavigationBar(QFrame):
         """Updates the information icon"""
         if state != self.__currentIconState:
             if state == self.STATE_OK_UTD:
-                self.__infoIcon.setPixmap(getPixmap('nbokutd.png'))
+                self.__infoIcon.setPixmap(getPixmap("nbokutd.png"))
                 self.__infoIcon.setToolTip("Context is up to date")
                 self.__currentIconState = self.STATE_OK_UTD
             elif state == self.STATE_OK_CHN:
-                self.__infoIcon.setPixmap(getPixmap('nbokchn.png'))
-                self.__infoIcon.setToolTip("Context is not up to date; "
-                                           "will be updated on idle")
+                self.__infoIcon.setPixmap(getPixmap("nbokchn.png"))
+                self.__infoIcon.setToolTip("Context is not up to date; will be updated on idle")
                 self.__currentIconState = self.STATE_OK_CHN
             elif state == self.STATE_BROKEN_UTD:
-                self.__infoIcon.setPixmap(getPixmap('nbbrokenutd.png'))
-                self.__infoIcon.setToolTip("Context might be invalid "
-                                           "due to invalid python code")
+                self.__infoIcon.setPixmap(getPixmap("nbbrokenutd.png"))
+                self.__infoIcon.setToolTip("Context might be invalid due to invalid python code")
                 self.__currentIconState = self.STATE_BROKEN_UTD
             else:
                 # STATE_BROKEN_CHN
-                self.__infoIcon.setPixmap(getPixmap('nbbrokenchn.png'))
-                self.__infoIcon.setToolTip("Context might be invalid; "
-                                           "will be updated on idle")
+                self.__infoIcon.setPixmap(getPixmap("nbbrokenchn.png"))
+                self.__infoIcon.setToolTip("Context might be invalid; will be updated on idle")
                 self.__currentIconState = self.STATE_BROKEN_CHN
 
     def resizeEvent(self, event):
@@ -219,7 +210,7 @@ class NavigationBar(QFrame):
         if self.__parentWidget.getUUID() != uuid:
             return
 
-        if isPythonMime(newFileType) and Settings()['showNavigationBar']:
+        if isPythonMime(newFileType) and Settings()["showNavigationBar"]:
             # Update the bar and show it
             self.setVisible(True)
             self.updateBar()
@@ -233,7 +224,7 @@ class NavigationBar(QFrame):
     def updateSettings(self):
         """Called when navigation bar settings have been updated"""
         textMime = self.__parentWidget.getMime()
-        if Settings()['showNavigationBar'] and isPythonMime(textMime):
+        if Settings()["showNavigationBar"] and isPythonMime(textMime):
             self.setVisible(True)
             self.updateBar()
         else:
@@ -269,8 +260,7 @@ class NavigationBar(QFrame):
         if context.length == 0:
             self.__globalScopeCombo.setCurrentIndex(-1)
         else:
-            index = self.__globalScopeCombo.findData(
-                context.levels[0][0].line)
+            index = self.__globalScopeCombo.findData(context.levels[0][0].line)
             self.__globalScopeCombo.setCurrentIndex(index)
 
         usedFromStore = 0
@@ -291,16 +281,17 @@ class NavigationBar(QFrame):
                 combo.clear()
 
             # Populate the combo box
-            self.__populateClassesAndFunctions(context.levels[index - 1][0],
-                                               combo)
+            self.__populateClassesAndFunctions(context.levels[index - 1][0], combo)
             combo.setCurrentIndex(combo.findData(context.levels[index][0].line))
             index += 1
             usedFromStore += 1
 
         # it might need to have one more level with nothing selected
         if context.length > 0:
-            if len(context.levels[context.length - 1][0].functions) > 0 or \
-               len(context.levels[context.length - 1][0].classes) > 0:
+            if (
+                len(context.levels[context.length - 1][0].functions) > 0
+                or len(context.levels[context.length - 1][0].classes) > 0
+            ):
                 # Need to add a combo
                 if len(self.__path) <= usedFromStore:
                     newPathItem = PathElement(self)
@@ -316,8 +307,7 @@ class NavigationBar(QFrame):
                     combo = self.__path[index - 1].combo
                     combo.clear()
 
-                self.__populateClassesAndFunctions(
-                    context.levels[context.length - 1][0], combo)
+                self.__populateClassesAndFunctions(context.levels[context.length - 1][0], combo)
                 combo.setCurrentIndex(-1)
                 usedFromStore += 1
 
@@ -336,32 +326,29 @@ class NavigationBar(QFrame):
         """Repopulates the global scope combo box"""
         self.__globalScopeCombo.clear()
 
-        self.__populateClassesAndFunctions(self.__currentInfo,
-                                           self.__globalScopeCombo)
+        self.__populateClassesAndFunctions(self.__currentInfo, self.__globalScopeCombo)
 
-        if not Settings()['navbarglobalsimports']:
+        if not Settings()["navbarglobalsimports"]:
             return
 
-        if len(self.__currentInfo.globals) == 0 and \
-           len(self.__currentInfo.imports) == 0:
+        if len(self.__currentInfo.globals) == 0 and len(self.__currentInfo.imports) == 0:
             return
 
         if self.__globalScopeCombo.count() != 0:
-            self.__globalScopeCombo.insertSeparator(
-                self.__globalScopeCombo.count())
+            self.__globalScopeCombo.insertSeparator(self.__globalScopeCombo.count())
 
         for glob in self.__currentInfo.globals:
-            self.__globalScopeCombo.addItem('global ' + glob.name, glob.line)
+            self.__globalScopeCombo.addItem("global " + glob.name, glob.line)
         for imp in self.__currentInfo.imports:
-            self.__globalScopeCombo.addItem('import ' + imp.name, imp.line)
+            self.__globalScopeCombo.addItem("import " + imp.name, imp.line)
 
     @staticmethod
     def __populateClassesAndFunctions(infoObj, combo):
         """Populates the combo with classes and functions from the infoObj"""
         for klass in infoObj.classes:
-            combo.addItem('class ' + klass.name, klass.line)
+            combo.addItem("class " + klass.name, klass.line)
         for func in infoObj.functions:
-            combo.addItem('def ' + func.name, func.line)
+            combo.addItem("def " + func.name, func.line)
 
     def __cursorPositionChanged(self):
         """Cursor position changed"""

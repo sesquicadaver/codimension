@@ -21,7 +21,6 @@
 
 
 class SearchResultProviderIFace:
-
     """Interface class for the search providers"""
 
     def __init__(self):
@@ -30,15 +29,14 @@ class SearchResultProviderIFace:
     @staticmethod
     def serialize(parameters):
         """Provides a string which serializes the search parameters"""
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")
 
     @staticmethod
     def searchAgain(searchId, parameters, resultsViewer):
         """Repeats the search"""
-        raise Exception('Not implemented')
+        raise Exception("Not implemented")
 
     @staticmethod
     def getName():
         """Provides the display name"""
-        raise Exception('Not implemented')
-
+        raise Exception("Not implemented")

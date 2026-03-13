@@ -19,7 +19,6 @@
 
 """find in files dialog"""
 
-
 import logging
 import re
 import time
@@ -57,7 +56,6 @@ from .searchsupport import ItemToSearchIn
 
 
 class FindInFilesDialog(QDialog):
-
     """find in files dialog implementation"""
 
     IN_PROJECT = 0
@@ -94,7 +92,7 @@ class FindInFilesDialog(QDialog):
 
         self.__createLayout()
 
-        self.__maxEntries = Settings()['maxSearchEntries']
+        self.__maxEntries = Settings()["maxSearchEntries"]
 
         if params is None:
             self.__newSearch = True
@@ -106,9 +104,9 @@ class FindInFilesDialog(QDialog):
             #    'rbProject': ., 'rbOpen': ., 'rbDir': .}, ... ]
             self.__history = getFindInFilesHistory()
             self.__populateHistory()
-            self.findCombo.setEditText('')
-            self.dirEditCombo.setEditText('')
-            self.filterCombo.setEditText('')
+            self.findCombo.setEditText("")
+            self.dirEditCombo.setEditText("")
+            self.filterCombo.setEditText("")
 
             if where == self.IN_PROJECT:
                 self.setSearchInProject(what)
@@ -131,54 +129,54 @@ class FindInFilesDialog(QDialog):
         """Serializes the current search parameters"""
         termText = self.findCombo.currentText()
         filtText = self.__normalizeFilters(self.filterCombo.currentText())
-        dirText = ''
+        dirText = ""
         if self.dirRButton.isChecked():
             dirText = self.dirEditCombo.currentText().strip()
 
-        return {'term': termText,
-                'dir': dirText,
-                'filters': filtText,
-                'cbCase': self.caseCheckBox.isChecked(),
-                'cbWord': self.wordCheckBox.isChecked(),
-                'cbRegexp': self.regexpCheckBox.isChecked(),
-                'rbProject': self.projectRButton.isChecked(),
-                'rbOpen': self.openFilesRButton.isChecked(),
-                'rbDir': self.dirRButton.isChecked()}
+        return {
+            "term": termText,
+            "dir": dirText,
+            "filters": filtText,
+            "cbCase": self.caseCheckBox.isChecked(),
+            "cbWord": self.wordCheckBox.isChecked(),
+            "cbRegexp": self.regexpCheckBox.isChecked(),
+            "rbProject": self.projectRButton.isChecked(),
+            "rbOpen": self.openFilesRButton.isChecked(),
+            "rbDir": self.dirRButton.isChecked(),
+        }
 
     def __deserialize(self, item):
         """Deserializes the history item"""
-        self.findCombo.setEditText(item['term'])
-        self.dirEditCombo.setEditText(item['dir'])
-        self.filterCombo.setEditText(item['filters'])
-        self.caseCheckBox.setChecked(item['cbCase'])
-        self.wordCheckBox.setChecked(item['cbWord'])
-        self.regexpCheckBox.setChecked(item['cbRegexp'])
+        self.findCombo.setEditText(item["term"])
+        self.dirEditCombo.setEditText(item["dir"])
+        self.filterCombo.setEditText(item["filters"])
+        self.caseCheckBox.setChecked(item["cbCase"])
+        self.wordCheckBox.setChecked(item["cbWord"])
+        self.regexpCheckBox.setChecked(item["cbRegexp"])
 
-        self.projectRButton.setChecked(item['rbProject'])
-        self.openFilesRButton.setChecked(item['rbOpen'])
-        self.dirRButton.setChecked(item['rbDir'])
+        self.projectRButton.setChecked(item["rbProject"])
+        self.openFilesRButton.setChecked(item["rbOpen"])
+        self.dirRButton.setChecked(item["rbDir"])
 
-        self.dirEditCombo.setEnabled(item['rbDir'])
-        self.dirSelectButton.setEnabled(item['rbDir'])
+        self.dirEditCombo.setEnabled(item["rbDir"])
+        self.dirSelectButton.setEnabled(item["rbDir"])
 
     def __populateHistory(self):
         """Populates the search history in the combo boxes"""
         # No need to react to the change of the current index
-        self.findCombo.currentIndexChanged[int].disconnect(
-            self.__whatIndexChanged)
+        self.findCombo.currentIndexChanged[int].disconnect(self.__whatIndexChanged)
         index = 0
         for props in self.__history:
-            self.findCombo.addItem(props['term'], index)
-            directory = props['dir']
+            self.findCombo.addItem(props["term"], index)
+            directory = props["dir"]
             if directory:
                 self.dirEditCombo.addItem(directory)
-            filt = props['filters']
+            filt = props["filters"]
             if filt:
                 self.filterCombo.addItem(filt)
             index += 1
         # Restore the handler
-        self.findCombo.currentIndexChanged[int].connect(
-            self.__whatIndexChanged)
+        self.findCombo.currentIndexChanged[int].connect(self.__whatIndexChanged)
 
     def __createLayout(self):
         """Creates the dialog layout"""
@@ -193,11 +191,9 @@ class FindInFilesDialog(QDialog):
         findLabel.setText("Find text:")
         self.findCombo = QComboBox(self)
         self.__tuneCombo(self.findCombo)
-        self.findCombo.lineEdit().setToolTip(
-            "Regular expression to search for")
+        self.findCombo.lineEdit().setToolTip("Regular expression to search for")
         self.findCombo.editTextChanged.connect(self.__someTextChanged)
-        self.findCombo.currentIndexChanged[int].connect(
-            self.__whatIndexChanged)
+        self.findCombo.currentIndexChanged[int].connect(self.__whatIndexChanged)
 
         gridLayout.addWidget(findLabel, 0, 0, 1, 1)
         gridLayout.addWidget(self.findCombo, 0, 1, 1, 1)
@@ -223,8 +219,7 @@ class FindInFilesDialog(QDialog):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            filesGroupbox.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(filesGroupbox.sizePolicy().hasHeightForWidth())
         filesGroupbox.setSizePolicy(sizePolicy)
 
         gridLayoutFG = QGridLayout(filesGroupbox)
@@ -280,8 +275,7 @@ class FindInFilesDialog(QDialog):
         buttonBox = QDialogButtonBox(self)
         buttonBox.setOrientation(Qt.Horizontal)
         buttonBox.setStandardButtons(QDialogButtonBox.Cancel)
-        self.findButton = buttonBox.addButton("Find",
-                                              QDialogButtonBox.AcceptRole)
+        self.findButton = buttonBox.addButton("Find", QDialogButtonBox.AcceptRole)
         self.findButton.setDefault(True)
         self.findButton.clicked.connect(self.__process)
         verticalLayout.addWidget(buttonBox)
@@ -294,8 +288,7 @@ class FindInFilesDialog(QDialog):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            comboBox.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(comboBox.sizePolicy().hasHeightForWidth())
         comboBox.setSizePolicy(sizePolicy)
         comboBox.setEditable(True)
         comboBox.setInsertPolicy(QComboBox.InsertAtTop)
@@ -416,41 +409,42 @@ class FindInFilesDialog(QDialog):
 
     def getParameters(self):
         """Provides a dictionary with the search parameters"""
-        parameters = {'term': self.findCombo.currentText(),
-                      'case': self.caseCheckBox.isChecked(),
-                      'whole': self.wordCheckBox.isChecked(),
-                      'regexp': self.regexpCheckBox.isChecked()}
+        parameters = {
+            "term": self.findCombo.currentText(),
+            "case": self.caseCheckBox.isChecked(),
+            "whole": self.wordCheckBox.isChecked(),
+            "regexp": self.regexpCheckBox.isChecked(),
+        }
         if self.projectRButton.isChecked():
-            parameters['in-project'] = True
-            parameters['in-opened'] = False
-            parameters['in-dir'] = ''
+            parameters["in-project"] = True
+            parameters["in-opened"] = False
+            parameters["in-dir"] = ""
         elif self.openFilesRButton.isChecked():
-            parameters['in-project'] = False
-            parameters['in-opened'] = True
-            parameters['in-dir'] = ''
+            parameters["in-project"] = False
+            parameters["in-opened"] = True
+            parameters["in-dir"] = ""
         else:
-            parameters['in-project'] = False
-            parameters['in-opened'] = False
-            parameters['in-dir'] = realpath(
-                self.dirEditCombo.currentText().strip())
-        parameters['file-filter'] = self.filterCombo.currentText().strip()
+            parameters["in-project"] = False
+            parameters["in-opened"] = False
+            parameters["in-dir"] = realpath(self.dirEditCombo.currentText().strip())
+        parameters["file-filter"] = self.filterCombo.currentText().strip()
 
         return parameters
 
     def __populateSearchAgain(self, params):
         """Populates the search parameters to do the same search"""
-        self.findCombo.setEditText(params['term'])
+        self.findCombo.setEditText(params["term"])
         self.findCombo.setEnabled(False)
-        self.caseCheckBox.setChecked(params['case'])
+        self.caseCheckBox.setChecked(params["case"])
         self.caseCheckBox.setEnabled(False)
-        self.wordCheckBox.setChecked(params['whole'])
+        self.wordCheckBox.setChecked(params["whole"])
         self.wordCheckBox.setEnabled(False)
-        self.regexpCheckBox.setChecked(params['regexp'])
+        self.regexpCheckBox.setChecked(params["regexp"])
         self.regexpCheckBox.setEnabled(False)
 
-        if params['in-project']:
+        if params["in-project"]:
             self.projectRButton.setChecked(True)
-        elif params['in-opened']:
+        elif params["in-opened"]:
             self.openFilesRButton.setChecked(True)
         else:
             self.dirRButton.setChecked(True)
@@ -459,22 +453,22 @@ class FindInFilesDialog(QDialog):
         self.openFilesRButton.setEnabled(False)
         self.dirRButton.setEnabled(False)
 
-        self.dirEditCombo.setEditText(params['in-dir'])
+        self.dirEditCombo.setEditText(params["in-dir"])
         self.dirEditCombo.setEnabled(False)
         self.dirSelectButton.setEnabled(False)
 
-        self.filterCombo.setEditText(params['file-filter'])
+        self.filterCombo.setEditText(params["file-filter"])
         self.filterCombo.setEnabled(False)
 
     @staticmethod
     def __normalizeFilters(text):
         """Normalizes the filters string"""
         normParts = []
-        for part in text.strip().split(';'):
+        for part in text.strip().split(";"):
             part = part.strip()
             if part:
                 normParts.append(part)
-        return '; '.join(normParts)
+        return "; ".join(normParts)
 
     def __testSearchability(self):
         """Tests the searchability and sets the Find button status"""
@@ -507,8 +501,7 @@ class FindInFilesDialog(QDialog):
             filters = self.__compileFilters()
         except Exception:
             self.findButton.setEnabled(False)
-            self.findButton.setToolTip("Incorrect files "
-                                       "filter regular expression")
+            self.findButton.setToolTip("Incorrect files filter regular expression")
             return
 
         matched = False
@@ -566,9 +559,7 @@ class FindInFilesDialog(QDialog):
                 return matched, tooLong
             if isdir(path + item):
                 dname = path + item + sep
-                matched, tooLong = FindInFilesDialog.__matchInDir(dname,
-                                                                  filters,
-                                                                  startTime)
+                matched, tooLong = FindInFilesDialog.__matchInDir(dname, filters, startTime)
                 if matched or tooLong:
                     return matched, tooLong
                 continue
@@ -598,7 +589,7 @@ class FindInFilesDialog(QDialog):
 
     def __someTextChanged(self, text):
         """Text to search, filter or dir name has been changed"""
-        del text    # unused argument
+        del text  # unused argument
         self.__testSearchability()
 
     def __whatIndexChanged(self, index):
@@ -614,8 +605,8 @@ class FindInFilesDialog(QDialog):
         options = QFileDialog.Options()
         options |= QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog
         dirName = QFileDialog.getExistingDirectory(
-            self, 'Select directory to search in',
-            self.dirEditCombo.currentText(), options)
+            self, "Select directory to search in", self.dirEditCombo.currentText(), options
+        )
 
         if dirName:
             self.dirEditCombo.setEditText(normpath(dirName))
@@ -645,10 +636,8 @@ class FindInFilesDialog(QDialog):
                     if isFileSearchable(fname, False):
                         files.append(ItemToSearchIn(fname, ""))
                 else:
-                    if widget.getType() in \
-                                [MainWindowTabWidgetBase.PlainTextEditor]:
-                        files.append(ItemToSearchIn(fname,
-                                                    widget.getUUID()))
+                    if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor]:
+                        files.append(ItemToSearchIn(fname, widget.getUUID()))
             QApplication.processEvents()
             if self.__cancelRequest:
                 raise Exception("Cancel request")
@@ -675,13 +664,12 @@ class FindInFilesDialog(QDialog):
             if self.__cancelRequest:
                 raise Exception("Cancel request")
             if isdir(path + item):
-                if item in ['.svn', '.cvs', '.git', '.hg']:
+                if item in [".svn", ".cvs", ".git", ".hg"]:
                     # It does not make sense to search in revision control dirs
                     continue
                 anotherDir, isLoop = resolveLink(path + item)
                 if not isLoop:
-                    self.__dirFiles(anotherDir + sep,
-                                    filters, files)
+                    self.__dirFiles(anotherDir + sep, filters, files)
                 continue
             if not isfile(path + item):
                 continue
@@ -701,17 +689,15 @@ class FindInFilesDialog(QDialog):
                         if isFileSearchable(realItem):
                             files.append(ItemToSearchIn(realItem, ""))
                     else:
-                        if widget.getType() in \
-                                    [MainWindowTabWidgetBase.PlainTextEditor]:
-                            files.append(ItemToSearchIn(realItem,
-                                                        widget.getUUID()))
+                        if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor]:
+                            files.append(ItemToSearchIn(realItem, widget.getUUID()))
 
     def __compileFilters(self):
         """Compiles the filters"""
         filtersText = self.filterCombo.currentText().strip()
         filtersRe = []
         if filtersText != "":
-            for filt in filtersText.split(';'):
+            for filt in filtersText.split(";"):
                 filtersRe.append(re.compile(filt.strip(), re.IGNORECASE))
         return filtersRe
 
@@ -737,15 +723,14 @@ class FindInFilesDialog(QDialog):
 
         # Add entries to the combo box if required
         historyItem = self.__serialize()
-        _, historyIndex = self.__historyIndexByWhat(
-            self.findCombo.currentText())
+        _, historyIndex = self.__historyIndexByWhat(self.findCombo.currentText())
         if historyIndex is not None:
             self.__history[historyIndex] = historyItem
         else:
             historyIndex = 0
             self.__history.insert(0, historyItem)
             if len(self.__history) > self.__maxEntries:
-                self.__history = self.__history[:self.__maxEntries]
+                self.__history = self.__history[: self.__maxEntries]
 
         self.findCombo.clear()
         self.filterCombo.clear()
@@ -753,15 +738,15 @@ class FindInFilesDialog(QDialog):
         self.__populateHistory()
 
         self.findCombo.setCurrentIndex(historyIndex)
-        self.findCombo.setCurrentText(historyItem['term'])
+        self.findCombo.setCurrentText(historyItem["term"])
 
-        fltValue = historyItem['filters']
+        fltValue = historyItem["filters"]
         if fltValue:
             index = self.__indexByText(self.filterCombo, fltValue)
             self.filterCombo.setCurrentIndex(index)
         self.filterCombo.setCurrentText(fltValue)
 
-        dirValue = historyItem['dir']
+        dirValue = historyItem["dir"]
         if dirValue:
             index = self.__indexByText(self.dirEditCombo, dirValue)
             self.dirEditCombo.setCurrentIndex(index)
@@ -797,13 +782,13 @@ class FindInFilesDialog(QDialog):
             return
 
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-        self.fileLabel.setPath('Building list of files to search in...')
+        self.fileLabel.setPath("Building list of files to search in...")
         QApplication.processEvents()
         try:
             files = self.__buildFilesList()
         except Exception as exc:
             QApplication.restoreOverrideCursor()
-            if 'Cancel request' not in str(exc):
+            if "Cancel request" not in str(exc):
                 logging.error(str(exc))
             self.close()
             return
@@ -811,21 +796,19 @@ class FindInFilesDialog(QDialog):
         QApplication.processEvents()
 
         if not files:
-            self.fileLabel.setPath('No files to search in')
+            self.fileLabel.setPath("No files to search in")
             return
 
         self.progressBar.setRange(0, len(files))
 
         index = 1
         for item in files:
-
             if self.__cancelRequest:
                 self.__inProgress = False
                 self.close()
                 return
 
-            self.fileLabel.setPath('Matches: ' + str(numberOfMatches) +
-                                   ' Processing: ' + item.fileName)
+            self.fileLabel.setPath("Matches: " + str(numberOfMatches) + " Processing: " + item.fileName)
 
             item.search(self.searchRegexp)
             found = len(item.matches)
@@ -842,9 +825,8 @@ class FindInFilesDialog(QDialog):
             # If it is redo then close the dialog anyway
             self.close()
         else:
-            msg = 'No matches in ' + str(len(files)) + ' file'
+            msg = "No matches in " + str(len(files)) + " file"
             if len(files) > 1:
-                msg += 's'
+                msg += "s"
             self.fileLabel.setPath(msg)
             self.__inProgress = False
-

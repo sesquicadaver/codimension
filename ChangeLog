@@ -1,3 +1,18 @@
+2025 Mar 13
+
+* Plugins implementation plan — items 5+ (testing, CI):
+  - tests/: test_todoscanner.py (per-plugin smoke, plan 6.1)
+  - CI: smoke via import check, pytest job for tests/
+  - ui/qt.py: restore QThread (required by plantumlcache, webresourcecache)
+
+2025 Mar 13
+
+* Plugins implementation plan — items 1–4:
+  - ChangeLog: updated for plugins phase completion
+  - LintDriverBase: new base class for ruff/bandit/mypy drivers (cdmplugins/lintdriverbase.py)
+  - Ruff on codimension: ruff check --fix, ruff format; codimension added to CI
+  - Format on save: ruffformat config dialog with format-on-save option; beforeSave hook in editorsmanager
+
 2025 Mar 11
 
 * Documentation: full project docs update (fork status, GPL, Git standards):

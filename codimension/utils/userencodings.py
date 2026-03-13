@@ -25,7 +25,6 @@ from .fileutils import loadJSON, saveJSON
 
 
 class FileEncodings:
-
     """Loads/stores/saves the file encodingss"""
 
     def __init__(self):
@@ -47,23 +46,21 @@ class FileEncodings:
         if not dirName.endswith(os.path.sep):
             dirName += os.path.sep
         if not os.path.isdir(dirName):
-            raise Exception('Directory name is expected for file '
-                            'encodings. The given ' + dirName + ' is not.')
+            raise Exception("Directory name is expected for file encodings. The given " + dirName + " is not.")
 
-        self.__encFileName = dirName + 'encodings.json'
+        self.__encFileName = dirName + "encodings.json"
         if os.path.exists(self.__encFileName):
             FileEncodings.load(self)
 
     def load(self):
         """Loads the saved encodings file"""
         if self.__encFileName:
-            self.__encodings = loadJSON(self.__encFileName,
-                                        'file encodings', {})
+            self.__encodings = loadJSON(self.__encFileName, "file encodings", {})
 
     def save(self):
         """Saves the encodings into a file"""
         if self.__encFileName:
-            saveJSON(self.__encFileName, self.__encodings, 'file encodings')
+            saveJSON(self.__encFileName, self.__encodings, "file encodings")
 
     def getFileEncoding(self, fileName):
         """Provides None if not found"""

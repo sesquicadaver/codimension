@@ -42,8 +42,8 @@ from utils.limits import MAXINT_32
 
 RUBBER_BAND_MIN_SIZE = 5
 
-class CFSceneMouseMixin:
 
+class CFSceneMouseMixin:
     """Encapsulates mouse clicks handling and related functionality"""
 
     def __init__(self):
@@ -142,8 +142,10 @@ class CFSceneMouseMixin:
                 rect = QRect(self.lmbOrigin, event.scenePos().toPoint())
                 self.rubberBand.setGeometry(rect.normalized())
                 if not self.__isRubberBandVisible():
-                    if abs(rect.left() - rect.right()) >= RUBBER_BAND_MIN_SIZE or \
-                       abs(rect.top() - rect.bottom()) >= RUBBER_BAND_MIN_SIZE:
+                    if (
+                        abs(rect.left() - rect.right()) >= RUBBER_BAND_MIN_SIZE
+                        or abs(rect.top() - rect.bottom()) >= RUBBER_BAND_MIN_SIZE
+                    ):
                         self.rubberBand.show()
             except Exception:
                 # Sometimes there is a race and the rubber band has already
@@ -183,23 +185,23 @@ class CFSceneMouseMixin:
                 if item.scopedItem():
                     # Some scope items have no header element at all
                     # like try/except with no condition, else
-                    if item.kind in [CellElement.TRY_SCOPE,
-                                     CellElement.ELSE_SCOPE,
-                                     CellElement.FINALLY_SCOPE,
-                                     CellElement.EXCEPT_SCOPE]:
+                    if item.kind in [
+                        CellElement.TRY_SCOPE,
+                        CellElement.ELSE_SCOPE,
+                        CellElement.FINALLY_SCOPE,
+                        CellElement.EXCEPT_SCOPE,
+                    ]:
                         if item.subKind != ScopeCellElement.TOP_LEFT:
                             continue
 
-                    elif item.subKind not in [ScopeCellElement.DECLARATION,
-                                              ScopeCellElement.DOCSTRING]:
+                    elif item.subKind not in [ScopeCellElement.DECLARATION, ScopeCellElement.DOCSTRING]:
                         continue
 
                     if item.subKind == ScopeCellElement.DECLARATION:
                         item = item.getTopLeftItem()
 
                 # The call must be done on item (not on rubberBand)
-                if item.collidesWithItem(self.rubberBand,
-                                         Qt.ContainsItemBoundingRect):
+                if item.collidesWithItem(self.rubberBand, Qt.ContainsItemBoundingRect):
                     self.addToSelection(item)
         else:
             item = self.itemAt(event.scenePos(), QTransform())
@@ -210,10 +212,11 @@ class CFSceneMouseMixin:
             else:
                 modifiers = event.modifiers()
                 if modifiers == Qt.NoModifier:
-                    if logicalItem.kind in [CellElement.INDEPENDENT_DOC,
-                                            CellElement.LEADING_DOC,
-                                            CellElement.ABOVE_DOC] and \
-                       item.isProxyItem():
+                    if (
+                        logicalItem.kind
+                        in [CellElement.INDEPENDENT_DOC, CellElement.LEADING_DOC, CellElement.ABOVE_DOC]
+                        and item.isProxyItem()
+                    ):
                         if logicalItem.cmlRef.link is None:
                             self.clearSelection()
                             logicalItem.setSelected(True)
@@ -237,11 +240,13 @@ class CFSceneMouseMixin:
                     if self.isOpenGroupItem(item):
                         self.addToSelection(item)
                     else:
-                        if logicalItem.kind in [CellElement.SCOPE_COMMENT_BADGE,
-                                                CellElement.SCOPE_DOCLINK_BADGE,
-                                                CellElement.SCOPE_EXCEPT_BADGE,
-                                                CellElement.SCOPE_DOCSTRING_BADGE,
-                                                CellElement.SCOPE_DECORATOR_BADGE]:
+                        if logicalItem.kind in [
+                            CellElement.SCOPE_COMMENT_BADGE,
+                            CellElement.SCOPE_DOCLINK_BADGE,
+                            CellElement.SCOPE_EXCEPT_BADGE,
+                            CellElement.SCOPE_DOCSTRING_BADGE,
+                            CellElement.SCOPE_DECORATOR_BADGE,
+                        ]:
                             itemsForRef = self.findItemsForRef(logicalItem.ref.ref)
                         else:
                             itemsForRef = self.findItemsForRef(logicalItem.ref)
@@ -348,9 +353,7 @@ class CFSceneMouseMixin:
                 return item.ref.body.begin, item.ref.body.end
 
             # try, while, for are special
-            if item.kind in [CellElement.TRY_SCOPE,
-                             CellElement.FOR_SCOPE,
-                             CellElement.WHILE_SCOPE]:
+            if item.kind in [CellElement.TRY_SCOPE, CellElement.FOR_SCOPE, CellElement.WHILE_SCOPE]:
                 lastSuiteItem = item.ref.suite[-1]
                 return item.ref.body.begin, lastSuiteItem.end
 
@@ -393,16 +396,17 @@ class CFSceneMouseMixin:
             if item.kind in [CellElement.BADGE, CellElement.SVG]:
                 continue
             if item.scopedItem():
-                if item.subKind not in [ScopeCellElement.TOP_LEFT,
-                                        ScopeCellElement.DOCSTRING]:
+                if item.subKind not in [ScopeCellElement.TOP_LEFT, ScopeCellElement.DOCSTRING]:
                     continue
             if not self.isOpenGroupItem(item):
                 if hasattr(item, "ref"):
-                    if item.kind in [CellElement.SCOPE_COMMENT_BADGE,
-                                     CellElement.SCOPE_DOCLINK_BADGE,
-                                     CellElement.SCOPE_EXCEPT_BADGE,
-                                     CellElement.SCOPE_DOCSTRING_BADGE,
-                                     CellElement.SCOPE_DECORATOR_BADGE]:
+                    if item.kind in [
+                        CellElement.SCOPE_COMMENT_BADGE,
+                        CellElement.SCOPE_DOCLINK_BADGE,
+                        CellElement.SCOPE_EXCEPT_BADGE,
+                        CellElement.SCOPE_DOCSTRING_BADGE,
+                        CellElement.SCOPE_DECORATOR_BADGE,
+                    ]:
                         if item.ref.ref is ref:
                             result.append(item)
                     else:
@@ -413,7 +417,7 @@ class CFSceneMouseMixin:
     @staticmethod
     def isOpenGroupItem(item):
         """True if it is an open group item"""
-        if hasattr(item, 'kind'):
+        if hasattr(item, "kind"):
             return item.kind == CellElement.OPENED_GROUP_BEGIN
         return False
 
@@ -424,7 +428,7 @@ class CFSceneMouseMixin:
         The distance to the item (0 - within the item).
         line and pos are 1-based.
         """
-        del pos     # unused argument
+        del pos  # unused argument
         candidates = []
         distance = MAXINT_32
 
@@ -434,7 +438,7 @@ class CFSceneMouseMixin:
 
             dist = item.getLineDistance(line)
             if dist == MAXINT_32:
-                continue    # Not really an option
+                continue  # Not really an option
             if dist < distance:
                 distance = dist
                 candidates = [item]
@@ -466,4 +470,3 @@ class CFSceneMouseMixin:
                 distance = dist
                 candidate = item
         return self.__getLogicalItem(candidate), distance
-

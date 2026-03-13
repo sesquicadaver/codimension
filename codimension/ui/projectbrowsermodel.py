@@ -35,13 +35,12 @@ from .viewitems import TreeViewDirectoryItem
 
 
 class ProjectBrowserModel(BrowserModelBase):
-
     """Class implementing the project browser model"""
 
     def __init__(self, parent):
         self.__mainWindow = parent
         BrowserModelBase.__init__(self, "Name", self.__mainWindow)
-        self.setTooltips(Settings()['projectTooltips'])
+        self.setTooltips(Settings()["projectTooltips"])
         self.populateModel()
         GlobalData().project.sigProjectChanged.connect(self.__onProjectChanged)
 
@@ -88,8 +87,7 @@ class ProjectBrowserModel(BrowserModelBase):
 
         item = index.internalPointer()
         if item.vcsStatus:
-            indicator = self.__mainWindow.vcsManager.getStatusIndicator(
-                item.vcsStatus)
+            indicator = self.__mainWindow.vcsManager.getStatusIndicator(item.vcsStatus)
             if role == Qt.TextColorRole:
                 if indicator and indicator.foregroundColor:
                     return indicator.foregroundColor

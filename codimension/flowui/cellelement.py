@@ -32,7 +32,6 @@ from .routines import distance, getDocComment
 
 
 class CellElement:
-
     """Base class for all the elements which could be found on the canvas"""
 
     UNKNOWN = -1
@@ -114,9 +113,9 @@ class CellElement:
     def __init__(self, ref, canvas, x, y):
         self.kind = self.UNKNOWN
         self.subKind = self.UNKNOWN
-        self.ref = ref              # reference to the control flow object
-        self.addr = [x, y]          # indexes in the current canvas
-        self.canvas = canvas        # reference to the canvas
+        self.ref = ref  # reference to the control flow object
+        self.addr = [x, y]  # indexes in the current canvas
+        self.canvas = canvas  # reference to the canvas
 
         self.tailComment = False
 
@@ -140,9 +139,18 @@ class CellElement:
         self.aboveBadges = AboveBadges()
 
     def __str__(self):
-        return kindToString(self.kind) + \
-            '[' + str(self.minWidth) + 'x' + str(self.minHeight) + '] -> [' + \
-            str(self.width) + 'x' + str(self.height) + ']'
+        return (
+            kindToString(self.kind)
+            + "["
+            + str(self.minWidth)
+            + "x"
+            + str(self.minHeight)
+            + "] -> ["
+            + str(self.width)
+            + "x"
+            + str(self.height)
+            + "]"
+        )
 
     def appendCommentBadges(self):
         """Appends the comment badges (regular, non scope items)"""
@@ -159,8 +167,7 @@ class CellElement:
                 self.aboveBadges.append(DocLinkBadgeItem(self))
             if self.ref.leadingComment:
                 if dividerAdded:
-                    self.aboveBadges.append(
-                        AboveBadgesSpacer(settings.badgeToBadgeHSpacing))
+                    self.aboveBadges.append(AboveBadgesSpacer(settings.badgeToBadgeHSpacing))
                 else:
                     if self.kind != self.DECORATOR:
                         self.aboveBadges.append(AboveBadgesDivider())
@@ -168,8 +175,7 @@ class CellElement:
                 self.aboveBadges.append(CommentBadgeItem(self, False))
             if self.ref.sideComment:
                 if dividerAdded:
-                    self.aboveBadges.append(
-                        AboveBadgesSpacer(settings.badgeToBadgeHSpacing))
+                    self.aboveBadges.append(AboveBadgesSpacer(settings.badgeToBadgeHSpacing))
                 else:
                     if self.kind != self.DECORATOR:
                         self.aboveBadges.append(AboveBadgesDivider())
@@ -178,26 +184,22 @@ class CellElement:
 
     def render(self):
         """Renders the graphics considering settings"""
-        raise Exception("render() is not implemented for " +
-                        kindToString(self.kind))
+        raise Exception("render() is not implemented for " + kindToString(self.kind))
 
     def drawBadges(self, scene):
         """Draws the badges raw"""
-        self.drawBadges(scene, self.canvas.settings,
-                        self.baseX, self.baseY, self.minWidth)
+        self.drawBadges(scene, self.canvas.settings, self.baseX, self.baseY, self.minWidth)
 
     def draw(self, scene, baseX, baseY):
         """Draws the element on the real canvas. Should respect settings."""
-        del scene   # unused argument
-        del baseX   # unused argument
-        del baseY   # unused argument
-        raise Exception("draw() is not implemented for " +
-                        kindToString(self.kind))
+        del scene  # unused argument
+        del baseX  # unused argument
+        del baseY  # unused argument
+        raise Exception("draw() is not implemented for " + kindToString(self.kind))
 
     def getBoundingRect(self, text):
         """Provides the bounding rectangle for a monospaced font"""
-        return self.canvas.settings.monoFontMetrics.boundingRect(
-            0, 0, MAXINT_32, MAXINT_32, 0, text)
+        return self.canvas.settings.monoFontMetrics.boundingRect(0, 0, MAXINT_32, MAXINT_32, 0, text)
 
     def getTooltip(self):
         """Provides the tooltip"""
@@ -207,10 +209,22 @@ class CellElement:
             parts.insert(0, canvas.getScopeName())
             canvas = canvas.canvas
         if self.canvas.settings.debug:
-            return "::".join(parts) + "<br>Size: " + \
-                str(self.width) + "x" + str(self.height) + \
-                " (" + str(self.minWidth) + "x" + str(self.minHeight) + ")" + \
-                " Row: " + str(self.addr[1]) + " Column: " + str(self.addr[0])
+            return (
+                "::".join(parts)
+                + "<br>Size: "
+                + str(self.width)
+                + "x"
+                + str(self.height)
+                + " ("
+                + str(self.minWidth)
+                + "x"
+                + str(self.minHeight)
+                + ")"
+                + " Row: "
+                + str(self.addr[1])
+                + " Column: "
+                + str(self.addr[0])
+            )
         return "::".join(parts)
 
     def getCanvasTooltip(self):
@@ -225,10 +239,18 @@ class CellElement:
         if not path:
             path = " ::"
         if self.canvas.settings.debug:
-            return path + "<br>Size: " + str(self.canvas.width) + "x" + \
-                   str(self.canvas.height) + \
-                   " (" + str(self.canvas.minWidth) + "x" + \
-                   str(self.canvas.minHeight) + ")"
+            return (
+                path
+                + "<br>Size: "
+                + str(self.canvas.width)
+                + "x"
+                + str(self.canvas.height)
+                + " ("
+                + str(self.canvas.minWidth)
+                + "x"
+                + str(self.canvas.minHeight)
+                + ")"
+            )
         return path
 
     def getEditor(self):
@@ -274,26 +296,39 @@ class CellElement:
 
     def scopedItem(self):
         """True if it is a scoped item"""
-        return self.kind in (self.FILE_SCOPE, self.FUNC_SCOPE,
-                             self.CLASS_SCOPE, self.FOR_SCOPE,
-                             self.WHILE_SCOPE, self.TRY_SCOPE,
-                             self.WITH_SCOPE,
-                             self.ELSE_SCOPE, self.EXCEPT_SCOPE,
-                             self.FINALLY_SCOPE,
-                             self.SCOPE_H_SIDE_EDGE, self.SCOPE_V_SIDE_EDGE,
-                             self.SCOPE_CORNER_EDGE)
+        return self.kind in (
+            self.FILE_SCOPE,
+            self.FUNC_SCOPE,
+            self.CLASS_SCOPE,
+            self.FOR_SCOPE,
+            self.WHILE_SCOPE,
+            self.TRY_SCOPE,
+            self.WITH_SCOPE,
+            self.ELSE_SCOPE,
+            self.EXCEPT_SCOPE,
+            self.FINALLY_SCOPE,
+            self.SCOPE_H_SIDE_EDGE,
+            self.SCOPE_V_SIDE_EDGE,
+            self.SCOPE_CORNER_EDGE,
+        )
 
     def isProxyItem(self):
         """True if it is a proxy item"""
-        return self.kind in (self.BADGE, self.SVG, self.CONNECTOR,
-                             self.DEPENDENT_CONNECTOR, self.TEXT,
-                             self.RUBBER_BAND, self.LINE, self.RECTANGLE,
-                             self.GROUP_CORNER_CONROL)
+        return self.kind in (
+            self.BADGE,
+            self.SVG,
+            self.CONNECTOR,
+            self.DEPENDENT_CONNECTOR,
+            self.TEXT,
+            self.RUBBER_BAND,
+            self.LINE,
+            self.RECTANGLE,
+            self.GROUP_CORNER_CONROL,
+        )
 
     def isSpacerItem(self):
         """True is it is a some kind of a spacer"""
-        return self.kind in (self.VACANT, self.H_SPACER, self.V_SPACER,
-                             self.H_GROUP_SPACER, self.SPACER)
+        return self.kind in (self.VACANT, self.H_SPACER, self.V_SPACER, self.H_GROUP_SPACER, self.SPACER)
 
     @staticmethod
     def getProxiedItem():
@@ -302,23 +337,23 @@ class CellElement:
 
     def isComment(self):
         """True if it is a comment"""
-        return self.kind in (self.INDEPENDENT_COMMENT,
-                             self.LEADING_COMMENT,
-                             self.SIDE_COMMENT,
-                             self.ABOVE_COMMENT,
-                             self.INDEPENDENT_MINIMIZED_COMMENT,
-                             self.SCOPE_COMMENT_BADGE,
-                             self.SCOPE_DOCLINK_BADGE)
+        return self.kind in (
+            self.INDEPENDENT_COMMENT,
+            self.LEADING_COMMENT,
+            self.SIDE_COMMENT,
+            self.ABOVE_COMMENT,
+            self.INDEPENDENT_MINIMIZED_COMMENT,
+            self.SCOPE_COMMENT_BADGE,
+            self.SCOPE_DOCLINK_BADGE,
+        )
 
     def isCMLDoc(self):
         """True if it is a CML doc item"""
-        return self.kind in (self.INDEPENDENT_DOC, self.LEADING_DOC,
-                             self.ABOVE_DOC)
+        return self.kind in (self.INDEPENDENT_DOC, self.LEADING_DOC, self.ABOVE_DOC)
 
     def isGroupItem(self):
         """True if it is some kind of a group item"""
-        return self.kind in (self.OPENED_GROUP_BEGIN, self.OPENED_GROUP_END,
-                             self.COLLAPSED_GROUP, self.EMPTY_GROUP)
+        return self.kind in (self.OPENED_GROUP_BEGIN, self.OPENED_GROUP_END, self.COLLAPSED_GROUP, self.EMPTY_GROUP)
 
     def isDocstring(self):
         """True if it is a docstring"""
@@ -326,13 +361,15 @@ class CellElement:
 
     def isMinimizedItem(self):
         """True if it is a minimized item"""
-        return self.kind in (self.INDEPENDENT_MINIMIZED_COMMENT,
-                             self.INDEPENDENT_MINIMIZED_DOC,
-                             self.SCOPE_EXCEPT_BADGE,
-                             self.SCOPE_DOCSTRING_BADGE,
-                             self.SCOPE_COMMENT_BADGE,
-                             self.SCOPE_DECORATOR_BADGE,
-                             self.SCOPE_DOCLINK_BADGE)
+        return self.kind in (
+            self.INDEPENDENT_MINIMIZED_COMMENT,
+            self.INDEPENDENT_MINIMIZED_DOC,
+            self.SCOPE_EXCEPT_BADGE,
+            self.SCOPE_DOCSTRING_BADGE,
+            self.SCOPE_COMMENT_BADGE,
+            self.SCOPE_DECORATOR_BADGE,
+            self.SCOPE_DOCLINK_BADGE,
+        )
 
     def getDistance(self, absPos):
         """Default implementation.
@@ -359,8 +396,7 @@ class CellElement:
         if hasattr(self.ref, "leadingComment"):
             if self.ref.leadingComment:
                 if self.ref.leadingComment.parts:
-                    line = min(self.ref.leadingComment.parts[0].beginLine,
-                               line)
+                    line = min(self.ref.leadingComment.parts[0].beginLine, line)
         return min(self.ref.body.beginLine, line)
 
     def getLineRange(self):
@@ -375,14 +411,14 @@ class CellElement:
     def getLinesSuffix(lineRange):
         """Provides the proper suffix for the selected item tooltips"""
         if lineRange[0] == lineRange[1]:
-            return 'line ' + str(lineRange[0])
-        return 'lines ' + str(lineRange[0]) + "-" + str(lineRange[1])
+            return "line " + str(lineRange[0])
+        return "lines " + str(lineRange[0]) + "-" + str(lineRange[1])
 
     @staticmethod
     def _putMimeToClipboard(value):
         """Copies the value (string) to a clipboard as mime data"""
         mimeData = QMimeData()
-        mimeData.setData('text/codimension', value.encode(DEFAULT_ENCODING))
+        mimeData.setData("text/codimension", value.encode(DEFAULT_ENCODING))
         QApplication.clipboard().setMimeData(mimeData)
 
     def copyToClipboard(self):
@@ -391,68 +427,68 @@ class CellElement:
 
 
 __kindToString = {
-    CellElement.UNKNOWN: 'UNKNOWN',
-    CellElement.VCANVAS: 'VCANVAS',
-    CellElement.VACANT: 'VACANT',
-    CellElement.H_SPACER: 'H_SPACER',
-    CellElement.V_SPACER: 'V_SPACER',
-    CellElement.H_GROUP_SPACER: 'H_GROUP_SPACER',
-    CellElement.SPACER: 'SPACER',
-    CellElement.NO_SCOPE: 'NO_SCOPE',
-    CellElement.FILE_SCOPE: 'FILE_SCOPE',
-    CellElement.FUNC_SCOPE: 'FUNC_SCOPE',
-    CellElement.CLASS_SCOPE: 'CLASS_SCOPE',
-    CellElement.FOR_SCOPE: 'FOR_SCOPE',
-    CellElement.WHILE_SCOPE: 'WHILE_SCOPE',
-    CellElement.ELSE_SCOPE: 'ELSE_SCOPE',
-    CellElement.WITH_SCOPE: 'WITH_SCOPE',
-    CellElement.TRY_SCOPE: 'TRY_SCOPE',
-    CellElement.EXCEPT_SCOPE: 'EXCEPT_SCOPE',
-    CellElement.FINALLY_SCOPE: 'FINALLY_SCOPE',
-    CellElement.SCOPE_H_SIDE_EDGE: 'SCOPE_H_SIDE_EDGE',
-    CellElement.SCOPE_V_SIDE_EDGE: 'SCOPE_V_SIDE_EDGE',
-    CellElement.SCOPE_CORNER_EDGE: 'SCOPE_CORNER_EDGE',
-    CellElement.CODE_BLOCK: 'CODE_BLOCK',
-    CellElement.BREAK: 'BREAK',
-    CellElement.CONTINUE: 'CONTINUE',
-    CellElement.RETURN: 'RETURN',
-    CellElement.RAISE: 'RAISE',
-    CellElement.ASSERT: 'ASSERT',
-    CellElement.SYSEXIT: 'SYSEXIT',
-    CellElement.IMPORT: 'IMPORT',
-    CellElement.IF: 'IF',
-    CellElement.LEADING_COMMENT: 'LEADING_COMMENT',
-    CellElement.INDEPENDENT_COMMENT: 'INDEPENDENT_COMMENT',
-    CellElement.SIDE_COMMENT: 'SIDE_COMMENT',
-    CellElement.ABOVE_COMMENT: 'ABOVE_COMMENT',
-    CellElement.INDEPENDENT_MINIMIZED_COMMENT: 'INDEPENDENT_MINIMIZED_COMMENT',
-    CellElement.INDEPENDENT_MINIMIZED_DOC: 'INDEPENDENT_MINIMIZED_DOC',
-    CellElement.DECORATOR: 'DECORATOR',
-    CellElement.CONNECTOR: 'CONNECTOR',
-    CellElement.DEPENDENT_CONNECTOR: 'DEPENDENT_CONNECTOR',
-    CellElement.SVG: 'SVG',
-    CellElement.BADGE: 'BADGE',
-    CellElement.TEXT: 'TEXT',
-    CellElement.RUBBER_BAND: 'RUBBER_BAND',
-    CellElement.LINE: 'LINE',
-    CellElement.RECTANGLE: 'RECTANGLE',
-    CellElement.GROUP_CORNER_CONROL: 'GROUP_CORNER_CONROL',
-    CellElement.SCOPE_DOCSTRING_BADGE: 'SCOPE_DOCSTRING_BADGE',
-    CellElement.SCOPE_COMMENT_BADGE: 'SCOPE_COMMENT_BADGE',
-    CellElement.SCOPE_EXCEPT_BADGE: 'SCOPE_EXCEPT_BADGE',
-    CellElement.SCOPE_DECORATOR_BADGE: 'SCOPE_DECORATOR_BADGE',
-    CellElement.SCOPE_DOCLINK_BADGE: 'SCOPE_DOCLINK_BADGE',
-    CellElement.INDEPENDENT_DOC: 'INDEPENDENT_DOC',
-    CellElement.LEADING_DOC: 'LEADING_DOC',
-    CellElement.ABOVE_DOC: 'ABOVE_DOC',
-    CellElement.EMPTY_GROUP: 'EMPTY_GROUP',
-    CellElement.OPENED_GROUP_BEGIN: 'OPENED_GROUP_BEGIN',
-    CellElement.OPENED_GROUP_END: 'OPENED_GROUP_END',
-    CellElement.COLLAPSED_GROUP: 'COLLAPSED_GROUP',
-    CellElement.DEPS_SELF_MODULE: 'DEPS_SELF_MODULE'}
+    CellElement.UNKNOWN: "UNKNOWN",
+    CellElement.VCANVAS: "VCANVAS",
+    CellElement.VACANT: "VACANT",
+    CellElement.H_SPACER: "H_SPACER",
+    CellElement.V_SPACER: "V_SPACER",
+    CellElement.H_GROUP_SPACER: "H_GROUP_SPACER",
+    CellElement.SPACER: "SPACER",
+    CellElement.NO_SCOPE: "NO_SCOPE",
+    CellElement.FILE_SCOPE: "FILE_SCOPE",
+    CellElement.FUNC_SCOPE: "FUNC_SCOPE",
+    CellElement.CLASS_SCOPE: "CLASS_SCOPE",
+    CellElement.FOR_SCOPE: "FOR_SCOPE",
+    CellElement.WHILE_SCOPE: "WHILE_SCOPE",
+    CellElement.ELSE_SCOPE: "ELSE_SCOPE",
+    CellElement.WITH_SCOPE: "WITH_SCOPE",
+    CellElement.TRY_SCOPE: "TRY_SCOPE",
+    CellElement.EXCEPT_SCOPE: "EXCEPT_SCOPE",
+    CellElement.FINALLY_SCOPE: "FINALLY_SCOPE",
+    CellElement.SCOPE_H_SIDE_EDGE: "SCOPE_H_SIDE_EDGE",
+    CellElement.SCOPE_V_SIDE_EDGE: "SCOPE_V_SIDE_EDGE",
+    CellElement.SCOPE_CORNER_EDGE: "SCOPE_CORNER_EDGE",
+    CellElement.CODE_BLOCK: "CODE_BLOCK",
+    CellElement.BREAK: "BREAK",
+    CellElement.CONTINUE: "CONTINUE",
+    CellElement.RETURN: "RETURN",
+    CellElement.RAISE: "RAISE",
+    CellElement.ASSERT: "ASSERT",
+    CellElement.SYSEXIT: "SYSEXIT",
+    CellElement.IMPORT: "IMPORT",
+    CellElement.IF: "IF",
+    CellElement.LEADING_COMMENT: "LEADING_COMMENT",
+    CellElement.INDEPENDENT_COMMENT: "INDEPENDENT_COMMENT",
+    CellElement.SIDE_COMMENT: "SIDE_COMMENT",
+    CellElement.ABOVE_COMMENT: "ABOVE_COMMENT",
+    CellElement.INDEPENDENT_MINIMIZED_COMMENT: "INDEPENDENT_MINIMIZED_COMMENT",
+    CellElement.INDEPENDENT_MINIMIZED_DOC: "INDEPENDENT_MINIMIZED_DOC",
+    CellElement.DECORATOR: "DECORATOR",
+    CellElement.CONNECTOR: "CONNECTOR",
+    CellElement.DEPENDENT_CONNECTOR: "DEPENDENT_CONNECTOR",
+    CellElement.SVG: "SVG",
+    CellElement.BADGE: "BADGE",
+    CellElement.TEXT: "TEXT",
+    CellElement.RUBBER_BAND: "RUBBER_BAND",
+    CellElement.LINE: "LINE",
+    CellElement.RECTANGLE: "RECTANGLE",
+    CellElement.GROUP_CORNER_CONROL: "GROUP_CORNER_CONROL",
+    CellElement.SCOPE_DOCSTRING_BADGE: "SCOPE_DOCSTRING_BADGE",
+    CellElement.SCOPE_COMMENT_BADGE: "SCOPE_COMMENT_BADGE",
+    CellElement.SCOPE_EXCEPT_BADGE: "SCOPE_EXCEPT_BADGE",
+    CellElement.SCOPE_DECORATOR_BADGE: "SCOPE_DECORATOR_BADGE",
+    CellElement.SCOPE_DOCLINK_BADGE: "SCOPE_DOCLINK_BADGE",
+    CellElement.INDEPENDENT_DOC: "INDEPENDENT_DOC",
+    CellElement.LEADING_DOC: "LEADING_DOC",
+    CellElement.ABOVE_DOC: "ABOVE_DOC",
+    CellElement.EMPTY_GROUP: "EMPTY_GROUP",
+    CellElement.OPENED_GROUP_BEGIN: "OPENED_GROUP_BEGIN",
+    CellElement.OPENED_GROUP_END: "OPENED_GROUP_END",
+    CellElement.COLLAPSED_GROUP: "COLLAPSED_GROUP",
+    CellElement.DEPS_SELF_MODULE: "DEPS_SELF_MODULE",
+}
 
 
 def kindToString(kind):
     """Provides a string representation of a element kind"""
     return __kindToString[kind]
-

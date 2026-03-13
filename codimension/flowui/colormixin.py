@@ -31,12 +31,11 @@ from .cml import CMLcc, CMLVersion
 # - group items have the color spec in their CML ref
 # - doc items have the color spec in their CML ref
 
-class ColorMixin:
 
+class ColorMixin:
     """Color mixin to support bg, fg and border color"""
 
-    def __init__(self, ref, defaultBG, defaultFG, defaultBorder,
-                 isDocstring=False, colorSpec=None):
+    def __init__(self, ref, defaultBG, defaultFG, defaultBorder, isDocstring=False, colorSpec=None):
         self.bgColor = defaultBG
         self.fgColor = defaultFG
         self.borderColor = defaultBorder
@@ -88,4 +87,3 @@ class ColorMixin:
             colorSpec = CMLVersion.find(leadingCML, CMLcc)
             if colorSpec:
                 self.__getFromColorSpec(colorSpec)
-

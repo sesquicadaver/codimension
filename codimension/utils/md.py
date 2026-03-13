@@ -43,15 +43,16 @@ from .settings import Settings
 # See also: http://www.prog.org.ru/topic_7398_0.html
 
 
-CODE_BLOCK_STYLE = 'style="border-width:1px;border-style:solid;' \
-                   'border-color:#ccc;margin-top:.5em;margin-bottom:.5em;"'
-PRE_WRAP_START = '''<table cellspacing="0" cellpadding="8" width="100%"
-                           align="left" bgcolor="#f8f8f8"''' + \
-                 CODE_BLOCK_STYLE + '><tr><td>'
-PRE_WRAP_END = '</td></tr></table>'
+CODE_BLOCK_STYLE = 'style="border-width:1px;border-style:solid;border-color:#ccc;margin-top:.5em;margin-bottom:.5em;"'
+PRE_WRAP_START = (
+    '''<table cellspacing="0" cellpadding="8" width="100%"
+                           align="left" bgcolor="#f8f8f8"'''
+    + CODE_BLOCK_STYLE
+    + "><tr><td>"
+)
+PRE_WRAP_END = "</td></tr></table>"
 
-QUOTE_TABLE = '<table cellspacing="0" width="100%" align="left" ' \
-              'style="margin-top:.4em;margin-bottom:.4em;">'
+QUOTE_TABLE = '<table cellspacing="0" width="100%" align="left" style="margin-top:.4em;margin-bottom:.4em;">'
 
 
 def get_lexer(text, lang):
@@ -73,11 +74,9 @@ def get_lexer(text, lang):
 
         # The pygments data sometimes miss mime options provided by python magic
         # library
-        if mime.startswith('text/'):
+        if mime.startswith("text/"):
             try:
-                return get_lexer_for_mimetype(mime.replace('text/',
-                                                           'application/'),
-                                              stripall=False)
+                return get_lexer_for_mimetype(mime.replace("text/", "application/"), stripall=False)
             except Exception:
                 pass
 
@@ -95,8 +94,8 @@ def get_lexer(text, lang):
 def is_plant_uml(text, lang):
     """True if it is a plant uml diagram"""
     if lang:
-        return lang.lower() in ['plantuml', 'uml']
-    return text.lstrip().lower().startswith('@start')
+        return lang.lower() in ["plantuml", "uml"]
+    return text.lstrip().lower().startswith("@start")
 
 
 def block_code(uuid, text, lang, inlinestyles=False, linenos=False):
@@ -112,18 +111,14 @@ def block_code(uuid, text, lang, inlinestyles=False, linenos=False):
         try:
             formatter = HtmlFormatter(noclasses=inlinestyles, linenos=linenos)
             code = highlight(text, lexer, formatter)
-            return ''.join([PRE_WRAP_START, '<pre>',
-                            code.replace('125%', '100%'), '</pre>',
-                            PRE_WRAP_END, '\n'])
+            return "".join([PRE_WRAP_START, "<pre>", code.replace("125%", "100%"), "</pre>", PRE_WRAP_END, "\n"])
         except Exception:
             pass
 
-    return ''.join([PRE_WRAP_START, '<pre>', mistune.escape(text),
-                    '</pre>', PRE_WRAP_END, '\n'])
+    return "".join([PRE_WRAP_START, "<pre>", mistune.escape(text), "</pre>", PRE_WRAP_END, "\n"])
 
 
 class CDMMarkdownRenderer(mistune.Renderer):
-
     """Codimension custom markdown renderer"""
 
     def __init__(self, uuid, fileName):
@@ -134,41 +129,41 @@ class CDMMarkdownRenderer(mistune.Renderer):
     def block_code(self, code, lang=None):
         """Custom block code renderer"""
         # renderer has an options
-        inlinestyles = self.options.get('inlinestyles', False)
-        linenos = self.options.get('linenos', False)
+        inlinestyles = self.options.get("inlinestyles", False)
+        linenos = self.options.get("linenos", False)
         return block_code(self.__uuid, code, lang, inlinestyles, linenos)
 
     def block_quote(self, text):
         """Custom block quote renderer"""
         # The text comes as \n separated paragraphs
-        return ''.join(['<p>', QUOTE_TABLE,
-                        '<tr><td bgcolor="#ccc" width="4"></td>',
-                        '<td width="8"></td>',
-                        '<td>',
-                        text.rstrip('\n')
-                        .replace('</p>\n', '</p>').replace('\n', '<br/>'),
-                        '</td></tr></table></p>'])
+        return "".join(
+            [
+                "<p>",
+                QUOTE_TABLE,
+                '<tr><td bgcolor="#ccc" width="4"></td>',
+                '<td width="8"></td>',
+                "<td>",
+                text.rstrip("\n").replace("</p>\n", "</p>").replace("\n", "<br/>"),
+                "</td></tr></table></p>",
+            ]
+        )
 
     def image(self, src, title, text):
         """Custom image handler"""
         if src and self.__fileName:
             if not os.path.isabs(src):
-                newSrcPath = ''.join([os.path.dirname(self.__fileName),
-                                      os.path.sep, src])
+                newSrcPath = "".join([os.path.dirname(self.__fileName), os.path.sep, src])
                 src = os.path.normpath(newSrcPath)
         return mistune.Renderer.image(self, src, title, text)
 
     def codespan(self, text):
         """Custom code span renderer"""
-        return '<u>' + mistune.Renderer.codespan(self, text) + '</u>'
+        return "<u>" + mistune.Renderer.codespan(self, text) + "</u>"
 
     def table(self, header, body):
         """Custom table tag renderer"""
-        replacement = '<table cellspacing="0" cellpadding="4"' + \
-                      CODE_BLOCK_STYLE + '>'
-        return mistune.Renderer.table(self, header, body).replace('<table>',
-                                                                  replacement)
-
+        replacement = '<table cellspacing="0" cellpadding="4"' + CODE_BLOCK_STYLE + ">"
+        return mistune.Renderer.table(self, header, body).replace("<table>", replacement)
 
 
 def renderMarkdown(uuid, text, fileName):
@@ -183,5 +178,5 @@ def renderMarkdown(uuid, text, fileName):
     except Exception as exc:
         errors.append(str(exc))
     except Exception:
-        errors.append('Unknown markdown rendering exception')
+        errors.append("Unknown markdown rendering exception")
     return renderedText, errors, warnings

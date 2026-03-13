@@ -47,7 +47,6 @@ from utils.settings import Settings
 
 
 class IgnoredExceptionsViewer(QWidget):
-
     """Implements the client exceptions viewer for a debugger"""
 
     def __init__(self, parent=None):
@@ -64,8 +63,8 @@ class IgnoredExceptionsViewer(QWidget):
         """Creates the popup menu"""
         self.__excptMenu = QMenu()
         self.__removeMenuItem = self.__excptMenu.addAction(
-            getIcon('ignexcptdel.png'), "Remove from ignore list",
-            self.__onRemoveFromIgnore)
+            getIcon("ignexcptdel.png"), "Remove from ignore list", self.__onRemoveFromIgnore
+        )
 
     def __createLayout(self):
         """Creates the widget layout"""
@@ -74,17 +73,15 @@ class IgnoredExceptionsViewer(QWidget):
         verticalLayout.setSpacing(0)
 
         self.__excptLabel = HeaderFitLabel(self)
-        self.__excptLabel.setText('Ignored exception types')
-        self.__excptLabel.setSizePolicy(QSizePolicy.Expanding,
-                                        QSizePolicy.Fixed)
+        self.__excptLabel.setText("Ignored exception types")
+        self.__excptLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.__excptLabel.setMinimumWidth(10)
 
         self.__showHideButton = QToolButton()
         self.__showHideButton.setAutoRaise(True)
-        self.__showHideButton.setIcon(getIcon('less.png'))
-        self.__showHideButton.setFixedSize(self.__excptLabel.height(),
-                                           self.__excptLabel.height())
-        self.__showHideButton.setToolTip('Hide ignored exceptions list')
+        self.__showHideButton.setIcon(getIcon("less.png"))
+        self.__showHideButton.setFixedSize(self.__excptLabel.height(), self.__excptLabel.height())
+        self.__showHideButton.setToolTip("Hide ignored exceptions list")
         self.__showHideButton.setFocusPolicy(Qt.NoFocus)
         self.__showHideButton.clicked.connect(self.onShowHide)
 
@@ -105,10 +102,8 @@ class IgnoredExceptionsViewer(QWidget):
         self.exceptionsList.setItemDelegate(NoOutlineHeightDelegate(4))
         self.exceptionsList.setContextMenuPolicy(Qt.CustomContextMenu)
 
-        self.exceptionsList.customContextMenuRequested.connect(
-            self.__showContextMenu)
-        self.exceptionsList.itemSelectionChanged.connect(
-            self.__onSelectionChanged)
+        self.exceptionsList.customContextMenuRequested.connect(self.__showContextMenu)
+        self.exceptionsList.itemSelectionChanged.connect(self.__onSelectionChanged)
         self.exceptionsList.setHeaderLabels(["Exception type"])
 
         self.__excTypeEdit = QLineEdit()
@@ -120,14 +115,11 @@ class IgnoredExceptionsViewer(QWidget):
         self.__addButton.setEnabled(False)
         self.__addButton.clicked.connect(self.__onAddExceptionFilter)
 
-        self.__removeButton = QAction(
-            getIcon('delitem.png'), "Remove selected exception type", self)
+        self.__removeButton = QAction(getIcon("delitem.png"), "Remove selected exception type", self)
         self.__removeButton.triggered.connect(self.__onRemoveFromIgnore)
         self.__removeButton.setEnabled(False)
 
-        self.__removeAllButton = QAction(
-            getIcon('ignexcptdelall.png'), "Remove all the exception types",
-            self)
+        self.__removeAllButton = QAction(getIcon("ignexcptdelall.png"), "Remove all the exception types", self)
         self.__removeAllButton.triggered.connect(self.__onRemoveAllFromIgnore)
         self.__removeAllButton.setEnabled(False)
 
@@ -174,7 +166,7 @@ class IgnoredExceptionsViewer(QWidget):
             self.__excTypeEdit.setVisible(False)
             self.__addButton.setVisible(False)
             self.toolbar.setVisible(False)
-            self.__showHideButton.setIcon(getIcon('more.png'))
+            self.__showHideButton.setIcon(getIcon("more.png"))
             self.__showHideButton.setToolTip("Show ignored exceptions list")
 
             self.setMinimumHeight(self.headerToolbar.height())
@@ -184,8 +176,8 @@ class IgnoredExceptionsViewer(QWidget):
             self.__excTypeEdit.setVisible(True)
             self.__addButton.setVisible(True)
             self.toolbar.setVisible(True)
-            self.__showHideButton.setIcon(getIcon('less.png'))
-            self.__showHideButton.setToolTip('Hide ignored exceptions list')
+            self.__showHideButton.setIcon(getIcon("less.png"))
+            self.__showHideButton.setToolTip("Hide ignored exceptions list")
 
             self.setMinimumHeight(self.__minH)
             self.setMaximumHeight(self.__maxH)
@@ -214,8 +206,7 @@ class IgnoredExceptionsViewer(QWidget):
         if count == 0:
             self.__excptLabel.setText("Ignored exception types")
         else:
-            self.__excptLabel.setText("Ignored exception types (total: " +
-                                      str(count) + ")")
+            self.__excptLabel.setText("Ignored exception types (total: " + str(count) + ")")
         self.__removeAllButton.setEnabled(count != 0)
 
     def __onProjectChanged(self, what):
@@ -228,7 +219,7 @@ class IgnoredExceptionsViewer(QWidget):
         if project.isLoaded():
             self.__ignored = list(project.exceptionFilters)
         else:
-            self.__ignored = Settings()['ignoredExceptions']
+            self.__ignored = Settings()["ignoredExceptions"]
 
         for exceptionType in self.__ignored:
             item = QTreeWidgetItem(self.exceptionsList)

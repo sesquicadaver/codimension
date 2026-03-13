@@ -19,12 +19,10 @@
 
 """Spacers to be used on the toolbars"""
 
-
 from .qt import QSizePolicy, QWidget
 
 
 class ToolBarHSpacer(QWidget):
-
     """Horizontal toolbar spacer"""
 
     def __init__(self, parent, width, name=None):
@@ -32,11 +30,10 @@ class ToolBarHSpacer(QWidget):
         self.setFixedWidth(width)
         if name is not None:
             self.setObjectName(name)
-        self.setStyleSheet('background: transparent')
+        self.setStyleSheet("background: transparent")
 
 
 class ToolBarVSpacer(QWidget):
-
     """Vertical toolbar spacer"""
 
     def __init__(self, parent, height, name=None):
@@ -44,11 +41,10 @@ class ToolBarVSpacer(QWidget):
         self.setFixedHeight(height)
         if name is not None:
             self.setObjectName(name)
-        self.setStyleSheet('background: transparent')
+        self.setStyleSheet("background: transparent")
 
 
 class ToolBarExpandingSpacer(QWidget):
-
     """Expanding toolbar spacer"""
 
     def __init__(self, parent, name=None):
@@ -56,5 +52,4 @@ class ToolBarExpandingSpacer(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         if name is not None:
             self.setObjectName(name)
-        self.setStyleSheet('background: transparent')
-
+        self.setStyleSheet("background: transparent")

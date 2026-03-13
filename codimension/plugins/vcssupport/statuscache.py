@@ -24,42 +24,44 @@ import datetime
 
 
 class VCSStatus:
-
     """Holds the VCS file status"""
 
     def __init__(self):
-        self.pluginID = None        # integer
-        self.indicatorID = None     # integer
-        self.message = None         # string or None
-        self.lastUpdate = None      # time
+        self.pluginID = None  # integer
+        self.indicatorID = None  # integer
+        self.message = None  # string or None
+        self.lastUpdate = None  # time
 
     def __str__(self):
-        return "Plugin ID: " + str(self.pluginID) + \
-            " Indicator ID: " + str(self.indicatorID) + \
-            " Message: " + str(self.message) + \
-            " Last update: " + str(self.lastUpdate)
+        return (
+            "Plugin ID: "
+            + str(self.pluginID)
+            + " Indicator ID: "
+            + str(self.indicatorID)
+            + " Message: "
+            + str(self.message)
+            + " Last update: "
+            + str(self.lastUpdate)
+        )
 
     def __eq__(self, other):
         if other is None:
             return False
-        return self.pluginID == other.pluginID and \
-            self.indicatorID == other.indicatorID and \
-            self.message == other.message
+        return (
+            self.pluginID == other.pluginID and self.indicatorID == other.indicatorID and self.message == other.message
+        )
 
     def __ne__(self, other):
         if other is None:
             return True
-        return self.pluginID != other.pluginID or \
-            self.indicatorID != other.indicatorID or \
-            self.message != other.message
+        return self.pluginID != other.pluginID or self.indicatorID != other.indicatorID or self.message != other.message
 
 
 class VCSStatusCache:
-
     """Caches the file statuses which came from various plugins"""
 
     def __init__(self):
-        self.cache = {}   # path -> VCSStatus
+        self.cache = {}  # path -> VCSStatus
 
     def getStatus(self, path):
         """Provides the status if it is in the cache"""
@@ -72,9 +74,7 @@ class VCSStatusCache:
         if path in self.cache:
             item = self.cache[path]
             item.lastUpdate = datetime.datetime.now()
-            if item.pluginID != pluginID or \
-               item.indicatorID != indicatorID or \
-               item.message != message:
+            if item.pluginID != pluginID or item.indicatorID != indicatorID or item.message != message:
                 item.pluginID = pluginID
                 item.indicatorID = indicatorID
                 item.message = message
@@ -97,7 +97,7 @@ class VCSStatusCache:
         self.cache = {}
 
     def dismissPlugin(self, pluginID, callback):
-        " Removes all the certain plugin entries from the cache "
+        "Removes all the certain plugin entries from the cache"
         for path, status in self.cache.items():
             if status.pluginID == pluginID:
                 status.lastUpdate = None

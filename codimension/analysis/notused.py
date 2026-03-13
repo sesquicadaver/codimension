@@ -20,7 +20,6 @@
 
 """not used code analysis using vulture"""
 
-
 import logging
 import os
 import os.path
@@ -35,7 +34,6 @@ from utils.globals import GlobalData
 
 
 class NotUsedAnalysisProgress(QDialog):
-
     """Progress of the not used analysis"""
 
     def __init__(self, path, newSearch=True):
@@ -43,8 +41,7 @@ class NotUsedAnalysisProgress(QDialog):
 
         path = os.path.abspath(path)
         if not os.path.exists(path):
-            raise Exception('Dead code analysis path must exist. '
-                            'The provide path "' + path + '" does not.')
+            raise Exception('Dead code analysis path must exist. The provide path "' + path + '" does not.')
 
         self.__path = path
 
@@ -55,21 +52,21 @@ class NotUsedAnalysisProgress(QDialog):
 
         self.__infoLabel = None
         self.__foundLabel = None
-        self.__found = 0        # Number of found
+        self.__found = 0  # Number of found
 
         self.__createLayout()
-        title = 'Dead code analysis for '
+        title = "Dead code analysis for "
         if os.path.isdir(path):
             project = GlobalData().project
             if project.isLoaded() and project.getProjectDir() == path:
-                title += 'all project files'
+                title += "all project files"
             else:
-                title += 'dir ' + os.path.basename(os.path.normpath(path))
+                title += "dir " + os.path.basename(os.path.normpath(path))
         else:
             title += os.path.basename(path)
 
         if not self.__newSearch:
-            title += ' (do again)'
+            title += " (do again)"
 
         self.setWindowTitle(title)
         self.__updateFoundLabel()
@@ -101,9 +98,9 @@ class NotUsedAnalysisProgress(QDialog):
         verticalLayout = QVBoxLayout(self)
 
         # Note label
-        noteLabel = QLabel("<b>Note</b>: the analysis is "
-                           "suggestive and not precise. "
-                           "Use the results with caution.\n", self)
+        noteLabel = QLabel(
+            "<b>Note</b>: the analysis is suggestive and not precise. Use the results with caution.\n", self
+        )
         verticalLayout.addWidget(noteLabel)
 
         # Info label
@@ -132,9 +129,7 @@ class NotUsedAnalysisProgress(QDialog):
         """Runs vulture"""
         errTmp = tempfile.mkstemp()
         errStream = os.fdopen(errTmp[0])
-        process = Popen(['vulture', self.__path],
-                        stdin=PIPE,
-                        stdout=PIPE, stderr=errStream)
+        process = Popen(["vulture", self.__path], stdin=PIPE, stdout=PIPE, stderr=errStream)
         process.stdin.close()
         processStdout = process.stdout.read()
         process.stdout.close()
@@ -167,22 +162,22 @@ class NotUsedAnalysisProgress(QDialog):
             if line:
                 # Line is like file.py:2: unused variable 'a' (60% confidence)
                 try:
-                    startIndex = line.find(':')
+                    startIndex = line.find(":")
                     if startIndex < 0:
                         continue
-                    endIndex = line.find(':', startIndex + 1)
+                    endIndex = line.find(":", startIndex + 1)
                     if endIndex < 0:
                         continue
                     fileName = line[:startIndex]
-                    startIndex = line.find(':')
+                    startIndex = line.find(":")
                     if startIndex < 0:
                         continue
-                    endIndex = line.find(':', startIndex + 1)
+                    endIndex = line.find(":", startIndex + 1)
                     if endIndex < 0:
                         continue
                     fileName = os.path.abspath(line[:startIndex])
-                    lineno = int(line[startIndex + 1:endIndex])
-                    message = line[endIndex + 1:].strip()
+                    lineno = int(line[startIndex + 1 : endIndex])
+                    message = line[endIndex + 1 :].strip()
                 except (ValueError, IndexError):
                     continue
 
@@ -190,13 +185,13 @@ class NotUsedAnalysisProgress(QDialog):
                 if index < 0:
                     widget = mainWindow.getWidgetForFileName(fileName)
                     if widget is None:
-                        uuid = ''
+                        uuid = ""
                     else:
                         uuid = widget.getUUID()
                     newItem = ItemToSearchIn(fileName, uuid)
                     self.candidates.append(newItem)
                     index = len(self.candidates) - 1
-                self.candidates[index].addMatch('', lineno, message)
+                self.candidates[index].addMatch("", lineno, message)
 
                 self.__found += 1
                 self.__updateFoundLabel()
@@ -207,18 +202,14 @@ class NotUsedAnalysisProgress(QDialog):
             # Redo action will handle the results on its own
             if self.__found == 0:
                 if stderr:
-                    logging.error('Error running vulture for ' + self.__path +
-                                  ':\n' + stderr)
+                    logging.error("Error running vulture for " + self.__path + ":\n" + stderr)
                 else:
-                    logging.info('No unused candidates found')
+                    logging.info("No unused candidates found")
             else:
-                mainWindow.displayFindInFiles(VultureSearchProvider.getName(),
-                                              self.candidates,
-                                              {'path': self.__path})
+                mainWindow.displayFindInFiles(VultureSearchProvider.getName(), self.candidates, {"path": self.__path})
 
         QApplication.restoreOverrideCursor()
-        self.__infoLabel.setText('Done')
+        self.__infoLabel.setText("Done")
         self.__inProgress = False
 
         self.accept()
-

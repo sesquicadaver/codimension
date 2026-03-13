@@ -19,7 +19,6 @@
 
 """MD rendering widget"""
 
-
 import logging
 import os.path
 
@@ -53,7 +52,6 @@ IDLE_TIMEOUT = 1500
 
 
 class MDViewer(TextViewer):
-
     """Markdown rendered content viewer"""
 
     def __init__(self, parent):
@@ -61,10 +59,8 @@ class MDViewer(TextViewer):
 
         self.setViewportMargins(10, 10, 10, 10)
 
-        Settings().webResourceCache.sigResourceSaved.connect(
-            self.onResourceSaved)
-        Settings().plantUMLCache.sigRenderReady.connect(
-            self.onPlantUMLRender)
+        Settings().webResourceCache.sigResourceSaved.connect(self.onResourceSaved)
+        Settings().plantUMLCache.sigRenderReady.connect(self.onPlantUMLRender)
 
     def getScrollbarPositions(self):
         """Provides the scrollbar positions"""
@@ -92,10 +88,10 @@ class MDViewer(TextViewer):
             if currentFileName:
                 currentDir = os.path.dirname(currentFileName) + os.path.sep
                 if url.startswith(currentDir):
-                    url = url.replace(currentDir, '', 1)
+                    url = url.replace(currentDir, "", 1)
             lowerUrl = url.lower()
 
-            if url.startswith('plantuml:'):
+            if url.startswith("plantuml:"):
                 fName = url[9:]
                 if os.path.exists(fName):
                     return QPixmap(fName)
@@ -103,26 +99,22 @@ class MDViewer(TextViewer):
                 # will not be reloaded when the generated diagram is ready
                 return None
 
-            if url.startswith('cdm-image:'):
+            if url.startswith("cdm-image:"):
                 try:
                     return getPixmap(url[10:])
                 except Exception:
-                    logging.error('Unknown Codimension cache image: ' +
-                                  url[10:])
+                    logging.error("Unknown Codimension cache image: " + url[10:])
                 return None
 
-            if lowerUrl.startswith('http:/') or lowerUrl.startswith('https:/'):
-                if not lowerUrl.startswith('http://') and \
-                   not lowerUrl.startswith('https://'):
-                    url = url.replace(':/', '://', 1)
-                fName = Settings().webResourceCache.getResource(
-                    url, self._parentWidget.getUUID())
+            if lowerUrl.startswith("http:/") or lowerUrl.startswith("https:/"):
+                if not lowerUrl.startswith("http://") and not lowerUrl.startswith("https://"):
+                    url = url.replace(":/", "://", 1)
+                fName = Settings().webResourceCache.getResource(url, self._parentWidget.getUUID())
                 if fName is not None:
                     try:
                         return QPixmap(fName)
                     except Exception as exc:
-                        logging.error('Cannot use the image from ' + fName +
-                                      ': ' + str(exc))
+                        logging.error("Cannot use the image from " + fName + ": " + str(exc))
                 return None
         return TextViewer.loadResource(self, resourceType, resourceURL)
 
@@ -145,20 +137,17 @@ class MDViewer(TextViewer):
 
     def terminate(self):
         """Called when a tab is to be closed"""
-        Settings().webResourceCache.sigResourceSaved.disconnect(
-            self.onResourceSaved)
-        Settings().plantUMLCache.sigRenderReady.disconnect(
-            self.onPlantUMLRender)
+        Settings().webResourceCache.sigResourceSaved.disconnect(self.onResourceSaved)
+        Settings().plantUMLCache.sigRenderReady.disconnect(self.onPlantUMLRender)
 
 
 class MDTopBar(QFrame):
-
     """MD widget top bar at the top"""
 
-    STATE_OK_UTD = 0        # Parsed OK, MD up to date
-    STATE_OK_CHN = 1        # Parsed OK, MD changed
-    STATE_BROKEN_UTD = 2    # Parsed with errors, MD up to date
-    STATE_BROKEN_CHN = 3    # Parsed with errors, MD changed
+    STATE_OK_UTD = 0  # Parsed OK, MD up to date
+    STATE_OK_CHN = 1  # Parsed OK, MD changed
+    STATE_BROKEN_UTD = 2  # Parsed with errors, MD up to date
+    STATE_BROKEN_CHN = 3  # Parsed with errors, MD changed
     STATE_UNKNOWN = 4
 
     def __init__(self, parent):
@@ -177,11 +166,11 @@ class MDTopBar(QFrame):
 
         # Create info icon
         self.__infoIcon = QLabel(self)
-        self.__infoIcon.setPixmap(getPixmap('cfunknown.png'))
+        self.__infoIcon.setPixmap(getPixmap("cfunknown.png"))
         self.__layout.addWidget(self.__infoIcon)
 
         self.__warningsIcon = QLabel(self)
-        self.__warningsIcon.setPixmap(getPixmap('cfwarning.png'))
+        self.__warningsIcon.setPixmap(getPixmap("cfwarning.png"))
         self.__layout.addWidget(self.__warningsIcon)
 
         self.clearWarnings()
@@ -198,18 +187,16 @@ class MDTopBar(QFrame):
 
     def setWarnings(self, warnings):
         """Sets the warnings"""
-        self.__warningsIcon.setToolTip(
-            'Markdown parser warnings:\n' + '\n'.join(warnings))
+        self.__warningsIcon.setToolTip("Markdown parser warnings:\n" + "\n".join(warnings))
         self.__warningsIcon.setVisible(True)
 
     def clearErrors(self):
         """Clears all the errors"""
-        self.__infoIcon.setToolTip('')
+        self.__infoIcon.setToolTip("")
 
     def setErrors(self, errors):
         """Sets the errors"""
-        self.__infoIcon.setToolTip(
-            'Markdown parser errors:\n' + '\n'.join(errors))
+        self.__infoIcon.setToolTip("Markdown parser errors:\n" + "\n".join(errors))
 
     def updateInfoIcon(self, state):
         """Updates the information icon"""
@@ -217,27 +204,24 @@ class MDTopBar(QFrame):
             return
 
         if state == self.STATE_OK_UTD:
-            self.__infoIcon.setPixmap(getPixmap('cfokutd.png'))
+            self.__infoIcon.setPixmap(getPixmap("cfokutd.png"))
             self.__infoIcon.setToolTip("Markdown render is up to date")
             self.__currentIconState = self.STATE_OK_UTD
         elif state == self.STATE_OK_CHN:
-            self.__infoIcon.setPixmap(getPixmap('cfokchn.png'))
-            self.__infoIcon.setToolTip("Markdown render is not up to date; "
-                                       "will be updated on idle")
+            self.__infoIcon.setPixmap(getPixmap("cfokchn.png"))
+            self.__infoIcon.setToolTip("Markdown render is not up to date; will be updated on idle")
             self.__currentIconState = self.STATE_OK_CHN
         elif state == self.STATE_BROKEN_UTD:
-            self.__infoIcon.setPixmap(getPixmap('cfbrokenutd.png'))
-            self.__infoIcon.setToolTip("Markdown render might be invalid "
-                                       "due to invalid python code")
+            self.__infoIcon.setPixmap(getPixmap("cfbrokenutd.png"))
+            self.__infoIcon.setToolTip("Markdown render might be invalid due to invalid python code")
             self.__currentIconState = self.STATE_BROKEN_UTD
         elif state == self.STATE_BROKEN_CHN:
-            self.__infoIcon.setPixmap(getPixmap('cfbrokenchn.png'))
-            self.__infoIcon.setToolTip("Markdown render might be invalid; "
-                                       "will be updated on idle")
+            self.__infoIcon.setPixmap(getPixmap("cfbrokenchn.png"))
+            self.__infoIcon.setToolTip("Markdown render might be invalid; will be updated on idle")
             self.__currentIconState = self.STATE_BROKEN_CHN
         else:
             # STATE_UNKNOWN
-            self.__infoIcon.setPixmap(getPixmap('cfunknown.png'))
+            self.__infoIcon.setPixmap(getPixmap("cfunknown.png"))
             self.__infoIcon.setToolTip("Markdown render state is unknown")
             self.__currentIconState = self.STATE_UNKNOWN
 
@@ -251,7 +235,6 @@ class MDTopBar(QFrame):
 
 
 class MDWidget(QWidget):
-
     """The MD rendered content widget which goes along with the text editor"""
 
     sigEscapePressed = pyqtSignal()
@@ -305,7 +288,7 @@ class MDWidget(QWidget):
         self.__toolbar.setContentsMargins(0, 0, 0, 0)
 
         # Some control buttons could be added later
-        self.printButton = QAction(getIcon('printer.png'), 'Print', self)
+        self.printButton = QAction(getIcon("printer.png"), "Print", self)
         self.printButton.triggered.connect(self.__onPrint)
         self.__toolbar.addAction(self.printButton)
 
@@ -338,16 +321,14 @@ class MDWidget(QWidget):
         if not self.__connected:
             self.__connectEditorSignals()
 
-        renderedText, errors, warnings = renderMarkdown(self.getUUID(),
-                                                        self.__editor.text,
-                                                        self.getFileName())
+        renderedText, errors, warnings = renderMarkdown(self.getUUID(), self.__editor.text, self.getFileName())
         if errors:
             self.__topBar.updateInfoIcon(self.__topBar.STATE_BROKEN_UTD)
             self.__topBar.setErrors(errors)
             return
         if renderedText is None:
             self.__topBar.updateInfoIcon(self.__topBar.STATE_BROKEN_UTD)
-            self.__topBar.setErrors(['Unknown markdown rendering error'])
+            self.__topBar.setErrors(["Unknown markdown rendering error"])
             return
 
         # That will clear the error tooltip as well
@@ -409,16 +390,14 @@ class MDWidget(QWidget):
     def __connectEditorSignals(self):
         """When it is a python file - connect to the editor signals"""
         if not self.__connected:
-            self.__editor.cursorPositionChanged.connect(
-                self.__cursorPositionChanged)
+            self.__editor.cursorPositionChanged.connect(self.__cursorPositionChanged)
             self.__editor.textChanged.connect(self.__onBufferChanged)
             self.__connected = True
 
     def __disconnectEditorSignals(self):
         """Disconnect the editor signals when the file is not a python one"""
         if self.__connected:
-            self.__editor.cursorPositionChanged.disconnect(
-                self.__cursorPositionChanged)
+            self.__editor.cursorPositionChanged.disconnect(self.__cursorPositionChanged)
             self.__editor.textChanged.disconnect(self.__onBufferChanged)
             self.__connected = False
 
@@ -432,9 +411,11 @@ class MDWidget(QWidget):
     def __onBufferChanged(self):
         """Triggered to update status icon and to restart the timer"""
         self.__updateTimer.stop()
-        if self.__topBar.getCurrentState() in [self.__topBar.STATE_OK_UTD,
-                                               self.__topBar.STATE_OK_CHN,
-                                               self.__topBar.STATE_UNKNOWN]:
+        if self.__topBar.getCurrentState() in [
+            self.__topBar.STATE_OK_UTD,
+            self.__topBar.STATE_OK_CHN,
+            self.__topBar.STATE_UNKNOWN,
+        ]:
             self.__topBar.updateInfoIcon(self.__topBar.STATE_OK_CHN)
         else:
             self.__topBar.updateInfoIcon(self.__topBar.STATE_BROKEN_CHN)
@@ -459,4 +440,3 @@ class MDWidget(QWidget):
 
     def getUUID(self):
         return self.__parentWidget.getUUID()
-

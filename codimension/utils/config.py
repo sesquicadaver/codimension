@@ -23,10 +23,10 @@
 # Default encoding for the cases when:
 # - the encoding could not be detected
 # - replaces ascii to be on the safe side
-DEFAULT_ENCODING = 'utf-8'
+DEFAULT_ENCODING = "utf-8"
 
 # File encoding used for various settings and project files
-SETTINGS_ENCODING = 'utf-8'
+SETTINGS_ENCODING = "utf-8"
 
 # Directory to store Codimension settings and projects
-CONFIG_DIR = '.codimension3'
+CONFIG_DIR = ".codimension3"

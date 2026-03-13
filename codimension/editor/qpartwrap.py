@@ -19,7 +19,6 @@
 
 """qutepart text editor component wrapper"""
 
-
 import logging
 import os.path
 import re
@@ -38,7 +37,6 @@ WORD_AT_START_REGEXP = re.compile(r"^\w+")
 
 
 class QutepartWrapper(Qutepart):
-
     """Convenience qutepart wrapper"""
 
     sigHighlighted = pyqtSignal(str, int, int)
@@ -48,8 +46,7 @@ class QutepartWrapper(Qutepart):
     highlightOn = False
 
     def __init__(self, parent):
-        Qutepart.__init__(self, needMarkArea=False, needLineNumbers=False,
-                          needCompleter=False)
+        Qutepart.__init__(self, needMarkArea=False, needLineNumbers=False, needCompleter=False)
         self.setParent(parent)
 
         self.encoding = None
@@ -82,7 +79,7 @@ class QutepartWrapper(Qutepart):
         """Triggered when a text zoom is changed"""
         self.setFont(getZoomedMonoFont())
         for margin in self.getMargins():
-            if hasattr(margin, 'onTextZoomChanged'):
+            if hasattr(margin, "onTextZoomChanged"):
                 margin.onTextZoomChanged()
         self._setSolidEdgeGeometry()
 
@@ -92,11 +89,11 @@ class QutepartWrapper(Qutepart):
 
     def getEolIndicator(self):
         """Provides the eol indicator for the current eol mode"""
-        if self.eol == '\r\n':
+        if self.eol == "\r\n":
             return "CRLF"
-        if self.eol == '\r':
-            return 'CR'
-        return 'LF'
+        if self.eol == "\r":
+            return "CR"
+        return "LF"
 
     def firstVisibleLine(self):
         """Provides the first visible line. 0-based"""
@@ -198,17 +195,16 @@ class QutepartWrapper(Qutepart):
         """Selects consistently with HOME behavior"""
         newLine, newPos = self.__getNewHomePos(toFirstNonSpace)
         cursor = self.textCursor()
-        cursor.setPosition(self.mapToAbsPosition(newLine, newPos),
-                           QTextCursor.KeepAnchor)
+        cursor.setPosition(self.mapToAbsPosition(newLine, newPos), QTextCursor.KeepAnchor)
         self.setTextCursor(cursor)
 
     def onHome(self):
         """Triggered when HOME is received"""
-        self.moveToLineBegin(Settings()['jumpToFirstNonSpace'])
+        self.moveToLineBegin(Settings()["jumpToFirstNonSpace"])
 
     def onShiftHome(self):
         """Triggered when Shift+HOME is received"""
-        self.selectTillLineBegin(Settings()['jumpToFirstNonSpace'])
+        self.selectTillLineBegin(Settings()["jumpToFirstNonSpace"])
 
     def onShiftEnd(self):
         """Selects till the end of line"""
@@ -220,11 +216,11 @@ class QutepartWrapper(Qutepart):
         """Triggered when Shift+Del is received"""
         if self.selectedText:
             QApplication.clipboard().setText(self.selectedText)
-            self.selectedText = ''
+            self.selectedText = ""
         else:
             line, _ = self.cursorPosition
             if self.lines[line]:
-                QApplication.clipboard().setText(self.lines[line] + '\n')
+                QApplication.clipboard().setText(self.lines[line] + "\n")
                 del self.lines[line]
 
     def onCtrlC(self):
@@ -234,12 +230,12 @@ class QutepartWrapper(Qutepart):
         else:
             line, _ = self.cursorPosition
             if self.lines[line]:
-                QApplication.clipboard().setText(self.lines[line] + '\n')
+                QApplication.clipboard().setText(self.lines[line] + "\n")
 
     def openAsFile(self):
         """Opens a selection or a current tag as a file"""
         path = self.selectedText.strip()
-        if path == "" or '\n' in path or '\r' in path:
+        if path == "" or "\n" in path or "\r" in path:
             return
 
         # Now the processing
@@ -280,7 +276,7 @@ class QutepartWrapper(Qutepart):
             url = "http://" + url
 
         oldTimeout = socket.getdefaulttimeout()
-        newTimeout = 5      # Otherwise the pause is too long
+        newTimeout = 5  # Otherwise the pause is too long
         socket.setdefaulttimeout(newTimeout)
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
 
@@ -290,8 +286,7 @@ class QutepartWrapper(Qutepart):
 
             # The content has been read sucessfully
             mainWindow = GlobalData().mainWindow
-            mainWindow.editorsManager().newTabClicked(content,
-                                                      os.path.basename(url))
+            mainWindow.editorsManager().newTabClicked(content, os.path.basename(url))
         except Exception as exc:
             logging.error("Error downloading '" + url + "'\n" + str(exc))
 
@@ -309,14 +304,14 @@ class QutepartWrapper(Qutepart):
         """Debug purpose member to print the highlight data"""
         line, pos = self.cursorPosition
         if self._highlighter is None:
-            print(str(line+1) + ":" + str(pos+1) + " no highlight")
+            print(str(line + 1) + ":" + str(pos + 1) + " no highlight")
             return
         block = self.document().findBlockByNumber(line)
         data = block.userData()
         if data is None:
-            print(str(line+1) + ":" + str(pos+1) + " None")
+            print(str(line + 1) + ":" + str(pos + 1) + " None")
             return
-        print(str(line+1) + ":" + str(pos+1) + " " + repr(data.data))
+        print(str(line + 1) + ":" + str(pos + 1) + " " + repr(data.data))
 
     def removeTrailingWhitespaces(self):
         """Removes trailing whitespaces"""
@@ -329,7 +324,7 @@ class QutepartWrapper(Qutepart):
             if stripped != line:
                 break
         else:
-            self.__showStatusBarMessage('No trailing spaces found')
+            self.__showStatusBarMessage("No trailing spaces found")
             return
 
         with self:
@@ -351,7 +346,7 @@ class QutepartWrapper(Qutepart):
             if expanded != line:
                 break
         else:
-            self.__showStatusBarMessage('No tabs found')
+            self.__showStatusBarMessage("No tabs found")
             return
 
         with self:
@@ -376,7 +371,7 @@ class QutepartWrapper(Qutepart):
         nonSpaceIndex = self.firstNonSpaceIndex(txt)
         if nonSpaceIndex is None:
             return False
-        if txt[nonSpaceIndex] != '#':
+        if txt[nonSpaceIndex] != "#":
             return False
         return not self.isStringLiteral(line, nonSpaceIndex)
 
@@ -397,8 +392,7 @@ class QutepartWrapper(Qutepart):
         if data is None:
             return False
         try:
-            return self._highlighter._syntax._getTextType(data.data,
-                                                          pos) == 's'
+            return self._highlighter._syntax._getTextType(data.data, pos) == "s"
         except IndexError:
             return False
 
@@ -484,7 +478,7 @@ class QutepartWrapper(Qutepart):
         cursor = self.textCursor()
         if cursor.hasSelection():
             word = cursor.selectedText()
-            if '\r' not in word and '\n' not in word:
+            if "\r" not in word and "\n" not in word:
                 return word, True, cursor.anchor(), cursor.position()
         cursor.select(QTextCursor.WordUnderCursor)
         return cursor.selectedText(), False, cursor.anchor(), cursor.position()
@@ -498,16 +492,16 @@ class QutepartWrapper(Qutepart):
     def getWordBeforeCursor(self):
         """Provides a word before the cursor"""
         cursor = self.textCursor()
-        textBeforeCursor = cursor.block().text()[:cursor.positionInBlock()]
+        textBeforeCursor = cursor.block().text()[: cursor.positionInBlock()]
         match = WORD_AT_END_REGEXP.search(textBeforeCursor)
-        return match.group(0) if match else ''
+        return match.group(0) if match else ""
 
     def getWordAfterCursor(self):
         """Provides a word after cursor"""
         cursor = self.textCursor()
-        textAfterCursor = cursor.block().text()[cursor.positionInBlock():]
+        textAfterCursor = cursor.block().text()[cursor.positionInBlock() :]
         match = WORD_AT_START_REGEXP.search(textAfterCursor)
-        return match.group(0) if match else ''
+        return match.group(0) if match else ""
 
     def onFirstChar(self):
         """Jump to the first character in the buffer"""
@@ -532,11 +526,9 @@ class QutepartWrapper(Qutepart):
 
     def findAllMatches(self, regExp):
         """Find all matches of regExp"""
-        if QutepartWrapper.matchesRegexp != regExp or \
-                self.__matchesCache is None:
+        if QutepartWrapper.matchesRegexp != regExp or self.__matchesCache is None:
             QutepartWrapper.matchesRegexp = regExp
-            self.__matchesCache = [match
-                                   for match in regExp.finditer(self.text)]
+            self.__matchesCache = [match for match in regExp.finditer(self.text)]
         QutepartWrapper.highlightOn = True
         return self.__matchesCache
 
@@ -544,12 +536,11 @@ class QutepartWrapper(Qutepart):
         """Updates the highlight. Returns False if there were too many."""
         matches = self.findAllMatches(regExp)
         count = len(matches)
-        if count > Settings()['maxHighlightedMatches']:
+        if count > Settings()["maxHighlightedMatches"]:
             self.setExtraSelections([])
             return False
 
-        self.setExtraSelections([(match.start(), len(match.group(0)))
-                                 for match in matches])
+        self.setExtraSelections([(match.start(), len(match.group(0))) for match in matches])
         return True
 
     def highlightRegexp(self, regExp, searchPos, forward, needMessage=True):
@@ -565,14 +556,15 @@ class QutepartWrapper(Qutepart):
         if needMessage:
             if highlighted:
                 if self.__matchesCache:
-                    msg = 'match %d of %d' % (matchIndex, totalMatches)
+                    msg = "match %d of %d" % (matchIndex, totalMatches)
                 else:
-                    msg = 'no matches'
+                    msg = "no matches"
             else:
-                msg = 'match %d of %d (too many to highlight, ' \
-                      'exceeds the limit of %d)' % \
-                      (matchIndex, totalMatches,
-                       Settings()['maxHighlightedMatches'])
+                msg = "match %d of %d (too many to highlight, exceeds the limit of %d)" % (
+                    matchIndex,
+                    totalMatches,
+                    Settings()["maxHighlightedMatches"],
+                )
             self.__showStatusBarMessage(msg)
         return len(self.__matchesCache)
 
@@ -587,7 +579,7 @@ class QutepartWrapper(Qutepart):
             return self.onNextHighlight()
 
         word, wasSelection, _, absEnd = self.getCurrentOrSelection()
-        if not word or '\r' in word or '\n' in word:
+        if not word or "\r" in word or "\n" in word:
             return 0
 
         # Reset match cashe in all the buffers
@@ -597,9 +589,9 @@ class QutepartWrapper(Qutepart):
 
         wordFlag = 0
         if wasSelection:
-            regExp = re.compile('%s' % re.escape(word), re.IGNORECASE)
+            regExp = re.compile("%s" % re.escape(word), re.IGNORECASE)
         else:
-            regExp = re.compile('\\b%s\\b' % re.escape(word), re.IGNORECASE)
+            regExp = re.compile("\\b%s\\b" % re.escape(word), re.IGNORECASE)
             wordFlag = 1
 
         count = self.highlightRegexp(regExp, absEnd, False)
@@ -621,15 +613,12 @@ class QutepartWrapper(Qutepart):
 
         if QutepartWrapper.highlightOn:
             # The current highlight is on
-            return self.highlightRegexp(QutepartWrapper.matchesRegexp,
-                                        self.absCursorPosition + 1, True)
+            return self.highlightRegexp(QutepartWrapper.matchesRegexp, self.absCursorPosition + 1, True)
 
         # Not highlighted. If within the currently matched word, then the
         # cursor should stay on it.
         wordBefore = self.getWordBeforeCursor()
-        return self.highlightRegexp(QutepartWrapper.matchesRegexp,
-                                    self.absCursorPosition - len(wordBefore),
-                                    True)
+        return self.highlightRegexp(QutepartWrapper.matchesRegexp, self.absCursorPosition - len(wordBefore), True)
 
     def onPrevHighlight(self):
         """Triggered when Ctrl+, is clicked"""
@@ -638,13 +627,11 @@ class QutepartWrapper(Qutepart):
 
         if QutepartWrapper.highlightOn:
             # The current highlight is on
-            return self.highlightRegexp(QutepartWrapper.matchesRegexp,
-                                        self.absCursorPosition - 1, False)
+            return self.highlightRegexp(QutepartWrapper.matchesRegexp, self.absCursorPosition - 1, False)
 
         # Not highlighted. If within the currently matched word, then the
         # cursor should stay on it.
-        return self.highlightRegexp(QutepartWrapper.matchesRegexp,
-                                    self.absCursorPosition, False)
+        return self.highlightRegexp(QutepartWrapper.matchesRegexp, self.absCursorPosition, False)
 
     def replaceAllMatches(self, replaceText):
         """Replaces all the current matches with the other text"""
@@ -654,8 +641,7 @@ class QutepartWrapper(Qutepart):
         replaceCount = 0
         noReplaceCount = 0
         for match in self.__matchesCache[::-1]:
-            textToReplace = self.text[match.start():
-                                      match.start() + len(match.group(0))]
+            textToReplace = self.text[match.start() : match.start() + len(match.group(0))]
             if textToReplace == replaceText:
                 noReplaceCount += 1
             else:
@@ -668,12 +654,9 @@ class QutepartWrapper(Qutepart):
             with self:
                 # reverse order, because replacement may move indexes
                 for match in self.__matchesCache[::-1]:
-                    textToReplace = self.text[match.start():
-                                              match.start() +
-                                              len(match.group(0))]
+                    textToReplace = self.text[match.start() : match.start() + len(match.group(0))]
                     if textToReplace != replaceText:
-                        self.replaceText(match.start(), len(match.group(0)),
-                                         replaceText)
+                        self.replaceText(match.start(), len(match.group(0)), replaceText)
 
                     if cursorPos is None:
                         cursorPos = self.absCursorPosition
@@ -685,13 +668,12 @@ class QutepartWrapper(Qutepart):
             self.absCursorPosition = cursorPos + delta
 
         if replaceCount == 1:
-            msg = '1 match replaced'
+            msg = "1 match replaced"
         else:
-            msg = '%d matches replaced' % replaceCount
+            msg = "%d matches replaced" % replaceCount
 
         if noReplaceCount > 0:
-            msg += '; %d skipped ' \
-                   '(the highlight matches replacement)' % noReplaceCount
+            msg += "; %d skipped (the highlight matches replacement)" % noReplaceCount
 
         self.__showStatusBarMessage(msg)
 
@@ -702,14 +684,11 @@ class QutepartWrapper(Qutepart):
             for match in self.__matchesCache:
                 if match.start() == pos:
                     regExp = QutepartWrapper.matchesRegexp
-                    textToReplace = self.text[match.start():
-                                              match.start() +
-                                              len(match.group(0))]
+                    textToReplace = self.text[match.start() : match.start() + len(match.group(0))]
                     if textToReplace == replaceText:
                         msg = "no replace: the highlight matches replacement"
                     else:
-                        self.replaceText(match.start(), len(match.group(0)),
-                                         replaceText)
+                        self.replaceText(match.start(), len(match.group(0)), replaceText)
                         self.__matchesCache = None
                         self.updateFoundItemsHighlighting(regExp)
                         msg = "1 match replaced"
@@ -764,9 +743,9 @@ class QutepartWrapper(Qutepart):
                     self.lines[-1] += value
                 if index == lastIndex:
                     if value != partsWithEnd[index]:
-                        self.lines.append('')
+                        self.lines.append("")
                 else:
-                    self.lines.append('')
+                    self.lines.append("")
 
     def gotoLine(self, line, pos=None, firstVisible=None):
         """Jumps to the given position and scrolls if needed.
@@ -805,15 +784,14 @@ class QutepartWrapper(Qutepart):
         """True if there is something to try to open as a file"""
         selectedText = self.selectedText.strip()
         if selectedText:
-            return '\n' not in selectedText and '\r' not in selectedText
+            return "\n" not in selectedText and "\r" not in selectedText
         return False
 
     def downloadAndShowAvailable(self):
         """True if download and show available"""
         selectedText = self.selectedText.strip()
-        if '\n' not in selectedText and '\r' not in selectedText:
-            return selectedText.lower().startswith('http://') or \
-                   selectedText.lower().startswith('www.')
+        if "\n" not in selectedText and "\r" not in selectedText:
+            return selectedText.lower().startswith("http://") or selectedText.lower().startswith("www.")
         return False
 
     def terminate(self):
@@ -834,4 +812,3 @@ class QutepartWrapper(Qutepart):
         self._lines._qpart = None
         self._lines._doc = None
         self._lines = None
-

@@ -18,18 +18,17 @@
 #
 
 """QComboBox extension:
-   - allows editing
-   - limits the number of saved entries
-   - does not allow duplications
-   - disables auto completion
-   - inserts items at top
+- allows editing
+- limits the number of saved entries
+- does not allow duplications
+- disables auto completion
+- inserts items at top
 """
 
 from .qt import QComboBox, Qt, pyqtSignal
 
 
 class EnterSensitiveComboBox(QComboBox):
-
     """Combo box which emits 'enterClicked' signal"""
 
     enterClicked = pyqtSignal()
@@ -46,7 +45,6 @@ class EnterSensitiveComboBox(QComboBox):
 
 
 class CDMComboBox(QComboBox):
-
     """QComboBox minor extension"""
 
     enterClicked = pyqtSignal()

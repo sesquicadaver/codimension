@@ -26,12 +26,10 @@
 
 """Line edit which shows specific text when inactive"""
 
-
 from .qt import QLineEdit, QPainter, QPalette, QStyle, QStyleOptionFrame, Qt
 
 
 class InactiveLineEdit(QLineEdit):
-
     """Line edit widget showing some inactive text"""
 
     def __init__(self, parent=None, inactiveText=""):
@@ -50,15 +48,11 @@ class InactiveLineEdit(QLineEdit):
     def paintEvent(self, evt):
         """Paint event handler"""
         QLineEdit.paintEvent(self, evt)
-        if self.text() == "" and self.__inactiveText != "" and \
-           not self.hasFocus():
+        if self.text() == "" and self.__inactiveText != "" and not self.hasFocus():
             panel = QStyleOptionFrame()
             self.initStyleOption(panel)
-            textRect = self.style().subElementRect(QStyle.SE_LineEditContents,
-                                                   panel, self)
+            textRect = self.style().subElementRect(QStyle.SE_LineEditContents, panel, self)
             textRect.adjust(2, 0, 0, 0)
             painter = QPainter(self)
-            painter.setPen(self.palette().brush(QPalette.Disabled,
-                                                QPalette.Text).color())
-            painter.drawText(textRect, Qt.AlignLeft | Qt.AlignVCenter,
-                             self.__inactiveText)
+            painter.setPen(self.palette().brush(QPalette.Disabled, QPalette.Text).color())
+            painter.drawText(textRect, Qt.AlignLeft | Qt.AlignVCenter, self.__inactiveText)

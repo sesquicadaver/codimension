@@ -20,7 +20,6 @@
 
 """Redirected IO console widget for running/profiling/debugging scripts"""
 
-
 from ui.qt import QAction, QHBoxLayout, QMenu, QSize, QSizePolicy, Qt, QToolBar, QToolButton, QWidget, pyqtSignal
 from utils.pixmapcache import getIcon
 from utils.runparams import DEBUG
@@ -30,7 +29,6 @@ from .redirectedioconsole import RedirectedIOConsole
 
 
 class IOConsoleWidget(QWidget):
-
     """IO Console widget"""
 
     sigSettingsUpdated = pyqtSignal()
@@ -41,7 +39,7 @@ class IOConsoleWidget(QWidget):
     def __init__(self, procuuid, kind, parent=None):
         QWidget.__init__(self, parent)
         self.procuuid = procuuid
-        self.kind = kind    # RUN/DEBUG/PROFILE
+        self.kind = kind  # RUN/DEBUG/PROFILE
 
         self.__viewer = RedirectedIOConsole(self)
         self.__viewer.sigUserInput.connect(self.__onUserInput)
@@ -61,12 +59,10 @@ class IOConsoleWidget(QWidget):
         """Creates the toolbar and layout"""
         self.__settingsMenu = QMenu(self)
         self.__settingsMenu.aboutToShow.connect(self.__settingsAboutToShow)
-        self.__wrapLongLinesAct = self.__settingsMenu.addAction(
-            "Wrap long lines")
+        self.__wrapLongLinesAct = self.__settingsMenu.addAction("Wrap long lines")
         self.__wrapLongLinesAct.setCheckable(True)
         self.__wrapLongLinesAct.triggered.connect(self.__onWrapLongLines)
-        self.__showWhitespacesAct = self.__settingsMenu.addAction(
-            "Show whitespaces")
+        self.__showWhitespacesAct = self.__settingsMenu.addAction("Show whitespaces")
         self.__showWhitespacesAct.setCheckable(True)
         self.__showWhitespacesAct.triggered.connect(self.__onShowWhitespaces)
         self.__autoscrollAct = self.__settingsMenu.addAction("Autoscroll")
@@ -74,8 +70,8 @@ class IOConsoleWidget(QWidget):
         self.__autoscrollAct.triggered.connect(self.__onAutoscroll)
 
         self.__settingsButton = QToolButton(self)
-        self.__settingsButton.setIcon(getIcon('iosettings.png'))
-        self.__settingsButton.setToolTip('View settings')
+        self.__settingsButton.setIcon(getIcon("iosettings.png"))
+        self.__settingsButton.setToolTip("View settings")
         self.__settingsButton.setPopupMode(QToolButton.InstantPopup)
         self.__settingsButton.setMenu(self.__settingsMenu)
         self.__settingsButton.setFocusPolicy(Qt.NoFocus)
@@ -84,13 +80,12 @@ class IOConsoleWidget(QWidget):
             fixedSpacer = QWidget()
             fixedSpacer.setFixedHeight(8)
 
-            self.__stopButton = QAction(getIcon('runconsolestop.png'),
-                                        'Stop process', self)
+            self.__stopButton = QAction(getIcon("runconsolestop.png"), "Stop process", self)
             self.__stopButton.triggered.connect(self.stop)
 
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.__clearButton = QAction(getIcon('trash.png'), 'Clear', self)
+        self.__clearButton = QAction(getIcon("trash.png"), "Clear", self)
         self.__clearButton.triggered.connect(self.clear)
 
         # The toolbar
@@ -121,26 +116,24 @@ class IOConsoleWidget(QWidget):
 
     def __settingsAboutToShow(self):
         """Settings menu is about to show"""
-        self.__wrapLongLinesAct.setChecked(Settings()['ioconsolelinewrap'])
-        self.__showWhitespacesAct.setChecked(Settings()['ioconsoleshowspaces'])
-        self.__autoscrollAct.setChecked(Settings()['ioconsoleautoscroll'])
+        self.__wrapLongLinesAct.setChecked(Settings()["ioconsolelinewrap"])
+        self.__showWhitespacesAct.setChecked(Settings()["ioconsoleshowspaces"])
+        self.__autoscrollAct.setChecked(Settings()["ioconsoleautoscroll"])
 
     def __onWrapLongLines(self):
         """Triggered when long lines setting is changed"""
-        Settings()['ioconsolelinewrap'] = not Settings()['ioconsolelinewrap']
+        Settings()["ioconsolelinewrap"] = not Settings()["ioconsolelinewrap"]
         self.sigSettingsUpdated.emit()
 
     def __onShowWhitespaces(self):
         """Triggered when show whitespaces is changed"""
-        Settings()['ioconsoleshowspaces'] = \
-            not Settings()['ioconsoleshowspaces']
+        Settings()["ioconsoleshowspaces"] = not Settings()["ioconsoleshowspaces"]
         self.sigSettingsUpdated.emit()
 
     @staticmethod
     def __onAutoscroll():
         """Triggered when autoscroll is changed"""
-        Settings()['ioconsoleautoscroll'] = \
-            not Settings()['ioconsoleautoscroll']
+        Settings()["ioconsoleautoscroll"] = not Settings()["ioconsoleautoscroll"]
 
     def clear(self):
         """Triggered when requested to clear the console"""

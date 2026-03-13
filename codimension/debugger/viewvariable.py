@@ -19,7 +19,6 @@
 
 """Dialog to show a single variable"""
 
-
 from ui.labels import HeaderLabel
 from ui.qt import QDialog, QDialogButtonBox, QGridLayout, QLabel, Qt, QTextEdit, QVBoxLayout
 from utils.colorfont import getZoomedMonoFont
@@ -28,11 +27,9 @@ from utils.pixmapcache import getIcon
 
 
 class ViewVariableDialog(QDialog):
-
     """Dialog all the properties of a variable"""
 
-    def __init__(self, varName,
-                 varType, varValue, isGlobal, parent=None):
+    def __init__(self, varName, varType, varValue, isGlobal, parent=None):
         QDialog.__init__(self, parent)
 
         if varName.endswith("."):
@@ -43,7 +40,7 @@ class ViewVariableDialog(QDialog):
             self.setWindowIcon(getIcon("globvar.png"))
         else:
             self.setWindowTitle("Local variable '" + varName + "'")
-            self.setWindowIcon(getIcon( "locvar.png"))
+            self.setWindowIcon(getIcon("locvar.png"))
         self.__createLayout(varName, varType, varValue, isGlobal)
 
     def __createLayout(self, varName, varType, varValue, isGlobal):
@@ -52,8 +49,7 @@ class ViewVariableDialog(QDialog):
         if varTypeParts[0].lower() in ["string", "unicode", "qstring"]:
             length = str(len(varValue))
             lines = str(len(varValue.splitlines()))
-            varType = varType.split("(")[0].strip() + \
-                      " (lines: " + lines + ", characters: " + length + ")"
+            varType = varType.split("(")[0].strip() + " (lines: " + lines + ", characters: " + length + ")"
 
         self.resize(600, 250)
         self.setSizeGripEnabled(True)
@@ -65,11 +61,10 @@ class ViewVariableDialog(QDialog):
         gridLayout.setSpacing(4)
         varScopeLabel = QLabel("Scope:", self)
         gridLayout.addWidget(varScopeLabel, 0, 0, Qt.AlignCenter)
-        varScopeValue = HeaderLabel('Global' if isGlobal else 'Local',
-                                    parent=self)
+        varScopeValue = HeaderLabel("Global" if isGlobal else "Local", parent=self)
         varScopeValue.setToolTip("Double click to copy")
         font = varScopeValue.font()
-        font.setFamily(GlobalData().skin['monoFont'].family())
+        font.setFamily(GlobalData().skin["monoFont"].family())
         gridLayout.addWidget(varScopeValue, 0, 1)
 
         varNameLabel = QLabel("Name:", self)

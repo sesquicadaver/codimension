@@ -29,20 +29,20 @@ from ui.qt import QAbstractItemModel, QModelIndex, Qt
 
 
 class WatchPointModel(QAbstractItemModel):
-
     """Class implementing a custom model for watch expressions"""
 
     def __init__(self, parent=None):
         QAbstractItemModel.__init__(self, parent)
 
         self.watchpoints = []
-        self.header = ['Condition', 'Special', 'Temporary', 'Enabled',
-                       'Ignore Count']
-        self.alignments = [Qt.Alignment(Qt.AlignLeft),
-                           Qt.Alignment(Qt.AlignLeft),
-                           Qt.Alignment(Qt.AlignHCenter),
-                           Qt.Alignment(Qt.AlignHCenter),
-                           Qt.Alignment(Qt.AlignRight)]
+        self.header = ["Condition", "Special", "Temporary", "Enabled", "Ignore Count"]
+        self.alignments = [
+            Qt.Alignment(Qt.AlignLeft),
+            Qt.Alignment(Qt.AlignLeft),
+            Qt.Alignment(Qt.AlignHCenter),
+            Qt.Alignment(Qt.AlignHCenter),
+            Qt.Alignment(Qt.AlignRight),
+        ]
 
     def columnCount(self, parent=QModelIndex()):
         """Provides the current column count"""
@@ -86,9 +86,7 @@ class WatchPointModel(QAbstractItemModel):
 
     def index(self, row, column, parent=QModelIndex()):
         """Creates the index"""
-        if parent.isValid() or \
-           row < 0 or row >= len(self.watchpoints) or \
-           column < 0 or column >= len(self.header):
+        if parent.isValid() or row < 0 or row >= len(self.watchpoints) or column < 0 or column >= len(self.header):
             return QModelIndex()
         return self.createIndex(row, column, self.watchpoints[row])
 
@@ -115,8 +113,7 @@ class WatchPointModel(QAbstractItemModel):
         if index.isValid():
             row = index.row()
             index1 = self.createIndex(row, 0, self.watchpoints[row])
-            index2 = self.createIndex(row, len(self.watchpoints[row]),
-                                      self.watchpoints[row])
+            index2 = self.createIndex(row, len(self.watchpoints[row]), self.watchpoints[row])
             self.dataAboutToBeChanged.emit(index1, index2)
             i = 0
             for value in [cond, special] + list(properties):
@@ -157,15 +154,14 @@ class WatchPointModel(QAbstractItemModel):
     def deleteAll(self):
         """Deletes all watch expressions"""
         if self.watchpoints:
-            self.beginRemoveRows(QModelIndex(), 0,
-                                 len(self.watchpoints) - 1)
+            self.beginRemoveRows(QModelIndex(), 0, len(self.watchpoints) - 1)
             self.watchpoints = []
             self.endRemoveRows()
 
     def getWatchPointByIndex(self, index):
         """Provides the values of a watch expression given by index"""
         if index.isValid():
-            return self.watchpoints[index.row()][:] # return a copy
+            return self.watchpoints[index.row()][:]  # return a copy
         return []
 
     def getWatchPointIndex(self, cond, special=""):

@@ -33,7 +33,6 @@ from .routines import getDoclinkIconAndTooltip
 
 
 class MinimizedIndependentCommentCell(CellElement, QGraphicsRectItem):
-
     """Represents a minimized independent comment"""
 
     def __init__(self, ref, canvas, x, y):
@@ -54,37 +53,39 @@ class MinimizedIndependentCommentCell(CellElement, QGraphicsRectItem):
         """Sets the item tooltip"""
         displayValue = self.ref.getDisplayValue()
         if displayValue:
-            self.setToolTip('<pre>' + escape(displayValue) + '</pre>')
+            self.setToolTip("<pre>" + escape(displayValue) + "</pre>")
 
     def __setupConnector(self):
         """Prepares the connector"""
         settings = self.canvas.settings
 
         cellToTheLeft = self.canvas.cells[self.addr[1]][self.addr[0] - 1]
-        leftEdge = \
-            cellToTheLeft.baseX + settings.mainLine + settings.hCellPadding
+        leftEdge = cellToTheLeft.baseX + settings.mainLine + settings.hCellPadding
 
         if self.leadingForElse:
             self.connector = Connector(
-                self.canvas, leftEdge + settings.hCellPadding,
+                self.canvas,
+                leftEdge + settings.hCellPadding,
                 self.baseY + self.minHeight / 2,
                 cellToTheLeft.baseX + settings.mainLine,
-                self.baseY + self.minHeight / 2)
+                self.baseY + self.minHeight / 2,
+            )
         else:
             self.connector = Connector(
-                self.canvas, leftEdge + settings.hCellPadding,
+                self.canvas,
+                leftEdge + settings.hCellPadding,
                 self.baseY + self.minHeight / 2,
                 cellToTheLeft.baseX + settings.mainLine,
-                self.baseY + self.minHeight / 2)
+                self.baseY + self.minHeight / 2,
+            )
         self.connector.penColor = settings.commentBorderColor
         self.connector.penWidth = settings.boxLineWidth
 
     def render(self):
         """Renders the cell"""
         s = self.canvas.settings
-        self.text = '#'
-        self.textRect = s.badgeFontMetrics.boundingRect(0, 0, MAXINT_32,
-                                                        MAXINT_32, 0, self.text)
+        self.text = "#"
+        self.textRect = s.badgeFontMetrics.boundingRect(0, 0, MAXINT_32, MAXINT_32, 0, self.text)
         self.badgeWidth = self.textRect.width() + 2 * s.badgeHSpacing
         self.badgeHeight = self.textRect.height() + 2 * s.badgeVSpacing
         self.badgeWidth = max(self.badgeWidth, self.badgeHeight)
@@ -105,36 +106,35 @@ class MinimizedIndependentCommentCell(CellElement, QGraphicsRectItem):
         scene.addItem(self.connector)
 
         # xPos matches the connector (which could be drawn in any direction)
-        xPos = max(self.connector.getFirstPoint()[0],
-                   self.connector.getLastPoint()[0])
+        xPos = max(self.connector.getFirstPoint()[0], self.connector.getLastPoint()[0])
 
         settings = self.canvas.settings
         penWidth = settings.selectPenWidth - 1
-        self.setRect(xPos - penWidth,
-                     baseY + settings.vCellPadding - penWidth,
-                     self.badgeWidth + 2 * penWidth,
-                     self.badgeHeight + 2 * penWidth)
+        self.setRect(
+            xPos - penWidth,
+            baseY + settings.vCellPadding - penWidth,
+            self.badgeWidth + 2 * penWidth,
+            self.badgeHeight + 2 * penWidth,
+        )
         scene.addItem(self)
 
-        self.iconItem = SVGItem(self.canvas, 'hiddencomment.svg', self)
+        self.iconItem = SVGItem(self.canvas, "hiddencomment.svg", self)
         sideSize = self.badgeHeight - 2 * settings.badgePixmapSpacing
         self.iconItem.setIconHeight(sideSize)
 
-        self.iconItem.setPos(xPos + (self.badgeWidth - sideSize) / 2,
-                             baseY + settings.vCellPadding +
-                             (self.badgeHeight - sideSize) / 2)
+        self.iconItem.setPos(
+            xPos + (self.badgeWidth - sideSize) / 2, baseY + settings.vCellPadding + (self.badgeHeight - sideSize) / 2
+        )
         scene.addItem(self.iconItem)
 
     def paint(self, painter, option, widget):
         """Draws the independent comment"""
         settings = self.canvas.settings
-        painter.setPen(self.getPainterPen(self.isSelected(),
-                                          settings.commentBorderColor))
+        painter.setPen(self.getPainterPen(self.isSelected(), settings.commentBorderColor))
         painter.setBrush(QBrush(settings.commentBGColor))
 
         # xPos matches the connector (which could be drawn in any direction)
-        xPos = max(self.connector.getFirstPoint()[0],
-                   self.connector.getLastPoint()[0])
+        xPos = max(self.connector.getFirstPoint()[0], self.connector.getLastPoint()[0])
         rect = QRectF(
             xPos,
             self.baseY + settings.vCellPadding,
@@ -149,8 +149,7 @@ class MinimizedIndependentCommentCell(CellElement, QGraphicsRectItem):
     def mouseDoubleClickEvent(self, event):
         """Jump to the appropriate line in the text editor"""
         # Needed custom because this item is used for ifs 'else' side comment
-        CellElement.mouseDoubleClickEvent(self, event,
-                                          pos=self.ref.beginPos)
+        CellElement.mouseDoubleClickEvent(self, event, pos=self.ref.beginPos)
 
     def getLineRange(self):
         """Provides the line range"""
@@ -162,23 +161,26 @@ class MinimizedIndependentCommentCell(CellElement, QGraphicsRectItem):
 
     def getSelectTooltip(self):
         """Provides the tooltip"""
-        return 'Comment at ' + CellElement.getLinesSuffix(self.getLineRange())
+        return "Comment at " + CellElement.getLinesSuffix(self.getLineRange())
 
 
 class MinimizedIndependentDocCell(CellElement, ColorMixin, QGraphicsRectItem):
-
     """Represents a minimized independent doc link"""
 
     def __init__(self, ref, canvas, x, y):
         CellElement.__init__(self, ref, canvas, x, y)
-        ColorMixin.__init__(self, None, canvas.settings.docLinkBGColor,
-                            canvas.settings.docLinkFGColor,
-                            canvas.settings.docLinkBorderColor,
-                            colorSpec=ref)
+        ColorMixin.__init__(
+            self,
+            None,
+            canvas.settings.docLinkBGColor,
+            canvas.settings.docLinkFGColor,
+            canvas.settings.docLinkBorderColor,
+            colorSpec=ref,
+        )
         QGraphicsRectItem.__init__(self)
         self.pixmapFile, tooltip = getDoclinkIconAndTooltip(ref, hidden=True)
         if tooltip:
-            self.setToolTip('<pre>' + escape(tooltip) + '</pre>')
+            self.setToolTip("<pre>" + escape(tooltip) + "</pre>")
 
         self.kind = CellElement.INDEPENDENT_MINIMIZED_DOC
 
@@ -190,22 +192,22 @@ class MinimizedIndependentDocCell(CellElement, ColorMixin, QGraphicsRectItem):
         settings = self.canvas.settings
 
         cellToTheLeft = self.canvas.cells[self.addr[1]][self.addr[0] - 1]
-        leftEdge = \
-            cellToTheLeft.baseX + settings.mainLine + settings.hCellPadding
+        leftEdge = cellToTheLeft.baseX + settings.mainLine + settings.hCellPadding
 
         self.connector = Connector(
-            self.canvas, leftEdge + settings.hCellPadding,
+            self.canvas,
+            leftEdge + settings.hCellPadding,
             self.baseY + self.minHeight / 2,
             cellToTheLeft.baseX + settings.mainLine,
-            self.baseY + self.minHeight / 2)
+            self.baseY + self.minHeight / 2,
+        )
         self.connector.penColor = settings.commentBorderColor
         self.connector.penWidth = settings.boxLineWidth
 
     def render(self):
         """Renders the cell"""
         s = self.canvas.settings
-        self.textRect = s.badgeFontMetrics.boundingRect(0, 0, MAXINT_32,
-                                                        MAXINT_32, 0, '#')
+        self.textRect = s.badgeFontMetrics.boundingRect(0, 0, MAXINT_32, MAXINT_32, 0, "#")
         self.badgeWidth = self.textRect.width() + 2 * s.badgeHSpacing
         self.badgeHeight = self.textRect.height() + 2 * s.badgeVSpacing
         self.badgeWidth = max(self.badgeWidth, self.badgeHeight)
@@ -226,36 +228,35 @@ class MinimizedIndependentDocCell(CellElement, ColorMixin, QGraphicsRectItem):
         scene.addItem(self.connector)
 
         # xPos matches the connector (which could be drawn in any direction)
-        xPos = max(self.connector.getFirstPoint()[0],
-                   self.connector.getLastPoint()[0])
+        xPos = max(self.connector.getFirstPoint()[0], self.connector.getLastPoint()[0])
 
         settings = self.canvas.settings
         penWidth = settings.selectPenWidth - 1
-        self.setRect(xPos - penWidth,
-                     baseY + settings.vCellPadding - penWidth,
-                     self.badgeWidth + 2 * penWidth,
-                     self.badgeHeight + 2 * penWidth)
+        self.setRect(
+            xPos - penWidth,
+            baseY + settings.vCellPadding - penWidth,
+            self.badgeWidth + 2 * penWidth,
+            self.badgeHeight + 2 * penWidth,
+        )
         scene.addItem(self)
 
         self.iconItem = SVGItem(self.canvas, self.pixmapFile, self)
         sideSize = self.badgeHeight - 2 * settings.badgePixmapSpacing
         self.iconItem.setIconHeight(sideSize)
 
-        self.iconItem.setPos(xPos + (self.badgeWidth - sideSize) / 2,
-                             baseY + settings.vCellPadding +
-                             (self.badgeHeight - sideSize) / 2)
+        self.iconItem.setPos(
+            xPos + (self.badgeWidth - sideSize) / 2, baseY + settings.vCellPadding + (self.badgeHeight - sideSize) / 2
+        )
         scene.addItem(self.iconItem)
 
     def paint(self, painter, option, widget):
         """Draws the independent comment"""
         settings = self.canvas.settings
-        painter.setPen(self.getPainterPen(self.isSelected(),
-                                          settings.docLinkBorderColor))
+        painter.setPen(self.getPainterPen(self.isSelected(), settings.docLinkBorderColor))
         painter.setBrush(QBrush(self.bgColor))
 
         # xPos matches the connector (which could be drawn in any direction)
-        xPos = max(self.connector.getFirstPoint()[0],
-                   self.connector.getLastPoint()[0])
+        xPos = max(self.connector.getFirstPoint()[0], self.connector.getLastPoint()[0])
         rect = QRectF(
             xPos,
             self.baseY + settings.vCellPadding,
@@ -269,8 +270,7 @@ class MinimizedIndependentDocCell(CellElement, ColorMixin, QGraphicsRectItem):
 
     def mouseDoubleClickEvent(self, event):
         """Jump to the appropriate line in the text editor"""
-        CellElement.mouseDoubleClickEvent(self, event,
-                                          pos=self.ref.ref.parts[0].beginPos)
+        CellElement.mouseDoubleClickEvent(self, event, pos=self.ref.ref.parts[0].beginPos)
 
     def getLineRange(self):
         """Provides the line range"""
@@ -282,5 +282,4 @@ class MinimizedIndependentDocCell(CellElement, ColorMixin, QGraphicsRectItem):
 
     def getSelectTooltip(self):
         """Provides the tooltip"""
-        return 'Link/anchor at ' + CellElement.getLinesSuffix(self.getLineRange())
-
+        return "Link/anchor at " + CellElement.getLinesSuffix(self.getLineRange())

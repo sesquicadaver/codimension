@@ -35,7 +35,6 @@ COLUMN_IGNORE_COUNT = 4
 
 
 class BreakPointModel(QAbstractItemModel):
-
     """Class implementing a custom model for breakpoints"""
 
     sigDataAboutToBeChanged = pyqtSignal(QModelIndex, QModelIndex)
@@ -47,11 +46,12 @@ class BreakPointModel(QAbstractItemModel):
         self.breakpoints = []
 
         self.__fields = {
-            COLUMN_LOCATION: ['File:line', Qt.Alignment(Qt.AlignLeft)],
-            COLUMN_CONDITION: ['Condition', Qt.Alignment(Qt.AlignLeft)],
-            COLUMN_TEMPORARY: ['T', Qt.Alignment(Qt.AlignHCenter)],
-            COLUMN_ENABLED: ['E', Qt.Alignment(Qt.AlignHCenter)],
-            COLUMN_IGNORE_COUNT: ['Ignore Count', Qt.Alignment(Qt.AlignRight)]}
+            COLUMN_LOCATION: ["File:line", Qt.Alignment(Qt.AlignLeft)],
+            COLUMN_CONDITION: ["Condition", Qt.Alignment(Qt.AlignLeft)],
+            COLUMN_TEMPORARY: ["T", Qt.Alignment(Qt.AlignHCenter)],
+            COLUMN_ENABLED: ["E", Qt.Alignment(Qt.AlignHCenter)],
+            COLUMN_IGNORE_COUNT: ["Ignore Count", Qt.Alignment(Qt.AlignRight)],
+        }
         self.__columnCount = len(self.__fields)
 
     def columnCount(self, parent=None):
@@ -132,9 +132,13 @@ class BreakPointModel(QAbstractItemModel):
 
     def index(self, row, column, parent=None):
         """Creates an index"""
-        if (parent and parent.isValid()) or \
-           row < 0 or row >= len(self.breakpoints) or \
-           column < 0 or column >= self.__columnCount:
+        if (
+            (parent and parent.isValid())
+            or row < 0
+            or row >= len(self.breakpoints)
+            or column < 0
+            or column >= self.__columnCount
+        ):
             return QModelIndex()
 
         return self.createIndex(row, column, self.breakpoints[row])
@@ -162,8 +166,7 @@ class BreakPointModel(QAbstractItemModel):
         if index.isValid():
             row = index.row()
             index1 = self.createIndex(row, 0, self.breakpoints[row])
-            index2 = self.createIndex(row, self.__columnCount - 1,
-                                      self.breakpoints[row])
+            index2 = self.createIndex(row, self.__columnCount - 1, self.breakpoints[row])
 
             self.sigDataAboutToBeChanged.emit(index1, index2)
             self.breakpoints[row].update(bpoint)
@@ -175,8 +178,7 @@ class BreakPointModel(QAbstractItemModel):
         if index.isValid():
             row = index.row()
             index1 = self.createIndex(row, 0, self.breakpoints[row])
-            index2 = self.createIndex(row, self.__columnCount - 1,
-                                      self.breakpoints[row])
+            index2 = self.createIndex(row, self.__columnCount - 1, self.breakpoints[row])
 
             self.sigDataAboutToBeChanged.emit(index1, index2)
             self.breakpoints[row].updateLineNumber(newLineNumber)
@@ -188,8 +190,7 @@ class BreakPointModel(QAbstractItemModel):
         if index.isValid():
             row = index.row()
             index1 = self.createIndex(row, 0, self.breakpoints[row])
-            index2 = self.createIndex(row, self.__columnCount - 1,
-                                      self.breakpoints[row])
+            index2 = self.createIndex(row, self.__columnCount - 1, self.breakpoints[row])
 
             self.sigDataAboutToBeChanged.emit(index1, index2)
             self.breakpoints[row].setEnabled(enabled)
@@ -236,8 +237,7 @@ class BreakPointModel(QAbstractItemModel):
         """Provides an index of a breakpoint"""
         for row in range(len(self.breakpoints)):
             bpoint = self.breakpoints[row]
-            if bpoint.getAbsoluteFileName() == fname and \
-               bpoint.getLineNumber() == lineno:
+            if bpoint.getAbsoluteFileName() == fname and bpoint.getLineNumber() == lineno:
                 return self.createIndex(row, 0, self.breakpoints[row])
         return QModelIndex()
 

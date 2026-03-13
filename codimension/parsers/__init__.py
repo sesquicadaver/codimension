@@ -26,21 +26,25 @@ in Python 3.10+), provides pure-Python ast-based implementations.
 # Install cdmpyparser fallback if C extension not available
 try:
     import cdmpyparser  # noqa: F401
+
     _CDMPYPARSER_AVAILABLE = True
 except ImportError:
     _CDMPYPARSER_AVAILABLE = False
     import sys as _sys
 
     from . import brief_ast as _brief_fallback
-    _sys.modules['cdmpyparser'] = _brief_fallback
+
+    _sys.modules["cdmpyparser"] = _brief_fallback
 
 # Install cdmcfparser fallback if C extension not available
 try:
     import cdmcfparser  # noqa: F401
+
     _CDMCFPARSER_AVAILABLE = True
 except ImportError:
     _CDMCFPARSER_AVAILABLE = False
     import sys as _sys
 
     from . import flow_ast as _flow_fallback
-    _sys.modules['cdmcfparser'] = _flow_fallback
+
+    _sys.modules["cdmcfparser"] = _flow_fallback

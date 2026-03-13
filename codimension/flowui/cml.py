@@ -35,12 +35,12 @@ from utils.limits import MAXINT_32
 
 def escapeCMLTextValue(src):
     """Escapes the string before inserting it to the code (CML value)"""
-    dst = ''
+    dst = ""
     for char in src:
-        if char == '\n':
-            dst += '\\n'
-        elif char in ('"', '\\'):
-            dst += '\\' + char
+        if char == "\n":
+            dst += "\\n"
+        elif char in ('"', "\\"):
+            dst += "\\" + char
         else:
             dst += char
     return dst
@@ -48,22 +48,22 @@ def escapeCMLTextValue(src):
 
 def unescapeCMLTextValue(src):
     """Removes escaping from the value received from the code"""
-    dst = ''
+    dst = ""
     lastIndex = len(src) - 1
     index = 0
     while index <= lastIndex:
-        if src[index] == '\\' and index < lastIndex:
-            if src[index + 1] == '\\':
-                dst += '\\'
+        if src[index] == "\\" and index < lastIndex:
+            if src[index + 1] == "\\":
+                dst += "\\"
                 index += 1
-            elif src[index + 1] == 'n':
-                dst += '\n'
+            elif src[index + 1] == "n":
+                dst += "\n"
                 index += 1
             elif src[index + 1] == '"':
                 dst += '"'
                 index += 1
             else:
-                dst += '\\'     # forgiving the other escape characters
+                dst += "\\"  # forgiving the other escape characters
         else:
             dst += src[index]
         index += 1
@@ -73,20 +73,19 @@ def unescapeCMLTextValue(src):
 def appendTextItem(name, value):
     """Provides a line to append"""
     if value:
-        if ' ' in value or '"' in value:
-            return ' ' + name + '="' + escapeCMLTextValue(value) + '"'
-        return ' ' + name + '=' + escapeCMLTextValue(value)
-    return ''
+        if " " in value or '"' in value:
+            return " " + name + '="' + escapeCMLTextValue(value) + '"'
+        return " " + name + "=" + escapeCMLTextValue(value)
+    return ""
 
 
 class CMLColorBase:
-
     """Covers the common colors for CML comments"""
 
     def __init__(self):
-        self.bgColor = None         # background color
-        self.fgColor = None         # foreground color
-        self.border = None          # border color
+        self.bgColor = None  # background color
+        self.fgColor = None  # foreground color
+        self.border = None  # border color
 
     def populateColors(self):
         """Populate colors"""
@@ -102,17 +101,15 @@ class CMLColorBase:
         """Generates the colors part"""
         parts = []
         if background is not None:
-            parts.append('bg=' + cssLikeColor(background))
+            parts.append("bg=" + cssLikeColor(background))
         if foreground is not None:
-            parts.append('fg=' + cssLikeColor(foreground))
+            parts.append("fg=" + cssLikeColor(foreground))
         if border is not None:
-            parts.append('border=' + cssLikeColor(border))
-        return ' '.join(parts)
-
+            parts.append("border=" + cssLikeColor(border))
+        return " ".join(parts)
 
 
 class CMLCommentBase:
-
     """Base class for all the CML comments"""
 
     def __init__(self, ref=None):
@@ -122,9 +119,9 @@ class CMLCommentBase:
     def validateRecordType(self, code):
         """Validates the record type"""
         if self.ref.recordType != code:
-            raise Exception("Invalid CML comment type. "
-                            "Expected: '" + code + "'. Received: '" +
-                            self.ref.recordType + "'.")
+            raise Exception(
+                "Invalid CML comment type. Expected: '" + code + "'. Received: '" + self.ref.recordType + "'."
+            )
 
     def __isSideComment(self, editor):
         """True if it is a side comment"""
@@ -148,8 +145,7 @@ class CMLCommentBase:
         line = self.ref.endLine
         while line >= self.ref.beginLine:
             if isSideComment:
-                raise Exception("Side CML comments removal "
-                                "has not been implemented yet")
+                raise Exception("Side CML comments removal has not been implemented yet")
             else:
                 # Editor has 0-based lines
                 del editor.lines[line - 1]
@@ -163,8 +159,7 @@ class CMLCommentBase:
         """Provides the line range"""
         # The CML comments may appear in a suite and range may be asked from
         # them to decide if the grouping is available
-        return [self.ref.parts[0].beginLine,
-                self.ref.parts[-1].endLine]
+        return [self.ref.parts[0].beginLine, self.ref.parts[-1].endLine]
 
     def getAbsPosRange(self):
         """Provides the absolute position range"""
@@ -176,7 +171,6 @@ class CMLCommentBase:
 
 
 class CMLsw(CMLCommentBase):
-
     """Covers the 'if' statement CML SW (switch branches) comments"""
 
     CODE = "sw"
@@ -193,13 +187,14 @@ class CMLsw(CMLCommentBase):
     @staticmethod
     def description():
         """Provides the CML comment description"""
-        return "The '" + CMLsw.CODE + \
-               "' comment is used for 'if' and 'elif' statements " \
-               "to switch default branch location i.e. to have " \
-               "the 'No' branch at the right.\n" \
-               "Supported properties: none\n\n" \
-               "Example:\n" \
-               "# cml 1 " + CMLsw.CODE
+        return (
+            "The '" + CMLsw.CODE + "' comment is used for 'if' and 'elif' statements "
+            "to switch default branch location i.e. to have "
+            "the 'No' branch at the right.\n"
+            "Supported properties: none\n\n"
+            "Example:\n"
+            "# cml 1 " + CMLsw.CODE
+        )
 
     @staticmethod
     def generate(pos=1):
@@ -208,7 +203,6 @@ class CMLsw(CMLCommentBase):
 
 
 class CMLcc(CMLCommentBase, CMLColorBase):
-
     """Covers 'Custom Colors' spec for most of the items"""
 
     CODE = "cc"
@@ -224,33 +218,32 @@ class CMLcc(CMLCommentBase, CMLColorBase):
         CMLVersion.validate(self.ref)
 
         self.populateColors()
-        if self.bgColor is None and \
-                self.fgColor is None and self.border is None:
-            raise Exception("The '" + CMLcc.CODE + "' CML comment does not "
-                            "supply neither background nor foreground color "
-                            "nor border color")
+        if self.bgColor is None and self.fgColor is None and self.border is None:
+            raise Exception(
+                "The '" + CMLcc.CODE + "' CML comment does not "
+                "supply neither background nor foreground color "
+                "nor border color"
+            )
 
     @staticmethod
     def description():
         """Provides the CML comment description"""
-        return "The '" + CMLcc.CODE + \
-               "' comment is used for custom colors of most of " \
-               "the graphics items.\n" \
-               "Supported properties:\n" \
-               "- color properties as described in the common section\n\n" \
-               "Example:\n" \
-               "# cml 1 " + CMLcc.CODE + \
-               " bg=#f6f4e4 fg=#000 border=#fff"
+        return (
+            "The '" + CMLcc.CODE + "' comment is used for custom colors of most of "
+            "the graphics items.\n"
+            "Supported properties:\n"
+            "- color properties as described in the common section\n\n"
+            "Example:\n"
+            "# cml 1 " + CMLcc.CODE + " bg=#f6f4e4 fg=#000 border=#fff"
+        )
 
     @staticmethod
     def generate(background, foreground, border, pos=1):
         """Generates a complete line to be inserted"""
-        return  ' ' * (pos - 1) + '# cml 1 cc ' + \
-                CMLColorBase.generateColors(background, foreground, border)
+        return " " * (pos - 1) + "# cml 1 cc " + CMLColorBase.generateColors(background, foreground, border)
 
 
 class CMLdoc(CMLCommentBase, CMLColorBase):
-
     """Covers the 'documentation link' comment"""
 
     CODE = "doc"
@@ -258,9 +251,9 @@ class CMLdoc(CMLCommentBase, CMLColorBase):
     def __init__(self, ref):
         CMLCommentBase.__init__(self, ref)
         CMLColorBase.__init__(self)
-        self.link = None    # file path, abs or relative
+        self.link = None  # file path, abs or relative
         self.anchor = None  # id of this comment to let a link from the doc
-        self.title = None   # text to display
+        self.title = None  # text to display
         self.validate()
 
     def validate(self):
@@ -270,43 +263,46 @@ class CMLdoc(CMLCommentBase, CMLColorBase):
 
         self.populateColors()
 
-        self.link = self.ref.properties.get('link', None)
-        self.anchor = self.ref.properties.get('anchor', None)
-        self.title = self.ref.properties.get('title', '')
+        self.link = self.ref.properties.get("link", None)
+        self.anchor = self.ref.properties.get("anchor", None)
+        self.title = self.ref.properties.get("title", "")
 
         if self.link is None and self.anchor is None:
-            raise Exception("The '" + CMLdoc.CODE +
-                            "' CML comment supplies neither "
-                            "a link nor an anchor")
+            raise Exception("The '" + CMLdoc.CODE + "' CML comment supplies neither a link nor an anchor")
         if self.anchor:
-            if ' ' in self.anchor or '\t' in self.anchor:
-                raise Exception("The '" + CMLdoc.CODE +
-                                "' CML comment anchor attribute "
-                                "must contain neither spaces nor tabs")
+            if " " in self.anchor or "\t" in self.anchor:
+                raise Exception(
+                    "The '" + CMLdoc.CODE + "' CML comment anchor attribute must contain neither spaces nor tabs"
+                )
 
     @staticmethod
     def description():
         """Provides the CML comment description"""
-        return "The '" + CMLdoc.CODE + \
-            "' comment is used to provide a link to a documentation.\n" \
-            "Supported properties:\n" \
-            "- 'link': link to the appropriate documentation\n" \
-            "- 'anchor': this ID could be used to provide a link to this comment\n" \
-            "- 'title': what to display on graphics\n" \
-            "- color properties as described in the common section\n\n" \
-            "Example:\n" \
-            "# cml 1 " + CMLdoc.CODE + " link=file:doc/mydoc.md title=\"See more\""
+        return (
+            "The '" + CMLdoc.CODE + "' comment is used to provide a link to a documentation.\n"
+            "Supported properties:\n"
+            "- 'link': link to the appropriate documentation\n"
+            "- 'anchor': this ID could be used to provide a link to this comment\n"
+            "- 'title': what to display on graphics\n"
+            "- color properties as described in the common section\n\n"
+            "Example:\n"
+            "# cml 1 " + CMLdoc.CODE + ' link=file:doc/mydoc.md title="See more"'
+        )
 
     @staticmethod
     def generate(link, anchor, title, background, foreground, border, pos=1):
         """Generates a complete line to be inserted"""
-        res = ' ' * (pos - 1) + '# cml 1 ' + CMLdoc.CODE + \
-              appendTextItem('link', link) + \
-              appendTextItem('anchor', anchor) + \
-              appendTextItem('title', title)
+        res = (
+            " " * (pos - 1)
+            + "# cml 1 "
+            + CMLdoc.CODE
+            + appendTextItem("link", link)
+            + appendTextItem("anchor", anchor)
+            + appendTextItem("title", title)
+        )
         colorPart = CMLColorBase.generateColors(background, foreground, border)
         if colorPart:
-            return res + ' ' + colorPart
+            return res + " " + colorPart
         return res
 
     def getTitle(self):
@@ -317,8 +313,7 @@ class CMLdoc(CMLCommentBase, CMLColorBase):
         """Updates the custom colors"""
         firstCommentLine = self.ref.parts[0].beginLine
         pos = self.ref.parts[0].beginPos
-        newCommentLine = CMLdoc.generate(self.link, self.anchor, self.title,
-                                         bgcolor, fgcolor, bordercolor, pos)
+        newCommentLine = CMLdoc.generate(self.link, self.anchor, self.title, bgcolor, fgcolor, bordercolor, pos)
         self.removeFromText(editor)
         editor.insertLines(newCommentLine, firstCommentLine)
 
@@ -327,9 +322,7 @@ class CMLdoc(CMLCommentBase, CMLColorBase):
         self.updateCustomColors(editor, None, None, None)
 
 
-
 class CMLrt(CMLCommentBase):
-
     """Covers 'Replace text' comment"""
 
     CODE = "rt"
@@ -347,25 +340,24 @@ class CMLrt(CMLCommentBase):
         self.text = self.ref.properties.get("text", None)
 
         if self.text is None:
-            raise Exception("The '" + CMLrt.CODE +
-                            "' CML comment does not supply text")
+            raise Exception("The '" + CMLrt.CODE + "' CML comment does not supply text")
 
     @staticmethod
     def description():
         """Provides the CML comment description"""
-        return "The '" + CMLrt.CODE + \
-               "' comment is used for replacing the text of most of " \
-               "the graphics items.\n" \
-               "Supported properties:\n" \
-               "- 'text': text to be shown instead of the real code\n\n" \
-               "Example:\n" \
-               "# cml 1 " + CMLrt.CODE + " text=\"Reset the dictionary\""
+        return (
+            "The '" + CMLrt.CODE + "' comment is used for replacing the text of most of "
+            "the graphics items.\n"
+            "Supported properties:\n"
+            "- 'text': text to be shown instead of the real code\n\n"
+            "Example:\n"
+            "# cml 1 " + CMLrt.CODE + ' text="Reset the dictionary"'
+        )
 
     @staticmethod
     def generate(txt, pos=1):
         """Generates a complete line to be inserted"""
-        return " " * (pos - 1) + "# cml 1 " + CMLrt.CODE + \
-               appendTextItem('text', txt)
+        return " " * (pos - 1) + "# cml 1 " + CMLrt.CODE + appendTextItem("text", txt)
 
     def getText(self):
         """Provides unescaped text"""
@@ -375,10 +367,9 @@ class CMLrt(CMLCommentBase):
 
 
 class CMLgb(CMLCommentBase, CMLColorBase):
-
     """Covers the 'group begin' comment"""
 
-    CODE = 'gb'
+    CODE = "gb"
 
     def __init__(self, ref):
         CMLCommentBase.__init__(self, ref)
@@ -394,38 +385,36 @@ class CMLgb(CMLCommentBase, CMLColorBase):
 
         self.populateColors()
 
-        self.title = self.ref.properties.get('title', None)
-        if 'id' in self.ref.properties:
-            self.id = self.ref.properties['id'].strip()
+        self.title = self.ref.properties.get("title", None)
+        if "id" in self.ref.properties:
+            self.id = self.ref.properties["id"].strip()
 
         if not self.id:
-            raise Exception("The '" + CMLgb.CODE +
-                            "' CML comment does not supply id")
+            raise Exception("The '" + CMLgb.CODE + "' CML comment does not supply id")
 
     @staticmethod
     def description():
         """Provides the CML comment description"""
-        return "The '" + CMLgb.CODE + \
-               "' is used to indicate the beginning of the visual group. It " \
-               "needs a counterpart " + CMLge.CODE + " CML comment which " \
-               "indicates the end of the visual group.\n" \
-               "Supported properties:\n" \
-               "- 'title': title to be shown when the group is collapsed\n" \
-               "- 'id': unique identifier of the visual group\n" \
-               "- color properties as described in the common section\n\n" \
-               "Example:\n" \
-               "# cml 1 " + CMLgb.CODE + " id=\"1234-5678-444444\" " \
-               "title=\"MD5 calculation\""
+        return (
+            "The '" + CMLgb.CODE + "' is used to indicate the beginning of the visual group. It "
+            "needs a counterpart " + CMLge.CODE + " CML comment which "
+            "indicates the end of the visual group.\n"
+            "Supported properties:\n"
+            "- 'title': title to be shown when the group is collapsed\n"
+            "- 'id': unique identifier of the visual group\n"
+            "- color properties as described in the common section\n\n"
+            "Example:\n"
+            "# cml 1 " + CMLgb.CODE + ' id="1234-5678-444444" '
+            'title="MD5 calculation"'
+        )
 
     @staticmethod
     def generate(groupid, title, background, foreground, border, pos=1):
         """Generates a complete line to be inserted"""
-        res = ' ' * (pos - 1) + '# cml 1 ' + CMLgb.CODE + \
-              appendTextItem('id', groupid) + \
-              appendTextItem('title', title)
+        res = " " * (pos - 1) + "# cml 1 " + CMLgb.CODE + appendTextItem("id", groupid) + appendTextItem("title", title)
         colorPart = CMLColorBase.generateColors(background, foreground, border)
         if colorPart:
-            return res + ' ' + colorPart
+            return res + " " + colorPart
         return res
 
     def getTitle(self):
@@ -444,16 +433,14 @@ class CMLgb(CMLCommentBase, CMLColorBase):
         if self.title is None:
             # Need to add the title= attribute to the last comment line
             lastLine = editor.lines[lastCommentLine - 1]
-            newLastLine = lastLine.rstrip() + ' title="' + \
-                escapeCMLTextValue(newTitle) + '"'
+            newLastLine = lastLine.rstrip() + ' title="' + escapeCMLTextValue(newTitle) + '"'
             editor.lines[lastCommentLine - 1] = newLastLine
             return
 
         # The title was there, so re-generate the comment line, remove the old
         # one and insert a new one
         pos = self.ref.parts[0].beginPos
-        newCommentLine = CMLgb.generate(self.id, newTitle, self.bgColor,
-                                        self.fgColor, self.border, pos)
+        newCommentLine = CMLgb.generate(self.id, newTitle, self.bgColor, self.fgColor, self.border, pos)
         self.removeFromText(editor)
         editor.insertLines(newCommentLine, firstCommentLine)
 
@@ -461,8 +448,7 @@ class CMLgb(CMLCommentBase, CMLColorBase):
         """Updates the custom colors"""
         firstCommentLine = self.ref.parts[0].beginLine
         pos = self.ref.parts[0].beginPos
-        newCommentLine = CMLgb.generate(self.id, self.title, bgcolor,
-                                        fgcolor, bordercolor, pos)
+        newCommentLine = CMLgb.generate(self.id, self.title, bgcolor, fgcolor, bordercolor, pos)
         self.removeFromText(editor)
         editor.insertLines(newCommentLine, firstCommentLine)
 
@@ -471,12 +457,10 @@ class CMLgb(CMLCommentBase, CMLColorBase):
         self.updateCustomColors(editor, None, None, None)
 
 
-
 class CMLge(CMLCommentBase):
-
     """Covers the 'group end' comment"""
 
-    CODE = 'ge'
+    CODE = "ge"
 
     def __init__(self, ref):
         CMLCommentBase.__init__(self, ref)
@@ -488,48 +472,48 @@ class CMLge(CMLCommentBase):
         self.validateRecordType(CMLge.CODE)
         CMLVersion.validate(self.ref)
 
-        if 'id' in self.ref.properties:
-            self.id = self.ref.properties['id'].strip()
+        if "id" in self.ref.properties:
+            self.id = self.ref.properties["id"].strip()
 
         if not self.id:
-            raise Exception("The '" + CMLge.CODE +
-                            "' CML comment does not supply id")
+            raise Exception("The '" + CMLge.CODE + "' CML comment does not supply id")
 
     @staticmethod
     def description():
         """Provides the CML comment description"""
-        return "The '" + CMLge.CODE + \
-               "' is used to indicate the end of the visual group. It " \
-               "needs a counterpart " + CMLgb.CODE + " CML comment which " \
-               "indicates the beginning of the visual group.\n" \
-               "Supported properties:\n" \
-               "- 'id': unique identifier of the visual group\n\n" \
-               "Example:\n" \
-               "# cml 1 " + CMLge.CODE + " id=\"1234-5678-444444\""
+        return (
+            "The '" + CMLge.CODE + "' is used to indicate the end of the visual group. It "
+            "needs a counterpart " + CMLgb.CODE + " CML comment which "
+            "indicates the beginning of the visual group.\n"
+            "Supported properties:\n"
+            "- 'id': unique identifier of the visual group\n\n"
+            "Example:\n"
+            "# cml 1 " + CMLge.CODE + ' id="1234-5678-444444"'
+        )
 
     @staticmethod
     def generate(groupid, pos=1):
         """Generates a complete line to be inserted"""
-        res = ' ' * (pos - 1) + '# cml 1 ' + CMLge.CODE
-        if ' ' in groupid:
+        res = " " * (pos - 1) + "# cml 1 " + CMLge.CODE
+        if " " in groupid:
             res += ' id="' + groupid + '"'
         else:
-            res += ' id=' + groupid
+            res += " id=" + groupid
         return res
 
 
-
 class CMLVersion:
-
     """Describes the current CML version"""
 
-    VERSION = 1     # Current CML version
-    COMMENT_TYPES = {CMLsw.CODE: CMLsw,
-                     CMLcc.CODE: CMLcc,
-                     CMLrt.CODE: CMLrt,
-                     CMLgb.CODE: CMLgb,
-                     CMLge.CODE: CMLge,
-                     CMLdoc.CODE: CMLdoc}
+    VERSION = 1  # Current CML version
+    COMMENT_TYPES = {
+        CMLsw.CODE: CMLsw,
+        CMLcc.CODE: CMLcc,
+        CMLrt.CODE: CMLrt,
+        CMLgb.CODE: CMLgb,
+        CMLge.CODE: CMLge,
+        CMLdoc.CODE: CMLdoc,
+    }
 
     def __init__(self):
         pass
@@ -538,10 +522,12 @@ class CMLVersion:
     def validate(cmlComment):
         """Valides the vestion"""
         if cmlComment.version > CMLVersion.VERSION:
-            raise Exception("The CML comment version " +
-                            str(cmlComment.version) +
-                            " is not supported. Max supported version is " +
-                            str(CMLVersion.VERSION))
+            raise Exception(
+                "The CML comment version "
+                + str(cmlComment.version)
+                + " is not supported. Max supported version is "
+                + str(CMLVersion.VERSION)
+            )
 
     @staticmethod
     def find(cmlComments, cmlType):
@@ -561,15 +547,14 @@ class CMLVersion:
             return None
 
     @staticmethod
-    def validateCMLComments(item, validGroups, allGroupId,
-                            pickLeadingComments=True):
+    def validateCMLComments(item, validGroups, allGroupId, pickLeadingComments=True):
         """Validates recursively all the CML items in the control flow.
 
         Replaces the recognized CML comments from the module with their higher
         level counterparts.
         Returns back a list of warnings. Also populates a list of valid groups.
         """
-        scopeGroupStack = []    # [(id, lineBegin, lineEnd), ...]
+        scopeGroupStack = []  # [(id, lineBegin, lineEnd), ...]
 
         warnings = []
         if pickLeadingComments:
@@ -577,8 +562,8 @@ class CMLVersion:
             # They need to be considered as belonging to the module suite.
             if hasattr(item, "leadingCMLComments"):
                 warnings += CMLVersion.validateCMLList(
-                    item.leadingCMLComments, True, scopeGroupStack,
-                    validGroups, allGroupId)
+                    item.leadingCMLComments, True, scopeGroupStack, validGroups, allGroupId
+                )
 
         # Some items are containers
         if item.kind == IF_FRAGMENT:
@@ -586,68 +571,61 @@ class CMLVersion:
                 if index == 0:
                     # The very first part
                     warnings += CMLVersion.validateCMLList(
-                        part.leadingCMLComments, True, scopeGroupStack,
-                        validGroups, allGroupId)
+                        part.leadingCMLComments, True, scopeGroupStack, validGroups, allGroupId
+                    )
                 else:
                     warnings += CMLVersion.validateCMLList(
-                        part.leadingCMLComments, False, None, None, None,
-                        'elif or else parts')
-                warnings += CMLVersion.validateCMLComments(
-                    part, validGroups, allGroupId, False)
+                        part.leadingCMLComments, False, None, None, None, "elif or else parts"
+                    )
+                warnings += CMLVersion.validateCMLComments(part, validGroups, allGroupId, False)
         elif item.kind in [FOR_FRAGMENT, WHILE_FRAGMENT]:
             if item.elsePart:
                 warnings += CMLVersion.validateCMLList(
-                    item.elsePart.leadingCMLComments, False, None, None, None,
-                    'loop else parts')
-                warnings += CMLVersion.validateCMLComments(
-                    item.elsePart, validGroups, allGroupId, False)
+                    item.elsePart.leadingCMLComments, False, None, None, None, "loop else parts"
+                )
+                warnings += CMLVersion.validateCMLComments(item.elsePart, validGroups, allGroupId, False)
         elif item.kind == TRY_FRAGMENT:
             if item.elsePart:
                 warnings += CMLVersion.validateCMLList(
-                    item.elsePart.leadingCMLComments, False,
-                    None, None, None, 'try else parts')
-                warnings += CMLVersion.validateCMLComments(
-                    item.elsePart, validGroups, allGroupId, False)
+                    item.elsePart.leadingCMLComments, False, None, None, None, "try else parts"
+                )
+                warnings += CMLVersion.validateCMLComments(item.elsePart, validGroups, allGroupId, False)
             if item.finallyPart:
                 warnings += CMLVersion.validateCMLList(
-                    item.finallyPart.leadingCMLComments, False,
-                    None, None, None, 'try finally parts')
-                warnings += CMLVersion.validateCMLComments(
-                    item.finallyPart, validGroups, allGroupId, False)
+                    item.finallyPart.leadingCMLComments, False, None, None, None, "try finally parts"
+                )
+                warnings += CMLVersion.validateCMLComments(item.finallyPart, validGroups, allGroupId, False)
             for part in item.exceptParts:
                 warnings += CMLVersion.validateCMLList(
-                    part.leadingCMLComments, False,
-                    None, None, None, 'try except parts')
-                warnings += CMLVersion.validateCMLComments(
-                    part, validGroups, allGroupId, False)
-        elif item.kind in [CONTROL_FLOW_FRAGMENT,
-                           CLASS_FRAGMENT, FUNCTION_FRAGMENT]:
+                    part.leadingCMLComments, False, None, None, None, "try except parts"
+                )
+                warnings += CMLVersion.validateCMLComments(part, validGroups, allGroupId, False)
+        elif item.kind in [CONTROL_FLOW_FRAGMENT, CLASS_FRAGMENT, FUNCTION_FRAGMENT]:
             if item.docstring:
                 warnings += CMLVersion.validateCMLList(
-                    item.docstring.leadingCMLComments, False,
-                    None, None, None, 'docstrings')
+                    item.docstring.leadingCMLComments, False, None, None, None, "docstrings"
+                )
                 warnings += CMLVersion.validateCMLList(
-                    item.docstring.sideCMLComments, False,
-                    None, None, None, 'docstrings')
+                    item.docstring.sideCMLComments, False, None, None, None, "docstrings"
+                )
 
             if item.kind in [CLASS_FRAGMENT, FUNCTION_FRAGMENT]:
                 if item.decorators:
                     for index, decorator in enumerate(item.decorators):
                         if index == 0:
                             warnings += CMLVersion.validateCMLList(
-                                decorator.leadingCMLComments, True,
-                                scopeGroupStack, validGroups, allGroupId)
+                                decorator.leadingCMLComments, True, scopeGroupStack, validGroups, allGroupId
+                            )
                         else:
                             warnings += CMLVersion.validateCMLList(
-                                decorator.leadingCMLComments, False,
-                                None, None, None, ' not first decorators')
+                                decorator.leadingCMLComments, False, None, None, None, " not first decorators"
+                            )
                         warnings += CMLVersion.validateCMLList(
-                            decorator.sideCMLComments, False,
-                            None, None, None, 'decorators')
+                            decorator.sideCMLComments, False, None, None, None, "decorators"
+                        )
 
         if hasattr(item, "sideCMLComments"):
-            warnings += CMLVersion.validateCMLList(
-                item.sideCMLComments, False, None, None, None, 'side comments')
+            warnings += CMLVersion.validateCMLList(item.sideCMLComments, False, None, None, None, "side comments")
 
         if hasattr(item, "suite"):
             for index, nestedItem in enumerate(item.suite):
@@ -657,11 +635,7 @@ class CMLVersion:
                     if replace is not None:
                         item.suite[index] = replace
                         if replace.CODE in [CMLgb.CODE, CMLge.CODE]:
-                            CMLVersion.handleScopeGroup(replace,
-                                                        scopeGroupStack,
-                                                        warnings,
-                                                        validGroups,
-                                                        allGroupId)
+                            CMLVersion.handleScopeGroup(replace, scopeGroupStack, warnings, validGroups, allGroupId)
                     if warn is not None:
                         warnings.append(warn)
                     continue
@@ -669,34 +643,31 @@ class CMLVersion:
                 if nestedItem.kind in [CLASS_FRAGMENT, FUNCTION_FRAGMENT]:
                     if nestedItem.decorators:
                         warnings += CMLVersion.validateCMLList(
-                            nestedItem.decorators[0].leadingCMLComments, True,
-                            scopeGroupStack, validGroups, allGroupId)
+                            nestedItem.decorators[0].leadingCMLComments, True, scopeGroupStack, validGroups, allGroupId
+                        )
                     warnings += CMLVersion.validateCMLList(
-                        nestedItem.leadingCMLComments, True,
-                        scopeGroupStack, validGroups, allGroupId)
+                        nestedItem.leadingCMLComments, True, scopeGroupStack, validGroups, allGroupId
+                    )
                 elif hasattr(nestedItem, "leadingCMLComments"):
                     warnings += CMLVersion.validateCMLList(
-                        nestedItem.leadingCMLComments, True, scopeGroupStack,
-                        validGroups, allGroupId)
+                        nestedItem.leadingCMLComments, True, scopeGroupStack, validGroups, allGroupId
+                    )
                 if nestedItem.kind == IF_FRAGMENT:
                     warnings += CMLVersion.validateCMLList(
-                        nestedItem.parts[0].leadingCMLComments, True,
-                        scopeGroupStack, validGroups, allGroupId)
+                        nestedItem.parts[0].leadingCMLComments, True, scopeGroupStack, validGroups, allGroupId
+                    )
 
-                warnings += CMLVersion.validateCMLComments(nestedItem,
-                                                           validGroups,
-                                                           allGroupId, False)
+                warnings += CMLVersion.validateCMLComments(nestedItem, validGroups, allGroupId, False)
 
         for group in scopeGroupStack:
-            warnings.append((group[1], -1, 'CML ' + CMLgb.CODE + ' comment '
-                             'does not have a matching CML ' + CMLge.CODE +
-                             ' comment'))
+            warnings.append(
+                (group[1], -1, "CML " + CMLgb.CODE + " comment does not have a matching CML " + CMLge.CODE + " comment")
+            )
 
         return warnings
 
     @staticmethod
-    def handleScopeGroup(cmlComment, groupStack, warnings,
-                         validGroups, allGroupId):
+    def handleScopeGroup(cmlComment, groupStack, warnings, validGroups, allGroupId):
         """Processes the cml grouping comments"""
         line = cmlComment.ref.parts[0].beginLine
         if cmlComment.CODE == CMLgb.CODE:
@@ -706,23 +677,23 @@ class CMLVersion:
             return
         if cmlComment.CODE == CMLge.CODE:
             if not groupStack:
-                warnings.append((line, -1,
-                                 'CML ' + CMLge.CODE + ' comment '
-                                 'without CML ' + CMLgb.CODE + ' comment'))
+                warnings.append((line, -1, "CML " + CMLge.CODE + " comment without CML " + CMLgb.CODE + " comment"))
                 return
             if groupStack[-1][0] != cmlComment.id:
-                warnings.append((line, -1,
-                                 'CML ' + CMLge.CODE + ' comment id does not '
-                                 'match the previous CML ' + CMLgb.CODE +
-                                 ' comment id at line ' +
-                                 str(groupStack[-1][1])))
+                warnings.append(
+                    (
+                        line,
+                        -1,
+                        "CML " + CMLge.CODE + " comment id does not "
+                        "match the previous CML " + CMLgb.CODE + " comment id at line " + str(groupStack[-1][1]),
+                    )
+                )
                 return
             validGroups.append((cmlComment.id, groupStack[-1][1], line))
             groupStack.pop()
 
     @staticmethod
-    def validateCMLList(comments, pickGroups, groupStack,
-                        validGroups, allGroupId, itemName=None):
+    def validateCMLList(comments, pickGroups, groupStack, validGroups, allGroupId, itemName=None):
         """Validates the CML comments in the provided list (internal use)"""
         warnings = []
         if comments:
@@ -735,16 +706,11 @@ class CMLVersion:
                     comments[index] = replace
                     if replace.CODE in [CMLgb.CODE, CMLge.CODE]:
                         if pickGroups:
-                            CMLVersion.handleScopeGroup(replace,
-                                                        groupStack,
-                                                        warnings,
-                                                        validGroups,
-                                                        allGroupId)
+                            CMLVersion.handleScopeGroup(replace, groupStack, warnings, validGroups, allGroupId)
                         else:
                             line = replace.ref.parts[0].beginLine
                             pos = replace.ref.parts[0].beginPos
-                            warn = (line, pos, 'Groups are not allowed for ' +
-                                    itemName)
+                            warn = (line, pos, "Groups are not allowed for " + itemName)
                 if warn is not None:
                     warnings.append(warn)
         return warnings
@@ -765,9 +731,7 @@ class CMLVersion:
         else:
             line = cmlComment.parts[0].beginLine
             pos = cmlComment.parts[0].beginPos
-            warning = (line, pos,
-                       "CML comment type '" + cmlComment.recordType +
-                       "' is not supported")
+            warning = (line, pos, "CML comment type '" + cmlComment.recordType + "' is not supported")
         return warning, highLevel
 
     @staticmethod
@@ -787,15 +751,16 @@ class CMLVersion:
     @staticmethod
     def description():
         """Provides the common parameters for various CML comments"""
-        return "Color properties supported by the '" + CMLcc.CODE + \
-               "' and the '" + CMLgb.CODE + "' comments:\n" \
-               "- 'bg': background color for the item\n" \
-               "- 'fg': foreground color for the item\n" \
-               "- 'border': border color for the item\n" \
-               "Color spec formats:\n" \
-               "- '#hhh': hexadecimal RGB\n" \
-               "- '#hhhh': hexadecimal RGBA\n" \
-               "- '#hhhhhh': hexadecimal RRGGBB\n" \
-               "- '#hhhhhhhh': hexadecimal RRGGBBAA\n" \
-               "- 'ddd,ddd,ddd': decimal RGB\n" \
-               "- 'ddd,ddd,ddd,ddd': decimal RGBA"
+        return (
+            "Color properties supported by the '" + CMLcc.CODE + "' and the '" + CMLgb.CODE + "' comments:\n"
+            "- 'bg': background color for the item\n"
+            "- 'fg': foreground color for the item\n"
+            "- 'border': border color for the item\n"
+            "Color spec formats:\n"
+            "- '#hhh': hexadecimal RGB\n"
+            "- '#hhhh': hexadecimal RGBA\n"
+            "- '#hhhhhh': hexadecimal RRGGBB\n"
+            "- '#hhhhhhhh': hexadecimal RRGGBBAA\n"
+            "- 'ddd,ddd,ddd': decimal RGB\n"
+            "- 'ddd,ddd,ddd,ddd': decimal RGBA"
+        )

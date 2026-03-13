@@ -19,7 +19,6 @@
 
 """Thread viewer"""
 
-
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitLabel
 from ui.qt import (
@@ -39,21 +38,22 @@ from utils.pixmapcache import getIcon
 
 
 class ThreadItem(QTreeWidgetItem):
-
     """Single thread item data structure"""
 
     def __init__(self, tid, name, state):
-        QTreeWidgetItem.__init__(self, ['', name, state, str(tid)])
+        QTreeWidgetItem.__init__(self, ["", name, state, str(tid)])
 
         self.__isCurrent = False
         self.__setTooltip()
 
     def __setTooltip(self):
         """Sets the tooltip"""
-        tooltip = "Current: " + str(self.__isCurrent) + "\n" \
-                  "Name: " + self.getName() + "\n" \
-                  "State: " + self.getState() + "\n" \
-                  "TID: " + str(self.getTID())
+        tooltip = (
+            "Current: " + str(self.__isCurrent) + "\n"
+            "Name: " + self.getName() + "\n"
+            "State: " + self.getState() + "\n"
+            "TID: " + str(self.getTID())
+        )
         for index in range(4):
             self.setToolTip(index, tooltip)
 
@@ -64,9 +64,9 @@ class ThreadItem(QTreeWidgetItem):
 
         self.__isCurrent = value
         if value:
-            self.setIcon(0, getIcon('currentthread.png'))
+            self.setIcon(0, getIcon("currentthread.png"))
         else:
-            self.setIcon(0, getIcon('empty.png'))
+            self.setIcon(0, getIcon("empty.png"))
         self.__setTooltip()
 
     def getTID(self):
@@ -87,7 +87,6 @@ class ThreadItem(QTreeWidgetItem):
 
 
 class ThreadsViewer(QWidget):
-
     """Implements the threads viewer for a debugger"""
 
     def __init__(self, debugger, parent=None):
@@ -103,17 +102,15 @@ class ThreadsViewer(QWidget):
         verticalLayout.setSpacing(0)
 
         self.__threadsLabel = HeaderFitLabel(self)
-        self.__threadsLabel.setText('Threads')
-        self.__threadsLabel.setSizePolicy(QSizePolicy.Expanding,
-                                          QSizePolicy.Fixed)
+        self.__threadsLabel.setText("Threads")
+        self.__threadsLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.__threadsLabel.setMinimumWidth(10)
 
         self.__showHideButton = QToolButton()
         self.__showHideButton.setAutoRaise(True)
-        self.__showHideButton.setIcon(getIcon('less.png'))
-        self.__showHideButton.setFixedSize(self.__threadsLabel.height(),
-                                           self.__threadsLabel.height())
-        self.__showHideButton.setToolTip('Hide threads list')
+        self.__showHideButton.setIcon(getIcon("less.png"))
+        self.__showHideButton.setFixedSize(self.__threadsLabel.height(), self.__threadsLabel.height())
+        self.__showHideButton.setToolTip("Hide threads list")
         self.__showHideButton.setFocusPolicy(Qt.NoFocus)
         self.__showHideButton.clicked.connect(self.__onShowHide)
 
@@ -151,14 +148,14 @@ class ThreadsViewer(QWidget):
             self.splitterSize = self.parent().sizes()[1]
 
             self.__threadsList.setVisible(False)
-            self.__showHideButton.setIcon(getIcon('more.png'))
+            self.__showHideButton.setIcon(getIcon("more.png"))
             self.__showHideButton.setToolTip("Show threads list")
 
             self.setMinimumHeight(self.headerToolbar.height())
             self.setMaximumHeight(self.headerToolbar.height())
         else:
             self.__threadsList.setVisible(True)
-            self.__showHideButton.setIcon(getIcon('less.png'))
+            self.__showHideButton.setIcon(getIcon("less.png"))
             self.__showHideButton.setToolTip("Hide threads list")
 
             self.setMinimumHeight(self.__minH)
@@ -170,8 +167,7 @@ class ThreadsViewer(QWidget):
     def __resizeColumns(self):
         """Resize the files list columns"""
         self.__threadsList.header().setStretchLastSection(True)
-        self.__threadsList.header().resizeSections(
-            QHeaderView.ResizeToContents)
+        self.__threadsList.header().resizeSections(QHeaderView.ResizeToContents)
         self.__threadsList.header().resizeSection(0, 22)
         self.__threadsList.header().setSectionResizeMode(0, QHeaderView.Fixed)
 
@@ -184,18 +180,17 @@ class ThreadsViewer(QWidget):
         """Populates the thread list from the client"""
         self.clear()
         for thread in threadList:
-            if thread['broken']:
+            if thread["broken"]:
                 state = "Waiting at breakpoint"
             else:
                 state = "Running"
-            item = ThreadItem(thread['id'], thread['name'], state)
-            if thread['id'] == currentThreadID:
+            item = ThreadItem(thread["id"], thread["name"], state)
+            if thread["id"] == currentThreadID:
                 item.setCurrent(True)
             self.__threadsList.addTopLevelItem(item)
 
         self.__resizeColumns()
-        self.__threadsLabel.setText("Threads (total: " +
-                                    str(len(threadList)) + ")")
+        self.__threadsLabel.setText("Threads (total: " + str(len(threadList)) + ")")
 
     def switchControl(self, isInIDE):
         """Switches the UI depending where the control flow is"""

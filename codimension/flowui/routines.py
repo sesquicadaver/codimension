@@ -35,11 +35,13 @@ def distance(val, begin, end):
 
 def getCommentBoxPath(settings, baseX, baseY, width, height):
     """Provides the comment box path"""
-    return getNoCellCommentBoxPath(baseX + settings.hCellPadding,
-                                   baseY + settings.vCellPadding,
-                                   width - 2 * settings.hCellPadding,
-                                   height - 2 * settings.vCellPadding,
-                                   settings.commentCorner)
+    return getNoCellCommentBoxPath(
+        baseX + settings.hCellPadding,
+        baseY + settings.vCellPadding,
+        width - 2 * settings.hCellPadding,
+        height - 2 * settings.vCellPadding,
+        settings.commentCorner,
+    )
 
 
 def getNoCellCommentBoxPath(xPos, yPos, width, height, corner):
@@ -62,7 +64,7 @@ def getNoCellCommentBoxPath(xPos, yPos, width, height, corner):
 def getCMLComment(cmlComments, code):
     """CML comment or None"""
     for cmlComment in cmlComments:
-        if hasattr(cmlComment, 'CODE'):
+        if hasattr(cmlComment, "CODE"):
             if cmlComment.CODE == code:
                 return cmlComment
     return None
@@ -76,18 +78,17 @@ def getDocComment(cmlComments):
 def getDoclinkIconAndTooltip(cmlRef, hidden=False):
     """Provides the icon file name and a tooltip for a doc item"""
     if cmlRef.link is not None and cmlRef.anchor is not None:
-        pixmap = 'docanchor.svg'
-        tooltip = 'Jump to the documentation'
+        pixmap = "docanchor.svg"
+        tooltip = "Jump to the documentation"
     elif cmlRef.link is not None:
-        pixmap = 'doclink.svg'
-        tooltip = 'Jump to the documentation'
+        pixmap = "doclink.svg"
+        tooltip = "Jump to the documentation"
     else:
-        pixmap = 'anchor.svg'
-        tooltip = 'Documentation anchor'
+        pixmap = "anchor.svg"
+        tooltip = "Documentation anchor"
 
     if hidden:
-        pixmap = 'hidden' + pixmap
+        pixmap = "hidden" + pixmap
         if cmlRef.title:
             tooltip = cmlRef.title
     return pixmap, tooltip
-

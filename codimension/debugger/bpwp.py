@@ -26,7 +26,6 @@ from .wpointviewer import WatchPointViewer
 
 
 class DebuggerBreakWatchPoints(QWidget):
-
     """Implements the debugger break and watch point viewer"""
 
     def __init__(self, parent, debugger):
@@ -41,10 +40,8 @@ class DebuggerBreakWatchPoints(QWidget):
         verticalLayout.setContentsMargins(1, 1, 1, 1)
 
         self.splitter = QSplitter(Qt.Vertical)
-        self.breakPointViewer = BreakPointViewer(
-            self.splitter, self.__debugger.getBreakPointModel())
-        self.__watchPointViewer = WatchPointViewer(
-            self.splitter, self.__debugger.getWatchPointModel())
+        self.breakPointViewer = BreakPointViewer(self.splitter, self.__debugger.getBreakPointModel())
+        self.__watchPointViewer = WatchPointViewer(self.splitter, self.__debugger.getWatchPointModel())
         # TODO: temporary
         self.__watchPointViewer.setVisible(False)
 

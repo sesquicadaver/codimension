@@ -30,12 +30,12 @@ from radon.complexity import cc_visit_ast, sorted_results
 #  lineno2: [msg3, ...]}
 
 
-IGNORE_REGEXP = re.compile(r'analysis:\s*(off|disable|ignore)', re.IGNORECASE)
+IGNORE_REGEXP = re.compile(r"analysis:\s*(off|disable|ignore)", re.IGNORECASE)
 
 
 def getBufferErrors(sourceCode):
     """Provides a list of warnings/errors for the given source code"""
-    sourceCode += '\n'
+    sourceCode += "\n"
 
     # First, compile into an AST and handle syntax errors.
     try:

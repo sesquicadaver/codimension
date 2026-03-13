@@ -29,8 +29,7 @@ from os.path import dirname, exists, isabs, realpath, sep
 from ui.qt import QIcon, QPixmap
 
 
-class PixmapCache():
-
+class PixmapCache:
     """pixmap cache"""
 
     def __init__(self):
@@ -51,6 +50,7 @@ class PixmapCache():
         self.__searchDirs = []
 
         from utils.globals import GlobalData
+
         skin = GlobalData().skin
 
         # First priority search dir is the ~/.codimension3/skins/<name>
@@ -68,8 +68,7 @@ class PixmapCache():
 
         # Third priority is the default location of the pixmaps (installation
         # package)
-        self.__searchDirs.append(dirname(realpath(sys.argv[0])) + sep +
-                                 'pixmaps' + sep)
+        self.__searchDirs.append(dirname(realpath(sys.argv[0])) + sep + "pixmaps" + sep)
 
     def __getPath(self, path):
         """Provides an absolute path"""
@@ -117,6 +116,7 @@ class PixmapCache():
             self.__locationCache[name] = path
             return path
 
+
 # Pixmap cache: should be only one
 # Access functions are below
 PIXMAP_CACHE = PixmapCache()
@@ -126,11 +126,12 @@ def getIcon(name):
     """Syntactic shugar"""
     return PIXMAP_CACHE.getIcon(name)
 
+
 def getPixmap(name):
     """Syntactic shugar"""
     return PIXMAP_CACHE.getPixmap(name)
 
+
 def getPixmapLocation(name):
     """Syntactic shugar"""
     return PIXMAP_CACHE.getLocation(name)
-

@@ -70,7 +70,6 @@ from .viewitems import (
 
 
 class BrowserModelBase(QAbstractItemModel):
-
     """Class implementing the file system browser model"""
 
     def __init__(self, headerData, parent=None):
@@ -106,8 +105,7 @@ class BrowserModelBase(QAbstractItemModel):
             item = index.internalPointer()
             if column < item.columnCount():
                 return item.data(column)
-            if column == item.columnCount() and \
-               column < self.columnCount(self.parent(index)):
+            if column == item.columnCount() and column < self.columnCount(self.parent(index)):
                 # This is for the case when an item under a multi-column
                 # parent doesn't have a value for all the columns
                 return ""
@@ -141,9 +139,7 @@ class BrowserModelBase(QAbstractItemModel):
         # The model/view framework considers negative values out-of-bounds,
         # however in python they work when indexing into lists. So make sure
         # we return an invalid index for out-of-bounds row/col
-        if row < 0 or column < 0 or \
-           row >= self.rowCount(parent) or \
-           column >= self.columnCount(parent):
+        if row < 0 or column < 0 or row >= self.rowCount(parent) or column >= self.columnCount(parent):
             return QModelIndex()
 
         if parent.isValid():
@@ -195,7 +191,7 @@ class BrowserModelBase(QAbstractItemModel):
             return self.rootItem.childCount()
 
         parentItem = parent.internalPointer()
-        if not parentItem.populated:    # lazy population
+        if not parentItem.populated:  # lazy population
             self.populateItem(parentItem)
         return parentItem.childCount()
 
@@ -282,7 +278,7 @@ class BrowserModelBase(QAbstractItemModel):
             logging.error("Cannot populate directory. " + str(exc))
             return
 
-        excludes = ['.svn', '.cvs', '.hg', '.git']
+        excludes = [".svn", ".cvs", ".hg", ".git"]
         items = [itm for itm in items if itm not in excludes]
         if parentItem.needVCSStatus:
             # That's the project browser. Filter out what not needed.
@@ -295,8 +291,9 @@ class BrowserModelBase(QAbstractItemModel):
                 path_real += os.path.sep
             venv_dir = getProjectVenvDir(project)
             exclude_paths = project.getExcludeFromAnalysisAsAbsolutePaths()
-            exclude_paths_real = {os.path.realpath(p).rstrip(os.path.sep)
-                                 for p in exclude_paths} if exclude_paths else set()
+            exclude_paths_real = (
+                {os.path.realpath(p).rstrip(os.path.sep) for p in exclude_paths} if exclude_paths else set()
+            )
             venv_real = os.path.realpath(venv_dir).rstrip(os.path.sep) if venv_dir else None
 
             def _should_skip(candidate_path, is_dir):
@@ -314,17 +311,14 @@ class BrowserModelBase(QAbstractItemModel):
                             return True
                 return False
 
-            items = [itm for itm in items if not _should_skip(path_real + itm,
-                                                             os.path.isdir(path_real + itm))]
+            items = [itm for itm in items if not _should_skip(path_real + itm, os.path.isdir(path_real + itm))]
 
         pathsToRequest = []
         if items:
             infoSrc = self.globalData.briefModinfoCache
 
             if repopulate:
-                self.beginInsertRows(self.createIndex(parentItem.row(),
-                                                      0, parentItem),
-                                     0, len(items) - 1)
+                self.beginInsertRows(self.createIndex(parentItem.row(), 0, parentItem), 0, len(items) - 1)
             path = os.path.realpath(path) + os.path.sep
             for item in items:
                 fullPath = path + item
@@ -344,19 +338,19 @@ class BrowserModelBase(QAbstractItemModel):
 
                         if not modInfo.isOK:
                             # Substitute icon and change the tooltip
-                            node.icon = getIcon('filepythonbroken.png')
+                            node.icon = getIcon("filepythonbroken.png")
                             if node.toolTip != "":
                                 node.toolTip += "\n\n"
-                            node.toolTip += "Parsing errors:\n" + \
-                                            "\n".join(modInfo.lexerErrors + \
-                                                      modInfo.errors)
+                            node.toolTip += "Parsing errors:\n" + "\n".join(modInfo.lexerErrors + modInfo.errors)
                             node.parsingErrors = True
 
-                        if modInfo.encoding is None and \
-                           not modInfo.imports and \
-                           not modInfo.globals and \
-                           not modInfo.functions and \
-                           not modInfo.classes:
+                        if (
+                            modInfo.encoding is None
+                            and not modInfo.imports
+                            and not modInfo.globals
+                            and not modInfo.functions
+                            and not modInfo.classes
+                        ):
                             node.populated = True
                             node.lazyPopulation = False
 
@@ -379,11 +373,9 @@ class BrowserModelBase(QAbstractItemModel):
         """Populates the sys.path item's subtree"""
         if sys.path:
             if repopulate:
-                self.beginInsertRows(self.createIndex(parentItem.row(),
-                                                      0, parentItem),
-                                     0, len(sys.path) - 1)
+                self.beginInsertRows(self.createIndex(parentItem.row(), 0, parentItem), 0, len(sys.path) - 1)
             for path in sys.path:
-                if path == '':
+                if path == "":
                     path = os.getcwd()
 
                 if os.path.isdir(path):
@@ -421,9 +413,7 @@ class BrowserModelBase(QAbstractItemModel):
 
         # Insert rows
         if repopulate:
-            self.beginInsertRows(self.createIndex(parentItem.row(),
-                                                  0, parentItem),
-                                 0, count - 1)
+            self.beginInsertRows(self.createIndex(parentItem.row(), 0, parentItem), 0, count - 1)
         if modInfo.encoding is not None:
             node = TreeViewCodingItem(parentItem, modInfo.encoding)
             self._addItem(node, parentItem)
@@ -452,9 +442,7 @@ class BrowserModelBase(QAbstractItemModel):
         parentItem.populated = True
 
         if repopulate:
-            self.beginInsertRows(
-                self.createIndex(parentItem.row(), 0, parentItem),
-                0, len(items) - 1)
+            self.beginInsertRows(self.createIndex(parentItem.row(), 0, parentItem), 0, len(items) - 1)
         for item in items:
             treeItem = itemClass(parentItem, item)
             if parentItem.columnCount() > 1:
@@ -476,31 +464,26 @@ class BrowserModelBase(QAbstractItemModel):
 
     def populateGlobalsItem(self, parentItem, repopulate=False):
         """Populates the globals item"""
-        self.__populateList(parentItem, parentItem.sourceObj.globals,
-                            TreeViewGlobalItem, repopulate)
+        self.__populateList(parentItem, parentItem.sourceObj.globals, TreeViewGlobalItem, repopulate)
 
     def populateImportsItem(self, parentItem, repopulate=False):
         """Populates the imports item"""
-        self.__populateList(parentItem, parentItem.sourceObj.imports,
-                            TreeViewImportItem, repopulate)
+        self.__populateList(parentItem, parentItem.sourceObj.imports, TreeViewImportItem, repopulate)
 
     def populateFunctionsItem(self, parentItem, repopulate=False):
         """Populates functions item"""
-        self.__populateList(parentItem, parentItem.sourceObj.functions,
-                            TreeViewFunctionItem, repopulate)
+        self.__populateList(parentItem, parentItem.sourceObj.functions, TreeViewFunctionItem, repopulate)
 
     def populateClassesItem(self, parentItem, repopulate=False):
         """Populate classes item"""
-        self.__populateList(parentItem, parentItem.sourceObj.classes,
-                            TreeViewClassItem, repopulate)
+        self.__populateList(parentItem, parentItem.sourceObj.classes, TreeViewClassItem, repopulate)
 
     def populateClassItem(self, parentItem, repopulate):
         """Populates a class item"""
         parentItem.populated = True
 
         # Count the number of items
-        count = len(parentItem.sourceObj.decorators) + \
-                len(parentItem.sourceObj.functions)
+        count = len(parentItem.sourceObj.decorators) + len(parentItem.sourceObj.functions)
 
         if parentItem.sourceObj.classes:
             count += 1
@@ -514,9 +497,7 @@ class BrowserModelBase(QAbstractItemModel):
 
         # Insert rows
         if repopulate:
-            self.beginInsertRows(
-                self.createIndex(parentItem.row(), 0, parentItem),
-                0, count - 1)
+            self.beginInsertRows(self.createIndex(parentItem.row(), 0, parentItem), 0, count - 1)
         for item in parentItem.sourceObj.decorators:
             node = TreeViewDecoratorItem(parentItem, item)
             if parentItem.columnCount() > 1:
@@ -569,9 +550,7 @@ class BrowserModelBase(QAbstractItemModel):
 
         # Insert rows
         if repopulate:
-            self.beginInsertRows(
-                self.createIndex(parentItem.row(), 0, parentItem),
-                0, count - 1)
+            self.beginInsertRows(self.createIndex(parentItem.row(), 0, parentItem), 0, count - 1)
 
         for item in parentItem.sourceObj.decorators:
             node = TreeViewDecoratorItem(parentItem, item)
@@ -597,20 +576,19 @@ class BrowserModelBase(QAbstractItemModel):
 
     def populateStaticAttributesItem(self, parentItem, repopulate):
         """Populates a static attributes item"""
-        self.__populateList(parentItem,
-                            parentItem.parentItem.sourceObj.classAttributes,
-                            TreeViewAttributeItem, repopulate)
+        self.__populateList(
+            parentItem, parentItem.parentItem.sourceObj.classAttributes, TreeViewAttributeItem, repopulate
+        )
 
     def populateInstanceAttributesItem(self, parentItem, repopulate):
         """Populates an instance attributes item"""
-        self.__populateList(parentItem,
-                            parentItem.parentItem.sourceObj.instanceAttributes,
-                            TreeViewAttributeItem, repopulate)
+        self.__populateList(
+            parentItem, parentItem.parentItem.sourceObj.instanceAttributes, TreeViewAttributeItem, repopulate
+        )
 
     def populateImportItem(self, parentItem, repopulate):
         """Populate an import item"""
-        self.__populateList(parentItem, parentItem.sourceObj.what,
-                            TreeViewWhatItem, repopulate)
+        self.__populateList(parentItem, parentItem.sourceObj.what, TreeViewWhatItem, repopulate)
 
     def signalItemUpdated(self, treeItem):
         """Emits a signal that an item is updated"""
@@ -650,8 +628,7 @@ class BrowserModelBase(QAbstractItemModel):
                     if decor.name == name:
                         found = True
                         existingDecors.append(name)
-                        if cmpDecoratorDisplayName(classChildItem.sourceObj,
-                                                   decor):
+                        if cmpDecoratorDisplayName(classChildItem.sourceObj, decor):
                             classChildItem.updateData(decor)
                             classChildItem.setData(2, decor.line)
                         else:
@@ -669,8 +646,7 @@ class BrowserModelBase(QAbstractItemModel):
                     itemsToRemove.append(classChildItem)
                 else:
                     classChildItem.updateData(classObj)
-                    self.updateClassesItem(classChildItem,
-                                           classObj.classes)
+                    self.updateClassesItem(classChildItem, classObj.classes)
                 continue
             if classChildItem.itemType == FunctionItemType:
                 name = classChildItem.sourceObj.name
@@ -679,8 +655,7 @@ class BrowserModelBase(QAbstractItemModel):
                     if method.name == name:
                         found = True
                         existingMethods.append(name)
-                        if cmpFunctionDisplayName(classChildItem.sourceObj,
-                                                  method):
+                        if cmpFunctionDisplayName(classChildItem.sourceObj, method):
                             classChildItem.updateData(method)
                             classChildItem.setData(2, method.line)
                         else:
@@ -688,8 +663,7 @@ class BrowserModelBase(QAbstractItemModel):
                             classChildItem.updateData(method)
                             classChildItem.setData(2, method.line)
                             self.signalItemUpdated(classChildItem)
-                        self.updateSingleFuncItem(classChildItem,
-                                                  method)
+                        self.updateSingleFuncItem(classChildItem, method)
                         break
                 if not found:
                     itemsToRemove.append(classChildItem)
@@ -699,16 +673,14 @@ class BrowserModelBase(QAbstractItemModel):
                 if not classObj.classAttributes:
                     itemsToRemove.append(classChildItem)
                 else:
-                    self.updateAttrItem(classChildItem,
-                                        classObj.classAttributes)
+                    self.updateAttrItem(classChildItem, classObj.classAttributes)
                 continue
             if classChildItem.itemType == InstanceAttributesItemType:
                 hadInstanceAttributes = True
                 if not classObj.instanceAttributes:
                     itemsToRemove.append(classChildItem)
                 else:
-                    self.updateAttrItem(classChildItem,
-                                        classObj.instanceAttributes)
+                    self.updateAttrItem(classChildItem, classObj.instanceAttributes)
                 continue
 
         for item in itemsToRemove:
@@ -735,14 +707,12 @@ class BrowserModelBase(QAbstractItemModel):
             if treeItem.columnCount() > 1:
                 newItem.appendData(["", ""])
             self.addTreeItem(treeItem, newItem)
-        if not hadStaticAttributes and \
-           classObj.classAttributes:
+        if not hadStaticAttributes and classObj.classAttributes:
             newItem = TreeViewStaticAttributesItem(treeItem)
             if treeItem.columnCount() > 1:
                 newItem.appendData(["", ""])
             self.addTreeItem(treeItem, newItem)
-        if not hadInstanceAttributes and \
-           classObj.instanceAttributes:
+        if not hadInstanceAttributes and classObj.instanceAttributes:
             newItem = TreeViewInstanceAttributesItem(treeItem)
             if treeItem.columnCount() > 1:
                 newItem.appendData(["", ""])
@@ -766,8 +736,7 @@ class BrowserModelBase(QAbstractItemModel):
                     if decor.name == name:
                         found = True
                         existingDecors.append(name)
-                        if cmpDecoratorDisplayName(funcChildItem.sourceObj,
-                                                   decor):
+                        if cmpDecoratorDisplayName(funcChildItem.sourceObj, decor):
                             funcChildItem.updateData(decor)
                             funcChildItem.setData(2, decor.line)
                         else:
@@ -785,8 +754,7 @@ class BrowserModelBase(QAbstractItemModel):
                     itemsToRemove.append(funcChildItem)
                 else:
                     funcChildItem.updateData(funcObj)
-                    self.updateFunctionsItem(funcChildItem,
-                                             funcObj.functions)
+                    self.updateFunctionsItem(funcChildItem, funcObj.functions)
                 continue
             if funcChildItem.itemType == ClassesItemType:
                 hadClasses = True
@@ -794,8 +762,7 @@ class BrowserModelBase(QAbstractItemModel):
                     itemsToRemove.append(funcChildItem)
                 else:
                     funcChildItem.updateData(funcObj)
-                    self.updateClassesItem(funcChildItem,
-                                           funcObj.classes)
+                    self.updateClassesItem(funcChildItem, funcObj.classes)
                 continue
 
         for item in itemsToRemove:
@@ -874,8 +841,7 @@ class BrowserModelBase(QAbstractItemModel):
                 if func.name == name:
                     found = True
                     existingFunctions.append(name)
-                    if cmpFunctionDisplayName(functionItem.sourceObj,
-                                              func):
+                    if cmpFunctionDisplayName(functionItem.sourceObj, func):
                         functionItem.updateData(func)
                         functionItem.setData(2, func.line)
                     else:

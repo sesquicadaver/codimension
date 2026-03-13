@@ -26,7 +26,6 @@ from .qt import QObject, pyqtSignal
 
 
 class TabHistoryEntry:
-
     """Holds a single history entry"""
 
     def __init__(self):
@@ -40,13 +39,10 @@ class TabHistoryEntry:
 
     def __eq__(self, other):
         """Compares two entries"""
-        return self.uuid == other.uuid and \
-               self.line == other.line and \
-               self.pos == other.pos
+        return self.uuid == other.uuid and self.line == other.line and self.pos == other.pos
 
 
 class TabsHistory(QObject):
-
     """Holds the editors manager history"""
 
     historyChanged = pyqtSignal()
@@ -92,12 +88,10 @@ class TabsHistory(QObject):
         newEntry.tabType = currentWidget.getType()
         newEntry.displayName = currentWidget.getShortName()
 
-        newEntry.icon = self.__editorsManger.tabIcon(
-            self.__editorsManger.currentIndex())
+        newEntry.icon = self.__editorsManger.tabIcon(self.__editorsManger.currentIndex())
         newEntry.uuid = currentWidget.getUUID()
 
-        if newEntry.tabType in [MainWindowTabWidgetBase.PlainTextEditor,
-                                MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if newEntry.tabType in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             newEntry.line = currentWidget.getLine()
             newEntry.pos = currentWidget.getPos()
             newEntry.firstVisible = currentWidget.getEditor().firstVisibleLine()
@@ -107,7 +101,7 @@ class TabsHistory(QObject):
                 # The new entry is the same as the current - ignore request
                 return
             # Cut the tail of the history if needed
-            self.__history = self.__history[:self.__index + 1]
+            self.__history = self.__history[: self.__index + 1]
 
         self.__history.append(newEntry)
         self.__enforceLimit()
@@ -136,12 +130,11 @@ class TabsHistory(QObject):
         # Adjust the indexes in the tabs seq list
         seqIndex = len(self.__tabsSequence) - 1
         while seqIndex >= 0:
-            self.__tabsSequence[seqIndex] = \
-                self.__tabsSequence[seqIndex] - stripCount
+            self.__tabsSequence[seqIndex] = self.__tabsSequence[seqIndex] - stripCount
             seqIndex -= 1
 
         # Strip some items in the history
-        self.__history = self.__history[-1 * self.limit:]
+        self.__history = self.__history[-1 * self.limit :]
 
     def updateForCurrentIndex(self):
         """Called when the current tab is left"""
@@ -159,21 +152,20 @@ class TabsHistory(QObject):
         self.__history[self.__index].tabType = widget.getType()
         self.__history[self.__index].displayName = widget.getShortName()
 
-        if self.__history[self.__index].tabType in \
-                            [MainWindowTabWidgetBase.PlainTextEditor,
-                             MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if self.__history[self.__index].tabType in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+        ]:
             self.__history[self.__index].line = widget.getLine()
             self.__history[self.__index].pos = widget.getPos()
-            self.__history[self.__index].firstVisible = \
-                                    widget.getEditor().firstVisibleLine()
+            self.__history[self.__index].firstVisible = widget.getEditor().firstVisibleLine()
         else:
             self.__history[self.__index].line = -1
             self.__history[self.__index].pos = -1
             self.__history[self.__index].firstVisible = -1
 
         tabIndex = self.__editorsManger.getIndexByUUID(uuid)
-        self.__history[self.__index].icon = \
-                                self.__editorsManger.tabIcon(tabIndex)
+        self.__history[self.__index].icon = self.__editorsManger.tabIcon(tabIndex)
 
     def testAdjacent(self, index):
         """tests if an adjacent history item is the same as the given"""
@@ -204,8 +196,7 @@ class TabsHistory(QObject):
         removedIndexes = []
         index = len(self.__history) - 1
         while index >= 0:
-            if self.__history[index].uuid == uuid or \
-               self.testAdjacent(index):
+            if self.__history[index].uuid == uuid or self.testAdjacent(index):
                 removedIndexes.insert(0, index)
                 del self.__history[index]
                 if index < self.__index:
@@ -254,15 +245,13 @@ class TabsHistory(QObject):
     def getEntry(self, index):
         """Provides the required history entry"""
         if index < 0 or index >= len(self.__history):
-            raise Exception("Invalid history index to set (" +
-                            str(index) + ")")
+            raise Exception("Invalid history index to set (" + str(index) + ")")
         return self.__history[index]
 
     def setCurrentIndex(self, index):
         """Sets the given history index as current"""
         if index < 0 or index >= len(self.__history):
-            raise Exception("Invalid history index to set (" +
-                            str(index) + ")")
+            raise Exception("Invalid history index to set (" + str(index) + ")")
         if self.__index != index:
             self.__index = index
             self.__tabsSequence.append(index)
@@ -271,8 +260,7 @@ class TabsHistory(QObject):
     def getCurrentEntry(self):
         """Provides the current history entry"""
         if self.__index == -1 or self.__index >= len(self.__history):
-            raise Exception("No current history entry (index=" +
-                            str(self.__index) + ")")
+            raise Exception("No current history entry (index=" + str(self.__index) + ")")
         return self.__history[self.__index]
 
     def stepBack(self):

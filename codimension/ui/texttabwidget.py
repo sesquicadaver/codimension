@@ -30,7 +30,6 @@ from .qt import QDesktopServices, QHBoxLayout, Qt, QTextBrowser, QWidget, pyqtSi
 
 
 class TextViewer(QTextBrowser):
-
     """Text viewer"""
 
     sigEscapePressed = pyqtSignal()
@@ -53,49 +52,51 @@ class TextViewer(QTextBrowser):
     def _resolveLink(self, link):
         """Resolves the link to a file and optional anchor/line number"""
         scheme = link.scheme().lower()
-        if scheme in ['http', 'https']:
+        if scheme in ["http", "https"]:
             QDesktopServices.openUrl(link)
             return None, None
 
-        if scheme == '':
+        if scheme == "":
             fileName = link.path()
-        elif scheme == 'file':
+        elif scheme == "file":
             if link.isValid():
                 fileName = link.path()
             else:
-                logging.error('Invalid link: ' + link.errorString())
+                logging.error("Invalid link: " + link.errorString())
                 return None, None
-        elif scheme == 'action':
+        elif scheme == "action":
             if link.isValid():
                 # The action is stored in the host part
                 action = link.host()
                 # The actions are predefined. I did not find a generic way
                 # to find what the key is bound to
-                if action.lower() == 'embedded-help':
+                if action.lower() == "embedded-help":
                     GlobalData().mainWindow._onEmbeddedHelp()
-                elif action.lower() == 'f1':
+                elif action.lower() == "f1":
                     GlobalData().mainWindow.em.onHelp()
-                elif action.lower() == 'project-cocumentation':
+                elif action.lower() == "project-cocumentation":
                     GlobalData().mainWindow.projectDocClicked()
                 else:
                     # must be a keyboard shortcut
                     logging.error("Unsupported action '" + link.host() + "'")
             return None, None
         else:
-            logging.error("Unsupported url scheme '" + link.scheme() +
-                          "'. Supported schemes are 'http', 'https', 'file' "
-                          "and an empty scheme for files")
+            logging.error(
+                "Unsupported url scheme '" + link.scheme() + "'. Supported schemes are 'http', 'https', 'file' "
+                "and an empty scheme for files"
+            )
             return None, None
 
         if not fileName:
-            logging.error('Could not get a file name. Check the link format. '
-                          'Valid examples: file:./relative/fname or '
-                          'file:relative/fname or file:/absolute/fname or '
-                          'file:///absolute/fname')
+            logging.error(
+                "Could not get a file name. Check the link format. "
+                "Valid examples: file:./relative/fname or "
+                "file:relative/fname or file:/absolute/fname or "
+                "file:///absolute/fname"
+            )
             return None, None
 
-        fileName, anchorOrLine = resolveLinkPath(fileName,
-                                                 self._parentWidget.getFileName())
+        fileName, anchorOrLine = resolveLinkPath(fileName, self._parentWidget.getFileName())
         if anchorOrLine is None:
             if link.hasFragment():
                 return fileName, link.fragment()
@@ -121,7 +122,6 @@ class TextViewer(QTextBrowser):
 
 
 class TextTabWidget(QWidget, MainWindowTabWidgetBase):
-
     """The widget which displays a RO HTML page"""
 
     sigEscapePressed = pyqtSignal()
@@ -155,7 +155,7 @@ class TextTabWidget(QWidget, MainWindowTabWidgetBase):
 
     def loadFormFile(self, path):
         """Loads the content from the given file"""
-        f = open(path, 'r')
+        f = open(path, "r")
         content = f.read()
         f.close()
         self.setHTML(content)

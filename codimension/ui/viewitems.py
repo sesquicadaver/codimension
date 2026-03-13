@@ -24,10 +24,10 @@
 #
 
 """Collection of items which may appear in various tree views:
-   - project view
-   - filesystem view
-   - classes view
-   - functions view
+- project view
+- filesystem view
+- classes view
+- functions view
 """
 
 import os
@@ -60,11 +60,10 @@ DecoratorItemType = 25
 AttributeItemType = 26
 GlobalItemType = 27
 
-EMPTY_ICON = getIcon('empty.png')
+EMPTY_ICON = getIcon("empty.png")
 
 
-class TreeViewItem():
-
+class TreeViewItem:
     """Common data structures for tree views items"""
 
     def __init__(self, parent, data):
@@ -89,7 +88,7 @@ class TreeViewItem():
         self.path = None
         self.needVCSStatus = False
 
-        self.vcsStatus = None   # VCSStatus instance, if present
+        self.vcsStatus = None  # VCSStatus instance, if present
 
     def isRoot(self):
         """True if it is the root item"""
@@ -147,7 +146,7 @@ class TreeViewItem():
         try:
             return self.itemData[column]
         except IndexError:
-            return ''
+            return ""
 
     def setData(self, column, value):
         """Sets the new data"""
@@ -186,7 +185,7 @@ class TreeViewItem():
     def getPath(self):
         """Provides the file name or dir name depending on the item type"""
         if self.itemType in [SysPathItemType, NoItemType]:
-            return ''
+            return ""
 
         current = self
 
@@ -203,19 +202,16 @@ class TreeViewItem():
         # skip till file or directory items
         while True:
             if current.itemType == NoItemType:
-                raise Exception("Internal error of getting tree view "
-                                "item path. Please inform the developers.")
-            if current.itemType in [FileItemType, DirectoryItemType,
-                                    SysPathItemType]:
+                raise Exception("Internal error of getting tree view item path. Please inform the developers.")
+            if current.itemType in [FileItemType, DirectoryItemType, SysPathItemType]:
                 break
             current = current.parentItem
 
         path = current.itemData[0]
-        while current.parentItem.itemType != NoItemType and \
-              current.parentItem.itemType != SysPathItemType:
+        while current.parentItem.itemType != NoItemType and current.parentItem.itemType != SysPathItemType:
             current = current.parentItem
             path = os.path.sep + path
-            if current.itemData[0] != os.path.sep:    # root item
+            if current.itemData[0] != os.path.sep:  # root item
                 path = current.itemData[0] + path
 
         path = os.path.normpath(path)
@@ -225,12 +221,11 @@ class TreeViewItem():
         return path
 
     def getRealPath(self):
-
         """Provides the file name or dir name depending on the item type.
-           All the links except of the item itself are resolved.
+        All the links except of the item itself are resolved.
         """
         if self.itemType in [SysPathItemType, NoItemType]:
-            return ''
+            return ""
 
         current = self
 
@@ -247,29 +242,25 @@ class TreeViewItem():
         # skip till file or directory items
         while True:
             if current.itemType == NoItemType:
-                raise Exception("Internal error of getting tree view "
-                                "item path. Please inform the developers.")
-            if current.itemType in [FileItemType, DirectoryItemType,
-                                    SysPathItemType]:
+                raise Exception("Internal error of getting tree view item path. Please inform the developers.")
+            if current.itemType in [FileItemType, DirectoryItemType, SysPathItemType]:
                 break
             current = current.parentItem
 
         hasLinks = False
         path = current.itemData[0]
-        while current.parentItem.itemType != NoItemType and \
-              current.parentItem.itemType != SysPathItemType:
+        while current.parentItem.itemType != NoItemType and current.parentItem.itemType != SysPathItemType:
             current = current.parentItem
             if current.itemType == DirectoryItemType:
                 if current.isLink:
                     hasLinks = True
             path = os.path.sep + path
-            if current.itemData[0] != os.path.sep:    # root item
+            if current.itemData[0] != os.path.sep:  # root item
                 path = current.itemData[0] + path
 
         if hasLinks:
             if self.isLink:
-                path = os.path.realpath(os.path.dirname(path)) + \
-                       os.path.sep + self.itemData[0]
+                path = os.path.realpath(os.path.dirname(path)) + os.path.sep + self.itemData[0]
             else:
                 path = os.path.realpath(path)
 
@@ -318,7 +309,6 @@ class TreeViewItem():
 
 
 class TreeViewDirectoryItem(TreeViewItem):
-
     """Directory item"""
 
     def __init__(self, parent, dinfo, full=True):
@@ -343,7 +333,7 @@ class TreeViewDirectoryItem(TreeViewItem):
     def updateStatus(self):
         """Updates internal fields"""
         if os.path.exists(self._dirName):
-            self.icon = getIcon('dirclosed.png')
+            self.icon = getIcon("dirclosed.png")
             self.populated = False
             self.lazyPopulation = True
 
@@ -352,9 +342,9 @@ class TreeViewDirectoryItem(TreeViewItem):
                 linkTo = os.readlink(self._dirName)
                 realpath = os.path.realpath(self._dirName)
                 self.toolTip = "-> " + linkTo + "  (" + realpath + ")"
-                self.icon = getIcon('dirlink.png')
+                self.icon = getIcon("dirlink.png")
         else:
-            self.icon = getIcon('dirbroken.png')
+            self.icon = getIcon("dirbroken.png")
             self.populated = True
             self.lazyPopulation = False
 
@@ -369,7 +359,6 @@ class TreeViewDirectoryItem(TreeViewItem):
 
 
 class TreeViewSysPathItem(TreeViewItem):
-
     """sys.path files item"""
 
     def __init__(self, parent):
@@ -377,14 +366,13 @@ class TreeViewSysPathItem(TreeViewItem):
         TreeViewItem.__init__(self, parent, "sys.path")
 
         self.itemType = SysPathItemType
-        self.icon = getIcon('filepython.png')
+        self.icon = getIcon("filepython.png")
         self.populated = False
         self.lazyPopulation = True
         self.isLink = False
 
 
 class TreeViewFileItem(TreeViewItem):
-
     """file item"""
 
     def __init__(self, parent, path):
@@ -405,10 +393,10 @@ class TreeViewFileItem(TreeViewItem):
         self.fileType, self.icon, _ = getFileProperties(path)
         if self.fileType is None:
             if self.icon is None:
-                self.icon = getIcon('filemisc.png')
+                self.icon = getIcon("filemisc.png")
             return
 
-        if 'broken-symlink' in self.fileType:
+        if "broken-symlink" in self.fileType:
             self.isLink = True
             self.toolTip = self.__brokenLinkTooltip(path)
             return
@@ -416,7 +404,7 @@ class TreeViewFileItem(TreeViewItem):
         if os.path.islink(path):
             self.isLink = True
             self.toolTip = self.__linkTooltip(path)
-            self.icon = getIcon('filelink.png')
+            self.icon = getIcon("filelink.png")
             self.fileType, _, _ = getFileProperties(os.path.realpath(path))
             return
 
@@ -432,7 +420,7 @@ class TreeViewFileItem(TreeViewItem):
                 self.toolTip = getProjectFileTooltip(path)
             except Exception:
                 # cannot get project properties
-                self.toolTip = 'Broken project file'
+                self.toolTip = "Broken project file"
             return
 
     def lessThan(self, other, column, order):
@@ -440,8 +428,8 @@ class TreeViewFileItem(TreeViewItem):
         if other.itemType != FileItemType:
             return order == Qt.DescendingOrder
 
-        sinit = self.data(0).startswith('__init__.py')
-        oinit = other.data(0).startswith('__init__.py')
+        sinit = self.data(0).startswith("__init__.py")
+        oinit = other.data(0).startswith("__init__.py")
         if sinit and not oinit:
             return order == Qt.AscendingOrder
         if not sinit and oinit:
@@ -454,12 +442,12 @@ class TreeViewFileItem(TreeViewItem):
             return
 
         self.fileType, self.icon, _ = getFileProperties(path)
-        if 'broken-symlink' in self.fileType:
+        if "broken-symlink" in self.fileType:
             self.toolTip = self.__brokenLinkTooltip(path)
             return
 
         self.toolTip = self.__linkTooltip(path)
-        self.icon = getIcon('filelink.png')
+        self.icon = getIcon("filelink.png")
         self.fileType, _, _ = getFileProperties(os.path.realpath(path))
 
     @staticmethod
@@ -478,7 +466,6 @@ class TreeViewFileItem(TreeViewItem):
 
 
 class TreeViewGlobalsItem(TreeViewItem):
-
     """Globals item"""
 
     def __init__(self, parent, infoObj):
@@ -486,7 +473,7 @@ class TreeViewGlobalsItem(TreeViewItem):
 
         self.sourceObj = infoObj
         self.itemType = GlobalsItemType
-        self.icon = getIcon('globals.png')
+        self.icon = getIcon("globals.png")
         self.populated = False
         self.lazyPopulation = True
 
@@ -496,7 +483,6 @@ class TreeViewGlobalsItem(TreeViewItem):
 
 
 class TreeViewImportsItem(TreeViewItem):
-
     """Imports item"""
 
     def __init__(self, parent, infoObj):
@@ -505,7 +491,7 @@ class TreeViewImportsItem(TreeViewItem):
 
         self.sourceObj = infoObj
         self.itemType = ImportsItemType
-        self.icon = getIcon('imports.png')
+        self.icon = getIcon("imports.png")
         self.populated = False
         self.lazyPopulation = True
 
@@ -515,7 +501,6 @@ class TreeViewImportsItem(TreeViewItem):
 
 
 class TreeViewFunctionsItem(TreeViewItem):
-
     """Functions item"""
 
     def __init__(self, parent, infoObj):
@@ -523,7 +508,7 @@ class TreeViewFunctionsItem(TreeViewItem):
 
         self.sourceObj = infoObj
         self.itemType = FunctionsItemType
-        self.icon = getIcon('method.png')
+        self.icon = getIcon("method.png")
         self.populated = False
         self.lazyPopulation = True
 
@@ -533,7 +518,6 @@ class TreeViewFunctionsItem(TreeViewItem):
 
 
 class TreeViewClassesItem(TreeViewItem):
-
     """Classes item"""
 
     def __init__(self, parent, infoObj):
@@ -541,7 +525,7 @@ class TreeViewClassesItem(TreeViewItem):
 
         self.sourceObj = infoObj
         self.itemType = ClassesItemType
-        self.icon = getIcon('class.png')
+        self.icon = getIcon("class.png")
         self.populated = False
         self.lazyPopulation = True
 
@@ -551,20 +535,18 @@ class TreeViewClassesItem(TreeViewItem):
 
 
 class TreeViewStaticAttributesItem(TreeViewItem):
-
     """Static attributes item"""
 
     def __init__(self, parent):
         TreeViewItem.__init__(self, parent, "Static attributes")
 
         self.itemType = StaticAttributesItemType
-        self.icon = getIcon('attributes.png')
+        self.icon = getIcon("attributes.png")
         self.populated = False
         self.lazyPopulation = True
 
 
 class TreeViewInstanceAttributesItem(TreeViewItem):
-
     """Instance attributes item"""
 
     def __init__(self, parent):
@@ -572,13 +554,12 @@ class TreeViewInstanceAttributesItem(TreeViewItem):
         TreeViewItem.__init__(self, parent, "Instance attributes")
 
         self.itemType = InstanceAttributesItemType
-        self.icon = getIcon('attributes.png')
+        self.icon = getIcon("attributes.png")
         self.populated = False
         self.lazyPopulation = True
 
 
 class TreeViewCodingItem(TreeViewItem):
-
     """coding item"""
 
     def __init__(self, parent, encodingObj):
@@ -586,7 +567,7 @@ class TreeViewCodingItem(TreeViewItem):
 
         self.sourceObj = encodingObj
         self.itemType = CodingItemType
-        self.icon = getIcon('textencoding.png')
+        self.icon = getIcon("textencoding.png")
 
     def updateData(self, encodingObj):
         """Updates data model source"""
@@ -595,7 +576,6 @@ class TreeViewCodingItem(TreeViewItem):
 
 
 class TreeViewImportItem(TreeViewItem):
-
     """Single import item"""
 
     def __init__(self, parent, importObj):
@@ -618,7 +598,6 @@ class TreeViewImportItem(TreeViewItem):
 
 
 class TreeViewWhatItem(TreeViewItem):
-
     """Single what imported item"""
 
     def __init__(self, parent, whatObj):
@@ -638,7 +617,6 @@ class TreeViewWhatItem(TreeViewItem):
 
 
 class TreeViewFunctionItem(TreeViewItem):
-
     """Single function / class  method item"""
 
     def __init__(self, parent, functionObj):
@@ -675,7 +653,6 @@ class TreeViewFunctionItem(TreeViewItem):
 
 
 class TreeViewClassItem(TreeViewItem):
-
     """Single class item"""
 
     def __init__(self, parent, classObj):
@@ -696,11 +673,13 @@ class TreeViewClassItem(TreeViewItem):
         #     self.icon = getIcon('class.png')
 
         # Decide if it should be expandable
-        if classObj.decorators or \
-           classObj.functions or \
-           classObj.classes or \
-           classObj.classAttributes or \
-           classObj.instanceAttributes:
+        if (
+            classObj.decorators
+            or classObj.functions
+            or classObj.classes
+            or classObj.classAttributes
+            or classObj.instanceAttributes
+        ):
             self.populated = False
             self.lazyPopulation = True
 
@@ -718,7 +697,6 @@ class TreeViewClassItem(TreeViewItem):
 
 
 class TreeViewDecoratorItem(TreeViewItem):
-
     """Single decorator item"""
 
     def __init__(self, parent, decoratorObj):
@@ -726,7 +704,7 @@ class TreeViewDecoratorItem(TreeViewItem):
 
         self.sourceObj = decoratorObj
         self.itemType = DecoratorItemType
-        self.icon = getIcon('decorator.png')
+        self.icon = getIcon("decorator.png")
 
     def updateData(self, decoratorObj):
         """Updates data model source"""
@@ -735,7 +713,6 @@ class TreeViewDecoratorItem(TreeViewItem):
 
 
 class TreeViewAttributeItem(TreeViewItem):
-
     """Single attribute item"""
 
     def __init__(self, parent, attributeObj):
@@ -765,7 +742,6 @@ class TreeViewAttributeItem(TreeViewItem):
 
 
 class TreeViewGlobalItem(TreeViewItem):
-
     """Single global var item"""
 
     def __init__(self, parent, globalObj):
@@ -792,4 +768,3 @@ class TreeViewGlobalItem(TreeViewItem):
         #     self.icon = getIcon('attribute_protected.png')
         # else:
         #     self.icon = getIcon('attribute.png')
-

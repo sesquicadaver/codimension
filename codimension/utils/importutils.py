@@ -67,19 +67,17 @@ def __scanDir(prefix, path, infoLabel=None):
         if item in [".svn", ".cvs", ".git", ".hg"]:
             continue
         if os.path.isdir(path + item):
-            result += __scanDir(prefix + item + ".",
-                                path + item + os.path.sep,
-                                infoLabel)
+            result += __scanDir(prefix + item + ".", path + item + os.path.sep, infoLabel)
             continue
 
         if not isPythonFile(path + item):
             continue
-        if item.startswith('__init__.'):
+        if item.startswith("__init__."):
             if prefix != "":
-                result.append(prefix[: -1])
+                result.append(prefix[:-1])
             continue
 
-        nameParts = item.split('.')
+        nameParts = item.split(".")
         result.append(prefix + nameParts[0])
     return result
 
@@ -88,11 +86,9 @@ def buildDirModules(path, infoLabel=None):
     """Builds a list of modules how they may appear in the import statements"""
     abspath = os.path.abspath(path)
     if not os.path.exists(abspath):
-        raise Exception("Cannot build list of modules for not "
-                        "existed dir (" + path + ")")
+        raise Exception("Cannot build list of modules for not existed dir (" + path + ")")
     if not os.path.isdir(abspath):
-        raise Exception("Cannot build list of modules. The path " + path +
-                        " is not a directory.")
+        raise Exception("Cannot build list of modules. The path " + path + " is not a directory.")
     if not abspath.endswith(os.path.sep):
         abspath += os.path.sep
     return __scanDir("", abspath, infoLabel)
@@ -138,7 +134,6 @@ def isImportedObject(info, name):
 
 
 class ImportResolution:
-
     def __init__(self, importObj, itemIndex, builtIn, path, what, message=None):
         # More or less input: import object and a 0-based index of the imported
         # items if so. Index could be None if there is no what list.
@@ -146,15 +141,15 @@ class ImportResolution:
         # from x import y, z
         # and y and z are should have been resolved as files
         self.importObj = importObj
-        self.itemIndex = itemIndex      # Index is None for most of the cases
-                                        # though
+        self.itemIndex = itemIndex  # Index is None for most of the cases
+        # though
 
         # Resolution result
-        self.path = path            # Path to the resolved file
-                                    # None for built-in and not resolved
-        self.what = what            # A list of names imported from it
-        self.builtIn = builtIn      # True if it is a built-in module
-        self.errMessage = message   # Error message if not resolved
+        self.path = path  # Path to the resolved file
+        # None for built-in and not resolved
+        self.what = what  # A list of names imported from it
+        self.builtIn = builtIn  # True if it is a built-in module
+        self.errMessage = message  # Error message if not resolved
 
     def isResolved(self):
         """True if the import is resolved"""
@@ -164,7 +159,7 @@ class ImportResolution:
         """If it was a submodule then the name is combined"""
         name = self.importObj.name
         if self.itemIndex is not None:
-            name += '.' + self.importObj.what[self.itemIndex]
+            name += "." + self.importObj.what[self.itemIndex]
         return name
 
 
@@ -185,8 +180,7 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
     # II:  <dir>/x/y.py
 
     if importObj.name in sys.builtin_module_names:
-        result.append(
-            ImportResolution(importObj, None, True, None, None))
+        result.append(ImportResolution(importObj, None, True, None, None))
         return
 
     oldSysPath = sys.path
@@ -196,8 +190,7 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
         spec = importlib.util.find_spec(importObj.name)
         if spec:
             if spec.has_location:
-                result.append(
-                    ImportResolution(importObj, None, False, spec.origin, None))
+                result.append(ImportResolution(importObj, None, False, spec.origin, None))
                 return
             # Something unknown; it's not clear what to do
     except Exception:
@@ -206,9 +199,15 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
         sys.path = oldSysPath
 
     result.append(
-        ImportResolution(importObj, None, False, None, None,
-            "Could not resolve 'import " + importObj.name + "' at line " +
-            str(importObj.line)))
+        ImportResolution(
+            importObj,
+            None,
+            False,
+            None,
+            None,
+            "Could not resolve 'import " + importObj.name + "' at line " + str(importObj.line),
+        )
+    )
 
 
 def __resolveFrom(importObj, importName, result):
@@ -219,9 +218,7 @@ def __resolveFrom(importObj, importName, result):
     incorrect behavior (e.g. 'import os' fails).
     """
     if importObj.name in sys.builtin_module_names:
-        result.append(
-            ImportResolution(importObj, None, True, None,
-                             [what.name for what in importObj.what]))
+        result.append(ImportResolution(importObj, None, True, None, [what.name for what in importObj.what]))
         return
 
     try:
@@ -229,8 +226,8 @@ def __resolveFrom(importObj, importName, result):
         if spec:
             if spec.has_location:
                 result.append(
-                    ImportResolution(importObj, None, False, spec.origin,
-                                     [what.name for what in importObj.what]))
+                    ImportResolution(importObj, None, False, spec.origin, [what.name for what in importObj.what])
+                )
                 return
 
             # No location and it could not be a builtin module because they
@@ -238,41 +235,60 @@ def __resolveFrom(importObj, importName, result):
             if spec.loader is not None:
                 # Unknown loader so not clear what to do
                 result.append(
-                    ImportResolution(importObj, None, False, None, None,
-                                     "Could not resolve 'from " +
-                                     importObj.name + " import ...' at line " +
-                                     str(importObj.line)))
+                    ImportResolution(
+                        importObj,
+                        None,
+                        False,
+                        None,
+                        None,
+                        "Could not resolve 'from " + importObj.name + " import ...' at line " + str(importObj.line),
+                    )
+                )
                 return
 
             # Loader is None but found something. Maybe it is a submodule
             if spec.submodule_search_locations:
                 for index, what in enumerate(importObj.what):
-                    impName = importName + '.' + what.name
+                    impName = importName + "." + what.name
                     found = False
                     try:
                         spec = importlib.util.find_spec(impName)
                         if spec:
                             if spec.has_location:
-                                result.append(
-                                    ImportResolution(importObj, index, False,
-                                                     spec.origin, None))
+                                result.append(ImportResolution(importObj, index, False, spec.origin, None))
                                 found = True
                     except Exception:
                         pass
                     if not found:
                         result.append(
                             ImportResolution(
-                                importObj, index, False, None, None,
-                                "Could not resolve 'from " + importObj.name +
-                                " import " + what.name + "' at line " +
-                                str(importObj.line)))
+                                importObj,
+                                index,
+                                False,
+                                None,
+                                None,
+                                "Could not resolve 'from "
+                                + importObj.name
+                                + " import "
+                                + what.name
+                                + "' at line "
+                                + str(importObj.line),
+                            )
+                        )
                 return
     except Exception:
         pass
 
-    result.append(ImportResolution(importObj, None, False, None, None,
-        "Could not resolve 'from " + importObj.name +
-        " import ...' at line " + str(importObj.line)))
+    result.append(
+        ImportResolution(
+            importObj,
+            None,
+            False,
+            None,
+            None,
+            "Could not resolve 'from " + importObj.name + " import ...' at line " + str(importObj.line),
+        )
+    )
 
 
 def __resolveFromImport(importObj, basePath, baseAndProjectPaths, result):
@@ -304,24 +320,41 @@ def __resolveRelativeImport(importObj, basePath, result):
     # IV:   <dir>/x/y/z.py
 
     if basePath is None:
-        result.append(ImportResolution(importObj, None, False, None, None,
-            "Could not resolve 'from " + importObj.name +
-            " import ...' at line " + str(importObj.line) +
-            " because the editing buffer has not been saved yet"))
+        result.append(
+            ImportResolution(
+                importObj,
+                None,
+                False,
+                None,
+                None,
+                "Could not resolve 'from "
+                + importObj.name
+                + " import ...' at line "
+                + str(importObj.line)
+                + " because the editing buffer has not been saved yet",
+            )
+        )
     else:
         path = basePath
         current = importObj.name[1:]
         error = False
-        while current.startswith('.'):
+        while current.startswith("."):
             if not path:
                 error = True
                 break
             current = current[1:]
             path = os.path.dirname(path)
         if error:
-            result.append(ImportResolution(importObj, None, False, None, None,
-                "Could not resolve 'from " + importObj.name +
-                " import ...' at line " + str(importObj.line)))
+            result.append(
+                ImportResolution(
+                    importObj,
+                    None,
+                    False,
+                    None,
+                    None,
+                    "Could not resolve 'from " + importObj.name + " import ...' at line " + str(importObj.line),
+                )
+            )
             return
 
         if not path:
@@ -350,7 +383,7 @@ def getImportResolutions(fileName, imports):
     origSysModulesKeys = set(sys.modules.keys())
 
     if fileName:
-        basePath = os.path.dirname(fileName)    # no '/' at the end
+        basePath = os.path.dirname(fileName)  # no '/' at the end
         baseAndProjectPaths = [basePath]
     else:
         basePath = None
@@ -375,10 +408,9 @@ def getImportResolutions(fileName, imports):
         if not importObj.what:
             # case 1: import x1, y1
             __resolveImport(importObj, baseAndProjectPaths, result)
-        elif not importObj.name.startswith('.'):
+        elif not importObj.name.startswith("."):
             # case 2: from i2 import x2, y2
-            __resolveFromImport(importObj, basePath, baseAndProjectPaths,
-                                result)
+            __resolveFromImport(importObj, basePath, baseAndProjectPaths, result)
         else:
             # case 3: from .i3 import x3, y3
             #      or from . import x4, y4
@@ -415,7 +447,7 @@ def resolveImports(fileName, imports):
     for resolution in getImportResolutions(fileName, imports):
         if resolution.isResolved():
             if resolution.builtIn:
-                path = 'built-in'
+                path = "built-in"
             else:
                 path = resolution.path
             if resolution.what is None:
@@ -427,4 +459,3 @@ def resolveImports(fileName, imports):
             errors.append(resolution.errMessage)
 
     return result, errors
-

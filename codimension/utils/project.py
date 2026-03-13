@@ -36,7 +36,6 @@ from ui.qt import QObject, pyqtSignal
 
 from .config import DEFAULT_ENCODING
 from .debugenv import DebuggerEnvironment
-from .venvutils import getProjectVenvDir
 from .filepositions import FilePositions
 from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
@@ -44,39 +43,43 @@ from .runparamscache import RunParametersCache
 from .searchenv import SearchEnvironment
 from .settings import SETTINGS_DIR, Settings
 from .userencodings import FileEncodings
+from .venvutils import getProjectVenvDir
 from .watcher import Watcher
 
 # Saved in .cdm3 file
-_DEFAULT_PROJECT_PROPS = {'scriptname': '',    # Script to run the project
-                          'mddocfile': '',
-                          'creationdate': '',
-                          'author': '',
-                          'license': '',
-                          'copyright': '',
-                          'version': '',
-                          'email': '',
-                          'description': '',
-                          'uuid': '',
-                          'importdirs': [],
-                          'excludeFromAnalysis': [],  # Dirs/files to exclude from analysis
-                          'encoding': '',
-                          'pythoninterpreter': ''}  # Optional venv/python path
+_DEFAULT_PROJECT_PROPS = {
+    "scriptname": "",  # Script to run the project
+    "mddocfile": "",
+    "creationdate": "",
+    "author": "",
+    "license": "",
+    "copyright": "",
+    "version": "",
+    "email": "",
+    "description": "",
+    "uuid": "",
+    "importdirs": [],
+    "excludeFromAnalysis": [],  # Dirs/files to exclude from analysis
+    "encoding": "",
+    "pythoninterpreter": "",
+}  # Optional venv/python path
 
 
-class CodimensionProject(QObject,
-                         DebuggerEnvironment,
-                         SearchEnvironment,
-                         FileSystemEnvironment,
-                         RunParametersCache,
-                         FilePositions,
-                         FileEncodings,
-                         FlowUICollapsedGroups):
-
+class CodimensionProject(
+    QObject,
+    DebuggerEnvironment,
+    SearchEnvironment,
+    FileSystemEnvironment,
+    RunParametersCache,
+    FilePositions,
+    FileEncodings,
+    FlowUICollapsedGroups,
+):
     """Provides codimension project singleton facility"""
 
     # Constants for the sigProjectChanged signal
-    CompleteProject = 0     # It is a completely new project
-    Properties = 1          # Project properties were updated
+    CompleteProject = 0  # It is a completely new project
+    Properties = 1  # Project properties were updated
 
     sigProjectChanged = pyqtSignal(int)
     sigFSChanged = pyqtSignal(list)
@@ -98,19 +101,19 @@ class CodimensionProject(QObject,
 
         # Avoid pylint complains
         self.fileName = ""
-        self.userProjectDir = ""    # Directory in ~/.codimension3/uuidNN/
+        self.userProjectDir = ""  # Directory in ~/.codimension3/uuidNN/
         self.filesList = set()
 
         self.props = copy.deepcopy(_DEFAULT_PROJECT_PROPS)
 
         # Precompile the exclude filters for the project files list
         self.__excludeFilter = []
-        for flt in Settings()['projectFilesFilters']:
+        for flt in Settings()["projectFilesFilters"]:
             self.__excludeFilter.append(re.compile(flt))
 
     def shouldExclude(self, name):
         """Tests if a file must be excluded"""
-        if name == '.pylintrc':
+        if name == ".pylintrc":
             return False
         for excl in self.__excludeFilter:
             if excl.match(name):
@@ -153,21 +156,22 @@ class CodimensionProject(QObject,
             try:
                 os.makedirs(userProjectDir)
             except Exception:
-                logging.error('Cannot create user project directory: %s. '
-                              'Please check the available disk space, '
-                              'permissions and re-create the project.',
-                              self.userProjectDir)
+                logging.error(
+                    "Cannot create user project directory: %s. "
+                    "Please check the available disk space, "
+                    "permissions and re-create the project.",
+                    self.userProjectDir,
+                )
                 raise
         else:
-            logging.warning('The user project directory exists! '
-                            'The content will be overwritten.')
+            logging.warning("The user project directory exists! The content will be overwritten.")
             self.__removeProjectFiles(userProjectDir)
 
         # Basic pre-requisites are met. We can reset the current project.
         self.__resetValues()
 
         self.fileName = fileName
-        props['uuid'] = projectUuid
+        props["uuid"] = projectUuid
         self.props = props
         self.userProjectDir = userProjectDir
 
@@ -186,8 +190,7 @@ class CodimensionProject(QObject,
         self.saveProject()
 
         # Update the watcher (exclude venv and excludeFromAnalysis from watch)
-        self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(),
-                                    self.getProjectDir())
+        self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(), self.getProjectDir())
         self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
 
         self.sigProjectChanged.emit(self.CompleteProject)
@@ -210,12 +213,10 @@ class CodimensionProject(QObject,
     def __createProjectFile(self):
         """Helper function to create the user project file"""
         try:
-            with open(self.userProjectDir + 'project', 'w',
-                      encoding=DEFAULT_ENCODING) as diskfile:
+            with open(self.userProjectDir + "project", "w", encoding=DEFAULT_ENCODING) as diskfile:
                 diskfile.write(self.fileName)
         except Exception as exc:
-            logging.error('Could not create the %s project file: %s',
-                          self.userProjectDir, str(exc))
+            logging.error("Could not create the %s project file: %s", self.userProjectDir, str(exc))
 
     def saveProject(self):
         """Writes all the settings into the file"""
@@ -232,28 +233,25 @@ class CodimensionProject(QObject,
                 skipProjectFile = True
 
         if not skipProjectFile:
-            with open(self.fileName, 'w',
-                      encoding=DEFAULT_ENCODING) as diskfile:
+            with open(self.fileName, "w", encoding=DEFAULT_ENCODING) as diskfile:
                 json.dump(self.props, diskfile, indent=4)
         else:
-            logging.warning('Skipping updates in %s due to writing permissions',
-                            self.fileName)
+            logging.warning("Skipping updates in %s due to writing permissions", self.fileName)
 
     def loadProject(self, projectFile):
         """Loads a project from the given file"""
         path = realpath(projectFile)
         if not exists(path):
-            raise Exception('Cannot open project file ' + projectFile)
-        if not path.endswith('.cdm3'):
-            raise Exception('Unexpected project file extension. '
-                            'Expected: .cdm3')
+            raise Exception("Cannot open project file " + projectFile)
+        if not path.endswith(".cdm3"):
+            raise Exception("Unexpected project file extension. Expected: .cdm3")
 
         try:
-            with open(path, 'r', encoding=DEFAULT_ENCODING) as diskfile:
+            with open(path, "r", encoding=DEFAULT_ENCODING) as diskfile:
                 props = json.load(diskfile)
         except Exception:
             # Bad error - cannot load project file at all
-            raise Exception('Bad project file ' + projectFile)
+            raise Exception("Bad project file " + projectFile)
 
         self.__resetValues()
         self.fileName = path
@@ -264,11 +262,10 @@ class CodimensionProject(QObject,
             if key not in self.props:
                 self.props[key] = value
 
-        if self.props['uuid'] == '':
-            logging.warning('Project file does not have UUID. '
-                            'Re-generate it...')
-            self.props['uuid'] = str(uuid.uuid1())
-        self.userProjectDir = SETTINGS_DIR + self.props['uuid'] + sep
+        if self.props["uuid"] == "":
+            logging.warning("Project file does not have UUID. Re-generate it...")
+            self.props["uuid"] = str(uuid.uuid1())
+        self.userProjectDir = SETTINGS_DIR + self.props["uuid"] + sep
         if not exists(self.userProjectDir):
             os.makedirs(self.userProjectDir)
 
@@ -289,8 +286,7 @@ class CodimensionProject(QObject,
         Settings().addRecentProject(self.fileName)
 
         # Setup the new watcher (exclude venv and excludeFromAnalysis from watch)
-        self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(),
-                                    self.getProjectDir())
+        self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(), self.getProjectDir())
         self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
 
         self.sigProjectChanged.emit(self.CompleteProject)
@@ -298,27 +294,26 @@ class CodimensionProject(QObject,
 
     def __getWatcherExcludeFilters(self):
         """Build exclude filters for Watcher (venv + excludeFromAnalysis)."""
-        exclude_filters = list(Settings()['projectFilesFilters'])
+        exclude_filters = list(Settings()["projectFilesFilters"])
         proj_real = realpath(self.getProjectDir()).rstrip(sep)
         venv_dir = getProjectVenvDir(self)
-        if venv_dir and (venv_dir == proj_real or
-                         venv_dir.startswith(proj_real + sep)):
+        if venv_dir and (venv_dir == proj_real or venv_dir.startswith(proj_real + sep)):
             venv_basename = basename(venv_dir.rstrip(sep))
             if venv_basename:
-                exclude_filters.append('^' + re.escape(venv_basename) + '$')
+                exclude_filters.append("^" + re.escape(venv_basename) + "$")
         added_basenames = set()
         for excl_path in self.getExcludeFromAnalysisAsAbsolutePaths():
             if excl_path.startswith(proj_real + sep) or excl_path == proj_real:
                 excl_basename = basename(excl_path.rstrip(sep))
                 if excl_basename and excl_basename not in added_basenames:
                     added_basenames.add(excl_basename)
-                    exclude_filters.append('^' + re.escape(excl_basename) + '$')
+                    exclude_filters.append("^" + re.escape(excl_basename) + "$")
         return exclude_filters
 
     def getImportDirsAsAbsolutePaths(self):
         """Provides a list of import dirs as absolute paths"""
         result = []
-        for path in self.props['importdirs']:
+        for path in self.props["importdirs"]:
             if isabs(path):
                 result.append(path)
             else:
@@ -329,7 +324,7 @@ class CodimensionProject(QObject,
         """Provides a list of absolute paths to exclude from analysis."""
         result = []
         proj_dir = self.getProjectDir()
-        for path in self.props.get('excludeFromAnalysis', []):
+        for path in self.props.get("excludeFromAnalysis", []):
             path = path.strip()
             if not path:
                 continue
@@ -358,7 +353,7 @@ class CodimensionProject(QObject,
         """Triggered when the watcher detects changes"""
         for item in items:
             try:
-                if item.startswith('+'):
+                if item.startswith("+"):
                     self.filesList.add(item[1:])
                 else:
                     self.filesList.remove(item[1:])
@@ -376,8 +371,8 @@ class CodimensionProject(QObject,
 
     def setImportDirs(self, paths):
         """Sets a new set of the project import dirs"""
-        if self.props['importdirs'] != paths:
-            self.props['importdirs'] = paths
+        if self.props["importdirs"] != paths:
+            self.props["importdirs"] = paths
             self.saveProject()
             self.sigProjectChanged.emit(self.Properties)
 
@@ -443,7 +438,7 @@ class CodimensionProject(QObject,
         """Returns True if the path belongs to the project"""
         if not self.isLoaded():
             return False
-        path = realpath(path)     # it could be a symlink
+        path = realpath(path)  # it could be a symlink
         if not path.endswith(sep):
             path += sep
         return path.startswith(self.getProjectDir())
@@ -463,7 +458,7 @@ class CodimensionProject(QObject,
     def updateProperties(self, props):
         """Updates the project properties"""
         if self.props != props:
-            analysis_props = ('excludeFromAnalysis', 'importdirs', 'pythoninterpreter')
+            analysis_props = ("excludeFromAnalysis", "importdirs", "pythoninterpreter")
             need_rescan = any(self.props.get(p) != props.get(p) for p in analysis_props)
             self.props = props
             self.saveProject()
@@ -471,13 +466,10 @@ class CodimensionProject(QObject,
                 self.__generateFilesList()
                 if self.__dirWatcher is not None:
                     self.__dirWatcher.deleteLater()
-                    self.__dirWatcher = Watcher(
-                        self.__getWatcherExcludeFilters(),
-                        self.getProjectDir())
+                    self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(), self.getProjectDir())
                     self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
             # Emit CompleteProject when analysis scope changed so all consumers refresh
-            self.sigProjectChanged.emit(
-                self.CompleteProject if need_rescan else self.Properties)
+            self.sigProjectChanged.emit(self.CompleteProject if need_rescan else self.Properties)
 
     def onProjectFileUpdated(self):
         """Called when a project file is updated via direct editing"""
@@ -488,7 +480,7 @@ class CodimensionProject(QObject,
 
     def isLoaded(self):
         """Returns True if a project is loaded"""
-        return self.fileName != ''
+        return self.fileName != ""
 
     def getProjectDir(self):
         """Provides an absolute path to the project dir"""
@@ -502,19 +494,19 @@ class CodimensionProject(QObject,
             return None
 
         fBaseName = basename(self.fileName)
-        if '.' in fBaseName:
-            return fBaseName.split('.')[0].strip()
+        if "." in fBaseName:
+            return fBaseName.split(".")[0].strip()
         return fBaseName
 
     def getProjectScript(self):
         """Provides the project script file name"""
         if not self.isLoaded():
             return None
-        if self.props['scriptname'] == '':
+        if self.props["scriptname"] == "":
             return None
-        if isabs(self.props['scriptname']):
-            return self.props['scriptname']
-        return realpath(self.getProjectDir() + self.props['scriptname'])
+        if isabs(self.props["scriptname"]):
+            return self.props["scriptname"]
+        return realpath(self.getProjectDir() + self.props["scriptname"])
 
     def addRecentFile(self, path):
         """Adds a recent file. True if a new file was inserted."""
@@ -542,11 +534,11 @@ class CodimensionProject(QObject,
         if not self.isLoaded():
             return None
         # Could be in project properties
-        if not self.props['mddocfile']:
+        if not self.props["mddocfile"]:
             return None
-        if isabs(self.props['mddocfile']):
-            return self.props['mddocfile']
-        return realpath(self.getProjectDir() + self.props['mddocfile'])
+        if isabs(self.props["mddocfile"]):
+            return self.props["mddocfile"]
+        return realpath(self.getProjectDir() + self.props["mddocfile"])
 
     def findStartupMarkdownFile(self):
         """Finds the startup MD doc file"""
@@ -557,8 +549,7 @@ class CodimensionProject(QObject,
             if not isabs(fName):
                 fName = self.getAbsolutePath(fName)
             if not exists(fName):
-                return None, 'Configured markdown doc file ' + \
-                       self.getStartupMarkdownFile() + ' is not found'
+                return None, "Configured markdown doc file " + self.getStartupMarkdownFile() + " is not found"
             return fName, None
 
         # check the file system
@@ -566,17 +557,15 @@ class CodimensionProject(QObject,
         for item in os.listdir(projectDir):
             if isfile(projectDir + item):
                 lowerName = item.lower()
-                if lowerName.endswith('.md') and lowerName.startswith('readme'):
+                if lowerName.endswith(".md") and lowerName.startswith("readme"):
                     return projectDir + item, None
         return None, None
 
     def suggestStartupMarkdownFile(self):
         """Suggests the default project doc file name"""
         if not self.isLoaded():
-            raise Exception('Invalid logic. A markdown project doc file name '
-                            'is requested without a loaded project')
-        return self.getProjectDir() + 'README.md'
-
+            raise Exception("Invalid logic. A markdown project doc file name is requested without a loaded project")
+        return self.getProjectDir() + "README.md"
 
 
 def getProjectProperties(projectFile):
@@ -586,23 +575,26 @@ def getProjectProperties(projectFile):
         raise Exception("Cannot find project file " + projectFile)
 
     try:
-        with open(path, 'r', encoding=DEFAULT_ENCODING) as diskfile:
+        with open(path, "r", encoding=DEFAULT_ENCODING) as diskfile:
             return json.load(diskfile)
     except Exception as exc:
-        logging.error('Error reading project file %s: %s',
-                      projectFile, str(exc))
+        logging.error("Error reading project file %s: %s", projectFile, str(exc))
         return {}
 
 
 def getProjectFileTooltip(fileName):
     """Provides a project file tooltip"""
     props = getProjectProperties(fileName)
-    return '\n'.join(['Version: ' + props.get('version', 'n/a'),
-                      'Description: ' + props.get('description', 'n/a'),
-                      'Author: ' + props.get('author', 'n/a'),
-                      'e-mail: ' + props.get('email', 'n/a'),
-                      'Copyright: ' + props.get('copyright', 'n/a'),
-                      'License: ' + props.get('license', 'n/a'),
-                      'Creation date: ' + props.get('creationdate', 'n/a'),
-                      'Default encoding: ' + props.get('encoding', 'n/a'),
-                      'UUID: ' + props.get('uuid', 'n/a')])
+    return "\n".join(
+        [
+            "Version: " + props.get("version", "n/a"),
+            "Description: " + props.get("description", "n/a"),
+            "Author: " + props.get("author", "n/a"),
+            "e-mail: " + props.get("email", "n/a"),
+            "Copyright: " + props.get("copyright", "n/a"),
+            "License: " + props.get("license", "n/a"),
+            "Creation date: " + props.get("creationdate", "n/a"),
+            "Default encoding: " + props.get("encoding", "n/a"),
+            "UUID: " + props.get("uuid", "n/a"),
+        ]
+    )

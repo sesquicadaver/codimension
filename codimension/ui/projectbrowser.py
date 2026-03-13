@@ -38,28 +38,23 @@ from .viewitems import DirectoryItemType
 
 
 class ProjectBrowser(FilesBrowser):
-
     """Project tree browser"""
 
     def __init__(self, parent):
 
         self.__mainWindow = parent
-        FilesBrowser.__init__(self, ProjectBrowserModel(self.__mainWindow),
-                              True, self.__mainWindow)
+        FilesBrowser.__init__(self, ProjectBrowserModel(self.__mainWindow), True, self.__mainWindow)
 
-        self.setWindowTitle('Project browser')
-        self.setWindowIcon(getIcon('icon.png'))
+        self.setWindowTitle("Project browser")
+        self.setWindowIcon(getIcon("icon.png"))
 
         GlobalData().project.sigProjectChanged.connect(self.__onProjectChanged)
         GlobalData().project.sigFSChanged.connect(self._onFSChanged)
 
         # VCS status support
-        GlobalData().pluginManager.sigPluginDeactivated.connect(
-            self.__onPluginDeactivated)
-        self.__mainWindow.vcsManager.sigVCSFileStatus.connect(
-            self.__onVCSFileStatus)
-        self.__mainWindow.vcsManager.sigVCSDirStatus.connect(
-            self.__onVCSDirStatus)
+        GlobalData().pluginManager.sigPluginDeactivated.connect(self.__onPluginDeactivated)
+        self.__mainWindow.vcsManager.sigVCSFileStatus.connect(self.__onVCSFileStatus)
+        self.__mainWindow.vcsManager.sigVCSDirStatus.connect(self.__onVCSDirStatus)
 
     def __onProjectChanged(self, what):
         """Triggered when a project is changed"""

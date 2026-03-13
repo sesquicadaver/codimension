@@ -26,11 +26,9 @@ from utils.globals import GlobalData
 
 
 class Breakpoint:
-
     """Represents a single breakpoint"""
 
-    def __init__(self, fileName=None, lineNumber=None, condition="",
-                 temporary=False, enabled=True, ignoreCount=0):
+    def __init__(self, fileName=None, lineNumber=None, condition="", temporary=False, enabled=True, ignoreCount=0):
         if fileName is None:
             self.__fileName = fileName
         elif os.path.isabs(fileName):
@@ -38,8 +36,7 @@ class Breakpoint:
             if project.isLoaded():
                 if project.isProjectFile(fileName):
                     # This is a project file; strip the project dir
-                    self.__fileName = fileName.replace(
-                        project.getProjectDir(), "")
+                    self.__fileName = fileName.replace(project.getProjectDir(), "")
                 else:
                     # Not a project file, save as is
                     self.__fileName = fileName
@@ -145,36 +142,42 @@ class Breakpoint:
 
     def getTooltip(self):
         """Provides the breakpoint tooltip"""
-        return "Location: " + self.getLocation(True) + "\n" \
-               "Enabled: " + str(self.__enabled) + "\n" \
-               "Temporary: " + str(self.__temporary) + "\n" \
-               "Ignore count: " + str(self.__ignoreCount) + "\n" \
-               "Condition: " + self.__condition
+        return (
+            "Location: " + self.getLocation(True) + "\n"
+            "Enabled: " + str(self.__enabled) + "\n"
+            "Temporary: " + str(self.__temporary) + "\n"
+            "Ignore count: " + str(self.__ignoreCount) + "\n"
+            "Condition: " + self.__condition
+        )
 
     def serialize(self):
         """Serializes the breakpoint to a string"""
-        return {'file': self.__fileName,
-                'line': self.__lineNumber,
-                'condition': self.__condition,
-                'temp': self.__temporary,
-                'enabled': self.__enabled,
-                'ignorecnt': self.__ignoreCount}
+        return {
+            "file": self.__fileName,
+            "line": self.__lineNumber,
+            "condition": self.__condition,
+            "temp": self.__temporary,
+            "enabled": self.__enabled,
+            "ignorecnt": self.__ignoreCount,
+        }
 
     def deserialize(self, source):
         """Deserializes the breakpoint"""
-        self.__fileName = source.get('file', None)
-        self.__lineNumber = source.get('line', None)
-        self.__condition = source.get('condition', None)
-        self.__temporary = source.get('temp', False)
-        self.__enabled = source.get('enabled', False)
-        self.__ignoreCount = source.get('ignorecnt', 0)
+        self.__fileName = source.get("file", None)
+        self.__lineNumber = source.get("line", None)
+        self.__condition = source.get("condition", None)
+        self.__temporary = source.get("temp", False)
+        self.__enabled = source.get("enabled", False)
+        self.__ignoreCount = source.get("ignorecnt", 0)
         return self.isValid()
 
     def __eq__(self, other):
         """True if equal"""
-        return self.__fileName == other.__fileName and \
-               self.__lineNumber == other.__lineNumber and \
-               self.__condition == other.__condition and \
-               self.__temporary == other.__temporary and \
-               self.__enabled == other.__enabled and \
-               self.__ignoreCount == other.__ignoreCount
+        return (
+            self.__fileName == other.__fileName
+            and self.__lineNumber == other.__lineNumber
+            and self.__condition == other.__condition
+            and self.__temporary == other.__temporary
+            and self.__enabled == other.__enabled
+            and self.__ignoreCount == other.__ignoreCount
+        )

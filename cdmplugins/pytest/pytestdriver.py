@@ -15,7 +15,7 @@ import os.path
 import re
 import sys
 
-from ui.qt import QWidget, pyqtSignal, QProcess, QProcessEnvironment, QByteArray
+from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
 from utils.run import getProjectPythonPath
 
@@ -31,10 +31,10 @@ class PytestDriver(QWidget):
         self.__process = None
         self.__args = None
         self.__pythonPath = sys.executable
-        self.__stdout = ''
-        self.__stderr = ''
-        self.__fileName = ''
-        self.__encoding = 'utf-8'
+        self.__stdout = ""
+        self.__stderr = ""
+        self.__fileName = ""
+        self.__encoding = "utf-8"
 
     def isInProcess(self):
         """True if pytest is still running."""
@@ -43,10 +43,10 @@ class PytestDriver(QWidget):
     def start(self, fileName, encoding):
         """Runs the pytest process."""
         if self.__process is not None:
-            return 'Another pytest run is in progress'
+            return "Another pytest run is in progress"
 
         self.__fileName = fileName
-        self.__encoding = 'utf-8' if encoding is None else encoding
+        self.__encoding = "utf-8" if encoding is None else encoding
 
         self.__process = QProcess(self)
         self.__process.setProcessChannelMode(QProcess.SeparateChannels)
@@ -55,24 +55,26 @@ class PytestDriver(QWidget):
         self.__process.readyReadStandardError.connect(self.__readStdError)
         self.__process.finished.connect(self.__finished)
 
-        self.__stdout = ''
-        self.__stderr = ''
+        self.__stdout = ""
+        self.__stderr = ""
 
         self.__args = [
-            '-m', 'pytest',
-            '-v', '--tb=short',
+            "-m",
+            "pytest",
+            "-v",
+            "--tb=short",
             os.path.basename(self.__fileName),
         ]
 
         processEnvironment = QProcessEnvironment()
-        processEnvironment.insert('PYTHONIOENCODING', self.__encoding)
+        processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
         self.__pythonPath = getProjectPythonPath(self.__ide.project)
         self.__process.start(self.__pythonPath, self.__args)
 
         if not self.__process.waitForStarted():
             self.__process = None
-            return 'pytest failed to start'
+            return "pytest failed to start"
         return None
 
     def stop(self):
@@ -91,7 +93,7 @@ class PytestDriver(QWidget):
         while self.__process.bytesAvailable():
             qba += self.__process.readAllStandardOutput()
         if qba.size():
-            self.__stdout += qba.data().decode(self.__encoding, errors='replace')
+            self.__stdout += qba.data().decode(self.__encoding, errors="replace")
 
     def __readStdError(self):
         """Handles reading from stderr."""
@@ -100,32 +102,34 @@ class PytestDriver(QWidget):
         while self.__process.bytesAvailable():
             qba += self.__process.readAllStandardError()
         if qba.size():
-            self.__stderr += qba.data().decode(self.__encoding, errors='replace')
+            self.__stderr += qba.data().decode(self.__encoding, errors="replace")
 
     def __finished(self, exitCode, exitStatus):
         """Handles the process finish."""
         self.__process = None
 
         results = {
-            'ExitCode': exitCode,
-            'ExitStatus': exitStatus,
-            'FileName': self.__fileName,
-            'Timestamp': getLocaleDateTime(),
-            'CommandLine': [self.__pythonPath] + self.__args,
-            'Tests': [],
-            'StdOut': self.__stdout,
-            'StdErr': self.__stderr,
+            "ExitCode": exitCode,
+            "ExitStatus": exitStatus,
+            "FileName": self.__fileName,
+            "Timestamp": getLocaleDateTime(),
+            "CommandLine": [self.__pythonPath] + self.__args,
+            "Tests": [],
+            "StdOut": self.__stdout,
+            "StdErr": self.__stderr,
         }
 
         # Parse pytest output: PASSED, FAILED, ERROR lines
         for line in self.__stdout.splitlines():
-            if ' PASSED' in line or ' FAILED' in line or ' ERROR' in line:
-                match = re.match(r'^(.+?)\s+(PASSED|FAILED|ERROR)', line)
+            if " PASSED" in line or " FAILED" in line or " ERROR" in line:
+                match = re.match(r"^(.+?)\s+(PASSED|FAILED|ERROR)", line)
                 if match:
-                    results['Tests'].append({
-                        'name': match.group(1).strip(),
-                        'status': match.group(2),
-                    })
+                    results["Tests"].append(
+                        {
+                            "name": match.group(1).strip(),
+                            "status": match.group(2),
+                        }
+                    )
 
         self.sigFinished.emit(results)
         self.__args = None

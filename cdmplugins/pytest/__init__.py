@@ -16,10 +16,11 @@ import os.path
 
 from packaging.version import Version
 from plugins.categories.wizardiface import WizardInterface
-from ui.qt import QTabBar, QApplication, QCursor, Qt, QShortcut, QKeySequence, QAction, QMenu
 from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
+from ui.qt import QAction, QApplication, QCursor, QKeySequence, QMenu, QShortcut, Qt, QTabBar
 from utils.fileutils import isPythonMime
 from utils.pixmapcache import getIcon
+
 from .pytestdriver import PytestDriver
 from .pytestresultviewer import PytestResultViewer
 
@@ -31,7 +32,7 @@ def _isTestFile(fileName):
     if not fileName:
         return False
     base = os.path.basename(fileName)
-    return base.startswith('test_') or base.endswith('_test.py')
+    return base.startswith("test_") or base.endswith("_test.py")
 
 
 class PytestPlugin(WizardInterface):
@@ -50,18 +51,15 @@ class PytestPlugin(WizardInterface):
     @staticmethod
     def isIDEVersionCompatible(ideVersion):
         """Checks if the IDE version is compatible with the plugin."""
-        return Version(ideVersion) >= Version('4.7.1')
+        return Version(ideVersion) >= Version("4.7.1")
 
     def activate(self, ideSettings, ideGlobalData):
         """Activates the plugin."""
         WizardInterface.activate(self, ideSettings, ideGlobalData)
 
         self.__resultViewer = PytestResultViewer(self.ide, PLUGIN_HOME_DIR)
-        self.ide.sideBars['bottom'].addTab(
-            self.__resultViewer, getIcon('run.png'),
-            'Pytest', 'pytest', 2)
-        self.ide.sideBars['bottom'].tabButton(
-            'pytest', QTabBar.RightSide).resize(0, 0)
+        self.ide.sideBars["bottom"].addTab(self.__resultViewer, getIcon("run.png"), "Pytest", "pytest", 2)
+        self.ide.sideBars["bottom"].tabButton("pytest", QTabBar.RightSide).resize(0, 0)
 
         self.__resultViewer.clear()
 
@@ -69,25 +67,20 @@ class PytestPlugin(WizardInterface):
         self.__pytestDriver.sigFinished.connect(self.__pytestFinished)
 
         if self.__globalShortcut is None:
-            self.__globalShortcut = QShortcut(QKeySequence('Ctrl+Shift+T'),
-                                              self.ide.mainWindow, self.__run)
+            self.__globalShortcut = QShortcut(QKeySequence("Ctrl+Shift+T"), self.ide.mainWindow, self.__run)
         else:
-            self.__globalShortcut.setKey(QKeySequence('Ctrl+Shift+T'))
+            self.__globalShortcut.setKey(QKeySequence("Ctrl+Shift+T"))
 
         for _, _, tabWidget in self.ide.editorsManager.getTextEditors():
             self.__addButton(tabWidget)
 
-        self.ide.editorsManager.sigTextEditorTabAdded.connect(
-            self.__textEditorTabAdded)
-        self.ide.editorsManager.sigFileTypeChanged.connect(
-            self.__fileTypeChanged)
+        self.ide.editorsManager.sigTextEditorTabAdded.connect(self.__textEditorTabAdded)
+        self.ide.editorsManager.sigFileTypeChanged.connect(self.__fileTypeChanged)
 
-        self.__mainMenu = QMenu('Pytest', self.ide.mainWindow)
-        self.__mainMenu.setIcon(getIcon('run.png'))
-        self.__mainRunAction = self.__mainMenu.addAction(
-            getIcon('run.png'),
-            'Run pytest\t(Ctrl+Shift+T)', self.__run)
-        toolsMenu = self.ide.mainWindow.menuBar().findChild(QMenu, 'tools')
+        self.__mainMenu = QMenu("Pytest", self.ide.mainWindow)
+        self.__mainMenu.setIcon(getIcon("run.png"))
+        self.__mainRunAction = self.__mainMenu.addAction(getIcon("run.png"), "Run pytest\t(Ctrl+Shift+T)", self.__run)
+        toolsMenu = self.ide.mainWindow.menuBar().findChild(QMenu, "tools")
         self.__mainMenuSeparator = toolsMenu.addSeparator()
         toolsMenu.addMenu(self.__mainMenu)
         self.__mainMenu.aboutToShow.connect(self.__mainMenuAboutToShow)
@@ -97,21 +90,18 @@ class PytestPlugin(WizardInterface):
         self.__globalShortcut.setKey(0)
 
         self.__resultViewer = None
-        self.ide.sideBars['bottom'].removeTab('pytest')
+        self.ide.sideBars["bottom"].removeTab("pytest")
         self.__pytestDriver = None
 
         for _, _, tabWidget in self.ide.editorsManager.getTextEditors():
-            pytestAction = tabWidget.toolbar.findChild(QAction, 'pytest')
+            pytestAction = tabWidget.toolbar.findChild(QAction, "pytest")
             if pytestAction is not None:
                 tabWidget.toolbar.removeAction(pytestAction)
                 pytestAction.deleteLater()
-                tabWidget.getEditor().modificationChanged.disconnect(
-                    self.__modificationChanged)
+                tabWidget.getEditor().modificationChanged.disconnect(self.__modificationChanged)
 
-        self.ide.editorsManager.sigTextEditorTabAdded.disconnect(
-            self.__textEditorTabAdded)
-        self.ide.editorsManager.sigFileTypeChanged.disconnect(
-            self.__fileTypeChanged)
+        self.ide.editorsManager.sigTextEditorTabAdded.disconnect(self.__textEditorTabAdded)
+        self.ide.editorsManager.sigFileTypeChanged.disconnect(self.__fileTypeChanged)
 
         self.__mainRunAction.deleteLater()
         self.__mainRunAction = None
@@ -136,10 +126,8 @@ class PytestPlugin(WizardInterface):
 
     def populateBufferContextMenu(self, parentMenu):
         """Populates the buffer context menu."""
-        parentMenu.setIcon(getIcon('run.png'))
-        self.__bufferRunAction = parentMenu.addAction(
-            getIcon('run.png'),
-            'Run pytest\t(Ctrl+Shift+T)', self.__run)
+        parentMenu.setIcon(getIcon("run.png"))
+        self.__bufferRunAction = parentMenu.addAction(getIcon("run.png"), "Run pytest\t(Ctrl+Shift+T)", self.__run)
         parentMenu.aboutToShow.connect(self.__bufferMenuAboutToShow)
 
     def __canRun(self, editorWidget):
@@ -151,11 +139,11 @@ class PytestPlugin(WizardInterface):
         if not isPythonMime(editorWidget.getMime()):
             return False, None
         if editorWidget.isModified():
-            return False, 'Save changes before running pytest'
+            return False, "Save changes before running pytest"
         if not os.path.isabs(editorWidget.getFileName()):
-            return False, 'Save the file before running pytest'
+            return False, "Save the file before running pytest"
         if not _isTestFile(editorWidget.getFileName()):
-            return False, 'Open a test file (test_*.py or *_test.py)'
+            return False, "Open a test file (test_*.py or *_test.py)"
         return True, None
 
     def __run(self):
@@ -178,13 +166,13 @@ class PytestPlugin(WizardInterface):
         """Pytest has finished."""
         self.__switchToIdle()
         self.__resultViewer.showResults(results)
-        self.ide.mainWindow.activateBottomTab('pytest')
+        self.ide.mainWindow.activateBottomTab("pytest")
 
     def __switchToRunning(self):
         """Switching to the running mode."""
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         for _, _, tabWidget in self.ide.editorsManager.getTextEditors():
-            pytestAction = tabWidget.toolbar.findChild(QAction, 'pytest')
+            pytestAction = tabWidget.toolbar.findChild(QAction, "pytest")
             if pytestAction is not None:
                 pytestAction.setEnabled(False)
 
@@ -192,34 +180,29 @@ class PytestPlugin(WizardInterface):
         """Switching to the idle mode."""
         QApplication.restoreOverrideCursor()
         for _, _, tabWidget in self.ide.editorsManager.getTextEditors():
-            pytestAction = tabWidget.toolbar.findChild(QAction, 'pytest')
+            pytestAction = tabWidget.toolbar.findChild(QAction, "pytest")
             if pytestAction is not None:
                 pytestAction.setEnabled(self.__canRun(tabWidget)[0])
 
     def __addButton(self, tabWidget):
         """Adds a button to the editor toolbar."""
-        pytestButton = QAction(getIcon('run.png'),
-                              'Run pytest (Ctrl+Shift+T)', tabWidget.toolbar)
+        pytestButton = QAction(getIcon("run.png"), "Run pytest (Ctrl+Shift+T)", tabWidget.toolbar)
         pytestButton.setEnabled(self.__canRun(tabWidget)[0])
         pytestButton.triggered.connect(self.__run)
-        pytestButton.setObjectName('pytest')
+        pytestButton.setObjectName("pytest")
 
-        beforeWidget = tabWidget.toolbar.findChild(QAction,
-                                                  'deadCodeScriptButton')
+        beforeWidget = tabWidget.toolbar.findChild(QAction, "deadCodeScriptButton")
         if beforeWidget is not None:
             tabWidget.toolbar.insertAction(beforeWidget, pytestButton)
         else:
             tabWidget.toolbar.addAction(pytestButton)
-        tabWidget.getEditor().modificationChanged.connect(
-            self.__modificationChanged)
+        tabWidget.getEditor().modificationChanged.connect(self.__modificationChanged)
 
     def __modificationChanged(self):
         """Triggered when editor modification state changed."""
-        pytestAction = self.ide.currentEditorWidget.toolbar.findChild(
-            QAction, 'pytest')
+        pytestAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "pytest")
         if pytestAction is not None:
-            pytestAction.setEnabled(
-                self.__canRun(self.ide.currentEditorWidget)[0])
+            pytestAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
 
     def __textEditorTabAdded(self, tabIndex):
         """Triggered when a new tab is added."""
@@ -229,18 +212,14 @@ class PytestPlugin(WizardInterface):
     def __fileTypeChanged(self, shortFileName, uuid, mime):
         """Triggered when a file changed its type."""
         del shortFileName, uuid, mime
-        pytestAction = self.ide.currentEditorWidget.toolbar.findChild(
-            QAction, 'pytest')
+        pytestAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "pytest")
         if pytestAction is not None:
-            pytestAction.setEnabled(
-                self.__canRun(self.ide.currentEditorWidget)[0])
+            pytestAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
 
     def __bufferMenuAboutToShow(self):
         """The buffer context menu is about to show."""
-        self.__bufferRunAction.setEnabled(
-            self.__canRun(self.ide.currentEditorWidget)[0])
+        self.__bufferRunAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
 
     def __mainMenuAboutToShow(self):
         """The main menu is about to show."""
-        self.__mainRunAction.setEnabled(
-            self.__canRun(self.ide.currentEditorWidget)[0])
+        self.__mainRunAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])

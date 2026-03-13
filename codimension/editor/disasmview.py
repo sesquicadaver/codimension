@@ -68,7 +68,6 @@ from utils.settings import Settings
 
 
 class DisassemblyTreeWidget(QTreeWidget):
-
     """Need only to generate sigEscapePressed signal"""
 
     sigEscapePressed = pyqtSignal()
@@ -86,26 +85,21 @@ class DisassemblyTreeWidget(QTreeWidget):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setExpandsOnDoubleClick(False)
 
-        headerLabels = ["Line", "Jump", "Address", "Instruction",
-                        "Argument", "Argument interpretation"]
+        headerLabels = ["Line", "Jump", "Address", "Instruction", "Argument", "Argument interpretation"]
         self.setHeaderLabels(headerLabels)
 
         headerItem = self.headerItem()
+        headerItem.setToolTip(0, "The corresponding line number in the source code")
+        headerItem.setToolTip(1, "A possible JUMP from an earlier instruction to this one")
+        headerItem.setToolTip(2, "The address in the bytecode which corresponds to the byte index")
+        headerItem.setToolTip(3, "The instruction name (also called opname)")
         headerItem.setToolTip(
-            0, "The corresponding line number in the source code")
-        headerItem.setToolTip(
-            1, "A possible JUMP from an earlier instruction to this one")
-        headerItem.setToolTip(
-            2, "The address in the bytecode which corresponds to "
-            "the byte index")
-        headerItem.setToolTip(
-            3, "The instruction name (also called opname)")
-        headerItem.setToolTip(
-            4, "The argument (if any) of the instruction which is used "
+            4,
+            "The argument (if any) of the instruction which is used "
             "internally by Python to fetch some constants or variables, "
-            "manage the stack, jump to a specific instruction, etc.")
-        headerItem.setToolTip(
-            5, "The human-friendly interpretation of the instruction argument")
+            "manage the stack, jump to a specific instruction, etc.",
+        )
+        headerItem.setToolTip(5, "The human-friendly interpretation of the instruction argument")
 
     def keyPressEvent(self, event):
         """Handles the key press events"""
@@ -117,7 +111,6 @@ class DisassemblyTreeWidget(QTreeWidget):
 
 
 class DisassemblyView(QWidget):
-
     sigGotoLine = pyqtSignal(int, int)
     sigEscapePressed = pyqtSignal()
 
@@ -155,8 +148,8 @@ class DisassemblyView(QWidget):
             item = self.__table.topLevelItem(index)
             if not item.isExpanded():
                 name = item.text(0)
-                if '(' in name:
-                    name = name.split('(')[0].strip()
+                if "(" in name:
+                    name = name.split("(")[0].strip()
                 self.__collapsed.append(name)
 
         # Selection
@@ -165,7 +158,7 @@ class DisassemblyView(QWidget):
         # - non-top something
         selected = self.__table.selectedItems()
         if len(selected) != 1:
-            self.__selectedParent =None
+            self.__selectedParent = None
             self.__selected = None
             self.__selectedIndex = None
         else:
@@ -174,25 +167,28 @@ class DisassemblyView(QWidget):
             if self.__selectedParent is None:
                 # Top level selected
                 self.__selected = selected.text(0)
-                if '(' in self.__selected:
-                    self.__selected = self.__selected.split('(')[0].strip()
+                if "(" in self.__selected:
+                    self.__selected = self.__selected.split("(")[0].strip()
                 self.__selectedIndex = None
             else:
                 # Non-top level
-                self.__selectedIndex = self.__selectedParent.indexOfChild(
-                    selected)
+                self.__selectedIndex = self.__selectedParent.indexOfChild(selected)
                 self.__selectedParent = self.__selectedParent.text(0)
-                if '(' in self.__selectedParent:
-                    self.__selectedParent = self.__selectedParent.split('(')[0].strip()
-                self.__selected = (selected.text(0), selected.text(1),
-                                   selected.text(2), selected.text(3),
-                                   selected.text(4), selected.text(5))
+                if "(" in self.__selectedParent:
+                    self.__selectedParent = self.__selectedParent.split("(")[0].strip()
+                self.__selected = (
+                    selected.text(0),
+                    selected.text(1),
+                    selected.text(2),
+                    selected.text(3),
+                    selected.text(4),
+                    selected.text(5),
+                )
 
     def restoreScrollAndSelection(self):
         """Restores the selection and scroll position"""
         # Selection
-        if (self.__selectedParent is not None or self.__selected is not None or
-            self.__selectedIndex is not None):
+        if self.__selectedParent is not None or self.__selected is not None or self.__selectedIndex is not None:
             # Need to restore the selection
             if self.__selectedParent is None:
                 # Top level was selected
@@ -206,20 +202,22 @@ class DisassemblyView(QWidget):
                     maxIndex = topItem.childCount() - 1
                     if self.__selectedIndex <= maxIndex:
                         item = topItem.child(self.__selectedIndex)
-                        if (item.text(0) == self.__selected[0] and
-                            item.text(1) == self.__selected[1] and
-                            item.text(2) == self.__selected[2] and
-                            item.text(3) == self.__selected[3] and
-                            item.text(4) == self.__selected[4] and
-                            item.text(5) == self.__selected[5]):
+                        if (
+                            item.text(0) == self.__selected[0]
+                            and item.text(1) == self.__selected[1]
+                            and item.text(2) == self.__selected[2]
+                            and item.text(3) == self.__selected[3]
+                            and item.text(4) == self.__selected[4]
+                            and item.text(5) == self.__selected[5]
+                        ):
                             item.setSelected(True)
 
         # Collapsed
         for index in range(self.__table.topLevelItemCount()):
             item = self.__table.topLevelItem(index)
             title = item.text(0)
-            if '(' in title:
-                title = title.split('(')[0].strip()
+            if "(" in title:
+                title = title.split("(")[0].strip()
             if title in self.__collapsed:
                 item.setExpanded(False)
 
@@ -234,7 +232,7 @@ class DisassemblyView(QWidget):
             title = item.text(0)
             if title == name:
                 return item
-            if title.startswith(name + ' ('):
+            if title.startswith(name + " ("):
                 return item
         return None
 
@@ -243,13 +241,11 @@ class DisassemblyView(QWidget):
         self.__navBar.clearWarnings()
         self.serializeScrollAndSelection()
         try:
-            optLevel = Settings()['disasmLevel']
+            optLevel = Settings()["disasmLevel"]
             if source is None:
-                props, disassembly = getFileDisassembled(
-                    filename, optLevel, stringify=False)
+                props, disassembly = getFileDisassembled(filename, optLevel, stringify=False)
             else:
-                props, disassembly = getBufferDisassembled(
-                    source, encoding, filename, optLevel, stringify=False)
+                props, disassembly = getBufferDisassembled(source, encoding, filename, optLevel, stringify=False)
 
             self.__table.clear()
 
@@ -259,18 +255,18 @@ class DisassemblyView(QWidget):
             self.__table.header().resizeSections(QHeaderView.ResizeToContents)
             self.__navBar.updateInfoIcon(self.__navBar.STATE_OK_UTD)
 
-            self. restoreScrollAndSelection()
+            self.restoreScrollAndSelection()
         except Exception as exc:
             self.__navBar.updateInfoIcon(self.__navBar.STATE_BROKEN_UTD)
-            self.__navBar.setErrors('Disassembling error:\n' + str(exc))
+            self.__navBar.setErrors("Disassembling error:\n" + str(exc))
 
     def __setupLabel(self, props):
         """Updates the property label"""
-        txt = ''
+        txt = ""
         for item in props:
             if txt:
-                txt += '<br/>'
-            txt += '<b>' + item[0] + ':</b> ' + item[1]
+                txt += "<br/>"
+            txt += "<b>" + item[0] + ":</b> " + item[1]
         self.__summary.setText(txt)
         self.__summary.setToolTip(txt)
         self.__summary.setVisible(True)
@@ -280,7 +276,7 @@ class DisassemblyView(QWidget):
         currentTopLevel = None
         emptyCount = 0
         for line in disassembly.splitlines():
-            if line.lower().startswith('disassembly of'):
+            if line.lower().startswith("disassembly of"):
                 line = line.strip()
                 emptyCount = 0
 
@@ -288,16 +284,16 @@ class DisassemblyView(QWidget):
                 # Disassembly of <code object optToString at 0x7f63b7bf9920, file "...", line 45>:
                 # Disassembly of optToString:
 
-                if line.endswith(':'):
+                if line.endswith(":"):
                     line = line[:-1]
-                if '<' in line and '>' in line:
+                if "<" in line and ">" in line:
                     # First option
-                    begin = line.find('code object ') + len('code object ')
-                    end = line.find(' at 0x')
+                    begin = line.find("code object ") + len("code object ")
+                    end = line.find(" at 0x")
                     name = line[begin:end]
-                    begin = line.find(', line ') + len(', line ')
+                    begin = line.find(", line ") + len(", line ")
                     lineNo = line[begin:-1]
-                    currentTopLevel = QTreeWidgetItem([name + ' (' + lineNo + ')'])
+                    currentTopLevel = QTreeWidgetItem([name + " (" + lineNo + ")"])
                 else:
                     # Second option
                     currentTopLevel = QTreeWidgetItem([line.split()[-1]])
@@ -321,36 +317,34 @@ class DisassemblyView(QWidget):
             # Line numbers may occupy more than 3 positions so the first
             # part is taken with a good margin
             parts = line.split()
-            if '>>' in parts:
-                jump = '>>'
-                parts.remove('>>')
+            if ">>" in parts:
+                jump = ">>"
+                parts.remove(">>")
             else:
-                jump = ''
+                jump = ""
 
-            if '-->' in parts:
-                parts.remove('-->')
+            if "-->" in parts:
+                parts.remove("-->")
 
             if parts[0].isdigit() and parts[1].isdigit():
                 # Line number and address
                 lineNo = parts.pop(0)
             else:
                 # Only adderess
-                lineNo = ''
+                lineNo = ""
             address = parts.pop(0)
             instruction = parts.pop(0)
 
             if parts:
                 argument = parts.pop(0)
             else:
-                argument = ''
+                argument = ""
             if parts:
-                interpretation = ' '.join(parts)
+                interpretation = " ".join(parts)
             else:
-                interpretation = ''
+                interpretation = ""
 
-            currentTopLevel.addChild(
-                QTreeWidgetItem([lineNo, jump, address,
-                                 instruction, argument, interpretation]))
+            currentTopLevel.addChild(QTreeWidgetItem([lineNo, jump, address, instruction, argument, interpretation]))
             self.__table.expandItem(currentTopLevel)
 
     def __selectionChanged(self):
@@ -361,7 +355,7 @@ class DisassemblyView(QWidget):
             if len(selected) == 1:
                 self.__navBar.setPath(self.__getPath(selected[0]))
                 return
-        self.__navBar.setPath('')
+        self.__navBar.setPath("")
 
     @staticmethod
     def __getPath(node):
@@ -369,17 +363,17 @@ class DisassemblyView(QWidget):
             return node.text(0)
         instruction = node.text(3)
         if not instruction:
-            instruction = '?'
-        return node.parent().text(0) + u' \u2192 ' + instruction
+            instruction = "?"
+        return node.parent().text(0) + " \u2192 " + instruction
 
     def __activated(self, item, _):
         """Handles the double click (or Enter) on an AST item"""
         if item.parent() is None:
             # Top level item
             title = item.text(0)
-            if '(' in title:
-                lineNo = title.split('(')[1]
-                lineNo = lineNo.split(')')[0]
+            if "(" in title:
+                lineNo = title.split("(")[1]
+                lineNo = lineNo.split(")")[0]
                 if lineNo.isdigit():
                     self.sigGotoLine.emit(int(lineNo), 1)
                     return
@@ -402,4 +396,3 @@ class DisassemblyView(QWidget):
     def __onEsc(self):
         """Triggered when Esc is pressed"""
         self.sigEscapePressed.emit()
-

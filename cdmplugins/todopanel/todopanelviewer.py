@@ -13,27 +13,27 @@
 
 import os.path
 
-from ui.qt import (
-    QWidget,
-    QLabel,
-    QPalette,
-    QAction,
-    Qt,
-    QHBoxLayout,
-    QVBoxLayout,
-    QToolBar,
-    QSize,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QHeaderView,
-    QFrame,
-    QComboBox,
-)
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderLabel
+from ui.qt import (
+    QAction,
+    QComboBox,
+    QFrame,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QPalette,
+    QSize,
+    Qt,
+    QToolBar,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from ui.spacers import ToolBarExpandingSpacer
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 
 
 class TodoPanelViewer(QWidget):
@@ -59,9 +59,7 @@ class TodoPanelViewer(QWidget):
         self.__noneLabel.setFont(font)
         self.__noneLabel.setAutoFillBackground(True)
         noneLabelPalette = self.__noneLabel.palette()
-        noneLabelPalette.setColor(
-            QPalette.Background, GlobalData().skin["nolexerPaper"]
-        )
+        noneLabelPalette.setColor(QPalette.Background, GlobalData().skin["nolexerPaper"])
         self.__noneLabel.setPalette(noneLabelPalette)
 
         self.refreshButton = QAction(getIcon("run.png"), "Refresh", self)
@@ -174,9 +172,7 @@ class TodoPanelViewer(QWidget):
         for file_path in sorted(by_file.keys()):
             hits = by_file[file_path]
             short_name = os.path.basename(file_path)
-            parent = QTreeWidgetItem(
-                [short_name, "", "", f"{len(hits)} item(s)"]
-            )
+            parent = QTreeWidgetItem([short_name, "", "", f"{len(hits)} item(s)"])
             parent.setToolTip(0, file_path)
             self.__resultsTree.addTopLevelItem(parent)
             for h in hits:

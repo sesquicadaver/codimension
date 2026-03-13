@@ -23,7 +23,6 @@ from .qt import QObject, pyqtSignal
 
 
 class ViewEntry:
-
     """One history entry"""
 
     def __init__(self, fName, pos):
@@ -36,7 +35,6 @@ class ViewEntry:
 
 
 class ViewHistory(QObject):
-
     """Holds the view history"""
 
     historyChanged = pyqtSignal()
@@ -72,7 +70,7 @@ class ViewHistory(QObject):
     def addEntry(self, entry):
         """Adds the entry the history"""
         if self.__index != -1:
-            self.__history = self.__history[:self.__index + 1]
+            self.__history = self.__history[: self.__index + 1]
 
         self.__history.append(entry)
         self.__enforceLimit()
@@ -86,7 +84,7 @@ class ViewHistory(QObject):
             return
 
         # Strip some items in the history
-        self.__history = self.__history[-1 * self.LIMIT:]
+        self.__history = self.__history[-1 * self.LIMIT :]
 
     def getSize(self):
         """Provides the total number of the history steps"""
@@ -99,15 +97,13 @@ class ViewHistory(QObject):
     def getEntry(self, index):
         """Provides the required history entry"""
         if index < 0 or index >= len(self.__history):
-            raise Exception("Invalid history index to get (" +
-                            str(index) + ")")
+            raise Exception("Invalid history index to get (" + str(index) + ")")
         return self.__history[index]
 
     def getCurrentEntry(self):
         """Provides the current history entry"""
         if self.__index == -1 or self.__index >= len(self.__history):
-            raise Exception("No current history entry (index=" +
-                            str(self.__index) + ")")
+            raise Exception("No current history entry (index=" + str(self.__index) + ")")
         return self.__history[self.__index]
 
     def stepBack(self):

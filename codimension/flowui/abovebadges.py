@@ -21,7 +21,6 @@
 
 
 class AboveBadgesDivider:
-
     """Divides the left hand side and the right hand side"""
 
     def __init__(self):
@@ -29,7 +28,6 @@ class AboveBadgesDivider:
 
 
 class AboveBadgesSpacer:
-
     """Provides a spacing between the badges"""
 
     def __init__(self, width):
@@ -37,7 +35,6 @@ class AboveBadgesSpacer:
 
 
 class AboveBadges:
-
     """Wrapper for the above badges container"""
 
     def __init__(self):
@@ -45,7 +42,7 @@ class AboveBadges:
         self.__normalized = False
         self.__height = None
         self.__width = None
-        self.count = 0      # Badges count (not separators)
+        self.count = 0  # Badges count (not separators)
 
     @staticmethod
     def isBadge(badge):
@@ -154,4 +151,3 @@ class AboveBadges:
             if index != 0:
                 if self.isBadge(badge):
                     badge.setZValue(1)
-

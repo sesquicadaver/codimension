@@ -27,7 +27,6 @@ from .qt import QApplication, QEvent, Qt
 
 
 class DiffTabWidget(HTMLTabWidget):
-
     """The widget which displays a RO diff page"""
 
     def __init__(self, parent=None):

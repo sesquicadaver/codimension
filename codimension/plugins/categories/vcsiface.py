@@ -23,7 +23,6 @@ from .cdmpluginbase import CDMPluginBase
 
 
 class VersionControlSystemInterface(CDMPluginBase):
-
     """Version control system plugin interface"""
 
     # Indicator for a non VCS item. It must be used in the getStatus(...)
@@ -47,9 +46,9 @@ class VersionControlSystemInterface(CDMPluginBase):
     @staticmethod
     def isIDEVersionCompatible(ideVersion):
         """Codimension makes this call before activating a plugin.
-           The passed ideVersion is a string representing
-           the current IDE version.
-           True should be returned if the plugin is compatible with the IDE."""
+        The passed ideVersion is a string representing
+        the current IDE version.
+        True should be returned if the plugin is compatible with the IDE."""
         raise Exception("isIDEVersionCompatible() must be overridden")
 
     @staticmethod
@@ -222,6 +221,6 @@ class VersionControlSystemInterface(CDMPluginBase):
                    method is running in a separate thread and updating UI
                    from non-UI thread can cause the IDE crash.
         """
-        del path    # unused argument
-        del flag    # unused argument
+        del path  # unused argument
+        del flag  # unused argument
         raise Exception("getStatus() must be overridden")

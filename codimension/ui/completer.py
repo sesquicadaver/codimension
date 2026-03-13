@@ -19,13 +19,11 @@
 
 """completer selection widget"""
 
-
 from .itemdelegates import NoOutlineHeightDelegate
 from .qt import QAbstractItemView, QAction, QCompleter, QEvent, QListView, QModelIndex, QStringListModel, Qt
 
 
 class CompleterPopup(QListView):
-
     """Custom completer popup"""
 
     def __init__(self, completer):
@@ -38,18 +36,17 @@ class CompleterPopup(QListView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         shiftTabAct = QAction(self)
-        shiftTabAct.setShortcut('Shift+Tab')
+        shiftTabAct.setShortcut("Shift+Tab")
         shiftTabAct.triggered.connect(self.__completer.moveToPrevious)
         self.addAction(shiftTabAct)
 
         ctrlSpaceAct = QAction(self)
-        ctrlSpaceAct.setShortcut('Ctrl+ ')
+        ctrlSpaceAct.setShortcut("Ctrl+ ")
         ctrlSpaceAct.triggered.connect(self.__completer.moveToNext)
         self.addAction(ctrlSpaceAct)
 
 
 class WordsListModel(QStringListModel):
-
     """Custom model to use the same font as the editor"""
 
     def __init__(self, words, font):
@@ -66,7 +63,6 @@ class WordsListModel(QStringListModel):
 
 
 class CodeCompleter(QCompleter):
-
     """Codimension code completer"""
 
     maxDisplayedItems = 8
@@ -102,8 +98,7 @@ class CodeCompleter(QCompleter):
         # completer. Otherwise this will have no effect.
         self.popup().setItemDelegate(NoOutlineHeightDelegate(4))
 
-        self.__width = self.popup().sizeHintForColumn(0) + \
-            self.popup().verticalScrollBar().sizeHint().width() + 20
+        self.__width = self.popup().sizeHintForColumn(0) + self.popup().verticalScrollBar().sizeHint().width() + 20
         if self.__width < 100:
             self.__width = 100
 

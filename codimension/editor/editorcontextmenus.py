@@ -19,7 +19,6 @@
 
 """Sets up and handles the text editor conext menus"""
 
-
 import os.path
 
 from analysis.disasm import OPT_NO_OPTIMIZATION, OPT_OPTIMIZE_ASSERT, OPT_OPTIMIZE_DOCSTRINGS
@@ -38,7 +37,6 @@ from utils.pixmapcache import getIcon
 
 
 class EditorContextMenuMixin:
-
     """Encapsulates the context menu handling"""
 
     def __init__(self):
@@ -51,60 +49,55 @@ class EditorContextMenuMixin:
         editorsManager = mainWindow.editorsManagerWidget.editorsManager
 
         self._menu = QMenu(self)
-        self.__menuUndo = self._menu.addAction(
-            getIcon('undo.png'), '&Undo', self.onUndo, "Ctrl+Z")
-        self.__menuRedo = self._menu.addAction(
-            getIcon('redo.png'), '&Redo', self.onRedo, "Ctrl+Y")
+        self.__menuUndo = self._menu.addAction(getIcon("undo.png"), "&Undo", self.onUndo, "Ctrl+Z")
+        self.__menuRedo = self._menu.addAction(getIcon("redo.png"), "&Redo", self.onRedo, "Ctrl+Y")
         self._menu.addSeparator()
 
-        self.__menuCut = self._menu.addAction(
-            getIcon('cutmenu.png'), 'Cu&t', self.onShiftDel, "Ctrl+X")
-        self.__menuCopy = self._menu.addAction(
-            getIcon('copymenu.png'), '&Copy', self.onCtrlC, "Ctrl+C")
-        self.__menuPaste = self._menu.addAction(
-            getIcon('pastemenu.png'), '&Paste', self.paste, "Ctrl+V")
+        self.__menuCut = self._menu.addAction(getIcon("cutmenu.png"), "Cu&t", self.onShiftDel, "Ctrl+X")
+        self.__menuCopy = self._menu.addAction(getIcon("copymenu.png"), "&Copy", self.onCtrlC, "Ctrl+C")
+        self.__menuPaste = self._menu.addAction(getIcon("pastemenu.png"), "&Paste", self.paste, "Ctrl+V")
         self.__menuSelectAll = self._menu.addAction(
-            getIcon('selectallmenu.png'), 'Select &all',
-            self.selectAll, "Ctrl+A")
+            getIcon("selectallmenu.png"), "Select &all", self.selectAll, "Ctrl+A"
+        )
         self._menu.addSeparator()
 
         self.__initReloadEncodingMenu()
-        self.encodingReloadMenu.setIcon(getIcon('textencoding.png'))
+        self.encodingReloadMenu.setIcon(getIcon("textencoding.png"))
         self._menu.addMenu(self.encodingReloadMenu)
         self.__initWriteEncodingMenu()
-        self.encodingWriteMenu.setIcon(getIcon('textencoding.png'))
+        self.encodingWriteMenu.setIcon(getIcon("textencoding.png"))
         menu = self._menu.addMenu(self.encodingWriteMenu)
         self.__menuClearEncoding = self._menu.addAction(
-            getIcon('clearmenu.png'), 'Clear explicit encoding',
-            self.__onClearEncoding)
+            getIcon("clearmenu.png"), "Clear explicit encoding", self.__onClearEncoding
+        )
         self._menu.addSeparator()
 
         menu = self._menu.addMenu(self.__initToolsMenu())
-        menu.setIcon(getIcon('toolsmenu.png'))
+        menu.setIcon(getIcon("toolsmenu.png"))
         self._menu.addSeparator()
 
         menu = self._menu.addMenu(self.__initDiagramsMenu())
-        menu.setIcon(getIcon('diagramsmenu.png'))
+        menu.setIcon(getIcon("diagramsmenu.png"))
         self._menu.addSeparator()
 
-        self.__menuOpenAsFile = self._menu.addAction(
-            getIcon('filemenu.png'), 'O&pen as file', self.openAsFile)
+        self.__menuOpenAsFile = self._menu.addAction(getIcon("filemenu.png"), "O&pen as file", self.openAsFile)
         self.__menuDownloadAndShow = self._menu.addAction(
-            getIcon('filemenu.png'), 'Do&wnload and show',
-            self.downloadAndShow)
+            getIcon("filemenu.png"), "Do&wnload and show", self.downloadAndShow
+        )
         self.__menuOpenInBrowser = self._menu.addAction(
-            getIcon('homepagemenu.png'), 'Open in browser', self.openInBrowser)
+            getIcon("homepagemenu.png"), "Open in browser", self.openInBrowser
+        )
         self._menu.addSeparator()
 
         self._menuHighlightInPrj = self._menu.addAction(
-            getIcon("highlightmenu.png"), "&Highlight in project browser",
-            editorsManager.onHighlightInPrj)
+            getIcon("highlightmenu.png"), "&Highlight in project browser", editorsManager.onHighlightInPrj
+        )
         self._menuHighlightInFS = self._menu.addAction(
-            getIcon("highlightmenu.png"), "H&ighlight in file system browser",
-            editorsManager.onHighlightInFS)
+            getIcon("highlightmenu.png"), "H&ighlight in file system browser", editorsManager.onHighlightInFS
+        )
         self._menuHighlightInOutline = self._menu.addAction(
-            getIcon("highlightmenu.png"), "Highlight in &outline browser",
-            self.highlightInOutline, 'Ctrl+B')
+            getIcon("highlightmenu.png"), "Highlight in &outline browser", self.highlightInOutline, "Ctrl+B"
+        )
 
         # Plugins support
         self.__pluginMenuSeparator = self._menu.addSeparator()
@@ -115,10 +108,8 @@ class EditorContextMenuMixin:
         else:
             self.__pluginMenuSeparator.setVisible(False)
 
-        editorsManager.sigPluginContextMenuAdded.connect(
-            self._onPluginMenuAdded)
-        editorsManager.sigPluginContextMenuRemoved.connect(
-            self._onPluginMenuRemoved)
+        editorsManager.sigPluginContextMenuAdded.connect(self._onPluginMenuAdded)
+        editorsManager.sigPluginContextMenuRemoved.connect(self._onPluginMenuRemoved)
 
     def __initReloadEncodingMenu(self):
         """Creates the encoding menu for reloading the existing file"""
@@ -140,31 +131,24 @@ class EditorContextMenuMixin:
 
     def __initToolsMenu(self):
         """Creates the tools menu"""
-        self.toolsMenu = QMenu('Python too&ls')
-        self.runAct = self.toolsMenu.addAction(
-            getIcon('run.png'), 'Run script', self._parent.onRunScript)
+        self.toolsMenu = QMenu("Python too&ls")
+        self.runAct = self.toolsMenu.addAction(getIcon("run.png"), "Run script", self._parent.onRunScript)
         self.runParamAct = self.toolsMenu.addAction(
-            getIcon('paramsmenu.png'), 'Set parameters and run',
-            self._parent.onRunScriptDlg)
+            getIcon("paramsmenu.png"), "Set parameters and run", self._parent.onRunScriptDlg
+        )
         self.toolsMenu.addSeparator()
         self.profileAct = self.toolsMenu.addAction(
-            getIcon('profile.png'), 'Profile script',
-            self._parent.onProfileScript)
+            getIcon("profile.png"), "Profile script", self._parent.onProfileScript
+        )
         self.profileParamAct = self.toolsMenu.addAction(
-            getIcon('paramsmenu.png'), 'Set parameters and profile',
-            self._parent.onProfileScriptDlg)
+            getIcon("paramsmenu.png"), "Set parameters and profile", self._parent.onProfileScriptDlg
+        )
         self.toolsMenu.addSeparator()
-        self.disasmMenu = QMenu('Disassembly')
-        self.disasmMenu.setIcon(getIcon('disassembly.png'))
-        self.disasmAct0 = self.disasmMenu.addAction(
-            getIcon(''), 'Disassembly (no optimization)',
-            self._onDisasm0)
-        self.disasmAct1 = self.disasmMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 1)',
-            self._onDisasm1)
-        self.disasmAct2 = self.disasmMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 2)',
-            self._onDisasm2)
+        self.disasmMenu = QMenu("Disassembly")
+        self.disasmMenu.setIcon(getIcon("disassembly.png"))
+        self.disasmAct0 = self.disasmMenu.addAction(getIcon(""), "Disassembly (no optimization)", self._onDisasm0)
+        self.disasmAct1 = self.disasmMenu.addAction(getIcon(""), "Disassembly (optimization level 1)", self._onDisasm1)
+        self.disasmAct2 = self.disasmMenu.addAction(getIcon(""), "Disassembly (optimization level 2)", self._onDisasm2)
         self.toolsMenu.addMenu(self.disasmMenu)
         return self.toolsMenu
 
@@ -172,11 +156,11 @@ class EditorContextMenuMixin:
         """Creates the diagrams menu"""
         self.diagramsMenu = QMenu("&Diagrams")
         self.importsDgmAct = self.diagramsMenu.addAction(
-            getIcon('importsdiagram.png'), 'Imports diagram',
-            self._parent.onImportDgm)
+            getIcon("importsdiagram.png"), "Imports diagram", self._parent.onImportDgm
+        )
         self.importsDgmParamAct = self.diagramsMenu.addAction(
-            getIcon('paramsmenu.png'), 'Fine tuned imports diagram',
-            self._parent.onImportDgmTuned)
+            getIcon("paramsmenu.png"), "Fine tuned imports diagram", self._parent.onImportDgmTuned
+        )
         return self.diagramsMenu
 
     def contextMenuEvent(self, event):
@@ -189,16 +173,14 @@ class EditorContextMenuMixin:
         self.__menuUndo.setEnabled(self.document().isUndoAvailable())
         self.__menuRedo.setEnabled(self.document().isRedoAvailable())
         self.__menuCut.setEnabled(not readOnly)
-        self.__menuPaste.setEnabled(QApplication.clipboard().text() != ""
-                                    and not readOnly)
+        self.__menuPaste.setEnabled(QApplication.clipboard().text() != "" and not readOnly)
 
         fileName = self._parent.getFileName()
         absFileName = os.path.isabs(fileName)
         self.__menuOpenAsFile.setEnabled(self.openAsFileAvailable())
         self.__menuDownloadAndShow.setEnabled(self.downloadAndShowAvailable())
         self.__menuOpenInBrowser.setEnabled(self.downloadAndShowAvailable())
-        self._menuHighlightInPrj.setEnabled(
-            absFileName and GlobalData().project.isProjectFile(fileName))
+        self._menuHighlightInPrj.setEnabled(absFileName and GlobalData().project.isProjectFile(fileName))
         self._menuHighlightInFS.setEnabled(absFileName)
         self._menuHighlightInOutline.setEnabled(isPython)
         self._menuHighlightInOutline.setEnabled(isPython)
@@ -212,14 +194,12 @@ class EditorContextMenuMixin:
             self.profileParamAct.setEnabled(runEnabled)
 
         if absFileName:
-            self.__menuClearEncoding.setEnabled(
-                getFileEncoding(fileName) is not None)
+            self.__menuClearEncoding.setEnabled(getFileEncoding(fileName) is not None)
         else:
-            self.__menuClearEncoding.setEnabled(
-                self.explicitUserEncoding is not None)
+            self.__menuClearEncoding.setEnabled(self.explicitUserEncoding is not None)
 
         # Check the proper encoding in the menu
-        encoding = 'undefined'
+        encoding = "undefined"
         if absFileName:
             enc = getFileEncoding(fileName)
             if enc:
@@ -246,8 +226,7 @@ class EditorContextMenuMixin:
             # New unsaved yet file
             if not self.explicitUserEncoding:
                 return False
-            return getNormalizedEncoding(enc) == getNormalizedEncoding(
-                self.explicitUserEncoding)
+            return getNormalizedEncoding(enc) == getNormalizedEncoding(self.explicitUserEncoding)
 
         # Existed before or just saved new file
         currentEnc = getFileEncoding(fileName)
@@ -264,13 +243,14 @@ class EditorContextMenuMixin:
 
         if self.document().isModified():
             res = QMessageBox.warning(
-                self, 'Continue loosing changes',
-                '<p>The buffer has unsaved changes. Are you sure to continue '
-                'reloading the content using ' + encoding + ' encoding and '
-                'loosing the changes?</p>',
-                QMessageBox.StandardButtons(QMessageBox.Cancel |
-                                            QMessageBox.Yes),
-                QMessageBox.Cancel)
+                self,
+                "Continue loosing changes",
+                "<p>The buffer has unsaved changes. Are you sure to continue "
+                "reloading the content using " + encoding + " encoding and "
+                "loosing the changes?</p>",
+                QMessageBox.StandardButtons(QMessageBox.Cancel | QMessageBox.Yes),
+                QMessageBox.Cancel,
+            )
             if res == QMessageBox.Cancel:
                 return
 
@@ -318,7 +298,7 @@ class EditorContextMenuMixin:
 
     def _onPluginMenuAdded(self, menu, count):
         """Triggered when a new menu was added"""
-        del count   # unused argument
+        del count  # unused argument
         self._menu.addMenu(menu)
         self.__pluginMenuSeparator.setVisible(True)
 
@@ -327,8 +307,7 @@ class EditorContextMenuMixin:
         if self.isPythonBuffer():
             if os.path.isabs(self._parent.getFileName()):
                 if not self._parent.isModified():
-                    GlobalData().mainWindow.showFileDisassembly(
-                        self._parent.getFileName(), optimization)
+                    GlobalData().mainWindow.showFileDisassembly(self._parent.getFileName(), optimization)
                     return
             fileName = self._parent.getFileName()
             if not fileName:
@@ -336,8 +315,7 @@ class EditorContextMenuMixin:
             encoding = self.encoding
             if not encoding:
                 encoding = detectNewFileWriteEncoding(self, fileName)
-            GlobalData().mainWindow.showBufferDisassembly(
-                self.text, encoding, fileName, optimization)
+            GlobalData().mainWindow.showBufferDisassembly(self.text, encoding, fileName, optimization)
 
     def _onDisasm0(self):
         """Triggered to disassemble the buffer without optimization"""
@@ -367,8 +345,7 @@ class EditorContextMenuMixin:
 
     def terminateMenus(self):
         """Called when the tab is closed"""
-        self.encodingReloadMenu.triggered.disconnect(
-            self.__onReloadWithEncoding)
+        self.encodingReloadMenu.triggered.disconnect(self.__onReloadWithEncoding)
         self.encodingReloadMenu.deleteLater()
         self.encodingReloadActGrp.deleteLater()
         self.encodingWriteMenu.triggered.disconnect(self.__onReadWriteEncoding)
@@ -381,10 +358,8 @@ class EditorContextMenuMixin:
 
         mainWindow = GlobalData().mainWindow
         editorsManager = mainWindow.editorsManagerWidget.editorsManager
-        editorsManager.sigPluginContextMenuAdded.disconnect(
-            self._onPluginMenuAdded)
-        editorsManager.sigPluginContextMenuRemoved.disconnect(
-            self._onPluginMenuRemoved)
+        editorsManager.sigPluginContextMenuAdded.disconnect(self._onPluginMenuAdded)
+        editorsManager.sigPluginContextMenuRemoved.disconnect(self._onPluginMenuRemoved)
 
     @staticmethod
     def __updateMainWindowStatusBar():

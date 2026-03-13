@@ -80,7 +80,6 @@ from .viewitems import (
 
 
 class ProjectViewer(QWidget):
-
     """Project viewer widget"""
 
     sigFileUpdated = pyqtSignal(str, str)
@@ -112,25 +111,19 @@ class ProjectViewer(QWidget):
         self.__updateFSToolbarButtons()
         self.__updatePrjToolbarButtons()
 
-        GlobalData().project.sigProjectChanged.connect(
-            self.__onProjectChanged)
-        GlobalData().project.sigRestoreProjectExpandedDirs.connect(
-            self.__onRestorePrjExpandedDirs)
+        GlobalData().project.sigProjectChanged.connect(self.__onProjectChanged)
+        GlobalData().project.sigRestoreProjectExpandedDirs.connect(self.__onRestorePrjExpandedDirs)
 
         # Support switching to debug and back
-        self.__mainWindow.debugModeChanged.connect(
-            self.projectTreeView.onDebugMode)
-        self.__mainWindow.debugModeChanged.connect(
-            self.filesystemView.onDebugMode)
+        self.__mainWindow.debugModeChanged.connect(self.projectTreeView.onDebugMode)
+        self.__mainWindow.debugModeChanged.connect(self.filesystemView.onDebugMode)
         self.__mainWindow.debugModeChanged.connect(self.onDebugMode)
 
         # Plugin context menu support
         self.__pluginFileMenus = {}
         self.__pluginDirMenus = {}
-        GlobalData().pluginManager.sigPluginActivated.connect(
-            self.__onPluginActivated)
-        GlobalData().pluginManager.sigPluginDeactivated.connect(
-            self.__onPluginDeactivated)
+        GlobalData().pluginManager.sigPluginActivated.connect(self.__onPluginActivated)
+        GlobalData().pluginManager.sigPluginDeactivated.connect(self.__onPluginDeactivated)
 
         # Keep the min and max height of the FS part initialized
         self.__minH = self.lower.minimumHeight()
@@ -152,27 +145,24 @@ class ProjectViewer(QWidget):
 
         # Header part: label + i-button
         self.projectLabel = HeaderFitLabel(self)
-        self.projectLabel.setText('Project: none')
-        self.projectLabel.setSizePolicy(QSizePolicy.Expanding,
-                                        QSizePolicy.Fixed)
+        self.projectLabel.setText("Project: none")
+        self.projectLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.projectLabel.setMinimumWidth(10)
 
         self.propertiesButton = QToolButton(self)
         self.propertiesButton.setAutoRaise(True)
-        self.propertiesButton.setIcon(getIcon('smalli.png'))
-        self.propertiesButton.setFixedSize(self.projectLabel.height(),
-                                           self.projectLabel.height())
-        self.propertiesButton.setToolTip('Project properties')
+        self.propertiesButton.setIcon(getIcon("smalli.png"))
+        self.propertiesButton.setFixedSize(self.projectLabel.height(), self.projectLabel.height())
+        self.propertiesButton.setToolTip("Project properties")
         self.propertiesButton.setEnabled(False)
         self.propertiesButton.setFocusPolicy(Qt.NoFocus)
         self.propertiesButton.clicked.connect(self.projectProperties)
 
         self.unloadButton = QToolButton(self)
         self.unloadButton.setAutoRaise(True)
-        self.unloadButton.setIcon(getIcon('unloadproject.png'))
-        self.unloadButton.setFixedSize(self.projectLabel.height(),
-                                       self.projectLabel.height())
-        self.unloadButton.setToolTip('Unload project')
+        self.unloadButton.setIcon(getIcon("unloadproject.png"))
+        self.unloadButton.setFixedSize(self.projectLabel.height(), self.projectLabel.height())
+        self.unloadButton.setToolTip("Unload project")
         self.unloadButton.setEnabled(False)
         self.unloadButton.setFocusPolicy(Qt.NoFocus)
         self.unloadButton.clicked.connect(self.unloadProject)
@@ -185,25 +175,16 @@ class ProjectViewer(QWidget):
         self.prjHeaderToolbar.addWidget(self.propertiesButton)
 
         # Toolbar part - buttons
-        self.prjFindWhereUsedButton = QAction(
-            getIcon('findusage.png'),
-            'Find where the highlighted item is used', self)
+        self.prjFindWhereUsedButton = QAction(getIcon("findusage.png"), "Find where the highlighted item is used", self)
         self.prjFindWhereUsedButton.triggered.connect(self.__findWhereUsed)
-        self.prjFindInDirButton = QAction(
-            getIcon('findindir.png'), 'Find in highlighted directory', self)
-        self.prjFindInDirButton.triggered.connect(
-            self.projectTreeView.findInDirectory)
-        self.prjShowParsingErrorsButton = QAction(
-            getIcon('showparsingerrors.png'), 'Show lexer/parser errors', self)
-        self.prjShowParsingErrorsButton.triggered.connect(
-            self.showPrjParserError)
-        self.prjNewDirButton = QAction(
-            getIcon('newdir.png'), 'Create sub directory', self)
+        self.prjFindInDirButton = QAction(getIcon("findindir.png"), "Find in highlighted directory", self)
+        self.prjFindInDirButton.triggered.connect(self.projectTreeView.findInDirectory)
+        self.prjShowParsingErrorsButton = QAction(getIcon("showparsingerrors.png"), "Show lexer/parser errors", self)
+        self.prjShowParsingErrorsButton.triggered.connect(self.showPrjParserError)
+        self.prjNewDirButton = QAction(getIcon("newdir.png"), "Create sub directory", self)
         self.prjNewDirButton.triggered.connect(self.__createDir)
-        self.prjCopyToClipboardButton = QAction(
-            getIcon('copymenu.png'), 'Copy path to clipboard', self)
-        self.prjCopyToClipboardButton.triggered.connect(
-            self.projectTreeView.copyToClipboard)
+        self.prjCopyToClipboardButton = QAction(getIcon("copymenu.png"), "Copy path to clipboard", self)
+        self.prjCopyToClipboardButton.triggered.connect(self.projectTreeView.copyToClipboard)
 
         self.upperToolbar = QToolBar()
         self.upperToolbar.setMovable(False)
@@ -216,12 +197,10 @@ class ProjectViewer(QWidget):
         self.upperToolbar.addAction(self.prjNewDirButton)
         self.upperToolbar.addAction(self.prjCopyToClipboardButton)
 
-        self.projectTreeView.sigFirstSelectedItem.connect(
-            self.__prjSelectionChanged)
+        self.projectTreeView.sigFirstSelectedItem.connect(self.__prjSelectionChanged)
 
         self.projectTreeView.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.projectTreeView.customContextMenuRequested.connect(
-            self.__prjContextMenuRequested)
+        self.projectTreeView.customContextMenuRequested.connect(self.__prjContextMenuRequested)
         pLayout = QVBoxLayout()
         pLayout.setContentsMargins(0, 0, 0, 0)
         pLayout.setSpacing(0)
@@ -243,35 +222,37 @@ class ProjectViewer(QWidget):
         # popup menu for python files content
         self.prjPythonMenu = QMenu(self)
         self.prjUsageAct = self.prjPythonMenu.addAction(
-            getIcon('findusage.png'), 'Find occurences', self.__findWhereUsed)
+            getIcon("findusage.png"), "Find occurences", self.__findWhereUsed
+        )
         self.prjPythonMenu.addSeparator()
         self.prjCopyAct = self.prjPythonMenu.addAction(
-            getIcon('copymenu.png'),
-            'Copy path to clipboard', self.projectTreeView.copyToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.projectTreeView.copyToClipboard
+        )
 
         # popup menu for directories
         self.prjDirMenu = QMenu(self)
         self.prjDirMenu.aboutToShow.connect(self.__updatePluginMenuData)
         self.prjDirImportDgmAct = self.prjDirMenu.addAction(
-            getIcon('importsdiagram.png'),
-            "Imports diagram", self.__onImportDiagram)
+            getIcon("importsdiagram.png"), "Imports diagram", self.__onImportDiagram
+        )
         self.prjDirImportDgmTunedAct = self.prjDirMenu.addAction(
-            getIcon('detailsdlg.png'),
-            'Fine tuned imports diagram', self.__onImportDgmTuned)
+            getIcon("detailsdlg.png"), "Fine tuned imports diagram", self.__onImportDgmTuned
+        )
         self.prjDirMenu.addSeparator()
         self.prjDirNewDirAct = self.prjDirMenu.addAction(
-            getIcon('newdir.png'), 'Create nested directory', self.__createDir)
+            getIcon("newdir.png"), "Create nested directory", self.__createDir
+        )
         self.prjDirMenu.addSeparator()
         self.prjDirFindAct = self.prjDirMenu.addAction(
-            getIcon('findindir.png'),
-            'Find in this directory', self.projectTreeView.findInDirectory)
+            getIcon("findindir.png"), "Find in this directory", self.projectTreeView.findInDirectory
+        )
         self.prjDirCopyPathAct = self.prjDirMenu.addAction(
-            getIcon('copymenu.png'),
-            'Copy path to clipboard', self.projectTreeView.copyToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.projectTreeView.copyToClipboard
+        )
         self.prjDirMenu.addSeparator()
         self.prjDirRemoveFromDiskAct = self.prjDirMenu.addAction(
-            getIcon('trash.png'),
-            'Remove directory from the disk recursively', self.__removePrj)
+            getIcon("trash.png"), "Remove directory from the disk recursively", self.__removePrj
+        )
         self.__prjDirPluginSeparator = self.prjDirMenu.addSeparator()
         self.__prjDirPluginSeparator.setVisible(False)
 
@@ -279,60 +260,56 @@ class ProjectViewer(QWidget):
         self.prjFileMenu = QMenu(self)
         self.prjFileMenu.aboutToShow.connect(self.__updatePluginMenuData)
         self.prjFileImportDgmAct = self.prjFileMenu.addAction(
-            getIcon('importsdiagram.png'),
-            "Imports diagram", self.__onImportDiagram)
+            getIcon("importsdiagram.png"), "Imports diagram", self.__onImportDiagram
+        )
         self.prjFileImportDgmTunedAct = self.prjFileMenu.addAction(
-            getIcon('detailsdlg.png'),
-            'Fine tuned imports diagram', self.__onImportDgmTuned)
+            getIcon("detailsdlg.png"), "Fine tuned imports diagram", self.__onImportDgmTuned
+        )
         self.prjFileMenu.addSeparator()
         self.prjFileCopyPathAct = self.prjFileMenu.addAction(
-            getIcon('copymenu.png'),
-            'Copy path to clipboard', self.projectTreeView.copyToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.projectTreeView.copyToClipboard
+        )
         self.prjFileShowErrorsAct = self.prjFileMenu.addAction(
-            getIcon('showparsingerrors.png'),
-            'Show lexer/parser errors', self.showPrjParserError)
-        self.prjDisasmMenu = self.prjFileMenu.addMenu(
-            getIcon('disassembly.png'), 'Disassembly')
+            getIcon("showparsingerrors.png"), "Show lexer/parser errors", self.showPrjParserError
+        )
+        self.prjDisasmMenu = self.prjFileMenu.addMenu(getIcon("disassembly.png"), "Disassembly")
         self.prjDisasmAct0 = self.prjDisasmMenu.addAction(
-            getIcon(''), 'Disassembly (no optimization)',
-            self.onPrjDisasm0)
+            getIcon(""), "Disassembly (no optimization)", self.onPrjDisasm0
+        )
         self.prjDisasmAct1 = self.prjDisasmMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 1)',
-            self.onPrjDisasm1)
+            getIcon(""), "Disassembly (optimization level 1)", self.onPrjDisasm1
+        )
         self.prjDisasmAct2 = self.prjDisasmMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 2)',
-            self.onPrjDisasm2)
+            getIcon(""), "Disassembly (optimization level 2)", self.onPrjDisasm2
+        )
         self.prjFileMenu.addMenu(self.prjDisasmMenu)
         self.prjDisasmPycAct = self.prjFileMenu.addAction(
-            getIcon('disassembly.png'), 'Disassembly .pyc',
-            self.onPrjDisasm0)
+            getIcon("disassembly.png"), "Disassembly .pyc", self.onPrjDisasm0
+        )
         self.prjFileMenu.addSeparator()
         self.prjFileRemoveFromDiskAct = self.prjFileMenu.addAction(
-            getIcon('trash.png'),
-            'Remove file from the disk', self.__removePrj)
+            getIcon("trash.png"), "Remove file from the disk", self.__removePrj
+        )
         self.__prjFilePluginSeparator = self.prjFileMenu.addSeparator()
         self.__prjFilePluginSeparator.setVisible(False)
 
         # Popup menu for broken symlinks
         self.prjBrokenLinkMenu = QMenu(self)
-        self.prjBrokenLinkMenu.addAction(
-            getIcon('trash.png'),
-            'Remove broken link from the disk', self.__removePrj)
+        self.prjBrokenLinkMenu.addAction(getIcon("trash.png"), "Remove broken link from the disk", self.__removePrj)
 
     def __createFilesystemPartLayout(self):
         """Creates the lower part of the project viewer"""
         # Header part: label + show/hide button
         self.fsLabel = HeaderFitLabel(self)
-        self.fsLabel.setText('File system')
+        self.fsLabel.setText("File system")
         self.fsLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.fsLabel.setMinimumWidth(10)
 
         self.__showHideButton = QToolButton(self)
         self.__showHideButton.setAutoRaise(True)
-        self.__showHideButton.setIcon(getIcon('less.png'))
-        self.__showHideButton.setFixedSize(self.fsLabel.height(),
-                                           self.fsLabel.height())
-        self.__showHideButton.setToolTip('Hide file system tree')
+        self.__showHideButton.setIcon(getIcon("less.png"))
+        self.__showHideButton.setFixedSize(self.fsLabel.height(), self.fsLabel.height())
+        self.__showHideButton.setToolTip("Hide file system tree")
         self.__showHideButton.setFocusPolicy(Qt.NoFocus)
         self.__showHideButton.clicked.connect(self.onShowHide)
 
@@ -344,36 +321,24 @@ class ProjectViewer(QWidget):
 
         # Tree view part
         self.filesystemView = FileSystemBrowser()
-        self.filesystemView.sigFirstSelectedItem.connect(
-            self.__fsSelectionChanged)
+        self.filesystemView.sigFirstSelectedItem.connect(self.__fsSelectionChanged)
         self.filesystemView.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.filesystemView.customContextMenuRequested.connect(
-            self.__fsContextMenuRequested)
+        self.filesystemView.customContextMenuRequested.connect(self.__fsContextMenuRequested)
 
         # Toolbar part - buttons
-        self.fsFindInDirButton = QAction(
-            getIcon('findindir.png'), 'Find in highlighted directory', self)
-        self.fsFindInDirButton.triggered.connect(
-            self.filesystemView.findInDirectory)
-        self.fsAddTopLevelDirButton = QAction(
-            getIcon('addtopleveldir.png'),
-            'Add as a top level directory', self)
+        self.fsFindInDirButton = QAction(getIcon("findindir.png"), "Find in highlighted directory", self)
+        self.fsFindInDirButton.triggered.connect(self.filesystemView.findInDirectory)
+        self.fsAddTopLevelDirButton = QAction(getIcon("addtopleveldir.png"), "Add as a top level directory", self)
         self.fsAddTopLevelDirButton.triggered.connect(self.addToplevelDir)
         self.fsRemoveTopLevelDirButton = QAction(
-            getIcon('removetopleveldir.png'),
-            'Remove from the top level directories', self)
-        self.fsRemoveTopLevelDirButton.triggered.connect(
-            self.removeToplevelDir)
-        self.fsShowParsingErrorsButton = QAction(
-            getIcon('showparsingerrors.png'), 'Show lexer/parser errors', self)
-        self.fsShowParsingErrorsButton.triggered.connect(
-            self.showFsParserError)
-        self.fsCopyToClipboardButton = QAction(
-            getIcon('copymenu.png'), 'Copy path to clipboard', self)
-        self.fsCopyToClipboardButton.triggered.connect(
-            self.filesystemView.copyToClipboard)
-        self.fsReloadButton = QAction(getIcon('reload.png'),
-                                      'Re-read the file system tree', self)
+            getIcon("removetopleveldir.png"), "Remove from the top level directories", self
+        )
+        self.fsRemoveTopLevelDirButton.triggered.connect(self.removeToplevelDir)
+        self.fsShowParsingErrorsButton = QAction(getIcon("showparsingerrors.png"), "Show lexer/parser errors", self)
+        self.fsShowParsingErrorsButton.triggered.connect(self.showFsParserError)
+        self.fsCopyToClipboardButton = QAction(getIcon("copymenu.png"), "Copy path to clipboard", self)
+        self.fsCopyToClipboardButton.triggered.connect(self.filesystemView.copyToClipboard)
+        self.fsReloadButton = QAction(getIcon("reload.png"), "Re-read the file system tree", self)
         self.fsReloadButton.triggered.connect(self.filesystemView.reload)
 
         self.lowerToolbar = QToolBar()
@@ -411,29 +376,27 @@ class ProjectViewer(QWidget):
         self.fsFileMenu = QMenu(self)
         self.fsFileMenu.aboutToShow.connect(self.__updatePluginMenuData)
         self.fsFileCopyPathAct = self.fsFileMenu.addAction(
-            getIcon('copymenu.png'),
-            'Copy path to clipboard', self.filesystemView.copyToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.filesystemView.copyToClipboard
+        )
         self.fsFileShowErrorsAct = self.fsFileMenu.addAction(
-            getIcon('showparsingerrors.png'),
-            'Show lexer/parser errors', self.showFsParserError)
-        self.fsDisasmMenu = self.fsFileMenu.addMenu(
-            getIcon('disassembly.png'), 'Disassembly')
-        self.fsDisasmAct0 = self.fsDisasmMenu.addAction(
-            getIcon(''), 'Disassembly (no optimization)',
-            self.onFsDisasm0)
+            getIcon("showparsingerrors.png"), "Show lexer/parser errors", self.showFsParserError
+        )
+        self.fsDisasmMenu = self.fsFileMenu.addMenu(getIcon("disassembly.png"), "Disassembly")
+        self.fsDisasmAct0 = self.fsDisasmMenu.addAction(getIcon(""), "Disassembly (no optimization)", self.onFsDisasm0)
         self.fsDisasmAct1 = self.fsDisasmMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 1)',
-            self.onFsDisasm1)
+            getIcon(""), "Disassembly (optimization level 1)", self.onFsDisasm1
+        )
         self.fsDisasmAct2 = self.fsDisasmMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 2)',
-            self.onFsDisasm2)
+            getIcon(""), "Disassembly (optimization level 2)", self.onFsDisasm2
+        )
         self.fsFileMenu.addMenu(self.fsDisasmMenu)
         self.fsDisasmPycAct = self.fsFileMenu.addAction(
-            getIcon('disassembly.png'), 'Disassembly .pyc',
-            self.onFsDisasm0)
+            getIcon("disassembly.png"), "Disassembly .pyc", self.onFsDisasm0
+        )
         self.fsFileMenu.addSeparator()
         self.fsFileRemoveAct = self.fsFileMenu.addAction(
-            getIcon('trash.png'), 'Remove file from the disk', self.__removeFs)
+            getIcon("trash.png"), "Remove file from the disk", self.__removeFs
+        )
         self.__fsFilePluginSeparator = self.fsFileMenu.addSeparator()
         self.__fsFilePluginSeparator.setVisible(False)
 
@@ -441,39 +404,37 @@ class ProjectViewer(QWidget):
         self.fsDirMenu = QMenu(self)
         self.fsDirMenu.aboutToShow.connect(self.__updatePluginMenuData)
         self.fsDirAddAsTopLevelAct = self.fsDirMenu.addAction(
-            getIcon('addtopleveldir.png'),
-            'Add as top level directory', self.addToplevelDir)
+            getIcon("addtopleveldir.png"), "Add as top level directory", self.addToplevelDir
+        )
         self.fsDirRemoveFromToplevelAct = self.fsDirMenu.addAction(
-            getIcon('removetopleveldir.png'),
-            'Remove from top level', self.removeToplevelDir)
+            getIcon("removetopleveldir.png"), "Remove from top level", self.removeToplevelDir
+        )
         self.fsDirMenu.addSeparator()
         self.fsDirFindAct = self.fsDirMenu.addAction(
-            getIcon('findindir.png'),
-            'Find in this directory', self.filesystemView.findInDirectory)
+            getIcon("findindir.png"), "Find in this directory", self.filesystemView.findInDirectory
+        )
         self.fsDirCopyPathAct = self.fsDirMenu.addAction(
-            getIcon('copymenu.png'),
-            'Copy path to clipboard', self.filesystemView.copyToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.filesystemView.copyToClipboard
+        )
         self.fsDirMenu.addSeparator()
         self.fsDirRemoveAct = self.fsDirMenu.addAction(
-            getIcon('trash.png'),
-            'Remove directory from the disk recursively', self.__removeFs)
+            getIcon("trash.png"), "Remove directory from the disk recursively", self.__removeFs
+        )
         self.__fsDirPluginSeparator = self.fsDirMenu.addSeparator()
         self.__fsDirPluginSeparator.setVisible(False)
 
         # create menu for broken symlink
         self.fsBrokenLinkMenu = QMenu(self)
-        self.fsBrokenLinkMenu.addAction(
-            getIcon('trash.png'),
-            'Remove broken link from the disk', self.__removeFs)
+        self.fsBrokenLinkMenu.addAction(getIcon("trash.png"), "Remove broken link from the disk", self.__removeFs)
 
         # popup menu for python files content
         self.fsPythonMenu = QMenu(self)
         self.fsUsageAct = self.fsPythonMenu.addAction(
-            getIcon('findusage.png'),
-            'Find occurences', self.__fsFindWhereUsed)
+            getIcon("findusage.png"), "Find occurences", self.__fsFindWhereUsed
+        )
         self.fsCopyAct = self.fsPythonMenu.addAction(
-            getIcon('copymenu.png'),
-            'Copy path to clipboard', self.filesystemView.copyToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.filesystemView.copyToClipboard
+        )
 
     @staticmethod
     def unloadProject():
@@ -485,8 +446,7 @@ class ProjectViewer(QWidget):
         if editorsManager.closeRequest():
             globalData.project.tabsStatus = editorsManager.getTabsStatus()
             editorsManager.closeAll()
-            globalData.project.fsBrowserExpandedDirs = \
-                mainWindow.getProjectExpandedPaths()
+            globalData.project.fsBrowserExpandedDirs = mainWindow.getProjectExpandedPaths()
             globalData.project.unloadProject()
 
     def __onRestorePrjExpandedDirs(self):
@@ -501,11 +461,11 @@ class ProjectViewer(QWidget):
 
         project = GlobalData().project
         if project.isLoaded():
-            self.projectLabel.setText('Project: ' + project.getProjectName())
+            self.projectLabel.setText("Project: " + project.getProjectName())
             self.propertiesButton.setEnabled(True)
             self.unloadButton.setEnabled(True)
         else:
-            self.projectLabel.setText('Project: none')
+            self.projectLabel.setText("Project: none")
             self.propertiesButton.setEnabled(False)
             self.unloadButton.setEnabled(False)
         self.filesystemView.layoutDisplay()
@@ -532,34 +492,35 @@ class ProjectViewer(QWidget):
 
             scriptName = dialog.scriptEdit.text().strip()
             if scriptName != "":
-                relativePath = os.path.relpath(scriptName,
-                                               project.getProjectDir())
-                if not relativePath.startswith('..'):
+                relativePath = os.path.relpath(scriptName, project.getProjectDir())
+                if not relativePath.startswith(".."):
                     scriptName = relativePath
 
             mdDocFile = dialog.mdDocEdit.text().strip()
-            if mdDocFile != '':
-                relativePath = os.path.relpath(mdDocFile,
-                                               project.getProjectDir())
-                if not relativePath.startswith('..'):
+            if mdDocFile != "":
+                relativePath = os.path.relpath(mdDocFile, project.getProjectDir())
+                if not relativePath.startswith(".."):
                     mdDocFile = relativePath
 
             venvPath = dialog.venvEdit.text().strip()
             project.updateProperties(
-                {'scriptname': scriptName,
-                 'mddocfile': mdDocFile,
-                 'creationdate': dialog.creationDateEdit.text().strip(),
-                 'author': dialog.authorEdit.text().strip(),
-                 'license': dialog.licenseEdit.text().strip(),
-                 'copyright': dialog.copyrightEdit.text().strip(),
-                 'version': dialog.versionEdit.text().strip(),
-                 'email': dialog.emailEdit.text().strip(),
-                 'description': dialog.descriptionEdit.toPlainText().strip(),
-                 'uuid': dialog.uuidEdit.text().strip(),
-                 'importdirs': importDirs,
-                 'excludeFromAnalysis': excludeFromAnalysis,
-                 'encoding': dialog.encodingCombo.currentText().strip(),
-                 'pythoninterpreter': venvPath})
+                {
+                    "scriptname": scriptName,
+                    "mddocfile": mdDocFile,
+                    "creationdate": dialog.creationDateEdit.text().strip(),
+                    "author": dialog.authorEdit.text().strip(),
+                    "license": dialog.licenseEdit.text().strip(),
+                    "copyright": dialog.copyrightEdit.text().strip(),
+                    "version": dialog.versionEdit.text().strip(),
+                    "email": dialog.emailEdit.text().strip(),
+                    "description": dialog.descriptionEdit.toPlainText().strip(),
+                    "uuid": dialog.uuidEdit.text().strip(),
+                    "importdirs": importDirs,
+                    "excludeFromAnalysis": excludeFromAnalysis,
+                    "encoding": dialog.encodingCombo.currentText().strip(),
+                    "pythoninterpreter": venvPath,
+                }
+            )
 
             self.sigFileUpdated.emit(project.fileName, "")
             self.onFileUpdated(project.fileName, "")
@@ -591,19 +552,23 @@ class ProjectViewer(QWidget):
         if self.__fsContextItem is None:
             return
 
-        if self.__fsContextItem.itemType not in \
-           [NoItemType, SysPathItemType, GlobalsItemType,
-            ImportsItemType, FunctionsItemType,
-            ClassesItemType, StaticAttributesItemType,
-            InstanceAttributesItemType]:
+        if self.__fsContextItem.itemType not in [
+            NoItemType,
+            SysPathItemType,
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+        ]:
             self.fsCopyToClipboardButton.setEnabled(True)
 
         if self.__fsContextItem.itemType == DirectoryItemType:
             self.fsFindInDirButton.setEnabled(True)
             globalData = GlobalData()
             if globalData.project.isLoaded():
-                if globalData.project.isTopLevelDir(
-                        self.__fsContextItem.getPath()):
+                if globalData.project.isTopLevelDir(self.__fsContextItem.getPath()):
                     if self.__fsContextItem.parentItem.itemType == NoItemType:
                         self.fsRemoveTopLevelDirButton.setEnabled(True)
                 else:
@@ -611,10 +576,8 @@ class ProjectViewer(QWidget):
                         self.fsAddTopLevelDirButton.setEnabled(True)
 
         if self.__fsContextItem.itemType == FileItemType:
-            if isPythonMime(self.__fsContextItem.fileType) and \
-               'broken-symlink' not in self.__fsContextItem.fileType:
-                self.fsShowParsingErrorsButton.setEnabled(
-                    self.__fsContextItem.parsingErrors)
+            if isPythonMime(self.__fsContextItem.fileType) and "broken-symlink" not in self.__fsContextItem.fileType:
+                self.fsShowParsingErrorsButton.setEnabled(self.__fsContextItem.parsingErrors)
 
     def __updatePrjToolbarButtons(self):
         """Updates the toolbar buttons depending on the __prjContextItem"""
@@ -623,16 +586,21 @@ class ProjectViewer(QWidget):
         self.prjShowParsingErrorsButton.setEnabled(False)
         self.prjNewDirButton.setEnabled(False)
         self.prjCopyToClipboardButton.setEnabled(False)
-#        self.prjDelProjectDirButton.setEnabled(False)
+        #        self.prjDelProjectDirButton.setEnabled(False)
 
         if self.__prjContextItem is None:
             return
 
-        if self.__prjContextItem.itemType not in \
-                    [NoItemType, SysPathItemType, GlobalsItemType,
-                     ImportsItemType, FunctionsItemType,
-                     ClassesItemType, StaticAttributesItemType,
-                     InstanceAttributesItemType]:
+        if self.__prjContextItem.itemType not in [
+            NoItemType,
+            SysPathItemType,
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+        ]:
             self.prjCopyToClipboardButton.setEnabled(True)
 
         if self.__prjContextItem.itemType == DirectoryItemType:
@@ -642,17 +610,13 @@ class ProjectViewer(QWidget):
             # if it is a top level and not the project file containing dir then
             # the del button should be enabled
             if self.__prjContextItem.parentItem.itemType == NoItemType:
-                os.path.dirname(GlobalData().project.fileName) + \
-                             os.path.sep
+                os.path.dirname(GlobalData().project.fileName) + os.path.sep
 
         if self.__prjContextItem.itemType == FileItemType:
             if isPythonMime(self.__prjContextItem.fileType):
-                self.prjShowParsingErrorsButton.setEnabled(
-                    self.__prjContextItem.parsingErrors)
+                self.prjShowParsingErrorsButton.setEnabled(self.__prjContextItem.parsingErrors)
 
-        if self.__prjContextItem.itemType in [FunctionItemType, ClassItemType,
-                                              AttributeItemType,
-                                              GlobalItemType]:
+        if self.__prjContextItem.itemType in [FunctionItemType, ClassItemType, AttributeItemType, GlobalItemType]:
             self.prjFindWhereUsedButton.setEnabled(True)
 
     def __fsContextMenuRequested(self, coord):
@@ -666,34 +630,31 @@ class ProjectViewer(QWidget):
         if self.__fsContextItem is None:
             return
 
-        if self.__fsContextItem.itemType in [NoItemType, SysPathItemType,
-                                             GlobalsItemType, ImportsItemType,
-                                             FunctionsItemType,
-                                             ClassesItemType,
-                                             StaticAttributesItemType,
-                                             InstanceAttributesItemType]:
+        if self.__fsContextItem.itemType in [
+            NoItemType,
+            SysPathItemType,
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+        ]:
             return
         if self.__fsContextItem.itemType == FileItemType:
-            if 'broken-symlink' in self.__fsContextItem.fileType:
+            if "broken-symlink" in self.__fsContextItem.fileType:
                 self.fsBrokenLinkMenu.popup(QCursor.pos())
                 return
 
         # Update the menu items status
-        self.fsFileCopyPathAct.setEnabled(
-            self.fsCopyToClipboardButton.isEnabled())
-        self.fsCopyAct.setEnabled(
-            self.fsCopyToClipboardButton.isEnabled())
-        self.fsFileShowErrorsAct.setEnabled(
-            self.fsShowParsingErrorsButton.isEnabled())
+        self.fsFileCopyPathAct.setEnabled(self.fsCopyToClipboardButton.isEnabled())
+        self.fsCopyAct.setEnabled(self.fsCopyToClipboardButton.isEnabled())
+        self.fsFileShowErrorsAct.setEnabled(self.fsShowParsingErrorsButton.isEnabled())
 
-        self.fsDirAddAsTopLevelAct.setEnabled(
-            self.fsAddTopLevelDirButton.isEnabled())
-        self.fsDirRemoveFromToplevelAct.setEnabled(
-            self.fsRemoveTopLevelDirButton.isEnabled())
-        self.fsDirFindAct.setEnabled(
-            self.fsFindInDirButton.isEnabled())
-        self.fsDirCopyPathAct.setEnabled(
-            self.fsCopyToClipboardButton.isEnabled())
+        self.fsDirAddAsTopLevelAct.setEnabled(self.fsAddTopLevelDirButton.isEnabled())
+        self.fsDirRemoveFromToplevelAct.setEnabled(self.fsRemoveTopLevelDirButton.isEnabled())
+        self.fsDirFindAct.setEnabled(self.fsFindInDirButton.isEnabled())
+        self.fsDirCopyPathAct.setEnabled(self.fsCopyToClipboardButton.isEnabled())
 
         self.fsDisasmMenu.setEnabled(False)
         self.fsDisasmPycAct.setEnabled(False)
@@ -705,37 +666,34 @@ class ProjectViewer(QWidget):
 
         # Add more conditions
         self.fsUsageAct.setEnabled(
-            self.__fsContextItem.itemType in [FunctionItemType,
-                                              ClassItemType,
-                                              AttributeItemType,
-                                              GlobalItemType] and \
-                GlobalData().project.isProjectFile(
-                    self.__fsContextItem.getPath()))
+            self.__fsContextItem.itemType in [FunctionItemType, ClassItemType, AttributeItemType, GlobalItemType]
+            and GlobalData().project.isProjectFile(self.__fsContextItem.getPath())
+        )
 
         if self.__fsContextItem.itemType == FileItemType:
             if self.__fsContextItem.isLink:
                 self.fsFileRemoveAct.setText("Remove link from the disk")
             else:
                 self.fsFileRemoveAct.setText("Remove file from the disk")
-            self.fsFileRemoveAct.setEnabled(
-                self.__canDeleteFile(self.__fsContextItem.getPath()))
+            self.fsFileRemoveAct.setEnabled(self.__canDeleteFile(self.__fsContextItem.getPath()))
             self.fsFileMenu.popup(QCursor.pos())
         elif self.__fsContextItem.itemType == DirectoryItemType:
             if self.__fsContextItem.isLink:
                 self.fsDirRemoveAct.setText("Remove link from the disk")
             else:
-                self.fsDirRemoveAct.setText("Remove directory from "
-                                            "the disk recursively")
-            self.fsDirRemoveAct.setEnabled(
-                self.__canDeleteDir(self.__fsContextItem.getPath()))
+                self.fsDirRemoveAct.setText("Remove directory from the disk recursively")
+            self.fsDirRemoveAct.setEnabled(self.__canDeleteDir(self.__fsContextItem.getPath()))
             self.fsDirMenu.popup(QCursor.pos())
-        elif self.__fsContextItem.itemType in [CodingItemType, ImportItemType,
-                                               FunctionItemType,
-                                               ClassItemType,
-                                               DecoratorItemType,
-                                               AttributeItemType,
-                                               GlobalItemType,
-                                               ImportWhatItemType]:
+        elif self.__fsContextItem.itemType in [
+            CodingItemType,
+            ImportItemType,
+            FunctionItemType,
+            ClassItemType,
+            DecoratorItemType,
+            AttributeItemType,
+            GlobalItemType,
+            ImportWhatItemType,
+        ]:
             self.fsPythonMenu.popup(QCursor.pos())
 
     def __prjContextMenuRequested(self, coord):
@@ -749,33 +707,30 @@ class ProjectViewer(QWidget):
         if self.__prjContextItem is None:
             return
 
-        if self.__prjContextItem.itemType in [NoItemType, SysPathItemType,
-                                              GlobalsItemType, ImportsItemType,
-                                              FunctionsItemType,
-                                              ClassesItemType,
-                                              StaticAttributesItemType,
-                                              InstanceAttributesItemType]:
+        if self.__prjContextItem.itemType in [
+            NoItemType,
+            SysPathItemType,
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+        ]:
             return
         if self.__prjContextItem.itemType == FileItemType:
-            if 'broken-symlink' in self.__prjContextItem.fileType:
+            if "broken-symlink" in self.__prjContextItem.fileType:
                 self.prjBrokenLinkMenu.popup(QCursor.pos())
                 return
 
         # Update the menu items status
-        self.prjUsageAct.setEnabled(
-            self.prjFindWhereUsedButton.isEnabled())
-        self.prjCopyAct.setEnabled(
-            self.prjCopyToClipboardButton.isEnabled())
-        self.prjDirNewDirAct.setEnabled(
-            self.prjNewDirButton.isEnabled())
-        self.prjDirFindAct.setEnabled(
-            self.prjFindInDirButton.isEnabled())
-        self.prjDirCopyPathAct.setEnabled(
-            self.prjCopyToClipboardButton.isEnabled())
-        self.prjFileCopyPathAct.setEnabled(
-            self.prjCopyToClipboardButton.isEnabled())
-        self.prjFileShowErrorsAct.setEnabled(
-            self.prjShowParsingErrorsButton.isEnabled())
+        self.prjUsageAct.setEnabled(self.prjFindWhereUsedButton.isEnabled())
+        self.prjCopyAct.setEnabled(self.prjCopyToClipboardButton.isEnabled())
+        self.prjDirNewDirAct.setEnabled(self.prjNewDirButton.isEnabled())
+        self.prjDirFindAct.setEnabled(self.prjFindInDirButton.isEnabled())
+        self.prjDirCopyPathAct.setEnabled(self.prjCopyToClipboardButton.isEnabled())
+        self.prjFileCopyPathAct.setEnabled(self.prjCopyToClipboardButton.isEnabled())
+        self.prjFileShowErrorsAct.setEnabled(self.prjShowParsingErrorsButton.isEnabled())
 
         # Imports diagram menu
         enabled = False
@@ -802,46 +757,39 @@ class ProjectViewer(QWidget):
 
         if self.__prjContextItem.itemType == FileItemType:
             if self.__prjContextItem.isLink:
-                self.prjFileRemoveFromDiskAct.setText(
-                    "Remove link from the disk")
+                self.prjFileRemoveFromDiskAct.setText("Remove link from the disk")
             else:
-                self.prjFileRemoveFromDiskAct.setText(
-                    "Remove file from the disk")
-            self.prjFileRemoveFromDiskAct.setEnabled(
-                self.__canDeleteFile(self.__prjContextItem.getPath()))
+                self.prjFileRemoveFromDiskAct.setText("Remove file from the disk")
+            self.prjFileRemoveFromDiskAct.setEnabled(self.__canDeleteFile(self.__prjContextItem.getPath()))
             self.prjFileMenu.popup(QCursor.pos())
         elif self.__prjContextItem.itemType == DirectoryItemType:
             if self.__prjContextItem.isLink:
-                self.prjDirRemoveFromDiskAct.setText(
-                    "Remove link from the disk")
+                self.prjDirRemoveFromDiskAct.setText("Remove link from the disk")
             else:
-                self.prjDirRemoveFromDiskAct.setText("Remove directory from "
-                                                     "the disk recursively")
-            self.prjDirRemoveFromDiskAct.setEnabled(
-                self.__canDeleteDir(self.__prjContextItem.getPath()))
+                self.prjDirRemoveFromDiskAct.setText("Remove directory from the disk recursively")
+            self.prjDirRemoveFromDiskAct.setEnabled(self.__canDeleteDir(self.__prjContextItem.getPath()))
             self.prjDirMenu.popup(QCursor.pos())
-        elif self.__prjContextItem.itemType in [CodingItemType, ImportItemType,
-                                                FunctionItemType,
-                                                ClassItemType,
-                                                DecoratorItemType,
-                                                AttributeItemType,
-                                                GlobalItemType,
-                                                ImportWhatItemType]:
+        elif self.__prjContextItem.itemType in [
+            CodingItemType,
+            ImportItemType,
+            FunctionItemType,
+            ClassItemType,
+            DecoratorItemType,
+            AttributeItemType,
+            GlobalItemType,
+            ImportWhatItemType,
+        ]:
             self.prjPythonMenu.popup(QCursor.pos())
 
     def __findWhereUsed(self):
         """Triggers analysis where the highlighted item is used"""
         if self.__prjContextItem is not None:
-            GlobalData().mainWindow.findWhereUsed(
-                self.__prjContextItem.getPath(),
-                self.__prjContextItem.sourceObj)
+            GlobalData().mainWindow.findWhereUsed(self.__prjContextItem.getPath(), self.__prjContextItem.sourceObj)
 
     def __fsFindWhereUsed(self):
         """Triggers analysis where the FS highlighted item is used"""
         if self.__fsContextItem is not None:
-            GlobalData().mainWindow.findWhereUsed(
-                self.__fsContextItem.getPath(),
-                self.__fsContextItem.sourceObj)
+            GlobalData().mainWindow.findWhereUsed(self.__fsContextItem.getPath(), self.__fsContextItem.sourceObj)
 
     def __createDir(self):
         """Triggered when a new subdir should be created"""
@@ -849,8 +797,7 @@ class ProjectViewer(QWidget):
             dlg = NewProjectDirDialog(self)
             if dlg.exec_() == QDialog.Accepted:
                 try:
-                    os.mkdir(self.__prjContextItem.getPath() +
-                             dlg.getDirName())
+                    os.mkdir(self.__prjContextItem.getPath() + dlg.getDirName())
                 except Exception as exc:
                     logging.error(str(exc))
 
@@ -870,12 +817,11 @@ class ProjectViewer(QWidget):
     def showPrjParserError(self):
         """Triggered when parsing errors must be displayed"""
         if self.__isValidPrjPythonFile():
-            self.projectTreeView.showParsingErrors(
-                self.__prjContextItem.getPath())
+            self.projectTreeView.showParsingErrors(self.__prjContextItem.getPath())
 
     def onDisasm(self, path, opt):
         """Disassemble a file"""
-        if path.endswith('.pyc') or path.endswith('.pyo'):
+        if path.endswith(".pyc") or path.endswith(".pyo"):
             GlobalData().mainWindow.showPycDisassembly(path)
         else:
             GlobalData().mainWindow.showFileDisassembly(path, opt)
@@ -884,10 +830,8 @@ class ProjectViewer(QWidget):
         """Disassemble without optimization"""
         # This one is also called for .pyc files
         if self.__isValidPrjItem(FileItemType):
-            if isPythonMime(self.__prjContextItem.fileType) or \
-               isPythonCompiledFile(self.__prjContextItem.getPath()):
-                self.onDisasm(self.__prjContextItem.getPath(),
-                              OPT_NO_OPTIMIZATION)
+            if isPythonMime(self.__prjContextItem.fileType) or isPythonCompiledFile(self.__prjContextItem.getPath()):
+                self.onDisasm(self.__prjContextItem.getPath(), OPT_NO_OPTIMIZATION)
 
     def onPrjDisasm1(self):
         """Disassemble with optimization level 1"""
@@ -897,8 +841,7 @@ class ProjectViewer(QWidget):
     def onPrjDisasm2(self):
         """Disassemble with optimization level 2"""
         if self.__isValidPrjPythonFile():
-            self.onDisasm(self.__prjContextItem.getPath(),
-                          OPT_OPTIMIZE_DOCSTRINGS)
+            self.onDisasm(self.__prjContextItem.getPath(), OPT_OPTIMIZE_DOCSTRINGS)
 
     def __isValidFsItem(self, itemType):
         """True if it is a valid filesystem item"""
@@ -917,10 +860,8 @@ class ProjectViewer(QWidget):
         """Disassemble without optimization"""
         # This one is also called for .pyc files
         if self.__isValidFsItem(FileItemType):
-            if isPythonMime(self.__fsContextItem.fileType) or \
-               isPythonCompiledFile(self.__fsContextItem.getPath()):
-                self.onDisasm(self.__fsContextItem.getPath(),
-                              OPT_NO_OPTIMIZATION)
+            if isPythonMime(self.__fsContextItem.fileType) or isPythonCompiledFile(self.__fsContextItem.getPath()):
+                self.onDisasm(self.__fsContextItem.getPath(), OPT_NO_OPTIMIZATION)
 
     def onFsDisasm1(self):
         """Disassemble with optimization level 1"""
@@ -930,14 +871,12 @@ class ProjectViewer(QWidget):
     def onFsDisasm2(self):
         """Disassemble with optimization level 2"""
         if self.__isValidFsPythonFile():
-            self.onDisasm(self.__fsContextItem.getPath(),
-                          OPT_OPTIMIZE_DOCSTRINGS)
+            self.onDisasm(self.__fsContextItem.getPath(), OPT_OPTIMIZE_DOCSTRINGS)
 
     def showFsParserError(self):
         """Triggered when parsing errors must be displayed"""
         if self.__isValidFsPythonFile():
-            self.filesystemView.showParsingErrors(
-                self.__fsContextItem.getPath())
+            self.filesystemView.showParsingErrors(self.__fsContextItem.getPath())
 
     def addToplevelDir(self):
         """Triggered for adding a new top level directory"""
@@ -954,8 +893,7 @@ class ProjectViewer(QWidget):
         if self.__prjContextItem is not None:
             fName = self.__prjContextItem.getPath()
             if self.__removeItem(fName):
-                GlobalData().mainWindow.recentProjectsViewer.removeRecentFile(
-                    fName)
+                GlobalData().mainWindow.recentProjectsViewer.removeRecentFile(fName)
 
     def __removeFs(self):
         """Remove the selected item"""
@@ -964,31 +902,25 @@ class ProjectViewer(QWidget):
             if self.__removeItem(fName):
                 # The item has really been deleted. Update the view
                 dirname, basename = self.filesystemView._splitPath(fName)
-                self.filesystemView._delFromTree(self.__fsContextItem,
-                                                 dirname, basename)
-                GlobalData().mainWindow.recentProjectsViewer.removeRecentFile(
-                    fName)
+                self.filesystemView._delFromTree(self.__fsContextItem, dirname, basename)
+                GlobalData().mainWindow.recentProjectsViewer.removeRecentFile(fName)
 
     def __removeItem(self, path):
         """Removes a link, a file or a directory"""
         path = os.path.abspath(path)
         if os.path.islink(path):
             header = "Deleting a link"
-            text = "Are you sure you want to delete the " \
-                   "symbolic link <b>" + path + "</b>?"
+            text = "Are you sure you want to delete the symbolic link <b>" + path + "</b>?"
         elif os.path.isdir(path):
             header = "Deleting a directory"
-            text = "Are you sure you want to delete the " \
-                   "directory <b>" + path + "</b> recursively?"
+            text = "Are you sure you want to delete the directory <b>" + path + "</b> recursively?"
         else:
             header = "Deleting a file"
-            text = "Are you sure you want to delete the " \
-                   "file <b>" + path + "</b>?"
+            text = "Are you sure you want to delete the file <b>" + path + "</b>?"
 
-        res = QMessageBox.warning(self, header, text,
-                                  QMessageBox.StandardButtons(
-                                      QMessageBox.Cancel | QMessageBox.Yes),
-                                  QMessageBox.Cancel)
+        res = QMessageBox.warning(
+            self, header, text, QMessageBox.StandardButtons(QMessageBox.Cancel | QMessageBox.Yes), QMessageBox.Cancel
+        )
         if res == QMessageBox.Yes:
             try:
                 # Unfortunately, remote file system may fail to report that
@@ -1002,9 +934,7 @@ class ProjectViewer(QWidget):
                     else:
                         os.remove(path)
                 else:
-                    logging.info("Could not find " + path +
-                                 " on the disk. Ignoring and "
-                                 "deleting from the browser.")
+                    logging.info("Could not find " + path + " on the disk. Ignoring and deleting from the browser.")
             except Exception as exc:
                 logging.error(str(exc))
                 return False
@@ -1029,8 +959,7 @@ class ProjectViewer(QWidget):
         """Tests if a directory has at least one python file"""
         for item in os.listdir(path):
             if os.path.isdir(path + item):
-                if ProjectViewer.__areTherePythonFiles(path + item +
-                                                       os.path.sep):
+                if ProjectViewer.__areTherePythonFiles(path + item + os.path.sep):
                     return True
                 continue
             if isPythonFile(path + item):
@@ -1045,8 +974,7 @@ class ProjectViewer(QWidget):
         if self.__prjContextItem.itemType == DirectoryItemType:
             # Check first if there are python files in it
             if not self.__areTherePythonFiles(self.__prjContextItem.getPath()):
-                logging.warning("There are no python files in " +
-                                self.__prjContextItem.getPath())
+                logging.warning("There are no python files in " + self.__prjContextItem.getPath())
                 return
             projectDir = GlobalData().project.getProjectDir()
             if projectDir == self.__prjContextItem.getPath():
@@ -1054,15 +982,14 @@ class ProjectViewer(QWidget):
                 tooltip = "Generated for the project"
             else:
                 what = ImportsDiagramDialog.DirectoryFiles
-                tooltip = "Generated for directory " + \
-                          self.__prjContextItem.getPath()
-            self.__generateImportDiagram(what, ImportDiagramOptions(),
-                                         tooltip)
+                tooltip = "Generated for directory " + self.__prjContextItem.getPath()
+            self.__generateImportDiagram(what, ImportDiagramOptions(), tooltip)
         else:
-            self.__generateImportDiagram(ImportsDiagramDialog.SingleFile,
-                                         ImportDiagramOptions(),
-                                         "Generated for file " +
-                                         self.__prjContextItem.getPath())
+            self.__generateImportDiagram(
+                ImportsDiagramDialog.SingleFile,
+                ImportDiagramOptions(),
+                "Generated for file " + self.__prjContextItem.getPath(),
+            )
 
     def __onImportDgmTuned(self):
         """Triggered when a tuned import diagram is requested"""
@@ -1072,8 +999,7 @@ class ProjectViewer(QWidget):
         if self.__prjContextItem.itemType == DirectoryItemType:
             # Check first if there are python files in it
             if not self.__areTherePythonFiles(self.__prjContextItem.getPath()):
-                logging.warning("There are no python files in " +
-                                self.__prjContextItem.getPath())
+                logging.warning("There are no python files in " + self.__prjContextItem.getPath())
                 return
 
         if self.__prjContextItem.itemType == DirectoryItemType:
@@ -1084,16 +1010,11 @@ class ProjectViewer(QWidget):
                 tooltip = "Generated for the project"
             else:
                 what = ImportsDiagramDialog.DirectoryFiles
-                dlg = ImportsDiagramDialog(what,
-                                           self.__prjContextItem.getPath(),
-                                           self)
-                tooltip = "Generated for directory " + \
-                          self.__prjContextItem.getPath()
+                dlg = ImportsDiagramDialog(what, self.__prjContextItem.getPath(), self)
+                tooltip = "Generated for directory " + self.__prjContextItem.getPath()
         else:
             what = ImportsDiagramDialog.SingleFile
-            dlg = ImportsDiagramDialog(what,
-                                       self.__prjContextItem.getPath(),
-                                       self)
+            dlg = ImportsDiagramDialog(what, self.__prjContextItem.getPath(), self)
             tooltip = "Generated for file " + self.__prjContextItem.getPath()
 
         if dlg.exec_() == QDialog.Accepted:
@@ -1101,11 +1022,9 @@ class ProjectViewer(QWidget):
 
     def __generateImportDiagram(self, what, options, tooltip):
         """Show the generation progress and display the diagram"""
-        progressDlg = ImportsDiagramProgress(what, options,
-                                             self.__prjContextItem.getPath())
+        progressDlg = ImportsDiagramProgress(what, options, self.__prjContextItem.getPath())
         if progressDlg.exec_() == QDialog.Accepted:
-            GlobalData().mainWindow.openDiagram(progressDlg.scene,
-                                                tooltip)
+            GlobalData().mainWindow.openDiagram(progressDlg.scene, tooltip)
 
     def onFileUpdated(self, fileName, uuid):
         """Triggered when the file is updated"""
@@ -1128,24 +1047,24 @@ class ProjectViewer(QWidget):
 
             self.filesystemView.setVisible(False)
             self.lowerToolbar.setVisible(False)
-            self.__showHideButton.setIcon(getIcon('more.png'))
-            self.__showHideButton.setToolTip('Show file system tree')
+            self.__showHideButton.setIcon(getIcon("more.png"))
+            self.__showHideButton.setToolTip("Show file system tree")
 
             self.lower.setMinimumHeight(self.fsHeaderToolbar.height())
             self.lower.setMaximumHeight(self.fsHeaderToolbar.height())
 
-            Settings()['showFSViewer'] = False
+            Settings()["showFSViewer"] = False
         else:
             self.filesystemView.setVisible(True)
             self.lowerToolbar.setVisible(True)
-            self.__showHideButton.setIcon(getIcon('less.png'))
-            self.__showHideButton.setToolTip('Hide file system tree')
+            self.__showHideButton.setIcon(getIcon("less.png"))
+            self.__showHideButton.setToolTip("Hide file system tree")
 
             self.lower.setMinimumHeight(self.__minH)
             self.lower.setMaximumHeight(self.__maxH)
             self.splitter.setSizes(self.__splitterSizes)
 
-            Settings()['showFSViewer'] = True
+            Settings()["showFSViewer"] = True
 
     def highlightPrjItem(self, path):
         """Triggered when the file is to be highlighted in a project tree"""
@@ -1175,9 +1094,9 @@ class ProjectViewer(QWidget):
                 self.fsFileMenu.addMenu(fMenu)
                 self.__fsFilePluginSeparator.setVisible(True)
         except Exception as exc:
-            logging.error("Error populating " + pluginName +
-                          " plugin file context menu: " +
-                          str(exc) + ". Ignore and continue.")
+            logging.error(
+                "Error populating " + pluginName + " plugin file context menu: " + str(exc) + ". Ignore and continue."
+            )
 
         try:
             dMenu = QMenu(pluginName, self)
@@ -1191,9 +1110,13 @@ class ProjectViewer(QWidget):
                 self.fsDirMenu.addMenu(dMenu)
                 self.__fsDirPluginSeparator.setVisible(True)
         except Exception as exc:
-            logging.error("Error populating " + pluginName +
-                          " plugin directory context menu: " +
-                          str(exc) + ". Ignore and continue.")
+            logging.error(
+                "Error populating "
+                + pluginName
+                + " plugin directory context menu: "
+                + str(exc)
+                + ". Ignore and continue."
+            )
 
     def __onPluginDeactivated(self, plugin):
         """Triggered when a plugin is deactivated"""
@@ -1210,9 +1133,9 @@ class ProjectViewer(QWidget):
                 fMenu = None
         except Exception as exc:
             pluginName = plugin.getName()
-            logging.error("Error removing " + pluginName +
-                          " plugin file context menu: " +
-                          str(exc) + ". Ignore and continue.")
+            logging.error(
+                "Error removing " + pluginName + " plugin file context menu: " + str(exc) + ". Ignore and continue."
+            )
 
         try:
             path = plugin.getPath()
@@ -1227,9 +1150,13 @@ class ProjectViewer(QWidget):
                 dMenu = None
         except Exception as exc:
             pluginName = plugin.getName()
-            logging.error("Error removing " + pluginName +
-                          " plugin directory context menu: " +
-                          str(exc) + ". Ignore and continue.")
+            logging.error(
+                "Error removing "
+                + pluginName
+                + " plugin directory context menu: "
+                + str(exc)
+                + ". Ignore and continue."
+            )
 
     def __updatePluginMenuData(self):
         """Triggered when a file or dir menu is about to show"""
@@ -1247,5 +1174,4 @@ class ProjectViewer(QWidget):
 
     def onDebugMode(self, newState):
         """Triggered when a debug mode is changed"""
-        self.unloadButton.setEnabled(GlobalData().project.isLoaded() and
-                                     not newState)
+        self.unloadButton.setEnabled(GlobalData().project.isLoaded() and not newState)

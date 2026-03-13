@@ -19,7 +19,6 @@
 
 """Call trace viewer"""
 
-
 import logging
 
 from ui.itemdelegates import NoOutlineHeightDelegate
@@ -46,7 +45,6 @@ from utils.settings import Settings
 
 
 class CallTraceBrowser(QTreeWidget):
-
     """Call trace browser implementation"""
 
     def __init__(self, parent=None):
@@ -62,8 +60,8 @@ class CallTraceBrowser(QTreeWidget):
         self.setHeaderLabels(["", "From", "To"])
 
         self.__callStack = []
-        self.__callIcon = getIcon('calltracecall.png')
-        self.__retIcon = getIcon('calltracereturn.png')
+        self.__callIcon = getIcon("calltracecall.png")
+        self.__retIcon = getIcon("calltracereturn.png")
 
         self.projectLoaded = False
         self.count = 0
@@ -83,13 +81,12 @@ class CallTraceBrowser(QTreeWidget):
         self.__callStack = []
         self.count = 0
 
-    def addCallTrace(self, isCall, fromFile, fromLine, fromFunction,
-                     toFile, toLine, toFunction):
+    def addCallTrace(self, isCall, fromFile, fromLine, fromFunction, toFile, toLine, toFunction):
         """Adds a record to the list"""
-        tooltip = 'Return\n'
+        tooltip = "Return\n"
         icon = self.__retIcon
         if isCall:
-            tooltip = 'Call\n'
+            tooltip = "Call\n"
             icon = self.__callIcon
 
         if self.projectLoaded:
@@ -103,12 +100,12 @@ class CallTraceBrowser(QTreeWidget):
 
         fromItem = self.__entryFormat.format(fromFile, fromLine, fromFunction)
         toItem = self.__entryFormat.format(toFile, toLine, toFunction)
-        item = QTreeWidgetItem(parentItem, ['', fromItem, toItem])
+        item = QTreeWidgetItem(parentItem, ["", fromItem, toItem])
         item.setIcon(0, icon)
         item.setData(0, Qt.UserRole, isCall)
         item.setExpanded(True)
 
-        tooltip += 'From: ' + fromItem + '\nTo: ' + toItem
+        tooltip += "From: " + fromItem + "\nTo: " + toItem
         item.setToolTip(1, tooltip)
         item.setToolTip(2, tooltip)
 
@@ -142,7 +139,6 @@ class CallTraceBrowser(QTreeWidget):
 
 
 class CallTraceViewer(QWidget):
-
     """Implements the call trace viewer"""
 
     def __init__(self, debugger, parent=None):
@@ -167,9 +163,8 @@ class CallTraceViewer(QWidget):
         verticalLayout.setSpacing(0)
 
         self.__calltraceLabel = HeaderFitLabel(self)
-        self.__calltraceLabel.setText('Call Trace')
-        self.__calltraceLabel.setSizePolicy(QSizePolicy.Expanding,
-                                            QSizePolicy.Fixed)
+        self.__calltraceLabel.setText("Call Trace")
+        self.__calltraceLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.__calltraceLabel.setMinimumWidth(10)
 
         self.headerToolbar = QToolBar(self)
@@ -179,29 +174,23 @@ class CallTraceViewer(QWidget):
 
         self.calltraceList = CallTraceBrowser(self)
 
-        self.__startButton = QAction(
-            getIcon('calltracestart.png'), "Start call tracing", self)
+        self.__startButton = QAction(getIcon("calltracestart.png"), "Start call tracing", self)
         self.__startButton.triggered.connect(self.__onStart)
-        self.__startButton.setEnabled(not Settings()['calltrace'])
+        self.__startButton.setEnabled(not Settings()["calltrace"])
 
-        self.__stopButton = QAction(
-            getIcon('calltracestop.png'), "Stop call tracing", self)
+        self.__stopButton = QAction(getIcon("calltracestop.png"), "Stop call tracing", self)
         self.__stopButton.triggered.connect(self.__onStop)
-        self.__stopButton.setEnabled(Settings()['calltrace'])
+        self.__stopButton.setEnabled(Settings()["calltrace"])
 
-        self.__resizeButton = QAction(
-            getIcon('resizecolumns.png'),
-            "Resize the columns to their contents", self)
+        self.__resizeButton = QAction(getIcon("resizecolumns.png"), "Resize the columns to their contents", self)
         self.__resizeButton.triggered.connect(self.__onResize)
         self.__resizeButton.setEnabled(True)
 
-        self.__clearButton = QAction(
-            getIcon('trash.png'), "Clear", self)
+        self.__clearButton = QAction(getIcon("trash.png"), "Clear", self)
         self.__clearButton.triggered.connect(self.__onClear)
         self.__clearButton.setEnabled(False)
 
-        self.__copyButton = QAction(
-            getIcon('copymenu.png'), "Copy to clipboard", self)
+        self.__copyButton = QAction(getIcon("copymenu.png"), "Copy to clipboard", self)
         self.__copyButton.triggered.connect(self.__onCopy)
         self.__copyButton.setEnabled(False)
 
@@ -227,12 +216,9 @@ class CallTraceViewer(QWidget):
         verticalLayout.addWidget(self.toolbar)
         verticalLayout.addWidget(self.calltraceList)
 
-    def __onCallTrace(self, isCall, fromFile, fromLine, fromFunction,
-                      toFile, toLine, toFunction):
+    def __onCallTrace(self, isCall, fromFile, fromLine, fromFunction, toFile, toLine, toFunction):
         """Call trace message received"""
-        self.calltraceList.addCallTrace(isCall, fromFile, fromLine,
-                                        fromFunction, toFile, toLine,
-                                        toFunction)
+        self.calltraceList.addCallTrace(isCall, fromFile, fromLine, fromFunction, toFile, toLine, toFunction)
         self.__clearButton.setEnabled(True)
         self.__copyButton.setEnabled(True)
         self.__updateHeader()
@@ -241,22 +227,22 @@ class CallTraceViewer(QWidget):
         """Updates the header"""
         count = self.calltraceList.count
         if count:
-            self.__calltraceLabel.setText('Call Trace (' + str(count) + ')')
+            self.__calltraceLabel.setText("Call Trace (" + str(count) + ")")
         else:
-            self.__calltraceLabel.setText('Call Trace')
+            self.__calltraceLabel.setText("Call Trace")
 
     def __onStart(self):
         """Start collecting calltrace"""
         self.__startButton.setEnabled(False)
         self.__stopButton.setEnabled(True)
-        Settings()['calltrace'] = True
+        Settings()["calltrace"] = True
         self.__debugger.startCalltrace()
 
     def __onStop(self):
         """Stop collecting calltrace"""
         self.__startButton.setEnabled(True)
         self.__stopButton.setEnabled(False)
-        Settings()['calltrace'] = False
+        Settings()["calltrace"] = False
         self.__debugger.stopCalltrace()
 
     def __onResize(self):
@@ -282,23 +268,19 @@ class CallTraceViewer(QWidget):
         try:
             item = self.calltraceList.topLevelItem(0)
             while item is not None:
-                call = '<-'
+                call = "<-"
                 if item.data(0, Qt.UserRole):
-                    call = '->'
+                    call = "->"
                 lhs = item.text(1)
                 lhsLength = len(lhs)
                 lhsMaxLength = max(lhsMaxLength, lhsLength)
 
-                content.append([lhs, lhsLength, call + ' ' + item.text(2)])
+                content.append([lhs, lhsLength, call + " " + item.text(2)])
                 item = self.calltraceList.itemBelow(item)
 
             for index in range(len(content)):
-                content[index] = \
-                    content[index][0] + \
-                    ' ' * (lhsMaxLength - content[index][1] + 1) + \
-                    content[index][2]
+                content[index] = content[index][0] + " " * (lhsMaxLength - content[index][1] + 1) + content[index][2]
 
-            QApplication.clipboard().setText('\n'.join(content))
+            QApplication.clipboard().setText("\n".join(content))
         except Exception as exc:
-            logging.error('Error copying the call trace to clipboard: ' +
-                          str(exc))
+            logging.error("Error copying the call trace to clipboard: " + str(exc))

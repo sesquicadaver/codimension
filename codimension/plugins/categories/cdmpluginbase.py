@@ -27,7 +27,6 @@ from yapsy.IPlugin import IPlugin
 
 
 class CDMPluginBase(IPlugin, QObject):
-
     """Base class for all codimension plugin categories"""
 
     pluginLogMessage = pyqtSignal(int, str)
@@ -64,8 +63,7 @@ class CDMPluginBase(IPlugin, QObject):
         return None
 
 
-class ViewAndToolbar():
-
+class ViewAndToolbar:
     """Incapsulates access to a certain view widget inside a side panel"""
 
     def __init__(self, widget, toolbar):
@@ -73,17 +71,15 @@ class ViewAndToolbar():
         self.toolbar = toolbar
 
 
-class SidePanel():
-
+class SidePanel:
     """Incapsulates access to a side panel widget and its toolbar"""
 
     def __init__(self, widget):
         self.widget = widget
-        self.views = {}       # view name (string) -> ViewAndToolbar instance
+        self.views = {}  # view name (string) -> ViewAndToolbar instance
 
 
-class IDEAccess():
-
+class IDEAccess:
     """Incapsulates access to the various IDE parts"""
 
     def __init__(self, parent):
@@ -126,7 +122,7 @@ class IDEAccess():
     @property
     def mainWindow(self):
         """Reference to the application main window.
-           See details in src/ui/mainwindow.py"""
+        See details in src/ui/mainwindow.py"""
         if self.globalData is None:
             raise Exception("Plugin is not active")
         return self.globalData.mainWindow
@@ -166,10 +162,10 @@ class IDEAccess():
     @property
     def projectSettingsDir(self):
         """The directory where settings specific for the current
-           project are stored. If there is no project loaded at the time of
-           calling then None is returned.
-           The directory is individual for each user/project and it is usually
-           ~/.codimension3/<project UUID>"""
+        project are stored. If there is no project loaded at the time of
+        calling then None is returned.
+        The directory is individual for each user/project and it is usually
+        ~/.codimension3/<project UUID>"""
         if self.project.isLoaded():
             return self.project.userProjectDir
         return None
@@ -252,10 +248,12 @@ class IDEAccess():
         A location can be None if there is no such a bar
         """
         if self.__sideBars is None:
-            self.__sideBars = {'left': self.mainWindow._leftSideBar,
-                               'right': self.mainWindow._rightSideBar,
-                               'bottom': self.mainWindow._bottomSideBar,
-                               'top': None}
+            self.__sideBars = {
+                "left": self.mainWindow._leftSideBar,
+                "right": self.mainWindow._rightSideBar,
+                "bottom": self.mainWindow._bottomSideBar,
+                "top": None,
+            }
         return self.__sideBars
 
     def __initializeSidePanels(self):
@@ -265,86 +263,70 @@ class IDEAccess():
         # Project
         projectPanel = SidePanel(self.mainWindow.projectViewer)
         projectPanel.views["project"] = ViewAndToolbar(
-            projectPanel.widget.projectTreeView,
-            projectPanel.widget.getProjectToolbar())
+            projectPanel.widget.projectTreeView, projectPanel.widget.getProjectToolbar()
+        )
         projectPanel.views["fileSystem"] = ViewAndToolbar(
-            projectPanel.widget.filesystemView,
-            projectPanel.widget.getFileSystemToolbar())
+            projectPanel.widget.filesystemView, projectPanel.widget.getFileSystemToolbar()
+        )
         self.__sidePanels["project"] = projectPanel
 
         # Recent
         recentPanel = SidePanel(self.mainWindow.recentProjectsViewer)
         recentPanel.views["files"] = ViewAndToolbar(
-            recentPanel.widget.recentFilesView,
-            recentPanel.widget.getRecentFilesToolbar())
+            recentPanel.widget.recentFilesView, recentPanel.widget.getRecentFilesToolbar()
+        )
         recentPanel.views["projects"] = ViewAndToolbar(
-            recentPanel.widget.projectsView,
-            recentPanel.widget.getRecentProjectsToolbar())
+            recentPanel.widget.projectsView, recentPanel.widget.getRecentProjectsToolbar()
+        )
         self.__sidePanels["recent"] = recentPanel
 
         # Classes
         classesPanel = SidePanel(self.mainWindow.classesViewer)
-        classesPanel.views["classes"] = ViewAndToolbar(
-            classesPanel.widget.clViewer,
-            classesPanel.widget.toolbar)
+        classesPanel.views["classes"] = ViewAndToolbar(classesPanel.widget.clViewer, classesPanel.widget.toolbar)
         self.__sidePanels["classes"] = classesPanel
 
         # Functions
         funcPanel = SidePanel(self.mainWindow.functionsViewer)
-        funcPanel.views["functions"] = ViewAndToolbar(
-            funcPanel.widget.funcViewer,
-            funcPanel.widget.toolbar)
+        funcPanel.views["functions"] = ViewAndToolbar(funcPanel.widget.funcViewer, funcPanel.widget.toolbar)
         self.__sidePanels["functions"] = funcPanel
 
         # Globals
         globPanel = SidePanel(self.mainWindow.globalsViewer)
-        globPanel.views["globals"] = ViewAndToolbar(
-            globPanel.widget.globalsViewer,
-            globPanel.widget.toolbar)
+        globPanel.views["globals"] = ViewAndToolbar(globPanel.widget.globalsViewer, globPanel.widget.toolbar)
         self.__sidePanels["globals"] = globPanel
 
         # Log
         logPanel = SidePanel(self.mainWindow.logViewer)
-        logPanel.views["log"] = ViewAndToolbar(
-            logPanel.widget.messages,
-            logPanel.widget.toolbar)
+        logPanel.views["log"] = ViewAndToolbar(logPanel.widget.messages, logPanel.widget.toolbar)
         self.__sidePanels["log"] = logPanel
 
         # Search
         searchPanel = SidePanel(self.mainWindow.findInFilesViewer)
-        searchPanel.views["search"] = ViewAndToolbar(
-            searchPanel.widget.getResultsViewer(),
-            searchPanel.widget.toolbar)
+        searchPanel.views["search"] = ViewAndToolbar(searchPanel.widget.getResultsViewer(), searchPanel.widget.toolbar)
         self.__sidePanels["search"] = searchPanel
 
         # Debugger
         dbgPanel = SidePanel(self.mainWindow.debuggerContext)
-        dbgPanel.views["variables"] = ViewAndToolbar(
-            dbgPanel.widget.variablesViewer,
-            None)
-        dbgPanel.views["stack"] = ViewAndToolbar(
-            dbgPanel.widget.stackViewer,
-            None)
-        dbgPanel.views["threads"] = ViewAndToolbar(
-            dbgPanel.widget.threadsViewer,
-            None)
+        dbgPanel.views["variables"] = ViewAndToolbar(dbgPanel.widget.variablesViewer, None)
+        dbgPanel.views["stack"] = ViewAndToolbar(dbgPanel.widget.stackViewer, None)
+        dbgPanel.views["threads"] = ViewAndToolbar(dbgPanel.widget.threadsViewer, None)
         self.__sidePanels["debugger"] = dbgPanel
 
         # Exceptions
         excptPanel = SidePanel(self.mainWindow.debuggerExceptions)
         excptPanel.views["exceptions"] = ViewAndToolbar(
-            excptPanel.widget.clientExcptViewer.exceptionsList,
-            excptPanel.widget.clientExcptViewer.toolbar)
+            excptPanel.widget.clientExcptViewer.exceptionsList, excptPanel.widget.clientExcptViewer.toolbar
+        )
         excptPanel.views["ignoredExceptions"] = ViewAndToolbar(
-            excptPanel.widget.ignoredExcptViewer.exceptionsList,
-            excptPanel.widget.ignoredExcptViewer.toolbar)
+            excptPanel.widget.ignoredExcptViewer.exceptionsList, excptPanel.widget.ignoredExcptViewer.toolbar
+        )
         self.__sidePanels["exceptions"] = excptPanel
 
         # Breakpoints
         bpointPanel = SidePanel(self.mainWindow.debuggerBreakWatchPoints)
         bpointPanel.views["breakpoints"] = ViewAndToolbar(
-            bpointPanel.widget.breakPointViewer.bpointsList,
-            bpointPanel.widget.breakPointViewer.toolbar)
+            bpointPanel.widget.breakPointViewer.bpointsList, bpointPanel.widget.breakPointViewer.toolbar
+        )
         self.__sidePanels["breakpoints"] = bpointPanel
 
     def sendLogMessage(self, level, msg, *args):
@@ -364,6 +346,4 @@ class IDEAccess():
         try:
             self.__parent.pluginLogMessage.emit(level, msg % args)
         except Exception as exc:
-            self.__parent.pluginLogMessage.emit(
-                logging.ERROR,
-                "Error sending a plugin log message. Error: " + str(exc))
+            self.__parent.pluginLogMessage.emit(logging.ERROR, "Error sending a plugin log message. Error: " + str(exc))

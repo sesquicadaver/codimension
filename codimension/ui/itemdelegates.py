@@ -19,12 +19,10 @@
 
 """ItemDelegate which helps changing the standard row height"""
 
-
 from .qt import QItemDelegate, QStyle, QStyledItemDelegate, QStyleOptionViewItem
 
 
 class ChangingHeightItemDelegate(QItemDelegate):
-
     """Helper class to set rows height"""
 
     def __init__(self, delta):
@@ -41,7 +39,6 @@ class ChangingHeightItemDelegate(QItemDelegate):
 
 
 class NoOutlineDelegate(QStyledItemDelegate):
-
     """Hides the dotted line outline around tree view cells"""
 
     def __init__(self):
@@ -56,7 +53,6 @@ class NoOutlineDelegate(QStyledItemDelegate):
 
 
 class NoOutlineHeightDelegate(QStyledItemDelegate):
-
     """Changes the raw height and removes the dotted cells outline"""
 
     def __init__(self, delta):

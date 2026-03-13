@@ -35,14 +35,12 @@ from .viewitems import TreeViewGlobalItem
 
 
 class GlobalsBrowserModel(BrowserModelBase):
-
     """Class implementing the globals browser model"""
 
     def __init__(self, parent=None):
         BrowserModelBase.__init__(self, ["Name", "File name", "Line"], parent)
         self.__needsPopulate = False
-        self.globalData.project.sigProjectChanged.connect(
-            self.__onProjectChanged)
+        self.globalData.project.sigProjectChanged.connect(self.__onProjectChanged)
 
     def populateIfNeeded(self):
         """Populates the model when the tab is first shown (lazy loading)."""

@@ -72,8 +72,7 @@ def clearValidBreakpointLinesCache():
     validBreakPointLinesCache = {}
 
 
-def getBreakpointLines(fileName, srcCode,
-                       enforceRecalc=False, saveToCache=True):
+def getBreakpointLines(fileName, srcCode, enforceRecalc=False, saveToCache=True):
     """Provides a set of breakable lines"""
     global validBreakPointLinesCache
     if not enforceRecalc:
@@ -93,6 +92,7 @@ def getBreakpointLines(fileName, srcCode,
 
 def calcBreakpointLines(sourceCode):
     """Calculates valid breakpoint lines"""
+
     def __safeOrd(char):
         """Exception safe ord"""
         try:
@@ -106,7 +106,7 @@ def calcBreakpointLines(sourceCode):
         validLines.add(line_no)
         bl = [__safeOrd(c) for c in code.co_lnotab[2::2]]
         sl = [__safeOrd(c) for c in code.co_lnotab[1::2]]
-        for (bi, si) in zip(bl, sl):
+        for bi, si in zip(bl, sl):
             line_no += si
             if bi == 0:
                 continue
@@ -123,7 +123,7 @@ def calcBreakpointLines(sourceCode):
         scl = [c[1] for c in t]
         return scl
 
-    code = compile(sourceCode, '', "exec")
+    code = compile(sourceCode, "", "exec")
 
     t = [code]
     validLines = set()
@@ -138,6 +138,7 @@ def calcBreakpointLines(sourceCode):
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) != 2:
         print("Expected python file name", file=sys.stderr)
         sys.exit(1)

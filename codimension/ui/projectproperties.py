@@ -56,7 +56,6 @@ from .qt import (
 
 
 class ProjectPropertiesDialog(QDialog):
-
     """project properties dialog implementation"""
 
     def __init__(self, project=None, parent=None):
@@ -83,21 +82,20 @@ class ProjectPropertiesDialog(QDialog):
             self.lastProjectName = ""
 
             if userRecord[4] != "":
-                self.authorEdit.setText(userRecord[4].split(',')[0].strip())
+                self.authorEdit.setText(userRecord[4].split(",")[0].strip())
             else:
                 self.authorEdit.setText(userRecord[0])
 
             try:
-                self.emailEdit.setText(userRecord[0] + "@" +
-                                       socket.gethostname())
+                self.emailEdit.setText(userRecord[0] + "@" + socket.gethostname())
             except Exception:
                 pass
 
             self.versionEdit.setText("0.0.1")
             self.licenseEdit.setText("GPL v3")
-            self.copyrightEdit.setText("Copyright (c) " +
-                                       self.authorEdit.text() + ", " +
-                                       str(datetime.date.today().year))
+            self.copyrightEdit.setText(
+                "Copyright (c) " + self.authorEdit.text() + ", " + str(datetime.date.today().year)
+            )
             self.creationDateEdit.setText(getLocaleDate())
             self.nameEdit.setFocus()
 
@@ -108,14 +106,12 @@ class ProjectPropertiesDialog(QDialog):
             # project file
             props = getProjectProperties(project)
 
-            scriptName = props['scriptname']
+            scriptName = props["scriptname"]
             if not os.path.isabs(scriptName) and scriptName != "":
-                scriptName = os.path.normpath(os.path.dirname(project) +
-                                              os.path.sep + scriptName)
-            mdDocName = props['mddocfile']
-            if not os.path.isabs(mdDocName) and mdDocName != '':
-                mdDocName = os.path.normpath(os.path.dirname(project) +
-                                             os.path.sep + mdDocName)
+                scriptName = os.path.normpath(os.path.dirname(project) + os.path.sep + scriptName)
+            mdDocName = props["mddocfile"]
+            if not os.path.isabs(mdDocName) and mdDocName != "":
+                mdDocName = os.path.normpath(os.path.dirname(project) + os.path.sep + mdDocName)
 
             self.nameEdit.setText(os.path.basename(project))
             self.nameEdit.setToolTip("")
@@ -123,21 +119,19 @@ class ProjectPropertiesDialog(QDialog):
             self.dirEdit.setToolTip("")
             self.scriptEdit.setText(scriptName)
             self.mdDocEdit.setText(mdDocName)
-            self.versionEdit.setText(props['version'])
-            self.authorEdit.setText(props['author'])
-            self.emailEdit.setText(props['email'])
-            self.licenseEdit.setText(props['license'])
-            self.copyrightEdit.setText(props['copyright'])
-            self.descriptionEdit.setText(props['description'])
-            self.encodingCombo.setCurrentText(props['encoding'])
-            self.creationDateEdit.setText(props['creationdate'])
-            self.uuidEdit.setText(props['uuid'])
-            self.uuidEdit.setToolTip(SETTINGS_DIR + props['uuid'] +
-                                     os.path.sep +
-                                     " (double click to copy path)")
-            self.venvEdit.setText(props.get('pythoninterpreter', ''))
+            self.versionEdit.setText(props["version"])
+            self.authorEdit.setText(props["author"])
+            self.emailEdit.setText(props["email"])
+            self.licenseEdit.setText(props["license"])
+            self.copyrightEdit.setText(props["copyright"])
+            self.descriptionEdit.setText(props["description"])
+            self.encodingCombo.setCurrentText(props["encoding"])
+            self.creationDateEdit.setText(props["creationdate"])
+            self.uuidEdit.setText(props["uuid"])
+            self.uuidEdit.setToolTip(SETTINGS_DIR + props["uuid"] + os.path.sep + " (double click to copy path)")
+            self.venvEdit.setText(props.get("pythoninterpreter", ""))
 
-            for item in props['importdirs']:
+            for item in props["importdirs"]:
                 self.importDirList.addItem(item)
 
             self.disableEditing()
@@ -151,27 +145,26 @@ class ProjectPropertiesDialog(QDialog):
             self.dirEdit.setToolTip("")
             self.scriptEdit.setText(project.getProjectScript())
             self.mdDocEdit.setText(project.getStartupMarkdownFile())
-            self.versionEdit.setText(project.props['version'])
-            self.authorEdit.setText(project.props['author'])
-            self.emailEdit.setText(project.props['email'])
-            self.licenseEdit.setText(project.props['license'])
-            self.copyrightEdit.setText(project.props['copyright'])
-            self.descriptionEdit.setText(project.props['description'])
-            self.encodingCombo.setCurrentText(project.props['encoding'])
-            self.creationDateEdit.setText(project.props['creationdate'])
-            self.uuidEdit.setText(project.props['uuid'])
-            self.uuidEdit.setToolTip(project.userProjectDir +
-                                     " (double click to copy path)")
-            self.venvEdit.setText(project.props.get('pythoninterpreter', ''))
+            self.versionEdit.setText(project.props["version"])
+            self.authorEdit.setText(project.props["author"])
+            self.emailEdit.setText(project.props["email"])
+            self.licenseEdit.setText(project.props["license"])
+            self.copyrightEdit.setText(project.props["copyright"])
+            self.descriptionEdit.setText(project.props["description"])
+            self.encodingCombo.setCurrentText(project.props["encoding"])
+            self.creationDateEdit.setText(project.props["creationdate"])
+            self.uuidEdit.setText(project.props["uuid"])
+            self.uuidEdit.setToolTip(project.userProjectDir + " (double click to copy path)")
+            self.venvEdit.setText(project.props.get("pythoninterpreter", ""))
             self.setReadOnly()
 
-            for item in project.props['importdirs']:
+            for item in project.props["importdirs"]:
                 self.importDirList.addItem(item)
             if self.importDirList.count() > 0:
                 self.importDirList.setCurrentRow(0)
                 self.delImportDirButton.setEnabled(True)
 
-            for item in project.props.get('excludeFromAnalysis', []):
+            for item in project.props.get("excludeFromAnalysis", []):
                 self.excludeDirList.addItem(item)
             if self.excludeDirList.count() > 0:
                 self.excludeDirList.setCurrentRow(0)
@@ -181,8 +174,7 @@ class ProjectPropertiesDialog(QDialog):
             # so there might be no write permissions.
             if not os.access(project.fileName, os.W_OK):
                 # Disable editing
-                self.setWindowTitle("Viewing Project Properties "
-                                    "(no write permissions)")
+                self.setWindowTitle("Viewing Project Properties (no write permissions)")
                 self.disableEditing()
             else:
                 self.scriptEdit.setFocus()
@@ -218,18 +210,17 @@ class ProjectPropertiesDialog(QDialog):
         mainScriptLabel = QLabel("Main script:", self)
         gridLayout.addWidget(mainScriptLabel, 2, 0, 1, 1)
         self.scriptEdit = QLineEdit(self)
-        self.scriptEdit.setToolTip("Project main script, "
-                                   "used when the project is run")
+        self.scriptEdit.setToolTip("Project main script, used when the project is run")
         gridLayout.addWidget(self.scriptEdit, 2, 1, 1, 1)
         self.scriptButton = QPushButton("...", self)
         gridLayout.addWidget(self.scriptButton, 2, 2, 1, 1)
         self.fileCompleter = FileCompleter(self.scriptEdit)
 
         # Project markdown doc file
-        mddocLabel = QLabel('Markdown doc file:', self)
+        mddocLabel = QLabel("Markdown doc file:", self)
         gridLayout.addWidget(mddocLabel, 3, 0, 1, 1)
         self.mdDocEdit = QLineEdit(self)
-        self.mdDocEdit.setToolTip('Project documentation start file')
+        self.mdDocEdit.setToolTip("Project documentation start file")
         gridLayout.addWidget(self.mdDocEdit, 3, 1, 1, 1)
         self.mdDocButton = QPushButton("...", self)
         gridLayout.addWidget(self.mdDocButton, 3, 2, 1, 1)
@@ -237,8 +228,9 @@ class ProjectPropertiesDialog(QDialog):
 
         # Python interpreter (venv)
         venvLabel = QLabel("Python interpreter (venv):", self)
-        venvLabel.setToolTip("Optional. Path to venv dir or python executable "
-                             "for project analysis (ruff, mypy, pytest, etc.)")
+        venvLabel.setToolTip(
+            "Optional. Path to venv dir or python executable for project analysis (ruff, mypy, pytest, etc.)"
+        )
         gridLayout.addWidget(venvLabel, 4, 0, 1, 1)
         self.venvEdit = QLineEdit(self)
         self.venvEdit.setPlaceholderText("Leave empty to use IDE Python")
@@ -256,8 +248,7 @@ class ProjectPropertiesDialog(QDialog):
         self.importDirList.setSelectionMode(QAbstractItemView.SingleSelection)
         self.importDirList.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.importDirList.setItemDelegate(NoOutlineHeightDelegate(4))
-        self.importDirList.setToolTip("Directories where to look for "
-                                      "project specific imports")
+        self.importDirList.setToolTip("Directories where to look for project specific imports")
         gridLayout.addWidget(self.importDirList, 5, 1, 1, 1)
 
         self.addImportDirButton = QPushButton(self)
@@ -280,9 +271,11 @@ class ProjectPropertiesDialog(QDialog):
         self.excludeDirList.setSelectionMode(QAbstractItemView.SingleSelection)
         self.excludeDirList.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.excludeDirList.setItemDelegate(NoOutlineHeightDelegate(4))
-        self.excludeDirList.setToolTip("Directories or files to exclude from "
-                                       "analysis (imports diagram, outline). "
-                                       "Relative to project or absolute path.")
+        self.excludeDirList.setToolTip(
+            "Directories or files to exclude from "
+            "analysis (imports diagram, outline). "
+            "Relative to project or absolute path."
+        )
         gridLayout.addWidget(self.excludeDirList, 6, 1, 1, 1)
 
         self.addExcludeButton = QPushButton(self)
@@ -336,10 +329,10 @@ class ProjectPropertiesDialog(QDialog):
         gridLayout.addWidget(self.descriptionEdit, 12, 1, 1, 1)
 
         # Default encoding
-        encodingLabel = QLabel('Default encoding:', self)
+        encodingLabel = QLabel("Default encoding:", self)
         gridLayout.addWidget(encodingLabel, 13, 0, 1, 1)
         self.encodingCombo = QComboBox(self)
-        self.encodingCombo.addItem('')
+        self.encodingCombo.addItem("")
         self.encodingCombo.addItems(sorted(SUPPORTED_CODECS))
         self.encodingCombo.setEditable(True)
         gridLayout.addWidget(self.encodingCombo, 13, 1, 1, 1)
@@ -354,9 +347,7 @@ class ProjectPropertiesDialog(QDialog):
         # Project UUID
         uuidLabel = QLabel("UUID:", self)
         gridLayout.addWidget(uuidLabel, 15, 0, 1, 1)
-        self.uuidEdit = FramedLabel(text='',
-                                    callback=self.__copyProjectPath,
-                                    parent=self)
+        self.uuidEdit = FramedLabel(text="", callback=self.__copyProjectPath, parent=self)
         gridLayout.addWidget(self.uuidEdit, 15, 1, 1, 1)
 
         verticalLayout.addLayout(gridLayout)
@@ -364,8 +355,7 @@ class ProjectPropertiesDialog(QDialog):
         # Buttons at the bottom
         buttonBox = QDialogButtonBox(self)
         buttonBox.setOrientation(Qt.Horizontal)
-        buttonBox.setStandardButtons(QDialogButtonBox.Cancel |
-                                     QDialogButtonBox.Ok)
+        buttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         verticalLayout.addWidget(buttonBox)
 
         nameLabel.setBuddy(self.nameEdit)
@@ -425,9 +415,7 @@ class ProjectPropertiesDialog(QDialog):
         """Displays a directory selection dialog"""
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog | QFileDialog.ShowDirsOnly
-        dirName = QFileDialog.getExistingDirectory(
-            self, "Select project directory", self.dirEdit.text(),
-            options)
+        dirName = QFileDialog.getExistingDirectory(self, "Select project directory", self.dirEdit.text(), options)
         if dirName:
             self.dirEdit.setText(os.path.normpath(dirName))
 
@@ -436,9 +424,12 @@ class ProjectPropertiesDialog(QDialog):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         scriptName = QFileDialog.getOpenFileName(
-            self, 'Select project main script', self.dirEdit.text(),
-            'Python Files (*.py);;All Files (*)',
-            options=options)
+            self,
+            "Select project main script",
+            self.dirEdit.text(),
+            "Python Files (*.py);;All Files (*)",
+            options=options,
+        )
         if isinstance(scriptName, tuple):
             scriptName = scriptName[0]
         if scriptName:
@@ -449,9 +440,12 @@ class ProjectPropertiesDialog(QDialog):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         mdFileName = QFileDialog.getOpenFileName(
-            self, 'Select project doc startup MD file', self.dirEdit.text(),
-            'Markdown Files (*.md);;All Files (*)',
-            options=options)
+            self,
+            "Select project doc startup MD file",
+            self.dirEdit.text(),
+            "Markdown Files (*.md);;All Files (*)",
+            options=options,
+        )
         if isinstance(mdFileName, tuple):
             mdFileName = mdFileName[0]
         if mdFileName:
@@ -463,15 +457,14 @@ class ProjectPropertiesDialog(QDialog):
         options |= QFileDialog.DontUseNativeDialog
         startDir = self.venvEdit.text().strip() or self.dirEdit.text()
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select Python interpreter (e.g. venv/bin/python)",
+            self,
+            "Select Python interpreter (e.g. venv/bin/python)",
             startDir,
             "Python (*python*);;All Files (*)",
             options=options,
         )
         if not path:
-            dirPath = QFileDialog.getExistingDirectory(
-                self, "Or select venv directory", startDir, options=options
-            )
+            dirPath = QFileDialog.getExistingDirectory(self, "Or select venv directory", startDir, options=options)
             if dirPath:
                 path = os.path.normpath(dirPath)
         if path:
@@ -493,8 +486,8 @@ class ProjectPropertiesDialog(QDialog):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog | QFileDialog.ShowDirsOnly
         dirName = QFileDialog.getExistingDirectory(
-            self, 'Select import directory', self.dirEdit.text(),
-            options=options)
+            self, "Select import directory", self.dirEdit.text(), options=options
+        )
 
         if not dirName:
             return
@@ -515,9 +508,9 @@ class ProjectPropertiesDialog(QDialog):
         index = 0
         while index < self.importDirList.count():
             if self.importDirList.item(index).text() == dirToInsert:
-                logging.warning("The directory '%s' is already in the list of "
-                                "imported directories and is not added.",
-                                dirName)
+                logging.warning(
+                    "The directory '%s' is already in the list of imported directories and is not added.", dirName
+                )
                 return
             index += 1
 
@@ -545,14 +538,14 @@ class ProjectPropertiesDialog(QDialog):
         options |= QFileDialog.DontUseNativeDialog | QFileDialog.ShowDirsOnly
         startDir = self.dirEdit.text()
         pathToAdd = QFileDialog.getExistingDirectory(
-            self, 'Select directory to exclude from analysis',
-            startDir, options=options)
+            self, "Select directory to exclude from analysis", startDir, options=options
+        )
         if not pathToAdd:
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
             pathToAdd, _ = QFileDialog.getOpenFileName(
-                self, 'Or select file to exclude', startDir,
-                'All Files (*)', options=options)
+                self, "Or select file to exclude", startDir, "All Files (*)", options=options
+            )
         if not pathToAdd:
             return
 
@@ -590,20 +583,16 @@ class ProjectPropertiesDialog(QDialog):
         # Check that the project name does not have path separators and is not
         # empty
         if not self.nameEdit.text().strip():
-            QMessageBox.critical(self, "Error",
-                                 "The project name must not be empty")
+            QMessageBox.critical(self, "Error", "The project name must not be empty")
             return
         if os.path.sep in self.nameEdit.text():
-            QMessageBox.critical(self, "Error",
-                                 "The project name must not "
-                                 "contain path separators")
+            QMessageBox.critical(self, "Error", "The project name must not contain path separators")
             return
 
         # Check that the project directory is given
         dirName = self.dirEdit.text().strip()
         if not dirName:
-            QMessageBox.critical(self, "Error",
-                                 "The project directory must not be empty")
+            QMessageBox.critical(self, "Error", "The project directory must not be empty")
             return
 
         dirName = os.path.abspath(dirName)
@@ -617,10 +606,11 @@ class ProjectPropertiesDialog(QDialog):
             projectFileName += ".cdm3"
 
         if os.path.exists(projectFileName):
-            QMessageBox.critical(self, "Error",
-                                 "The project file " + projectFileName +
-                                 " exists. Please provide another "
-                                 "directory / project name.")
+            QMessageBox.critical(
+                self,
+                "Error",
+                "The project file " + projectFileName + " exists. Please provide another directory / project name.",
+            )
             return
 
         # Check that the project dir is not a file
@@ -628,26 +618,21 @@ class ProjectPropertiesDialog(QDialog):
             # It might be a link, so read it first
             dirName = os.path.realpath(dirName)
             if not os.path.exists(dirName):
-                QMessageBox.critical(self, "Error",
-                                     "Broken link: " + dirName)
+                QMessageBox.critical(self, "Error", "Broken link: " + dirName)
                 return
             if not os.path.isdir(dirName):
-                QMessageBox.critical(self, "Error",
-                                     "The project directory may not be a file")
+                QMessageBox.critical(self, "Error", "The project directory may not be a file")
                 return
             # Check that the dir is writable
             if not os.access(dirName, os.W_OK):
-                QMessageBox.critical(self, "Error",
-                                     "You don't have write permissions on " +
-                                     dirName)
+                QMessageBox.critical(self, "Error", "You don't have write permissions on " + dirName)
                 return
         else:
             # Create the directory
             try:
                 os.makedirs(dirName)
             except OSError:
-                QMessageBox.critical(self, "Error",
-                                     "Cannot create the project directory")
+                QMessageBox.critical(self, "Error", "Cannot create the project directory")
                 return
 
         if not self.__checkEncoding():
@@ -664,8 +649,7 @@ class ProjectPropertiesDialog(QDialog):
         enc = self.encodingCombo.currentText().strip()
         if enc:
             if not isValidEncoding(enc):
-                QMessageBox.critical(self, "Error",
-                                     "Unsupported default project encoding")
+                QMessageBox.critical(self, "Error", "Unsupported default project encoding")
                 return False
         return True
 
@@ -673,8 +657,7 @@ class ProjectPropertiesDialog(QDialog):
         """Called when the project name changed"""
         if newName.endswith(".cdm3"):
             newName = newName[:-5]
-        if self.dirEdit.text().strip() == (self.initialDirName +
-                                           self.lastProjectName):
+        if self.dirEdit.text().strip() == (self.initialDirName + self.lastProjectName):
             self.dirEdit.setText(self.initialDirName + newName)
             self.lastProjectName = newName
 

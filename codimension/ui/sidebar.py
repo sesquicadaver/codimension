@@ -29,7 +29,6 @@ from .qt import QBoxLayout, QEvent, QSize, QStackedWidget, Qt, QTabBar, QWidget,
 
 
 class SideBar(QWidget):
-
     """Sidebar with a widget area which is hidden or shown.
 
     On by clicking any tab, off by clicking the current tab.
@@ -76,8 +75,7 @@ class SideBar(QWidget):
         self.__orientation = orientation
         self.setOrientation(orientation)
 
-        self.__tabBar.currentChanged.connect(
-            self.__stackedWidget.setCurrentIndex)
+        self.__tabBar.currentChanged.connect(self.__stackedWidget.setCurrentIndex)
         self.__tabBar.currentChanged.connect(self.sigCurrentTabChanged.emit)
 
     def setSplitter(self, splitter):
@@ -197,14 +195,14 @@ class SideBar(QWidget):
     def __toVariant(name, priority):
         """A tab stores its name and priority"""
         if priority is None:
-            return ':' + name
-        return str(priority) + ':' + name
+            return ":" + name
+        return str(priority) + ":" + name
 
     @staticmethod
     def __fromVariant(data):
         """A tab stores its name and priority"""
-        val = data.split(':')
-        if val[0] == '':
+        val = data.split(":")
+        if val[0] == "":
             return val[1], None
         return val[1], int(val[0])
 
@@ -212,8 +210,7 @@ class SideBar(QWidget):
         """Appends a new widget to the end"""
         self.__tabBar.addTab(icon, label)
         self.__stackedWidget.addWidget(widget)
-        self.__tabBar.setTabData(self.count - 1,
-                                 self.__toVariant(name, priority))
+        self.__tabBar.setTabData(self.count - 1, self.__toVariant(name, priority))
 
     def __pickInsertIndex(self, priority):
         """Picks the tab insert index in accordance to the priority"""
@@ -239,8 +236,7 @@ class SideBar(QWidget):
             else:
                 self.__tabBar.insertTab(index, icon, label)
                 self.__stackedWidget.insertWidget(index, widget)
-                self.__tabBar.setTabData(index,
-                                         self.__toVariant(name, priority))
+                self.__tabBar.setTabData(index, self.__toVariant(name, priority))
 
     def clear(self):
         """Remove all tabs"""
@@ -314,8 +310,7 @@ class SideBar(QWidget):
         if index is not None:
             data = self.__tabBar.tabData(index)
             _, priority = self.__fromVariant(data)
-            self.__tabBar.setTabData(index,
-                                     self.__toVariant(newName, priority))
+            self.__tabBar.setTabData(index, self.__toVariant(newName, priority))
 
     def setCurrentTab(self, indexOrNameOrWidget):
         """Sets the current widget approprietly"""
@@ -330,8 +325,7 @@ class SideBar(QWidget):
         """Remove a tab"""
         index = self.__getWidgetIndex(indexOrNameOrWidget)
         if index is not None:
-            self.__stackedWidget.removeWidget(
-                self.__stackedWidget.widget(index))
+            self.__stackedWidget.removeWidget(self.__stackedWidget.widget(index))
             self.__tabBar.removeTab(index)
 
     def isTabEnabled(self, indexOrNameOrWidget):

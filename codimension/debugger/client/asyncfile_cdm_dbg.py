@@ -34,7 +34,6 @@ from protocol_cdm_dbg import METHOD_CLIENT_OUTPUT
 
 
 class AsyncFile(object):
-
     """Wrapps a socket object with a file interface"""
 
     MAXTRIES = 10
@@ -46,7 +45,7 @@ class AsyncFile(object):
         self.mode = mode
         self.name = name
         self.nWriteErrors = 0
-        self.encoding = 'utf-8'
+        self.encoding = "utf-8"
         self.errors = None
         self.newlines = None
         self.line_buffering = False
@@ -56,7 +55,7 @@ class AsyncFile(object):
     def __checkMode(self, mode):
         """Checks the mode"""
         if mode != self.mode:
-            raise IOError((9, '[Errno 9] Bad file descriptor'))
+            raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def pendingWrite(self):
         """Returns the number of strings waiting to be written"""
@@ -78,7 +77,7 @@ class AsyncFile(object):
 
             try:
                 try:
-                    buf = buf.encode('utf-8', 'backslashreplace')
+                    buf = buf.encode("utf-8", "backslashreplace")
                 except (UnicodeEncodeError, UnicodeDecodeError):
                     pass
                 self.sock.sendall(buf)
@@ -86,7 +85,7 @@ class AsyncFile(object):
             except socket.error:
                 self.nWriteErrors += 1
                 if self.nWriteErrors > self.MAXTRIES:
-                    self.wpending = []    # delete all output
+                    self.wpending = []  # delete all output
 
     def isatty(self):
         """Indicates whether a tty interface is supported"""
@@ -101,18 +100,18 @@ class AsyncFile(object):
 
     def readable(self):
         """Checks if the stream is readable"""
-        return self.mode == 'r'
+        return self.mode == "r"
 
     def read_p(self, size=-1):
         """Reads bytes from this file"""
-        self.__checkMode('r')
+        self.__checkMode("r")
         if size < 0:
             size = 20000
-        return self.sock.recv(size).decode('utf8', 'backslashreplace')
+        return self.sock.recv(size).decode("utf8", "backslashreplace")
 
     def read(self, size=-1):
         """Reads bytes from this file"""
-        self.__checkMode('r')
+        self.__checkMode("r")
         buf = input()
         if size >= 0:
             buf = buf[:size]
@@ -120,7 +119,7 @@ class AsyncFile(object):
 
     def readline_p(self, size=-1):
         """Reads a line from this file"""
-        self.__checkMode('r')
+        self.__checkMode("r")
         if size < 0:
             size = 20000
 
@@ -129,7 +128,7 @@ class AsyncFile(object):
         # delivered as two separate events. Therefore we make sure we only
         # read a line at a time.
         line = self.sock.recv(size, socket.MSG_PEEK)
-        eol = line.find(b'\n')
+        eol = line.find(b"\n")
 
         if eol >= 0:
             size = eol + 1
@@ -137,11 +136,11 @@ class AsyncFile(object):
             size = len(line)
 
         # Now we know how big the line is, read it for real.
-        return self.sock.recv(size).decode('utf8', 'backslashreplace')
+        return self.sock.recv(size).decode("utf8", "backslashreplace")
 
     def readlines(self, sizehint=-1):
         """Reads all lines from this file"""
-        self.__checkMode('r')
+        self.__checkMode("r")
 
         lines = []
         room = sizehint
@@ -165,8 +164,8 @@ class AsyncFile(object):
 
     def readline(self, sizehint=-1):
         """Reads one line from this file"""
-        self.__checkMode('r')
-        line = input() + '\n'
+        self.__checkMode("r")
+        line = input() + "\n"
         if sizehint >= 0:
             line = line[:sizehint]
         return line
@@ -177,31 +176,30 @@ class AsyncFile(object):
 
     def seek(self, offset, whence=0):
         """Moves the filepointer"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def tell(self):
         """Provides the filepointer position"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def truncate(self, size=-1):
         """Truncates the file"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def writable(self):
         """Check if a stream is writable"""
-        return self.mode == 'w'
+        return self.mode == "w"
 
     def write(self, s):
         """Writes a string to the file"""
-        self.__checkMode('w')
-        cmd = prepareJSONMessage(
-            METHOD_CLIENT_OUTPUT, self.procuuid, {"text": s})
+        self.__checkMode("w")
+        cmd = prepareJSONMessage(METHOD_CLIENT_OUTPUT, self.procuuid, {"text": s})
         self.wpending.append(cmd)
         self.flush()
 
     def write_p(self, s):
         """Writes a json-rpc 2.0 coded string to the file"""
-        self.__checkMode('w')
+        self.__checkMode("w")
         self.wpending.append(s)
         self.flush()
 

@@ -23,7 +23,6 @@
 # pylint: disable=W0702
 # pylint: disable=W0703
 
-
 import json
 import logging
 import os
@@ -40,9 +39,8 @@ from ui.qt import QImageReader
 from .config import DEFAULT_ENCODING
 from .pixmapcache import getIcon
 
-__QTSupportedImageFormats = [fmt.data().decode(DEFAULT_ENCODING) for fmt in
-                             QImageReader.supportedImageFormats()]
-VIEWABLE_IMAGE_MIMES = ['image/' + ext for ext in __QTSupportedImageFormats]
+__QTSupportedImageFormats = [fmt.data().decode(DEFAULT_ENCODING) for fmt in QImageReader.supportedImageFormats()]
+VIEWABLE_IMAGE_MIMES = ["image/" + ext for ext in __QTSupportedImageFormats]
 
 
 # NOTES
@@ -61,17 +59,16 @@ def __getXmlSyntaxFile(fName):
     """
     # Special cases: codimension project files
     #                makefiles
-    if fName.endswith('.cdm'):
-        return 'ini.xml'
-    if fName.endswith('.cdm3'):
-        return 'json.xml'
-    if fName.endswith('.ts'):
-        return 'xml.xml'
-    if 'makefile' in fName.lower():
+    if fName.endswith(".cdm"):
+        return "ini.xml"
+    if fName.endswith(".cdm3"):
+        return "json.xml"
+    if fName.endswith(".ts"):
+        return "xml.xml"
+    if "makefile" in fName.lower():
         return "makefile.xml"
 
-    for regExp, xmlFileName in \
-                Qutepart._globalSyntaxManager._extensionToXmlFileName.items():
+    for regExp, xmlFileName in Qutepart._globalSyntaxManager._extensionToXmlFileName.items():
         if regExp.match(fName):
             return xmlFileName
     return None
@@ -83,24 +80,23 @@ def __getMimeByXmlSyntaxFile(xmlSyntaxFile):
     Returns a mime type or None
     """
     candidates = []
-    for mime, xmlFileName in \
-                Qutepart._globalSyntaxManager._mimeTypeToXmlFileName.items():
+    for mime, xmlFileName in Qutepart._globalSyntaxManager._mimeTypeToXmlFileName.items():
         if xmlFileName == xmlSyntaxFile:
             candidates.append(mime)
     if not candidates:
         # The qutepart syntax DB misses a markdown mime
-        if xmlSyntaxFile == 'markdown.xml':
-            return 'text/x-markdown'
+        if xmlSyntaxFile == "markdown.xml":
+            return "text/x-markdown"
         # ... and mako mime
-        if xmlSyntaxFile == 'mako.xml':
-            return 'text/x-mako'
+        if xmlSyntaxFile == "mako.xml":
+            return "text/x-mako"
         return None
     if len(candidates) == 1:
         return candidates[0]
 
     # Prefer the text candidate
     for item in candidates:
-        if item.startswith('text'):
+        if item.startswith("text"):
             return item
     return candidates[0]
 
@@ -113,8 +109,8 @@ def getXmlSyntaxFileByMime(mime):
     try:
         return Qutepart._globalSyntaxManager._mimeTypeToXmlFileName[mime]
     except KeyError:
-        if mime == 'text/x-c++':
-            return 'cpp.xml'
+        if mime == "text/x-c++":
+            return "cpp.xml"
         return None
 
 
@@ -123,18 +119,17 @@ __magic = magic.Magic(mime=True)
 
 def isFileSearchable(fName, checkForBrokenLink=True):
     """Returns True if it makes sense to search for text in that file"""
-    mime, _, syntaxFile = getFileProperties(fName, checkForBrokenLink,
-                                            skipCache=False)
+    mime, _, syntaxFile = getFileProperties(fName, checkForBrokenLink, skipCache=False)
     if syntaxFile is not None:
         # The files like libQt5Widgets.so.5 are mistakenly detected
         # as a man doc files (mandoc.xml)
         if mime:
-            if mime.endswith('x-sharedlib'):
+            if mime.endswith("x-sharedlib"):
                 return False
         return True
     if mime is None:
         return False
-    return mime.startswith('text/')
+    return mime.startswith("text/")
 
 
 def isImageViewable(mime):
@@ -146,8 +141,7 @@ def isImageViewable(mime):
 
 def isImageFile(fName):
     """True is the file is a viewable image"""
-    mime, _, _ = getFileProperties(fName, checkForBrokenLink=True,
-                                   skipCache=False)
+    mime, _, _ = getFileProperties(fName, checkForBrokenLink=True, skipCache=False)
     return isImageViewable(mime)
 
 
@@ -166,231 +160,232 @@ def __initSyntaxToIcon():
     """Prevents calling getIcon before QApplication is created"""
     global __syntaxToIcon
     __syntaxToIcon = {
-        'stata.xml': getIcon('filemisc.png'),
-        'sisu.xml': getIcon('filemisc.png'),
-        'mandoc.xml': getIcon('fileman.png'),
-        'fgl-4gl.xml': getIcon('filemisc.png'),
-        'ansforth94.xml': getIcon('filemisc.png'),
-        'abap.xml': getIcon('filemisc.png'),
-        'abc.xml': getIcon('filemisc.png'),
-        'asm-avr.xml': getIcon('filemisc.png'),
-        'freebasic.xml': getIcon('filemisc.png'),
-        'wml.xml': getIcon('filemisc.png'),
-        'd.xml': getIcon('filed.png'),
-        'sql-oracle.xml': getIcon('filemisc.png'),
-        'maxima.xml': getIcon('filemisc.png'),
-        'fortran.xml': getIcon('filemisc.png'),
-        'gdl.xml': getIcon('filemisc.png'),
-        'haxe.xml': getIcon('filemisc.png'),
-        'asm-m68k.xml': getIcon('filemisc.png'),
-        'j.xml': getIcon('filemisc.png'),
-        'lilypond.xml': getIcon('filemisc.png'),
-        'asm-dsp56k.xml': getIcon('filemisc.png'),
-        'jsp.xml': getIcon('filemisc.png'),
-        'objectivecpp.xml': getIcon('filemisc.png'),
-        'mab.xml': getIcon('filemisc.png'),
-        'fgl-per.xml': getIcon('filemisc.png'),
-        'pgn.xml': getIcon('filemisc.png'),
-        'picsrc.xml': getIcon('filemisc.png'),
-        'perl.xml': getIcon('fileperl.png'),
-        'xharbour.xml': getIcon('filemisc.png'),
-        'r.xml': getIcon('filemisc.png'),
-        'rmarkdown.xml': getIcon('filemisc.png'),
-        'relaxng.xml': getIcon('filemisc.png'),
-        'verilog.xml': getIcon('filemisc.png'),
-        'ada.xml': getIcon('fileada.png'),
-        'hunspell-aff.xml': getIcon('filemisc.png'),
-        'agda.xml': getIcon('filemisc.png'),
-        'ahdl.xml': getIcon('filemisc.png'),
-        'ahk.xml': getIcon('filemisc.png'),
-        'postscript.xml': getIcon('filepostscript.png'),
-        'ample.xml': getIcon('filemisc.png'),
-        'ansys.xml': getIcon('filemisc.png'),
-        'actionscript.xml': getIcon('filemisc.png'),
-        'asn1.xml': getIcon('filemisc.png'),
-        'asp.xml': getIcon('filemisc.png'),
-        'awk.xml': getIcon('fileawk.png'),
-        'bash.xml': getIcon('fileshell.png'),
-        'dosbat.xml': getIcon('filemisc.png'),
-        'latex.xml': getIcon('filetex.png'),
-        'bibtex.xml': getIcon('filetex.png'),
-        'boo.xml': getIcon('filemisc.png'),
-        'component-pascal.xml': getIcon('filepascal.png'),
-        'gdb.xml': getIcon('filemisc.png'),
-        '4dos.xml': getIcon('filemisc.png'),
-        'c.xml': getIcon('filec.png'),
-        'ccss.xml': getIcon('filecss.png'),
-        'coldfusion.xml': getIcon('filemisc.png'),
-        'nagios.xml': getIcon('filemisc.png'),
-        'cg.xml': getIcon('filemisc.png'),
-        'cgis.xml': getIcon('filemisc.png'),
-        'chicken.xml': getIcon('filemisc.png'),
-        'haskell.xml': getIcon('filemisc.png'),
-        'cisco.xml': getIcon('filemisc.png'),
-        'opencl.xml': getIcon('filemisc.png'),
-        'clojure.xml': getIcon('filemisc.png'),
-        'cmake.xml': getIcon('filemake.png'),
-        'coffee.xml': getIcon('filemisc.png'),
-        'logtalk.xml': getIcon('filemisc.png'),
-        'crk.xml': getIcon('filemisc.png'),
-        'cs.xml': getIcon('filemisc.png'),
-        'tcsh.xml': getIcon('fileshell.png'),
-        'css.xml': getIcon('filecss.png'),
-        'context.xml': getIcon('filemisc.png'),
-        'cue.xml': getIcon('filemisc.png'),
-        'curry.xml': getIcon('filemisc.png'),
-        'xml.xml': getIcon('filexml.png'),
-        'hunspell-dat.xml': getIcon('filemisc.png'),
-        'prolog.xml': getIcon('filemisc.png'),
-        'modula-2.xml': getIcon('filemisc.png'),
-        'desktop.xml': getIcon('filemisc.png'),
-        'hunspell-dic.xml': getIcon('filemisc.png'),
-        'diff.xml': getIcon('filediff.png'),
-        'dot.xml': getIcon('filemisc.png'),
-        'doxygen.xml': getIcon('filemisc.png'),
-        'dtd.xml': getIcon('filemisc.png'),
-        'euphoria.xml': getIcon('filemisc.png'),
-        'email.xml': getIcon('fileemail.png'),
-        'erlang.xml': getIcon('filemisc.png'),
-        'fasm.xml': getIcon('filemisc.png'),
-        'ferite.xml': getIcon('filemisc.png'),
-        'lex.xml': getIcon('filemisc.png'),
-        'glsl.xml': getIcon('filemisc.png'),
-        'fsharp.xml': getIcon('filemisc.png'),
-        'ftl.xml': getIcon('filemisc.png'),
-        'grammar.xml': getIcon('filemisc.png'),
-        'gap.xml': getIcon('filemisc.png'),
-        'glosstex.xml': getIcon('filetex.png'),
-        'ruby.xml': getIcon('filemisc.png'),
-        'gnuplot.xml': getIcon('filemisc.png'),
-        'go.xml': getIcon('filemisc.png'),
-        'groovy.xml': getIcon('filemisc.png'),
-        'scheme.xml': getIcon('filemisc.png'),
-        'haml.xml': getIcon('filemisc.png'),
-        'hamlet.xml': getIcon('filemisc.png'),
-        'spice.xml': getIcon('filemisc.png'),
-        'html.xml': getIcon('filehtml.png'),
-        'rhtml.xml': getIcon('filemisc.png'),
-        'progress.xml': getIcon('filemisc.png'),
-        'vcard.xml': getIcon('filevcard.png'),
-        'idl.xml': getIcon('fileidl.png'),
-        'hunspell-idx.xml': getIcon('filemisc.png'),
-        'bmethod.xml': getIcon('filemisc.png'),
-        'opal.xml': getIcon('filemisc.png'),
-        'html-php.xml': getIcon('filemisc.png'),
-        'inform.xml': getIcon('filemisc.png'),
-        'ini.xml': getIcon('fileprops.png'),
-        'jam.xml': getIcon('filemisc.png'),
-        'java.xml': getIcon('filejava.png'),
-        'jira.xml': getIcon('filemisc.png'),
-        'julia.xml': getIcon('filemisc.png'),
-        'javascript.xml': getIcon('filejs.png'),
-        'json.xml': getIcon('filemisc.png'),
-        'k.xml': getIcon('filemisc.png'),
-        'kbasic.xml': getIcon('filemisc.png'),
-        'literate-curry.xml': getIcon('filemisc.png'),
-        'ld.xml': getIcon('filemisc.png'),
-        'ldif.xml': getIcon('filemisc.png'),
-        'less.xml': getIcon('filemisc.png'),
-        'literate-haskell.xml': getIcon('filemisc.png'),
-        'commonlisp.xml': getIcon('filemisc.png'),
-        'lsl.xml': getIcon('filemisc.png'),
-        'lua.xml': getIcon('filemisc.png'),
-        'octave.xml': getIcon('filemisc.png'),
-        'm3u.xml': getIcon('filemisc.png'),
-        'm4.xml': getIcon('filemisc.png'),
-        'mako.xml': getIcon('filemisc.png'),
-        'mediawiki.xml': getIcon('filemisc.png'),
-        'mel.xml': getIcon('filemisc.png'),
-        'metafont.xml': getIcon('filemisc.png'),
-        'makefile.xml': getIcon('filemake.png'),
-        'ocaml.xml': getIcon('filemisc.png'),
-        'ocamllex.xml': getIcon('filemisc.png'),
-        'ocamlyacc.xml': getIcon('filemisc.png'),
-        'modelica.xml': getIcon('filemisc.png'),
-        'carto-css.xml': getIcon('filecss.png'),
-        'mergetagtext.xml': getIcon('filemisc.png'),
-        'mup.xml': getIcon('filemisc.png'),
-        'nemerle.xml': getIcon('filemisc.png'),
-        'mathematica.xml': getIcon('filemisc.png'),
-        'nesc.xml': getIcon('filemisc.png'),
-        'nsis.xml': getIcon('filemisc.png'),
-        'noweb.xml': getIcon('filemisc.png'),
-        'lpc.xml': getIcon('filemisc.png'),
-        'oors.xml': getIcon('filemisc.png'),
-        'pascal.xml': getIcon('filepascal.png'),
-        'purebasic.xml': getIcon('filemisc.png'),
-        'pig.xml': getIcon('filemisc.png'),
-        'pike.xml': getIcon('filemisc.png'),
-        'pli.xml': getIcon('filemisc.png'),
-        'gettext.xml': getIcon('filemisc.png'),
-        'povray.xml': getIcon('filemisc.png'),
-        'puppet.xml': getIcon('filemisc.png'),
-        'ppd.xml': getIcon('filemisc.png'),
-        'qmake.xml': getIcon('filemake.png'),
-        'protobuf.xml': getIcon('filemisc.png'),
-        'python.xml': getIcon('filepython.png'),
-        'qml.xml': getIcon('filemisc.png'),
-        'winehq.xml': getIcon('filemisc.png'),
-        'replicode.xml': getIcon('filemisc.png'),
-        'rexx.xml': getIcon('filemisc.png'),
-        'rib.xml': getIcon('filemisc.png'),
-        'relaxngcompact.xml': getIcon('filemisc.png'),
-        'rapidq.xml': getIcon('filemisc.png'),
-        'rust.xml': getIcon('filemisc.png'),
-        'rest.xml': getIcon('filemisc.png'),
-        'rtf.xml': getIcon('filertf.png'),
-        'sather.xml': getIcon('filemisc.png'),
-        'scala.xml': getIcon('filemisc.png'),
-        'sci.xml': getIcon('filemisc.png'),
-        'scss.xml': getIcon('filecss.png'),
-        'sed.xml': getIcon('filemisc.png'),
-        'sgml.xml': getIcon('filemisc.png'),
-        'zsh.xml': getIcon('fileshell.png'),
-        'sieve.xml': getIcon('filemisc.png'),
-        'sml.xml': getIcon('filemisc.png'),
-        'rpmspec.xml': getIcon('filemisc.png'),
-        'valgrind-suppression.xml': getIcon('filemisc.png'),
-        'systemverilog.xml': getIcon('filemisc.png'),
-        'tads3.xml': getIcon('filemisc.png'),
-        'txt2tags.xml': getIcon('filemisc.png'),
-        'tcl.xml': getIcon('filetcl.png'),
-        'texinfo.xml': getIcon('filetex.png'),
-        'textile.xml': getIcon('filemisc.png'),
-        'taskjuggler.xml': getIcon('filemisc.png'),
-        'toml.xml': getIcon('filemisc.png'),
-        'template-toolkit.xml': getIcon('filemisc.png'),
-        'uscript.xml': getIcon('filemisc.png'),
-        'vala.xml': getIcon('filemisc.png'),
-        'monobasic.xml': getIcon('filemisc.png'),
-        'varnishcc4.xml': getIcon('filemisc.png'),
-        'varnish4.xml': getIcon('filemisc.png'),
-        'vhdl.xml': getIcon('filemisc.png'),
-        'velocity.xml': getIcon('filemisc.png'),
-        'vera.xml': getIcon('filemisc.png'),
-        'varnishtest4.xml': getIcon('filemisc.png'),
-        'vrml.xml': getIcon('filemisc.png'),
-        'xslt.xml': getIcon('filexml.png'),
-        'xul.xml': getIcon('filemisc.png'),
-        'yaml.xml': getIcon('filemisc.png'),
-        'yacas.xml': getIcon('filemisc.png'),
-        'yacc.xml': getIcon('filemisc.png'),
-        'zonnon.xml': getIcon('filemisc.png'),
-        'asterisk.xml': getIcon('filemisc.png'),
-        'git-ignore.xml': getIcon('filemisc.png'),
-        'kdesrc-buildrc.xml': getIcon('filemisc.png'),
-        'changelog.xml': getIcon('filemisc.png'),
-        'dockerfile.xml': getIcon('filemisc.png'),
-        'kconfig.xml': getIcon('filemisc.png'),
-        'ilerpg.xml': getIcon('filemisc.png'),
-        'apache.xml': getIcon('filemisc.png'),
-        'debiancontrol.xml': getIcon('filemisc.png'),
-        'fstab.xml': getIcon('filemisc.png'),
-        'git-rebase.xml': getIcon('filemisc.png'),
-        'gitolite.xml': getIcon('filemisc.png'),
-        'meson.xml': getIcon('filemisc.png'),
-        'xorg.xml': getIcon('filemisc.png'),
-        'markdown.xml': getIcon('filemarkdown.png')}
+        "stata.xml": getIcon("filemisc.png"),
+        "sisu.xml": getIcon("filemisc.png"),
+        "mandoc.xml": getIcon("fileman.png"),
+        "fgl-4gl.xml": getIcon("filemisc.png"),
+        "ansforth94.xml": getIcon("filemisc.png"),
+        "abap.xml": getIcon("filemisc.png"),
+        "abc.xml": getIcon("filemisc.png"),
+        "asm-avr.xml": getIcon("filemisc.png"),
+        "freebasic.xml": getIcon("filemisc.png"),
+        "wml.xml": getIcon("filemisc.png"),
+        "d.xml": getIcon("filed.png"),
+        "sql-oracle.xml": getIcon("filemisc.png"),
+        "maxima.xml": getIcon("filemisc.png"),
+        "fortran.xml": getIcon("filemisc.png"),
+        "gdl.xml": getIcon("filemisc.png"),
+        "haxe.xml": getIcon("filemisc.png"),
+        "asm-m68k.xml": getIcon("filemisc.png"),
+        "j.xml": getIcon("filemisc.png"),
+        "lilypond.xml": getIcon("filemisc.png"),
+        "asm-dsp56k.xml": getIcon("filemisc.png"),
+        "jsp.xml": getIcon("filemisc.png"),
+        "objectivecpp.xml": getIcon("filemisc.png"),
+        "mab.xml": getIcon("filemisc.png"),
+        "fgl-per.xml": getIcon("filemisc.png"),
+        "pgn.xml": getIcon("filemisc.png"),
+        "picsrc.xml": getIcon("filemisc.png"),
+        "perl.xml": getIcon("fileperl.png"),
+        "xharbour.xml": getIcon("filemisc.png"),
+        "r.xml": getIcon("filemisc.png"),
+        "rmarkdown.xml": getIcon("filemisc.png"),
+        "relaxng.xml": getIcon("filemisc.png"),
+        "verilog.xml": getIcon("filemisc.png"),
+        "ada.xml": getIcon("fileada.png"),
+        "hunspell-aff.xml": getIcon("filemisc.png"),
+        "agda.xml": getIcon("filemisc.png"),
+        "ahdl.xml": getIcon("filemisc.png"),
+        "ahk.xml": getIcon("filemisc.png"),
+        "postscript.xml": getIcon("filepostscript.png"),
+        "ample.xml": getIcon("filemisc.png"),
+        "ansys.xml": getIcon("filemisc.png"),
+        "actionscript.xml": getIcon("filemisc.png"),
+        "asn1.xml": getIcon("filemisc.png"),
+        "asp.xml": getIcon("filemisc.png"),
+        "awk.xml": getIcon("fileawk.png"),
+        "bash.xml": getIcon("fileshell.png"),
+        "dosbat.xml": getIcon("filemisc.png"),
+        "latex.xml": getIcon("filetex.png"),
+        "bibtex.xml": getIcon("filetex.png"),
+        "boo.xml": getIcon("filemisc.png"),
+        "component-pascal.xml": getIcon("filepascal.png"),
+        "gdb.xml": getIcon("filemisc.png"),
+        "4dos.xml": getIcon("filemisc.png"),
+        "c.xml": getIcon("filec.png"),
+        "ccss.xml": getIcon("filecss.png"),
+        "coldfusion.xml": getIcon("filemisc.png"),
+        "nagios.xml": getIcon("filemisc.png"),
+        "cg.xml": getIcon("filemisc.png"),
+        "cgis.xml": getIcon("filemisc.png"),
+        "chicken.xml": getIcon("filemisc.png"),
+        "haskell.xml": getIcon("filemisc.png"),
+        "cisco.xml": getIcon("filemisc.png"),
+        "opencl.xml": getIcon("filemisc.png"),
+        "clojure.xml": getIcon("filemisc.png"),
+        "cmake.xml": getIcon("filemake.png"),
+        "coffee.xml": getIcon("filemisc.png"),
+        "logtalk.xml": getIcon("filemisc.png"),
+        "crk.xml": getIcon("filemisc.png"),
+        "cs.xml": getIcon("filemisc.png"),
+        "tcsh.xml": getIcon("fileshell.png"),
+        "css.xml": getIcon("filecss.png"),
+        "context.xml": getIcon("filemisc.png"),
+        "cue.xml": getIcon("filemisc.png"),
+        "curry.xml": getIcon("filemisc.png"),
+        "xml.xml": getIcon("filexml.png"),
+        "hunspell-dat.xml": getIcon("filemisc.png"),
+        "prolog.xml": getIcon("filemisc.png"),
+        "modula-2.xml": getIcon("filemisc.png"),
+        "desktop.xml": getIcon("filemisc.png"),
+        "hunspell-dic.xml": getIcon("filemisc.png"),
+        "diff.xml": getIcon("filediff.png"),
+        "dot.xml": getIcon("filemisc.png"),
+        "doxygen.xml": getIcon("filemisc.png"),
+        "dtd.xml": getIcon("filemisc.png"),
+        "euphoria.xml": getIcon("filemisc.png"),
+        "email.xml": getIcon("fileemail.png"),
+        "erlang.xml": getIcon("filemisc.png"),
+        "fasm.xml": getIcon("filemisc.png"),
+        "ferite.xml": getIcon("filemisc.png"),
+        "lex.xml": getIcon("filemisc.png"),
+        "glsl.xml": getIcon("filemisc.png"),
+        "fsharp.xml": getIcon("filemisc.png"),
+        "ftl.xml": getIcon("filemisc.png"),
+        "grammar.xml": getIcon("filemisc.png"),
+        "gap.xml": getIcon("filemisc.png"),
+        "glosstex.xml": getIcon("filetex.png"),
+        "ruby.xml": getIcon("filemisc.png"),
+        "gnuplot.xml": getIcon("filemisc.png"),
+        "go.xml": getIcon("filemisc.png"),
+        "groovy.xml": getIcon("filemisc.png"),
+        "scheme.xml": getIcon("filemisc.png"),
+        "haml.xml": getIcon("filemisc.png"),
+        "hamlet.xml": getIcon("filemisc.png"),
+        "spice.xml": getIcon("filemisc.png"),
+        "html.xml": getIcon("filehtml.png"),
+        "rhtml.xml": getIcon("filemisc.png"),
+        "progress.xml": getIcon("filemisc.png"),
+        "vcard.xml": getIcon("filevcard.png"),
+        "idl.xml": getIcon("fileidl.png"),
+        "hunspell-idx.xml": getIcon("filemisc.png"),
+        "bmethod.xml": getIcon("filemisc.png"),
+        "opal.xml": getIcon("filemisc.png"),
+        "html-php.xml": getIcon("filemisc.png"),
+        "inform.xml": getIcon("filemisc.png"),
+        "ini.xml": getIcon("fileprops.png"),
+        "jam.xml": getIcon("filemisc.png"),
+        "java.xml": getIcon("filejava.png"),
+        "jira.xml": getIcon("filemisc.png"),
+        "julia.xml": getIcon("filemisc.png"),
+        "javascript.xml": getIcon("filejs.png"),
+        "json.xml": getIcon("filemisc.png"),
+        "k.xml": getIcon("filemisc.png"),
+        "kbasic.xml": getIcon("filemisc.png"),
+        "literate-curry.xml": getIcon("filemisc.png"),
+        "ld.xml": getIcon("filemisc.png"),
+        "ldif.xml": getIcon("filemisc.png"),
+        "less.xml": getIcon("filemisc.png"),
+        "literate-haskell.xml": getIcon("filemisc.png"),
+        "commonlisp.xml": getIcon("filemisc.png"),
+        "lsl.xml": getIcon("filemisc.png"),
+        "lua.xml": getIcon("filemisc.png"),
+        "octave.xml": getIcon("filemisc.png"),
+        "m3u.xml": getIcon("filemisc.png"),
+        "m4.xml": getIcon("filemisc.png"),
+        "mako.xml": getIcon("filemisc.png"),
+        "mediawiki.xml": getIcon("filemisc.png"),
+        "mel.xml": getIcon("filemisc.png"),
+        "metafont.xml": getIcon("filemisc.png"),
+        "makefile.xml": getIcon("filemake.png"),
+        "ocaml.xml": getIcon("filemisc.png"),
+        "ocamllex.xml": getIcon("filemisc.png"),
+        "ocamlyacc.xml": getIcon("filemisc.png"),
+        "modelica.xml": getIcon("filemisc.png"),
+        "carto-css.xml": getIcon("filecss.png"),
+        "mergetagtext.xml": getIcon("filemisc.png"),
+        "mup.xml": getIcon("filemisc.png"),
+        "nemerle.xml": getIcon("filemisc.png"),
+        "mathematica.xml": getIcon("filemisc.png"),
+        "nesc.xml": getIcon("filemisc.png"),
+        "nsis.xml": getIcon("filemisc.png"),
+        "noweb.xml": getIcon("filemisc.png"),
+        "lpc.xml": getIcon("filemisc.png"),
+        "oors.xml": getIcon("filemisc.png"),
+        "pascal.xml": getIcon("filepascal.png"),
+        "purebasic.xml": getIcon("filemisc.png"),
+        "pig.xml": getIcon("filemisc.png"),
+        "pike.xml": getIcon("filemisc.png"),
+        "pli.xml": getIcon("filemisc.png"),
+        "gettext.xml": getIcon("filemisc.png"),
+        "povray.xml": getIcon("filemisc.png"),
+        "puppet.xml": getIcon("filemisc.png"),
+        "ppd.xml": getIcon("filemisc.png"),
+        "qmake.xml": getIcon("filemake.png"),
+        "protobuf.xml": getIcon("filemisc.png"),
+        "python.xml": getIcon("filepython.png"),
+        "qml.xml": getIcon("filemisc.png"),
+        "winehq.xml": getIcon("filemisc.png"),
+        "replicode.xml": getIcon("filemisc.png"),
+        "rexx.xml": getIcon("filemisc.png"),
+        "rib.xml": getIcon("filemisc.png"),
+        "relaxngcompact.xml": getIcon("filemisc.png"),
+        "rapidq.xml": getIcon("filemisc.png"),
+        "rust.xml": getIcon("filemisc.png"),
+        "rest.xml": getIcon("filemisc.png"),
+        "rtf.xml": getIcon("filertf.png"),
+        "sather.xml": getIcon("filemisc.png"),
+        "scala.xml": getIcon("filemisc.png"),
+        "sci.xml": getIcon("filemisc.png"),
+        "scss.xml": getIcon("filecss.png"),
+        "sed.xml": getIcon("filemisc.png"),
+        "sgml.xml": getIcon("filemisc.png"),
+        "zsh.xml": getIcon("fileshell.png"),
+        "sieve.xml": getIcon("filemisc.png"),
+        "sml.xml": getIcon("filemisc.png"),
+        "rpmspec.xml": getIcon("filemisc.png"),
+        "valgrind-suppression.xml": getIcon("filemisc.png"),
+        "systemverilog.xml": getIcon("filemisc.png"),
+        "tads3.xml": getIcon("filemisc.png"),
+        "txt2tags.xml": getIcon("filemisc.png"),
+        "tcl.xml": getIcon("filetcl.png"),
+        "texinfo.xml": getIcon("filetex.png"),
+        "textile.xml": getIcon("filemisc.png"),
+        "taskjuggler.xml": getIcon("filemisc.png"),
+        "toml.xml": getIcon("filemisc.png"),
+        "template-toolkit.xml": getIcon("filemisc.png"),
+        "uscript.xml": getIcon("filemisc.png"),
+        "vala.xml": getIcon("filemisc.png"),
+        "monobasic.xml": getIcon("filemisc.png"),
+        "varnishcc4.xml": getIcon("filemisc.png"),
+        "varnish4.xml": getIcon("filemisc.png"),
+        "vhdl.xml": getIcon("filemisc.png"),
+        "velocity.xml": getIcon("filemisc.png"),
+        "vera.xml": getIcon("filemisc.png"),
+        "varnishtest4.xml": getIcon("filemisc.png"),
+        "vrml.xml": getIcon("filemisc.png"),
+        "xslt.xml": getIcon("filexml.png"),
+        "xul.xml": getIcon("filemisc.png"),
+        "yaml.xml": getIcon("filemisc.png"),
+        "yacas.xml": getIcon("filemisc.png"),
+        "yacc.xml": getIcon("filemisc.png"),
+        "zonnon.xml": getIcon("filemisc.png"),
+        "asterisk.xml": getIcon("filemisc.png"),
+        "git-ignore.xml": getIcon("filemisc.png"),
+        "kdesrc-buildrc.xml": getIcon("filemisc.png"),
+        "changelog.xml": getIcon("filemisc.png"),
+        "dockerfile.xml": getIcon("filemisc.png"),
+        "kconfig.xml": getIcon("filemisc.png"),
+        "ilerpg.xml": getIcon("filemisc.png"),
+        "apache.xml": getIcon("filemisc.png"),
+        "debiancontrol.xml": getIcon("filemisc.png"),
+        "fstab.xml": getIcon("filemisc.png"),
+        "git-rebase.xml": getIcon("filemisc.png"),
+        "gitolite.xml": getIcon("filemisc.png"),
+        "meson.xml": getIcon("filemisc.png"),
+        "xorg.xml": getIcon("filemisc.png"),
+        "markdown.xml": getIcon("filemarkdown.png"),
+    }
 
 
 # Some specific cases for various binaries to be mapped to a certain icon
@@ -401,68 +396,69 @@ def __initMimeToIcon():
     """Prevents calling getIcon() before QApplication is created"""
     global __mimeToIcon
     __mimeToIcon = {
-        'application/x-executable': getIcon('filebinary.png'),
-        'application/x-sharedlib': getIcon('fileso.png'),
-        'application/x-coredump': getIcon('filemisc.png'),
-        'application/pdf': getIcon('filepdf.png'),
-        'application/x-bzip2': getIcon('filearchive.png'),
-        'application/x-gzip': getIcon('filearchive.png'),
-        'application/zip': getIcon('filearchive.png'),
-        'application/x-xz': getIcon('filearchive.png'),
-        'application/x-rar': getIcon('filearchive.png'),
-        'application/x-tar': getIcon('filetar.png'),
-        'application/x-object': getIcon('fileso.png')}
+        "application/x-executable": getIcon("filebinary.png"),
+        "application/x-sharedlib": getIcon("fileso.png"),
+        "application/x-coredump": getIcon("filemisc.png"),
+        "application/pdf": getIcon("filepdf.png"),
+        "application/x-bzip2": getIcon("filearchive.png"),
+        "application/x-gzip": getIcon("filearchive.png"),
+        "application/zip": getIcon("filearchive.png"),
+        "application/x-xz": getIcon("filearchive.png"),
+        "application/x-rar": getIcon("filearchive.png"),
+        "application/x-tar": getIcon("filetar.png"),
+        "application/x-object": getIcon("fileso.png"),
+    }
 
 
 def __getIcon(xmlSyntaxFile, mime, fBaseName):
     """Provides an icon for a file"""
-    if '.' in fBaseName:
-        fileExtension = fBaseName.split('.')[-1].lower()
+    if "." in fBaseName:
+        fileExtension = fBaseName.split(".")[-1].lower()
     else:
-        fileExtension = ''
+        fileExtension = ""
 
     if xmlSyntaxFile is not None:
         # There are a few special cases:
         # - svg is detected as xml.xml
         # - c/c++/h/h++ are detected as cpp.xml
         # - cdm project is detected as ini.xml
-        if xmlSyntaxFile == 'ini.xml':
-            if fileExtension == 'cdm':
-                return getIcon('fileproject.png')
-        if xmlSyntaxFile == 'json.xml':
-            if fileExtension == 'cdm3':
-                return getIcon('fileproject.png')
-        if xmlSyntaxFile == 'cpp.xml':
-            if 'h' in fileExtension:
-                if fBaseName.endswith('.ui.h'):
-                    return getIcon('filedesigner.png')
-                if fBaseName.endswith('.h'):    # Capital H is for C++
-                    return getIcon('filecheader.png')
-                return getIcon('filecppheader.png')
-            return getIcon('filecpp.png')
-        if xmlSyntaxFile == 'xml.xml':
-            if fileExtension == 'svg':
-                return getIcon('filesvg.png')
+        if xmlSyntaxFile == "ini.xml":
+            if fileExtension == "cdm":
+                return getIcon("fileproject.png")
+        if xmlSyntaxFile == "json.xml":
+            if fileExtension == "cdm3":
+                return getIcon("fileproject.png")
+        if xmlSyntaxFile == "cpp.xml":
+            if "h" in fileExtension:
+                if fBaseName.endswith(".ui.h"):
+                    return getIcon("filedesigner.png")
+                if fBaseName.endswith(".h"):  # Capital H is for C++
+                    return getIcon("filecheader.png")
+                return getIcon("filecppheader.png")
+            return getIcon("filecpp.png")
+        if xmlSyntaxFile == "xml.xml":
+            if fileExtension == "svg":
+                return getIcon("filesvg.png")
             if fileExtension == "ui":
-                return getIcon('filedesigner.png')
-            if fileExtension in ['ts', 'qm']:
-                return getIcon('filelinguist2.png')
-            if fileExtension == 'qrc':
-                return getIcon('fileresource.png')
+                return getIcon("filedesigner.png")
+            if fileExtension in ["ts", "qm"]:
+                return getIcon("filelinguist2.png")
+            if fileExtension == "qrc":
+                return getIcon("fileresource.png")
 
         try:
             if __syntaxToIcon is None:
                 __initSyntaxToIcon()
             return __syntaxToIcon[xmlSyntaxFile]
         except KeyError:
-            return getIcon('filemisc.png')
+            return getIcon("filemisc.png")
 
     # Here: no luck with a syntax file
     # This could be an image or compiled python or binary of some sort...
     # Or a text which does not need a syntax highlight
 
     if fileExtension in __QTSupportedImageFormats:
-        return getIcon('filepixmap.png')
+        return getIcon("filepixmap.png")
 
     try:
         if mime is not None:
@@ -472,15 +468,15 @@ def __getIcon(xmlSyntaxFile, mime, fBaseName):
     except KeyError:
         pass
 
-    if fileExtension in ['pyc', 'pyo']:
-        return getIcon('filepythoncompiled.png')
+    if fileExtension in ["pyc", "pyo"]:
+        return getIcon("filepythoncompiled.png")
 
     if mime is not None:
-        if mime == 'application/x-executable':
-            return getIcon('filebinary.png')
-        if mime.startswith('text/'):
-            return getIcon('filetext.png')
-    return getIcon('filemisc.png')
+        if mime == "application/x-executable":
+            return getIcon("filebinary.png")
+        if mime.startswith("text/"):
+            return getIcon("filetext.png")
+    return getIcon("filemisc.png")
 
 
 def __getMagicMime(fName):
@@ -525,9 +521,10 @@ def __initFilePropertiesCache():
     """Prevents calling getIcon before a QApplication is created"""
     global __filePropertiesCache
     __filePropertiesCache = {
-        '': [None, getIcon('filemisc.png'), None],
-        '/': ['inode/directory', getIcon('dirclosed.png'), None],
-        '.': ['inode/broken-symlink', getIcon('filebrokenlink.png'), None]}
+        "": [None, getIcon("filemisc.png"), None],
+        "/": ["inode/directory", getIcon("dirclosed.png"), None],
+        ".": ["inode/broken-symlink", getIcon("filebrokenlink.png"), None],
+    }
 
 
 def getFileProperties(fName, checkForBrokenLink=True, skipCache=False):
@@ -547,14 +544,14 @@ def getFileProperties(fName, checkForBrokenLink=True, skipCache=False):
         __initFilePropertiesCache()
 
     if not fName:
-        return __filePropertiesCache['']
+        return __filePropertiesCache[""]
 
     if fName.endswith(sep):
-        return __filePropertiesCache['/']
+        return __filePropertiesCache["/"]
 
     if checkForBrokenLink and islink(fName):
         if not exists(fName):
-            return __filePropertiesCache['.']
+            return __filePropertiesCache["."]
 
     if not skipCache and fName in __filePropertiesCache:
         value = __filePropertiesCache[fName]
@@ -579,65 +576,61 @@ def getFileProperties(fName, checkForBrokenLink=True, skipCache=False):
         # File may not exist
         fBaseName = basename(fName)
 
-    if '.' in fBaseName:
-        fileExtension = fBaseName.split('.')[-1].lower()
+    if "." in fBaseName:
+        fileExtension = fBaseName.split(".")[-1].lower()
     else:
-        fileExtension = ''
+        fileExtension = ""
 
     syntaxFile = __getXmlSyntaxFile(fBaseName)
     if syntaxFile is None:
         denied = False
         # Special case: this could be a QT supported image
         if fileExtension in __QTSupportedImageFormats:
-            mime = 'image/' + fileExtension
-        elif 'readme' in fBaseName.lower():
-            mime = 'text/plain'
+            mime = "image/" + fileExtension
+        elif "readme" in fBaseName.lower():
+            mime = "text/plain"
         else:
             mime, denied = __getMagicMime(fName)
-            if mime == 'inode/x-empty':
+            if mime == "inode/x-empty":
                 # Special case for the empty files; treat them as text files
                 # till they are changed, i.e. do not memorize them in cache.
                 # The magic library detects them as binary (without extensions)
-                return [mime, getIcon('filemisc.png'),
-                        getXmlSyntaxFileByMime('text/plain')]
+                return [mime, getIcon("filemisc.png"), getXmlSyntaxFileByMime("text/plain")]
             if mime is not None:
                 syntaxFile = getXmlSyntaxFileByMime(mime)
 
-        cacheValue = [mime,
-                      getIcon('filedenied.png') if denied else
-                      __getIcon(syntaxFile, mime, fBaseName),
-                      syntaxFile]
+        cacheValue = [mime, getIcon("filedenied.png") if denied else __getIcon(syntaxFile, mime, fBaseName), syntaxFile]
         __filePropertiesCache[fName] = cacheValue
         return cacheValue
 
     # syntax file was successfully identified.
     # Detect the mime type by a syntax file
-    if fileExtension == 'cdm':
-        mime = 'text/x-codimension'
-    elif fileExtension == 'cdm3':
-        mime = 'text/x-codimension3'
+    if fileExtension == "cdm":
+        mime = "text/x-codimension"
+    elif fileExtension == "cdm3":
+        mime = "text/x-codimension3"
     else:
         mime = __getMimeByXmlSyntaxFile(syntaxFile)
         if mime is None:
             mime, _ = __getMagicMime(fName)
 
-    if fileExtension == 'o' and syntaxFile == 'lpc.xml':
+    if fileExtension == "o" and syntaxFile == "lpc.xml":
         # lpc.xml is bound to .o extension i.e. exactly object files!
-        if 'object' in mime:
+        if "object" in mime:
             syntaxFile = None
-    if fileExtension == 'a' and syntaxFile == 'ada.xml':
+    if fileExtension == "a" and syntaxFile == "ada.xml":
         tryMime, _ = __getMagicMime(fName)
-        if 'x-archive' in tryMime:
+        if "x-archive" in tryMime:
             mime = tryMime
             syntaxFile = None
-    if fileExtension == 'ttf' and syntaxFile == 'template-toolkit.xml':
+    if fileExtension == "ttf" and syntaxFile == "template-toolkit.xml":
         tryMime, _ = __getMagicMime(fName)
-        if 'font' in tryMime:
+        if "font" in tryMime:
             mime = tryMime
             syntaxFile = None
-    if fileExtension == 'dat' and syntaxFile == 'hunspell-dat.xml':
+    if fileExtension == "dat" and syntaxFile == "hunspell-dat.xml":
         tryMime, _ = __getMagicMime(fName)
-        if 'octet-stream' in tryMime:
+        if "octet-stream" in tryMime:
             mime = tryMime
             syntaxFile = None
 
@@ -654,7 +647,7 @@ def compactPath(path, width, measure=len):
     if measure(path) <= width:
         return path
 
-    dots = '...'
+    dots = "..."
 
     head, tail = split(path)
     mid = len(head) // 2
@@ -677,20 +670,20 @@ def compactPath(path, width, measure=len):
         if measure(path) <= width:
             return path
         tail = tail[1:]
-    return ''
+    return ""
 
 
 def isPythonMime(mime):
     """True if it is a python mime"""
     if mime is None:
         return False
-    return 'python' in mime
+    return "python" in mime
 
 
 def isMarkdownMime(mime):
     """True if it is a markdown mime"""
     if mime:
-        return 'markdown' in mime
+        return "markdown" in mime
     return False
 
 
@@ -705,8 +698,8 @@ def isPythonCompiledFile(fName):
     mime, _, _ = getFileProperties(fName)
     if mime is None:
         return False
-    if 'octet-stream' in mime:
-        if fName.endswith('.pyc') or fName.endswith('.pyo'):
+    if "octet-stream" in mime:
+        if fName.endswith(".pyc") or fName.endswith(".pyo"):
             return True
     return False
 
@@ -715,7 +708,7 @@ def isCDMProjectMime(mime):
     """True if it is a codimension project mime"""
     if mime is None:
         return False
-    return 'x-codimension3' in mime
+    return "x-codimension3" in mime
 
 
 def isCDMProjectFile(fName):
@@ -723,29 +716,27 @@ def isCDMProjectFile(fName):
     mime, _, _ = getFileProperties(fName)
     if mime is None:
         return False
-    return 'x-codimension3' in mime
+    return "x-codimension3" in mime
 
 
 # Utility functions to save/load generic JSON
 def loadJSON(fileName, errorWhat, defaultValue):
     """Generic JSON loading"""
     try:
-        with open(fileName, 'r', encoding=DEFAULT_ENCODING) as diskfile:
+        with open(fileName, "r", encoding=DEFAULT_ENCODING) as diskfile:
             return json.load(diskfile)
     except Exception as exc:
-        logging.error('Error loading %s (from %s): %s',
-                      errorWhat, fileName, str(exc))
+        logging.error("Error loading %s (from %s): %s", errorWhat, fileName, str(exc))
         return defaultValue
 
 
 def saveJSON(fileName, values, errorWhat):
     """Generic JSON saving"""
     try:
-        with open(fileName, 'w', encoding=DEFAULT_ENCODING) as diskfile:
+        with open(fileName, "w", encoding=DEFAULT_ENCODING) as diskfile:
             json.dump(values, diskfile, indent=4)
     except Exception as exc:
-        logging.error('Error saving %s (to %s): %s',
-                      errorWhat, fileName, str(exc))
+        logging.error("Error saving %s (to %s): %s", errorWhat, fileName, str(exc))
         return False
     return True
 
@@ -753,43 +744,43 @@ def saveJSON(fileName, values, errorWhat):
 def getFileContent(fileName, allowException=True, enc=DEFAULT_ENCODING):
     """Provides the file content"""
     try:
-        with open(fileName, 'r', encoding=enc) as diskfile:
+        with open(fileName, "r", encoding=enc) as diskfile:
             content = diskfile.read()
         return content
     except Exception as exc:
         if allowException:
             raise
-        logging.error('Error reading from file %s: %s', fileName, str(exc))
+        logging.error("Error reading from file %s: %s", fileName, str(exc))
         return None
 
 
 def saveToFile(fileName, content, allowException=True, enc=DEFAULT_ENCODING):
     """Overwrites the file content"""
     try:
-        with open(fileName, 'w', encoding=enc) as diskfile:
+        with open(fileName, "w", encoding=enc) as diskfile:
             diskfile.write(content)
         return True
     except Exception as exc:
         if allowException:
             raise
-        logging.error('Error writing to file %s: %s', fileName, str(exc))
+        logging.error("Error writing to file %s: %s", fileName, str(exc))
     return False
 
 
 def saveBinaryToFile(fileName, content, allowException=True):
     """Overwrites the file content"""
     try:
-        with open(fileName, 'wb') as diskfile:
+        with open(fileName, "wb") as diskfile:
             diskfile.write(content)
         return True
     except Exception as exc:
         if allowException:
             raise
-        logging.error('Error writing to file %s: %s', fileName, str(exc))
+        logging.error("Error writing to file %s: %s", fileName, str(exc))
     return False
 
 
-def makeTempFile(prefix='cdm_', suffix=None):
+def makeTempFile(prefix="cdm_", suffix=None):
     """Creates a temporary file"""
     fileHandle, fileName = tempfile.mkstemp(suffix, prefix)
     os.close(fileHandle)
@@ -817,11 +808,9 @@ def resolveLink(path):
 def isCreatable(path):
     """Checks if the path is creatable"""
     if not isabs(path):
-        raise Exception('The isCreatable() function '
-                        'supports absolute paths only')
+        raise Exception("The isCreatable() function supports absolute paths only")
     if exists(path):
-        raise Exception('The isCreatable() function '
-                        'is only for not existing items')
+        raise Exception("The isCreatable() function is only for not existing items")
 
     parts = path[1:].split(sep)
     for count in range(len(parts) - 1, 0, -1):
@@ -831,13 +820,12 @@ def isCreatable(path):
             if isdir(candidatePath):
                 if os.access(candidatePath, os.W_OK):
                     return True, None
-                return False, 'No write permissions in ' + candidatePath
+                return False, "No write permissions in " + candidatePath
 
-            return False, 'The path part ' + candidatePath + \
-                          ' points to a non directory item'
+            return False, "The path part " + candidatePath + " points to a non directory item"
 
     # Check the root directory
-    if os.access('/', os.W_OK):
+    if os.access("/", os.W_OK):
         return True, None
 
-    return False, 'No write permissions to the root directory'
+    return False, "No write permissions to the root directory"

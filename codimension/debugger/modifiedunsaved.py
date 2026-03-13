@@ -39,7 +39,6 @@ from utils.pixmapcache import getIcon, getPixmap
 
 
 class ModifiedUnsavedDialog(QDialog):
-
     """Dialog with a list of modified but unsaved files implementation"""
 
     # See utils.run for runParameters
@@ -52,7 +51,7 @@ class ModifiedUnsavedDialog(QDialog):
         else:
             title = "1 project file modified and not saved"
         self.setWindowTitle(title)
-        self.setWindowIcon(getIcon('warning.png'))
+        self.setWindowIcon(getIcon("warning.png"))
         self.__createLayout(action, title, files)
 
     def __createLayout(self, action, title, files):
@@ -66,13 +65,12 @@ class ModifiedUnsavedDialog(QDialog):
         # Pixmap and the message
         topLayout = QHBoxLayout()
         pixmap = QLabel()
-        pixmap.setPixmap(getPixmap('warning.png'))
+        pixmap.setPixmap(getPixmap("warning.png"))
         topLayout.addWidget(pixmap)
         hSpacer = QWidget()
         hSpacer.setFixedSize(15, 15)
         topLayout.addWidget(hSpacer)
-        message = QLabel("All the project files must be "
-                         "saved before start debugging")
+        message = QLabel("All the project files must be saved before start debugging")
         message.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         message.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         message.setWordWrap(True)
@@ -99,8 +97,7 @@ class ModifiedUnsavedDialog(QDialog):
             fileItem.setIcon(0, icon)
             if isPythonMime(fileType):
                 info = GlobalData().briefModinfoCache.get(fileName)
-                fileItem.setToolTip(0, info.docstring.text if info.docstring
-                                    else '')
+                fileItem.setToolTip(0, info.docstring.text if info.docstring else "")
             filesList.addTopLevelItem(fileItem)
         layout.addWidget(filesList)
 
@@ -108,8 +105,7 @@ class ModifiedUnsavedDialog(QDialog):
         buttonBox = QDialogButtonBox()
         buttonBox.setOrientation(Qt.Horizontal)
         buttonBox.setStandardButtons(QDialogButtonBox.Cancel)
-        continueButton = buttonBox.addButton(action,
-                                             QDialogButtonBox.ActionRole)
+        continueButton = buttonBox.addButton(action, QDialogButtonBox.ActionRole)
         continueButton.setDefault(True)
         layout.addWidget(buttonBox)
 

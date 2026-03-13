@@ -26,7 +26,6 @@ from .qt import QComboBox, QHBoxLayout, QIntValidator, QLabel, QSizePolicy, Qt, 
 
 
 class GotoLineWidget(QWidget):
-
     """goto bar widget"""
 
     maxHistory = 32
@@ -55,8 +54,7 @@ class GotoLineWidget(QWidget):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            self.linenumberEdit.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(self.linenumberEdit.sizePolicy().hasHeightForWidth())
         self.linenumberEdit.setSizePolicy(sizePolicy)
         self.validator = QIntValidator(1, 100000, self)
         self.linenumberEdit.setValidator(self.validator)
@@ -96,7 +94,7 @@ class GotoLineWidget(QWidget):
         while txt in self.__gotoHistory:
             self.__gotoHistory.remove(txt)
         self.__gotoHistory = [txt] + self.__gotoHistory
-        self.__gotoHistory = self.__gotoHistory[:GotoLineWidget.maxHistory]
+        self.__gotoHistory = self.__gotoHistory[: GotoLineWidget.maxHistory]
 
         self.linenumberEdit.clear()
         self.linenumberEdit.addItems(self.__gotoHistory)
@@ -114,12 +112,12 @@ class GotoLineWidget(QWidget):
     def updateStatus(self):
         """Triggered when the current tab is changed"""
         currentWidget = self.editorsManager.currentWidget()
-        status = currentWidget.getType() in \
-            [MainWindowTabWidgetBase.PlainTextEditor,
-             MainWindowTabWidgetBase.VCSAnnotateViewer]
+        status = currentWidget.getType() in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+        ]
         self.linenumberEdit.setEnabled(status)
-        self.goButton.setEnabled(status and
-                                 self.linenumberEdit.currentText() != "")
+        self.goButton.setEnabled(status and self.linenumberEdit.currentText() != "")
 
     def __onGo(self):
         """Triggered when the 'Go!' button is clicked"""
@@ -127,8 +125,10 @@ class GotoLineWidget(QWidget):
             return
 
         currentWidget = self.editorsManager.currentWidget()
-        if currentWidget.getType() not in [MainWindowTabWidgetBase.PlainTextEditor,
-            MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if currentWidget.getType() not in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+        ]:
             return
 
         txt = self.linenumberEdit.currentText()

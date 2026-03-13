@@ -64,7 +64,6 @@ from .viewitems import (
 
 
 class FilesBrowserSortFilterProxyModel(QSortFilterProxyModel):
-
     """Files (filesystem and project) browser sort filter proxy model.
 
     It allows filtering basing on top level items.
@@ -72,8 +71,8 @@ class FilesBrowserSortFilterProxyModel(QSortFilterProxyModel):
 
     def __init__(self, isProjectFilter, parent=None):
         QSortFilterProxyModel.__init__(self, parent)
-        self.__sortColumn = None    # Avoid pylint complains
-        self.__sortOrder = None     # Avoid pylint complains
+        self.__sortColumn = None  # Avoid pylint complains
+        self.__sortOrder = None  # Avoid pylint complains
         self.__shouldFilter = isProjectFilter
 
     def sort(self, column, order):
@@ -112,7 +111,7 @@ class FilesBrowserSortFilterProxyModel(QSortFilterProxyModel):
     def filterAcceptsRow(self, sourceRow, sourceParent):
         """Filters rows"""
         if not self.__shouldFilter:
-            return True     # Show everything
+            return True  # Show everything
 
         # Filter using the loaded project filter
         if not sourceParent.isValid():
@@ -123,7 +122,6 @@ class FilesBrowserSortFilterProxyModel(QSortFilterProxyModel):
 
 
 class FilesBrowser(QTreeView):
-
     """Common functionality of the FS and project browsers"""
 
     sigFirstSelectedItem = pyqtSignal(QModelIndex)
@@ -167,7 +165,7 @@ class FilesBrowser(QTreeView):
 
     def _resizeColumns(self, index):
         """Resizes the view when items get expanded or collapsed"""
-        del index   # unused argument
+        del index  # unused argument
         # rowCount = self.model().rowCount()
         self.header().setStretchLastSection(True)
 
@@ -176,8 +174,7 @@ class FilesBrowser(QTreeView):
 
     def _resort(self):
         """Re-sorts the tree"""
-        self.model().sort(self.header().sortIndicatorSection(),
-                          self.header().sortIndicatorOrder())
+        self.model().sort(self.header().sortIndicatorSection(), self.header().sortIndicatorOrder())
 
     def mouseDoubleClickEvent(self, mouseEvent):
         """Reimplemented to disable expanding/collapsing of items on dbl click.
@@ -189,11 +186,16 @@ class FilesBrowser(QTreeView):
             return
 
         item = self.model().item(index)
-        if item.itemType in [GlobalsItemType,
-                             ImportsItemType, FunctionsItemType,
-                             ClassesItemType, StaticAttributesItemType,
-                             InstanceAttributesItemType,
-                             DirectoryItemType, SysPathItemType]:
+        if item.itemType in [
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+            DirectoryItemType,
+            SysPathItemType,
+        ]:
             QTreeView.mouseDoubleClickEvent(self, mouseEvent)
         else:
             self.openItem(item)
@@ -223,7 +225,7 @@ class FilesBrowser(QTreeView):
         index = srcModel.buildIndex(startItem.getRowPath())
         self.setExpanded(self.model().mapFromSource(index), True)
 
-        parts = path[len(itemPath):].split(os.path.sep)
+        parts = path[len(itemPath) :].split(os.path.sep)
         dirs = parts[:-1]
         fName = parts[-1]
 
@@ -244,7 +246,7 @@ class FilesBrowser(QTreeView):
             return False
 
         # Here: all the dirs have been found and they are expanded
-        if fName == '':
+        if fName == "":
             # It was a directory item, so there is no need to highlight,
             # it was just expanding dirs request.
             return False
@@ -280,17 +282,22 @@ class FilesBrowser(QTreeView):
     @staticmethod
     def openItem(item):
         """Handles the case when an item is activated"""
-        if item.itemType in [GlobalsItemType,
-                             ImportsItemType, FunctionsItemType,
-                             ClassesItemType, StaticAttributesItemType,
-                             InstanceAttributesItemType,
-                             DirectoryItemType, SysPathItemType]:
+        if item.itemType in [
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+            DirectoryItemType,
+            SysPathItemType,
+        ]:
             return
 
         if item.itemType == FileItemType:
             if item.fileType is None:
                 return
-            if 'broken-symlink' in item.fileType:
+            if "broken-symlink" in item.fileType:
                 return
 
             itemPath = item.getPath()
@@ -312,12 +319,17 @@ class FilesBrowser(QTreeView):
             GlobalData().mainWindow.openFileByType(itemMime, itemPath, -1)
             return
 
-        if item.itemType in [CodingItemType, ImportItemType, FunctionItemType,
-                             ClassItemType, DecoratorItemType,
-                             AttributeItemType, GlobalItemType,
-                             ImportWhatItemType]:
-            GlobalData().mainWindow.openFile(os.path.realpath(item.getPath()),
-                                             item.sourceObj.line)
+        if item.itemType in [
+            CodingItemType,
+            ImportItemType,
+            FunctionItemType,
+            ClassItemType,
+            DecoratorItemType,
+            AttributeItemType,
+            GlobalItemType,
+            ImportWhatItemType,
+        ]:
+            GlobalData().mainWindow.openFile(os.path.realpath(item.getPath()), item.sourceObj.line)
 
     def copyToClipboard(self):
         """Copies the path to the file where the element is to the clipboard"""
@@ -343,8 +355,8 @@ class FilesBrowser(QTreeView):
         dlg.exec_()
         if dlg.searchResults:
             GlobalData().mainWindow.displayFindInFiles(
-                FindInFilesSearchProvider().getName(),
-                dlg.searchResults, dlg.getParameters())
+                FindInFilesSearchProvider().getName(), dlg.searchResults, dlg.getParameters()
+            )
 
     def selectionChanged(self, selected, deselected):
         """Triggered when the selection changed"""
@@ -361,7 +373,7 @@ class FilesBrowser(QTreeView):
         itemsToAdd = []
         for item in items:
             item = str(item)
-            if item.startswith('-'):
+            if item.startswith("-"):
                 itemsToDel.append(item[1:])
             else:
                 itemsToAdd.append(item[1:])
@@ -406,11 +418,9 @@ class FilesBrowser(QTreeView):
 
             if not foundInChildren:
                 if item.endswith(os.path.sep):
-                    newItem = TreeViewDirectoryItem(
-                        treeItem, treeItem.getPath() + basename, False)
+                    newItem = TreeViewDirectoryItem(treeItem, treeItem.getPath() + basename, False)
                 else:
-                    newItem = TreeViewFileItem(treeItem,
-                                               treeItem.getPath() + basename)
+                    newItem = TreeViewFileItem(treeItem, treeItem.getPath() + basename)
                 parentIndex = srcModel.buildIndex(treeItem.getRowPath())
                 srcModel.addItem(newItem, parentIndex)
 
@@ -456,8 +466,7 @@ class FilesBrowser(QTreeView):
                     l_dirname, l_basename = self._splitPath(i.getPath())
                     if dirname == l_dirname and basename == l_basename:
                         index = srcModel.buildIndex(i.getRowPath())
-                        srcModel.beginRemoveRows(index.parent(),
-                                                 index.row(), index.row())
+                        srcModel.beginRemoveRows(index.parent(), index.row(), index.row())
                         i.parentItem.removeChild(i)
                         srcModel.endRemoveRows()
                     elif os.path.realpath(i.getPath()) == dirname + basename:
@@ -467,8 +476,7 @@ class FilesBrowser(QTreeView):
                     # Regular final file
                     if os.path.realpath(i.getPath()) == dirname + basename:
                         index = srcModel.buildIndex(i.getRowPath())
-                        srcModel.beginRemoveRows(index.parent(),
-                                                 index.row(), index.row())
+                        srcModel.beginRemoveRows(index.parent(), index.row(), index.row())
                         i.parentItem.removeChild(i)
                         srcModel.endRemoveRows()
 
@@ -477,8 +485,7 @@ class FilesBrowser(QTreeView):
         """Provides the dirname and the base name"""
         if path.endswith(os.path.sep):
             # directory
-            dirname = os.path.realpath(os.path.dirname(path[:-1])) + \
-                      os.path.sep
+            dirname = os.path.realpath(os.path.dirname(path[:-1])) + os.path.sep
             basename = os.path.basename(path[:-1])
         else:
             dirname = os.path.realpath(os.path.dirname(path)) + os.path.sep
@@ -487,15 +494,15 @@ class FilesBrowser(QTreeView):
 
     def onFileUpdated(self, fileName, uuid):
         """Triggered when the file is updated"""
-        del uuid    # unused argument
+        del uuid  # unused argument
         mime, icon, _ = getFileProperties(fileName)
         if isPythonMime(mime):
             path = os.path.realpath(fileName)
             info = GlobalData().briefModinfoCache.get(path)
             if info.isOK:
-                icon = getIcon('filepython.png')
+                icon = getIcon("filepython.png")
             else:
-                icon = getIcon('filepythonbroken.png')
+                icon = getIcon("filepythonbroken.png")
 
             # For all root items
             for treeItem in self.model().sourceModel().rootItem.childItems:
@@ -514,8 +521,8 @@ class FilesBrowser(QTreeView):
 
     def onFileTypeChanged(self, fileName, uuid, newMime):
         """Triggered when the file type is changed"""
-        del uuid        # unused argument
-        del newMime     # unused argument
+        del uuid  # unused argument
+        del newMime  # unused argument
         mime, icon, _ = getFileProperties(fileName)
         path = os.path.realpath(fileName)
         for treeItem in self.model().sourceModel().rootItem.childItems:
@@ -546,8 +553,7 @@ class FilesBrowser(QTreeView):
         """Recursively walks the tree items and updates the icon"""
         if treeItem.itemType in [DirectoryItemType, SysPathItemType]:
             for i in treeItem.childItems:
-                if i.itemType in [DirectoryItemType,
-                                  SysPathItemType, FileItemType]:
+                if i.itemType in [DirectoryItemType, SysPathItemType, FileItemType]:
                     self.__walkTreeAndUpdate(i, path, mime, icon, info)
 
         if treeItem.itemType == FileItemType:
@@ -623,8 +629,7 @@ class FilesBrowser(QTreeView):
                 hadFunctions = True
                 if info.functions:
                     fileChildItem.updateData(info)
-                    self.model().sourceModel().updateFunctionsItem(
-                        fileChildItem, info.functions)
+                    self.model().sourceModel().updateFunctionsItem(fileChildItem, info.functions)
                     self._resort()
                 else:
                     itemsToRemove.append(fileChildItem)
@@ -633,8 +638,7 @@ class FilesBrowser(QTreeView):
                 hadClasses = True
                 if info.classes:
                     fileChildItem.updateData(info)
-                    self.model().sourceModel().updateClassesItem(fileChildItem,
-                                                                 info.classes)
+                    self.model().sourceModel().updateClassesItem(fileChildItem, info.classes)
                     self._resort()
                 else:
                     itemsToRemove.append(fileChildItem)
@@ -643,8 +647,7 @@ class FilesBrowser(QTreeView):
         for item in itemsToRemove:
             self.__removeTreeItem(item)
 
-        if not hadCoding and treeItem.populated and \
-           info.encoding is not None:
+        if not hadCoding and treeItem.populated and info.encoding is not None:
             # Coding item appeared, so we need to add it
             newItem = TreeViewCodingItem(treeItem, info.encoding)
             self.__addTreeItem(treeItem, newItem)
@@ -719,8 +722,7 @@ class FilesBrowser(QTreeView):
                     # No need to send the update signal because the name is
                     # still the same, but need to update the importwhat items
                     # if so
-                    self.__updateSingleImportItem(importItem,
-                                                  importsCopy[index])
+                    self.__updateSingleImportItem(importItem, importsCopy[index])
                     del importsCopy[index]
                     break
             if not found:

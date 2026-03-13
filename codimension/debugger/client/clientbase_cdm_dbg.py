@@ -104,8 +104,8 @@ DEBUG_CLIENT_ORIG_FORK = None
 DEBUG_CLIENT_ORIG_CLOSE = None
 DEBUG_CLIENT_ORIG_SET_RECURSION_LIMIT = None
 
-WAIT_CONTINUE_TIMEOUT = 5       # in seconds
-WAIT_EXIT_COMMAND_TIMEOUT = 5   # in seconds
+WAIT_CONTINUE_TIMEOUT = 5  # in seconds
+WAIT_EXIT_COMMAND_TIMEOUT = 5  # in seconds
 
 
 def debugClientInput(prompt="", echo=True):
@@ -117,12 +117,13 @@ def debugClientInput(prompt="", echo=True):
 
 # Use our own input().
 try:
-    DEBUG_CLIENT_ORIG_INPUT = __builtins__.__dict__['input']
-    __builtins__.__dict__['input'] = debugClientInput
+    DEBUG_CLIENT_ORIG_INPUT = __builtins__.__dict__["input"]
+    __builtins__.__dict__["input"] = debugClientInput
 except (AttributeError, KeyError):
     import __main__
-    DEBUG_CLIENT_ORIG_INPUT = __main__.__builtins__.__dict__['input']
-    __main__.__builtins__.__dict__['input'] = debugClientInput
+
+    DEBUG_CLIENT_ORIG_INPUT = __main__.__builtins__.__dict__["input"]
+    __main__.__builtins__.__dict__["input"] = debugClientInput
 
 
 def debugClientFork():
@@ -133,7 +134,7 @@ def debugClientFork():
 
 
 # use our own fork().
-if 'fork' in dir(os):
+if "fork" in dir(os):
     DEBUG_CLIENT_ORIG_FORK = os.fork
     os.fork = debugClientFork
 
@@ -146,7 +147,7 @@ def debugClientClose(filedesc):
 
 
 # use our own close()
-if 'close' in dir(os):
+if "close" in dir(os):
     DEBUG_CLIENT_ORIG_CLOSE = os.close
     os.close = debugClientClose
 
@@ -159,14 +160,13 @@ def debugClientSetRecursionLimit(limit):
 
 
 # use our own setrecursionlimit().
-if 'setrecursionlimit' in dir(sys):
+if "setrecursionlimit" in dir(sys):
     DEBUG_CLIENT_ORIG_SET_RECURSION_LIMIT = sys.setrecursionlimit
     sys.setrecursionlimit = debugClientSetRecursionLimit
     debugClientSetRecursionLimit(sys.getrecursionlimit())
 
 
 class DebugClientBase(object):
-
     """Class implementing the client side of the debugger.
 
     It provides access to the Python interpeter from a debugger running in
@@ -185,7 +185,7 @@ class DebugClientBase(object):
     """
 
     # keep these in sync with VariablesViewer.VariableItem.Indicators
-    INDICATORS = ['()', '[]', '{:}', '{}']
+    INDICATORS = ["()", "[]", "{:}", "{}"]
 
     def __init__(self):
         self.breakpoints = {}
@@ -201,11 +201,11 @@ class DebugClientBase(object):
         self.framenr = 0
 
         # The context to run the debugged program in.
-        self.debugMod = types.ModuleType('__main__')
-        self.debugMod.__dict__['__builtins__'] = __builtins__
+        self.debugMod = types.ModuleType("__main__")
+        self.debugMod.__dict__["__builtins__"] = __builtins__
 
         # The list of complete lines to execute.
-        self.buffer = ''
+        self.buffer = ""
 
         # The list of regexp objects to filter variables against
         self.globalsFilterObjects = []
@@ -213,7 +213,7 @@ class DebugClientBase(object):
 
         self._fncache = {}
         self.dircache = []
-        self.passive = False    # used to indicate the passive mode
+        self.passive = False  # used to indicate the passive mode
         self.running = None
         self.test = None
         self.debugging = False
@@ -229,7 +229,7 @@ class DebugClientBase(object):
 
         self.compileCommand = codeop.CommandCompiler()
 
-        self.__encoding = 'utf-8'
+        self.__encoding = "utf-8"
         self.eventExit = None
         self.__needEpilogue = True
 
@@ -258,12 +258,12 @@ class DebugClientBase(object):
             METHOD_SET_ENVIRONMENT: self.__handleSetEnvironment,
             METHOD_CALL_TRACE: self.__handleCallTrace,
             METHOD_SET_FILTER: self.__handleSetFilter,
-            METHOD_THREAD_SET: self.__handleThreadSet}
+            METHOD_THREAD_SET: self.__handleThreadSet,
+        }
 
     def input(self, prompt, echo):
         """input() using the event loop"""
-        sendJSONCommand(self.socket, METHOD_STDIN,
-                        self.procuuid, {'prompt': prompt, 'echo': echo})
+        sendJSONCommand(self.socket, METHOD_STDIN, self.procuuid, {"prompt": prompt, "echo": echo})
         self.eventLoop(True)
         return self.userInput
 
@@ -285,13 +285,13 @@ class DebugClientBase(object):
             # Ok, go away.
             sys.exit()
 
-    def __compileFileSource(self, filename, mode='exec'):
+    def __compileFileSource(self, filename, mode="exec"):
         """Compiles source code read from a file"""
         with codecs.open(filename, encoding=self.__encoding) as fp:
             statement = fp.read()
 
         try:
-            code = compile(statement + '\n', filename, mode)
+            code = compile(statement + "\n", filename, mode)
         except SyntaxError:
             exctype, excval, exctb = sys.exc_info()
             try:
@@ -323,31 +323,28 @@ class DebugClientBase(object):
         try:
             self.__messageHandlers[method](params)
         except KeyError:
-            printerr('Unhandled message. Method: ' + method +
-                     ' Params: ' + repr(params))
+            printerr("Unhandled message. Method: " + method + " Params: " + repr(params))
 
     def __handleThreadSet(self, params):
         """Handling METHOD_THREAD_SET"""
-        if params['threadID'] in self.threads:
-            self.setCurrentThread(params['threadID'])
-            sendJSONCommand(self.socket, METHOD_THREAD_SET,
-                            self.procuuid, None)
+        if params["threadID"] in self.threads:
+            self.setCurrentThread(params["threadID"])
+            sendJSONCommand(self.socket, METHOD_THREAD_SET, self.procuuid, None)
             stack = self.currentThread.getStack()
-            sendJSONCommand(self.socket, METHOD_STACK,
-                            self.procuuid, {'stack': stack})
+            sendJSONCommand(self.socket, METHOD_STACK, self.procuuid, {"stack": stack})
 
     def __handleSetFilter(self, params):
         """Handling METHOD_SET_FILTER"""
-        self.__generateFilterObjects(params['scope'], params['filter'])
+        self.__generateFilterObjects(params["scope"], params["filter"])
 
     def __handleCallTrace(self, params):
         """Handling METHOD_CALL_TRACE"""
-        self.setCallTrace(params['enable'])
+        self.setCallTrace(params["enable"])
 
     def __handleSetEnvironment(self, params):
         """Handling METHOD_SET_ENVIRONMENT"""
-        for key, value in params['environment'].items():
-            if key.endswith('+'):
+        for key, value in params["environment"].items():
+            if key.endswith("+"):
                 if key[:-1] in os.environ:
                     os.environ[key[:-1]] += value
                 else:
@@ -357,23 +354,24 @@ class DebugClientBase(object):
 
     def __handleExecuteStatement(self, params):
         """Handling METHOD_EXECUTE_STATEMENT"""
-        statement = params['statement']
+        statement = params["statement"]
         try:
             code = self.compileCommand(statement, self.readstream.name)
         except (OverflowError, SyntaxError, ValueError):
             # Report the exception
-            sys.last_type, sys.last_value, sys.last_traceback = \
-                sys.exc_info()
-            sendJSONCommand(self.socket, METHOD_EXEC_STATEMENT_ERROR,
-                            self.procuuid,
-                            {'text': ''.join(traceback.format_exception_only(
-                                sys.last_type, sys.last_value))})
+            sys.last_type, sys.last_value, sys.last_traceback = sys.exc_info()
+            sendJSONCommand(
+                self.socket,
+                METHOD_EXEC_STATEMENT_ERROR,
+                self.procuuid,
+                {"text": "".join(traceback.format_exception_only(sys.last_type, sys.last_value))},
+            )
             return
 
         if code is None:
-            sendJSONCommand(self.socket, METHOD_EXEC_STATEMENT_ERROR,
-                            self.procuuid,
-                            {'text': 'Incomplete statement to execute'})
+            sendJSONCommand(
+                self.socket, METHOD_EXEC_STATEMENT_ERROR, self.procuuid, {"text": "Incomplete statement to execute"}
+            )
             return
 
         try:
@@ -397,9 +395,7 @@ class DebugClientBase(object):
             self.__execWithCollector(code, _globals, _locals, collector)
             self.currentThread.storeFrameLocals(self.framenr)
 
-            sendJSONCommand(self.socket, METHOD_EXEC_STATEMENT_OUTPUT,
-                            self.procuuid,
-                            {'text': collector.buf})
+            sendJSONCommand(self.socket, METHOD_EXEC_STATEMENT_OUTPUT, self.procuuid, {"text": collector.buf})
 
         except SystemExit as exc:
             self.progTerminated(exc.code)
@@ -415,29 +411,27 @@ class DebugClientBase(object):
                 del tblist[:1]
                 tlist = traceback.format_list(tblist)
                 if tlist:
-                    tlist.insert(0, 'Traceback (innermost last):\n')
-                    tlist.extend(traceback.format_exception_only(
-                        exc_type, exc_value))
+                    tlist.insert(0, "Traceback (innermost last):\n")
+                    tlist.extend(traceback.format_exception_only(exc_type, exc_value))
             finally:
                 tblist = exc_tb = None
 
-            sendJSONCommand(self.socket, METHOD_EXEC_STATEMENT_ERROR,
-                            self.procuuid, {'text': ''.join(tlist)})
+            sendJSONCommand(self.socket, METHOD_EXEC_STATEMENT_ERROR, self.procuuid, {"text": "".join(tlist)})
 
     @staticmethod
     def __execWithCollector(code, globalVars, localVars, collector):
         """The actual execution with the output collected"""
         oldStreams = [None for _ in range(6)]
-        if 'sys' in globalVars:
-            oldStreams[0] = globalVars['sys'].stdout
-            oldStreams[1] = globalVars['sys'].stderr
-            globalVars['sys'].stdout = collector
-            globalVars['sys'].stderr = collector
-        if 'sys' in localVars:
-            oldStreams[2] = localVars['sys'].stdout
-            oldStreams[3] = localVars['sys'].stderr
-            localVars['sys'].stdout = collector
-            localVars['sys'].stderr = collector
+        if "sys" in globalVars:
+            oldStreams[0] = globalVars["sys"].stdout
+            oldStreams[1] = globalVars["sys"].stderr
+            globalVars["sys"].stdout = collector
+            globalVars["sys"].stderr = collector
+        if "sys" in localVars:
+            oldStreams[2] = localVars["sys"].stdout
+            oldStreams[3] = localVars["sys"].stderr
+            localVars["sys"].stdout = collector
+            localVars["sys"].stderr = collector
         oldStreams[4] = sys.stdout
         oldStreams[5] = sys.stderr
         sys.stdout = collector
@@ -446,12 +440,12 @@ class DebugClientBase(object):
         try:
             exec(code, globalVars, localVars)
         finally:
-            if 'sys' in globalVars:
-                globalVars['sys'].stdout = oldStreams[0]
-                globalVars['sys'].stderr = oldStreams[1]
-            if 'sys' in localVars:
-                localVars['sys'].stdout = oldStreams[2]
-                localVars['sys'].stderr = oldStreams[3]
+            if "sys" in globalVars:
+                globalVars["sys"].stdout = oldStreams[0]
+                globalVars["sys"].stderr = oldStreams[1]
+            if "sys" in localVars:
+                localVars["sys"].stdout = oldStreams[2]
+                localVars["sys"].stderr = oldStreams[3]
             sys.stdout = oldStreams[4]
             sys.stderr = oldStreams[5]
 
@@ -474,9 +468,9 @@ class DebugClientBase(object):
         """Handling METHOD_STEP_QUIT"""
         if self.passive:
             if params:
-                if 'exitCode' in params:
+                if "exitCode" in params:
                     # The IDE requested to exit with a certain code
-                    self.progTerminated(params['exitCode'])
+                    self.progTerminated(params["exitCode"])
                     return
             self.progTerminated(STOPPED_BY_REQUEST)
         else:
@@ -485,94 +479,93 @@ class DebugClientBase(object):
 
     def __handleMoveIP(self, params):
         """Handling METHOD_MOVE_IP"""
-        newLine = params['newLine']
+        newLine = params["newLine"]
         self.currentThreadExec.move_instruction_pointer(newLine)
 
     def __handleContinue(self, params):
         """Handling METHOD_CONTINUE"""
-        self.currentThreadExec.go(params['special'])
+        self.currentThreadExec.go(params["special"])
         self.eventExit = True
 
     def __handleStdin(self, params):
         """Handling METHOD_STDIN"""
         # If we are handling raw mode input then break out of the current
         # event loop.
-        self.userInput = params['input']
+        self.userInput = params["input"]
         self.eventExit = True
 
     def __handleSetBP(self, params):
         """Handling METHOD_SET_BP"""
-        if params['setBreakpoint']:
-            if params['condition'] in ['None', '']:
+        if params["setBreakpoint"]:
+            if params["condition"] in ["None", ""]:
                 cond = None
-            elif params['condition'] is not None:
+            elif params["condition"] is not None:
                 try:
-                    cond = compile(params['condition'], '<string>', 'eval')
+                    cond = compile(params["condition"], "<string>", "eval")
                 except SyntaxError:
-                    sendJSONCommand(self.socket, METHOD_BP_CONDITION_ERROR,
-                                    self.procuuid,
-                                    {'filename': params['filename'],
-                                     'line': params['line']})
+                    sendJSONCommand(
+                        self.socket,
+                        METHOD_BP_CONDITION_ERROR,
+                        self.procuuid,
+                        {"filename": params["filename"], "line": params["line"]},
+                    )
                     return
             else:
                 cond = None
 
-            Breakpoint(params['filename'], params['line'],
-                       params['temporary'], cond)
+            Breakpoint(params["filename"], params["line"], params["temporary"], cond)
         else:
-            Breakpoint.clear_break(params['filename'], params['line'])
+            Breakpoint.clear_break(params["filename"], params["line"])
 
     def __handleBPEnable(self, params):
         """Handling METHOD_BP_ENABLE"""
-        bPoint = Breakpoint.get_break(params['filename'], params['line'])
+        bPoint = Breakpoint.get_break(params["filename"], params["line"])
         if bPoint is not None:
-            if params['enable']:
+            if params["enable"]:
                 bPoint.enable()
             else:
                 bPoint.disable()
 
     def __handleBPIgnore(self, params):
         """Handling METHOD_BP_IGNORE"""
-        bPoint = Breakpoint.get_break(params['filename'], params['line'])
+        bPoint = Breakpoint.get_break(params["filename"], params["line"])
         if bPoint is not None:
-            bPoint.ignore = params['count']
+            bPoint.ignore = params["count"]
 
     def __handleSetWP(self, params):
         """Handling METHOD_SET_WP"""
-        if params['setWatch']:
-            if params['condition'].endswith(
-                    ('??created??', '??changed??')):
-                compiledCond, flag = params['condition'].split()
+        if params["setWatch"]:
+            if params["condition"].endswith(("??created??", "??changed??")):
+                compiledCond, flag = params["condition"].split()
             else:
-                compiledCond = params['condition']
-                flag = ''
+                compiledCond = params["condition"]
+                flag = ""
 
             try:
-                compiledCond = compile(compiledCond, '<string>', 'eval')
+                compiledCond = compile(compiledCond, "<string>", "eval")
             except SyntaxError:
-                sendJSONCommand(self.socket, METHOD_WP_CONDITION_ERROR,
-                                self.procuuid,
-                                {'condition': params['condition']})
+                sendJSONCommand(
+                    self.socket, METHOD_WP_CONDITION_ERROR, self.procuuid, {"condition": params["condition"]}
+                )
                 return
-            Watch(params['condition'], compiledCond, flag,
-                  params['temporary'])
+            Watch(params["condition"], compiledCond, flag, params["temporary"])
         else:
-            Watch.clear_watch(params['condition'])
+            Watch.clear_watch(params["condition"])
 
     def __handleWPEnable(self, params):
         """Handling METHOD_WP_ENABLE"""
-        wPoint = Watch.get_watch(params['condition'])
+        wPoint = Watch.get_watch(params["condition"])
         if wPoint is not None:
-            if params['enable']:
+            if params["enable"]:
                 wPoint.enable()
             else:
                 wPoint.disable()
 
     def __handleWPIgnore(self, params):
         """Handling METHOD_WP_IGNORE"""
-        wPoint = Watch.get_watch(params['condition'])
+        wPoint = Watch.get_watch(params["condition"])
         if wPoint is not None:
-            wPoint.ignore = params['count']
+            wPoint.ignore = params["count"]
 
     def __handleShutdown(self, _):
         """Handling METHOD_SHUTDOWN"""
@@ -581,18 +574,16 @@ class DebugClientBase(object):
     def __handleForkTo(self, params):
         """Handling METHOD_FORK_TO"""
         # this results from a separate event loop
-        self.forkChild = (params['target'] == 'child')
+        self.forkChild = params["target"] == "child"
         self.eventExit = True
 
     def __handleVariables(self, params):
         """Handling METHOD_VARIABLES"""
-        self.__dumpVariables(params['frameNumber'], params['scope'],
-                             params['filters'])
+        self.__dumpVariables(params["frameNumber"], params["scope"], params["filters"])
 
     def __handleVariable(self, params):
         """Handling METHOD_VARIABLE"""
-        self.__dumpVariable(params['variable'], params['frameNumber'],
-                            params['scope'], params['filters'])
+        self.__dumpVariable(params["variable"], params["frameNumber"], params["scope"], params["filters"])
 
     def __handleThreadList(self, _):
         """Handling METHOD_THREAD_LIST"""
@@ -609,44 +600,45 @@ class DebugClientBase(object):
 
     def sendClearTemporaryBreakpoint(self, filename, lineno):
         """Signals the deletion of a temporary breakpoint"""
-        sendJSONCommand(self.socket, METHOD_CLEAR_BP,
-                        self.procuuid, {'filename': filename, 'line': lineno})
+        sendJSONCommand(self.socket, METHOD_CLEAR_BP, self.procuuid, {"filename": filename, "line": lineno})
 
     def sendClearTemporaryWatch(self, condition):
         """Signals the deletion of a temporary watch expression"""
-        sendJSONCommand(self.socket, METHOD_CLEAR_WP,
-                        self.procuuid, {'condition': condition})
+        sendJSONCommand(self.socket, METHOD_CLEAR_WP, self.procuuid, {"condition": condition})
 
     def sendResponseLine(self, stack):
         """Sends the current call stack"""
-        sendJSONCommand(self.socket, METHOD_LINE,
-                        self.procuuid, {'stack': stack})
+        sendJSONCommand(self.socket, METHOD_LINE, self.procuuid, {"stack": stack})
 
     def sendCallTrace(self, event, fromInfo, toInfo):
         """Sends a call trace entry"""
-        sendJSONCommand(self.socket, METHOD_CALL_TRACE,
-                        self.procuuid,
-                        {'event': event[0], 'from': fromInfo, 'to': toInfo})
+        sendJSONCommand(
+            self.socket, METHOD_CALL_TRACE, self.procuuid, {"event": event[0], "from": fromInfo, "to": toInfo}
+        )
 
     def sendException(self, exceptionType, exceptionMessage, stack):
         """Sends information for an exception"""
-        sendJSONCommand(self.socket, METHOD_EXCEPTION,
-                        self.procuuid,
-                        {'type': exceptionType, 'message': exceptionMessage,
-                         'stack': stack})
+        sendJSONCommand(
+            self.socket,
+            METHOD_EXCEPTION,
+            self.procuuid,
+            {"type": exceptionType, "message": exceptionMessage, "stack": stack},
+        )
 
     def sendSyntaxError(self, message, filename, lineno, charno):
         """Sends information for a syntax error"""
-        sendJSONCommand(self.socket, METHOD_SYNTAX_ERROR,
-                        self.procuuid,
-                        {'message': message, 'filename': filename,
-                         'line': lineno, 'characternumber': charno})
+        sendJSONCommand(
+            self.socket,
+            METHOD_SYNTAX_ERROR,
+            self.procuuid,
+            {"message": message, "filename": filename, "line": lineno, "characternumber": charno},
+        )
 
     def sendPassiveStartup(self, filename, exceptions):
         """Sends indication that the debugee is entering event loop"""
-        sendJSONCommand(self.socket, METHOD_DEBUG_STARTUP,
-                        self.procuuid,
-                        {'filename': filename, 'exceptions': exceptions})
+        sendJSONCommand(
+            self.socket, METHOD_DEBUG_STARTUP, self.procuuid, {"filename": filename, "exceptions": exceptions}
+        )
 
     def readReady(self, stream):
         """Called when there is data ready to be read"""
@@ -657,7 +649,7 @@ class DebugClientBase(object):
         global DEBUG_CLIENT_INSTANCE
 
         DEBUG_CLIENT_INSTANCE = self
-        self.__receiveBuffer = ''
+        self.__receiveBuffer = ""
 
         if not self.passive:
             # At this point simulate an event loop
@@ -698,7 +690,7 @@ class DebugClientBase(object):
         else:
             self.socket.connectToHost(remoteAddress, port)
         if not self.socket.waitForConnected(1000):
-            raise Exception('Cannot connect to the IDE')
+            raise Exception("Cannot connect to the IDE")
         self.socket.setSocketOption(QAbstractSocket.KeepAliveOption, 1)
         self.socket.setSocketOption(QAbstractSocket.LowDelayOption, 1)
         self.socket.disconnected.connect(self.__onDisconnected)
@@ -709,8 +701,7 @@ class DebugClientBase(object):
 
     def __setupStreams(self):
         """Sets up all the required streams"""
-        self.readstream = AsyncFile(self.socket, self.procuuid,
-                                    sys.stdin.mode, sys.stdin.name)
+        self.readstream = AsyncFile(self.socket, self.procuuid, sys.stdin.mode, sys.stdin.name)
 
         if self.redirect:
             sys.stdout = OutStreamRedirector(self.socket, True, self.procuuid)
@@ -726,10 +717,12 @@ class DebugClientBase(object):
 
     def __interceptSignals(self):
         """Intercepts common signals"""
-        for signum in [signal.SIGABRT,          # abnormal termination
-                       signal.SIGFPE,           # floating point exception
-                       signal.SIGILL,           # illegal instruction
-                       signal.SIGSEGV]:         # segmentation violation
+        for signum in [
+            signal.SIGABRT,  # abnormal termination
+            signal.SIGFPE,  # floating point exception
+            signal.SIGILL,  # illegal instruction
+            signal.SIGSEGV,
+        ]:  # segmentation violation
             signal.signal(signum, self.__signalHandler)
 
     def __signalHandler(self, signalNumber, stackFrame):
@@ -750,25 +743,24 @@ class DebugClientBase(object):
         linenr = stackFrame.f_lineno
         ffunc = stackFrame.f_code.co_name
 
-        if ffunc == '?':
-            ffunc = ''
+        if ffunc == "?":
+            ffunc = ""
 
-        if ffunc and not ffunc.startswith('<'):
+        if ffunc and not ffunc.startswith("<"):
             argInfo = getArgValues(stackFrame)
             try:
-                fargs = formatArgValues(
-                    argInfo.args, argInfo.varargs,
-                    argInfo.keywords, argInfo.locals)
+                fargs = formatArgValues(argInfo.args, argInfo.varargs, argInfo.keywords, argInfo.locals)
             except Exception:
-                fargs = ''
+                fargs = ""
         else:
-            fargs = ''
+            fargs = ""
 
-        sendJSONCommand(self.socket, METHOD_SIGNAL,
-                        self.procuuid,
-                        {'message': message, 'filename': filename,
-                         'linenumber': linenr, 'function': ffunc,
-                         'arguments': fargs})
+        sendJSONCommand(
+            self.socket,
+            METHOD_SIGNAL,
+            self.procuuid,
+            {"message": message, "filename": filename, "linenumber": linenr, "function": ffunc, "arguments": fargs},
+        )
 
     def absPath(self, fileName):
         """Converts a filename to an absolute name"""
@@ -807,7 +799,7 @@ class DebugClientBase(object):
         """True if the main script we are currently running"""
         return self.running
 
-    def progTerminated(self, status, message=''):
+    def progTerminated(self, status, message=""):
         """Tells the debugger that the program has terminated"""
         if not self.__needEpilogue:
             return
@@ -824,11 +816,8 @@ class DebugClientBase(object):
             self.set_quit()
             self.running = None
 
-        sendJSONCommand(self.socket, METHOD_EPILOGUE_EXIT_CODE,
-                        self.procuuid, {'exitCode': status,
-                                        'message': message})
-        waitForIDEMessage(self.socket, METHOD_EPILOGUE_EXIT,
-                          WAIT_EXIT_COMMAND_TIMEOUT)
+        sendJSONCommand(self.socket, METHOD_EPILOGUE_EXIT_CODE, self.procuuid, {"exitCode": status, "message": message})
+        waitForIDEMessage(self.socket, METHOD_EPILOGUE_EXIT, WAIT_EXIT_COMMAND_TIMEOUT)
         # The final message exchange with the IDE has been completed
         # It is safe just to abort
         raise SystemExit
@@ -865,12 +854,10 @@ class DebugClientBase(object):
         if scope != -1:
             keylist = varDict.keys()
 
-            vlist = self.__formatVariablesList(
-                keylist, varDict, scope, filterList)
+            vlist = self.__formatVariablesList(keylist, varDict, scope, filterList)
             varlist.extend(vlist)
 
-        sendJSONCommand(self.socket, METHOD_VARIABLES,
-                        self.procuuid, {'scope': scope, 'variables': varlist})
+        sendJSONCommand(self.socket, METHOD_VARIABLES, self.procuuid, {"scope": scope, "variables": varlist})
 
     def __dumpVariable(self, var, frmnr, scope, filterList):
         """Returns the variables of a frame to the debug server"""
@@ -912,169 +899,143 @@ class DebugClientBase(object):
 
             if variable is not None:
                 typeObject, typeName, typeStr, resolver = getType(variable)
-                if typeStr.startswith(('PyQt5.', 'PyQt4.')):
+                if typeStr.startswith(("PyQt5.", "PyQt4.")):
                     vlist = self.__formatQtVariable(variable, typeName)
                     varlist.extend(vlist)
                 elif resolver:
                     varDict = resolver.getDictionary(variable)
-                    vlist = self.__formatVariablesList(
-                        list(varDict.keys()), varDict, scope, filterList)
+                    vlist = self.__formatVariablesList(list(varDict.keys()), varDict, scope, filterList)
                     varlist.extend(vlist)
 
-        sendJSONCommand(self.socket, METHOD_VARIABLE,
-                        self.procuuid,
-                        {'scope': scope, 'variable': var,
-                         'variables': varlist})
+        sendJSONCommand(
+            self.socket, METHOD_VARIABLE, self.procuuid, {"scope": scope, "variable": var, "variables": varlist}
+        )
 
     def __extractIndicators(self, var):
         """Extracts the indicator string from a variable text"""
         for indicator in DebugClientBase.INDICATORS:
             if var.endswith(indicator):
-                return var[:-len(indicator)], indicator
+                return var[: -len(indicator)], indicator
         return var, ""
 
     def __formatQtVariable(self, value, qttype):
         """Produces a formatted output of a simple Qt4/Qt5 type"""
         varlist = []
-        if qttype == 'QChar':
-            varlist.append(
-                ('', 'QChar', '{0}'.format(chr(value.unicode()))))
-            varlist.append(('', 'int', '{0:d}'.format(value.unicode())))
-        elif qttype == 'QByteArray':
-            varlist.append(
-                ('bytes', 'QByteArray', '{0}'.format(bytes(value))[2:-1]))
-            varlist.append(
-                ('hex', 'QByteArray', '{0}'.format(value.toHex())[2:-1]))
-            varlist.append(
-                ('base64', 'QByteArray', '{0}'.format(value.toBase64())[2:-1]))
-            varlist.append(('percent encoding', 'QByteArray',
-                            '{0}'.format(value.toPercentEncoding())[2:-1]))
-        elif qttype == 'QString':
-            varlist.append(('', 'QString', '{0}'.format(value)))
-        elif qttype == 'QStringList':
+        if qttype == "QChar":
+            varlist.append(("", "QChar", "{0}".format(chr(value.unicode()))))
+            varlist.append(("", "int", "{0:d}".format(value.unicode())))
+        elif qttype == "QByteArray":
+            varlist.append(("bytes", "QByteArray", "{0}".format(bytes(value))[2:-1]))
+            varlist.append(("hex", "QByteArray", "{0}".format(value.toHex())[2:-1]))
+            varlist.append(("base64", "QByteArray", "{0}".format(value.toBase64())[2:-1]))
+            varlist.append(("percent encoding", "QByteArray", "{0}".format(value.toPercentEncoding())[2:-1]))
+        elif qttype == "QString":
+            varlist.append(("", "QString", "{0}".format(value)))
+        elif qttype == "QStringList":
             for i in range(value.count()):
-                varlist.append(
-                    ('{0:d}'.format(i), 'QString', '{0}'.format(value[i])))
-        elif qttype == 'QPoint':
-            varlist.append(('x', 'int', '{0:d}'.format(value.x())))
-            varlist.append(('y', 'int', '{0:d}'.format(value.y())))
-        elif qttype == 'QPointF':
-            varlist.append(('x', 'float', '{0:g}'.format(value.x())))
-            varlist.append(('y', 'float', '{0:g}'.format(value.y())))
-        elif qttype == 'QRect':
-            varlist.append(('x', 'int', '{0:d}'.format(value.x())))
-            varlist.append(('y', 'int', '{0:d}'.format(value.y())))
-            varlist.append(('width', 'int', '{0:d}'.format(value.width())))
-            varlist.append(('height', 'int', '{0:d}'.format(value.height())))
-        elif qttype == 'QRectF':
-            varlist.append(('x', 'float', '{0:g}'.format(value.x())))
-            varlist.append(('y', 'float', '{0:g}'.format(value.y())))
-            varlist.append(('width', 'float', '{0:g}'.format(value.width())))
-            varlist.append(('height', 'float', '{0:g}'.format(value.height())))
-        elif qttype == 'QSize':
-            varlist.append(('width', 'int', '{0:d}'.format(value.width())))
-            varlist.append(('height', 'int', '{0:d}'.format(value.height())))
-        elif qttype == 'QSizeF':
-            varlist.append(('width', 'float', '{0:g}'.format(value.width())))
-            varlist.append(('height', 'float', '{0:g}'.format(value.height())))
-        elif qttype == 'QColor':
-            varlist.append(('name', 'str', '{0}'.format(value.name())))
+                varlist.append(("{0:d}".format(i), "QString", "{0}".format(value[i])))
+        elif qttype == "QPoint":
+            varlist.append(("x", "int", "{0:d}".format(value.x())))
+            varlist.append(("y", "int", "{0:d}".format(value.y())))
+        elif qttype == "QPointF":
+            varlist.append(("x", "float", "{0:g}".format(value.x())))
+            varlist.append(("y", "float", "{0:g}".format(value.y())))
+        elif qttype == "QRect":
+            varlist.append(("x", "int", "{0:d}".format(value.x())))
+            varlist.append(("y", "int", "{0:d}".format(value.y())))
+            varlist.append(("width", "int", "{0:d}".format(value.width())))
+            varlist.append(("height", "int", "{0:d}".format(value.height())))
+        elif qttype == "QRectF":
+            varlist.append(("x", "float", "{0:g}".format(value.x())))
+            varlist.append(("y", "float", "{0:g}".format(value.y())))
+            varlist.append(("width", "float", "{0:g}".format(value.width())))
+            varlist.append(("height", "float", "{0:g}".format(value.height())))
+        elif qttype == "QSize":
+            varlist.append(("width", "int", "{0:d}".format(value.width())))
+            varlist.append(("height", "int", "{0:d}".format(value.height())))
+        elif qttype == "QSizeF":
+            varlist.append(("width", "float", "{0:g}".format(value.width())))
+            varlist.append(("height", "float", "{0:g}".format(value.height())))
+        elif qttype == "QColor":
+            varlist.append(("name", "str", "{0}".format(value.name())))
             red, green, blue, alpha = value.getRgb()
-            varlist.append(
-                ('rgba', 'int',
-                 '{0:d}, {1:d}, {2:d}, {3:d}'.format(red, green, blue, alpha)))
+            varlist.append(("rgba", "int", "{0:d}, {1:d}, {2:d}, {3:d}".format(red, green, blue, alpha)))
             hue, saturation, value, alpha = value.getHsv()
-            varlist.append(
-                ('hsva', 'int',
-                 '{0:d}, {1:d}, {2:d}, {3:d}'.format(hue, saturation,
-                                                     value, alpha)))
+            varlist.append(("hsva", "int", "{0:d}, {1:d}, {2:d}, {3:d}".format(hue, saturation, value, alpha)))
             cyan, magenta, yellow, black, alpha = value.getCmyk()
             varlist.append(
-                ('cmyka', 'int',
-                 '{0:d}, {1:d}, {2:d}, {3:d}, {4:d}'.format(cyan, magenta,
-                                                            yellow, black,
-                                                            alpha)))
-        elif qttype == 'QDate':
-            varlist.append(('', 'QDate', '{0}'.format(value.toString())))
-        elif qttype == 'QTime':
-            varlist.append(('', 'QTime', '{0}'.format(value.toString())))
-        elif qttype == 'QDateTime':
-            varlist.append(('', 'QDateTime', '{0}'.format(value.toString())))
-        elif qttype == 'QDir':
-            varlist.append(('path', 'str', '{0}'.format(value.path())))
-            varlist.append(('absolutePath', 'str',
-                            '{0}'.format(value.absolutePath())))
-            varlist.append(('canonicalPath', 'str',
-                            '{0}'.format(value.canonicalPath())))
-        elif qttype == 'QFile':
-            varlist.append(('fileName', 'str', '{0}'.format(value.fileName())))
-        elif qttype == 'QFont':
-            varlist.append(('family', 'str', '{0}'.format(value.family())))
-            varlist.append(
-                ('pointSize', 'int', '{0:d}'.format(value.pointSize())))
-            varlist.append(('weight', 'int', '{0:d}'.format(value.weight())))
-            varlist.append(('bold', 'bool', '{0}'.format(value.bold())))
-            varlist.append(('italic', 'bool', '{0}'.format(value.italic())))
-        elif qttype == 'QUrl':
-            varlist.append(('url', 'str', '{0}'.format(value.toString())))
-            varlist.append(('scheme', 'str', '{0}'.format(value.scheme())))
-            varlist.append(('user', 'str', '{0}'.format(value.userName())))
-            varlist.append(('password', 'str', '{0}'.format(value.password())))
-            varlist.append(('host', 'str', '{0}'.format(value.host())))
-            varlist.append(('port', 'int', '{0:d}'.format(value.port())))
-            varlist.append(('path', 'str', '{0}'.format(value.path())))
-        elif qttype == 'QModelIndex':
-            varlist.append(('valid', 'bool', '{0}'.format(value.isValid())))
+                ("cmyka", "int", "{0:d}, {1:d}, {2:d}, {3:d}, {4:d}".format(cyan, magenta, yellow, black, alpha))
+            )
+        elif qttype == "QDate":
+            varlist.append(("", "QDate", "{0}".format(value.toString())))
+        elif qttype == "QTime":
+            varlist.append(("", "QTime", "{0}".format(value.toString())))
+        elif qttype == "QDateTime":
+            varlist.append(("", "QDateTime", "{0}".format(value.toString())))
+        elif qttype == "QDir":
+            varlist.append(("path", "str", "{0}".format(value.path())))
+            varlist.append(("absolutePath", "str", "{0}".format(value.absolutePath())))
+            varlist.append(("canonicalPath", "str", "{0}".format(value.canonicalPath())))
+        elif qttype == "QFile":
+            varlist.append(("fileName", "str", "{0}".format(value.fileName())))
+        elif qttype == "QFont":
+            varlist.append(("family", "str", "{0}".format(value.family())))
+            varlist.append(("pointSize", "int", "{0:d}".format(value.pointSize())))
+            varlist.append(("weight", "int", "{0:d}".format(value.weight())))
+            varlist.append(("bold", "bool", "{0}".format(value.bold())))
+            varlist.append(("italic", "bool", "{0}".format(value.italic())))
+        elif qttype == "QUrl":
+            varlist.append(("url", "str", "{0}".format(value.toString())))
+            varlist.append(("scheme", "str", "{0}".format(value.scheme())))
+            varlist.append(("user", "str", "{0}".format(value.userName())))
+            varlist.append(("password", "str", "{0}".format(value.password())))
+            varlist.append(("host", "str", "{0}".format(value.host())))
+            varlist.append(("port", "int", "{0:d}".format(value.port())))
+            varlist.append(("path", "str", "{0}".format(value.path())))
+        elif qttype == "QModelIndex":
+            varlist.append(("valid", "bool", "{0}".format(value.isValid())))
             if value.isValid():
-                varlist.append(('row', 'int', '{0}'.format(value.row())))
-                varlist.append(('column', 'int', '{0}'.format(value.column())))
-                varlist.append(
-                    ('internalId', 'int', '{0}'.format(value.internalId())))
-                varlist.append(('internalPointer', 'void *',
-                                '{0}'.format(value.internalPointer())))
-        elif qttype == 'QRegExp':
-            varlist.append(('pattern', 'str', '{0}'.format(value.pattern())))
+                varlist.append(("row", "int", "{0}".format(value.row())))
+                varlist.append(("column", "int", "{0}".format(value.column())))
+                varlist.append(("internalId", "int", "{0}".format(value.internalId())))
+                varlist.append(("internalPointer", "void *", "{0}".format(value.internalPointer())))
+        elif qttype == "QRegExp":
+            varlist.append(("pattern", "str", "{0}".format(value.pattern())))
 
         # GUI stuff
-        elif qttype == 'QAction':
-            varlist.append(('name', 'str', '{0}'.format(value.objectName())))
-            varlist.append(('text', 'str', '{0}'.format(value.text())))
-            varlist.append(
-                ('icon text', 'str', '{0}'.format(value.iconText())))
-            varlist.append(('tooltip', 'str', '{0}'.format(value.toolTip())))
-            varlist.append(
-                ('whatsthis', 'str', '{0}'.format(value.whatsThis())))
-            varlist.append(
-                ('shortcut', 'str',
-                 '{0}'.format(value.shortcut().toString())))
-        elif qttype == 'QKeySequence':
-            varlist.append(('value', '', '{0}'.format(value.toString())))
+        elif qttype == "QAction":
+            varlist.append(("name", "str", "{0}".format(value.objectName())))
+            varlist.append(("text", "str", "{0}".format(value.text())))
+            varlist.append(("icon text", "str", "{0}".format(value.iconText())))
+            varlist.append(("tooltip", "str", "{0}".format(value.toolTip())))
+            varlist.append(("whatsthis", "str", "{0}".format(value.whatsThis())))
+            varlist.append(("shortcut", "str", "{0}".format(value.shortcut().toString())))
+        elif qttype == "QKeySequence":
+            varlist.append(("value", "", "{0}".format(value.toString())))
 
         # XML stuff
-        elif qttype == 'QDomAttr':
-            varlist.append(('name', 'str', '{0}'.format(value.name())))
-            varlist.append(('value', 'str', '{0}'.format(value.value())))
-        elif qttype == 'QDomCharacterData':
-            varlist.append(('data', 'str', '{0}'.format(value.data())))
-        elif qttype == 'QDomComment':
-            varlist.append(('data', 'str', '{0}'.format(value.data())))
+        elif qttype == "QDomAttr":
+            varlist.append(("name", "str", "{0}".format(value.name())))
+            varlist.append(("value", "str", "{0}".format(value.value())))
+        elif qttype == "QDomCharacterData":
+            varlist.append(("data", "str", "{0}".format(value.data())))
+        elif qttype == "QDomComment":
+            varlist.append(("data", "str", "{0}".format(value.data())))
         elif qttype == "QDomDocument":
-            varlist.append(('text', 'str', '{0}'.format(value.toString())))
-        elif qttype == 'QDomElement':
-            varlist.append(('tagName', 'str', '{0}'.format(value.tagName())))
-            varlist.append(('text', 'str', '{0}'.format(value.text())))
-        elif qttype == 'QDomText':
-            varlist.append(('data', 'str', '{0}'.format(value.data())))
+            varlist.append(("text", "str", "{0}".format(value.toString())))
+        elif qttype == "QDomElement":
+            varlist.append(("tagName", "str", "{0}".format(value.tagName())))
+            varlist.append(("text", "str", "{0}".format(value.text())))
+        elif qttype == "QDomText":
+            varlist.append(("data", "str", "{0}".format(value.data())))
 
         # Networking stuff
-        elif qttype == 'QHostAddress':
-            varlist.append(
-                ('address', 'QHostAddress', '{0}'.format(value.toString())))
+        elif qttype == "QHostAddress":
+            varlist.append(("address", "QHostAddress", "{0}".format(value.toString())))
 
         return varlist
 
-    def __formatVariablesList(self, keylist, dict_, scope, filterList=None,
-                              formatSequences=False):
+    def __formatVariablesList(self, keylist, dict_, scope, filterList=None, formatSequences=False):
         """Produces a formated variables list"""
         filterList = [] if filterList is None else filterList[:]
 
@@ -1095,86 +1056,75 @@ class DebugClientBase(object):
                 continue
 
             # filter hidden attributes (filter #0)
-            if 0 in filterList and str(key)[:2] == '__' and not (
-                    key == "___len___" and
-                    TOO_LARGE_ATTRIBUTE in keylist):
+            if 0 in filterList and str(key)[:2] == "__" and not (key == "___len___" and TOO_LARGE_ATTRIBUTE in keylist):
                 continue
 
             # special handling for '__builtins__' (it's way too big)
-            if key == '__builtins__':
-                rvalue = '<module __builtin__ (built-in)>'
-                valtype = 'module'
+            if key == "__builtins__":
+                rvalue = "<module __builtin__ (built-in)>"
+                valtype = "module"
             else:
                 value = dict_[key]
                 valtypestr = str(type(value))[1:-1]
-                _, valtype = valtypestr.split(' ', 1)
+                _, valtype = valtypestr.split(" ", 1)
                 valtype = valtype[1:-1]
                 valtypename = type(value).__name__
                 if valtype not in VAR_TYPE_STRINGS:
-                    if valtype in ['numpy.ndarray', 'array.array']:
-                        if VAR_TYPE_STRINGS.index('list') in filterList:
+                    if valtype in ["numpy.ndarray", "array.array"]:
+                        if VAR_TYPE_STRINGS.index("list") in filterList:
                             continue
-                    elif valtypename == 'MultiValueDict':
-                        if VAR_TYPE_STRINGS.index('dict') in filterList:
+                    elif valtypename == "MultiValueDict":
+                        if VAR_TYPE_STRINGS.index("dict") in filterList:
                             continue
-                    elif valtype == 'sip.methoddescriptor':
-                        if VAR_TYPE_STRINGS.index('method') in filterList:
+                    elif valtype == "sip.methoddescriptor":
+                        if VAR_TYPE_STRINGS.index("method") in filterList:
                             continue
-                    elif valtype == 'sip.enumtype':
-                        if VAR_TYPE_STRINGS.index('class') in filterList:
+                    elif valtype == "sip.enumtype":
+                        if VAR_TYPE_STRINGS.index("class") in filterList:
                             continue
-                    elif VAR_TYPE_STRINGS.index('instance') in filterList:
+                    elif VAR_TYPE_STRINGS.index("instance") in filterList:
                         continue
 
-                    if (not valtypestr.startswith('type ') and
-                            valtypename not in
-                            ['ndarray', 'MultiValueDict', 'array']):
+                    if not valtypestr.startswith("type ") and valtypename not in ["ndarray", "MultiValueDict", "array"]:
                         valtype = valtypestr
                 else:
                     try:
                         # Strip 'instance' to be equal with Python 3
-                        if valtype == 'instancemethod':
-                            valtype = 'method'
+                        if valtype == "instancemethod":
+                            valtype = "method"
 
                         if VAR_TYPE_STRINGS.index(valtype) in filterList:
                             continue
                     except ValueError:
-                        if valtype == 'classobj':
-                            if VAR_TYPE_STRINGS.index(
-                                    'instance') in filterList:
+                        if valtype == "classobj":
+                            if VAR_TYPE_STRINGS.index("instance") in filterList:
                                 continue
-                        elif valtype == 'sip.methoddescriptor':
-                            if VAR_TYPE_STRINGS.index(
-                                    'method') in filterList:
+                        elif valtype == "sip.methoddescriptor":
+                            if VAR_TYPE_STRINGS.index("method") in filterList:
                                 continue
-                        elif valtype == 'sip.enumtype':
-                            if VAR_TYPE_STRINGS.index('class') in \
-                                    filterList:
+                        elif valtype == "sip.enumtype":
+                            if VAR_TYPE_STRINGS.index("class") in filterList:
                                 continue
-                        elif not valtype.startswith('PySide') and \
-                            (VAR_TYPE_STRINGS.index('other') in
-                             filterList):
+                        elif not valtype.startswith("PySide") and (VAR_TYPE_STRINGS.index("other") in filterList):
                             continue
 
                 try:
-                    if valtype in ['list', 'tuple', 'dict', 'set',
-                                   'frozenset', 'array.array']:
-                        if valtype == 'dict':
-                            rvalue = '{0:d}'.format(len(value.keys()))
+                    if valtype in ["list", "tuple", "dict", "set", "frozenset", "array.array"]:
+                        if valtype == "dict":
+                            rvalue = "{0:d}".format(len(value.keys()))
                         else:
-                            rvalue = '{0:d}'.format(len(value))
-                    elif valtype == 'numpy.ndarray':
-                        rvalue = '{0:d}'.format(value.size)
-                    elif valtypename == 'MultiValueDict':
-                        rvalue = '{0:d}'.format(len(value.keys()))
-                        valtype = 'django.MultiValueDict'  # shortened type
+                            rvalue = "{0:d}".format(len(value))
+                    elif valtype == "numpy.ndarray":
+                        rvalue = "{0:d}".format(value.size)
+                    elif valtypename == "MultiValueDict":
+                        rvalue = "{0:d}".format(len(value.keys()))
+                        valtype = "django.MultiValueDict"  # shortened type
                     else:
                         rvalue = repr(value)
-                        if valtype.startswith('class') and \
-                           rvalue[0] in ['{', '(', '[']:
-                            rvalue = ''
+                        if valtype.startswith("class") and rvalue[0] in ["{", "(", "["]:
+                            rvalue = ""
                 except Exception:
-                    rvalue = ''
+                    rvalue = ""
 
             if formatSequences:
                 if str(key) == key:
@@ -1188,25 +1138,21 @@ class DebugClientBase(object):
     def __generateFilterObjects(self, scope, filterString):
         """Converts a filter string to a list of filter objects"""
         patternFilterObjects = []
-        for pattern in filterString.split(';'):
-            patternFilterObjects.append(re.compile('^{0}$'.format(pattern)))
+        for pattern in filterString.split(";"):
+            patternFilterObjects.append(re.compile("^{0}$".format(pattern)))
         if scope:
             self.globalsFilterObjects = patternFilterObjects[:]
         else:
             self.localsFilterObjects = patternFilterObjects[:]
 
-    def startProgInDebugger(self, progargs, host,
-                            port, exceptions, tracePython,
-                            enableCallTrace):
+    def startProgInDebugger(self, progargs, host, port, exceptions, tracePython, enableCallTrace):
         """Starts the remote debugger"""
         remoteAddress = self.resolveHost(host)
         self.connect(remoteAddress, port)
 
         # Common part of running: the IDE waits for the client message
-        sendJSONCommand(self.socket, METHOD_PROC_ID_INFO,
-                        self.procuuid, None)
-        waitForIDEMessage(self.socket, METHOD_PROLOGUE_CONTINUE,
-                          WAIT_CONTINUE_TIMEOUT)
+        sendJSONCommand(self.socket, METHOD_PROC_ID_INFO, self.procuuid, None)
+        waitForIDEMessage(self.socket, METHOD_PROLOGUE_CONTINUE, WAIT_CONTINUE_TIMEOUT)
 
         self.__setupStreams()
 
@@ -1235,8 +1181,8 @@ class DebugClientBase(object):
         # need for this is on Windows os where backslash is the path separator.
         # They will get inadvertantly stripped away during the eval causing
         # IOErrors if self.running is passed as a normal str.
-        self.debugMod.__dict__['__file__'] = self.running
-        sys.modules['__main__'] = self.debugMod
+        self.debugMod.__dict__["__file__"] = self.running
+        sys.modules["__main__"] = self.debugMod
 
         code = self.__compileFileSource(self.running)
         if code:
@@ -1255,14 +1201,13 @@ class DebugClientBase(object):
         except ValueError:
             # version = 'v4'
             family = socket.AF_INET
-        return socket.getaddrinfo(host, None, family,
-                                  socket.SOCK_STREAM)[0][4][0]
+        return socket.getaddrinfo(host, None, family, socket.SOCK_STREAM)[0][4][0]
 
     def main(self):
         """
         Public method implementing the main method.
         """
-        if '--' in sys.argv:
+        if "--" in sys.argv:
             args = sys.argv[1:]
             host = None
             port = None
@@ -1270,56 +1215,53 @@ class DebugClientBase(object):
             exceptions = True
             enableCallTrace = True
             while args[0]:
-                if args[0] == '--host':
+                if args[0] == "--host":
                     host = args[1]
                     del args[0]
                     del args[0]
-                elif args[0] == '--port':
+                elif args[0] == "--port":
                     port = int(args[1])
                     del args[0]
                     del args[0]
-                elif args[0] == '--trace-python':
+                elif args[0] == "--trace-python":
                     tracePython = True
                     del args[0]
-                elif args[0] == '--no-exc-report':
+                elif args[0] == "--no-exc-report":
                     exceptions = False
                     del args[0]
-                elif args[0] == '--no-redirect':
+                elif args[0] == "--no-redirect":
                     self.redirect = False
                     del args[0]
-                elif args[0] == '--encoding':
+                elif args[0] == "--encoding":
                     self.__encoding = args[1]
                     del args[0]
                     del args[0]
-                elif args[0] == '--fork-child':
+                elif args[0] == "--fork-child":
                     self.forkAuto = True
                     self.forkChild = True
                     del args[0]
-                elif args[0] == '--fork-parent':
+                elif args[0] == "--fork-parent":
                     self.forkAuto = True
                     self.forkChild = False
                     del args[0]
-                elif args[0] == '--procuuid':
+                elif args[0] == "--procuuid":
                     self.procuuid = args[1]
                     del args[0]
                     del args[0]
-                elif args[0] == '--no-call-trace':
+                elif args[0] == "--no-call-trace":
                     enableCallTrace = False
                     del args[0]
-                elif args[0] == '--':
+                elif args[0] == "--":
                     del args[0]
                     break
-                else:   # unknown option
+                else:  # unknown option
                     del args[0]
             if not args:
                 print("No program given. Aborting...")
             elif port is None or host is None:
                 print("Network address is not provided. Aborting...")
             else:
-                self.startProgInDebugger(args, host, port,
-                                         exceptions,
-                                         tracePython,
-                                         enableCallTrace)
+                self.startProgInDebugger(args, host, port, exceptions, tracePython, enableCallTrace)
         else:
             print("No script to debug. Aborting...")
 
@@ -1332,13 +1274,12 @@ class DebugClientBase(object):
         isPopen = False
         stackFrames = traceback.extract_stack()
         for stackFrame in stackFrames:
-            if stackFrame[2] == '_execute_child':
-                if stackFrame[0].endswith(os.path.sep + 'subprocess.py'):
+            if stackFrame[2] == "_execute_child":
+                if stackFrame[0].endswith(os.path.sep + "subprocess.py"):
                     isPopen = True
 
         if not self.forkAuto and not isPopen:
-            sendJSONCommand(self.socket, METHOD_FORK_TO,
-                            self.procuuid, None)
+            sendJSONCommand(self.socket, METHOD_FORK_TO, self.procuuid, None)
             self.eventLoop(True)
         pid = DEBUG_CLIENT_ORIG_FORK()
 
@@ -1376,11 +1317,11 @@ class DebugClientBase(object):
     @staticmethod
     def __getSysPath(firstEntry):
         """calculate a path list including the PYTHONPATH env variable"""
-        sysPath = [path for path in
-                   os.environ.get('PYTHONPATH', '').split(os.pathsep)
-                   if path not in sys.path] + sys.path[:]
-        if '' in sysPath:
-            sysPath.remove('')
+        sysPath = [
+            path for path in os.environ.get("PYTHONPATH", "").split(os.pathsep) if path not in sys.path
+        ] + sys.path[:]
+        if "" in sysPath:
+            sysPath.remove("")
         sysPath.insert(0, firstEntry)
-        sysPath.insert(0, '')
+        sysPath.insert(0, "")
         return sysPath

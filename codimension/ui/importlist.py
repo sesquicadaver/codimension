@@ -41,7 +41,6 @@ from .qt import (
 
 
 class ImportsList(QTreeWidget):
-
     """Need to derive for overloading focusOutEvent()"""
 
     def __init__(self, parent):
@@ -53,7 +52,6 @@ class ImportsList(QTreeWidget):
 
 
 class ImportListWidget(QFrame):
-
     """Frameless dialogue to select an import to open"""
 
     IMPORT_MODE = 0
@@ -129,13 +127,12 @@ class ImportListWidget(QFrame):
             importName = item[0]
             resolvedPath = item[1]
             if resolvedPath is None:
-                resolvedPath = ''
+                resolvedPath = ""
             importItem = QTreeWidgetItem([importName, resolvedPath])
             importItem.setToolTip(0, self.__getFileTooltip(resolvedPath))
             self.__importList.addTopLevelItem(importItem)
 
-        self.__importList.header().resizeSections(
-            QHeaderView.ResizeToContents)
+        self.__importList.header().resizeSections(QHeaderView.ResizeToContents)
 
     def showDefinitions(self, definitions):
         """Pops up the dialog"""
@@ -156,12 +153,10 @@ class ImportListWidget(QFrame):
         headerItem = QTreeWidgetItem(["Type", "Path", "Line", "Column"])
         self.__importList.setHeaderItem(headerItem)
         for item in definitions:
-            defItem = QTreeWidgetItem([item[3], item[0],
-                                       str(item[1]), str(item[2] + 1)])
+            defItem = QTreeWidgetItem([item[3], item[0], str(item[1]), str(item[2] + 1)])
             self.__importList.addTopLevelItem(defItem)
 
-        self.__importList.header().resizeSections(
-            QHeaderView.ResizeToContents)
+        self.__importList.header().resizeSections(QHeaderView.ResizeToContents)
 
     @staticmethod
     def __getFileTooltip(path):
@@ -172,7 +167,7 @@ class ImportListWidget(QFrame):
                 modInfo = GlobalData().briefModinfoCache.get(path)
                 if modInfo.docstring is not None:
                     return modInfo.docstring.text
-        return ''
+        return ""
 
     def setFocus(self):
         """Sets the focus to the list of imports"""

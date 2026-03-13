@@ -48,8 +48,7 @@ from .qt import (
 )
 
 
-class FileItemRoot():
-
+class FileItemRoot:
     """Files list root item"""
 
     def __init__(self, values):
@@ -66,7 +65,7 @@ class FileItemRoot():
         try:
             return self.itemData[column]
         except Exception:
-            return ''
+            return ""
 
     def appendChild(self, child):
         """Add a child item"""
@@ -100,8 +99,7 @@ class FileItemRoot():
             return False
 
 
-class FileItem():
-
+class FileItem:
     """Files list item"""
 
     def __init__(self, parent, icon, fullname, tooltip):
@@ -116,7 +114,7 @@ class FileItem():
     @staticmethod
     def columnCount():
         """Provides the number of columns"""
-        return 2    # Base name and full path
+        return 2  # Base name and full path
 
     def data(self, column):
         """Provides a value for the column"""
@@ -144,7 +142,6 @@ class FileItem():
 
 
 class FindFileModel(QAbstractItemModel):
-
     """Find file data model implementation"""
 
     def __init__(self, parent=None):
@@ -168,7 +165,7 @@ class FindFileModel(QAbstractItemModel):
     def __populateFromProject(self):
         """Populates find name dialog from the project files"""
         mainWindow = GlobalData().mainWindow
-        showTooltips = Settings()['findFileTooltips']
+        showTooltips = Settings()["findFileTooltips"]
         for fname in GlobalData().project.filesList:
             if fname.endswith(os.path.sep):
                 continue
@@ -191,7 +188,7 @@ class FindFileModel(QAbstractItemModel):
         """Populates the name dialog from the opened files"""
         mainWindow = GlobalData().mainWindow
         editorsManager = mainWindow.editorsManagerWidget.editorsManager
-        showTooltips = Settings()['findFileTooltips']
+        showTooltips = Settings()["findFileTooltips"]
         for record in editorsManager.getTextEditors():
             # uuid = record[0]
             fname = record[1]
@@ -234,8 +231,7 @@ class FindFileModel(QAbstractItemModel):
             item = index.internalPointer()
             if index.column() < item.columnCount():
                 return item.data(index.column())
-            if index.column() == item.columnCount() and \
-                index.column() < self.columnCount(self.parent(index)):
+            if index.column() == item.columnCount() and index.column() < self.columnCount(self.parent(index)):
                 # This is for the case when an item under a multi-column
                 # parent doesn't have a value for all the columns
                 return ""
@@ -268,9 +264,7 @@ class FindFileModel(QAbstractItemModel):
         # The model/view framework considers negative values out-of-bounds,
         # however in python they work when indexing into lists. So make sure
         # we return an invalid index for out-of-bounds row/col
-        if row < 0 or column < 0 or \
-           row >= self.rowCount(parent) or \
-           column >= self.columnCount(parent):
+        if row < 0 or column < 0 or row >= self.rowCount(parent) or column >= self.columnCount(parent):
             return QModelIndex()
 
         if not parent.isValid():
@@ -326,13 +320,12 @@ class FindFileModel(QAbstractItemModel):
 
 
 class FindFileSortFilterProxyModel(QSortFilterProxyModel):
-
     """Find file dialog sort filter proxy model"""
 
     def __init__(self, parent=None):
         QSortFilterProxyModel.__init__(self, parent)
-        self.__sortColumn = None    # Avoid pylint complains
-        self.__sortOrder = None     # Avoid pylint complains
+        self.__sortColumn = None  # Avoid pylint complains
+        self.__sortOrder = None  # Avoid pylint complains
 
         self.__filters = []
         self.__filtersCount = 0
@@ -381,7 +374,7 @@ class FindFileSortFilterProxyModel(QSortFilterProxyModel):
     def filterAcceptsRow(self, sourceRow, _):
         """Filters rows"""
         if self.__filtersCount == 0 or self.__sourceModelRoot is None:
-            return True     # No filters
+            return True  # No filters
 
         nameToMatch = self.__sourceModelRoot.child(sourceRow).basename
         for regexp in self.__filters:
@@ -391,7 +384,6 @@ class FindFileSortFilterProxyModel(QSortFilterProxyModel):
 
 
 class FilesBrowser(QTreeView):
-
     """List of files widget implementation"""
 
     def __init__(self, parent=None):
@@ -440,8 +432,7 @@ class FilesBrowser(QTreeView):
 
     def _resort(self):
         """Re-sorts the tree"""
-        self.model().sort(self.header().sortIndicatorSection(),
-                          self.header().sortIndicatorOrder())
+        self.model().sort(self.header().sortIndicatorSection(), self.header().sortIndicatorOrder())
 
     def openCurrentItem(self):
         """Triggers when an item is clicked or double clicked"""
@@ -473,7 +464,6 @@ class FilesBrowser(QTreeView):
 
 
 class FindFileDialog(QDialog):
-
     """Find file dialog implementation"""
 
     def __init__(self, parent=None):
@@ -515,8 +505,7 @@ class FindFileDialog(QDialog):
             title += "project: "
         else:
             title += "opened files: "
-        title += str(self.__filesBrowser.getVisible()) + " of " + \
-            str(self.__filesBrowser.getTotal())
+        title += str(self.__filesBrowser.getVisible()) + " of " + str(self.__filesBrowser.getTotal())
         self.setWindowTitle(title)
 
     def __createLayout(self):
@@ -530,8 +519,7 @@ class FindFileDialog(QDialog):
 
         self.findCombo = EnterSensitiveComboBox(self)
         self.__tuneCombo(self.findCombo)
-        self.findCombo.lineEdit().setToolTip(
-            "Regular expression to search for")
+        self.findCombo.lineEdit().setToolTip("Regular expression to search for")
         verticalLayout.addWidget(self.findCombo)
         self.findCombo.enterClicked.connect(self.__enterInFilter)
 
@@ -541,8 +529,7 @@ class FindFileDialog(QDialog):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            comboBox.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(comboBox.sizePolicy().hasHeightForWidth())
         comboBox.setSizePolicy(sizePolicy)
         comboBox.setEditable(True)
         comboBox.setInsertPolicy(QComboBox.InsertAtTop)

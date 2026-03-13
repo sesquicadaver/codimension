@@ -24,4 +24,3 @@
 # convenience
 MAXINT_32 = 2147483647
 MININT_32 = -2147483648
-

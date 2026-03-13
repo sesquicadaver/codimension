@@ -75,16 +75,16 @@ CONNECTION_TIMEOUT = 3000
 STATE_PROLOGUE = 0
 STATE_RUNNING = 1
 
+
 # Used from outside too
 def getWorkingDir(path, params):
     """Provides the working directory"""
-    if params['useScriptLocation']:
+    if params["useScriptLocation"]:
         return os.path.dirname(path)
-    return params['specificDir']
+    return params["specificDir"]
 
 
 class RemoteProcessWrapper(QObject):
-
     """Wrapper to control the remote process"""
 
     sigFinished = pyqtSignal(str, int)
@@ -112,24 +112,20 @@ class RemoteProcessWrapper(QObject):
         """Starts the remote process"""
         params = getRunParameters(self.path)
         if self.redirected:
-            cmd, environment = getCwdCmdEnv(self.kind, self.path, params,
-                                            self.__serverPort, self.procuuid)
+            cmd, environment = getCwdCmdEnv(self.kind, self.path, params, self.__serverPort, self.procuuid)
         else:
-            cmd, environment = getCwdCmdEnv(self.kind, self.path, params,
-                                            self.__serverPort, self.procuuid)
+            cmd, environment = getCwdCmdEnv(self.kind, self.path, params, self.__serverPort, self.procuuid)
 
-        self.__proc = Popen(cmd, shell=True,
-                            cwd=getWorkingDir(self.path, params),
-                            env=environment)
+        self.__proc = Popen(cmd, shell=True, cwd=getWorkingDir(self.path, params), env=environment)
         if self.kind == DEBUG:
             time.sleep(0.1)
             procPoll = self.__proc.poll()
             if procPoll is not None:
-                msg = ' '.join(['Error starting debug session.',
-                                'Process has finished with return code:',
-                                str(procPoll)])
-                if params['customTerminal']:
-                    msg += '. Incorrect custom terminal string?'
+                msg = " ".join(
+                    ["Error starting debug session.", "Process has finished with return code:", str(procPoll)]
+                )
+                if params["customTerminal"]:
+                    msg += ". Incorrect custom terminal string?"
                 raise Exception(msg)
 
     def setSocket(self, clientSocket):
@@ -149,8 +145,8 @@ class RemoteProcessWrapper(QObject):
 
     def cancelPendingDebugSession(self):
         """Cancels the debug session which has not started yet due to possibly
-           a bad custom terminal script. I.e. the debuggee has not come back
-           to the IDE to a TCP server"""
+        a bad custom terminal script. I.e. the debuggee has not come back
+        to the IDE to a TCP server"""
         self.runManager.cancelPendingDebugSession(self.procuuid)
 
     def stop(self):
@@ -169,10 +165,8 @@ class RemoteProcessWrapper(QObject):
         """Disconnects the socket related slots"""
         if self.__clientSocket:
             try:
-                self.__clientSocket.readyRead.disconnect(
-                    self.__parseClientLine)
-                self.__clientSocket.disconnected.disconnect(
-                    self.__disconnected)
+                self.__clientSocket.readyRead.disconnect(self.__parseClientLine)
+                self.__clientSocket.disconnected.disconnect(self.__disconnected)
             except Exception:
                 pass
 
@@ -235,11 +229,11 @@ class RemoteProcessWrapper(QObject):
             return None
 
         if self.kind == RUN:
-            wrapper = os.path.join('client', 'client_cdm_run.py')
+            wrapper = os.path.join("client", "client_cdm_run.py")
         elif self.kind == PROFILE:
-            wrapper = os.path.join('client', 'client_cdm_profile.py')
+            wrapper = os.path.join("client", "client_cdm_profile.py")
         else:
-            wrapper = os.path.join('client', 'client_cdm_dbg.py')
+            wrapper = os.path.join("client", "client_cdm_dbg.py")
         for item in os.listdir("/proc"):
             if item.isdigit():
                 try:
@@ -248,9 +242,9 @@ class RemoteProcessWrapper(QObject):
                     f.close()
 
                     if wrapper in content:
-                        if '--port' in content:
+                        if "--port" in content:
                             if str(self.__serverPort) in content:
-                                if '--procuuid' in content:
+                                if "--procuuid" in content:
                                     if self.procuuid in content:
                                         return int(item)
                 except Exception:
@@ -264,14 +258,12 @@ class RemoteProcessWrapper(QObject):
 
     def __sendStart(self):
         """Sends the start command to the runnee"""
-        sendJSONCommand(self.__clientSocket, METHOD_PROLOGUE_CONTINUE,
-                        self.procuuid, None)
+        sendJSONCommand(self.__clientSocket, METHOD_PROLOGUE_CONTINUE, self.procuuid, None)
 
     def __sendExit(self):
         """sends the exit command to the runnee"""
         self.__disconnectSocket()
-        sendJSONCommand(self.__clientSocket, METHOD_EPILOGUE_EXIT,
-                        self.procuuid, None)
+        sendJSONCommand(self.__clientSocket, METHOD_EPILOGUE_EXIT, self.procuuid, None)
 
     def sendJSONCommand(self, method, params):
         """Sends a command to the debuggee. Used by the debugger."""
@@ -281,29 +273,28 @@ class RemoteProcessWrapper(QObject):
         """Parses a single line from the running client"""
         while self.__clientSocket and self.__clientSocket.canReadLine():
             try:
-                method, procuuid, params, jsonStr = getParsedJSONMessage(
-                    self.__clientSocket)
-                del procuuid    # unused
+                method, procuuid, params, jsonStr = getParsedJSONMessage(self.__clientSocket)
+                del procuuid  # unused
 
                 if IDE_DEBUG:
                     print("Process wrapper received: " + str(jsonStr))
 
                 if method == METHOD_EPILOGUE_EXIT_CODE:
                     self.__sendExit()
-                    self.sigFinished.emit(self.procuuid, params['exitCode'])
+                    self.sigFinished.emit(self.procuuid, params["exitCode"])
                     QApplication.processEvents()
                     continue
                 if method == METHOD_STDOUT:
-                    self.sigClientStdout.emit(self.procuuid, params['text'])
+                    self.sigClientStdout.emit(self.procuuid, params["text"])
                     QApplication.processEvents()
                     continue
                 if method == METHOD_STDERR:
-                    self.sigClientStderr.emit(self.procuuid, params['text'])
+                    self.sigClientStderr.emit(self.procuuid, params["text"])
                     QApplication.processEvents()
                     continue
                 if method == METHOD_STDIN:
-                    prompt = params['prompt']
-                    echo = params['echo']
+                    prompt = params["prompt"]
+                    echo = params["echo"]
                     self.sigClientInput.emit(self.procuuid, prompt, echo)
                     QApplication.processEvents()
                     continue
@@ -313,18 +304,15 @@ class RemoteProcessWrapper(QObject):
                 self.sigIncomingMessage.emit(self.procuuid, method, params)
 
             except Exception as exc:
-                logging.error('Failure to get a message '
-                              'from a remote process: %s', str(exc))
+                logging.error("Failure to get a message from a remote process: %s", str(exc))
 
     def userInput(self, collectedString):
         """Called when the user finished input"""
         if self.__clientSocket:
-            sendJSONCommand(self.__clientSocket, METHOD_STDIN,
-                            self.procuuid, {'input': collectedString})
+            sendJSONCommand(self.__clientSocket, METHOD_STDIN, self.procuuid, {"input": collectedString})
 
 
 class RemoteProcess:
-
     """Stores attributes of a single process"""
 
     def __init__(self):
@@ -334,7 +322,6 @@ class RemoteProcess:
 
 
 class RunManager(QObject):
-
     """Manages the external running processes"""
 
     # script path, output file, start time, finish time, redirected
@@ -369,13 +356,13 @@ class RunManager(QObject):
         """Triggered when the debug client has not connected"""
         procuuid = self.__newConnectionTimer.objectName()
         self.__onProcessFinished(procuuid, FAILED_TO_START)
-        logging.error('Failed to start the script: no incoming connection')
+        logging.error("Failed to start the script: no incoming connection")
 
     def cancelPendingDebugSession(self, procuuid):
         """Triggered when:
-           - the user requested debugging
-           - the user requested cancelling but the debuggee has not established
-             a connection yet. That could be due to an incorrect custom terminal
+        - the user requested debugging
+        - the user requested cancelling but the debuggee has not established
+          a connection yet. That could be due to an incorrect custom terminal
         """
         if self.__newConnectionTimer.isActive():
             self.__newConnectionTimer.stop()
@@ -403,20 +390,19 @@ class RunManager(QObject):
         """Waits for the message with the proc ID"""
         if clientSocket.waitForReadyRead(1000):
             try:
-                method, procuuid, params, jsonStr = getParsedJSONMessage(
-                    clientSocket)
+                method, procuuid, params, jsonStr = getParsedJSONMessage(clientSocket)
                 if IDE_DEBUG:
-                    print("Run manager (wait for handshake) received: " +
-                          str(jsonStr))
+                    print("Run manager (wait for handshake) received: " + str(jsonStr))
                 if method != METHOD_PROC_ID_INFO:
-                    logging.error('Unexpected message at the handshake stage. '
-                                  'Expected: %s. Received: %s',
-                                  METHOD_PROC_ID_INFO, str(method))
+                    logging.error(
+                        "Unexpected message at the handshake stage. Expected: %s. Received: %s",
+                        METHOD_PROC_ID_INFO,
+                        str(method),
+                    )
                     self.__safeSocketClose(clientSocket)
                     return None
             except (TypeError, ValueError):
-                self.__mainWindow.showStatusBarMessage(
-                    'Unsolicited connection to the RunManager. Ignoring...')
+                self.__mainWindow.showStatusBarMessage("Unsolicited connection to the RunManager. Ignoring...")
                 self.__safeSocketClose(clientSocket)
                 return None
 
@@ -432,11 +418,11 @@ class RunManager(QObject):
         try:
             clientSocket.close()
         except Exception as exc:
-            logging.error('Run manager safe socket close: %s', str(exc))
+            logging.error("Run manager safe socket close: %s", str(exc))
 
     def __pickWidget(self, procuuid, kind):
         """Picks the widget for a process"""
-        consoleReuse = Settings()['ioconsolereuse']
+        consoleReuse = Settings()["ioconsolereuse"]
         if consoleReuse == NO_REUSE:
             widget = IOConsoleWidget(procuuid, kind)
             self.__mainWindow.addIOConsole(widget, kind)
@@ -468,8 +454,7 @@ class RunManager(QObject):
             profilerParams = Settings().getProfilerSettings()
         elif kind == DEBUG:
             debuggerParams = Settings().getDebuggerSettings()
-        dlg = RunDialog(path, params, profilerParams, debuggerParams,
-                        kind, self.__mainWindow)
+        dlg = RunDialog(path, params, profilerParams, debuggerParams, kind, self.__mainWindow)
         if dlg.exec_() == QDialog.Accepted:
             addRunParams(path, dlg.runParams)
             if kind == PROFILE:
@@ -483,35 +468,27 @@ class RunManager(QObject):
 
     def __prepareRemoteProcess(self, path, kind):
         """Prepares the data structures to start a remote proces"""
-        redirected = getRunParameters(path)['redirected']
+        redirected = getRunParameters(path)["redirected"]
         remoteProc = RemoteProcess()
         remoteProc.kind = kind
-        remoteProc.procWrapper = RemoteProcessWrapper(
-            self, path, self.__tcpServer.serverPort(), redirected, kind)
+        remoteProc.procWrapper = RemoteProcessWrapper(self, path, self.__tcpServer.serverPort(), redirected, kind)
         remoteProc.procWrapper.state = STATE_PROLOGUE
         if redirected or kind == DEBUG:
-            self.__prologueProcesses.append((remoteProc.procWrapper.procuuid,
-                                             time.time()))
+            self.__prologueProcesses.append((remoteProc.procWrapper.procuuid, time.time()))
             if not self.__prologueTimer.isActive():
                 self.__prologueTimer.start(1000)
         if redirected:
-            remoteProc.widget = self.__pickWidget(
-                remoteProc.procWrapper.procuuid, kind)
-            remoteProc.widget.appendIDEMessage(
-                'Starting script ' + path + '...')
+            remoteProc.widget = self.__pickWidget(remoteProc.procWrapper.procuuid, kind)
+            remoteProc.widget.appendIDEMessage("Starting script " + path + "...")
 
-            remoteProc.procWrapper.sigClientStdout.connect(
-                remoteProc.widget.appendStdoutMessage)
-            remoteProc.procWrapper.sigClientStderr.connect(
-                remoteProc.widget.appendStderrMessage)
-            remoteProc.procWrapper.sigClientInput.connect(
-                remoteProc.widget.input)
+            remoteProc.procWrapper.sigClientStdout.connect(remoteProc.widget.appendStdoutMessage)
+            remoteProc.procWrapper.sigClientStderr.connect(remoteProc.widget.appendStderrMessage)
+            remoteProc.procWrapper.sigClientInput.connect(remoteProc.widget.input)
 
             remoteProc.widget.sigUserInput.connect(self.__onUserInput)
 
         remoteProc.procWrapper.sigFinished.connect(self.__onProcessFinished)
-        remoteProc.procWrapper.sigIncomingMessage.connect(
-            self.__onIncomingMessage)
+        remoteProc.procWrapper.sigIncomingMessage.connect(self.__onIncomingMessage)
         self.__processes.append(remoteProc)
         return remoteProc
 
@@ -529,8 +506,7 @@ class RunManager(QObject):
                 if not self.__waitTimer.isActive():
                     self.__waitTimer.start(1000)
         except Exception as exc:
-            self.__onProcessFinished(remoteProc.procWrapper.procuuid,
-                                     FAILED_TO_START)
+            self.__onProcessFinished(remoteProc.procWrapper.procuuid, FAILED_TO_START)
             logging.error(str(exc))
 
     def profile(self, path, needDialog):
@@ -547,8 +523,7 @@ class RunManager(QObject):
                 if not self.__waitTimer.isActive():
                     self.__waitTimer.start(1000)
         except Exception as exc:
-            self.__onProcessFinished(remoteProc.procWrapper.procuuid,
-                                     FAILED_TO_START)
+            self.__onProcessFinished(remoteProc.procWrapper.procuuid, FAILED_TO_START)
             logging.error(str(exc))
 
     def debug(self, path, needDialog):
@@ -562,21 +537,19 @@ class RunManager(QObject):
         # The run parameters could be changed by another run after the
         # debugging has started so they need to be saved per session
         self.sigDebugSessionPrologueStarted.emit(
-            remoteProc.procWrapper, path,
-            getRunParameters(path), Settings().getDebuggerSettings())
+            remoteProc.procWrapper, path, getRunParameters(path), Settings().getDebuggerSettings()
+        )
         try:
             remoteProc.procWrapper.start()
             if not remoteProc.procWrapper.redirected:
-                self.__newConnectionTimer.setObjectName(
-                    remoteProc.procWrapper.procuuid)
+                self.__newConnectionTimer.setObjectName(remoteProc.procWrapper.procuuid)
                 self.__newConnectionTimer.start(CONNECTION_TIMEOUT)
 
                 remoteProc.procWrapper.startTime = datetime.now()
                 if not self.__waitTimer.isActive():
                     self.__waitTimer.start(1000)
         except Exception as exc:
-            self.__onProcessFinished(remoteProc.procWrapper.procuuid,
-                                     FAILED_TO_START)
+            self.__onProcessFinished(remoteProc.procWrapper.procuuid, FAILED_TO_START)
             logging.error(str(exc))
 
     def killAll(self):
@@ -691,7 +664,7 @@ class RunManager(QObject):
         if index is not None:
             item = self.__processes[index]
             if item.widget:
-                msg = item.widget.appendIDEMessage('Script started')
+                msg = item.widget.appendIDEMessage("Script started")
                 item.procWrapper.startTime = msg.timestamp
 
     def __onUserInput(self, procuuid, userInput):
@@ -727,13 +700,13 @@ class RunManager(QObject):
             GlobalData().getProfileOutputPath(procWrapper.procuuid),
             printableTimestamp(procWrapper.startTime),
             printableTimestamp(procWrapper.finishTime),
-            procWrapper.redirected)
+            procWrapper.redirected,
+        )
 
     def __onIncomingMessage(self, procuuid, method, params):
         """Handles a debugger incoming message"""
         if IDE_DEBUG:
-            print('Debugger message from ' + procuuid +
-                  ' Method: ' + method + ' Prameters: ' + repr(params))
+            print("Debugger message from " + procuuid + " Method: " + method + " Prameters: " + repr(params))
 
         self.sigIncomingMessage.emit(procuuid, method, params)
 
@@ -755,9 +728,7 @@ class RunManager(QObject):
                 else:
                     if time.time() - startTime > HANDSHAKE_TIMEOUT:
                         # Waited too long
-                        item.widget.appendIDEMessage(
-                            'Timeout: the process did not start; '
-                            'killing the process.')
+                        item.widget.appendIDEMessage("Timeout: the process did not start; killing the process.")
                         item.procWrapper.stop()
                     else:
                         needNewTimer = True

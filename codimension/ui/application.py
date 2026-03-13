@@ -32,7 +32,6 @@ APP_DEACTIVATE = QEvent.ApplicationDeactivate
 
 
 class CodimensionApplication(QApplication):
-
     """Codimension application class"""
 
     def __init__(self, argv, style):
@@ -57,23 +56,23 @@ class CodimensionApplication(QApplication):
         # already been destroyed. Without checking that a widget is still alive
         # (e.g. clicking 'Cancel' in a dialog box) leads to a core dump.
 
-        QApplication.setWindowIcon(getIcon('icon.png'))
+        QApplication.setWindowIcon(getIcon("icon.png"))
 
         self.focusChanged.connect(self.__onFocusChanged)
 
-        appCSS = ''
-        if GlobalData().skin['dark']:
-            appCSS = qdarkstyle.load_stylesheet(qt_api='pyqt5')
-            #appCSS = appCSS.replace('QStatusBar QLabel',
+        appCSS = ""
+        if GlobalData().skin["dark"]:
+            appCSS = qdarkstyle.load_stylesheet(qt_api="pyqt5")
+            # appCSS = appCSS.replace('QStatusBar QLabel',
             #                        'QStatusBar QComboBox')
-            #appCSS = appCSS.replace('QStatusBar::item',
+            # appCSS = appCSS.replace('QStatusBar::item',
             #                        'QStatusBar QComboBox')
 
         # Avoid having rectangular frames on the status bar and
         # some application wide style changes
-        adjustmentCSS = GlobalData().skin['appCSS']
+        adjustmentCSS = GlobalData().skin["appCSS"]
         if adjustmentCSS:
-            appCSS += '\n' + adjustmentCSS
+            appCSS += "\n" + adjustmentCSS
 
         if appCSS:
             self.setStyleSheet(appCSS)
@@ -109,7 +108,7 @@ class CodimensionApplication(QApplication):
         Pass focus explicitly on broken window managers when the app is
         activated; Catch Ctrl+1 and Ctrl+2 application wide;
         """
-        del obj     # unused argument
+        del obj  # unused argument
         try:
             eventType = event.type()
             if eventType == KEY_PRESS:
@@ -126,9 +125,7 @@ class CodimensionApplication(QApplication):
                         if self.mainWindow:
                             return self.mainWindow.passFocusToFlow()
             elif eventType == APP_ACTIVATE:
-                lastFocus, \
-                beforeMenuBar = self.__areWidgetsAlive(self.__lastFocus,
-                                                       self.__beforeMenuBar)
+                lastFocus, beforeMenuBar = self.__areWidgetsAlive(self.__lastFocus, self.__beforeMenuBar)
                 if lastFocus:
                     if isinstance(self.__lastFocus, QMenuBar):
                         if beforeMenuBar:

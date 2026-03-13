@@ -30,7 +30,6 @@ from utils.globals import GlobalData
 
 
 class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
-
     """Represents the module for which the dependencies are drawn"""
 
     def __init__(self, fileName, needConnector, canvas, x, y):
@@ -49,23 +48,21 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
     def render(self):
         """Renders the cell"""
         settings = self.canvas.settings
-        text = os.path.basename(self.fileName).split('.')[0]
+        text = os.path.basename(self.fileName).split(".")[0]
         self.setupText(self, customText=text)
 
         vPadding = 2 * (settings.vDepsCellPadding + settings.vDepsTextPadding)
         self.minHeight = self.textRect.height() + vPadding
         hPadding = 2 * (settings.hDepsCellPadding + settings.hDepsTextPadding)
-        self.minWidth = max(self.textRect.width() + hPadding,
-                            settings.minWidth)
+        self.minWidth = max(self.textRect.width() + hPadding, settings.minWidth)
 
         # Add badges
-        self.aboveBadges.append(BadgeItem(self, 'doc'))
+        self.aboveBadges.append(BadgeItem(self, "doc"))
         self.aboveBadges.append(AboveBadgesSpacer(settings.badgeToBadgeHSpacing))
-        self.aboveBadges.append(BadgeItem(self, 'path'))
+        self.aboveBadges.append(BadgeItem(self, "path"))
 
         self.minHeight += self.aboveBadges.height + settings.badgeToScopeVPadding
-        self.minWidth = max(self.aboveBadges.width + 2 * settings.hDepsCellPadding,
-                            self.minWidth)
+        self.minWidth = max(self.aboveBadges.width + 2 * settings.hDepsCellPadding, self.minWidth)
 
         self.height = self.minHeight
         self.width = self.minWidth
@@ -80,11 +77,13 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
         # working properly
         settings = self.canvas.settings
         if self.__needConnector:
-            self.connector = Connector(self.canvas,
-                                       baseX + self.width - settings.hDepsCellPadding,
-                                       baseY + self.height / 2.0,
-                                       baseX + self.width,
-                                       baseY + self.height / 2.0)
+            self.connector = Connector(
+                self.canvas,
+                baseX + self.width - settings.hDepsCellPadding,
+                baseY + self.height / 2.0,
+                baseX + self.width,
+                baseY + self.height / 2.0,
+            )
         # scene.addItem(self.connector)
 
         # Draw comment badges
@@ -99,15 +98,17 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
         yPos = baseY + settings.vDepsCellPadding
         penWidth = settings.selectPenWidth - 1
         self.setRect(
-            xPos - penWidth, yPos - penWidth + takenByBadges,
+            xPos - penWidth,
+            yPos - penWidth + takenByBadges,
             self.minWidth - 2 * settings.hDepsCellPadding + 2 * penWidth,
-            self.minHeight - 2 * settings.vDepsCellPadding + 2 * penWidth - takenByBadges)
+            self.minHeight - 2 * settings.vDepsCellPadding + 2 * penWidth - takenByBadges,
+        )
         scene.addItem(self)
 
     def paint(self, painter, option, widget):
         """Draws the code block"""
-        del option      # unused argument
-        del widget      # unused argument
+        del option  # unused argument
+        del widget  # unused argument
 
         settings = self.canvas.settings
         painter.setPen(self.getPainterPen(self.isSelected(), settings.selfBorderColor))
@@ -122,8 +123,7 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
             yPos += badgeShift
             rectHeight -= badgeShift
 
-        painter.drawRect(self.baseX + settings.hDepsCellPadding,
-                         yPos, rectWidth, rectHeight)
+        painter.drawRect(self.baseX + settings.hDepsCellPadding, yPos, rectWidth, rectHeight)
 
         # Draw the text in the rectangle
         pen = QPen(settings.selfFGColor)
@@ -133,8 +133,7 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
         textWidth = self.textRect.width() + 2 * settings.hDepsTextPadding
         textShift = (rectWidth - textWidth) / 2
         rect = QRectF(
-            self.baseX + settings.hDepsCellPadding +
-            settings.hDepsTextPadding + textShift,
+            self.baseX + settings.hDepsCellPadding + settings.hDepsTextPadding + textShift,
             yPos + settings.vDepsTextPadding,
             self.textRect.width(),
             self.textRect.height(),
@@ -146,4 +145,3 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
             return
         GlobalData().mainWindow.raise_()
         GlobalData().mainWindow.activateWindow()
-

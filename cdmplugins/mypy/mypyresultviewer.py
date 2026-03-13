@@ -13,16 +13,27 @@
 
 import os.path
 
-from ui.qt import (
-    QWidget, QLabel, QPalette, QSizePolicy, QAction, Qt,
-    QHBoxLayout, QVBoxLayout, QToolBar, QSize,
-    QTreeWidget, QTreeWidgetItem, QHeaderView, QFrame,
-)
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitPathLabel, HeaderLabel
+from ui.qt import (
+    QAction,
+    QFrame,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QPalette,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from ui.spacers import ToolBarExpandingSpacer
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 
 
 class MypyResultViewer(QWidget):
@@ -42,11 +53,10 @@ class MypyResultViewer(QWidget):
         self.__noneLabel.setFont(font)
         self.__noneLabel.setAutoFillBackground(True)
         noneLabelPalette = self.__noneLabel.palette()
-        noneLabelPalette.setColor(QPalette.Background,
-                                  GlobalData().skin['nolexerPaper'])
+        noneLabelPalette.setColor(QPalette.Background, GlobalData().skin["nolexerPaper"])
         self.__noneLabel.setPalette(noneLabelPalette)
 
-        self.clearButton = QAction(getIcon('trash.png'), 'Clear', self)
+        self.clearButton = QAction(getIcon("trash.png"), "Clear", self)
         self.clearButton.triggered.connect(self.clear)
 
         self.toolbar = QToolBar(self)
@@ -65,7 +75,7 @@ class MypyResultViewer(QWidget):
         self.__resultsTree.setItemsExpandable(True)
         self.__resultsTree.setUniformRowHeights(True)
         self.__resultsTree.setItemDelegate(NoOutlineHeightDelegate(4))
-        self.__resultsTree.setHeaderLabels(['Line', 'Code', 'Message'])
+        self.__resultsTree.setHeaderLabels(["Line", "Code", "Message"])
         self.__resultsTree.itemActivated.connect(self.__resultActivated)
 
         self.__fileLabel = HeaderFitPathLabel(None, self)
@@ -112,7 +122,7 @@ class MypyResultViewer(QWidget):
     def onPathLabelDoubleClick(self):
         """Opens the file on double click."""
         if self.__results and self.__ide:
-            self.__ide.mainWindow.openFile(self.__results['FileName'], -1)
+            self.__ide.mainWindow.openFile(self.__results["FileName"], -1)
 
     def __resultActivated(self, item, column):
         """Navigates to the result line when activated."""
@@ -121,7 +131,7 @@ class MypyResultViewer(QWidget):
             return
         try:
             lineNo = int(item.text(0))
-            self.__ide.mainWindow.openFile(self.__results['FileName'], lineNo)
+            self.__ide.mainWindow.openFile(self.__results["FileName"], lineNo)
         except (ValueError, TypeError):
             pass
 
@@ -136,33 +146,33 @@ class MypyResultViewer(QWidget):
         self.__results = results
         self.__updateButtons()
 
-        if 'ProcessError' in results:
-            item = QTreeWidgetItem(['Error', '', results['ProcessError']])
+        if "ProcessError" in results:
+            item = QTreeWidgetItem(["Error", "", results["ProcessError"]])
             self.__resultsTree.addTopLevelItem(item)
             return
 
-        tooltip = ' '.join(['mypy results for',
-                            os.path.basename(results['FileName']),
-                            'at', results['Timestamp']])
-        self.__ide.sideBars['bottom'].setTabToolTip('mypy', tooltip)
+        tooltip = " ".join(["mypy results for", os.path.basename(results["FileName"]), "at", results["Timestamp"]])
+        self.__ide.sideBars["bottom"].setTabToolTip("mypy", tooltip)
 
-        self.__fileLabel.setPath(results['FileName'])
-        self.__timestampLabel.setText(results['Timestamp'])
+        self.__fileLabel.setPath(results["FileName"])
+        self.__timestampLabel.setText(results["Timestamp"])
 
-        diagnostics = results.get('Diagnostics', [])
+        diagnostics = results.get("Diagnostics", [])
         if diagnostics:
-            parent = QTreeWidgetItem([f'Issues ({len(diagnostics)})', '', ''])
+            parent = QTreeWidgetItem([f"Issues ({len(diagnostics)})", "", ""])
             self.__resultsTree.addTopLevelItem(parent)
             for d in diagnostics:
-                item = QTreeWidgetItem([
-                    str(d.get('line', '')),
-                    d.get('code', ''),
-                    d.get('message', ''),
-                ])
+                item = QTreeWidgetItem(
+                    [
+                        str(d.get("line", "")),
+                        d.get("code", ""),
+                        d.get("message", ""),
+                    ]
+                )
                 parent.addChild(item)
             parent.setExpanded(True)
         else:
-            item = QTreeWidgetItem(['', '', 'No type errors found'])
+            item = QTreeWidgetItem(["", "", "No type errors found"])
             self.__resultsTree.addTopLevelItem(item)
 
         self.__resultsTree.header().resizeSections(QHeaderView.ResizeToContents)

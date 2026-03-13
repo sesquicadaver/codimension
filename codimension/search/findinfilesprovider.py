@@ -26,7 +26,6 @@ from .resultprovideriface import SearchResultProviderIFace
 
 
 class FindInFilesSearchProvider(SearchResultProviderIFace):
-
     """Find in files search results provider"""
 
     def __init__(self):
@@ -44,22 +43,24 @@ class FindInFilesSearchProvider(SearchResultProviderIFace):
         #   'in-opened': <bool>
         #   'in-dir': <string>
         #   'file-filter': <string> }
-        ret = [('Text', parameters['term']),
-               ('Case', str(parameters['case'])),
-               ('Whole word', str(parameters['whole'])),
-               ('Regular expression', str(parameters['regexp']))]
+        ret = [
+            ("Text", parameters["term"]),
+            ("Case", str(parameters["case"])),
+            ("Whole word", str(parameters["whole"])),
+            ("Regular expression", str(parameters["regexp"])),
+        ]
 
-        if parameters['in-project']:
-            ret.append(('In', 'Project'))
-        elif parameters['in-opened']:
-            ret.append(('In', 'Opened files'))
+        if parameters["in-project"]:
+            ret.append(("In", "Project"))
+        elif parameters["in-opened"]:
+            ret.append(("In", "Opened files"))
         else:
-            ret.append(('In', parameters['in-dir']))
+            ret.append(("In", parameters["in-dir"]))
 
-        if parameters['file-filter']:
-            ret.append(('File filter', parameters['file-filter']))
+        if parameters["file-filter"]:
+            ret.append(("File filter", parameters["file-filter"]))
         else:
-            ret.append(('File filter', 'None'))
+            ret.append(("File filter", "None"))
 
         return ret
 
@@ -69,14 +70,11 @@ class FindInFilesSearchProvider(SearchResultProviderIFace):
         try:
             dlg = FindInFilesDialog(params=parameters)
             dlg.exec_()
-            resultsViewer.showReport(FindInFilesSearchProvider.getName(),
-                                     dlg.searchResults,
-                                     parameters, searchId)
+            resultsViewer.showReport(FindInFilesSearchProvider.getName(), dlg.searchResults, parameters, searchId)
         except Exception as exc:
             logging.error(str(exc))
 
     @staticmethod
     def getName():
         """Provides the display name"""
-        return 'Find in files'
-
+        return "Find in files"

@@ -23,7 +23,6 @@ from ui.qt import QDialog, QDialogButtonBox, QHBoxLayout, QIntValidator, QLabel,
 
 
 class VCSUpdateIntervalConfigDialog(QDialog):
-
     """Dialog to configure update interval"""
 
     def __init__(self, value, parent=None):
@@ -56,8 +55,7 @@ class VCSUpdateIntervalConfigDialog(QDialog):
         # Buttons at the bottom
         self.__buttonBox = QDialogButtonBox(self)
         self.__buttonBox.setOrientation(Qt.Horizontal)
-        self.__buttonBox.setStandardButtons(QDialogButtonBox.Ok |
-                                            QDialogButtonBox.Cancel)
+        self.__buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.__buttonBox.accepted.connect(self.userAccept)
         self.__buttonBox.rejected.connect(self.close)
 

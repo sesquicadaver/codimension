@@ -37,9 +37,7 @@ def scan_file(file_path, encoding="utf-8"):
                 if match:
                     tag = match.group(1).upper()
                     text = (match.group(2) or "").strip()
-                    results.append(
-                        {"line": line_no, "tag": tag, "text": text}
-                    )
+                    results.append({"line": line_no, "tag": tag, "text": text})
     except (OSError, UnicodeDecodeError):
         pass
     return results
@@ -64,9 +62,7 @@ def scan_project(project, encoding="utf-8"):
             continue
         if not item.lower().endswith(".py"):
             continue
-        full_path = item if os.path.isabs(item) else os.path.normpath(
-            project_dir + item
-        )
+        full_path = item if os.path.isabs(item) else os.path.normpath(project_dir + item)
         if not os.path.isfile(full_path):
             continue
         try:

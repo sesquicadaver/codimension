@@ -19,7 +19,6 @@
 
 """Annotated VCS viewer implementation"""
 
-
 from ui.importlist import ImportListWidget
 from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
 from ui.qt import (
@@ -47,13 +46,12 @@ from .texteditor import TextEditor
 
 
 class VCSAnnotateViewer(TextEditor):
-
     """VCS blame view"""
 
-    LINENUM_MARGIN = 0      # Matches the text editor
-    REVISION_MARGIN = 1     # Introduced here
-    FOLDING_MARGIN = 2      # Matches the text editor
-    MESSAGES_MARGIN = 3     # Matches the text editor
+    LINENUM_MARGIN = 0  # Matches the text editor
+    REVISION_MARGIN = 1  # Introduced here
+    FOLDING_MARGIN = 2  # Matches the text editor
+    MESSAGES_MARGIN = 3  # Matches the text editor
 
     def __init__(self, parent):
         self.__maxLength = None
@@ -66,21 +64,20 @@ class VCSAnnotateViewer(TextEditor):
     def __initAlterRevisionMarker(self):
         skin = GlobalData().skin
         from PyQt5.Qsci import QsciScintilla
+
         self.__alterMarker = self.markerDefine(QsciScintilla.Background)
-        self.setMarkerBackgroundColor(skin.revisionAlterPaper,
-                                      self.__alterMarker)
+        self.setMarkerBackgroundColor(skin.revisionAlterPaper, self.__alterMarker)
 
     def setAnnotatedContent(self, shortName, text, lineRevisions, revisionInfo):
         """Sets the content"""
         self.__lineRevisions = lineRevisions
         self.__revisionInfo = revisionInfo
 
-        fileType = getattr(self._parent, 'getFileType', lambda: None)()
+        fileType = getattr(self._parent, "getFileType", lambda: None)()
         # Qt Designer (.ui) and Qt Linguist (.ts) use latin-1
-        qt_binary_mimes = ('application/x-designer', 'application/x-linguist',
-                           'text/x-designer', 'text/x-linguist')
+        qt_binary_mimes = ("application/x-designer", "application/x-linguist", "text/x-designer", "text/x-linguist")
         if fileType and fileType in qt_binary_mimes:
-            self.encoding = 'latin-1'
+            self.encoding = "latin-1"
         else:
             text, self.encoding = decode(text)
 
@@ -97,20 +94,21 @@ class VCSAnnotateViewer(TextEditor):
     def __setRevisionText(self):
         """Sets the revision margin text"""
         for revNumber in self.__revisionInfo:
-            author = self.__revisionInfo[revNumber]['author']
-            if '@' in author:
+            author = self.__revisionInfo[revNumber]["author"]
+            if "@" in author:
                 # Most probably this is an e-mail address. Leave just name.
-                self.__revisionInfo[revNumber]['shortAuthor'] = author.split('@')[0]
+                self.__revisionInfo[revNumber]["shortAuthor"] = author.split("@")[0]
             else:
-                self.__revisionInfo[revNumber]['shortAuthor'] = author
+                self.__revisionInfo[revNumber]["shortAuthor"] = author
 
         skin = GlobalData().skin
         from PyQt5.Qsci import QsciStyle
+
         revisionMarginFont = QFont(skin.lineNumFont)
         revisionMarginFont.setItalic(True)
-        style = QsciStyle(-1, "Revision margin style",
-                          skin.revisionMarginColor,
-                          skin.revisionMarginPaper, revisionMarginFont)
+        style = QsciStyle(
+            -1, "Revision margin style", skin.revisionMarginColor, skin.revisionMarginPaper, revisionMarginFont
+        )
 
         lineNumber = 0
         self.__maxLength = -1
@@ -121,8 +119,7 @@ class VCSAnnotateViewer(TextEditor):
 
         for lineRevision in self.__lineRevisions:
             if lineRevision in self.__revisionInfo:
-                marginText = " " + ":".join([str(lineRevision),
-                    self.__revisionInfo[lineRevision]['shortAuthor']])
+                marginText = " " + ":".join([str(lineRevision), self.__revisionInfo[lineRevision]["shortAuthor"]])
             else:
                 marginText = " " + str(lineRevision)
             textLength = len(marginText)
@@ -143,18 +140,17 @@ class VCSAnnotateViewer(TextEditor):
 
     def detectRevisionMarginWidth(self):
         """Caculates the margin width depending on
-           the margin font and the current zoom"""
+        the margin font and the current zoom"""
         skin = GlobalData().skin
         font = QFont(skin.lineNumFont)
         font.setPointSize(font.pointSize() + self.getZoom())
         fontMetrics = QFontMetrics(font, self)
-        return fontMetrics.width('W' * self.__maxLength) + 3
+        return fontMetrics.width("W" * self.__maxLength) + 3
 
     def setRevisionMarginWidth(self):
         """Called when zooming is done to keep the width wide enough"""
         if self.__maxLength:
-            self.setMarginWidth(self.REVISION_MARGIN,
-                                self.detectRevisionMarginWidth())
+            self.setMarginWidth(self.REVISION_MARGIN, self.detectRevisionMarginWidth())
         else:
             self.setMarginWidth(self.REVISION_MARGIN, 0)
 
@@ -177,13 +173,12 @@ class VCSAnnotateViewer(TextEditor):
         if revisionNumber not in self.__revisionInfo:
             return None
 
-        tooltip = "Revision: " + \
-            str(revisionNumber) + "\n" \
-            "Author: " + \
-            self.__revisionInfo[revisionNumber]['author'] + "\n" \
-            "Date: " + \
-            str(self.__revisionInfo[revisionNumber]['date'])
-        comment = self.__revisionInfo[revisionNumber]['message']
+        tooltip = (
+            "Revision: " + str(revisionNumber) + "\n"
+            "Author: " + self.__revisionInfo[revisionNumber]["author"] + "\n"
+            "Date: " + str(self.__revisionInfo[revisionNumber]["date"])
+        )
+        comment = self.__revisionInfo[revisionNumber]["message"]
         if comment:
             tooltip += "\nComment: " + comment
         return tooltip
@@ -241,7 +236,6 @@ class VCSAnnotateViewer(TextEditor):
 
 
 class VCSAnnotateViewerTabWidget(QWidget, MainWindowTabWidgetBase):
-
     """VCS annotate viewer tab widget"""
 
     sigEscapePressed = pyqtSignal()
@@ -257,7 +251,7 @@ class VCSAnnotateViewerTabWidget(QWidget, MainWindowTabWidgetBase):
         self.__shortName = ""
 
         self.__createLayout()
-        self.__viewer.zoomTo(Settings()['zoom'])
+        self.__viewer.zoomTo(Settings()["zoom"])
 
     def __onEsc(self):
         """Triggered when Esc is pressed"""
@@ -266,13 +260,12 @@ class VCSAnnotateViewerTabWidget(QWidget, MainWindowTabWidgetBase):
     def __createLayout(self):
         """Creates the toolbar and layout"""
         # Buttons
-        printButton = QAction(getIcon('printer.png'), 'Print', self)
+        printButton = QAction(getIcon("printer.png"), "Print", self)
         printButton.triggered.connect(self.__onPrint)
         printButton.setEnabled(False)
         printButton.setVisible(False)
 
-        printPreviewButton = QAction(
-            getIcon('printpreview.png'), 'Print preview', self)
+        printPreviewButton = QAction(getIcon("printpreview.png"), "Print preview", self)
         printPreviewButton.triggered.connect(self.__onPrintPreview)
         printPreviewButton.setEnabled(False)
         printPreviewButton.setVisible(False)
@@ -326,8 +319,7 @@ class VCSAnnotateViewerTabWidget(QWidget, MainWindowTabWidgetBase):
             # Take all the file imports and resolve them
             fileImports = getImportsList(self.__editor.text)
             if not fileImports:
-                GlobalData().mainWindow.showStatusBarMessage(
-                    "There are no imports")
+                GlobalData().mainWindow.showStatusBarMessage("There are no imports")
             else:
                 self.__onImportList(self.__fileName, fileImports)
 
@@ -340,8 +332,7 @@ class VCSAnnotateViewerTabWidget(QWidget, MainWindowTabWidgetBase):
             # Display the import selection widget
             self.__importsBar.showResolvedImports(resolvedList)
         else:
-            GlobalData().mainWindow.showStatusBarMessage(
-                "Could not resolve any imports")
+            GlobalData().mainWindow.showStatusBarMessage("Could not resolve any imports")
 
     def resizeEvent(self, event):
         """Resizes the import selection dialogue if necessary"""
@@ -356,25 +347,29 @@ class VCSAnnotateViewerTabWidget(QWidget, MainWindowTabWidgetBase):
 
     def onRunScript(self, action=False):
         return True
+
     def onRunScriptSettings(self):
         return True
+
     def onProfileScript(self, action=False):
         return True
+
     def onProfileScriptSettings(self):
         return True
+
     def onImportDgm(self, action=None):
         return True
+
     def onImportDgmTuned(self):
         return True
+
     def shouldAcceptFocus(self):
         return True
 
-    def setAnnotatedContent(self, shortName, text,
-                            lineRevisions, revisionInfo):
+    def setAnnotatedContent(self, shortName, text, lineRevisions, revisionInfo):
         """Sets the content"""
         self.setShortName(shortName)
-        self.__viewer.setAnnotatedContent(shortName, text,
-                                          lineRevisions, revisionInfo)
+        self.__viewer.setAnnotatedContent(shortName, text, lineRevisions, revisionInfo)
 
     def writeFile(self, fileName):
         """Writes the text to a file"""
@@ -411,12 +406,11 @@ class VCSAnnotateViewerTabWidget(QWidget, MainWindowTabWidgetBase):
         lang = self.__viewer.language()
         if lang:
             return lang
-        return self.__viewer.mime if self.__viewer.mime else 'n/a'
+        return self.__viewer.mime if self.__viewer.mime else "n/a"
 
     def setFileName(self, name):
         """Sets the file name"""
-        raise Exception("Setting a file name for "
-                        "annotate results is not applicable")
+        raise Exception("Setting a file name for annotate results is not applicable")
 
     def getEol(self):
         """Tells the EOL style"""

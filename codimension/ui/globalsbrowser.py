@@ -32,12 +32,11 @@ from .objectsbrowserbase import ObjectsBrowser
 
 
 class GlobalsBrowser(ObjectsBrowser):
-
     """Globals browser"""
 
     def __init__(self, parent=None):
         ObjectsBrowser.__init__(self, GlobalsBrowserModel(), parent)
         self.setRootIsDecorated(False)
 
-        self.setWindowTitle('Globals browser')
-        self.setWindowIcon(getIcon('icon.png'))
+        self.setWindowTitle("Globals browser")
+        self.setWindowIcon(getIcon("icon.png"))

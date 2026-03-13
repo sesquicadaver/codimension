@@ -28,14 +28,13 @@ from .cml import CMLrt, CMLVersion
 
 
 class TextMixin:
-
     """Text mixin to support text displayed by the item and a tooltip"""
 
     def __init__(self):
-        self.text = None            # Text to display; it may be:
-                                    # - text from the code
-                                    # - replacement text if so
-                                    # - nothing if suppressed
+        self.text = None  # Text to display; it may be:
+        # - text from the code
+        # - replacement text if so
+        # - nothing if suppressed
         self.textRect = None
 
     @staticmethod
@@ -66,8 +65,7 @@ class TextMixin:
                 return True
 
         if settings.noContent:
-            if graphicsItem.kind not in [CellElement.CLASS_SCOPE,
-                                         CellElement.FUNC_SCOPE]:
+            if graphicsItem.kind not in [CellElement.CLASS_SCOPE, CellElement.FUNC_SCOPE]:
                 return True
 
         return False
@@ -81,21 +79,17 @@ class TextMixin:
 
         if TextMixin.__shouldHideText(graphicsItem):
             # The content needs to be suppressed
-            tooltip = '<pre>' + \
-                      TextMixin.__getDisplayText(graphicsItem, customText) + \
-                      '</pre>'
+            tooltip = "<pre>" + TextMixin.__getDisplayText(graphicsItem, customText) + "</pre>"
 
             if replacement:
-                tooltip += '<hr>Replacement text:<pre>' + \
-                    escape(replacement) + '</pre>'
+                tooltip += "<hr>Replacement text:<pre>" + escape(replacement) + "</pre>"
             graphicsItem.setToolTip(tooltip)
 
-            self.text = ''
+            self.text = ""
         else:
             # No suppression; something needs to be shown
             self.text = TextMixin.__getDisplayText(graphicsItem, customText)
             if replacement:
-                graphicsItem.setToolTip('<pre>' + escape(self.text) + '</pre>')
+                graphicsItem.setToolTip("<pre>" + escape(self.text) + "</pre>")
                 self.text = replacement
         self.textRect = graphicsItem.getBoundingRect(self.text)
-

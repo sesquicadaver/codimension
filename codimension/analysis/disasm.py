@@ -38,16 +38,19 @@ OPT_NO_OPTIMIZATION = 0
 OPT_OPTIMIZE_ASSERT = 1
 OPT_OPTIMIZE_DOCSTRINGS = 2
 
-_CONVERSION = {OPT_NO_OPTIMIZATION: 'no optimization',
-               OPT_OPTIMIZE_ASSERT: 'assert optimization',
-               OPT_OPTIMIZE_DOCSTRINGS: 'assert + docstring optimization'}
+_CONVERSION = {
+    OPT_NO_OPTIMIZATION: "no optimization",
+    OPT_OPTIMIZE_ASSERT: "assert optimization",
+    OPT_OPTIMIZE_DOCSTRINGS: "assert + docstring optimization",
+}
+
 
 def optToString(optimization):
     """Converts optimization into a string"""
     try:
         return _CONVERSION[optimization]
     except KeyError:
-        return 'unknown optimization'
+        return "unknown optimization"
 
 
 def safeUnlink(path):
@@ -69,8 +72,10 @@ def getCodeDisassembly(code):
 # The objects which have already been disassembled
 DIS_OBJECTS = set()
 
-DIS_PATTERN = 'Disassembly of <code object '
+DIS_PATTERN = "Disassembly of <code object "
 DIS_PATTERN_LEN = len(DIS_PATTERN)
+
+
 def updateDisassembledNames(disassembly):
     for line in disassembly.splitlines():
         if line.startswith(DIS_PATTERN):
@@ -81,21 +86,21 @@ def updateDisassembledNames(disassembly):
 def recursiveDisassembly(codeObject, name=None):
     """Disassemble recursively"""
     if name is None:
-        what = 'module'
+        what = "module"
     else:
         if name in DIS_OBJECTS:
-            return ''
+            return ""
         what = name
 
     disassembly = getCodeDisassembly(codeObject)
     updateDisassembledNames(disassembly)
 
-    res = '\n\nDisassembly of ' + what + ':\n' + disassembly
+    res = "\n\nDisassembly of " + what + ":\n" + disassembly
     for item in codeObject.co_consts:
         if isinstance(item, CodeType):
             itemName = item.co_name
             if name:
-                itemName = name + '.' + itemName
+                itemName = name + "." + itemName
             res += recursiveDisassembly(item, itemName)
     return res
 
@@ -103,36 +108,33 @@ def recursiveDisassembly(codeObject, name=None):
 # The idea is taken from here:
 # https://stackoverflow.com/questions/11141387/given-a-python-pyc-file-is-there-a-tool-that-let-me-view-the-bytecode
 # https://stackoverflow.com/questions/32562163/how-can-i-understand-a-pyc-file-content
-def getCompiledfileDisassembled(pycPath, pyPath, optimization,
-                                forBuffer=False):
+def getCompiledfileDisassembled(pycPath, pyPath, optimization, forBuffer=False):
     """Reads the .pyc file and provides the plain text disassembly"""
-    props = [('Python version', platform.python_version()),
-             ('Python interpreter path', sys.executable)]
+    props = [("Python version", platform.python_version()), ("Python interpreter path", sys.executable)]
 
-    pycFile = open(pycPath, 'rb')
+    pycFile = open(pycPath, "rb")
 
     # Python 3.7+ .pyc header: magic (4) + flags (4) + timestamp (4) + size (4)
     magic = pycFile.read(4)
     pycFile.read(4)  # flags (unused)
     timestamp = pycFile.read(4)
     size = pycFile.read(4)
-    size = struct.unpack('I', size)[0]
+    size = struct.unpack("I", size)[0]
 
     code = marshal.load(pycFile)
-    magic = binascii.hexlify(magic).decode('utf-8')
-    timestamp = time.asctime(
-        time.localtime(struct.unpack('I', timestamp)[0]))
+    magic = binascii.hexlify(magic).decode("utf-8")
+    timestamp = time.asctime(time.localtime(struct.unpack("I", timestamp)[0]))
 
     # In terpreter magic is not really interesting because the version
     # and path are already provided. So suppress them
     # props.append(('Interpreter magic', magic))
     # props.append(('Interpreter timestamp', timestamp))
 
-    bufferSpec = ''
+    bufferSpec = ""
     if forBuffer:
-        bufferSpec = ' (unsaved buffer)'
-    props.append(('Python module', pyPath + bufferSpec))
-    props.append(('Optimization', optToString(optimization)))
+        bufferSpec = " (unsaved buffer)"
+    props.append(("Python module", pyPath + bufferSpec))
+    props.append(("Optimization", optToString(optimization)))
 
     DIS_OBJECTS.clear()
     disassembly = recursiveDisassembly(code)
@@ -143,10 +145,10 @@ def getCompiledfileDisassembled(pycPath, pyPath, optimization,
 
 def _stringify(props, disassembly):
     """Combines the properties and disassembly into one string"""
-    result = '-' * 80
+    result = "-" * 80
     for item in props:
-        result += '\n' + item[0] + ': ' + item[1]
-    result += '\n' + '-' * 80
+        result += "\n" + item[0] + ": " + item[1]
+    result += "\n" + "-" * 80
     result += disassembly
     return result
 
@@ -158,17 +160,15 @@ def _getFileDisassembled(path, optimization):
     if not os.access(path, os.R_OK):
         raise Exception("No read permissions for " + path)
 
-    tempPycFile = makeTempFile(suffix='.pyc')
+    tempPycFile = makeTempFile(suffix=".pyc")
     try:
-        py_compile.compile(path, tempPycFile,
-                           doraise=True, optimize=optimization)
+        py_compile.compile(path, tempPycFile, doraise=True, optimize=optimization)
     except Exception as exc:
         safeUnlink(tempPycFile)
-        raise Exception("Cannot disassemble file " + path + ': ' + str(exc))
+        raise Exception("Cannot disassemble file " + path + ": " + str(exc))
 
     try:
-        props, disassembly = getCompiledfileDisassembled(tempPycFile, path,
-                                                         optimization)
+        props, disassembly = getCompiledfileDisassembled(tempPycFile, path, optimization)
     except Exception:
         safeUnlink(tempPycFile)
         raise
@@ -187,21 +187,19 @@ def getFileDisassembled(path, optimization, stringify=True):
 
 def _getBufferDisassembled(content, encoding, path, optimization):
     """Disassembles a memory buffer"""
-    tempSrcFile = makeTempFile(suffix='.py')
-    tempPycFile = makeTempFile(suffix='.pyc')
+    tempSrcFile = makeTempFile(suffix=".py")
+    tempPycFile = makeTempFile(suffix=".pyc")
 
     try:
         saveToFile(tempSrcFile, content, allowException=True, enc=encoding)
-        py_compile.compile(tempSrcFile, tempPycFile, path,
-                           doraise=True, optimize=optimization)
+        py_compile.compile(tempSrcFile, tempPycFile, path, doraise=True, optimize=optimization)
     except Exception:
         safeUnlink(tempSrcFile)
         safeUnlink(tempPycFile)
         raise
 
     try:
-        props, disassembly = getCompiledfileDisassembled(tempPycFile, path,
-                                                         optimization, True)
+        props, disassembly = getCompiledfileDisassembled(tempPycFile, path, optimization, True)
     except Exception:
         safeUnlink(tempSrcFile)
         safeUnlink(tempPycFile)
@@ -210,47 +208,42 @@ def _getBufferDisassembled(content, encoding, path, optimization):
     safeUnlink(tempSrcFile)
     safeUnlink(tempPycFile)
     if path:
-        return props, disassembly.replace('file "' + path + '",',
-                                          'unsaved buffer "' + path + '",')
+        return props, disassembly.replace('file "' + path + '",', 'unsaved buffer "' + path + '",')
     return props, disassembly
 
 
 def getBufferDisassembled(content, encoding, path, optimization, stringify=True):
     """Disassembles a memory buffer"""
-    props, disassembly = _getBufferDisassembled(content, encoding,
-                                                path, optimization)
+    props, disassembly = _getBufferDisassembled(content, encoding, path, optimization)
     if stringify:
         return _stringify(props, disassembly)
     return props, disassembly
 
 
-
 def getCompiledfileBinary(pycPath, pyPath, optimization, forBuffer=False):
     """Reads the .pyc file and provides the plain text disassembly"""
-    props = [('Python version', platform.python_version()),
-             ('Python interpreter path', sys.executable)]
+    props = [("Python version", platform.python_version()), ("Python interpreter path", sys.executable)]
 
-    pycFile = open(pycPath, 'rb')
+    pycFile = open(pycPath, "rb")
     content = pycFile.read()
 
     # Python 3.7+ .pyc header: magic (4) + flags (4) + timestamp (4) + size (4)
     magic = content[0:4]
     timestamp = content[8:12]
 
-    magic = binascii.hexlify(magic).decode('utf-8')
-    timestamp = time.asctime(
-        time.localtime(struct.unpack('I', timestamp)[0]))
+    magic = binascii.hexlify(magic).decode("utf-8")
+    timestamp = time.asctime(time.localtime(struct.unpack("I", timestamp)[0]))
 
     # Interpreter magic is not really interesting because the version
     # and path are already provided. So suppress them
     # props.append(('Interpreter magic', magic))
     # props.append(('Interpreter timestamp', timestamp))
 
-    bufferSpec = ''
+    bufferSpec = ""
     if forBuffer:
-        bufferSpec = ' (unsaved buffer)'
-    props.append(('Python module', pyPath + bufferSpec))
-    props.append(('Optimization', optToString(optimization)))
+        bufferSpec = " (unsaved buffer)"
+    props.append(("Python module", pyPath + bufferSpec))
+    props.append(("Optimization", optToString(optimization)))
 
     return props, content
 
@@ -262,14 +255,12 @@ def getFileBinary(path, optimization):
     if not os.access(path, os.R_OK):
         raise Exception("No read permissions for " + path)
 
-    tempPycFile = makeTempFile(suffix='.pyc')
+    tempPycFile = makeTempFile(suffix=".pyc")
     try:
-        py_compile.compile(path, tempPycFile,
-                           doraise=True, optimize=optimization)
+        py_compile.compile(path, tempPycFile, doraise=True, optimize=optimization)
     except Exception as exc:
         safeUnlink(tempPycFile)
-        raise Exception("Cannot provide binary for file " +
-                        path + ': ' + str(exc))
+        raise Exception("Cannot provide binary for file " + path + ": " + str(exc))
 
     try:
         props, content = getCompiledfileBinary(tempPycFile, path, optimization)
@@ -281,24 +272,21 @@ def getFileBinary(path, optimization):
     return props, content
 
 
-
 def getBufferBinary(content, encoding, path, optimization):
     """Provides the binary pyc content"""
-    tempSrcFile = makeTempFile(suffix='.py')
-    tempPycFile = makeTempFile(suffix='.pyc')
+    tempSrcFile = makeTempFile(suffix=".py")
+    tempPycFile = makeTempFile(suffix=".pyc")
 
     try:
         saveToFile(tempSrcFile, content, allowException=True, enc=encoding)
-        py_compile.compile(tempSrcFile, tempPycFile, path,
-                           doraise=True, optimize=optimization)
+        py_compile.compile(tempSrcFile, tempPycFile, path, doraise=True, optimize=optimization)
     except Exception:
         safeUnlink(tempSrcFile)
         safeUnlink(tempPycFile)
         raise
 
     try:
-        props, content = getCompiledfileBinary(tempPycFile, path,
-                                               optimization, True)
+        props, content = getCompiledfileBinary(tempPycFile, path, optimization, True)
     except Exception:
         safeUnlink(tempSrcFile)
         safeUnlink(tempPycFile)
@@ -307,4 +295,3 @@ def getBufferBinary(content, encoding, path, optimization):
     safeUnlink(tempSrcFile)
     safeUnlink(tempPycFile)
     return props, content
-

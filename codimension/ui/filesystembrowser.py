@@ -33,14 +33,13 @@ from .filesystembrowsermodel import FileSystemBrowserModel
 
 
 class FileSystemBrowser(FilesBrowser):
-
     """File system tree browser"""
 
     def __init__(self, parent=None):
         FilesBrowser.__init__(self, FileSystemBrowserModel(), False, parent)
 
-        self.setWindowTitle('Filesystem browser')
-        self.setWindowIcon(getIcon('icon.png'))
+        self.setWindowTitle("Filesystem browser")
+        self.setWindowIcon(getIcon("icon.png"))
 
         GlobalData().project.sigFSChanged.connect(self._onFSChanged)
 

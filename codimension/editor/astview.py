@@ -28,7 +28,6 @@ from utils.astutils import parseSourceToAST
 
 
 class ASTView(QTreeWidget):
-
     sigGotoLine = pyqtSignal(int, int)
 
     def __init__(self, navBar, parent):
@@ -45,7 +44,7 @@ class ASTView(QTreeWidget):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setExpandsOnDoubleClick(False)
 
-        self.__headerItem = QTreeWidgetItem(['Node', 'Position / items'])
+        self.__headerItem = QTreeWidgetItem(["Node", "Position / items"])
         self.setHeaderItem(self.__headerItem)
 
         self.itemSelectionChanged.connect(self.__selectionChanged)
@@ -70,8 +69,7 @@ class ASTView(QTreeWidget):
             self.verticalScrollBar().setValue(vScroll)
         except Exception as exc:
             self.__navBar.updateInfoIcon(self.__navBar.STATE_BROKEN_UTD)
-            self.__navBar.setErrors(
-                'Parse source to AST error:\n' + str(exc))
+            self.__navBar.setErrors("Parse source to AST error:\n" + str(exc))
 
     def addNodeRecursive(self, node, prefix=None):
         nodeName = node.__class__.__name__
@@ -88,48 +86,47 @@ class ASTView(QTreeWidget):
             if isinstance(fieldValue, ast.AST):
                 if fieldValue._fields:
                     self.__parentStack.append(treeNode)
-                    self.addNodeRecursive(fieldValue, fieldName + ': ')
+                    self.addNodeRecursive(fieldValue, fieldName + ": ")
                     self.__parentStack.pop(-1)
                 else:
                     treeNode.addChild(
                         QTreeWidgetItem(
-                            [fieldName + ': ' + fieldValue.__class__.__name__,
-                             self.__getNodePosition(fieldValue)]))
+                            [fieldName + ": " + fieldValue.__class__.__name__, self.__getNodePosition(fieldValue)]
+                        )
+                    )
             elif self.__isScalar(fieldValue):
-                treeNode.addChild(
-                    QTreeWidgetItem([fieldName + ': ' + repr(fieldValue), '']))
+                treeNode.addChild(QTreeWidgetItem([fieldName + ": " + repr(fieldValue), ""]))
             elif isinstance(fieldValue, list):
                 listLength = len(fieldValue)
-                txt = str(listLength) + ' item'
+                txt = str(listLength) + " item"
                 if listLength != 1:
-                    txt += 's'
-                listNode = QTreeWidgetItem([fieldName + ': [...]', txt])
+                    txt += "s"
+                listNode = QTreeWidgetItem([fieldName + ": [...]", txt])
                 treeNode.addChild(listNode)
                 self.expandItem(listNode)
                 self.__parentStack.append(listNode)
                 for index, listItem in enumerate(fieldValue):
-                    prefix = '[' + str(index) + ']: '
+                    prefix = "[" + str(index) + "]: "
                     if self.__isScalar(listItem):
-                        treeNode.addChild(
-                            QTreeWidgetItem([prefix + repr(listItem), '']))
+                        treeNode.addChild(QTreeWidgetItem([prefix + repr(listItem), ""]))
                     else:
                         self.addNodeRecursive(listItem, prefix)
                 self.__parentStack.pop(-1)
             else:
-                logging.error('AST node is not recognized. Skipping...')
+                logging.error("AST node is not recognized. Skipping...")
         self.expandItem(treeNode)
 
     @staticmethod
     def __getNodePosition(astNode):
-        pos = ''
-        if hasattr(astNode, 'lineno'):
+        pos = ""
+        if hasattr(astNode, "lineno"):
             pos = str(astNode.lineno)
-            if hasattr(astNode, 'col_offset'):
-                pos += ':' + str(astNode.col_offset)
-        if hasattr(astNode, 'end_lineno'):
-            pos += ' - ' + str(astNode.end_lineno)
-            if hasattr(astNode, 'end_col_offset'):
-                pos += ':' + str(astNode.end_col_offset)
+            if hasattr(astNode, "col_offset"):
+                pos += ":" + str(astNode.col_offset)
+        if hasattr(astNode, "end_lineno"):
+            pos += " - " + str(astNode.end_lineno)
+            if hasattr(astNode, "end_col_offset"):
+                pos += ":" + str(astNode.end_col_offset)
         return pos
 
     @staticmethod
@@ -155,31 +152,31 @@ class ASTView(QTreeWidget):
                 path = self.__getPathElement(current)
                 while current.parent() is not None:
                     current = current.parent()
-                    path = self.__getPathElement(current) + u' \u2192 ' + path
+                    path = self.__getPathElement(current) + " \u2192 " + path
                 self.__navBar.setPath(path)
             else:
-                self.__navBar.setPath('')
+                self.__navBar.setPath("")
         else:
-            self.__navBar.setPath('')
+            self.__navBar.setPath("")
 
     @staticmethod
     def __getPathElement(node):
         text = node.text(0)
-        if text.startswith('['):
+        if text.startswith("["):
             # List item, the actual purpose follows the index
             return text
         # Regular node, after ':' there might be its type
-        return text.split(':')[0]
+        return text.split(":")[0]
 
     @staticmethod
     def __getLinePos(node):
         while node is not None:
             text = node.text(1)
             if text:
-                if 'item' not in text:
-                    firstRegion = text.split('-')[0].strip()
+                if "item" not in text:
+                    firstRegion = text.split("-")[0].strip()
                     try:
-                        parts = firstRegion.split(':')
+                        parts = firstRegion.split(":")
                         line = int(parts[0])
                         pos = 0
                         if len(parts) == 2:
@@ -195,4 +192,3 @@ class ASTView(QTreeWidget):
         """Handles the double click (or Enter) on an AST item"""
         line, pos = self.__getLinePos(item)
         self.sigGotoLine.emit(line, pos + 1)
-

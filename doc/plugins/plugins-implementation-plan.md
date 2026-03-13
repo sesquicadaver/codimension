@@ -4,7 +4,7 @@
 
 **Версія:** 1.0  
 **Дата:** 2025-03  
-**Статус:** План
+**Статус:** Виконано (критерії готовності пройдені)
 
 ---
 
@@ -39,9 +39,9 @@
 
 ### Фаза 0: Підготовка (1–2 дні)
 
-- [ ] Створити спільний базовий клас `LintDriverBase` (опціонально) для driver-ів
-- [ ] Перевірити сумісність з CI (ruff, mypy у venv)
-- [ ] Оновити Living Specification: матриця ТЗ → модуль → тести
+- [x] Створити спільний базовий клас `LintDriverBase` (опціонально) для driver-ів
+- [x] Перевірити сумісність з CI (ruff, mypy у venv)
+- [x] Оновити Living Specification: матриця ТЗ → модуль → тести
 
 ### Фаза 1: Coverage (pytest-cov) — 3–5 днів ✅
 **Пріоритет:** Високий. Потрібен для CI та Living Specification.
@@ -116,7 +116,7 @@ cdmplugins/bandit/
 | 4.1 | Створити `cdmplugins/ruffformat/` | cdmp, __init__.py ✅ |
 | 4.2 | FormatDriver: `ruff format` | In-place format ✅ |
 | 4.3 | Результат: success/error у status bar | Без окремої вкладки ✅ |
-| 4.4 | Опція: format on save (config) | getConfigFunction → None (TODO) |
+| 4.4 | Опція: format on save (config) | getConfigFunction, ruffformatconfig.py ✅ |
 
 **Варіант:** Використано ruff format (ruff вже є) — менше залежностей.
 
@@ -229,31 +229,33 @@ pip-audit>=2.0.0
 
 ### 6.1 Per-plugin
 
-- Запуск плагіна на тестовому файлі
-- Перевірка вкладки результатів
-- Перевірка меню та гарячих клавіш
-- Deactivate без падіння
+- [x] Запуск плагіна на тестовому файлі — smoke в IDE
+- [x] Перевірка вкладки результатів — ручна
+- [x] Перевірка меню та гарячих клавіш — ручна
+- [x] Deactivate без падіння — ручна
+- [x] Unit-тести: `tests/test_todoscanner.py` (todoscanner без Qt)
 
 ### 6.2 Інтеграційне
 
-- Усі плагіни активні одночасно
-- Перемикання вкладок
-- Запуск з різних контекстів (файл, директорія, проект)
+- Усі плагіни активні одночасно — ручне тестування
+- Перемикання вкладок — ручне
+- Запуск з різних контекстів (файл, директорія, проект) — ручне
 
 ### 6.3 CI
 
-- `pip install -e .` у venv
-- Запуск codimension, перевірка завантаження плагінів
-- ruff, mypy на коді плагінів
+- [x] `pip install -e .` у venv
+- [x] Перевірка завантаження: `python -c "import codimension; import cdmplugins"`
+- [x] ruff, mypy на коді плагінів
+- [x] pytest tests/ — unit-тести
 
 ---
 
 ## 6. Документація
 
-- [ ] Оновити `doc/plugins/plugins.md` — перелік нових плагінів
-- [ ] Додати опис кожного плагіна (короткий)
-- [ ] Оновити ChangeLog при кожному релізі
-- [ ] Living Specification: ТЗ → модуль → тест
+- [x] Оновити `doc/plugins/plugins.md` — перелік нових плагінів
+- [x] Додати опис кожного плагіна (короткий)
+- [x] Оновити ChangeLog при кожному релізі
+- [x] Living Specification: ТЗ → модуль → тест — [living-specification.md](living-specification.md)
 
 ---
 
@@ -270,9 +272,9 @@ pip-audit>=2.0.0
 
 ## 8. Критерії готовності
 
-- [ ] Усі плагіни в `cdmplugins/`
-- [ ] setup.py оновлено
-- [ ] requirements.txt оновлено
-- [ ] Документація оновлена
-- [ ] CI проходить (ruff, mypy)
-- [ ] Smoke-тест: codimension запускається, плагіни активуються
+- [x] Усі плагіни в `cdmplugins/`
+- [x] setup.py оновлено
+- [x] requirements.txt оновлено
+- [x] Документація оновлена
+- [x] CI проходить (ruff, mypy) — `.github/workflows/ci.yml`
+- [x] Smoke-тест: codimension запускається, плагіни активуються

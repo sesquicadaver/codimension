@@ -25,8 +25,7 @@ from os.path import exists, getmtime, realpath
 from cdmpyparser import getBriefModuleInfoFromFile
 
 
-class BriefModuleInfoCache():
-
+class BriefModuleInfoCache:
     """Provides the module info cache"""
 
     def __init__(self):

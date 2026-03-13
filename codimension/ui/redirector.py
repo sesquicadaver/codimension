@@ -29,7 +29,6 @@ from .qt import QObject, pyqtSignal
 
 
 class Redirector(QObject):
-
     """Helper class used to redirect stdout and stderr to the log window"""
 
     appendToStdout = pyqtSignal(str)
@@ -44,7 +43,7 @@ class Redirector(QObject):
 
     def write(self, message):
         """Writes the given data"""
-        message = message.rstrip('\n')
+        message = message.rstrip("\n")
         if self.__isStdout:
             self.appendToStdout.emit(message)
         else:

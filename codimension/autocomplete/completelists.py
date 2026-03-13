@@ -19,7 +19,6 @@
 
 """Utilities to build completeion lists to suggest to the user"""
 
-
 import logging
 import os
 import os.path
@@ -34,6 +33,7 @@ from .bufferutils import getEditorTags
 
 # Global variables to avoid creating a jedi project every time
 jediProject = None
+
 
 def getJediProject(force=False):
     """Provides a jedi project"""
@@ -56,9 +56,7 @@ def getJediProject(force=False):
             jPath = os.path.realpath(QDir.homePath())
             addedPaths = ()
 
-        jediProject = Project(jPath,
-                              sys_path=GlobalData().originalSysPath[:],
-                              added_sys_path=addedPaths)
+        jediProject = Project(jPath, sys_path=GlobalData().originalSysPath[:], added_sys_path=addedPaths)
 
     return jediProject
 
@@ -78,8 +76,7 @@ def getCallSignatures(editor, fileName):
         script = getJediScript(editor.text, fileName)
         return script.get_signatures(line=line + 1, column=pos)
     except Exception as exc:
-        logging.error('jedi library failed to provide call signatures: ' +
-                      str(exc))
+        logging.error("jedi library failed to provide call signatures: " + str(exc))
     return []
 
 
@@ -99,13 +96,18 @@ def getDefinitions(editor, fileName):
                 continue
             if path is None and definition.in_builtin_module():
                 continue
-            result.append([path if path else fileName,
-                           definition.line, definition.column,
-                           definition.type, definition.docstring(),
-                           definition.module_name])
+            result.append(
+                [
+                    path if path else fileName,
+                    definition.line,
+                    definition.column,
+                    definition.type,
+                    definition.docstring(),
+                    definition.module_name,
+                ]
+            )
     except Exception as exc:
-        logging.error('jedi library failed to provide definitions: ' +
-                      str(exc))
+        logging.error("jedi library failed to provide definitions: " + str(exc))
     return result
 
 
@@ -121,15 +123,14 @@ def getOccurrences(editor, fileName, line=None, pos=None):
         try:
             text = getFileContent(fileName)
         except Exception as exc:
-            logging.error('Cannot read file ' + fileName + ': ' + str(exc))
+            logging.error("Cannot read file " + fileName + ": " + str(exc))
             return []
 
     try:
         script = getJediScript(text, fileName)
         return script.get_references(line=line, column=pos)
     except Exception as exc:
-        logging.error('jedi library failed to provide usages: ' +
-                      str(exc))
+        logging.error("jedi library failed to provide usages: " + str(exc))
     return []
 
 
@@ -146,12 +147,10 @@ def getCompletionList(editor, fileName):
         for item in script.complete(line=line + 1, column=pos):
             items.append(item.name)
     except Exception as exc:
-        logging.error('jedi library could not provide completions: ' +
-                      str(exc))
+        logging.error("jedi library could not provide completions: " + str(exc))
 
     if items:
         return items
 
     # jedi provided nothing => last resort: words in the editor buffer
     return list(getEditorTags(editor))
-

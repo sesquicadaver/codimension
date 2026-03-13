@@ -30,21 +30,20 @@ from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
 from .qt import QMenu, QObject, Qt, QTimer
 
 COMPLEXITY_PIXMAPS = {
-    'A': 'complexity-a.png',
-    'B': 'complexity-b.png',
-    'C': 'complexity-c.png',
-    'D': 'complexity-d.png',
-    'E': 'complexity-e.png',
-    'F': 'complexity-f.png'}
-
+    "A": "complexity-a.png",
+    "B": "complexity-b.png",
+    "C": "complexity-c.png",
+    "D": "complexity-d.png",
+    "E": "complexity-e.png",
+    "F": "complexity-f.png",
+}
 
 
 class PyflakesAttributes:
-
     """Holds all the attributes associated with pyflakes results"""
 
     def __init__(self):
-        self.messages = []      # Complains
+        self.messages = []  # Complains
         self.ccMessages = []
         self.changed = False
 
@@ -56,7 +55,6 @@ class PyflakesAttributes:
 
 
 class PyflakesViewer(QObject):
-
     """The pyflakes viewer"""
 
     def __init__(self, editorsManager, uiLabel, ccLabel, parent=None):
@@ -70,8 +68,7 @@ class PyflakesViewer(QObject):
         self.__editorsManager.currentChanged.connect(self.__onTabChanged)
         self.__editorsManager.sigTabClosed.connect(self.__onTabClosed)
         self.__editorsManager.sigBufferSavedAs.connect(self.__onSavedBufferAs)
-        self.__editorsManager.sigFileTypeChanged.connect(
-            self.__onFileTypeChanged)
+        self.__editorsManager.sigFileTypeChanged.connect(self.__onFileTypeChanged)
 
         self.__flakesResults = {}  # UUID -> PyflakesAttributes
         self.__currentUUID = None
@@ -81,14 +78,12 @@ class PyflakesViewer(QObject):
 
         # Context menu for the messages icon
         self.__uiLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.__uiLabel.customContextMenuRequested.connect(
-            self.__showPyflakesContextMenu)
+        self.__uiLabel.customContextMenuRequested.connect(self.__showPyflakesContextMenu)
         self.__uiLabel.doubleClicked.connect(self.__jumpToFirstMessage)
 
         # Context menu for the CC icon
         self.__ccLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.__ccLabel.customContextMenuRequested.connect(
-            self.__showCCContextMenu)
+        self.__ccLabel.customContextMenuRequested.connect(self.__showCCContextMenu)
         self.__ccLabel.doubleClicked.connect(self.__jumpToFirstCC)
 
     def __onTabChanged(self, index):
@@ -109,8 +104,7 @@ class PyflakesViewer(QObject):
             self.__currentUUID = None
             return
 
-        if widget.getType() not in [MainWindowTabWidgetBase.PlainTextEditor,
-                                    MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if widget.getType() not in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             self.__currentUUID = None
             self.setAnalysisNotAvailable(self.__uiLabel, self.__ccLabel)
             return
@@ -129,8 +123,7 @@ class PyflakesViewer(QObject):
             # We have it, change the icon and the tooltip correspondingly
             results = self.__flakesResults[uuid].messages
             ccResults = self.__flakesResults[uuid].ccMessages
-            self.setAnalysisResults(self.__uiLabel, results,
-                                    self.__ccLabel, ccResults, None)
+            self.setAnalysisResults(self.__uiLabel, results, self.__ccLabel, ccResults, None)
             return
 
         # It is first time we are here, create a new
@@ -146,8 +139,7 @@ class PyflakesViewer(QObject):
         self.__flakesResults[uuid] = attributes
         self.__currentUUID = uuid
 
-        self.setAnalysisResults(self.__uiLabel, results,
-                                self.__ccLabel, ccResults, editor)
+        self.setAnalysisResults(self.__uiLabel, results, self.__ccLabel, ccResults, editor)
 
     def __cursorPositionChanged(self):
         """Triggered when a cursor position is changed"""
@@ -194,8 +186,7 @@ class PyflakesViewer(QObject):
         self.__flakesResults[self.__currentUUID].ccMessages = ccResults
         self.__flakesResults[self.__currentUUID].changed = False
 
-        self.setAnalysisResults(self.__uiLabel, results,
-                                self.__ccLabel, ccResults, editor)
+        self.setAnalysisResults(self.__uiLabel, results, self.__ccLabel, ccResults, editor)
 
     def __onTabClosed(self, uuid):
         """Triggered when a tab is closed"""
@@ -214,7 +205,7 @@ class PyflakesViewer(QObject):
 
     def __onFileTypeChanged(self, fileName, uuid, newFileType):
         """Triggered when the current buffer file type is changed, e.g. .cgi"""
-        del fileName    # unused argument
+        del fileName  # unused argument
         if isPythonMime(newFileType):
             # The file became a python one
             if uuid not in self.__flakesResults:
@@ -253,9 +244,7 @@ class PyflakesViewer(QObject):
         for lineno in lineNumbers:
             if lineno > 0:
                 for item in messages[lineno]:
-                    act = contextMenu.addAction(
-                        getIcon('pyflakesmsgmarker.png'),
-                        "Line " + str(lineno) + ": " + item)
+                    act = contextMenu.addAction(getIcon("pyflakesmsgmarker.png"), "Line " + str(lineno) + ": " + item)
                     act.setData(lineno)
         contextMenu.triggered.connect(self.__onContextMenu)
         contextMenu.popup(self.__uiLabel.mapToGlobal(pos))
@@ -272,13 +261,12 @@ class PyflakesViewer(QObject):
         for item in self.__flakesResults[self.__currentUUID].ccMessages:
             complexity = cc_rank(item.complexity)
 
-            if complexity != 'A':
+            if complexity != "A":
                 count += 1
-                title = complexity + '(' + str(item.complexity) + ') ' + \
-                        item.fullname
-                if item.letter in ('F', 'M'):
-                    title += '()'
-                act = contextMenu.addAction(getIcon('ccmarker.png'), title)
+                title = complexity + "(" + str(item.complexity) + ") " + item.fullname
+                if item.letter in ("F", "M"):
+                    title += "()"
+                act = contextMenu.addAction(getIcon("ccmarker.png"), title)
                 act.setData(item.lineno)
         if count > 0:
             contextMenu.triggered.connect(self.__onContextMenu)
@@ -345,59 +333,54 @@ class PyflakesViewer(QObject):
             lineNumbers.sort()
             for lineNo in lineNumbers:
                 for item in results[lineNo]:
-                    complains += '<br/>'
+                    complains += "<br/>"
                     if lineNo == -1:
                         # Special case: compilation error
                         complains += escape(item)
                     else:
-                        complains += "Line " + str(lineNo) + \
-                                     ": " + escape(item)
-            label.setToolTip(complains.replace(' ', '&nbsp;'))
-            label.setPixmap(getPixmap('flakeserrors.png'))
+                        complains += "Line " + str(lineNo) + ": " + escape(item)
+            label.setToolTip(complains.replace(" ", "&nbsp;"))
+            label.setPixmap(getPixmap("flakeserrors.png"))
         else:
             # There are no complains
-            label.setToolTip('Buffer checked: no pyflakes complains')
-            label.setPixmap(getPixmap('flakesok.png'))
+            label.setToolTip("Buffer checked: no pyflakes complains")
+            label.setPixmap(getPixmap("flakesok.png"))
 
         if ccResults:
-            complains = 'Buffer cyclomatic complexity:<br/>'
-            worstComplexity = 'A'
+            complains = "Buffer cyclomatic complexity:<br/>"
+            worstComplexity = "A"
             for item in ccResults:
                 complexity = cc_rank(item.complexity)
                 worstComplexity = max(complexity, worstComplexity)
 
-                if complexity != 'A':
-                    complains += '<br/>' + complexity + \
-                                 '(' + str(item.complexity) + ') ' + \
-                                 escape(item.fullname)
-                    if item.letter in ('F', 'M'):
-                        complains += '()'
+                if complexity != "A":
+                    complains += "<br/>" + complexity + "(" + str(item.complexity) + ") " + escape(item.fullname)
+                    if item.letter in ("F", "M"):
+                        complains += "()"
 
-            if worstComplexity == 'A':
-                ccLabel.setToolTip('Buffer cyclomatic complexity: no complains')
+            if worstComplexity == "A":
+                ccLabel.setToolTip("Buffer cyclomatic complexity: no complains")
             else:
-                ccLabel.setToolTip(complains.replace(' ', '&nbsp;'))
+                ccLabel.setToolTip(complains.replace(" ", "&nbsp;"))
             ccLabel.setPixmap(getPixmap(COMPLEXITY_PIXMAPS[worstComplexity]))
         else:
-            ccLabel.setToolTip('No complexity information available')
-            ccLabel.setPixmap(getPixmap('ccmarker.png'))
+            ccLabel.setToolTip("No complexity information available")
+            ccLabel.setPixmap(getPixmap("ccmarker.png"))
 
     @staticmethod
     def setAnalysisWaiting(label, ccLabel):
         """Displays the waiting for a time slice to start checking icon"""
-        label.setToolTip('File is modified: '
-                         'pyflakes is waiting for time slice')
-        label.setPixmap(getPixmap('flakesmodified.png'))
+        label.setToolTip("File is modified: pyflakes is waiting for time slice")
+        label.setPixmap(getPixmap("flakesmodified.png"))
 
-        ccLabel.setToolTip('File is modified: '
-                           'radon is waiting for time slice')
-        ccLabel.setPixmap(getPixmap('flakesmodified.png'))
+        ccLabel.setToolTip("File is modified: radon is waiting for time slice")
+        ccLabel.setPixmap(getPixmap("flakesmodified.png"))
 
     @staticmethod
     def setAnalysisNotAvailable(label, ccLabel):
         """Displays the appropriate icon that pyflakes is not available"""
-        label.setToolTip('Not a python file: pyflakes is sleeping')
-        label.setPixmap(getPixmap('flakessleep.png'))
+        label.setToolTip("Not a python file: pyflakes is sleeping")
+        label.setPixmap(getPixmap("flakessleep.png"))
 
-        ccLabel.setToolTip('Not a python file: radon is sleeping')
-        ccLabel.setPixmap(getPixmap('flakessleep.png'))
+        ccLabel.setToolTip("Not a python file: radon is sleeping")
+        ccLabel.setPixmap(getPixmap("flakessleep.png"))

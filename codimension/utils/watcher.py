@@ -35,7 +35,6 @@ from ui.qt import QFileSystemWatcher, QObject, pyqtSignal
 
 
 class Watcher(QObject):
-
     """Filesystem watcher implementation"""
 
     sigFSChanged = pyqtSignal(list)
@@ -45,15 +44,15 @@ class Watcher(QObject):
         self.__dirWatcher = QFileSystemWatcher(self)
 
         # data members
-        self.__excludeFilter = []       # Files exclude filter
-        self.__srcDirsToWatch = set()   # Came from the user
+        self.__excludeFilter = []  # Files exclude filter
+        self.__srcDirsToWatch = set()  # Came from the user
 
         self.__fsTopLevelSnapshot = {}  # Current snapshot
-        self.__fsSnapshot = {}          # Current snapshot
+        self.__fsSnapshot = {}  # Current snapshot
 
         # Sets of dirs which are currently watched
         self.__dirsToWatch = set()
-        self.__topLevelDirsToWatch = set()      # Generated till root
+        self.__topLevelDirsToWatch = set()  # Generated till root
 
         # precompile filters
         for flt in excludeFilters:
@@ -62,10 +61,8 @@ class Watcher(QObject):
         # Initialise the list of dirs to watch
         self.__srcDirsToWatch.add(dirToWatch)
 
-        self.__topLevelDirsToWatch = self.__buildTopDirsList(
-            self.__srcDirsToWatch)
-        self.__fsTopLevelSnapshot = self.__buildTopLevelSnapshot(
-            self.__topLevelDirsToWatch, self.__srcDirsToWatch)
+        self.__topLevelDirsToWatch = self.__buildTopDirsList(self.__srcDirsToWatch)
+        self.__fsTopLevelSnapshot = self.__buildTopLevelSnapshot(self.__topLevelDirsToWatch, self.__srcDirsToWatch)
         self.__dirsToWatch = self.__buildSnapshot()
 
         # Here __dirsToWatch and __topLevelDirsToWatch have a complete
@@ -104,7 +101,7 @@ class Watcher(QObject):
                 if len(candidate) <= len(path):
                     continue
                 if candidate.startswith(path):
-                    candidate = candidate[len(path):]
+                    candidate = candidate[len(path) :]
                     slashIndex = candidate.find(os.path.sep) + 1
                     item = candidate[:slashIndex]
                     if os.path.exists(path + item):
@@ -155,7 +152,7 @@ class Watcher(QObject):
             newSet = set()
             for item in os.listdir(path):
                 if not os.path.isdir(path + item):
-                    continue    # Only dirs are of interest for the top level
+                    continue  # Only dirs are of interest for the top level
                 item = item + os.path.sep
                 if item in oldSet:
                     newSet.add(item)
@@ -179,8 +176,7 @@ class Watcher(QObject):
             itemsToReport = []
 
             for item in diff:
-                self.__processRemoveTopDir(path + item, dirsToBeRemoved,
-                                           itemsToReport)
+                self.__processRemoveTopDir(path + item, dirsToBeRemoved, itemsToReport)
 
             # Here: it is possible that the last dir to watch disappeared
             if not newSet:
@@ -190,16 +186,14 @@ class Watcher(QObject):
 
                 parts = path[1:-1].split(os.path.sep)
                 for index in range(len(parts) - 2, 0, -1):
-                    candidate = os.path.sep + \
-                                os.path.sep.join(parts[0:index]) + \
-                                os.path.sep
+                    candidate = os.path.sep + os.path.sep.join(parts[0:index]) + os.path.sep
                     dirSet = self.__fsTopLevelSnapshot[candidate]
                     dirSet.remove(parts[index + 1] + os.path.sep)
                     if not dirSet:
                         dirsToBeRemoved.append(candidate)
                         del self.__fsTopLevelSnapshot[candidate]
                         continue
-                    break   # it is not the last item in the set
+                    break  # it is not the last item in the set
 
             # Update the watcher
             if dirsToBeRemoved:
@@ -252,16 +246,14 @@ class Watcher(QObject):
             for item in addedItems:
                 if item.endswith(os.path.sep):
                     # directory was added
-                    self.__processAddedDir(path + item,
-                                           dirsToBeAdded, itemsToReport)
+                    self.__processAddedDir(path + item, dirsToBeAdded, itemsToReport)
                 else:
                     itemsToReport.append("+" + path + item)
 
             for item in deletedItems:
                 if item.endswith(os.path.sep):
                     # directory was deleted
-                    self.__processRemovedDir(path + item,
-                                             dirsToBeRemoved, itemsToReport)
+                    self.__processRemovedDir(path + item, dirsToBeRemoved, itemsToReport)
                 else:
                     itemsToReport.append("-" + path + item)
 
@@ -318,8 +310,7 @@ class Watcher(QObject):
         for item in oldSet:
             if item.endswith(os.path.sep):
                 # Nested dir
-                self.__processRemovedDir(path + item, dirsToBeRemoved,
-                                         itemsToReport)
+                self.__processRemovedDir(path + item, dirsToBeRemoved, itemsToReport)
             else:
                 # a file
                 itemsToReport.append("-" + path + item)
@@ -331,13 +322,11 @@ class Watcher(QObject):
             # It is still a top level dir
             dirsToBeRemoved.append(path)
             for item in self.__fsTopLevelSnapshot[path]:
-                self.__processRemoveTopDir(path + item, dirsToBeRemoved,
-                                           itemsToReport)
+                self.__processRemoveTopDir(path + item, dirsToBeRemoved, itemsToReport)
             del self.__fsTopLevelSnapshot[path]
         else:
             # This is a project level dir
-            self.__processRemovedDir(path, dirsToBeRemoved,
-                                     itemsToReport)
+            self.__processRemovedDir(path, dirsToBeRemoved, itemsToReport)
 
     def reset(self):
         """Resets the watcher (it does not report any changes)"""
@@ -382,7 +371,7 @@ class Watcher(QObject):
                 if len(candidate) <= len(item):
                     continue
                 if candidate.startswith(item):
-                    candidate = candidate[len(item):]
+                    candidate = candidate[len(item) :]
                     slashIndex = candidate.find(os.path.sep) + 1
                     dirName = candidate[:slashIndex]
                     if os.path.exists(item + dirName):
@@ -392,7 +381,7 @@ class Watcher(QObject):
 
         # Update the top level snapshot with the added dir
         upperDir = os.path.dirname(path[:-1]) + os.path.sep
-        dirName = path.replace(upperDir, '')
+        dirName = path.replace(upperDir, "")
         self.__fsTopLevelSnapshot[upperDir].add(dirName)
 
         # Update the list of top level dirs to watch
@@ -495,8 +484,7 @@ class Watcher(QObject):
             for item in self.__fsTopLevelSnapshot[path]:
                 if item.endswith(os.path.sep):
                     # It's a dir
-                    self.__deregisterDir(path + item, dirsToBeRemoved,
-                                         itemsToReport)
+                    self.__deregisterDir(path + item, dirsToBeRemoved, itemsToReport)
                 else:
                     # It's a file
                     itemsToReport.append("-" + path + item)
@@ -508,8 +496,7 @@ class Watcher(QObject):
             for item in self.__fsSnapshot[path]:
                 if item.endswith(os.path.sep):
                     # It's a dir
-                    self.__deregisterDir(path + item, dirsToBeRemoved,
-                                         itemsToReport)
+                    self.__deregisterDir(path + item, dirsToBeRemoved, itemsToReport)
                 else:
                     # It's a file
                     itemsToReport.append("-" + path + item)

@@ -34,7 +34,6 @@ NO_MODIFIER = int(Qt.NoModifier)
 
 
 class CFSceneKeyboardMixin:
-
     """Encapsulates keyboard handling and related functionality"""
 
     def __init__(self):
@@ -46,11 +45,14 @@ class CFSceneKeyboardMixin:
                 Qt.Key_A: self.selectAll,
                 Qt.Key_Minus: Settings().onFlowZoomOut,
                 Qt.Key_Equal: Settings().onFlowZoomIn,
-                Qt.Key_0: Settings().onFlowZoomReset},
+                Qt.Key_0: Settings().onFlowZoomReset,
+            },
             NO_MODIFIER: {
                 Qt.Key_Home: self.scrollToHBegin,
                 Qt.Key_End: self.scrollToHEnd,
-                Qt.Key_Escape: self.clearSelection}}
+                Qt.Key_Escape: self.clearSelection,
+            },
+        }
 
     def keyPressEvent(self, event):
         """Handles the key press event"""
@@ -135,8 +137,7 @@ class CFSceneKeyboardMixin:
     def scrollToHEnd(self):
         """Scrolls horizontally to the very end"""
         view = self.parent().view()
-        view.horizontalScrollBar().setValue(
-            view.horizontalScrollBar().maximum())
+        view.horizontalScrollBar().setValue(view.horizontalScrollBar().maximum())
 
     def selectAll(self):
         """Selects all"""

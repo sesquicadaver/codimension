@@ -25,7 +25,6 @@ from .resultprovideriface import SearchResultProviderIFace
 
 
 class VultureSearchProvider(SearchResultProviderIFace):
-
     """vulture search results provider"""
 
     def __init__(self):
@@ -34,24 +33,21 @@ class VultureSearchProvider(SearchResultProviderIFace):
     @staticmethod
     def serialize(parameters):
         """Provides a string which serializes the search parameters"""
-        return [('Path', parameters['path'])]
+        return [("Path", parameters["path"])]
 
     @staticmethod
     def searchAgain(searchId, parameters, resultsViewer):
         """Repeats the search"""
         from analysis.notused import NotUsedAnalysisProgress
+
         try:
-            dlg = NotUsedAnalysisProgress(parameters['path'],
-                                          newSearch=False)
+            dlg = NotUsedAnalysisProgress(parameters["path"], newSearch=False)
             dlg.exec_()
-            resultsViewer.showReport(VultureSearchProvider.getName(),
-                                     dlg.candidates,
-                                     parameters, searchId)
+            resultsViewer.showReport(VultureSearchProvider.getName(), dlg.candidates, parameters, searchId)
         except Exception as exc:
             logging.error(str(exc))
 
     @staticmethod
     def getName():
         """Provides the display name"""
-        return 'Dead code'
-
+        return "Dead code"

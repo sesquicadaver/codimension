@@ -49,24 +49,24 @@ ARGUMENT_FRAGMENT = 24
 CML_COMMENT_FRAGMENT = 63
 CONTROL_FLOW_FRAGMENT = 64
 
-VERSION = '2.5.0-ast'
-CML_VERSION = '1.0'
+VERSION = "2.5.0-ast"
+CML_VERSION = "1.0"
 
 
 def _abs_pos(source: str, lineno: int, col_offset: int) -> int:
     """Compute 0-based absolute position from line/col."""
-    lines = source.split('\n')
+    lines = source.split("\n")
     if lineno < 1:
         return 0
-    return sum(len(line) + 1 for line in lines[:lineno - 1]) + col_offset
+    return sum(len(line) + 1 for line in lines[: lineno - 1]) + col_offset
 
 
 def _pos(node: ast.AST, source: str) -> tuple[int, int, int, int, int, int]:
     """Return (begin, end, beginLine, endLine, beginPos, endPos) for node."""
-    ln = getattr(node, 'lineno', 1) or 1
-    co = getattr(node, 'col_offset', 0) or 0
-    eln = getattr(node, 'end_lineno', ln) or ln
-    eco = getattr(node, 'end_col_offset', co) or co
+    ln = getattr(node, "lineno", 1) or 1
+    co = getattr(node, "col_offset", 0) or 0
+    eln = getattr(node, "end_lineno", ln) or ln
+    eco = getattr(node, "end_col_offset", co) or co
     begin = _abs_pos(source, ln, co)
     end = _abs_pos(source, eln, eco)
     return begin, end, ln, eln, co + 1, eco + 1
@@ -131,7 +131,7 @@ class _FragmentBase:
     @property
     def suite(self) -> list[_FragmentBase]:
         """Alias for nsuite - flow UI uses .suite."""
-        return getattr(self, 'nsuite', [])
+        return getattr(self, "nsuite", [])
 
     def getLineRange(self) -> tuple[int, int]:
         return self.body.getLineRange()
@@ -140,7 +140,7 @@ class _FragmentBase:
         return self.body.getAbsPosRange()
 
     def getDisplayValue(self) -> str:
-        return ''
+        return ""
 
 
 class _ElifPart(_FragmentBase):
@@ -155,7 +155,7 @@ class _ElifPart(_FragmentBase):
         bpos: int,
         epos: int,
         condition: _Body | None = None,
-        display_value: str = '',
+        display_value: str = "",
     ) -> None:
         super().__init__(ELIF_PART_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.condition = condition
@@ -177,7 +177,7 @@ class _CodeBlock(_FragmentBase):
         eln: int,
         bpos: int,
         epos: int,
-        display_value: str = '',
+        display_value: str = "",
     ) -> None:
         super().__init__(CODEBLOCK_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self._display_value = display_value
@@ -197,7 +197,7 @@ class _ImportFrag(_FragmentBase):
         eln: int,
         bpos: int,
         epos: int,
-        display_value: str = '',
+        display_value: str = "",
         from_part: _Body | None = None,
         what_part: _Body | None = None,
     ) -> None:
@@ -247,18 +247,14 @@ class _RaiseFrag(_FragmentBase):
 class _BreakFrag(_FragmentBase):
     """Break statement."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(BREAK_FRAGMENT, begin, end, bln, eln, bpos, epos)
 
 
 class _ContinueFrag(_FragmentBase):
     """Continue statement."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(CONTINUE_FRAGMENT, begin, end, bln, eln, bpos, epos)
 
 
@@ -302,43 +298,37 @@ class _SysExitFrag(_FragmentBase):
 class _FunctionFrag(_FragmentBase):
     """Function definition."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(FUNCTION_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.decorators: list[_FragmentBase] = []
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
 
     def getDisplayValue(self) -> str:
-        if hasattr(self, 'name') and self.name is not None:
+        if hasattr(self, "name") and self.name is not None:
             return self.name.getContent()
-        return ''
+        return ""
 
 
 class _ClassFrag(_FragmentBase):
     """Class definition."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(CLASS_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.decorators: list[_FragmentBase] = []
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
 
     def getDisplayValue(self) -> str:
-        if hasattr(self, 'name') and self.name is not None:
+        if hasattr(self, "name") and self.name is not None:
             return self.name.getContent()
-        return ''
+        return ""
 
 
 class _ForFrag(_FragmentBase):
     """For loop."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(FOR_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.condition: _Body | None = None
         self.nsuite: list[_FragmentBase] = []
@@ -348,9 +338,7 @@ class _ForFrag(_FragmentBase):
 class _WhileFrag(_FragmentBase):
     """While loop."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(WHILE_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.condition: _Body | None = None
         self.nsuite: list[_FragmentBase] = []
@@ -360,9 +348,7 @@ class _WhileFrag(_FragmentBase):
 class _WithFrag(_FragmentBase):
     """With statement."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(WITH_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.nsuite: list[_FragmentBase] = []
 
@@ -388,9 +374,7 @@ class _ExceptPart(_FragmentBase):
 class _TryFrag(_FragmentBase):
     """Try statement."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(TRY_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.nsuite: list[_FragmentBase] = []
         self.exceptParts: list[_ExceptPart] = []
@@ -401,9 +385,7 @@ class _TryFrag(_FragmentBase):
 class _IfFrag(_FragmentBase):
     """If/elif/else statement. parts = list of ElifPart."""
 
-    def __init__(
-        self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int
-    ) -> None:
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(IF_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.parts: list[_ElifPart] = []
 
@@ -412,11 +394,10 @@ class _ControlFlow(_FragmentBase):
     """Top-level control flow container."""
 
     def __init__(self, source: str):
-        lines = source.split('\n')
+        lines = source.split("\n")
         end_ln = len(lines) if lines else 1
         end_pos = len(lines[-1]) + 1 if lines else 1
-        super().__init__(CONTROL_FLOW_FRAGMENT, 0, max(0, len(source) - 1), 1,
-                         end_ln, 1, end_pos)
+        super().__init__(CONTROL_FLOW_FRAGMENT, 0, max(0, len(source) - 1), 1, end_ln, 1, end_pos)
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
         self.leadingCMLComments: list = []
@@ -436,44 +417,44 @@ class _ControlFlow(_FragmentBase):
         """Produce format: Name<\\ncontent\\n> for nested, Name for leaf."""
         chunks = []
         for item in suite:
-            kind_name = _KIND_NAMES.get(item.kind, 'Fragment')
+            kind_name = _KIND_NAMES.get(item.kind, "Fragment")
             inner = []
-            if hasattr(item, 'nsuite') and item.nsuite:
+            if hasattr(item, "nsuite") and item.nsuite:
                 inner.append(self._str_suite(item.nsuite))
-            if hasattr(item, 'parts') and item.parts:
+            if hasattr(item, "parts") and item.parts:
                 for p in item.parts:
-                    inner.append('part')
-                    if getattr(p, 'nsuite', None):
+                    inner.append("part")
+                    if getattr(p, "nsuite", None):
                         inner.append(self._str_suite(p.nsuite))
-            if hasattr(item, 'elsePart') and item.elsePart and item.elsePart.nsuite:
-                inner.append('else')
+            if hasattr(item, "elsePart") and item.elsePart and item.elsePart.nsuite:
+                inner.append("else")
                 inner.append(self._str_suite(item.elsePart.nsuite))
-            if hasattr(item, 'exceptParts') and item.exceptParts:
+            if hasattr(item, "exceptParts") and item.exceptParts:
                 for ep in item.exceptParts:
-                    if getattr(ep, 'nsuite', None):
+                    if getattr(ep, "nsuite", None):
                         inner.append(self._str_suite(ep.nsuite))
-            if hasattr(item, 'finallyPart') and item.finallyPart and item.finallyPart.nsuite:
-                inner.append('finally')
+            if hasattr(item, "finallyPart") and item.finallyPart and item.finallyPart.nsuite:
+                inner.append("finally")
                 inner.append(self._str_suite(item.finallyPart.nsuite))
             if inner:
-                chunks.append(kind_name + '<\n' + '\n'.join(inner) + '\n>')
+                chunks.append(kind_name + "<\n" + "\n".join(inner) + "\n>")
             else:
                 chunks.append(kind_name)
         # No newline between chunks: formatFlow requires shifts non-empty on \n
-        return ''.join(chunks)
+        return "".join(chunks)
 
 
 _KIND_NAMES = {
-    CODEBLOCK_FRAGMENT: 'CodeBlock',
-    FUNCTION_FRAGMENT: 'Function',
-    CLASS_FRAGMENT: 'Class',
-    FOR_FRAGMENT: 'For',
-    WHILE_FRAGMENT: 'While',
-    IF_FRAGMENT: 'If',
-    TRY_FRAGMENT: 'Try',
-    WITH_FRAGMENT: 'With',
-    RETURN_FRAGMENT: 'Return',
-    IMPORT_FRAGMENT: 'Import',
+    CODEBLOCK_FRAGMENT: "CodeBlock",
+    FUNCTION_FRAGMENT: "Function",
+    CLASS_FRAGMENT: "Class",
+    FOR_FRAGMENT: "For",
+    WHILE_FRAGMENT: "While",
+    IF_FRAGMENT: "If",
+    TRY_FRAGMENT: "Try",
+    WITH_FRAGMENT: "With",
+    RETURN_FRAGMENT: "Return",
+    IMPORT_FRAGMENT: "Import",
 }
 
 
@@ -485,7 +466,7 @@ class _DocstringFrag:
     """
 
     def __init__(self, text: str | None) -> None:
-        self._text = text or ''
+        self._text = text or ""
         self.leadingCMLComments: list = []
         self.sideCMLComments: list = []
 
@@ -564,17 +545,14 @@ class _FlowBuilder(ast.NodeVisitor):
         # Other statements -> code block
         return self._visit_code_block(node)
 
-    def _visit_function(
-        self, node: ast.FunctionDef | ast.AsyncFunctionDef
-    ) -> _FunctionFrag:
+    def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> _FunctionFrag:
         """Build Function fragment."""
         b, e, bln, eln, bpos, epos = self._pos(node)
         frag = _FunctionFrag(b, e, bln, eln, bpos, epos)
         frag.name = _NameContent(node.name)
         for dec in node.decorator_list:
             db, de, dbln, deln, dbpos, depos = self._pos(dec)
-            dec_frag = _FragmentBase(DECORATOR_FRAGMENT, db, de, dbln, deln,
-                                    dbpos, depos)
+            dec_frag = _FragmentBase(DECORATOR_FRAGMENT, db, de, dbln, deln, dbpos, depos)
             frag.decorators.append(dec_frag)
         self._visit_suite(node.body, frag.nsuite)
         return frag
@@ -586,8 +564,7 @@ class _FlowBuilder(ast.NodeVisitor):
         frag.name = _NameContent(node.name)
         for dec in node.decorator_list:
             db, de, dbln, deln, dbpos, depos = self._pos(dec)
-            dec_frag = _FragmentBase(DECORATOR_FRAGMENT, db, de, dbln, deln,
-                                    dbpos, depos)
+            dec_frag = _FragmentBase(DECORATOR_FRAGMENT, db, de, dbln, deln, dbpos, depos)
             frag.decorators.append(dec_frag)
         self._visit_suite(node.body, frag.nsuite)
         return frag
@@ -628,13 +605,12 @@ class _FlowBuilder(ast.NodeVisitor):
             b, e, bln, eln, bpos, epos = 0, 0, 1, 1, 1, 1
         cond = self._make_body(condition_node) if condition_node else None
         if condition_node is None:
-            display_value = 'else'
+            display_value = "else"
         elif self.source and cond:
-            display_value = self.source[cond.begin:cond.end + 1].strip().rstrip(':')
+            display_value = self.source[cond.begin : cond.end + 1].strip().rstrip(":")
         else:
-            display_value = ''
-        part = _ElifPart(b, e, bln, eln, bpos, epos, condition=cond,
-                        display_value=display_value)
+            display_value = ""
+        part = _ElifPart(b, e, bln, eln, bpos, epos, condition=cond, display_value=display_value)
         self._visit_suite(body, part.nsuite)
         return part
 
@@ -646,8 +622,7 @@ class _FlowBuilder(ast.NodeVisitor):
         frag.parts.append(self._make_elif_part(node.test, node.body))
         # elif parts
         curr = node
-        while curr.orelse and len(curr.orelse) == 1 and isinstance(
-                curr.orelse[0], ast.If):
+        while curr.orelse and len(curr.orelse) == 1 and isinstance(curr.orelse[0], ast.If):
             curr = curr.orelse[0]
             frag.parts.append(self._make_elif_part(curr.test, curr.body))
         # else part
@@ -708,9 +683,7 @@ class _FlowBuilder(ast.NodeVisitor):
         msg = self._make_body(node.msg) if node.msg else None
         return _AssertFrag(b, e, bln, eln, bpos, epos, test=tst, message=msg)
 
-    def _visit_import(
-        self, node: ast.Import | ast.ImportFrom
-    ) -> _ImportFrag:
+    def _visit_import(self, node: ast.Import | ast.ImportFrom) -> _ImportFrag:
         """Build Import fragment with display text and fromPart/whatPart."""
         b, e, bln, eln, bpos, epos = self._pos(node)
         display_value: str
@@ -718,40 +691,35 @@ class _FlowBuilder(ast.NodeVisitor):
         what_part: _Body | None = None
 
         if isinstance(node, ast.Import):
-            names = [alias.name if alias.asname is None else
-                     f'{alias.name} as {alias.asname}' for alias in node.names]
-            display_value = 'import ' + ', '.join(names)
+            names = [alias.name if alias.asname is None else f"{alias.name} as {alias.asname}" for alias in node.names]
+            display_value = "import " + ", ".join(names)
             what_part = _Body(b, e, bln, eln, bpos, epos)
         else:
-            module = node.module or ''
+            module = node.module or ""
             names = []
             for alias in node.names:
                 if alias.asname is None:
                     names.append(alias.name)
                 else:
-                    names.append(f'{alias.name} as {alias.asname}')
-            what_str = ', '.join(names)
-            display_value = f'from {module} import {what_str}' if module else f'import {what_str}'
+                    names.append(f"{alias.name} as {alias.asname}")
+            what_str = ", ".join(names)
+            display_value = f"from {module} import {what_str}" if module else f"import {what_str}"
             if node.module:
                 mod_b, mod_e, mod_bln, mod_eln, mod_bpos, mod_epos = self._pos(node.module)
                 from_part = _Body(mod_b, mod_e, mod_bln, mod_eln, mod_bpos, mod_epos)
             what_part = _Body(b, e, bln, eln, bpos, epos)
 
-        return _ImportFrag(b, e, bln, eln, bpos, epos,
-                          display_value=display_value,
-                          from_part=from_part, what_part=what_part)
+        return _ImportFrag(
+            b, e, bln, eln, bpos, epos, display_value=display_value, from_part=from_part, what_part=what_part
+        )
 
-    def _visit_sysexit(
-        self, node: ast.Expr
-    ) -> _SysExitFrag | _CodeBlock | None:
+    def _visit_sysexit(self, node: ast.Expr) -> _SysExitFrag | _CodeBlock | None:
         """Check for sys.exit() and build SysExit fragment if so."""
         if not isinstance(node, ast.Expr) or not isinstance(node.value, ast.Call):
             return None
         call = node.value
         if isinstance(call.func, ast.Attribute):
-            if (isinstance(call.func.value, ast.Name) and
-                    call.func.value.id == 'sys' and
-                    call.func.attr == 'exit'):
+            if isinstance(call.func.value, ast.Name) and call.func.value.id == "sys" and call.func.attr == "exit":
                 b, e, bln, eln, bpos, epos = self._pos(node)
                 arg = self._make_body(call) if call.args else None
                 return _SysExitFrag(b, e, bln, eln, bpos, epos, arg=arg)
@@ -760,9 +728,8 @@ class _FlowBuilder(ast.NodeVisitor):
     def _visit_code_block(self, node: ast.AST) -> _CodeBlock:
         """Build CodeBlock fragment for generic statement."""
         b, e, bln, eln, bpos, epos = self._pos(node)
-        display_value = self.source[b:e + 1] if self.source and e >= b else ''
-        return _CodeBlock(b, e, bln, eln, bpos, epos,
-                          display_value=display_value)
+        display_value = self.source[b : e + 1] if self.source and e >= b else ""
+        return _CodeBlock(b, e, bln, eln, bpos, epos, display_value=display_value)
 
     def visit(self, node: ast.AST | None) -> None:
         """Override to collect into control_flow.nsuite."""
@@ -781,13 +748,13 @@ class _FlowBuilder(ast.NodeVisitor):
 def _build_control_flow(source: str, filename: str) -> _ControlFlow:
     """Parse source and build ControlFlow fragment tree."""
     try:
-        tree = ast.parse(source, filename, mode='exec', type_comments=True)
+        tree = ast.parse(source, filename, mode="exec", type_comments=True)
     except SyntaxError as exc:
         cf = _ControlFlow(source)
         # flowuiwidget expects (line, col, msg) tuples
-        line = getattr(exc, 'lineno', -1)
-        col = getattr(exc, 'offset', -1)
-        cf.errors.append((line, col, str(exc.msg) if exc.msg else 'Syntax error'))
+        line = getattr(exc, "lineno", -1)
+        col = getattr(exc, "offset", -1)
+        cf.errors.append((line, col, str(exc.msg) if exc.msg else "Syntax error"))
         return cf
     builder = _FlowBuilder(source)
     builder.visit(tree)
@@ -796,10 +763,10 @@ def _build_control_flow(source: str, filename: str) -> _ControlFlow:
 
 def getControlFlowFromMemory(content: str) -> _ControlFlow:
     """Build control flow from string content."""
-    return _build_control_flow(content, '<string>')
+    return _build_control_flow(content, "<string>")
 
 
 def getControlFlowFromFile(fileName: str) -> _ControlFlow:
     """Build control flow from file."""
-    with open(fileName, encoding='utf-8', errors='replace') as f:
+    with open(fileName, encoding="utf-8", errors="replace") as f:
         return _build_control_flow(f.read(), fileName)

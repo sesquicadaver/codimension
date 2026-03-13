@@ -54,12 +54,11 @@ from .spacers import ToolBarExpandingSpacer
 
 
 class RecentProjectViewItem(QTreeWidgetItem):
-
     """Single recent projects view item data structure"""
 
     def __init__(self, fileName):
         # full file name is expected
-        projectName = os.path.basename(fileName .replace('.cdm3', ''))
+        projectName = os.path.basename(fileName.replace(".cdm3", ""))
         QTreeWidgetItem.__init__(self, ["", projectName + "   ", fileName])
 
         self.__isValid = True
@@ -73,14 +72,14 @@ class RecentProjectViewItem(QTreeWidgetItem):
         # Check that the file exists
         if not os.path.exists(fileName):
             self.__isValid = False
-            self.setToolTip(0, 'Project file does not exist')
-            self.setToolTip(1, 'Project file does not exist')
+            self.setToolTip(0, "Project file does not exist")
+            self.setToolTip(1, "Project file does not exist")
             self.__markBroken()
         else:
             # Get the project properties
             try:
                 tooltip = getProjectFileTooltip(fileName)
-                if Settings()['recentTooltips']:
+                if Settings()["recentTooltips"]:
                     self.setToolTip(1, tooltip)
                 else:
                     self.setToolTip(1, "")
@@ -90,18 +89,18 @@ class RecentProjectViewItem(QTreeWidgetItem):
             except Exception:
                 # Cannot get project properties. Mark broken.
                 self.__isValid = False
-                self.setToolTip(0, 'Broken project file')
-                self.setToolTip(1, 'Broken project file')
+                self.setToolTip(0, "Broken project file")
+                self.setToolTip(1, "Broken project file")
                 self.__markBroken()
         self.setToolTip(2, self.getFilename())
 
     def __markBroken(self):
         """Mark the broken project with an icon"""
-        self.setIcon(0, getIcon('brokenproject.png'))
+        self.setIcon(0, getIcon("brokenproject.png"))
 
     def __markCurrent(self):
         """Mark the current project with an icon"""
-        self.setIcon(0, getIcon('currentproject.png'))
+        self.setIcon(0, getIcon("currentproject.png"))
         self.__isCurrent = True
 
     def getFilename(self):
@@ -118,7 +117,6 @@ class RecentProjectViewItem(QTreeWidgetItem):
 
 
 class RecentFileViewItem(QTreeWidgetItem):
-
     """Single recent file view item data structure"""
 
     def __init__(self, fileName):
@@ -139,10 +137,10 @@ class RecentFileViewItem(QTreeWidgetItem):
     def __markBroken(self):
         """Mark the file as broken"""
         self.__isValid = False
-        self.setToolTip(0, 'File does not exist')
-        self.setToolTip(1, 'File does not exist')
+        self.setToolTip(0, "File does not exist")
+        self.setToolTip(1, "File does not exist")
         self.setToolTip(2, self.getFilename())
-        self.setIcon(0, getIcon('brokenproject.png'))
+        self.setIcon(0, getIcon("brokenproject.png"))
 
     def __markOK(self):
         """Mark the file as OK"""
@@ -152,21 +150,21 @@ class RecentFileViewItem(QTreeWidgetItem):
         if isPythonMime(mime):
             # The tooltip could be the file docstring
             info = GlobalData().briefModinfoCache.get(fileName)
-            if info.docstring and Settings()['recentTooltips']:
+            if info.docstring and Settings()["recentTooltips"]:
                 self.setToolTip(1, info.docstring.text)
             else:
                 self.setToolTip(1, "")
             if info.isOK:
-                self.setIcon(0, getIcon('filepython.png'))
+                self.setIcon(0, getIcon("filepython.png"))
             else:
-                self.setIcon(0, getIcon('filepythonbroken.png'))
+                self.setIcon(0, getIcon("filepythonbroken.png"))
             self.setToolTip(0, "")
         elif isCDMProjectMime(mime):
             # Get the project properties
             try:
                 self.setToolTip(0, "")
                 tooltip = getProjectFileTooltip(fileName)
-                if Settings()['recentTooltips']:
+                if Settings()["recentTooltips"]:
                     self.setToolTip(1, tooltip)
                 else:
                     self.setToolTip(1, "")
@@ -174,8 +172,8 @@ class RecentFileViewItem(QTreeWidgetItem):
             except Exception:
                 # cannot get project properties. Mark broken.
                 self.__isValid = False
-                self.setToolTip(0, 'Broken project file')
-                self.setToolTip(1, 'Broken project file')
+                self.setToolTip(0, "Broken project file")
+                self.setToolTip(1, "Broken project file")
             self.setIcon(0, icon)
         else:
             # Get the other file type icon
@@ -193,7 +191,6 @@ class RecentFileViewItem(QTreeWidgetItem):
 
 
 class RecentProjectsViewer(QWidget):
-
     """Recent projects viewer implementation"""
 
     def __init__(self, parent=None):
@@ -241,17 +238,16 @@ class RecentProjectsViewer(QWidget):
     def __createFilePopupMenu(self):
         """create the recent files popup menu"""
         self.__fileMenu = QMenu(self.recentFilesView)
-        self.__openMenuItem = self.__fileMenu.addAction(
-            getIcon('openitem.png'), 'Open', self.__openFile)
+        self.__openMenuItem = self.__fileMenu.addAction(getIcon("openitem.png"), "Open", self.__openFile)
         self.__copyPathFileMenuItem = self.__fileMenu.addAction(
-            getIcon('copymenu.png'),
-            'Copy path to clipboard', self.__filePathToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.__filePathToClipboard
+        )
         self.__fileMenu.addSeparator()
         self.__delFileMenuItem = self.__fileMenu.addAction(
-            getIcon('trash.png'), 'Delete from recent', self.__deleteFile)
+            getIcon("trash.png"), "Delete from recent", self.__deleteFile
+        )
         self.recentFilesView.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.recentFilesView.customContextMenuRequested.connect(
-            self.__handleShowFileContextMenu)
+        self.recentFilesView.customContextMenuRequested.connect(self.__handleShowFileContextMenu)
 
         GlobalData().project.sigRecentFilesChanged.connect(self.__populateFiles)
         Settings().sigRecentFilesChanged.connect(self.__populateFiles)
@@ -259,20 +255,18 @@ class RecentProjectsViewer(QWidget):
     def __createProjectPopupMenu(self):
         """Creates the recent project popup menu"""
         self.__projectMenu = QMenu(self.projectsView)
-        self.__prjLoadMenuItem = self.__projectMenu.addAction(
-            getIcon('load.png'), 'Load', self.__loadProject)
+        self.__prjLoadMenuItem = self.__projectMenu.addAction(getIcon("load.png"), "Load", self.__loadProject)
         self.__projectMenu.addSeparator()
-        self.__propsMenuItem = self.__projectMenu.addAction(
-            getIcon('smalli.png'), 'Properties', self.__viewProperties)
+        self.__propsMenuItem = self.__projectMenu.addAction(getIcon("smalli.png"), "Properties", self.__viewProperties)
         self.__prjCopyPathMenuItem = self.__projectMenu.addAction(
-            getIcon('copymenu.png'),
-            'Copy path to clipboard', self.__prjPathToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.__prjPathToClipboard
+        )
         self.__projectMenu.addSeparator()
         self.__delPrjMenuItem = self.__projectMenu.addAction(
-            getIcon('trash.png'), 'Delete from recent', self.__deleteProject)
+            getIcon("trash.png"), "Delete from recent", self.__deleteProject
+        )
         self.projectsView.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.projectsView.customContextMenuRequested.connect(
-            self.__handleShowPrjContextMenu)
+        self.projectsView.customContextMenuRequested.connect(self.__handleShowPrjContextMenu)
 
         Settings().sigRecentListChanged.connect(self.__populateProjects)
         GlobalData().project.sigProjectChanged.connect(self.__projectChanged)
@@ -281,8 +275,7 @@ class RecentProjectsViewer(QWidget):
         """Creates the upper part - recent files"""
         recentFilesLabel = HeaderFitLabel(self)
         recentFilesLabel.setText("Recent files")
-        recentFilesLabel.setSizePolicy(QSizePolicy.Expanding,
-                                       QSizePolicy.Fixed)
+        recentFilesLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         recentFilesLabel.setMinimumWidth(10)
 
         rfHeaderToolbar = QToolBar(self)
@@ -297,25 +290,19 @@ class RecentProjectsViewer(QWidget):
         self.recentFilesView.setItemDelegate(NoOutlineHeightDelegate(4))
         self.recentFilesView.setUniformRowHeights(True)
 
-        self.__filesHeaderItem = QTreeWidgetItem(["", "File",
-                                                  "Absolute path"])
+        self.__filesHeaderItem = QTreeWidgetItem(["", "File", "Absolute path"])
         self.recentFilesView.setHeaderItem(self.__filesHeaderItem)
         self.recentFilesView.header().setSortIndicator(1, Qt.AscendingOrder)
 
-        self.recentFilesView.itemSelectionChanged.connect(
-            self.__fileSelectionChanged)
+        self.recentFilesView.itemSelectionChanged.connect(self.__fileSelectionChanged)
         self.recentFilesView.itemActivated.connect(self.__fileActivated)
 
         # Toolbar part - buttons
-        self.openFileButton = QAction(getIcon('openitem.png'),
-                                      'Open the highlighted file', self)
+        self.openFileButton = QAction(getIcon("openitem.png"), "Open the highlighted file", self)
         self.openFileButton.triggered.connect(self.__openFile)
-        self.copyFilePathButton = QAction(getIcon('copymenu.png'),
-                                          'Copy path to clipboard', self)
+        self.copyFilePathButton = QAction(getIcon("copymenu.png"), "Copy path to clipboard", self)
         self.copyFilePathButton.triggered.connect(self.__filePathToClipboard)
-        self.trashFileButton = QAction(getIcon('delitem.png'),
-                                       'Remove selected (not from the disk)',
-                                       self)
+        self.trashFileButton = QAction(getIcon("delitem.png"), "Remove selected (not from the disk)", self)
         self.trashFileButton.triggered.connect(self.__deleteFile)
 
         self.upperToolbar = QToolBar()
@@ -347,17 +334,15 @@ class RecentProjectsViewer(QWidget):
     def __createRecentProjectsLayout(self):
         """Creates the bottom layout"""
         recentProjectsLabel = HeaderFitLabel(self)
-        recentProjectsLabel.setText('Recent projects')
-        recentProjectsLabel.setSizePolicy(QSizePolicy.Expanding,
-                                          QSizePolicy.Fixed)
+        recentProjectsLabel.setText("Recent projects")
+        recentProjectsLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         recentProjectsLabel.setMinimumWidth(10)
 
         self.__showHideButton = QToolButton(self)
         self.__showHideButton.setAutoRaise(True)
-        self.__showHideButton.setIcon(getIcon('less.png'))
-        self.__showHideButton.setFixedSize(recentProjectsLabel.height(),
-                                           recentProjectsLabel.height())
-        self.__showHideButton.setToolTip('Hide recent projects list')
+        self.__showHideButton.setIcon(getIcon("less.png"))
+        self.__showHideButton.setFixedSize(recentProjectsLabel.height(), recentProjectsLabel.height())
+        self.__showHideButton.setToolTip("Hide recent projects list")
         self.__showHideButton.setFocusPolicy(Qt.NoFocus)
         self.__showHideButton.clicked.connect(self.__onShowHide)
 
@@ -368,18 +353,13 @@ class RecentProjectsViewer(QWidget):
         self.rpHeaderToolbar.addWidget(self.__showHideButton)
 
         # Toolbar part - buttons
-        self.loadButton = QAction(getIcon('load.png'),
-                                  'Load the highlighted project', self)
+        self.loadButton = QAction(getIcon("load.png"), "Load the highlighted project", self)
         self.loadButton.triggered.connect(self.__loadProject)
-        self.propertiesButton = QAction(getIcon('smalli.png'),
-                                        'Show the highlighted project '
-                                        'properties', self)
+        self.propertiesButton = QAction(getIcon("smalli.png"), "Show the highlighted project properties", self)
         self.propertiesButton.triggered.connect(self.__viewProperties)
-        self.copyPrjPathButton = QAction(getIcon('copymenu.png'),
-                                         'Copy path to clipboard', self)
+        self.copyPrjPathButton = QAction(getIcon("copymenu.png"), "Copy path to clipboard", self)
         self.copyPrjPathButton.triggered.connect(self.__prjPathToClipboard)
-        self.trashButton = QAction(getIcon('delitem.png'),
-                                   'Remove selected (not from the disk)', self)
+        self.trashButton = QAction(getIcon("delitem.png"), "Remove selected (not from the disk)", self)
         self.trashButton.triggered.connect(self.__deleteProject)
 
         self.lowerToolbar = QToolBar()
@@ -401,14 +381,12 @@ class RecentProjectsViewer(QWidget):
         self.projectsView.setItemDelegate(NoOutlineHeightDelegate(4))
         self.projectsView.setUniformRowHeights(True)
 
-        self.__projectsHeaderItem = QTreeWidgetItem(
-            ["", "Project", "Absolute path"])
+        self.__projectsHeaderItem = QTreeWidgetItem(["", "Project", "Absolute path"])
         self.projectsView.setHeaderItem(self.__projectsHeaderItem)
 
         self.projectsView.header().setSortIndicator(1, Qt.AscendingOrder)
         self.projectsView.itemActivated.connect(self.__projectActivated)
-        self.projectsView.itemSelectionChanged.connect(
-            self.__projectSelectionChanged)
+        self.projectsView.itemSelectionChanged.connect(self.__projectSelectionChanged)
 
         recentProjectsLayout = QVBoxLayout()
         recentProjectsLayout.setContentsMargins(0, 0, 0, 0)
@@ -460,9 +438,7 @@ class RecentProjectsViewer(QWidget):
 
             self.propertiesButton.setEnabled(enabled)
             self.copyPrjPathButton.setEnabled(True)
-            self.loadButton.setEnabled(enabled and
-                                       not isCurrentProject and
-                                       not self.__debugMode)
+            self.loadButton.setEnabled(enabled and not isCurrentProject and not self.__debugMode)
             self.trashButton.setEnabled(not isCurrentProject)
 
     def __updateFileToolbarButtons(self):
@@ -484,41 +460,33 @@ class RecentProjectsViewer(QWidget):
         self.__propsMenuItem.setEnabled(enabled)
         self.__delPrjMenuItem.setEnabled(not isCurrentProject)
         # fName = self.__projectContextItem.getFilename()
-        self.__prjLoadMenuItem.setEnabled(enabled and
-                                          not isCurrentProject and
-                                          not self.__debugMode)
+        self.__prjLoadMenuItem.setEnabled(enabled and not isCurrentProject and not self.__debugMode)
 
         self.__projectMenu.popup(QCursor.pos())
 
     def __sortProjects(self):
         """Sort the project items"""
-        self.projectsView.sortItems(
-            self.projectsView.sortColumn(),
-            self.projectsView.header().sortIndicatorOrder())
+        self.projectsView.sortItems(self.projectsView.sortColumn(), self.projectsView.header().sortIndicatorOrder())
 
     def __sortFiles(self):
         """Sort the file items"""
         self.recentFilesView.sortItems(
-            self.recentFilesView.sortColumn(),
-            self.recentFilesView.header().sortIndicatorOrder())
+            self.recentFilesView.sortColumn(), self.recentFilesView.header().sortIndicatorOrder()
+        )
 
     def __resizeProjectColumns(self):
         """Resize the projects list columns"""
         self.projectsView.header().setStretchLastSection(True)
-        self.projectsView.header().resizeSections(
-            QHeaderView.ResizeToContents)
+        self.projectsView.header().resizeSections(QHeaderView.ResizeToContents)
         self.projectsView.header().resizeSection(0, 22)
-        self.projectsView.header().setSectionResizeMode(
-            0, QHeaderView.Fixed)
+        self.projectsView.header().setSectionResizeMode(0, QHeaderView.Fixed)
 
     def __resizeFileColumns(self):
         """Resize the files list columns"""
         self.recentFilesView.header().setStretchLastSection(True)
-        self.recentFilesView.header().resizeSections(
-            QHeaderView.ResizeToContents)
+        self.recentFilesView.header().resizeSections(QHeaderView.ResizeToContents)
         self.recentFilesView.header().resizeSection(0, 22)
-        self.recentFilesView.header().setSectionResizeMode(
-            0, QHeaderView.Fixed)
+        self.recentFilesView.header().setSectionResizeMode(0, QHeaderView.Fixed)
 
     def __projectActivated(self, item, _):
         """Handles the double click (or Enter) on the item"""
@@ -551,32 +519,33 @@ class RecentProjectsViewer(QWidget):
                     excludeFromAnalysis.append(dlg.excludeDirList.item(index).text())
 
                 scriptName = dlg.scriptEdit.text().strip()
-                relativePath = os.path.relpath(scriptName,
-                                               project.getProjectDir())
-                if not relativePath.startswith('..'):
+                relativePath = os.path.relpath(scriptName, project.getProjectDir())
+                if not relativePath.startswith(".."):
                     scriptName = relativePath
 
                 mdDocFile = dlg.mdDocEdit.text().strip()
-                relativePath = os.path.relpath(mdDocFile,
-                                               project.getProjectDir())
-                if not relativePath.startswith('..'):
+                relativePath = os.path.relpath(mdDocFile, project.getProjectDir())
+                if not relativePath.startswith(".."):
                     mdDocFile = relativePath
 
                 project.updateProperties(
-                    {'scriptname': scriptName,
-                     'mddocfile': mdDocFile,
-                     'creationdate': dlg.creationDateEdit.text().strip(),
-                     'author': dlg.authorEdit.text().strip(),
-                     'license': dlg.licenseEdit.text().strip(),
-                     'copyright': dlg.copyrightEdit.text().strip(),
-                     'version': dlg.versionEdit.text().strip(),
-                     'email': dlg.emailEdit.text().strip(),
-                     'description': dlg.descriptionEdit.toPlainText().strip(),
-                     'uuid': dlg.uuidEdit.text().strip(),
-                     'importdirs': importDirs,
-                     'excludeFromAnalysis': excludeFromAnalysis,
-                     'encoding': dlg.encodingCombo.currentText().strip(),
-                     'pythoninterpreter': dlg.venvEdit.text().strip()})
+                    {
+                        "scriptname": scriptName,
+                        "mddocfile": mdDocFile,
+                        "creationdate": dlg.creationDateEdit.text().strip(),
+                        "author": dlg.authorEdit.text().strip(),
+                        "license": dlg.licenseEdit.text().strip(),
+                        "copyright": dlg.copyrightEdit.text().strip(),
+                        "version": dlg.versionEdit.text().strip(),
+                        "email": dlg.emailEdit.text().strip(),
+                        "description": dlg.descriptionEdit.toPlainText().strip(),
+                        "uuid": dlg.uuidEdit.text().strip(),
+                        "importdirs": importDirs,
+                        "excludeFromAnalysis": excludeFromAnalysis,
+                        "encoding": dlg.encodingCombo.currentText().strip(),
+                        "pythoninterpreter": dlg.venvEdit.text().strip(),
+                    }
+                )
         else:
             # This is not the current project - it can be viewed
             fName = self.__projectContextItem.getFilename()
@@ -620,16 +589,14 @@ class RecentProjectsViewer(QWidget):
                 prj.loadProject(projectFileName)
                 mainWin.activateProjectTab()
         else:
-            logging.error("The project " +
-                          os.path.basename(projectFileName) +
-                          " disappeared from the file system.")
+            logging.error("The project " + os.path.basename(projectFileName) + " disappeared from the file system.")
             self.__populateProjects()
         QApplication.restoreOverrideCursor()
 
     def __populateProjects(self):
         """Populates the recent projects"""
         self.projectsView.clear()
-        for item in Settings()['recentProjects']:
+        for item in Settings()["recentProjects"]:
             self.projectsView.addTopLevelItem(RecentProjectViewItem(item))
 
         self.__sortProjects()
@@ -655,11 +622,9 @@ class RecentProjectsViewer(QWidget):
 
         if what == CodimensionProject.Properties:
             # Update the corresponding tooltip
-            items = self.projectsView.findItems(GlobalData().project.fileName,
-                                                Qt.MatchExactly, 2)
+            items = self.projectsView.findItems(GlobalData().project.fileName, Qt.MatchExactly, 2)
             if len(items) != 1:
-                logging.error("Unexpected number of matched projects: " +
-                              str(len(items)))
+                logging.error("Unexpected number of matched projects: " + str(len(items)))
                 return
 
             items[0].updateTooltip()
@@ -692,14 +657,12 @@ class RecentProjectsViewer(QWidget):
     def __filePathToClipboard(self):
         """Copies the file item path to the clipboard"""
         if self.__fileContextItem is not None:
-            QApplication.clipboard().setText(
-                self.__fileContextItem.getFilename())
+            QApplication.clipboard().setText(self.__fileContextItem.getFilename())
 
     def __prjPathToClipboard(self):
         """Copies the project item path to the clipboard"""
         if self.__projectContextItem is not None:
-            QApplication.clipboard().setText(
-                self.__projectContextItem.getFilename())
+            QApplication.clipboard().setText(self.__projectContextItem.getFilename())
 
     def onFileUpdated(self, fileName, _):
         """Triggered when the file is updated: python or project; _: uuid"""
@@ -724,8 +687,8 @@ class RecentProjectsViewer(QWidget):
 
     def onFileTypeChanged(self, fileName, uuid, newMime):
         """Triggered when the file type is changed"""
-        del uuid        # unused argument
-        del newMime     # unused argument
+        del uuid  # unused argument
+        del newMime  # unused argument
         realPath = os.path.realpath(fileName)
         count = self.recentFilesView.topLevelItemCount()
         for index in range(0, count):
@@ -745,16 +708,16 @@ class RecentProjectsViewer(QWidget):
 
             self.projectsView.setVisible(False)
             self.lowerToolbar.setVisible(False)
-            self.__showHideButton.setIcon(getIcon('more.png'))
-            self.__showHideButton.setToolTip('Show recent projects list')
+            self.__showHideButton.setIcon(getIcon("more.png"))
+            self.__showHideButton.setToolTip("Show recent projects list")
 
             self.lower.setMinimumHeight(self.rpHeaderToolbar.height())
             self.lower.setMaximumHeight(self.rpHeaderToolbar.height())
         else:
             self.projectsView.setVisible(True)
             self.lowerToolbar.setVisible(True)
-            self.__showHideButton.setIcon(getIcon('less.png'))
-            self.__showHideButton.setToolTip('Hide recent projects list')
+            self.__showHideButton.setIcon(getIcon("less.png"))
+            self.__showHideButton.setToolTip("Hide recent projects list")
 
             self.lower.setMinimumHeight(self.__minH)
             self.lower.setMaximumHeight(self.__maxH)

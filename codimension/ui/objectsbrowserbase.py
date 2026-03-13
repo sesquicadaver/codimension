@@ -42,15 +42,14 @@ from .viewitems import (
 
 
 class ObjectsBrowserSortFilterProxyModel(QSortFilterProxyModel):
-
     """Objects (globals, functions, classes) browser sort filter proxy model
-       implementation. It allows filtering basing on top level items.
+    implementation. It allows filtering basing on top level items.
     """
 
     def __init__(self, parent=None):
         QSortFilterProxyModel.__init__(self, parent)
-        self.__sortColumn = None    # Avoid pylint complains
-        self.__sortOrder = None     # Avoid pylint complains
+        self.__sortColumn = None  # Avoid pylint complains
+        self.__sortOrder = None  # Avoid pylint complains
 
         self.__filters = []
         self.__filtersCount = 0
@@ -100,7 +99,7 @@ class ObjectsBrowserSortFilterProxyModel(QSortFilterProxyModel):
     def filterAcceptsRow(self, sourceRow, sourceParent):
         """Filters rows"""
         if self.__filtersCount == 0 or self.__sourceModelRoot is None:
-            return True     # No filters
+            return True  # No filters
 
         sindex = self.sourceModel().index(sourceRow, 0, sourceParent)
         if not sindex.isValid():
@@ -122,7 +121,6 @@ class ObjectsBrowserSortFilterProxyModel(QSortFilterProxyModel):
 
 
 class ObjectsBrowser(QTreeView):
-
     """Common functionality of the G/F/C browsers"""
 
     sigOpeningItem = pyqtSignal(str, int)
@@ -168,10 +166,9 @@ class ObjectsBrowser(QTreeView):
     def updateCounter(self, parent=None, start=0, end=0):
         """Updates the header with the currently visible and total items"""
         del parent  # unused argument
-        del start   # unused argument
-        del end     # unused argument
-        text = "Name (" + str(self.model().rowCount()) + " of " + \
-                          str(self.__model.totalRowCount()) + ")"
+        del start  # unused argument
+        del end  # unused argument
+        text = "Name (" + str(self.model().rowCount()) + " of " + str(self.__model.totalRowCount()) + ")"
         self.__model.updateRootData(0, text)
 
     def __onProjectChanged(self, what):
@@ -188,7 +185,7 @@ class ObjectsBrowser(QTreeView):
         self.model().setFilter(text)
 
         # This is to trigger filtering - ugly but I don't know how else
-        self.model().setFilterRegExp('')
+        self.model().setFilterRegExp("")
 
         # No need to resort but need to resize columns
         self._resizeColumns(QModelIndex())
@@ -216,8 +213,7 @@ class ObjectsBrowser(QTreeView):
 
     def _resort(self):
         """Re-sorts the tree"""
-        self.model().sort(self.header().sortIndicatorSection(),
-                          self.header().sortIndicatorOrder())
+        self.model().sort(self.header().sortIndicatorSection(), self.header().sortIndicatorOrder())
 
     def mouseDoubleClickEvent(self, mouseEvent):
         """Reimplemented to disable expanding/collapsing of items on dbl click.
@@ -229,11 +225,16 @@ class ObjectsBrowser(QTreeView):
             return
 
         item = self.model().item(index)
-        if item.itemType in [GlobalsItemType,
-                             ImportsItemType, FunctionsItemType,
-                             ClassesItemType, StaticAttributesItemType,
-                             InstanceAttributesItemType,
-                             DirectoryItemType, SysPathItemType]:
+        if item.itemType in [
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+            DirectoryItemType,
+            SysPathItemType,
+        ]:
             # This will return the first column index regardless in what
             # column the double click happened
             index = self.selectedIndexes()[0]
@@ -251,11 +252,16 @@ class ObjectsBrowser(QTreeView):
 
     def openItem(self, item):
         """Handles the case when an item is activated"""
-        if item.itemType in [GlobalsItemType,
-                             ImportsItemType, FunctionsItemType,
-                             ClassesItemType, StaticAttributesItemType,
-                             InstanceAttributesItemType,
-                             DirectoryItemType, SysPathItemType]:
+        if item.itemType in [
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+            DirectoryItemType,
+            SysPathItemType,
+        ]:
             return
         path = item.getPath()
         line = item.data(2)
@@ -300,8 +306,8 @@ class ObjectsBrowser(QTreeView):
         for path in items:
             path = str(path)
             if path.endswith(os.path.sep):
-                continue    # dirs are out of interest
-            if path.startswith('+'):
+                continue  # dirs are out of interest
+            if path.startswith("+"):
                 path = path[1:]
                 if not isPythonFile(path):
                     continue
@@ -312,8 +318,7 @@ class ObjectsBrowser(QTreeView):
                     continue
                 deletedPythonFiles.append(path)
         if addedPythonFiles or deletedPythonFiles:
-            if self.__model.onFSChanged(addedPythonFiles,
-                                        deletedPythonFiles):
+            if self.__model.onFSChanged(addedPythonFiles, deletedPythonFiles):
                 # Need resort and counter updates
                 self.layoutDisplay()
                 self.updateCounter()
