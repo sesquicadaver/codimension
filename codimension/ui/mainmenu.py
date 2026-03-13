@@ -29,7 +29,7 @@ from utils.settings import CLEAR_AND_REUSE, NO_CLEAR_AND_REUSE, NO_REUSE
 from utils.skin import getSkinsList
 
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from .qt import QActionGroup, QApplication, QFontDialog, QMenu, QStyleFactory
+from .qt import QActionGroup, QApplication, QDialog, QFontDialog, QMenu, QMessageBox, QStyleFactory
 
 
 def getAccelerator(count):
@@ -82,6 +82,7 @@ class MainWindowMenuMixin:
         self._projectPropsAct = prjMenu.addAction(
             getIcon("smalli.png"), "&Properties", self.projectViewer.projectProperties
         )
+        self.__gitRepoAct = prjMenu.addAction("Git &repository...", self._onGitRepository)
         prjMenu.addSeparator()
         self._prjTemplateMenu = QMenu("Project-specific &template", self)
         self.__createPrjTemplateAct = self._prjTemplateMenu.addAction(getIcon("generate.png"), "&Create")
@@ -597,6 +598,20 @@ class MainWindowMenuMixin:
         """Triggered when project menu is about to hide"""
         self.__newProjectAct.setEnabled(True)
         self.__openProjectAct.setEnabled(True)
+
+    def _onGitRepository(self):
+        """Open Git repository override dialog (Project → Git repository)."""
+        try:
+            from cdmplugins.git.gitconfig import save_repo_override
+            from cdmplugins.git.gitdialogs import RepoOverrideDialog
+
+            dlg = RepoOverrideDialog(self)
+            if dlg.exec_() == QDialog.Accepted:
+                save_repo_override(dlg.get_repo_override())
+        except ImportError:
+            QMessageBox.information(
+                self, "Git", "Git plugin is not available. Install and enable the Git plugin."
+            )
 
     def __tabAboutToShow(self):
         """Triggered when tab menu is about to show"""

@@ -146,8 +146,6 @@ class GitPlugin(VersionControlSystemInterface):
         parentMenu.addSeparator()
         parentMenu.addAction("Create pull request...", self.__onDirCreatePR)
         parentMenu.addAction("View pull requests", self.__onDirViewPRs)
-        parentMenu.addSeparator()
-        parentMenu.addAction("Repository (override)...", self.__onDirRepoOverride)
 
     def populateBufferContextMenu(self, parentMenu):
         """Populate the buffer context menu."""
@@ -414,12 +412,3 @@ class GitPlugin(VersionControlSystemInterface):
             )
             return
         QDesktopServices.openUrl(QUrl(url))
-
-    def __onDirRepoOverride(self):
-        """Set repository override from Project → Git context menu."""
-        from .gitconfig import save_repo_override
-        from .gitdialogs import RepoOverrideDialog
-
-        dlg = RepoOverrideDialog(self.ide.mainWindow)
-        if dlg.exec_() == QDialog.Accepted:
-            save_repo_override(dlg.get_repo_override())

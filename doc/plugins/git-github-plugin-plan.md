@@ -219,8 +219,8 @@ def findGitRoot(path: str) -> str | None:
 - Default remote (origin)
 - **GitHub username** — для Git credential (HTTPS push/pull), відповідь на запит Git
 - **GitHub token (PAT)** — для REST API (Create PR, View PRs). Fine-grained або classic (ghp_xxx).
-- **Repository (override)** — ручне введення owner/repo або URL. Якщо задано — використовується замість git remote. Дозволяє View PRs без git-репо. Останній пункт у меню **Project → Git** (контекстне меню директорії).
-- Доступ: Plugin Manager → Git → іконка налаштувань; Repository (override) — Project → Git → Repository (override)...
+- **Repository (override)** — ручне введення owner/repo або URL. Якщо задано — використовується замість git remote. Дозволяє View PRs без git-репо.
+- Доступ: Plugin Manager → Git → іконка налаштувань; Repository (override) — **Project → Git repository...** (меню Project)
 
 ---
 
