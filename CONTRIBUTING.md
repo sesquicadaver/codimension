@@ -7,7 +7,7 @@
 1. **Fork** репозиторій (якщо ще не зробили)
 2. Створіть гілку: `git checkout -b feature/your-feature`
 3. Внесіть зміни, дотримуючись існуючого стилю
-4. Запустіть перевірки: `ruff check codimension/`, `mypy codimension/`
+4. Запустіть перевірки: `ruff check codimension cdmplugins`, `mypy $(find cdmplugins -name '*.py')`, `pytest tests/`
 5. Оновіть ChangeLog
 6. Зробіть commit з зрозумілим повідомленням
 7. Push та створіть Pull Request
