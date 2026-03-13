@@ -515,3 +515,83 @@ def getRequirementsHint(projectDir, unresolvedPackages):
         + ", ".join(sorted(unresolvedPackages))
         + ". Consider: pip install " + " ".join(sorted(unresolvedPackages))
     )
+
+
+def generateRequirementsFromProject(filesList, progressCallback=None):
+    """Scan project Python files for unresolved imports and collect third-party package names.
+
+    Args:
+        filesList: Iterable of file/dir paths from project (full paths; dirs end with sep).
+        progressCallback: Optional callable(current, total, message) for progress updates.
+
+    Returns:
+        (packages_set, error_count): Set of top-level package names, count of resolved errors.
+    """
+    from .fileutils import isPythonFile
+
+    allErrors = []
+    pythonFiles = []
+    for item in filesList:
+        if item.endswith(os.sep):
+            continue
+        if isPythonFile(item):
+            pythonFiles.append(item)
+
+    total = len(pythonFiles)
+    for idx, fName in enumerate(pythonFiles):
+        if progressCallback:
+            progressCallback(idx, total, "Scanning " + os.path.basename(fName) + "...")
+        try:
+            info = GlobalData().briefModinfoCache.get(fName)
+            _, errors = resolveImports(fName, info.imports)
+            allErrors.extend(errors)
+        except Exception:
+            pass
+
+    packages = getUnresolvedPackageNames(allErrors)
+    return packages, len(allErrors)
+
+
+def _parseRequirementsPackageName(line):
+    """Extract package name from a requirements line (e.g. 'numpy>=1.0' -> 'numpy')."""
+    import re
+    line = line.strip().split("#")[0].strip()
+    if not line or line.startswith("-"):
+        return None
+    match = re.match(r"^([a-zA-Z0-9_-]+)", line)
+    return match.group(1).lower() if match else None
+
+
+def writeRequirementsFile(path, packages, mode="w"):
+    """Write package names to requirements.txt.
+
+    Args:
+        path: Full path to requirements.txt.
+        packages: Iterable of package names (e.g. {'numpy', 'requests'}).
+        mode: 'w' to overwrite, 'a' to append (only new packages).
+
+    Returns:
+        Number of lines written.
+    """
+    from .config import DEFAULT_ENCODING
+
+    sortedPkgs = sorted(packages)
+    if not sortedPkgs:
+        return 0
+
+    existing = set()
+    if mode == "a" and os.path.isfile(path):
+        with open(path, "r", encoding=DEFAULT_ENCODING) as f:
+            for line in f:
+                pkg = _parseRequirementsPackageName(line)
+                if pkg:
+                    existing.add(pkg)
+        sortedPkgs = [p for p in sortedPkgs if p.lower() not in existing]
+
+    if not sortedPkgs:
+        return 0
+
+    with open(path, mode, encoding=DEFAULT_ENCODING) as f:
+        for pkg in sortedPkgs:
+            f.write(pkg + "\n")
+    return len(sortedPkgs)
