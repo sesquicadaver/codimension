@@ -278,3 +278,15 @@ pip-audit>=2.0.0
 - [x] Документація оновлена
 - [x] CI проходить (ruff, mypy) — `.github/workflows/ci.yml`
 - [x] Smoke-тест: codimension запускається, плагіни активуються
+
+---
+
+## 9. GitHub інтеграція (пов’язаний план)
+
+План інтеграції з GitHub: [doc/github-integration-plan.md](../github-integration-plan.md).
+
+**Статус (2025-03):** Фази 1.3, 2–5 виконано:
+- Issue/PR templates, Badges, CONTRIBUTING
+- Dependabot, pip-audit у CI
+- Кешування pip у CI
+- Release workflow (тег v* → PyPI)

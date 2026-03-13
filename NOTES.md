@@ -42,28 +42,30 @@ python -m build
 ```
 
 5. Verify `dist/` has required files
-6. Upload to pypitest:
+6. Upload to pypitest (опційно):
 
 ```shell
 pip install twine
 twine upload -r pypitest dist/*
 ```
 
-7. Test from pypitest
-8. Upload to PyPI:
+7. Test from pypitest (якщо використовували крок 6)
+8. **Автоматичний реліз (рекомендовано):** створіть тег — workflow `.github/workflows/release.yml` збудує та завантажить на PyPI:
+
+```shell
+git tag -a v4.10.0 -m "Release 4.10.0"
+git push --tags
+```
+
+Потрібен GitHub Secret `PYPI_API_TOKEN` (токен з pypi.org, формат pypi-xxx).
+
+9. **Ручний upload:** якщо не використовуєте workflow:
 
 ```shell
 twine upload dist/*
 ```
 
-9. Create annotated tag:
-
-```shell
-git tag -a 4.10.0 -m "Release 4.10.0"
-git push --tags
-```
-
-10. Publish release on GitHub (this fork): https://github.com/sesquicadaver/codimension/releases
+10. Publish release on GitHub: https://github.com/sesquicadaver/codimension/releases
 
 ## Development
 

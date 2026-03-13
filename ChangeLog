@@ -1,5 +1,26 @@
 2025 Mar 13
 
+* GitHub integration plan — Фази 1.3, 5:
+  - CI: кешування pip (setup-python cache, requirements.txt)
+  - Release workflow: .github/workflows/release.yml (trigger: tag v*)
+  - Валідація тегу vs cdmverspec.py перед білдом
+  - pyproject.toml: [build-system] для python -m build
+  - NOTES.md: інструкція для автоматичного релізу через тег
+
+2025 Mar 13
+
+* GitHub integration plan — Фази 2–4:
+  - Issue templates: bug_report, feature_request, config.yml
+  - PR template: .github/pull_request_template.md
+  - Badges: CI, Python 3.10+, License GPL v3 у README
+  - CONTRIBUTING: посилання на templates, CI, doc/github-integration-plan.md
+  - Dependabot: .github/dependabot.yml (pip, github-actions)
+  - pip-audit у CI (smoke job)
+  - doc/github-integration-plan.md: статус оновлено
+  - doc/plugins/plugins-implementation-plan.md: секція 9 (GitHub integration status)
+
+2025 Mar 13
+
 * Plugins implementation plan — items 5+ (testing, CI):
   - tests/: test_todoscanner.py (per-plugin smoke, plan 6.1)
   - CI: smoke via import check, pytest job for tests/

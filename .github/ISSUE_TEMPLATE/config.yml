@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Документація
+    url: https://github.com/sesquicadaver/codimension/tree/main/doc
+    about: Документація проєкту
+  - name: Оригінальний проєкт (архів)
+    url: https://github.com/SergeySatskiy/codimension
+    about: Історичний репозиторій, не підтримується

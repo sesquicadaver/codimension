@@ -1,5 +1,9 @@
 # Codimension Python 3 IDE
 
+[![CI](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml/badge.svg)](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)](LICENSE)
+
 **Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінальний проєкт не підтримується понад 4 роки. Цей форк — активна версія з підтримкою Python 3.10+.
 
 Експериментальна Python IDE з графічним аналізом коду (flow diagram, algorithmic tree).

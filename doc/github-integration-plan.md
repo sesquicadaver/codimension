@@ -1,8 +1,8 @@
 # План інтеграції Codimension з GitHub
 
-**Версія:** 1.0  
+**Версія:** 1.2  
 **Дата:** 2025-03  
-**Статус:** План
+**Статус:** Виконано (Фази 1.3, 2–5)
 
 ---
 
@@ -16,23 +16,24 @@
 | Ruff check | ✅ | codimension, cdmplugins |
 | Ruff format | ✅ | codimension, cdmplugins |
 | Mypy | ✅ | cdmplugins |
-| Smoke test | ⚠️ | `codimension --help` (може падати без display) |
-| README | ✅ | Посилання на GitHub |
-| CONTRIBUTING | ✅ | Інструкції для PR |
-| pyproject.toml | ✅ | Repository, Homepage URLs |
+| Smoke test | ✅ | `python -c "import codimension; import cdmplugins"` (без display) |
+| Pytest | ✅ | tests/ у CI |
+| pip-audit | ✅ | smoke job у CI |
+| README | ✅ | Badges (CI, Python, License), посилання |
+| CONTRIBUTING | ✅ | PR template, issue templates, CI |
+| Issue templates | ✅ | bug_report, feature_request, config.yml |
+| PR template | ✅ | `.github/pull_request_template.md` |
+| Dependabot | ✅ | `.github/dependabot.yml` |
+| CI cache | ✅ | pip cache (setup-python) |
+| Release workflow | ✅ | `.github/workflows/release.yml` |
+| pyproject.toml | ✅ | Repository, Homepage, build-system |
 | .gitignore | ✅ | venv, build, dist |
 
-### 1.2 Що відсутнє
+### 1.2 Що відсутнє (опційно)
 
-- Issue templates
-- PR template
 - Branch protection rules (налаштовуються в GitHub UI)
-- Dependabot / Renovate
 - CodeQL / security scanning
-- Release workflow (автоматизація PyPI)
-- Badge у README
 - Smoke test для GUI (xvfb)
-- Unit/integration тести в CI
 
 ---
 
@@ -141,12 +142,14 @@
 
 ## 6. Критерії готовності
 
-- [ ] Smoke test проходить у CI без падіння
-- [ ] Issue/PR templates створені
-- [ ] README містить badge CI
-- [ ] CONTRIBUTING оновлено
-- [ ] Dependabot налаштовано (опційно)
-- [ ] Release workflow готовий (опційно)
+- [x] Smoke test проходить у CI без падіння
+- [x] Issue/PR templates створені
+- [x] README містить badge CI
+- [x] CONTRIBUTING оновлено
+- [x] Dependabot налаштовано
+- [x] pip-audit у CI
+- [x] Release workflow готовий
+- [x] Кешування pip у CI
 
 ---
 
