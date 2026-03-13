@@ -1,5 +1,19 @@
 2025 Mar 13
 
+* doc/plugins: documentation audit (plugins-implementation-plan v1.1):
+  - living-specification.md: pip-audit у CI-перевірках
+  - plugins.md: посилання на plugins-implementation-plan, git-github-plugin-plan
+  - plugins-implementation-plan.md: секція 11 (Documentation audit)
+  - codimension/ui/qt.py: ruff I001 (sort imports)
+
+2025 Mar 13
+
+* doc/plugins/git-github-plugin-plan.md: план створення Git/GitHub плагіна
+  - VersionControlSystemInterface, 6 фаз (Status, Commit/Push/Pull, Branches, PR, Buffer, Tests)
+  - Git CLI + gh CLI для PR, структура cdmplugins/git/
+
+2025 Mar 13
+
 * ui/qt.py: додано відсутні імпорти Qt (ImportError при запуску):
   - QFont, QFontComboBox, QTextOption, QSpinBox
   - QRectF, QStyleOptionGraphicsItem, QTransform

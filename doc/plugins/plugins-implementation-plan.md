@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable MD060 -->
 
-**Версія:** 1.0  
+**Версія:** 1.1  
 **Дата:** 2025-03  
 **Статус:** Виконано (критерії готовності пройдені)
 
@@ -286,7 +286,25 @@ pip-audit>=2.0.0
 План інтеграції з GitHub: [doc/github-integration-plan.md](../github-integration-plan.md).
 
 **Статус (2025-03):** Фази 1.3, 2–5 виконано:
+
 - Issue/PR templates, Badges, CONTRIBUTING
 - Dependabot, pip-audit у CI
 - Кешування pip у CI
 - Release workflow (тег v* → PyPI)
+
+---
+
+## 10. Git/GitHub плагін (майбутній)
+
+План створення плагіна для повноцінної роботи з Git та GitHub: [git-github-plugin-plan.md](git-github-plugin-plan.md).
+
+**Охоплення:** status, add, commit, push, pull, branch, checkout, stash, pull request (через gh CLI).
+
+---
+
+## 11. Documentation audit (2025-03)
+
+- [x] living-specification.md: додано pip-audit до CI-перевірок
+- [x] plugins.md: посилання на plugins-implementation-plan.md, git-github-plugin-plan.md
+- [x] ui/qt.py: додано відсутні імпорти Qt (QFont, QRectF, QSpinBox тощо)
+- [x] cdmplugins: заміна `from ..lintdriverbase` на `from cdmplugins.lintdriverbase` (yapsy)

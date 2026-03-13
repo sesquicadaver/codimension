@@ -34,6 +34,7 @@
 | Ruff format | `ruff format --check codimension cdmplugins` | .github/workflows/ci.yml |
 | Mypy | `mypy $(find cdmplugins -name '*.py')` | .github/workflows/ci.yml |
 | Smoke | `import codimension; import cdmplugins` | .github/workflows/ci.yml |
+| pip-audit | `pip-audit` (smoke job) | .github/workflows/ci.yml |
 | Pytest | `pytest tests/` | .github/workflows/ci.yml |
 
 ---
