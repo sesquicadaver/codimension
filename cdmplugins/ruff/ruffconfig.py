@@ -15,7 +15,7 @@ import configparser
 import os.path
 import shlex
 
-from ui.qt import QDialog, QDialogButtonBox, QFormLayout, QLineEdit
+from ui.qt import QDialog, QDialogButtonBox, QGridLayout, QLabel, QLineEdit, QVBoxLayout
 from utils.settings import SETTINGS_DIR
 
 CONFIG_FILE = SETTINGS_DIR + "ruff.plugin.conf"
@@ -55,16 +55,18 @@ class RuffConfigDialog(QDialog):
         self.setWindowTitle("Ruff — Configuration")
 
         raw = " ".join(load_extra_args())
-        layout = QFormLayout(self)
+        layout = QVBoxLayout(self)
+        grid = QGridLayout()
         self.__extraEdit = QLineEdit(self)
         self.__extraEdit.setPlaceholderText("e.g. --ignore E501 --extend-select I")
         self.__extraEdit.setText(raw)
-        layout.addRow("Extra arguments:", self.__extraEdit)
-
+        grid.addWidget(QLabel("Extra arguments:", self), 0, 0)
+        grid.addWidget(self.__extraEdit, 0, 1)
+        layout.addLayout(grid)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
-        layout.addRow(buttons)
+        layout.addWidget(buttons)
 
     def get_extra_args(self):
         """Return extra args as string."""
