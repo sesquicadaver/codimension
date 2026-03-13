@@ -1617,6 +1617,10 @@ class CodimensionMainWindow(QMainWindow):
         editor.highlightCurrentDebuggerLine(self.__lastDebugLineNumber, self.__lastDebugAsException)
         self.em.currentWidget().setFocus()
 
+    def _loadProject(self, projectFile):
+        """Loads the given project (public for mixins)."""
+        self.__loadProject(projectFile)
+
     def __loadProject(self, projectFile):
         """Loads the given project"""
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
