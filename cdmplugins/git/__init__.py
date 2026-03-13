@@ -122,8 +122,15 @@ class GitPlugin(VersionControlSystemInterface):
         return result
 
     def populateMainMenu(self, parentMenu):
-        """Populate the main menu."""
-        del parentMenu
+        """Populate the main menu: Settings for Git/GitHub access."""
+        from utils.pixmapcache import getIcon
+
+        parentMenu.setIcon(getIcon("pluginsettings.png"))
+        parentMenu.addAction(
+            getIcon("pluginsettings.png"),
+            "Settings...",
+            self.__configure,
+        )
 
     def populateFileContextMenu(self, parentMenu):
         """Populate the file context menu."""
