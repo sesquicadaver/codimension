@@ -19,6 +19,8 @@ from ui.qt import (
     QGridLayout,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QPushButton,
     QTextEdit,
     QVBoxLayout,
@@ -55,6 +57,50 @@ class CommitDialog(QDialog):
     def get_amend(self):
         """Return whether amend is checked."""
         return self.__amendCb.isChecked()
+
+
+class SelectBranchDialog(QDialog):
+    """Dialog to select a branch to switch to (checkout)."""
+
+    def __init__(self, git_root, parent=None):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Git — Switch Branch")
+        self.__gitRoot = git_root
+
+        try:
+            from .gitdriver import get_current_branch, list_branches
+
+            branches = list_branches(git_root, include_remote=True)
+            current = get_current_branch(git_root)
+        except ImportError:
+            branches = []
+            current = None
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("Select branch:", self))
+        self.__listWidget = QListWidget(self)
+        self.__listWidget.setMinimumHeight(200)
+        for name, is_curr in branches:
+            item = QListWidgetItem(("✓ " if is_curr else "  ") + name)
+            item.setData(256, name)
+            self.__listWidget.addItem(item)
+            if is_curr:
+                self.__listWidget.setCurrentItem(item)
+        if branches and not self.__listWidget.currentItem():
+            self.__listWidget.setCurrentRow(0)
+        layout.addWidget(self.__listWidget)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def get_selected_branch(self):
+        """Return selected branch name or None."""
+        item = self.__listWidget.currentItem()
+        if item is None:
+            return None
+        return item.data(256)
 
 
 class CreateBranchDialog(QDialog):
@@ -149,7 +195,7 @@ class RepoOverrideDialog(QDialog):
         grid.addWidget(self.__repoEdit, 0, 1)
 
         self.__cloneToEdit = QLineEdit(self)
-        self.__cloneToEdit.setPlaceholderText("Directory to clone into")
+        self.__cloneToEdit.setPlaceholderText("Full path, e.g. ~/Projects/repo_name")
         self.__cloneToEdit.setText(self._default_clone_dir(current))
         grid.addWidget(QLabel("Clone to:", self), 1, 0)
         grid.addWidget(self.__cloneToEdit, 1, 1)
@@ -182,10 +228,23 @@ class RepoOverrideDialog(QDialog):
         return os.path.join(base, repo_name)
 
     def _on_browse(self):
-        """Browse for clone directory."""
-        path = QFileDialog.getExistingDirectory(self, "Select directory to clone into")
+        """Browse for parent directory. Repo will be cloned as subfolder parent/repo_name."""
+        import os
+
+        path = QFileDialog.getExistingDirectory(
+            self, "Select parent directory (repo will be cloned as subfolder)"
+        )
         if path:
-            self.__cloneToEdit.setText(path)
+            repo_spec = self.__repoEdit.text().strip()
+            try:
+                from .gitdriver import repo_spec_to_clone_url
+
+                url = repo_spec_to_clone_url(repo_spec)
+                repo_name = url.rstrip("/").rstrip(".git").split("/")[-1] if url else "repo"
+            except Exception:
+                repo_name = "repo"
+            full_path = os.path.join(path, repo_name)
+            self.__cloneToEdit.setText(full_path)
 
     def get_repo_override(self):
         """Return the repository override value."""
