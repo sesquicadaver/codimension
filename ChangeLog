@@ -1,5 +1,12 @@
 2025 Mar 13
 
+* ui/qt.py: додано відсутні імпорти Qt (ImportError при запуску):
+  - QFont, QFontComboBox, QTextOption, QSpinBox
+  - QRectF, QStyleOptionGraphicsItem, QTransform
+  - QMimeData, QMutex, QWaitCondition
+
+2025 Mar 13
+
 * GitHub integration plan — Фази 1.3, 5:
   - CI: кешування pip (setup-python cache, requirements.txt)
   - Release workflow: .github/workflows/release.yml (trigger: tag v*)
