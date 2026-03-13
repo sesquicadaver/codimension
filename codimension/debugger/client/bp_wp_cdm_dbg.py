@@ -32,7 +32,6 @@ import os
 
 
 class Breakpoint:
-
     """
     Breakpoint class
     """
@@ -138,7 +137,6 @@ class Breakpoint:
 
 
 class Watch:
-
     """
     Watch class
     """
@@ -156,15 +154,15 @@ class Watch:
 
             self.created = False
             self.changed = False
-            if flag == '??created??':
+            if flag == "??created??":
                 self.created = True
-            elif flag == '??changed??':
+            elif flag == "??changed??":
                 self.changed = True
 
             self.values = {}
             Watch.WATCHES.append(self)
         else:
-            raise Exception('Inconsistency: a watch has no condition')
+            raise Exception("Inconsistency: a watch has no condition")
 
     def deleteMe(self):
         """Clears this watch expression"""

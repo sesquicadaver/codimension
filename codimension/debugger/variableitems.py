@@ -42,7 +42,7 @@ def getDisplayValue(displayValue):
                 nonEmptyIndex = index
                 break
         if nonEmptyIndex is None:
-            displayValue = ""   # Multilined empty string
+            displayValue = ""  # Multilined empty string
         else:
             if len(lines[nonEmptyIndex]) > 128:
                 displayValue = lines[nonEmptyIndex][:128] + "<...>"
@@ -64,7 +64,7 @@ def getDisplayValue(displayValue):
 
 def getTooltipValue(value):
     """Takes a potentially multilined string and converts it to
-       the form suitable for tooltips
+    the form suitable for tooltips
     """
     lines = value.splitlines()
     lineCount = len(lines)
@@ -92,11 +92,9 @@ def getTooltipValue(value):
 
 
 class VariableItem(QTreeWidgetItem):
-
     """Base structure for variable items"""
 
-    def __init__(self, parent, isGlobal,
-                 displayName, displayValue, displayType):
+    def __init__(self, parent, isGlobal, displayName, displayValue, displayType):
         self.__isGlobal = isGlobal
         self.__value = displayValue
         self.__type = displayType
@@ -107,18 +105,15 @@ class VariableItem(QTreeWidgetItem):
         displayValue = getDisplayValue(displayValue)
 
         # Decide about the tooltip
-        self.__tooltip = "Name: " + self.__name + "\n" + \
-                         "Type: " + displayType + "\n" + \
-                         "Value: "
+        self.__tooltip = "Name: " + self.__name + "\n" + "Type: " + displayType + "\n" + "Value: "
 
         tooltipDisplayValue = getTooltipValue(self.__value)
-        if '\r' in tooltipDisplayValue or '\n' in tooltipDisplayValue:
+        if "\r" in tooltipDisplayValue or "\n" in tooltipDisplayValue:
             self.__tooltip += "\n" + tooltipDisplayValue
         else:
             self.__tooltip += tooltipDisplayValue
 
-        QTreeWidgetItem.__init__(self, parent, [self.__name, displayValue,
-                                                displayType])
+        QTreeWidgetItem.__init__(self, parent, [self.__name, displayValue, displayType])
         self.populated = True
 
     def getValue(self):
@@ -159,7 +154,7 @@ class VariableItem(QTreeWidgetItem):
         """Extract the indicator string from a variable text"""
         for indicator in INDICATORS:
             if var.endswith(indicator):
-                return var[:-len(indicator)], indicator
+                return var[: -len(indicator)], indicator
         return var, ""
 
     def _buildKey(self):
@@ -182,9 +177,9 @@ class VariableItem(QTreeWidgetItem):
             if column == 0:
                 if not self.parent():
                     if self.__isGlobal:
-                        fileName = 'globvar.png'
+                        fileName = "globvar.png"
                     else:
-                        fileName = 'locvar.png'
+                        fileName = "locvar.png"
                     return getIcon(fileName)
         return QTreeWidgetItem.data(self, column, role)
 
@@ -206,17 +201,13 @@ class VariableItem(QTreeWidgetItem):
         pass
 
 
-
 class SpecialVariableItem(VariableItem):
-
     """These special variable nodes are generated for classes, lists,
-       tuples and dictionaries.
+    tuples and dictionaries.
     """
 
-    def __init__(self, parent, debugger, isGlobal,
-                 displayName, displayValue, displayType, frameNumber):
-        VariableItem.__init__(self, parent, isGlobal,
-                              displayName, displayValue, displayType)
+    def __init__(self, parent, debugger, isGlobal, displayName, displayValue, displayType, frameNumber):
+        VariableItem.__init__(self, parent, isGlobal, displayName, displayValue, displayType)
         self.attachDummy()
         self.populated = False
 
@@ -237,18 +228,14 @@ class SpecialVariableItem(VariableItem):
             par = par.parent()
 
         # Step 2: request the variable from the debugger
-        self.__debugger.remoteClientVariable(self.isGlobal(),
-                                             pathlist, self.frameNumber)
+        self.__debugger.remoteClientVariable(self.isGlobal(), pathlist, self.frameNumber)
 
 
 class ArrayElementVariableItem(VariableItem):
-
     """Represents an array element"""
 
-    def __init__(self, parent, isGlobal,
-                 displayName, displayValue, displayType):
-        VariableItem.__init__(self, parent, isGlobal,
-                              displayName, displayValue, displayType)
+    def __init__(self, parent, isGlobal, displayName, displayValue, displayType):
+        VariableItem.__init__(self, parent, isGlobal, displayName, displayValue, displayType)
 
         """
         Array elements have numbers as names, but the key must be
@@ -261,14 +248,12 @@ class ArrayElementVariableItem(VariableItem):
 
 
 class SpecialArrayElementVariableItem(SpecialVariableItem):
-
     """Represents a special array variable node"""
 
-    def __init__(self, parent, debugger, isGlobal,
-                 displayName, displayValue, displayType, frameNumber):
-        SpecialVariableItem.__init__(self, parent, debugger, isGlobal,
-                                     displayName, displayValue, displayType,
-                                     frameNumber)
+    def __init__(self, parent, debugger, isGlobal, displayName, displayValue, displayType, frameNumber):
+        SpecialVariableItem.__init__(
+            self, parent, debugger, isGlobal, displayName, displayValue, displayType, frameNumber
+        )
         """
         Array elements have numbers as names, but the key must be
         right justified and zero filled to 6 decimal places. Then

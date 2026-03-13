@@ -50,10 +50,9 @@ from .qt import (
 
 
 class EnvVarDialog(QDialog):
-
     """Single environment variable add/edit dialog"""
 
-    def __init__(self, name='', value='', parent=None):
+    def __init__(self, name="", value="", parent=None):
         QDialog.__init__(self, parent)
 
         self.name = name
@@ -97,8 +96,7 @@ class EnvVarDialog(QDialog):
 
         buttonBox = QDialogButtonBox(self)
         buttonBox.setOrientation(Qt.Horizontal)
-        buttonBox.setStandardButtons(QDialogButtonBox.Ok |
-                                     QDialogButtonBox.Cancel)
+        buttonBox.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.__OKButton = buttonBox.button(QDialogButtonBox.Ok)
         self.__OKButton.setDefault(True)
         buttonBox.accepted.connect(self.accept)
@@ -108,8 +106,7 @@ class EnvVarDialog(QDialog):
     def __nameChanged(self, newName):
         """Triggered when a variable name is changed"""
         strippedName = str(newName).strip()
-        self.__OKButton.setEnabled(strippedName != "" and
-                                   ' ' not in strippedName)
+        self.__OKButton.setEnabled(strippedName != "" and " " not in strippedName)
         self.name = strippedName
 
     def __valueChanged(self, newValue):
@@ -118,17 +115,12 @@ class EnvVarDialog(QDialog):
 
 
 class RunDialog(QDialog):
-
     """Run parameters dialog implementation"""
 
-    ACTION_TO_VERB = {RUN: 'Run',
-                      PROFILE: 'Profile',
-                      DEBUG: 'Debug'}
+    ACTION_TO_VERB = {RUN: "Run", PROFILE: "Profile", DEBUG: "Debug"}
 
     # See utils.run for runParameters
-    def __init__(self, path, runParameters,
-                 profilerParams, debuggerParams,
-                 action, parent=None):
+    def __init__(self, path, runParameters, profilerParams, debuggerParams, action, parent=None):
         QDialog.__init__(self, parent)
 
         # Used as a return value
@@ -174,14 +166,13 @@ class RunDialog(QDialog):
         self.__inheritedInterpreterRButton = None
 
         self.__createLayout()
-        self.setWindowTitle(RunDialog.ACTION_TO_VERB[action] +
-                            ' parameters for ' + path)
+        self.setWindowTitle(RunDialog.ACTION_TO_VERB[action] + " parameters for " + path)
 
         self.__populateValues()
 
     def __populateValues(self):
         """Populates the dialog UI controls"""
-        self.__argsEdit.setText(self.runParams['arguments'])
+        self.__argsEdit.setText(self.runParams["arguments"])
 
         self.__populateWorkingDir()
         self.__populateEnvironment()
@@ -197,7 +188,7 @@ class RunDialog(QDialog):
 
     def __populateWorkingDir(self):
         """Populates the working directory"""
-        if self.runParams['useScriptLocation']:
+        if self.runParams["useScriptLocation"]:
             self.__scriptWDRButton.setChecked(True)
             self.__dirEdit.setEnabled(False)
             self.__dirSelectButton.setEnabled(False)
@@ -205,20 +196,18 @@ class RunDialog(QDialog):
             self.__dirRButton.setChecked(True)
             self.__dirEdit.setEnabled(True)
             self.__dirSelectButton.setEnabled(True)
-        self.__dirEdit.setText(self.runParams['specificDir'])
+        self.__dirEdit.setText(self.runParams["specificDir"])
 
     def __populateEnvironment(self):
         """Populates the environment variables"""
-        self.__populateTable(self.__inhPlusEnvTable,
-                             self.runParams['additionToParentEnv'])
-        self.__populateTable(self.__specEnvTable,
-                             self.runParams['specificEnv'])
+        self.__populateTable(self.__inhPlusEnvTable, self.runParams["additionToParentEnv"])
+        self.__populateTable(self.__specEnvTable, self.runParams["specificEnv"])
 
-        if self.runParams['envType'] == RunParameters.InheritParentEnv:
+        if self.runParams["envType"] == RunParameters.InheritParentEnv:
             self.__inheritParentRButton.setChecked(True)
             self.__setEnabledInheritedPlusEnv(False)
             self.__setEnabledSpecificEnv(False)
-        elif self.runParams['envType'] == RunParameters.InheritParentEnvPlus:
+        elif self.runParams["envType"] == RunParameters.InheritParentEnvPlus:
             self.__inheritParentPlusRButton.setChecked(True)
             self.__setEnabledSpecificEnv(False)
         else:
@@ -227,7 +216,7 @@ class RunDialog(QDialog):
 
     def __populateInterpreter(self):
         """Populates the interpreter"""
-        if self.runParams['useInherited']:
+        if self.runParams["useInherited"]:
             self.__inheritedInterpreterRButton.setChecked(True)
             self.__intEdit.setEnabled(False)
             self.__intSelectButton.setEnabled(False)
@@ -235,41 +224,37 @@ class RunDialog(QDialog):
             self.__customIntRButton.setChecked(True)
             self.__intEdit.setEnabled(True)
             self.__intSelectButton.setEnabled(True)
-        self.__intEdit.setText(self.runParams['customInterpreter'])
+        self.__intEdit.setText(self.runParams["customInterpreter"])
 
     def __populateIO(self):
         """Populate I/O"""
-        if self.runParams['redirected']:
+        if self.runParams["redirected"]:
             self.__redirectedRButton.setChecked(True)
             self.__termEdit.setEnabled(False)
         else:
             self.__customTermRButton.setChecked(True)
             self.__termEdit.setEnabled(True)
-        self.__termEdit.setText(self.runParams['customTerminal'])
+        self.__termEdit.setText(self.runParams["customTerminal"])
         self.__termEdit.setToolTip(
-            'Use ${prog} substitution if needed.\n'
-            'Otherwise the command line is attached at the end.\n'
-            'E.g.: xterm -e /bin/bash -c "${prog}; /bin/bash" &')
+            "Use ${prog} substitution if needed.\n"
+            "Otherwise the command line is attached at the end.\n"
+            'E.g.: xterm -e /bin/bash -c "${prog}; /bin/bash" &'
+        )
 
     def __populateProfile(self):
         """Populates profile"""
-        if self.profilerParams.nodeLimit < 0.0 or \
-           self.profilerParams.nodeLimit > 100.0:
+        if self.profilerParams.nodeLimit < 0.0 or self.profilerParams.nodeLimit > 100.0:
             self.profilerParams.nodeLimit = 1.0
         self.__nodeLimitEdit.setText(str(self.profilerParams.nodeLimit))
-        if self.profilerParams.edgeLimit < 0.0 or \
-           self.profilerParams.edgeLimit > 100.0:
+        if self.profilerParams.edgeLimit < 0.0 or self.profilerParams.edgeLimit > 100.0:
             self.profilerParams.edgeLimit = 1.0
         self.__edgeLimitEdit.setText(str(self.profilerParams.edgeLimit))
 
     def __populateDebug(self):
         """Populates debug"""
-        self.__reportExceptionCheckBox.setChecked(
-            self.debuggerParams.reportExceptions)
-        self.__traceInterpreterCheckBox.setChecked(
-            self.debuggerParams.traceInterpreter)
-        self.__stopAtFirstCheckBox.setChecked(
-            self.debuggerParams.stopAtFirstLine)
+        self.__reportExceptionCheckBox.setChecked(self.debuggerParams.reportExceptions)
+        self.__traceInterpreterCheckBox.setChecked(self.debuggerParams.traceInterpreter)
+        self.__stopAtFirstCheckBox.setChecked(self.debuggerParams.stopAtFirstLine)
         self.__autoforkCheckBox.setChecked(self.debuggerParams.autofork)
         self.__debugChildCheckBox.setChecked(self.debuggerParams.followChild)
         self.__debugChildCheckBox.setEnabled(self.debuggerParams.autofork)
@@ -318,9 +303,7 @@ class RunDialog(QDialog):
         buttonBox = QDialogButtonBox(self)
         buttonBox.setOrientation(Qt.Horizontal)
         buttonBox.setStandardButtons(QDialogButtonBox.Cancel)
-        self.__runButton = buttonBox.addButton(
-            RunDialog.ACTION_TO_VERB[self.__action],
-            QDialogButtonBox.AcceptRole)
+        self.__runButton = buttonBox.addButton(RunDialog.ACTION_TO_VERB[self.__action], QDialogButtonBox.AcceptRole)
         self.__runButton.setDefault(True)
         self.__runButton.clicked.connect(self.onAccept)
         layout.addWidget(buttonBox)
@@ -348,12 +331,11 @@ class RunDialog(QDialog):
 
     def __getWorkingDirGroupbox(self):
         """Provides the working dir groupbox"""
-        workDirGroupbox = QGroupBox('Working Directory', self)
+        workDirGroupbox = QGroupBox("Working Directory", self)
         workDirGroupbox.setSizePolicy(self.__getSizePolicy(workDirGroupbox))
 
         gridLayoutWD = QGridLayout(workDirGroupbox)
-        self.__scriptWDRButton = QRadioButton("&Use script location",
-                                              workDirGroupbox)
+        self.__scriptWDRButton = QRadioButton("&Use script location", workDirGroupbox)
         gridLayoutWD.addWidget(self.__scriptWDRButton, 0, 0)
         self.__scriptWDRButton.clicked.connect(lambda: self.__wdDir(True))
 
@@ -372,30 +354,27 @@ class RunDialog(QDialog):
 
     def __getEnvGroupbox(self):
         """Provides the environment groupbox"""
-        envGroupbox = QGroupBox('Environment', self)
+        envGroupbox = QGroupBox("Environment", self)
         envGroupbox.setSizePolicy(self.__getSizePolicy(envGroupbox))
 
         layoutEnv = QVBoxLayout(envGroupbox)
-        self.__inheritParentRButton = QRadioButton("Inherit &parent",
-                                                   envGroupbox)
+        self.__inheritParentRButton = QRadioButton("Inherit &parent", envGroupbox)
         self.__inheritParentRButton.clicked.connect(self.__inhClicked)
         layoutEnv.addWidget(self.__inheritParentRButton)
 
-        self.__inheritParentPlusRButton = QRadioButton(
-            "Inherit parent and add/&modify", envGroupbox)
+        self.__inheritParentPlusRButton = QRadioButton("Inherit parent and add/&modify", envGroupbox)
         self.__inheritParentPlusRButton.clicked.connect(self.__inhPlusClicked)
         layoutEnv.addWidget(self.__inheritParentPlusRButton)
         hInhPlusLayout = QHBoxLayout()
         self.__inhPlusEnvTable = QTreeWidget()
-        self.__inhPlusEnvTable.itemActivated.connect(
-            lambda x, y: self.__editInhClicked())
+        self.__inhPlusEnvTable.itemActivated.connect(lambda x, y: self.__editInhClicked())
         self.__tuneTable(self.__inhPlusEnvTable)
         hInhPlusLayout.addWidget(self.__inhPlusEnvTable)
         vInhPlusLayout = QVBoxLayout()
-        self.__addInhButton = QPushButton('Add')
+        self.__addInhButton = QPushButton("Add")
         self.__addInhButton.clicked.connect(self.__addInhClicked)
         vInhPlusLayout.addWidget(self.__addInhButton)
-        self.__delInhButton = QPushButton('Delete')
+        self.__delInhButton = QPushButton("Delete")
         self.__delInhButton.clicked.connect(self.__delInhClicked)
         vInhPlusLayout.addWidget(self.__delInhButton)
         self.__editInhButton = QPushButton("Edit")
@@ -409,15 +388,14 @@ class RunDialog(QDialog):
         layoutEnv.addWidget(self.__specificRButton)
         hSpecLayout = QHBoxLayout()
         self.__specEnvTable = QTreeWidget()
-        self.__specEnvTable.itemActivated.connect(
-            lambda x, y: self.__editSpecClicked())
+        self.__specEnvTable.itemActivated.connect(lambda x, y: self.__editSpecClicked())
         self.__tuneTable(self.__specEnvTable)
         hSpecLayout.addWidget(self.__specEnvTable)
         vSpecLayout = QVBoxLayout()
-        self.__addSpecButton = QPushButton('Add')
+        self.__addSpecButton = QPushButton("Add")
         self.__addSpecButton.clicked.connect(self.__addSpecClicked)
         vSpecLayout.addWidget(self.__addSpecButton)
-        self.__delSpecButton = QPushButton('Delete')
+        self.__delSpecButton = QPushButton("Delete")
         self.__delSpecButton.clicked.connect(self.__delSpecClicked)
         vSpecLayout.addWidget(self.__delSpecButton)
         self.__editSpecButton = QPushButton("Edit")
@@ -429,22 +407,17 @@ class RunDialog(QDialog):
 
     def __getInterpreterGroupbox(self):
         """Creates the interpreter groupbox"""
-        interpreterGroupbox = QGroupBox('Python Interpreter', self)
-        interpreterGroupbox.setSizePolicy(
-            self.__getSizePolicy(interpreterGroupbox))
+        interpreterGroupbox = QGroupBox("Python Interpreter", self)
+        interpreterGroupbox.setSizePolicy(self.__getSizePolicy(interpreterGroupbox))
 
         gridLayoutInt = QGridLayout(interpreterGroupbox)
-        self.__inheritedInterpreterRButton = QRadioButton(
-            "&Inherited", interpreterGroupbox)
+        self.__inheritedInterpreterRButton = QRadioButton("&Inherited", interpreterGroupbox)
         gridLayoutInt.addWidget(self.__inheritedInterpreterRButton, 0, 0)
-        self.__inheritedInterpreterRButton.clicked.connect(
-            lambda: self.__interpreter(True))
+        self.__inheritedInterpreterRButton.clicked.connect(lambda: self.__interpreter(True))
 
-        self.__customIntRButton = QRadioButton(
-            "Select interpreter (series &3)", interpreterGroupbox)
+        self.__customIntRButton = QRadioButton("Select interpreter (series &3)", interpreterGroupbox)
         gridLayoutInt.addWidget(self.__customIntRButton, 1, 0)
-        self.__customIntRButton.clicked.connect(
-            lambda: self.__interpreter(False))
+        self.__customIntRButton.clicked.connect(lambda: self.__interpreter(False))
 
         self.__intEdit = QLineEdit(interpreterGroupbox)
         gridLayoutInt.addWidget(self.__intEdit, 1, 1)
@@ -457,20 +430,17 @@ class RunDialog(QDialog):
 
     def __getIOGroupbox(self):
         """Creates the interpreter groupbox"""
-        ioGroupbox = QGroupBox('Input/output', self)
+        ioGroupbox = QGroupBox("Input/output", self)
         ioGroupbox.setSizePolicy(self.__getSizePolicy(ioGroupbox))
 
         gridLayoutInt = QGridLayout(ioGroupbox)
         self.__redirectedRButton = QRadioButton("&Redirected I/O", ioGroupbox)
         gridLayoutInt.addWidget(self.__redirectedRButton, 0, 0)
-        self.__redirectedRButton.clicked.connect(
-            lambda: self.__redirected(True))
+        self.__redirectedRButton.clicked.connect(lambda: self.__redirected(True))
 
-        self.__customTermRButton = QRadioButton("Custom terminal string",
-                                                ioGroupbox)
+        self.__customTermRButton = QRadioButton("Custom terminal string", ioGroupbox)
         gridLayoutInt.addWidget(self.__customTermRButton, 1, 0)
-        self.__customTermRButton.clicked.connect(
-            lambda: self.__redirected(False))
+        self.__customTermRButton.clicked.connect(lambda: self.__redirected(False))
 
         self.__termEdit = QLineEdit(ioGroupbox)
         gridLayoutInt.addWidget(self.__termEdit, 1, 1)
@@ -479,22 +449,20 @@ class RunDialog(QDialog):
 
     def __getProfileLimitsGroupbox(self):
         """Creates the profile limits groupbox"""
-        limitsGroupbox = QGroupBox('Profiler diagram limits (IDE wide)', self)
+        limitsGroupbox = QGroupBox("Profiler diagram limits (IDE wide)", self)
         limitsGroupbox.setSizePolicy(self.__getSizePolicy(limitsGroupbox))
 
         layoutLimits = QGridLayout(limitsGroupbox)
         self.__nodeLimitEdit = QLineEdit()
         self.__nodeLimitEdit.textEdited.connect(self.__setRunButtonProps)
         self.__nodeLimitValidator = QDoubleValidator(0.0, 100.0, 2, self)
-        self.__nodeLimitValidator.setNotation(
-            QDoubleValidator.StandardNotation)
+        self.__nodeLimitValidator.setNotation(QDoubleValidator.StandardNotation)
         self.__nodeLimitEdit.setValidator(self.__nodeLimitValidator)
         nodeLimitLabel = QLabel("Hide nodes below")
         self.__edgeLimitEdit = QLineEdit()
         self.__edgeLimitEdit.textEdited.connect(self.__setRunButtonProps)
         self.__edgeLimitValidator = QDoubleValidator(0.0, 100.0, 2, self)
-        self.__edgeLimitValidator.setNotation(
-            QDoubleValidator.StandardNotation)
+        self.__edgeLimitValidator.setNotation(QDoubleValidator.StandardNotation)
         self.__edgeLimitEdit.setValidator(self.__edgeLimitValidator)
         edgeLimitLabel = QLabel("Hide edges below")
         layoutLimits.addWidget(nodeLimitLabel, 0, 0)
@@ -507,19 +475,16 @@ class RunDialog(QDialog):
 
     def __getDebugGroupbox(self):
         """Creates the debug settings groupbox"""
-        dbgGroupbox = QGroupBox('Debugger (IDE wide)', self)
+        dbgGroupbox = QGroupBox("Debugger (IDE wide)", self)
         dbgGroupbox.setSizePolicy(self.__getSizePolicy(dbgGroupbox))
 
         dbgLayout = QVBoxLayout(dbgGroupbox)
         self.__reportExceptionCheckBox = QCheckBox("Report &exceptions")
-        self.__reportExceptionCheckBox.stateChanged.connect(
-            self.__onReportExceptionChanged)
+        self.__reportExceptionCheckBox.stateChanged.connect(self.__onReportExceptionChanged)
         self.__traceInterpreterCheckBox = QCheckBox("T&race interpreter libs")
-        self.__traceInterpreterCheckBox.stateChanged.connect(
-            self.__onTraceInterpreterChanged)
+        self.__traceInterpreterCheckBox.stateChanged.connect(self.__onTraceInterpreterChanged)
         self.__stopAtFirstCheckBox = QCheckBox("Stop at first &line")
-        self.__stopAtFirstCheckBox.stateChanged.connect(
-            self.__onStopAtFirstChanged)
+        self.__stopAtFirstCheckBox.stateChanged.connect(self.__onStopAtFirstChanged)
         self.__autoforkCheckBox = QCheckBox("&Fork without asking")
         self.__autoforkCheckBox.stateChanged.connect(self.__onAutoforkChanged)
         self.__debugChildCheckBox = QCheckBox("Debu&g child process")
@@ -554,49 +519,49 @@ class RunDialog(QDialog):
         """Working dir radio selection changed"""
         self.__dirEdit.setEnabled(not useScriptLocation)
         self.__dirSelectButton.setEnabled(not useScriptLocation)
-        self.runParams['useScriptLocation'] = useScriptLocation
+        self.runParams["useScriptLocation"] = useScriptLocation
         self.__setRunButtonProps()
 
     def __interpreter(self, useInherited):
         """Interpreter radio selection changed"""
         self.__intEdit.setEnabled(not useInherited)
         self.__intSelectButton.setEnabled(not useInherited)
-        self.runParams['useInherited'] = useInherited
+        self.runParams["useInherited"] = useInherited
         self.__setRunButtonProps()
 
     def __redirected(self, redirected):
         """I/O radio button changed"""
         self.__termEdit.setEnabled(not redirected)
-        self.runParams['redirected'] = redirected
+        self.runParams["redirected"] = redirected
         self.__setRunButtonProps()
 
     def __customTermChanged(self, value):
         """Triggered when a custom terminal string changed"""
         value = str(value).strip()
-        self.runParams['customTerminal'] = value
+        self.runParams["customTerminal"] = value
         self.__setRunButtonProps()
 
     def __argsChanged(self, value):
         """Triggered when cmd line args are changed"""
         value = str(value).strip()
-        self.runParams['arguments'] = value
+        self.runParams["arguments"] = value
         self.__setRunButtonProps()
 
     def __workingDirChanged(self, value):
         """Triggered when a working dir value is changed"""
         value = str(value)
-        self.runParams['specificDir'] = value
+        self.runParams["specificDir"] = value
         self.__setRunButtonProps()
 
     def __interpreterChanged(self, value):
         """Triggered when an interpreter is changed"""
         value = str(value).strip()
-        self.runParams['customInterpreter'] = value
+        self.runParams["customInterpreter"] = value
         self.__setRunButtonProps()
 
     def __onCloseChanged(self, state):
         """Triggered when the close terminal check box changed"""
-        self.runParams['closeTerminal'] = state != 0
+        self.runParams["closeTerminal"] = state != 0
 
     def __onReportExceptionChanged(self, state):
         """Triggered when exception report check box changed"""
@@ -622,7 +587,7 @@ class RunDialog(QDialog):
     def __argumentsOK(self):
         """Returns True if the arguments are OK"""
         try:
-            parseCommandLineArguments(self.runParams['arguments'])
+            parseCommandLineArguments(self.runParams["arguments"])
             return True
         except Exception:
             return False
@@ -639,17 +604,15 @@ class RunDialog(QDialog):
             return True
         path = self.__intEdit.text().strip()
         if not path:
-            return 'No executable specified'
+            return "No executable specified"
         try:
-            code = "from __future__ import print_function; " \
-                "import sys; print(sys.version_info.major)"
+            code = "from __future__ import print_function; import sys; print(sys.version_info.major)"
             output = checkOutput(path + ' -c "' + code + '"', useShell=True)
             output = output.strip()
-            if output != '3':
-                return 'Only python series 3 is supported ' \
-                    '(provided: series ' + output + ')'
+            if output != "3":
+                return "Only python series 3 is supported (provided: series " + output + ")"
         except Exception:
-            return 'Error checking the provided interpreter'
+            return "Error checking the provided interpreter"
 
     def __ioOK(self):
         """Checks if the IO is correct"""
@@ -658,7 +621,7 @@ class RunDialog(QDialog):
 
         term = self.__termEdit.text().strip()
         if not term:
-            return 'No custom terminal line specified'
+            return "No custom terminal line specified"
 
     def __setRunButtonProps(self, _=None):
         """Enable/disable run button and set its tooltip"""
@@ -669,21 +632,19 @@ class RunDialog(QDialog):
 
         if not self.__dirOK():
             self.__runButton.setEnabled(False)
-            self.__runButton.setToolTip("The given working "
-                                        "dir is not found")
+            self.__runButton.setToolTip("The given working dir is not found")
             return
 
         interpreterOK = self.__interpreterOK()
         if isinstance(interpreterOK, str):
             self.__runButton.setEnabled(False)
-            self.__runButton.setToolTip('Invalid interpreter. ' +
-                                        interpreterOK)
+            self.__runButton.setToolTip("Invalid interpreter. " + interpreterOK)
             return
 
         ioOK = self.__ioOK()
         if isinstance(ioOK, str):
             self.__runButton.setEnabled(False)
-            self.__runButton.setToolTip('Invalid terminal. ' + ioOK)
+            self.__runButton.setToolTip("Invalid terminal. " + ioOK)
             return
 
         if self.__nodeLimitEdit is not None:
@@ -694,8 +655,7 @@ class RunDialog(QDialog):
                     raise Exception("Out of range")
             except Exception:
                 self.__runButton.setEnabled(False)
-                self.__runButton.setToolTip("The given node limit "
-                                            "is out of range")
+                self.__runButton.setToolTip("The given node limit is out of range")
                 return
 
         if self.__edgeLimitEdit is not None:
@@ -706,22 +666,21 @@ class RunDialog(QDialog):
                     raise Exception("Out of range")
             except Exception:
                 self.__runButton.setEnabled(False)
-                self.__runButton.setToolTip("The given edge limit "
-                                            "is out of range")
+                self.__runButton.setToolTip("The given edge limit is out of range")
                 return
 
         self.__runButton.setEnabled(True)
         self.__runButton.setToolTip(
-            "Save parameters and " +
-            RunDialog.ACTION_TO_VERB[self.__action].lower() + " script")
+            "Save parameters and " + RunDialog.ACTION_TO_VERB[self.__action].lower() + " script"
+        )
 
     def __selectDirClicked(self):
         """Selects the script working dir"""
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog | QFileDialog.ShowDirsOnly
         dirName = QFileDialog.getExistingDirectory(
-            self, "Select the script working directory",
-            self.__dirEdit.text(), options=options)
+            self, "Select the script working directory", self.__dirEdit.text(), options=options
+        )
 
         if dirName:
             self.__dirEdit.setText(os.path.normpath(dirName))
@@ -730,9 +689,7 @@ class RunDialog(QDialog):
         """Selects a python interpreter"""
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Select python series 3 interpreter",
-            options=options)
+        path, _ = QFileDialog.getOpenFileName(self, "Select python series 3 interpreter", options=options)
 
         if path:
             self.__intEdit.setText(os.path.normpath(path))
@@ -742,13 +699,13 @@ class RunDialog(QDialog):
         """Inerit parent env radio button clicked"""
         self.__setEnabledInheritedPlusEnv(False)
         self.__setEnabledSpecificEnv(False)
-        self.runParams['envType'] = RunParameters.InheritParentEnv
+        self.runParams["envType"] = RunParameters.InheritParentEnv
 
     def __inhPlusClicked(self):
         """Inherit parent and add radio button clicked"""
         self.__setEnabledInheritedPlusEnv(True)
         self.__setEnabledSpecificEnv(False)
-        self.runParams['envType'] = RunParameters.InheritParentEnvPlus
+        self.runParams["envType"] = RunParameters.InheritParentEnvPlus
 
         if self.__inhPlusEnvTable.selectedIndexes():
             self.__delInhButton.setEnabled(True)
@@ -761,7 +718,7 @@ class RunDialog(QDialog):
         """Specific env radio button clicked"""
         self.__setEnabledInheritedPlusEnv(False)
         self.__setEnabledSpecificEnv(True)
-        self.runParams['envType'] = RunParameters.SpecificEnvironment
+        self.runParams["envType"] = RunParameters.SpecificEnvironment
 
         if self.__specEnvTable.selectedIndexes():
             self.__delSpecButton.setEnabled(True)
@@ -791,7 +748,7 @@ class RunDialog(QDialog):
             name = str(dlg.name)
             value = str(dlg.value)
             self.__delAndInsert(self.__inhPlusEnvTable, name, value)
-            self.runParams['additionToParentEnv'][name] = value
+            self.runParams["additionToParentEnv"][name] = value
             self.__delInhButton.setEnabled(True)
             self.__editInhButton.setEnabled(True)
 
@@ -802,7 +759,7 @@ class RunDialog(QDialog):
             name = str(dlg.name)
             value = str(dlg.value)
             self.__delAndInsert(self.__specEnvTable, name, value)
-            self.runParams['specificEnv'][name] = value
+            self.runParams["specificEnv"][name] = value
             self.__delSpecButton.setEnabled(True)
             self.__editSpecButton.setEnabled(True)
 
@@ -818,13 +775,12 @@ class RunDialog(QDialog):
                 self.__inhPlusEnvTable.takeTopLevelItem(index)
                 break
 
-        del self.runParams['additionToParentEnv'][str(name)]
+        del self.runParams["additionToParentEnv"][str(name)]
         if self.__inhPlusEnvTable.topLevelItemCount() == 0:
             self.__delInhButton.setEnabled(False)
             self.__editInhButton.setEnabled(False)
         else:
-            self.__inhPlusEnvTable.setCurrentItem(
-                self.__inhPlusEnvTable.topLevelItem(0))
+            self.__inhPlusEnvTable.setCurrentItem(self.__inhPlusEnvTable.topLevelItem(0))
 
     def __delSpecClicked(self):
         """Delete the highlighted variable"""
@@ -838,13 +794,12 @@ class RunDialog(QDialog):
                 self.__specEnvTable.takeTopLevelItem(index)
                 break
 
-        del self.runParams['specificEnv'][str(name)]
+        del self.runParams["specificEnv"][str(name)]
         if self.__specEnvTable.topLevelItemCount() == 0:
             self.__delSpecButton.setEnabled(False)
             self.__editSpecButton.setEnabled(False)
         else:
-            self.__specEnvTable.setCurrentItem(
-                self.__specEnvTable.topLevelItem(0))
+            self.__specEnvTable.setCurrentItem(self.__specEnvTable.topLevelItem(0))
 
     def __editInhClicked(self):
         """Edits the highlighted variable"""
@@ -857,7 +812,7 @@ class RunDialog(QDialog):
             name = str(dlg.name)
             value = str(dlg.value)
             self.__delAndInsert(self.__inhPlusEnvTable, name, value)
-            self.runParams['additionToParentEnv'][name] = value
+            self.runParams["additionToParentEnv"][name] = value
 
     def __editSpecClicked(self):
         """Edits the highlighted variable"""
@@ -870,14 +825,12 @@ class RunDialog(QDialog):
             name = str(dlg.name)
             value = str(dlg.value)
             self.__delAndInsert(self.__specEnvTable, name, value)
-            self.runParams['specificEnv'][name] = value
+            self.runParams["specificEnv"][name] = value
 
     def onAccept(self):
         """Saves the selected terminal and profiling values"""
         if self.__action == PROFILE:
-            self.profilerParams.nodeLimit = float(
-                self.__nodeLimitEdit.text())
-            self.profilerParams.edgeLimit = float(
-                self.__edgeLimitEdit.text())
+            self.profilerParams.nodeLimit = float(self.__nodeLimitEdit.text())
+            self.profilerParams.edgeLimit = float(self.__edgeLimitEdit.text())
 
         self.accept()

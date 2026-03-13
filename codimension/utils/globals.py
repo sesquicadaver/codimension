@@ -56,7 +56,6 @@ def getSubdirs(path, baseNamesOnly=True, excludePythonModulesDirs=True):
 
 
 class GlobalDataWrapper:
-
     """Global data singleton"""
 
     def __init__(self):
@@ -73,6 +72,9 @@ class GlobalDataWrapper:
 
         self.pluginManager = CDMPluginManager()
 
+        # Callbacks (widget, fileName) run after a file is saved. Used by ruffformat for format-on-save.
+        self.afterSaveCallbacks = []
+
         self.briefModinfoCache = BriefModuleInfoCache()
 
         self.graphvizAvailable = self.__checkGraphviz()
@@ -82,10 +84,10 @@ class GlobalDataWrapper:
     def getProfileOutputPath(self, procuuid):
         """Provides the path to the profile output file"""
         if self.project.isLoaded():
-            return self.project.userProjectDir + procuuid + '.profile.out'
+            return self.project.userProjectDir + procuuid + ".profile.out"
 
         # No project loaded
-        return SETTINGS_DIR + procuuid + '.profile.out'
+        return SETTINGS_DIR + procuuid + ".profile.out"
 
     def getProjectImportDirs(self):
         """Provides a list of the project import dirs if so"""
@@ -104,13 +106,15 @@ class GlobalDataWrapper:
             return False
 
         from .fileutils import isPythonFile
+
         return isPythonFile(scriptName)
 
     def getFileLineDocstring(self, fName, line):
         """Provides a docstring if so for the given file and line"""
         from .fileutils import isPythonFile
+
         if not isPythonFile(fName):
-            return ''
+            return ""
 
         infoCache = self.briefModinfoCache
 
@@ -118,13 +122,13 @@ class GlobalDataWrapper:
             """Checks docstring for a function or a class"""
             if obj.line == line or obj.keywordLine == line:
                 if obj.docstring is None:
-                    return True, ''
+                    return True, ""
                 return True, obj.docstring.text
             for item in obj.classes + obj.functions:
                 found, docstring = checkFuncObject(item, line)
                 if found:
                     return True, docstring
-            return False, ''
+            return False, ""
 
         try:
             info = infoCache.get(fName)
@@ -134,13 +138,14 @@ class GlobalDataWrapper:
                     return docstring
         except Exception:
             pass
-        return ''
+        return ""
 
     def getModInfo(self, path):
         """Provides a module info for the given file"""
         from .fileutils import isPythonFile
+
         if not isPythonFile(path):
-            raise Exception('Trying to parse non-python file: ' + path)
+            raise Exception("Trying to parse non-python file: " + path)
         return self.briefModinfoCache.get(path)
 
     def registerSearchProvider(self, cls):
@@ -150,17 +155,17 @@ class GlobalDataWrapper:
     @staticmethod
     def __checkGraphviz():
         """Checks if graphviz is available"""
-        return shutil.which('dot') is not None
+        return shutil.which("dot") is not None
 
     @staticmethod
     def __checkJava():
         """Checks if java is available"""
-        return shutil.which('java') is not None
+        return shutil.which("java") is not None
 
     @staticmethod
     def __checkHexdump():
         """Checks if hexdump is available"""
-        return shutil.which('hexdump') is not None
+        return shutil.which("hexdump") is not None
 
 
 globalsSingleton = GlobalDataWrapper()

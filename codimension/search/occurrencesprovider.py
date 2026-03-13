@@ -25,7 +25,6 @@ from .resultprovideriface import SearchResultProviderIFace
 
 
 class OccurrencesSearchProvider(SearchResultProviderIFace):
-
     """vulture search results provider"""
 
     def __init__(self):
@@ -38,10 +37,12 @@ class OccurrencesSearchProvider(SearchResultProviderIFace):
         #                'filename': <string>,
         #                'line': <int>
         #                'column': <int>}
-        return [('Name', parameters['name']),
-                ('File name', parameters['filename']),
-                ('Line', str(parameters['line'])),
-                ('Column', str(parameters['column']))]
+        return [
+            ("Name", parameters["name"]),
+            ("File name", parameters["filename"]),
+            ("Line", str(parameters["line"])),
+            ("Column", str(parameters["column"])),
+        ]
 
     @staticmethod
     def searchAgain(searchId, parameters, resultsViewer):
@@ -54,5 +55,4 @@ class OccurrencesSearchProvider(SearchResultProviderIFace):
     @staticmethod
     def getName():
         """Provides the display name"""
-        return 'Occurrences'
-
+        return "Occurrences"

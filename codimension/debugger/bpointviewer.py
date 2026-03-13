@@ -55,7 +55,6 @@ from .editbreakpoint import BreakpointEditDialog
 
 
 class BreakPointView(QTreeView):
-
     """Breakpoint viewer widget"""
 
     sigSelectionChanged = pyqtSignal(QModelIndex)
@@ -110,8 +109,7 @@ class BreakPointView(QTreeView):
 
     def __resort(self):
         """Resorts the tree"""
-        self.model().sort(self.header().sortIndicatorSection(),
-                          self.header().sortIndicatorOrder())
+        self.model().sort(self.header().sortIndicatorSection(), self.header().sortIndicatorOrder())
 
     def toSourceIndex(self, index):
         """Converts an index to a source index"""
@@ -127,35 +125,25 @@ class BreakPointView(QTreeView):
             return
 
         if selected:
-            flags = QItemSelectionModel.SelectionFlags(
-                QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
+            flags = QItemSelectionModel.SelectionFlags(QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
         else:
-            flags = QItemSelectionModel.SelectionFlags(
-                QItemSelectionModel.Deselect | QItemSelectionModel.Rows)
+            flags = QItemSelectionModel.SelectionFlags(QItemSelectionModel.Deselect | QItemSelectionModel.Rows)
         self.selectionModel().select(index, flags)
 
     def __createPopupMenus(self):
         """Generate the popup menu"""
         self.menu = QMenu()
-        self.__editAct = self.menu.addAction(
-            getIcon('bpprops.png'), "Edit...", self.__editBreak)
-        self.__jumpToCodeAct = self.menu.addAction(
-            getIcon('gotoline.png'), "Jump to code", self.__showSource)
+        self.__editAct = self.menu.addAction(getIcon("bpprops.png"), "Edit...", self.__editBreak)
+        self.__jumpToCodeAct = self.menu.addAction(getIcon("gotoline.png"), "Jump to code", self.__showSource)
         self.menu.addSeparator()
-        self.__enableAct = self.menu.addAction(
-            getIcon('bpenable.png'), "Enable", self.enableBreak)
-        self.__enableAllAct = self.menu.addAction(
-            getIcon('bpenableall.png'), "Enable all", self.enableAllBreaks)
+        self.__enableAct = self.menu.addAction(getIcon("bpenable.png"), "Enable", self.enableBreak)
+        self.__enableAllAct = self.menu.addAction(getIcon("bpenableall.png"), "Enable all", self.enableAllBreaks)
         self.menu.addSeparator()
-        self.__disableAct = self.menu.addAction(
-            getIcon('bpdisable.png'), "Disable", self.disableBreak)
-        self.__disableAllAct = self.menu.addAction(
-            getIcon('bpdisableall.png'), "Disable all", self.disableAllBreaks)
+        self.__disableAct = self.menu.addAction(getIcon("bpdisable.png"), "Disable", self.disableBreak)
+        self.__disableAllAct = self.menu.addAction(getIcon("bpdisableall.png"), "Disable all", self.disableAllBreaks)
         self.menu.addSeparator()
-        self.__delAct = self.menu.addAction(
-            getIcon('bpdel.png'), "Delete", self.deleteBreak)
-        self.__delAllAct = self.menu.addAction(
-            getIcon('bpdelall.png'), "Delete all", self.deleteAllBreaks)
+        self.__delAct = self.menu.addAction(getIcon("bpdel.png"), "Delete", self.deleteBreak)
+        self.__delAllAct = self.menu.addAction(getIcon("bpdelall.png"), "Delete all", self.deleteAllBreaks)
 
     def __showContextMenu(self, _):
         """Shows the context menu"""
@@ -309,7 +297,6 @@ class BreakPointView(QTreeView):
 
 
 class BreakPointViewer(QWidget):
-
     """Implements the break point viewer for a debugger"""
 
     def __init__(self, parent, bpointsModel):
@@ -319,8 +306,7 @@ class BreakPointViewer(QWidget):
         self.__createLayout(bpointsModel)
 
         GlobalData().project.sigProjectChanged.connect(self.__onProjectChanged)
-        GlobalData().project.sigProjectAboutToUnload.connect(
-            self.__onProjectAboutToUnload)
+        GlobalData().project.sigProjectAboutToUnload.connect(self.__onProjectAboutToUnload)
         self.bpointsList.sigSelectionChanged.connect(self.__onSelectionChanged)
         bpointsModel.sigBreakpoinsChanged.connect(self.__onModelChanged)
 
@@ -335,9 +321,8 @@ class BreakPointViewer(QWidget):
         verticalLayout.setSpacing(0)
 
         self.__breakpointLabel = HeaderFitLabel(self)
-        self.__breakpointLabel.setText('Breakpoints')
-        self.__breakpointLabel.setSizePolicy(QSizePolicy.Expanding,
-                                             QSizePolicy.Fixed)
+        self.__breakpointLabel.setText("Breakpoints")
+        self.__breakpointLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.__breakpointLabel.setMinimumWidth(10)
 
         self.headerToolbar = QToolBar(self)
@@ -347,46 +332,37 @@ class BreakPointViewer(QWidget):
 
         self.bpointsList = BreakPointView(self, bpointsModel)
 
-        self.__editButton = QAction(
-            getIcon('bpprops.png'), "Edit breakpoint properties", self)
+        self.__editButton = QAction(getIcon("bpprops.png"), "Edit breakpoint properties", self)
         self.__editButton.triggered.connect(self.__onEdit)
         self.__editButton.setEnabled(False)
 
-        self.__jumpToCodeButton = QAction(
-            getIcon('gotoline.png'), "Jump to the code", self)
+        self.__jumpToCodeButton = QAction(getIcon("gotoline.png"), "Jump to the code", self)
         self.__jumpToCodeButton.triggered.connect(self.__onJumpToCode)
         self.__jumpToCodeButton.setEnabled(False)
 
-        self.__enableButton = QAction(
-            getIcon('bpenable.png'), "Enable selected breakpoint", self)
+        self.__enableButton = QAction(getIcon("bpenable.png"), "Enable selected breakpoint", self)
         self.__enableButton.triggered.connect(self.__onEnableDisable)
         self.__enableButton.setEnabled(False)
 
-        self.__disableButton = QAction(
-            getIcon('bpdisable.png'), "Disable selected breakpoint", self)
+        self.__disableButton = QAction(getIcon("bpdisable.png"), "Disable selected breakpoint", self)
         self.__disableButton.triggered.connect(self.__onEnableDisable)
         self.__disableButton.setEnabled(False)
 
-        self.__enableAllButton = QAction(
-            getIcon('bpenableall.png'), "Enable all the breakpoint", self)
+        self.__enableAllButton = QAction(getIcon("bpenableall.png"), "Enable all the breakpoint", self)
         self.__enableAllButton.triggered.connect(self.__onEnableAll)
         self.__enableAllButton.setEnabled(False)
 
-        self.__disableAllButton = QAction(
-            getIcon('bpdisableall.png'), "Disable all the breakpoint", self)
+        self.__disableAllButton = QAction(getIcon("bpdisableall.png"), "Disable all the breakpoint", self)
         self.__disableAllButton.triggered.connect(self.__onDisableAll)
         self.__disableAllButton.setEnabled(False)
 
-        self.__delButton = QAction(
-            getIcon('delitem.png'), "Delete selected breakpoint", self)
+        self.__delButton = QAction(getIcon("delitem.png"), "Delete selected breakpoint", self)
         self.__delButton.triggered.connect(self.__onDel)
         self.__delButton.setEnabled(False)
 
-        self.__delAllButton = QAction(
-            getIcon('bpdelall.png'), "Delete all the breakpoint", self)
+        self.__delAllButton = QAction(getIcon("bpdelall.png"), "Delete all the breakpoint", self)
         self.__delAllButton.triggered.connect(self.__onDelAll)
         self.__delAllButton.setEnabled(False)
-
 
         # Toolbar
         self.toolbar = QToolBar()
@@ -422,12 +398,10 @@ class BreakPointViewer(QWidget):
 
     def __updateBreakpointsLabel(self):
         """Updates the breakpoints header label"""
-        enableCount, \
-        disableCount = self.bpointsList.model().sourceModel().getCounts()
+        enableCount, disableCount = self.bpointsList.model().sourceModel().getCounts()
         total = enableCount + disableCount
         if total > 0:
-            self.__breakpointLabel.setText("Breakpoints (total: " +
-                                           str(total) + ")")
+            self.__breakpointLabel.setText("Breakpoints (total: " + str(total) + ")")
         else:
             self.__breakpointLabel.setText("Breakpoints")
 
@@ -459,11 +433,12 @@ class BreakPointViewer(QWidget):
             if breakableLines is not None and line in breakableLines:
                 model.addBreakpoint(newBpoint)
             else:
-                logging.warning("Breakpoint at " + fileName + ":" +
-                                str(line) + " does not point to a breakable "
-                                "line anymore (the file is invalid or was "
-                                "modified outside of the "
-                                "IDE etc.). The breakpoint is deleted.")
+                logging.warning(
+                    "Breakpoint at " + fileName + ":" + str(line) + " does not point to a breakable "
+                    "line anymore (the file is invalid or was "
+                    "modified outside of the "
+                    "IDE etc.). The breakpoint is deleted."
+                )
 
     def __onProjectAboutToUnload(self):
         """Triggered before the project is unloaded"""
@@ -491,8 +466,7 @@ class BreakPointViewer(QWidget):
 
     def __updateButtons(self):
         """Updates the buttons status"""
-        enableCount, \
-        disableCount = self.bpointsList.model().sourceModel().getCounts()
+        enableCount, disableCount = self.bpointsList.model().sourceModel().getCounts()
 
         if self.__currentItem is None:
             self.__editButton.setEnabled(False)
@@ -531,8 +505,8 @@ class BreakPointViewer(QWidget):
                 return
             model = self.bpointsList.model().sourceModel()
             index = model.getBreakPointIndex(
-                self.__currentItem.getAbsoluteFileName(),
-                self.__currentItem.getLineNumber())
+                self.__currentItem.getAbsoluteFileName(), self.__currentItem.getLineNumber()
+            )
             model.setBreakPointByIndex(index, newBpoint)
             self.bpointsList.layoutDisplay()
 
@@ -540,8 +514,7 @@ class BreakPointViewer(QWidget):
         """Triggered when should jump to source"""
         if self.__currentItem is None:
             return
-        self.bpointsList.jumpToCode(self.__currentItem.getAbsoluteFileName(),
-                                    self.__currentItem.getLineNumber())
+        self.bpointsList.jumpToCode(self.__currentItem.getAbsoluteFileName(), self.__currentItem.getLineNumber())
 
     def __onEnableAll(self):
         """Triggered when all the breakpoints should be enabled"""

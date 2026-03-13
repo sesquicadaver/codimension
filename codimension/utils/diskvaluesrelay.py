@@ -124,19 +124,16 @@ def getFilePosition(fileName):
     return Settings().getFilePosition(fileName)
 
 
-def updateFilePosition(fileName, line, pos, firstLine,
-                       horizontalPos, verticalPos):
+def updateFilePosition(fileName, line, pos, firstLine, horizontalPos, verticalPos):
     """Updates the position for the file"""
     if fileName:
         project = GlobalData().project
         if project.isLoaded():
             if project.isProjectFile(fileName):
                 key = relpath(fileName, dirname(project.fileName))
-                project.updateFilePosition(key, line, pos, firstLine,
-                                           horizontalPos, verticalPos)
+                project.updateFilePosition(key, line, pos, firstLine, horizontalPos, verticalPos)
                 return
-        Settings().updateFilePosition(fileName, line, pos, firstLine,
-                                      horizontalPos, verticalPos)
+        Settings().updateFilePosition(fileName, line, pos, firstLine, horizontalPos, verticalPos)
 
 
 def getFindFileHistory():
@@ -231,8 +228,6 @@ def getRecentFiles():
     if project.isLoaded():
         return project.recentFiles
     return Settings().recentFiles
-
-
 
 
 ##DebuggerEnvironment

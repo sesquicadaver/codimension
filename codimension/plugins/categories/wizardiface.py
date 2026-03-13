@@ -23,7 +23,6 @@ from .cdmpluginbase import CDMPluginBase
 
 
 class WizardInterface(CDMPluginBase):
-
     """Wizard plugin interface"""
 
     def __init__(self):

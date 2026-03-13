@@ -22,12 +22,11 @@
 import uuid
 
 
-class MainWindowTabWidgetBase():
-
+class MainWindowTabWidgetBase:
     """Base class for all the main window tab widgets"""
 
     Unknown = -1
-    PlainTextEditor = 0     # Text editor + may be a graphics widget
+    PlainTextEditor = 0  # Text editor + may be a graphics widget
     PictureViewer = 1
     HTMLViewer = 2
     GeneratedDiagram = 3

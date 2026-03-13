@@ -35,12 +35,11 @@ from .viewitems import TreeViewDirectoryItem, TreeViewSysPathItem
 
 
 class FileSystemBrowserModel(BrowserModelBase):
-
     """Class implementing the file system browser model"""
 
     def __init__(self, parent=None):
         BrowserModelBase.__init__(self, "Name", parent)
-        self.setTooltips(Settings()['projectTooltips'])
+        self.setTooltips(Settings()["projectTooltips"])
 
         self.projectTopLevelDirs = []
         self.populateModel()
@@ -53,8 +52,7 @@ class FileSystemBrowserModel(BrowserModelBase):
         self.addItem(TreeViewSysPathItem(self.rootItem))
         self.addItem(TreeViewDirectoryItem(self.rootItem, QDir.homePath()))
         for dname in QDir.drives():
-            self.addItem(TreeViewDirectoryItem(self.rootItem,
-                                               dname.absoluteFilePath()))
+            self.addItem(TreeViewDirectoryItem(self.rootItem, dname.absoluteFilePath()))
         self.__populateProjectTopLevelDirs()
 
     def __onProjectChanged(self, what):
@@ -62,16 +60,15 @@ class FileSystemBrowserModel(BrowserModelBase):
         if what != CodimensionProject.CompleteProject:
             return
 
-        self.__removeProjectTopLevelDirs()      # Remove the previous set
-        self.__populateProjectTopLevelDirs()    # Populate the new one
+        self.__removeProjectTopLevelDirs()  # Remove the previous set
+        self.__populateProjectTopLevelDirs()  # Populate the new one
 
     def __populateProjectTopLevelDirs(self):
         """Populates the project specific top level dirs"""
         for dname in GlobalData().project.topLevelDirs:
             cnt = self.rootItem.childCount()
             self.beginInsertRows(QModelIndex(), cnt, cnt)
-            self._addItem(TreeViewDirectoryItem(self.rootItem, dname),
-                          self.rootItem)
+            self._addItem(TreeViewDirectoryItem(self.rootItem, dname), self.rootItem)
             self.endInsertRows()
             self.projectTopLevelDirs.append(dname)
 

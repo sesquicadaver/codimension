@@ -30,7 +30,6 @@ IND_VCS_ERROR = -2
 
 
 class VCSPluginThread(QThread):
-
     """Wrapper for the plugin thread"""
 
     VCSStatus = pyqtSignal(str, int, str)
@@ -72,19 +71,23 @@ class VCSPluginThread(QThread):
                     self.VCSStatus.emit(path + status[0], status[1], status[2])
                 else:
                     self.VCSStatus.emit(
-                        path, IND_VCS_ERROR,
+                        path,
+                        IND_VCS_ERROR,
                         "The " + self.__plugin.getName() + " plugin "
-                        "does not follow the getStatus() interface agreement")
+                        "does not follow the getStatus() interface agreement",
+                    )
         except Exception as exc:
             self.VCSStatus.emit(
-                path, IND_VCS_ERROR,
-                "Exception in " + self.__plugin.getName() +
-                " plugin while retrieving VCS status: " + str(exc))
+                path,
+                IND_VCS_ERROR,
+                "Exception in " + self.__plugin.getName() + " plugin while retrieving VCS status: " + str(exc),
+            )
         except Exception:
             self.VCSStatus.emit(
-                path, IND_VCS_ERROR,
-                "Unknown exception in " + self.__plugin.getName() +
-                " plugin while retrieving VCS status")
+                path,
+                IND_VCS_ERROR,
+                "Unknown exception in " + self.__plugin.getName() + " plugin while retrieving VCS status",
+            )
 
     def addRequest(self, path, flag, urgent=False):
         """Adds a request to the queue"""

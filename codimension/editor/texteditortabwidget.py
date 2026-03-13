@@ -19,7 +19,6 @@
 
 """Text editor tab widget"""
 
-
 import logging
 import os.path
 
@@ -57,7 +56,6 @@ from .texteditor import TextEditor
 
 
 class TextEditorTabWidget(QWidget):
-
     """Plain text editor tab widget"""
 
     sigReloadRequest = pyqtSignal()
@@ -142,139 +140,120 @@ class TextEditorTabWidget(QWidget):
         self.toolbar.setContentsMargins(0, 0, 0, 0)
 
         # Buttons
-        printButton = QAction(getIcon('printer.png'), 'Print (Ctrl+P)',
-                              self.toolbar)
+        printButton = QAction(getIcon("printer.png"), "Print (Ctrl+P)", self.toolbar)
         printButton.triggered.connect(self.__onPrint)
-        printButton.setObjectName('printButton')
+        printButton.setObjectName("printButton")
 
-        printPreviewButton = QAction(getIcon('printpreview.png'),
-                                     'Print preview', self.toolbar)
+        printPreviewButton = QAction(getIcon("printpreview.png"), "Print preview", self.toolbar)
         printPreviewButton.triggered.connect(self.__onPrintPreview)
         printPreviewButton.setEnabled(False)
         printPreviewButton.setVisible(False)
-        printPreviewButton.setObjectName('printPreviewButton')
+        printPreviewButton.setObjectName("printPreviewButton")
 
         printSpacer = ToolBarVSpacer(self.toolbar, 8)
-        printSpacer.setObjectName('printSpacer')
+        printSpacer.setObjectName("printSpacer")
 
         # Imports diagram and its menu
         importsMenu = QMenu(self)
-        self.importsDlgAct = importsMenu.addAction(
-            getIcon('detailsdlg.png'), 'Fine tuned imports diagram')
+        self.importsDlgAct = importsMenu.addAction(getIcon("detailsdlg.png"), "Fine tuned imports diagram")
         self.importsDlgAct.triggered.connect(self.onImportDgmTuned)
         self.importsDiagramButton = QToolButton(self.toolbar)
-        self.importsDiagramButton.setIcon(getIcon('importsdiagram.png'))
-        self.importsDiagramButton.setToolTip('Generate imports diagram')
+        self.importsDiagramButton.setIcon(getIcon("importsdiagram.png"))
+        self.importsDiagramButton.setToolTip("Generate imports diagram")
         self.importsDiagramButton.setPopupMode(QToolButton.DelayedPopup)
         self.importsDiagramButton.setMenu(importsMenu)
         self.importsDiagramButton.setFocusPolicy(Qt.NoFocus)
         self.importsDiagramButton.clicked.connect(self.onImportDgm)
         self.importsDiagramButton.setEnabled(False)
-        self.importsDiagramButton.setObjectName('importsDiagramButton')
+        self.importsDiagramButton.setObjectName("importsDiagramButton")
 
         # Run script and its menu
         runScriptMenu = QMenu(self)
-        self.runScriptDlgAct = runScriptMenu.addAction(
-            getIcon('detailsdlg.png'), 'Set run/debug parameters')
+        self.runScriptDlgAct = runScriptMenu.addAction(getIcon("detailsdlg.png"), "Set run/debug parameters")
         self.runScriptDlgAct.triggered.connect(self.onRunScriptDlg)
         self.runScriptButton = QToolButton(self.toolbar)
-        self.runScriptButton.setIcon(getIcon('run.png'))
-        self.runScriptButton.setToolTip('Run script')
+        self.runScriptButton.setIcon(getIcon("run.png"))
+        self.runScriptButton.setToolTip("Run script")
         self.runScriptButton.setPopupMode(QToolButton.DelayedPopup)
         self.runScriptButton.setMenu(runScriptMenu)
         self.runScriptButton.setFocusPolicy(Qt.NoFocus)
         self.runScriptButton.clicked.connect(self.onRunScript)
         self.runScriptButton.setEnabled(False)
-        self.runScriptButton.setObjectName('runScriptButton')
+        self.runScriptButton.setObjectName("runScriptButton")
 
         # Profile script and its menu
         profileScriptMenu = QMenu(self)
-        self.profileScriptDlgAct = profileScriptMenu.addAction(
-            getIcon('detailsdlg.png'), 'Set profile parameters')
+        self.profileScriptDlgAct = profileScriptMenu.addAction(getIcon("detailsdlg.png"), "Set profile parameters")
         self.profileScriptDlgAct.triggered.connect(self.onProfileScriptDlg)
         self.profileScriptButton = QToolButton(self.toolbar)
-        self.profileScriptButton.setIcon(getIcon('profile.png'))
-        self.profileScriptButton.setToolTip('Profile script')
+        self.profileScriptButton.setIcon(getIcon("profile.png"))
+        self.profileScriptButton.setToolTip("Profile script")
         self.profileScriptButton.setPopupMode(QToolButton.DelayedPopup)
         self.profileScriptButton.setMenu(profileScriptMenu)
         self.profileScriptButton.setFocusPolicy(Qt.NoFocus)
         self.profileScriptButton.clicked.connect(self.onProfileScript)
         self.profileScriptButton.setEnabled(False)
-        self.profileScriptButton.setObjectName('profileScriptButton')
+        self.profileScriptButton.setObjectName("profileScriptButton")
 
         # Debug script and its menu
         debugScriptMenu = QMenu(self)
-        self.debugScriptDlgAct = debugScriptMenu.addAction(
-            getIcon('detailsdlg.png'), 'Set run/debug parameters')
+        self.debugScriptDlgAct = debugScriptMenu.addAction(getIcon("detailsdlg.png"), "Set run/debug parameters")
         self.debugScriptDlgAct.triggered.connect(self.onDebugScriptDlg)
         self.debugScriptButton = QToolButton(self.toolbar)
-        self.debugScriptButton.setIcon(getIcon('debugger.png'))
-        self.debugScriptButton.setToolTip('Debug script')
+        self.debugScriptButton.setIcon(getIcon("debugger.png"))
+        self.debugScriptButton.setToolTip("Debug script")
         self.debugScriptButton.setPopupMode(QToolButton.DelayedPopup)
         self.debugScriptButton.setMenu(debugScriptMenu)
         self.debugScriptButton.setFocusPolicy(Qt.NoFocus)
         self.debugScriptButton.clicked.connect(self.onDebugScript)
         self.debugScriptButton.setEnabled(False)
-        self.debugScriptButton.setObjectName('debugScriptButton')
+        self.debugScriptButton.setObjectName("debugScriptButton")
 
         # Disassembling
         disasmScriptMenu = QMenu(self)
-        disasmScriptMenu.addAction(
-            getIcon(''), 'Disassembly (no optimization)',
-            self.__editor._onDisasm0)
-        disasmScriptMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 1)',
-            self.__editor._onDisasm1)
-        disasmScriptMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 2)',
-            self.__editor._onDisasm2)
+        disasmScriptMenu.addAction(getIcon(""), "Disassembly (no optimization)", self.__editor._onDisasm0)
+        disasmScriptMenu.addAction(getIcon(""), "Disassembly (optimization level 1)", self.__editor._onDisasm1)
+        disasmScriptMenu.addAction(getIcon(""), "Disassembly (optimization level 2)", self.__editor._onDisasm2)
         self.disasmScriptButton = QToolButton(self.toolbar)
-        self.disasmScriptButton.setIcon(getIcon('disassembly.png'))
-        self.disasmScriptButton.setToolTip('Disassembly script')
+        self.disasmScriptButton.setIcon(getIcon("disassembly.png"))
+        self.disasmScriptButton.setToolTip("Disassembly script")
         self.disasmScriptButton.setPopupMode(QToolButton.DelayedPopup)
         self.disasmScriptButton.setMenu(disasmScriptMenu)
         self.disasmScriptButton.setFocusPolicy(Qt.NoFocus)
         self.disasmScriptButton.clicked.connect(self.__editor._onDisasm0)
         self.disasmScriptButton.setEnabled(False)
-        self.disasmScriptButton.setObjectName('disasmScriptButton')
+        self.disasmScriptButton.setObjectName("disasmScriptButton")
 
         # Dead code
-        self.deadCodeScriptButton = QAction(getIcon('deadcode.png'),
-                                            'Find dead code', self.toolbar)
+        self.deadCodeScriptButton = QAction(getIcon("deadcode.png"), "Find dead code", self.toolbar)
         self.deadCodeScriptButton.triggered.connect(self.__onDeadCode)
         self.deadCodeScriptButton.setEnabled(False)
-        self.deadCodeScriptButton.setObjectName('deadCodeScriptButton')
+        self.deadCodeScriptButton.setObjectName("deadCodeScriptButton")
 
         undoSpacer = ToolBarVSpacer(self.toolbar, 8)
-        undoSpacer.setObjectName('undoSpacer')
+        undoSpacer.setObjectName("undoSpacer")
 
-        self.__undoButton = QAction(getIcon('undo.png'), 'Undo (Ctrl+Z)',
-                                    self.toolbar)
-        self.__undoButton.setShortcut('Ctrl+Z')
+        self.__undoButton = QAction(getIcon("undo.png"), "Undo (Ctrl+Z)", self.toolbar)
+        self.__undoButton.setShortcut("Ctrl+Z")
         self.__undoButton.triggered.connect(self.__editor.onUndo)
         self.__undoButton.setEnabled(False)
-        self.__undoButton.setObjectName('undoButton')
+        self.__undoButton.setObjectName("undoButton")
 
-        self.__redoButton = QAction(getIcon('redo.png'), 'Redo (Ctrl+Y)',
-                                    self.toolbar)
-        self.__redoButton.setShortcut('Ctrl+Y')
+        self.__redoButton = QAction(getIcon("redo.png"), "Redo (Ctrl+Y)", self.toolbar)
+        self.__redoButton.setShortcut("Ctrl+Y")
         self.__redoButton.triggered.connect(self.__editor.onRedo)
         self.__redoButton.setEnabled(False)
-        self.__redoButton.setObjectName('redoButton')
+        self.__redoButton.setObjectName("redoButton")
 
         spacer = ToolBarExpandingSpacer(self.toolbar)
-        spacer.setObjectName('spacer')
+        spacer.setObjectName("spacer")
 
-        self.removeTrailingSpacesButton = QAction(
-            getIcon('trailingws.png'), 'Remove trailing spaces', self.toolbar)
-        self.removeTrailingSpacesButton.triggered.connect(
-            self.onRemoveTrailingWS)
-        self.removeTrailingSpacesButton.setObjectName(
-            'removeTrailingSpacesButton')
-        self.expandTabsButton = QAction(
-            getIcon('expandtabs.png'), 'Expand tabs (4 spaces)', self.toolbar)
+        self.removeTrailingSpacesButton = QAction(getIcon("trailingws.png"), "Remove trailing spaces", self.toolbar)
+        self.removeTrailingSpacesButton.triggered.connect(self.onRemoveTrailingWS)
+        self.removeTrailingSpacesButton.setObjectName("removeTrailingSpacesButton")
+        self.expandTabsButton = QAction(getIcon("expandtabs.png"), "Expand tabs (4 spaces)", self.toolbar)
         self.expandTabsButton.triggered.connect(self.onExpandTabs)
-        self.expandTabsButton.setObjectName('expandTabsButton')
+        self.expandTabsButton.setObjectName("expandTabsButton")
 
         # Add items to the toolbar
         self.toolbar.addAction(printPreviewButton)
@@ -298,8 +277,7 @@ class TextEditorTabWidget(QWidget):
 
         self.__outsideChangesBar = OutsideChangeWidget(self.__editor)
         self.__outsideChangesBar.sigReloadRequest.connect(self.__onReload)
-        self.__outsideChangesBar.reloadAllNonModifiedRequest.connect(
-            self.reloadAllNonModified)
+        self.__outsideChangesBar.reloadAllNonModifiedRequest.connect(self.reloadAllNonModified)
         self.__outsideChangesBar.hide()
 
         hLayout = QHBoxLayout()
@@ -343,28 +321,26 @@ class TextEditorTabWidget(QWidget):
 
         self.__renderWidget.setVisible(False)
 
-        self.__splitter.setSizes(Settings()['flowSplitterSizes'])
+        self.__splitter.setSizes(Settings()["flowSplitterSizes"])
         self.__splitter.splitterMoved.connect(self.flowSplitterMoved)
         Settings().sigFlowSplitterChanged.connect(self.otherFlowSplitterMoved)
 
     def flowSplitterMoved(self, pos, index):
         """Splitter has been moved"""
-        del pos     # unused argument
-        del index   # unused argument
-        Settings()['flowSplitterSizes'] = list(self.__splitter.sizes())
+        del pos  # unused argument
+        del index  # unused argument
+        Settings()["flowSplitterSizes"] = list(self.__splitter.sizes())
 
     def otherFlowSplitterMoved(self):
         """Other window has changed the splitter position"""
-        self.__splitter.setSizes(Settings()['flowSplitterSizes'])
+        self.__splitter.setSizes(Settings()["flowSplitterSizes"])
 
     def updateStatus(self):
         """Updates the toolbar buttons status"""
         self.__updateRunDebugButtons()
         isPythonFile = isPythonMime(self.__editor.mime)
-        self.importsDiagramButton.setEnabled(
-            isPythonFile and GlobalData().graphvizAvailable)
-        self.__editor.diagramsMenu.setEnabled(
-            self.importsDiagramButton.isEnabled())
+        self.importsDiagramButton.setEnabled(isPythonFile and GlobalData().graphvizAvailable)
+        self.__editor.diagramsMenu.setEnabled(self.importsDiagramButton.isEnabled())
         self.__editor.toolsMenu.setEnabled(self.runScriptButton.isEnabled())
 
     def onNavigationBar(self):
@@ -398,8 +374,7 @@ class TextEditorTabWidget(QWidget):
         isPython = self.__editor.isPythonBuffer()
         isMarkdown = self.__editor.isMarkdownBuffer()
         self.disasmScriptButton.setEnabled(isPython)
-        self.__renderWidget.setVisible(not Settings()['floatingRenderer'] and
-                                       (isPython or isMarkdown))
+        self.__renderWidget.setVisible(not Settings()["floatingRenderer"] and (isPython or isMarkdown))
 
     # Arguments: modified
     def modificationChanged(self, _=None):
@@ -408,10 +383,12 @@ class TextEditorTabWidget(QWidget):
 
     def __updateRunDebugButtons(self):
         """Enables/disables the run and debug buttons as required"""
-        enable = isPythonMime(self.__editor.mime) and \
-                 not self.isModified() and \
-                 not self.__debugMode and \
-                 os.path.isabs(self.__fileName)
+        enable = (
+            isPythonMime(self.__editor.mime)
+            and not self.isModified()
+            and not self.__debugMode
+            and os.path.isabs(self.__fileName)
+        )
 
         if enable != self.runScriptButton.isEnabled():
             self.runScriptButton.setEnabled(enable)
@@ -438,9 +415,7 @@ class TextEditorTabWidget(QWidget):
             self.__editor.setCurrentPosition(len(newText))
             line, pos = self.__editor.cursorPosition
             lastLine = self.__editor.lines()
-            self.__editor.setSelection(line, pos,
-                                       lastLine - 1,
-                                       len(self.__editor.text(lastLine - 1)))
+            self.__editor.setSelection(line, pos, lastLine - 1, len(self.__editor.text(lastLine - 1)))
             self.__editor.removeSelectedText()
             self.__editor.cursorPosition = origLine, origPos
 
@@ -470,9 +445,9 @@ class TextEditorTabWidget(QWidget):
         if self.isModified():
             what = ImportsDiagramDialog.SingleBuffer
             if not os.path.isabs(self.getFileName()):
-                logging.warning("Imports diagram can only be generated for "
-                                "a file. Save the editor buffer "
-                                "and try again.")
+                logging.warning(
+                    "Imports diagram can only be generated for a file. Save the editor buffer and try again."
+                )
                 return
         else:
             what = ImportsDiagramDialog.SingleFile
@@ -487,9 +462,9 @@ class TextEditorTabWidget(QWidget):
         if self.isModified():
             what = ImportsDiagramDialog.SingleBuffer
             if not os.path.isabs(self.getFileName()):
-                logging.warning("Imports diagram can only be generated for "
-                                "a file. Save the editor buffer "
-                                "and try again.")
+                logging.warning(
+                    "Imports diagram can only be generated for a file. Save the editor buffer and try again."
+                )
                 return
         else:
             what = ImportsDiagramDialog.SingleFile
@@ -498,18 +473,13 @@ class TextEditorTabWidget(QWidget):
     def __generateImportDiagram(self, what, options):
         """Show the generation progress and display the diagram"""
         if self.isModified():
-            progressDlg = ImportsDiagramProgress(what, options,
-                                                 self.getFileName(),
-                                                 self.__editor.text)
-            tooltip = "Generated for modified buffer (" + \
-                      self.getFileName() + ")"
+            progressDlg = ImportsDiagramProgress(what, options, self.getFileName(), self.__editor.text)
+            tooltip = "Generated for modified buffer (" + self.getFileName() + ")"
         else:
-            progressDlg = ImportsDiagramProgress(what, options,
-                                                 self.getFileName())
+            progressDlg = ImportsDiagramProgress(what, options, self.getFileName())
             tooltip = "Generated for file " + self.getFileName()
         if progressDlg.exec_() == QDialog.Accepted:
-            GlobalData().mainWindow.openDiagram(progressDlg.scene,
-                                                tooltip)
+            GlobalData().mainWindow.openDiagram(progressDlg.scene, tooltip)
 
     def onOpenImport(self):
         """Triggered when Ctrl+I is received"""
@@ -517,8 +487,7 @@ class TextEditorTabWidget(QWidget):
             # Take all the file imports and resolve them
             fileImports = getImportsList(self.__editor.text)
             if not fileImports:
-                GlobalData().mainWindow.showStatusBarMessage(
-                    "There are no imports")
+                GlobalData().mainWindow.showStatusBarMessage("There are no imports")
             else:
                 self.__onImportList(self.__fileName, fileImports)
 
@@ -531,8 +500,7 @@ class TextEditorTabWidget(QWidget):
             # Display the import selection widget
             self.importsBar.showResolvedImports(resolvedList)
         else:
-            GlobalData().mainWindow.showStatusBarMessage(
-                "Could not resolve any imports")
+            GlobalData().mainWindow.showStatusBarMessage("Could not resolve any imports")
 
     def resizeEvent(self, event):
         """Resizes the import selection dialogue if necessary"""
@@ -551,8 +519,7 @@ class TextEditorTabWidget(QWidget):
     def showOutsideChangesBar(self, allEnabled):
         """Shows the bar for the editor for the user to choose the action"""
         self.setReloadDialogShown(True)
-        self.__outsideChangesBar.showChoice(self.isModified(),
-                                            allEnabled)
+        self.__outsideChangesBar.showChoice(self.isModified(), allEnabled)
 
     def __onReload(self):
         """Triggered when a request to reload the file is received"""
@@ -631,8 +598,7 @@ class TextEditorTabWidget(QWidget):
     def terminate(self):
         """Called just before the tab is closed"""
         self.__splitter.splitterMoved.disconnect(self.flowSplitterMoved)
-        Settings().sigFlowSplitterChanged.disconnect(
-            self.otherFlowSplitterMoved)
+        Settings().sigFlowSplitterChanged.disconnect(self.otherFlowSplitterMoved)
         self.__cleanupLayout()
 
         self.__navigationBar.terminate()
@@ -655,11 +621,11 @@ class TextEditorTabWidget(QWidget):
         self.__editor.sigCFlowSyncRequested.disconnect(self.cflowSyncRequested)
         self.__editor.languageChanged.disconnect(self.__languageChanged)
 
-        printButton = self.toolbar.findChild(QAction, 'printButton')
+        printButton = self.toolbar.findChild(QAction, "printButton")
         printButton.triggered.disconnect(self.__onPrint)
         printButton.deleteLater()
 
-        printPreviewButton = self.toolbar.findChild(QAction, 'printPreviewButton')
+        printPreviewButton = self.toolbar.findChild(QAction, "printPreviewButton")
         printPreviewButton.triggered.connect(self.__onPrintPreview)
         printPreviewButton.deleteLater()
 
@@ -700,8 +666,7 @@ class TextEditorTabWidget(QWidget):
         self.__redoButton.triggered.disconnect(self.__editor.onRedo)
         self.__redoButton.deleteLater()
 
-        self.removeTrailingSpacesButton.triggered.disconnect(
-            self.onRemoveTrailingWS)
+        self.removeTrailingSpacesButton.triggered.disconnect(self.onRemoveTrailingWS)
         self.removeTrailingSpacesButton.deleteLater()
 
         self.expandTabsButton.triggered.disconnect(self.onExpandTabs)
@@ -711,7 +676,6 @@ class TextEditorTabWidget(QWidget):
 
         self.importsBar.deleteLater()
         self.toolbar.deleteLater()
-
 
     # Mandatory interface part is below
 
@@ -727,7 +691,7 @@ class TextEditorTabWidget(QWidget):
         """Tells if the file is read only"""
         if not os.path.exists(self.__fileName):
             return None
-        return 'RW' if QFileInfo(self.__fileName).isWritable() else 'RO'
+        return "RW" if QFileInfo(self.__fileName).isWritable() else "RO"
 
     def getMime(self):
         """Provides the buffer mime"""
@@ -743,7 +707,7 @@ class TextEditorTabWidget(QWidget):
         editorLanguage = self.__editor.language()
         if editorLanguage:
             return editorLanguage
-        return self.__editor.mime if self.__editor.mime else 'n/a'
+        return self.__editor.mime if self.__editor.mime else "n/a"
 
     def getFileName(self):
         """Tells what file name of the widget content"""
@@ -789,8 +753,7 @@ class TextEditorTabWidget(QWidget):
         if not os.path.exists(self.__fileName):
             return True
         path = os.path.realpath(self.__fileName)
-        return self.__diskModTime != os.path.getmtime(path) or \
-               self.__diskSize != os.path.getsize(path)
+        return self.__diskModTime != os.path.getmtime(path) or self.__diskSize != os.path.getsize(path)
 
     def doesFileExist(self):
         """Returns True if the loaded file still exists"""
@@ -802,8 +765,7 @@ class TextEditorTabWidget(QWidget):
 
     def getReloadDialogShown(self):
         """Tells if the reload dialog has already been shown"""
-        return self.__reloadDlgShown and \
-            not self.__outsideChangesBar.isVisible()
+        return self.__reloadDlgShown and not self.__outsideChangesBar.isVisible()
 
     def updateModificationTime(self, fileName):
         """Updates the modification time"""
@@ -827,10 +789,8 @@ class TextEditorTabWidget(QWidget):
                 self.expandTabsButton.setEnabled(False)
         else:
             # Undo/redo
-            self.__undoButton.setEnabled(
-                self.__editor.document().isUndoAvailable())
-            self.__redoButton.setEnabled(
-                self.__editor.document().isRedoAvailable())
+            self.__undoButton.setEnabled(self.__editor.document().isUndoAvailable())
+            self.__redoButton.setEnabled(self.__editor.document().isRedoAvailable())
 
             # Spaces/tabs
             self.removeTrailingSpacesButton.setEnabled(True)
@@ -839,8 +799,7 @@ class TextEditorTabWidget(QWidget):
         # Run/debug buttons
         self.__updateRunDebugButtons()
 
-    def isLineBreakable(self, line=None, enforceRecalc=False,
-                        enforceSure=False):
+    def isLineBreakable(self, line=None, enforceRecalc=False, enforceSure=False):
         """True if a breakpoint could be placed on the current line"""
         return self.__editor.isLineBreakable()
 
@@ -864,4 +823,4 @@ class TextEditorTabWidget(QWidget):
         """Returns back the rendering widgets"""
         for widget in widgets:
             self.__renderLayout.addWidget(widget)
-        self.__languageChanged()    # Sets the widget visibility
+        self.__languageChanged()  # Sets the widget visibility

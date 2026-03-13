@@ -39,7 +39,7 @@
 
 ### Фаза 0: Підготовка (1–2 дні)
 
-- [ ] Створити спільний базовий клас `LintDriverBase` (опціонально) для driver-ів
+- [x] Створити спільний базовий клас `LintDriverBase` (опціонально) для driver-ів
 - [x] Перевірити сумісність з CI (ruff, mypy у venv)
 - [x] Оновити Living Specification: матриця ТЗ → модуль → тести
 
@@ -116,7 +116,7 @@ cdmplugins/bandit/
 | 4.1 | Створити `cdmplugins/ruffformat/` | cdmp, __init__.py ✅ |
 | 4.2 | FormatDriver: `ruff format` | In-place format ✅ |
 | 4.3 | Результат: success/error у status bar | Без окремої вкладки ✅ |
-| 4.4 | Опція: format on save (config) | getConfigFunction → None (TODO) |
+| 4.4 | Опція: format on save (config) | getConfigFunction, ruffformatconfig.py ✅ |
 
 **Варіант:** Використано ruff format (ruff вже є) — менше залежностей.
 
@@ -252,7 +252,7 @@ pip-audit>=2.0.0
 
 - [x] Оновити `doc/plugins/plugins.md` — перелік нових плагінів
 - [x] Додати опис кожного плагіна (короткий)
-- [ ] Оновити ChangeLog при кожному релізі
+- [x] Оновити ChangeLog при кожному релізі
 - [x] Living Specification: ТЗ → модуль → тест — [living-specification.md](living-specification.md)
 
 ---

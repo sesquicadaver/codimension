@@ -25,7 +25,6 @@ from .fileutils import loadJSON, saveJSON
 
 
 class FlowUICollapsedGroups:
-
     """Loads/stores/saves the collapsed group list"""
 
     def __init__(self):
@@ -47,23 +46,21 @@ class FlowUICollapsedGroups:
         if not dirName.endswith(os.path.sep):
             dirName += os.path.sep
         if not os.path.isdir(dirName):
-            raise Exception('Directory name is expected for collapsed '
-                            'groups. The given ' + dirName + ' is not.')
+            raise Exception("Directory name is expected for collapsed groups. The given " + dirName + " is not.")
 
-        self.__groupsFileName = dirName + 'collapsedgroups.json'
+        self.__groupsFileName = dirName + "collapsedgroups.json"
         if os.path.exists(self.__groupsFileName):
             FlowUICollapsedGroups.load(self)
 
     def load(self):
         """Loads the saved collapsed groups file"""
         if self.__groupsFileName:
-            self.__groups = loadJSON(self.__groupsFileName,
-                                     'collapsed groups', {})
+            self.__groups = loadJSON(self.__groupsFileName, "collapsed groups", {})
 
     def save(self):
         """Saves the collapsed groups into a file"""
         if self.__groupsFileName:
-            saveJSON(self.__groupsFileName, self.__groups, 'collapsed groups')
+            saveJSON(self.__groupsFileName, self.__groups, "collapsed groups")
 
     def getFileGroups(self, fileName):
         """Provides None if not found"""

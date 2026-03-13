@@ -25,8 +25,7 @@ from cdm_dbg_utils import sendJSONCommand
 from protocol_cdm_dbg import METHOD_STDERR, METHOD_STDOUT
 
 
-class OutStreamRedirector():
-
+class OutStreamRedirector:
     """Wraps a socket object with a file interface"""
 
     def __init__(self, sock, isStdout, procid):
@@ -58,23 +57,23 @@ class OutStreamRedirector():
 
     def read_p(self, size=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def read(self, size=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def readline_p(self, size=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def readlines(self, sizehint=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def readline(self, sizehint=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def seekable(self):
         """Checks if the stream is seekable"""
@@ -82,26 +81,26 @@ class OutStreamRedirector():
 
     def seek(self, offset, whence=0):
         """Seek is not supported"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def tell(self):
         """Tell is not supported"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def truncate(self, size=-1):
         """Truncates is not supported"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def write(self, data):
         """Writes a string to the file"""
         method = METHOD_STDERR
         if self.isStdout:
             method = METHOD_STDOUT
-        sendJSONCommand(self.sock, method, self.procid, {'text': data})
+        sendJSONCommand(self.sock, method, self.procid, {"text": data})
 
     def writelines(self, lines):
         """Writes a list of strings to the file"""
-        self.write(''.join(lines))
+        self.write("".join(lines))
 
 
 # The OutStreamCollector is used in case of the Exec() request.
@@ -109,8 +108,7 @@ class OutStreamRedirector():
 # printouts. They need to be collected as a combined output and sent back to
 # the IDE. So an instance of the OutStreamCollector is used to temporary
 # substitute the sys.stdout and sys.stderr.
-class OutStreamCollector():
-
+class OutStreamCollector:
     """Collects output with a file interface"""
 
     def __init__(self):
@@ -138,23 +136,23 @@ class OutStreamCollector():
 
     def read_p(self, size=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def read(self, size=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def readline_p(self, size=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def readlines(self, sizehint=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def readline(self, sizehint=-1):
         """Read is not supported"""
-        raise IOError((9, '[Errno 9] Bad file descriptor'))
+        raise IOError((9, "[Errno 9] Bad file descriptor"))
 
     def seekable(self):
         """Checks if the stream is seekable"""
@@ -162,15 +160,15 @@ class OutStreamCollector():
 
     def seek(self, offset, whence=0):
         """Seek is not supported"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def tell(self):
         """Tell is not supported"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def truncate(self, size=-1):
         """Truncates is not supported"""
-        raise IOError((29, '[Errno 29] Illegal seek'))
+        raise IOError((29, "[Errno 29] Illegal seek"))
 
     def writable(self):
         """Check if a stream is writable"""
@@ -182,4 +180,4 @@ class OutStreamCollector():
 
     def writelines(self, lines):
         """Writes a list of strings to the file"""
-        self.write(''.join(lines))
+        self.write("".join(lines))

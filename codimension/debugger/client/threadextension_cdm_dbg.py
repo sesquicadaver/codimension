@@ -41,7 +41,6 @@ _qtThreadNumber = 1
 
 
 class ThreadExtension(object):
-
     """
     Class implementing the thread support for the debugger.
 
@@ -69,16 +68,15 @@ class ThreadExtension(object):
 
         # special objects representing the main scripts thread and frame
         self.mainThread = self
-        self.threadModName = '_thread'
+        self.threadModName = "_thread"
 
         # reset already imported thread module to apply hooks at next import
         del sys.modules[self.threadModName]
-        del sys.modules['threading']
+        del sys.modules["threading"]
 
         sys.meta_path.insert(0, self)
 
-    def attachThread(self, target=None, args=None, kwargs=None,
-                     mainThread=False):
+    def attachThread(self, target=None, args=None, kwargs=None, mainThread=False):
         """
         Public method to setup a standard thread for DebugClient to debug.
 
@@ -90,14 +88,13 @@ class ThreadExtension(object):
 
         if mainThread:
             ident = _thread.get_ident()
-            name = 'MainThread'
+            name = "MainThread"
             newThread = self.mainThread
             newThread.isMainThread = True
         else:
             newThread = DebugBase(self)
-            ident = self._original_start_new_thread(
-                newThread.bootstrap, (target, args, kwargs))
-            name = 'Thread-{0}'.format(self.threadNumber)
+            ident = self._original_start_new_thread(newThread.bootstrap, (target, args, kwargs))
+            name = "Thread-{0}".format(self.threadNumber)
             self.threadNumber += 1
 
         newThread.id = ident
@@ -157,7 +154,7 @@ class ThreadExtension(object):
                     threadProps["name"] = threadNames.get(threadId, thd.name)
                     threadProps["broken"] = thd.isBroken
                 except Exception:
-                    threadProps["name"] = 'UnknownThread'
+                    threadProps["name"] = "UnknownThread"
                     threadProps["broken"] = False
 
                 threadList.append(threadProps)
@@ -168,9 +165,9 @@ class ThreadExtension(object):
             threadProps["broken"] = self.isBroken
             threadList.append(threadProps)
 
-        sendJSONCommand(self.socket, METHOD_THREAD_LIST,
-                        self.procuuid,
-                        {"currentID": currentId, "threadList": threadList})
+        sendJSONCommand(
+            self.socket, METHOD_THREAD_LIST, self.procuuid, {"currentID": currentId, "threadList": threadList}
+        )
 
     @staticmethod
     def getExecutedFrame(frame):
@@ -180,8 +177,8 @@ class ThreadExtension(object):
         while frame is not None:
             baseName = os.path.basename(frame.f_code.co_filename)
             if not baseName.startswith(
-                    ('clientbase_cdm_dbg.py', 'base_cdm_dbg.py',
-                     'asyncfile_cdm_dbg.py', 'threadextension_cdm_dbg.py')):
+                ("clientbase_cdm_dbg.py", "base_cdm_dbg.py", "asyncfile_cdm_dbg.py", "threadextension_cdm_dbg.py")
+            ):
                 break
             frame = frame.f_back
         return frame
@@ -191,13 +188,13 @@ class ThreadExtension(object):
         frames = sys._current_frames()
         for threadId, frame in frames.items():
             # skip our own timer thread
-            if frame.f_code.co_name == '__eventPollTimer':
+            if frame.f_code.co_name == "__eventPollTimer":
                 continue
 
             # Unknown thread
             if threadId not in self.threads:
                 newThread = DebugBase(self)
-                name = 'Thread-{0}'.format(self.threadNumber)
+                name = "Thread-{0}".format(self.threadNumber)
                 self.threadNumber += 1
 
                 newThread.id = threadId
@@ -208,13 +205,11 @@ class ThreadExtension(object):
             if "__pypy__" not in sys.builtin_module_names:
                 # Don't update with None
                 currentFrame = self.getExecutedFrame(frame)
-                if (currentFrame is not None and
-                        self.threads[threadId].isBroken is False):
+                if currentFrame is not None and self.threads[threadId].isBroken is False:
                     self.threads[threadId].currentFrame = currentFrame
 
         # Clean up obsolet because terminated threads
-        self.threads = {id_: thrd for id_, thrd in self.threads.items()
-                        if id_ in frames}
+        self.threads = {id_: thrd for id_, thrd in self.threads.items() if id_ in frames}
 
     # find_module(self, fullname, path=None)
     def find_module(self, fullname, _=None):
@@ -222,9 +217,19 @@ class ThreadExtension(object):
         if fullname in sys.modules or not self.debugging:
             return None
 
-        if fullname in [self.threadModName, 'PyQt4.QtCore', 'PyQt5.QtCore',
-                        'PySide.QtCore', 'PySide2.QtCore', 'greenlet',
-                        'threading'] and self.enableImportHooks:
+        if (
+            fullname
+            in [
+                self.threadModName,
+                "PyQt4.QtCore",
+                "PyQt5.QtCore",
+                "PySide.QtCore",
+                "PySide2.QtCore",
+                "greenlet",
+                "threading",
+            ]
+            and self.enableImportHooks
+        ):
             # Disable hook to be able to import original module
             self.enableImportHooks = False
             return self
@@ -234,15 +239,14 @@ class ThreadExtension(object):
         """Loads a module"""
         module = importlib.import_module(fullname)
         sys.modules[fullname] = module
-        if (fullname == self.threadModName and
-                self._original_start_new_thread is None):
+        if fullname == self.threadModName and self._original_start_new_thread is None:
             # make thread hooks available to system
             self._original_start_new_thread = module.start_new_thread
             module.start_new_thread = self.attachThread
 
-        elif fullname == 'greenlet' and self.greenlet is False:
+        elif fullname == "greenlet" and self.greenlet is False:
             # Check for greenlet.settrace
-            if hasattr(module, 'settrace'):
+            if hasattr(module, "settrace"):
                 self.greenlet = True
                 DebugBase.pollTimerEnabled = False
 
@@ -277,7 +281,6 @@ class ThreadExtension(object):
                     sys.settrace(None)
 
             class ThreadWrapper(module.Thread):
-
                 """Wrapper class for threading.Thread"""
 
                 def __init__(self, *args, **kwargs):
@@ -290,9 +293,10 @@ class ThreadExtension(object):
             module.Thread = ThreadWrapper
 
         # Add hook for *.QThread
-        elif (fullname in ['PyQt4.QtCore', 'PyQt5.QtCore',
-                           'PySide.QtCore', 'PySide2.QtCore'] and
-              self.qtThreadAttached is False):
+        elif (
+            fullname in ["PyQt4.QtCore", "PyQt5.QtCore", "PySide.QtCore", "PySide2.QtCore"]
+            and self.qtThreadAttached is False
+        ):
             self.qtThreadAttached = True
             # _debugClient as a class attribute can't be accessed in following
             # class. Therefore we need a global variable.
@@ -304,7 +308,7 @@ class ThreadExtension(object):
 
                 newThread = DebugBase(_debugClient)
                 ident = _thread.get_ident()
-                name = 'QtThread-{0}'.format(_qtThreadNumber)
+                name = "QtThread-{0}".format(_qtThreadNumber)
 
                 _qtThreadNumber += 1
 
@@ -332,8 +336,7 @@ class ThreadExtension(object):
                 def __init__(self, *args, **kwargs):
                     # Overwrite the provided run method with our own, to
                     # intercept the thread creation by Qt
-                    self.run = lambda s=self, run=self.run: (
-                        _bootstrapQThread(s, run))
+                    self.run = lambda s=self, run=self.run: _bootstrapQThread(s, run)
 
                     super(QThreadWrapper, self).__init__(*args, **kwargs)
 

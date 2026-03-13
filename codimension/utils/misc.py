@@ -37,10 +37,10 @@ from .settings import SETTINGS_DIR
 
 # File name of the template for any new file.
 # The file is searched nearby the project file.
-templateFileName = 'template.py'
+templateFileName = "template.py"
 
 # File name with pylint settings
-pylintFileName = 'pylintrc'
+pylintFileName = "pylintrc"
 
 
 def splitThousands(value, sep="'"):
@@ -57,7 +57,7 @@ def getLocaleDate():
         date_format = locale.nl_langinfo(locale.D_FMT)
         return now.strftime(date_format)
     except Exception:
-        return now.strftime('%Y-%m-%d')
+        return now.strftime("%Y-%m-%d")
 
 
 def getLocaleTime():
@@ -67,7 +67,7 @@ def getLocaleTime():
         time_format = locale.nl_langinfo(locale.T_FMT)
         return now.strftime(time_format)
     except Exception:
-        return now.strftime('%H:%M:%S')
+        return now.strftime("%H:%M:%S")
 
 
 def getLocaleDateTime():
@@ -110,8 +110,8 @@ def getNewFileTemplate():
 
     # read the file content: splitlines() eats the trailing \n
     content = getFileContent(templateFile)
-    if content.endswith('\n') or content.endswith('\r\n'):
-        content = content.splitlines() + ['']
+    if content.endswith("\n") or content.endswith("\r\n"):
+        content = content.splitlines() + [""]
     else:
         content = content.splitlines()
 
@@ -119,33 +119,26 @@ def getNewFileTemplate():
     project = GlobalData().project
     projectLoaded = project.isLoaded()
     if projectLoaded:
-        subs = [(re.compile(re.escape('$projectdate'), re.I),
-                 project.props['creationdate']),
-                (re.compile(re.escape('$author'), re.I),
-                 project.props['author']),
-                (re.compile(re.escape('$license'), re.I),
-                 project.props['license']),
-                (re.compile(re.escape('$copyright'), re.I),
-                 project.props['copyright']),
-                (re.compile(re.escape('$version'), re.I),
-                 project.props['version']),
-                (re.compile(re.escape('$email'), re.I),
-                 project.props['email'])]
+        subs = [
+            (re.compile(re.escape("$projectdate"), re.I), project.props["creationdate"]),
+            (re.compile(re.escape("$author"), re.I), project.props["author"]),
+            (re.compile(re.escape("$license"), re.I), project.props["license"]),
+            (re.compile(re.escape("$copyright"), re.I), project.props["copyright"]),
+            (re.compile(re.escape("$version"), re.I), project.props["version"]),
+            (re.compile(re.escape("$email"), re.I), project.props["email"]),
+        ]
     else:
         subs = []
 
     # Common substitutions
-    subs.append((re.compile(re.escape('$date'), re.I),
-                 getLocaleDate()))
-    subs.append((re.compile(re.escape('$time'), re.I),
-                 getLocaleTime()))
-    subs.append((re.compile(re.escape('$user'), re.I),
-                 getpass.getuser()))
+    subs.append((re.compile(re.escape("$date"), re.I), getLocaleDate()))
+    subs.append((re.compile(re.escape("$time"), re.I), getLocaleTime()))
+    subs.append((re.compile(re.escape("$user"), re.I), getpass.getuser()))
 
     if projectLoaded:
         # description could be multilined so it is a different story
-        descriptionRegexp = re.compile(re.escape('$description'), re.I)
-        description = project.props['description'].split('\n')
+        descriptionRegexp = re.compile(re.escape("$description"), re.I)
+        description = project.props["description"].split("\n")
 
     result = []
     for line in content:
@@ -156,8 +149,8 @@ def getNewFileTemplate():
             match = re.search(descriptionRegexp, line)
             if match is not None:
                 # description is in the line
-                leadingPart = line[:match.start()]
-                trailingPart = line[match.end():]
+                leadingPart = line[: match.start()]
+                trailingPart = line[match.end() :]
                 for dline in description:
                     result.append(leadingPart + dline + trailingPart)
             else:
@@ -165,7 +158,7 @@ def getNewFileTemplate():
         else:
             result.append(line)
 
-    return '\n'.join(result)
+    return "\n".join(result)
 
 
 def getDefaultTemplate():
@@ -217,7 +210,7 @@ start point:
 Please discard these instructions, provide the required content and save as
 needed. If you do so, next time the project doc button is clicked, the project
 doc markdown file will be displayed.
-""".replace('%s', fName)
+""".replace("%s", fName)
 
 
 def getDefaultFileDoc(fName, anchor):
@@ -239,7 +232,7 @@ When clicked, the source code file will be opened and scrolled to the doc link.
 
 Please discard these instructions, provide the required content and save as
 needed.
-""".replace('${fName}', fName).replace('${anchor}', anchor)
+""".replace("${fName}", fName).replace("${anchor}", anchor)
 
 
 # Dynamic mixin at runtime:
@@ -252,13 +245,14 @@ def extendInstance(obj, cls):
     obj.__class__ = type(base_cls_name, (base_cls, cls), {})
 
 
-ANCHOR_REGEXP = re.compile(r'\#[_a-zA-Z0-9]+$')
+ANCHOR_REGEXP = re.compile(r"\#[_a-zA-Z0-9]+$")
+
 
 # Supported format:
 # [file:]<absolute or relative path>[#anchor identifier]
 def splitLinkPath(link):
     """Splits the link path into the path and the anchor"""
-    if link.startswith('file:'):
+    if link.startswith("file:"):
         link = link[5:]
     link = os.path.normpath(link)
 
@@ -267,7 +261,7 @@ def splitLinkPath(link):
     if match is not None:
         anchorPart = match.group()
         anchor = anchorPart[1:]
-        link = link[0:-1 * len(anchorPart)].strip()
+        link = link[0 : -1 * len(anchorPart)].strip()
     return link, anchor
 
 
@@ -307,14 +301,12 @@ def resolveFile(link, fromFile):
 def checkExistingLinkTarget(fName):
     """Returns an error message or None if everything is fine"""
     if not os.path.isfile(fName):
-        return ' '.join(("The resolved link path",
-                         "'" + fName + "'",
-                         "does not point to a file"))
+        return " ".join(("The resolved link path", "'" + fName + "'", "does not point to a file"))
 
     if not isFileOpenable(fName):
-        return ' '.join(("The resolved link path",
-                         "'" + fName + "'",
-                         "does not point to a file which Codimension can open"))
+        return " ".join(
+            ("The resolved link path", "'" + fName + "'", "does not point to a file which Codimension can open")
+        )
     return None
 
 
@@ -326,8 +318,9 @@ def resolveLinkPath(link, fromFile):
 
     # fName is not None => file exists on FS
     if not fName:
-        logging.error("The link '%s' does not point to an existing file. "
-                      "Resolve tries: %s",effectiveLink, ', '.join(tryPaths))
+        logging.error(
+            "The link '%s' does not point to an existing file. Resolve tries: %s", effectiveLink, ", ".join(tryPaths)
+        )
         return None, None
 
     errMsg = checkExistingLinkTarget(fName)
@@ -355,9 +348,7 @@ def preResolveLinkPath(link, fromFile, canBeCreated):
         return fName, anchor, None
 
     if not tryPaths:
-        return None, None, \
-               "The link '" + effectiveLink + \
-               "' is invalid. Use an absolute path or save the file first."
+        return None, None, "The link '" + effectiveLink + "' is invalid. Use an absolute path or save the file first."
 
     if canBeCreated:
         for path in tryPaths:
@@ -366,15 +357,15 @@ def preResolveLinkPath(link, fromFile, canBeCreated):
                 # Can be created here
                 return path, anchor, None
 
-        return None, None, \
-           "The link '" + effectiveLink + \
-           "' points to non existing file which cannot be created due to " \
-           "lack of permissions or invalid path. Tried paths: " + \
-           ", ".join(tryPaths)
+        return (
+            None,
+            None,
+            "The link '" + effectiveLink + "' points to non existing file which cannot be created due to "
+            "lack of permissions or invalid path. Tried paths: " + ", ".join(tryPaths),
+        )
 
-    return None, None, \
-        "The link '" + effectiveLink + \
-        "' does not point to an existing file"
+    return None, None, "The link '" + effectiveLink + "' does not point to an existing file"
+
 
 def printStack(limit=100):
     """Prints the stack in the log window"""
@@ -387,22 +378,21 @@ def printStack(limit=100):
 
     if len(lines) > limit:
         lines = lines[-limit:]
-    print('\n'.join(lines))
+    print("\n".join(lines))
 
 
 def printReferences(obj):
     """Prints the object references"""
     if obj is None:
-        print('No object to print references')
+        print("No object to print references")
     else:
         refs = gc.get_referrers(obj)
-        print('Object references (total ' + str(len(refs)) + '):')
+        print("Object references (total " + str(len(refs)) + "):")
         for item in refs:
-            print('---')
+            print("---")
             print(type(item))
             val = repr(item)
             if len(val) > 512:
-                print('Truncated: ' + val[:512])
+                print("Truncated: " + val[:512])
             else:
                 print(val)
-

@@ -27,7 +27,7 @@ from .globals import GlobalData
 def getHexdump(fileName):
     """Provides the hex dumped file content or None"""
     if not GlobalData().hexdumpAvailable:
-        logging.error('hexdump is not available')
+        logging.error("hexdump is not available")
         return None
 
     # TODO: implement hexdump via subprocess when hexdumpAvailable

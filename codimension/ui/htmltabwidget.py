@@ -29,7 +29,6 @@ from .qt import QFrame, QHBoxLayout, Qt, QTextBrowser, pyqtSignal
 
 
 class HTMLViewer(QTextBrowser):
-
     """HTML viewer (web browser)"""
 
     sigEscapePressed = pyqtSignal()
@@ -47,13 +46,12 @@ class HTMLViewer(QTextBrowser):
 
     def onTextZoomChanged(self):
         """Triggered when a text zoom is changed.
-           It is mostly used in diff viewers
+        It is mostly used in diff viewers
         """
         self.setFont(getZoomedMonoFont())
 
 
 class HTMLTabWidget(MainWindowTabWidgetBase, QFrame):
-
     """The widget which displays a RO HTML page"""
 
     sigEscapePressed = pyqtSignal()

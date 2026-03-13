@@ -33,26 +33,23 @@ BROKEN_INDICATOR = "??"
 def buildColor(colorAsStr):
     """Converts saved color into QColor object"""
     colorAsStr = colorAsStr.strip()
-    parts = colorAsStr.split(',')
+    parts = colorAsStr.split(",")
 
     length = len(parts)
     if length == 3:
-        return QColor(int(parts[0]), int(parts[1]),
-                      int(parts[2]))
+        return QColor(int(parts[0]), int(parts[1]), int(parts[2]))
     if length == 4:
-        return QColor(int(parts[0]), int(parts[1]),
-                      int(parts[2]), int(parts[3]))
+        return QColor(int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3]))
     raise Exception("Unexpected color format")
 
 
 class VCSIndicator:
-
     """Holds an indicator properties"""
 
     def __init__(self, configLine):
         """Config line looks as follows:
-           id:::pathOrString:::ForegroundColor:::BackgroundColor:::Tooltip
-           It comes from a config file or from a plugin"""
+        id:::pathOrString:::ForegroundColor:::BackgroundColor:::Tooltip
+        It comes from a config file or from a plugin"""
         self.identifier = None
         self.pixmap = None
         self.text = None
@@ -77,8 +74,7 @@ class VCSIndicator:
     def __parseConfigTuple(self, pluginIndicator):
         """Checks what plugin provided"""
         if len(pluginIndicator) != 5:
-            raise Exception("Unexpected format of an indicator "
-                            "description. Expected 5 values.")
+            raise Exception("Unexpected format of an indicator description. Expected 5 values.")
         # ID field
         self.identifier = int(pluginIndicator[0])
 
@@ -93,9 +89,7 @@ class VCSIndicator:
             else:
                 self.__setText(pluginIndicator[1])
         except Exception:
-            self.__setBrokenIndicator("Failed to get plugin indicator "
-                                      "pixmap. Indicator id: " +
-                                      str(self.identifier))
+            self.__setBrokenIndicator("Failed to get plugin indicator pixmap. Indicator id: " + str(self.identifier))
             return
 
         # Foreground color
@@ -135,10 +129,8 @@ class VCSIndicator:
         if self.pixmap is None:
             return
 
-        if self.pixmap.width() > MAX_PIXMAP_INDICATOR_WIDTH or \
-           self.pixmap.height() > MAX_PIXMAP_INDICATOR_HEIGHT:
-            maxSize = QSize(MAX_PIXMAP_INDICATOR_WIDTH,
-                            MAX_PIXMAP_INDICATOR_HEIGHT)
+        if self.pixmap.width() > MAX_PIXMAP_INDICATOR_WIDTH or self.pixmap.height() > MAX_PIXMAP_INDICATOR_HEIGHT:
+            maxSize = QSize(MAX_PIXMAP_INDICATOR_WIDTH, MAX_PIXMAP_INDICATOR_HEIGHT)
             self.pixmap = self.pixmap.scaled(maxSize, Qt.KeepAspectRatio)
 
     def isPixmap(self):

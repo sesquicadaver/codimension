@@ -26,7 +26,6 @@ from utils.settings import Settings
 
 
 class BinViewTextEditor(QPlainTextEdit):
-
     """Needs to intercept Ctrl+- Ctrl+= Ctrl+0"""
 
     def __init__(self, parent):
@@ -71,7 +70,6 @@ class BinViewTextEditor(QPlainTextEdit):
 
 
 class BinView(QWidget):
-
     def __init__(self, navBar, parent):
         QWidget.__init__(self, parent)
         self.__navBar = navBar
@@ -112,13 +110,11 @@ class BinView(QWidget):
         self.__navBar.clearWarnings()
         self.serializeScrollAndSelection()
         try:
-            optLevel = Settings()['disasmLevel']
+            optLevel = Settings()["disasmLevel"]
             if source is None:
-                props, binContent = getFileBinary(
-                    filename, optLevel)
+                props, binContent = getFileBinary(filename, optLevel)
             else:
-                props, binContent = getBufferBinary(
-                    source, encoding, filename, optLevel)
+                props, binContent = getBufferBinary(source, encoding, filename, optLevel)
 
             self.__textEdit.clear()
 
@@ -130,16 +126,15 @@ class BinView(QWidget):
             QTimer.singleShot(0, self.restoreScrollAndSelection)
         except Exception as exc:
             self.__navBar.updateInfoIcon(self.__navBar.STATE_BROKEN_UTD)
-            self.__navBar.setErrors('Binary view populating error:\n' +
-                                    str(exc))
+            self.__navBar.setErrors("Binary view populating error:\n" + str(exc))
 
     def __setupLabel(self, props):
         """Updates the property label"""
-        txt = ''
+        txt = ""
         for item in props:
             if txt:
-                txt += '<br/>'
-            txt += '<b>' + item[0] + ':</b> ' + item[1]
+                txt += "<br/>"
+            txt += "<b>" + item[0] + ":</b> " + item[1]
         self.__summary.setText(txt)
         self.__summary.setToolTip(txt)
         self.__summary.setVisible(True)
@@ -147,33 +142,30 @@ class BinView(QWidget):
     def __populate(self, binContent, props):
         """Populates binary view"""
         address = 0
-        currentLine = ''
-        asciiLine = ''
+        currentLine = ""
+        asciiLine = ""
         for char in binContent:
             if address % 16 == 0:
-                currentLine = hex(address).lstrip('0x').rstrip('L').rjust(8, '0') + '  '
-            currentLine += hex(char).lstrip('0x').rjust(2, '0') + ' '
+                currentLine = hex(address).lstrip("0x").rstrip("L").rjust(8, "0") + "  "
+            currentLine += hex(char).lstrip("0x").rjust(2, "0") + " "
             if char < 32:
-                asciiLine += '.'
+                asciiLine += "."
             else:
                 charRepr = chr(char)
                 if len(repr(charRepr)) > 3:
-                    asciiLine += '.'
+                    asciiLine += "."
                 else:
                     asciiLine += charRepr
 
             address += 1
             if address % 8 == 0:
-                currentLine += ' '
+                currentLine += " "
             if address % 16 == 0:
-                self.__textEdit.appendPlainText(currentLine +
-                                                '|' + asciiLine + '|')
-                currentLine = ''
-                asciiLine = ''
+                self.__textEdit.appendPlainText(currentLine + "|" + asciiLine + "|")
+                currentLine = ""
+                asciiLine = ""
 
         if currentLine:
-            self.__textEdit.appendPlainText(currentLine.ljust(60, ' ') +
-                                            '|' + asciiLine + '|')
+            self.__textEdit.appendPlainText(currentLine.ljust(60, " ") + "|" + asciiLine + "|")
 
-        props.append(('Size', splitThousands(str(address)) + ' bytes'))
-
+        props.append(("Size", splitThousands(str(address)) + " bytes"))

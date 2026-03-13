@@ -35,7 +35,7 @@ def toHex(value):
     """Converts the value to a double digit hex string"""
     asStr = hex(value)[2:]
     if len(asStr) == 1:
-        return '0' + asStr
+        return "0" + asStr
     return asStr
 
 
@@ -49,11 +49,12 @@ def buildColor(color):
     ddd,ddd,ddd         decimal rgb
     ddd,ddd,ddd,ddd     decimal rgba
     """
-    if color.startswith('#'):
+    if color.startswith("#"):
+
         def normalizeLength(spec):
             if len(spec) in [6, 8]:
                 return spec
-            normalized = ''
+            normalized = ""
             for character in spec:
                 normalized += 2 * character
             return normalized
@@ -81,7 +82,7 @@ def buildColor(color):
         except Exception:
             raise Exception("Invalid hexadecimal color format: #" + color)
 
-    parts = color.split(',')
+    parts = color.split(",")
     length = len(parts)
     if length not in [3, 4]:
         raise Exception("Invalid decimal color format: " + color)
@@ -113,15 +114,13 @@ def cssLikeColor(color):
     # Shorten it if possible
     if len(asStr) == 7:
         # '#rgb'
-        if asStr[1] == asStr[2] and asStr[3] == asStr[4] and \
-           asStr[5] == asStr[6]:
-            return '#' + asStr[1] + asStr[3] + asStr[5]
+        if asStr[1] == asStr[2] and asStr[3] == asStr[4] and asStr[5] == asStr[6]:
+            return "#" + asStr[1] + asStr[3] + asStr[5]
         return asStr
 
     # '#rgba'
-    if asStr[1] == asStr[2] and asStr[3] == asStr[4] and \
-       asStr[5] == asStr[6] and asStr[7] == asStr[8]:
-        return '#' + asStr[1] + asStr[3] + asStr[5] + asStr[7]
+    if asStr[1] == asStr[2] and asStr[3] == asStr[4] and asStr[5] == asStr[6] and asStr[7] == asStr[8]:
+        return "#" + asStr[1] + asStr[3] + asStr[5] + asStr[7]
     return asStr
 
 
@@ -130,7 +129,7 @@ def transparentColor(fgColor, bgColor, alpha):
     if alpha == 255:
         return fgColor
 
-    dAlpha = float(alpha)/255.0
+    dAlpha = float(alpha) / 255.0
     dFirst = float(fgColor) * dAlpha
     dSecond = float(bgColor) * (1.0 - dAlpha)
     return min(255, round(dFirst + dSecond))
@@ -150,20 +149,14 @@ def qtCssColor(color, bgColor=None):
         rTransp = transparentColor(color.red(), bgColor.red(), alpha)
         gTransp = transparentColor(color.green(), bgColor.green(), alpha)
         bTransp = transparentColor(color.blue(), bgColor.blue(), alpha)
-    return ''.join(('#', toHex(rTransp), toHex(gTransp), toHex(bTransp)))
+    return "".join(("#", toHex(rTransp), toHex(gTransp), toHex(bTransp)))
 
 
 def colorAsString(color, hexadecimal=False):
     """Converts the given color to a string"""
     if hexadecimal:
-        return '#' + ''.join([toHex(color.red()),
-                              toHex(color.green()),
-                              toHex(color.blue()),
-                              toHex(color.alpha())])
-    return ','.join([str(color.red()),
-                     str(color.green()),
-                     str(color.blue()),
-                     str(color.alpha())])
+        return "#" + "".join([toHex(color.red()), toHex(color.green()), toHex(color.blue()), toHex(color.alpha())])
+    return ",".join([str(color.red()), str(color.green()), str(color.blue()), str(color.alpha())])
 
 
 def buildFont(fontAsStr):
@@ -179,7 +172,7 @@ def fontAsString(font):
     return font.toString()
 
 
-excludeFontList = ['webdings', 'cursor', 'mathematical', 'dingbats', 'hershey']
+excludeFontList = ["webdings", "cursor", "mathematical", "dingbats", "hershey"]
 
 
 def isExcludeFont(family):
@@ -224,49 +217,47 @@ def colorFontToJSON(pythonObj):
         return colorAsString(pythonObj)
     if isinstance(pythonObj, QFont):
         return fontAsString(pythonObj)
-    raise TypeError(repr(pythonObj) + ' is not JSON serializable')
+    raise TypeError(repr(pythonObj) + " is not JSON serializable")
 
 
 def colorFontFromJSON(jsonObj):
     """Custom deserialization"""
-    if '__class__' in jsonObj:
-        if jsonObj['__class__'] == 'QColor':
-            return buildColor(jsonObj['__value__'])
-        if jsonObj['__class__'] == 'QFont':
-            return buildFont(jsonObj['__value__'])
+    if "__class__" in jsonObj:
+        if jsonObj["__class__"] == "QColor":
+            return buildColor(jsonObj["__value__"])
+        if jsonObj["__class__"] == "QFont":
+            return buildFont(jsonObj["__value__"])
     return jsonObj
 
 
 def getZoomedMonoFont():
     """Provides the current mono font respecting zoom"""
-    font = QFont(GlobalData().skin['monoFont'])
-    font.setPointSize(font.pointSize() + Settings()['zoom'])
+    font = QFont(GlobalData().skin["monoFont"])
+    font.setPointSize(font.pointSize() + Settings()["zoom"])
     return font
 
 
 def getZoomedCFMonoFont():
     """Provides the current mono font respecting zoom"""
-    font = QFont(GlobalData().skin['cfMonoFont'])
-    font.setPointSize(font.pointSize() + Settings()['flowZoom'])
+    font = QFont(GlobalData().skin["cfMonoFont"])
+    font.setPointSize(font.pointSize() + Settings()["flowZoom"])
     return font
 
 
 def getZoomedCFBadgeFont():
     """Provides the current control flow badge font respecting zoom"""
-    font = QFont(GlobalData().skin['badgeFont'])
-    font.setPointSize(font.pointSize() + Settings()['flowZoom'])
+    font = QFont(GlobalData().skin["badgeFont"])
+    font.setPointSize(font.pointSize() + Settings()["flowZoom"])
     return font
 
 
 def getZoomedMarginFont():
     """Provides the current margin font respecting zoom"""
-    font = QFont(GlobalData().skin['lineNumFont'])
-    font.setPointSize(font.pointSize() + Settings()['zoom'])
+    font = QFont(GlobalData().skin["lineNumFont"])
+    font.setPointSize(font.pointSize() + Settings()["zoom"])
     return font
 
 
 def setLineEditBackground(widget, color, bgColor=None):
     """Sets the widget background to the given color"""
-    widget.setStyleSheet('QLineEdit {background-color: ' +
-                         qtCssColor(color, bgColor) + '}')
-
+    widget.setStyleSheet("QLineEdit {background-color: " + qtCssColor(color, bgColor) + "}")

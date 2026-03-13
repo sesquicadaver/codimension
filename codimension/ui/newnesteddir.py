@@ -25,7 +25,6 @@ from .qt import QDialog, QDialogButtonBox, QEvent, QLabel, QLineEdit, QObject, Q
 
 
 class NewProjectDirDialog(QDialog):
-
     """New project directory dialog"""
 
     def __init__(self, parent=None):
@@ -49,16 +48,14 @@ class NewProjectDirDialog(QDialog):
         vboxlayout.addWidget(inputLabel)
 
         self.__dirnameEdit = QLineEdit(self)
-        self.__dirnameEdit.setToolTip("Subdirectory name without "
-                                      "path separators")
+        self.__dirnameEdit.setToolTip("Subdirectory name without path separators")
         self.__dirnameEdit.installEventFilter(self)
         self.__dirnameEdit.textEdited.connect(self.__onTextChanged)
         vboxlayout.addWidget(self.__dirnameEdit)
 
         self.__buttonBox = QDialogButtonBox(self)
         self.__buttonBox.setOrientation(Qt.Horizontal)
-        self.__buttonBox.setStandardButtons(QDialogButtonBox.Cancel |
-                                            QDialogButtonBox.Ok)
+        self.__buttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         vboxlayout.addWidget(self.__buttonBox)
 
         self.__buttonBox.accepted.connect(self.accept)
@@ -66,7 +63,7 @@ class NewProjectDirDialog(QDialog):
 
     def __onTextChanged(self, text):
         """Triggered when the input text has been changed"""
-        self.okButton.setEnabled(text != '')
+        self.okButton.setEnabled(text != "")
 
     def getDirName(self):
         """Provides the user input"""

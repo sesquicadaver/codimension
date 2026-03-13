@@ -48,7 +48,6 @@ MAX_LINES = 10000
 
 
 class LogViewer(QWidget):
-
     """The log (+stdout, +stderr) viewer widget"""
 
     def __init__(self, parent=None):
@@ -66,16 +65,14 @@ class LogViewer(QWidget):
         # create the context menu
         self.__menu = QMenu(self)
         self.__selectAllMenuItem = self.__menu.addAction(
-            getIcon('selectall.png'), 'Select All', self.messages.selectAll)
-        self.__copyMenuItem = self.__menu.addAction(
-            getIcon('copymenu.png'), 'Copy', self.messages.copy)
+            getIcon("selectall.png"), "Select All", self.messages.selectAll
+        )
+        self.__copyMenuItem = self.__menu.addAction(getIcon("copymenu.png"), "Copy", self.messages.copy)
         self.__menu.addSeparator()
-        self.__clearMenuItem = self.__menu.addAction(
-            getIcon('trash.png'), 'Clear', self.__clear)
+        self.__clearMenuItem = self.__menu.addAction(getIcon("trash.png"), "Clear", self.__clear)
 
         self.messages.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.messages.customContextMenuRequested.connect(
-            self.__handleShowContextMenu)
+        self.messages.customContextMenuRequested.connect(self.__handleShowContextMenu)
         self.messages.copyAvailable.connect(self.__onCopyAvailable)
 
         self.cNormalFormat = self.messages.currentCharFormat()
@@ -100,13 +97,11 @@ class LogViewer(QWidget):
         # self.messages.setFontPointSize( 12.0 )
 
         # Buttons
-        self.selectAllButton = QAction(getIcon('selectall.png'),
-                                       'Select all', self)
+        self.selectAllButton = QAction(getIcon("selectall.png"), "Select all", self)
         self.selectAllButton.triggered.connect(self.messages.selectAll)
-        self.copyButton = QAction(getIcon('copymenu.png'),
-                                  'Copy to clipboard', self)
+        self.copyButton = QAction(getIcon("copymenu.png"), "Copy to clipboard", self)
         self.copyButton.triggered.connect(self.messages.copy)
-        self.clearButton = QAction(getIcon('trash.png'), 'Clear all', self)
+        self.clearButton = QAction(getIcon("trash.png"), "Clear all", self)
         self.clearButton.triggered.connect(self.__clear)
 
         # Toolbar
@@ -152,7 +147,7 @@ class LogViewer(QWidget):
             else:
                 self.messages.setCurrentCharFormat(self.cNormalFormat)
             self.messages.insertPlainText(txt)
-            self.messages.insertPlainText('\n')
+            self.messages.insertPlainText("\n")
             self.messages.ensureCursorVisible()
             self.__updateToolbarButtons()
 
@@ -166,9 +161,7 @@ class LogViewer(QWidget):
 
     def append(self, txt):
         """Decides what the message is - error or not - and append it then"""
-        if txt.startswith('CRITICAL') or \
-           txt.startswith('ERROR') or \
-           txt.startswith('WARNING'):
+        if txt.startswith("CRITICAL") or txt.startswith("ERROR") or txt.startswith("WARNING"):
             self.appendError(txt)
         else:
             self.appendMessage(txt)

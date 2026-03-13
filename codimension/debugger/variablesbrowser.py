@@ -19,7 +19,6 @@
 
 """The debugger namespace viewer implementation"""
 
-
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.qt import QAbstractItemView, QHeaderView, QRegExp, Qt, QTreeWidget
 from utils.settings import Settings
@@ -35,31 +34,27 @@ from .variableitems import (
 )
 from .viewvariable import ViewVariableDialog
 
-INDICATOR_PATTERN = "|".join([QRegExp.escape(indicator)
-                              for indicator in INDICATORS])
-RX_CLASS = QRegExp('<.*(instance|object) at 0x.*>')
-RX_CLASS2 = QRegExp('class .*')
-RX_CLASS3 = QRegExp('<class .* at 0x.*>')
-DVAR_RX_CLASS1 = QRegExp(
-    r'<.*(instance|object) at 0x.*>({0})'.format(INDICATOR_PATTERN))
-DVAR_RX_CLASS2 = QRegExp(
-    r'<class .* at 0x.*>({0})'.format(INDICATOR_PATTERN))
-DVAR_RX_ARRAY_ELEMENT = QRegExp(r'^\d+$')
-DVAR_RX_SPECIAL_ARRAY_ELEMENT = QRegExp(
-    r'^\d+({0})$'.format(INDICATOR_PATTERN))
+INDICATOR_PATTERN = "|".join([QRegExp.escape(indicator) for indicator in INDICATORS])
+RX_CLASS = QRegExp("<.*(instance|object) at 0x.*>")
+RX_CLASS2 = QRegExp("class .*")
+RX_CLASS3 = QRegExp("<class .* at 0x.*>")
+DVAR_RX_CLASS1 = QRegExp(r"<.*(instance|object) at 0x.*>({0})".format(INDICATOR_PATTERN))
+DVAR_RX_CLASS2 = QRegExp(r"<class .* at 0x.*>({0})".format(INDICATOR_PATTERN))
+DVAR_RX_ARRAY_ELEMENT = QRegExp(r"^\d+$")
+DVAR_RX_SPECIAL_ARRAY_ELEMENT = QRegExp(r"^\d+({0})$".format(INDICATOR_PATTERN))
 RX_NONPRINTABLE = QRegExp(r"""(\\x\d\d)+""")
 
 TYPE_TO_INDICATORS = {
     # Python types
-    'list': '[]',
-    'tuple': '()',
-    'dict': '{:}',
-    'set': '{}',
-    'frozenset': '{}'}
+    "list": "[]",
+    "tuple": "()",
+    "dict": "{:}",
+    "set": "{}",
+    "frozenset": "{}",
+}
 
 
 class VariablesBrowser(QTreeWidget):
-
     """Variables browser implementation"""
 
     def __init__(self, debugger, parent=None):
@@ -93,7 +88,7 @@ class VariablesBrowser(QTreeWidget):
         self.setSortingEnabled(True)
 
     def scrollTo(self, index, hint=QAbstractItemView.EnsureVisible):
-        """ Disables horizontal scrolling when a row is clicked.
+        """Disables horizontal scrolling when a row is clicked.
 
         Found here: http://qt-project.org/faq/answer/
                            how_can_i_disable_autoscroll_when
@@ -152,11 +147,9 @@ class VariablesBrowser(QTreeWidget):
         if len(vlist):
             self.resortEnabled = False
             self.setSortingEnabled(False)
-            for (var, vtype, value) in vlist:
+            for var, vtype, value in vlist:
                 item = self.__addItem(None, areGlobals, vtype, var, value)
-                item.setHidden(not self.__variableToShow(item.getName(),
-                                                         item.isGlobal(),
-                                                         item.getType()))
+                item.setHidden(not self.__variableToShow(item.getName(), item.isGlobal(), item.getType()))
 
             # reexpand tree
             openItems = sorted(self.openItems[:])
@@ -215,9 +208,7 @@ class VariablesBrowser(QTreeWidget):
             item = self.__findItem(vlist[0], 0)
             for var, vtype, value in vlist[1:]:
                 newItem = self.__addItem(item, isGlobal, vtype, var, value)
-                newItem.setHidden(not self.__variableToShow(newItem.getName(),
-                                                            newItem.isGlobal(),
-                                                            newItem.getType()))
+                newItem.setHidden(not self.__variableToShow(newItem.getName(), newItem.isGlobal(), newItem.getType()))
 
         # reexpand tree
         openItems = sorted(self.openItems[:])
@@ -239,14 +230,12 @@ class VariablesBrowser(QTreeWidget):
                 self.setCurrentItem(citm)
                 citm.setSelected(True)
                 if self.__scrollToItem:
-                    self.scrollToItem(self.__scrollToItem,
-                                      QAbstractItemView.PositionAtTop)
+                    self.scrollToItem(self.__scrollToItem, QAbstractItemView.PositionAtTop)
                 else:
                     self.scrollToItem(citm, QAbstractItemView.PositionAtTop)
                 self.current = None
         elif self.__scrollToItem:
-            self.scrollToItem(self.__scrollToItem,
-                              QAbstractItemView.PositionAtTop)
+            self.scrollToItem(self.__scrollToItem, QAbstractItemView.PositionAtTop)
 
         self.__resizeSections()
 
@@ -255,44 +244,31 @@ class VariablesBrowser(QTreeWidget):
             self.setSortingEnabled(True)
         self.__resort()
 
-    def __generateItem(self, parentItem, isGlobal,
-                       varName, varValue, varType, isSpecial=False):
+    def __generateItem(self, parentItem, isGlobal, varName, varValue, varType, isSpecial=False):
         """Generates an appropriate variable item"""
         if isSpecial:
-            if DVAR_RX_CLASS1.exactMatch(varName) or \
-               DVAR_RX_CLASS2.exactMatch(varName):
+            if DVAR_RX_CLASS1.exactMatch(varName) or DVAR_RX_CLASS2.exactMatch(varName):
                 isSpecial = False
 
         if RX_CLASS2.exactMatch(varType):
-            return SpecialVariableItem(parentItem, self.__debugger, isGlobal,
-                                       varName, varValue, varType[7:-1],
-                                       self.framenr)
+            return SpecialVariableItem(
+                parentItem, self.__debugger, isGlobal, varName, varValue, varType[7:-1], self.framenr
+            )
 
-        elif varType != "void *" and \
-             (RX_CLASS.exactMatch(varValue) or
-              RX_CLASS3.exactMatch(varValue) or
-              isSpecial):
+        elif varType != "void *" and (RX_CLASS.exactMatch(varValue) or RX_CLASS3.exactMatch(varValue) or isSpecial):
             if DVAR_RX_SPECIAL_ARRAY_ELEMENT.exactMatch(varName):
-                return SpecialArrayElementVariableItem(parentItem,
-                                                       self.__debugger,
-                                                       isGlobal,
-                                                       varName, varValue,
-                                                       varType,
-                                                       self.framenr)
-            return SpecialVariableItem(parentItem, self.__debugger, isGlobal,
-                                       varName, varValue, varType,
-                                       self.framenr)
-        elif varType in ["numpy.ndarray", "django.MultiValueDict",
-                         "array.array"]:
-            return SpecialVariableItem(parentItem, self.__debugger, isGlobal,
-                                       varName, "{0} items".format(varValue),
-                                       varType, self.framenr)
+                return SpecialArrayElementVariableItem(
+                    parentItem, self.__debugger, isGlobal, varName, varValue, varType, self.framenr
+                )
+            return SpecialVariableItem(parentItem, self.__debugger, isGlobal, varName, varValue, varType, self.framenr)
+        elif varType in ["numpy.ndarray", "django.MultiValueDict", "array.array"]:
+            return SpecialVariableItem(
+                parentItem, self.__debugger, isGlobal, varName, "{0} items".format(varValue), varType, self.framenr
+            )
         else:
             if DVAR_RX_ARRAY_ELEMENT.exactMatch(varName):
-                return ArrayElementVariableItem(parentItem, isGlobal,
-                                                varName, varValue, varType)
-            return VariableItem(parentItem, isGlobal,
-                                varName, varValue, varType)
+                return ArrayElementVariableItem(parentItem, isGlobal, varName, varValue, varType)
+            return VariableItem(parentItem, isGlobal, varName, varValue, varType)
 
         print("WARNING: Reached the end without forming a variable!")
 
@@ -301,8 +277,8 @@ class VariablesBrowser(QTreeWidget):
         try:
             dvtype = VAR_TYPE_DISP_STRINGS[varType]
         except KeyError:
-            if varType == 'classobj':
-                dvtype = VAR_TYPE_DISP_STRINGS['instance']
+            if varType == "classobj":
+                dvtype = VAR_TYPE_DISP_STRINGS["instance"]
             else:
                 dvtype = varType
         return dvtype
@@ -313,17 +289,14 @@ class VariablesBrowser(QTreeWidget):
             parentItem = self
 
         try:
-            varName = '{0}{1}'.format(varName, TYPE_TO_INDICATORS[varType])
+            varName = "{0}{1}".format(varName, TYPE_TO_INDICATORS[varType])
         except KeyError:
             pass
 
         displayType = self.__getDisplayType(varType)
-        if varType in ['list', 'tuple', 'dict', 'set', 'frozenset']:
-            return self.__generateItem(parentItem, isGlobal,
-                                       varName, str(varValue) + " item(s)",
-                                       displayType,
-                                       True)
-        if varType in ['unicode', 'str']:
+        if varType in ["list", "tuple", "dict", "set", "frozenset"]:
+            return self.__generateItem(parentItem, isGlobal, varName, str(varValue) + " item(s)", displayType, True)
+        if varType in ["unicode", "str"]:
             if RX_NONPRINTABLE.indexIn(varValue) != -1:
                 stringValue = varValue
             else:
@@ -332,12 +305,9 @@ class VariablesBrowser(QTreeWidget):
                     displayType += " (chars: " + str(len(stringValue)) + ")"
                 except Exception:
                     stringValue = varValue
-            return self.__generateItem(parentItem, isGlobal,
-                                       varName, stringValue,
-                                       displayType)
+            return self.__generateItem(parentItem, isGlobal, varName, stringValue, displayType)
 
-        return self.__generateItem(parentItem, isGlobal,
-                                   varName, varValue, displayType)
+        return self.__generateItem(parentItem, isGlobal, varName, varValue, displayType)
 
     def mouseDoubleClickEvent(self, mouseEvent):
         """Handles the mouse double click event"""
@@ -348,9 +318,7 @@ class VariablesBrowser(QTreeWidget):
         childCount = item.childCount()
         if childCount == 0:
             # Show the dialog
-            dlg = ViewVariableDialog(self.__getQualifiedName(item),
-                                     item.getType(), item.getValue(),
-                                     item.isGlobal())
+            dlg = ViewVariableDialog(self.__getQualifiedName(item), item.getType(), item.getValue(), item.isGlobal())
             dlg.exec_()
         else:
             QTreeWidget.mouseDoubleClickEvent(self, mouseEvent)
@@ -358,7 +326,7 @@ class VariablesBrowser(QTreeWidget):
     def __getQualifiedName(self, item):
         """Provides a fully qualified name"""
         name = item.getName()
-        if name[-2:] in ['[]', '{}', '()']:
+        if name[-2:] in ["[]", "{}", "()"]:
             name = name[:-2]
 
         par = item.parent()
@@ -366,17 +334,17 @@ class VariablesBrowser(QTreeWidget):
         # build up the fully qualified name
         while par is not None:
             pname = par.getName()
-            if pname[-2:] in ['[]', '{}', '()']:
+            if pname[-2:] in ["[]", "{}", "()"]:
                 if nlist[0].endswith("."):
-                    nlist[0] = '[%s].' % nlist[0][:-1]
+                    nlist[0] = "[%s]." % nlist[0][:-1]
                 else:
-                    nlist[0] = '[%s]' % nlist[0]
+                    nlist[0] = "[%s]" % nlist[0]
                 nlist.insert(0, pname[:-2])
             else:
-                nlist.insert(0, '%s.' % pname)
+                nlist.insert(0, "%s." % pname)
             par = par.parent()
 
-        name = ''.join(nlist)
+        name = "".join(nlist)
         return name
 
     def __buildTreePath(self, item):
@@ -424,8 +392,7 @@ class VariablesBrowser(QTreeWidget):
     def __resort(self):
         """Resorts the tree"""
         if self.resortEnabled:
-            self.sortItems(self.sortColumn(),
-                           self.header().sortIndicatorOrder())
+            self.sortItems(self.sortColumn(), self.header().sortIndicatorOrder())
 
     def getShownAndTotalCounts(self):
         """Provides the total number of variables and currently shown"""
@@ -461,9 +428,7 @@ class VariablesBrowser(QTreeWidget):
 
         for index in range(self.topLevelItemCount()):
             item = self.topLevelItem(index)
-            toShow = self.__variableToShow(item.getName(),
-                                           item.isGlobal(),
-                                           item.getType())
+            toShow = self.__variableToShow(item.getName(), item.isGlobal(), item.getType())
             item.setHidden(not toShow)
             if toShow:
                 self.__applyFiltersRecursively(item)
@@ -480,9 +445,7 @@ class VariablesBrowser(QTreeWidget):
             childItem = item.child(index)
             if not hasattr(childItem, "getName"):
                 continue
-            toShow = self.__variableToShow(childItem.getName(),
-                                           childItem.isGlobal(),
-                                           childItem.getType())
+            toShow = self.__variableToShow(childItem.getName(), childItem.isGlobal(), childItem.getType())
             childItem.setHidden(not toShow)
             if toShow:
                 self.__applyFiltersRecursively(childItem)
@@ -494,10 +457,8 @@ class VariablesBrowser(QTreeWidget):
 
         # Strip indicators from the name
         varName = str(varName)
-        if varName.endswith("]") or \
-           varName.endswith("}") or \
-           varName.endswith(")"):
-            varName = varName[:-2]   # Strip display purpose decor if so
+        if varName.endswith("]") or varName.endswith("}") or varName.endswith(")"):
+            varName = varName[:-2]  # Strip display purpose decor if so
 
         settings = Settings()
         for _, settingName, matchFunction in VARIABLE_FILTERS:

@@ -67,23 +67,21 @@ def hideSearchTooltip():
 
 
 class MatchTableItem(QTreeWidgetItem):
-
     """Match item"""
 
     def __init__(self, items, tooltip):
-        items.insert(1, '')
+        items.insert(1, "")
         QTreeWidgetItem.__init__(self, items)
         self.__intColumn = 0
         self.__tooltip = tooltip
         self.__fileModified = False
-        self.setIcon(1, getIcon('findtooltip.png'))
+        self.setIcon(1, getIcon("findtooltip.png"))
 
     def __lt__(self, other):
         """Integer or string custom sorting"""
         sortColumn = self.treeWidget().sortColumn()
         if sortColumn == self.__intColumn:
-            return int(self.text(sortColumn)) < \
-                   int(other.text(sortColumn))
+            return int(self.text(sortColumn)) < int(other.text(sortColumn))
         return self.text(sortColumn) < other.text(sortColumn)
 
     def setModified(self, status):
@@ -115,7 +113,6 @@ class MatchTableItem(QTreeWidgetItem):
 
 
 class MatchTableFileItem(QTreeWidgetItem):
-
     """Match file item"""
 
     def __init__(self, items, uuid):
@@ -124,9 +121,8 @@ class MatchTableFileItem(QTreeWidgetItem):
 
 
 class SearchResultsTreeWidget(QTreeWidget):
-
     """Tree widget derivation to intercept the fact that the mouse cursor
-       left the widget
+    left the widget
     """
 
     lastEntered = None
@@ -138,7 +134,7 @@ class SearchResultsTreeWidget(QTreeWidget):
         self.setItemsExpandable(True)
         self.setUniformRowHeights(True)
         self.setItemDelegate(NoOutlineHeightDelegate(4))
-        headerLabels = ['File name / line', '', 'Text']
+        headerLabels = ["File name / line", "", "Text"]
         self.setHeaderLabels(headerLabels)
         self.setMouseTracking(True)
 
@@ -234,7 +230,7 @@ class SearchResultsTreeWidget(QTreeWidget):
     @staticmethod
     def __resultClicked(item, column):
         """Handles the single click"""
-        del item    # unused argument
+        del item  # unused argument
         del column  # unused argument
         hideSearchTooltip()
 
@@ -259,9 +255,7 @@ class SearchResultsTreeWidget(QTreeWidget):
             self.lastEntered = item
 
 
-
 class ResultsViewerWidget(QWidget):
-
     """A header plus a tree widget"""
 
     def __init__(self, providerId, results, parameters, searchId, parent):
@@ -274,15 +268,13 @@ class ResultsViewerWidget(QWidget):
         self.__removeItemButton = parent.removeItemButton
 
         self.resultsTree = SearchResultsTreeWidget()
-        self.resultsTree.itemSelectionChanged.connect(
-            self.__selectionChanged)
+        self.resultsTree.itemSelectionChanged.connect(self.__selectionChanged)
 
         self.indicator = HeaderLabel()
-        self.providerLabel = HeaderLabel(
-            GlobalData().searchProviders[providerId].getName())
-        self.providerLabel.setToolTip('Results provider')
+        self.providerLabel = HeaderLabel(GlobalData().searchProviders[providerId].getName())
+        self.providerLabel.setToolTip("Results provider")
         self.timestampLabel = HeaderLabel()
-        self.timestampLabel.setToolTip('Search timestamp')
+        self.timestampLabel.setToolTip("Search timestamp")
 
         self.__labelLayout = QHBoxLayout()
         self.__labelLayout.setContentsMargins(0, 0, 0, 0)
@@ -293,10 +285,9 @@ class ResultsViewerWidget(QWidget):
         # There could be many labels with the search parameters
         for item in GlobalData().searchProviders[providerId].serialize(parameters):
             paramLabel = HeaderFitLabel()
-            paramLabel.setText('%s: %s' % item)
+            paramLabel.setText("%s: %s" % item)
             paramLabel.setAlignment(Qt.AlignLeft)
-            paramLabel.setSizePolicy(QSizePolicy.Expanding,
-                                     QSizePolicy.Fixed)
+            paramLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             self.__labelLayout.addWidget(paramLabel)
 
         self.__labelLayout.addWidget(self.timestampLabel)
@@ -324,7 +315,7 @@ class ResultsViewerWidget(QWidget):
                 matchText = " (1 match)"
             else:
                 matchText = " (" + str(matched) + " matches)"
-            columns = [item.fileName, '', matchText]
+            columns = [item.fileName, "", matchText]
             fileItem = MatchTableFileItem(columns, item.bufferUUID)
             _, icon, _ = getFileProperties(item.fileName)
             fileItem.setIcon(0, icon)
@@ -340,10 +331,11 @@ class ResultsViewerWidget(QWidget):
             fileItem.setExpanded(True)
 
         # Update the header with the total number of matches
-        headerLabels = ["File name / line (total files: " +
-                        str(len(results)) + ")",
-                        '',
-                        "Text (total matches: " + str(totalMatched) + ")"]
+        headerLabels = [
+            "File name / line (total files: " + str(len(results)) + ")",
+            "",
+            "Text (total matches: " + str(totalMatched) + ")",
+        ]
         self.resultsTree.setHeaderLabels(headerLabels)
 
         # Resizing the table
@@ -355,9 +347,8 @@ class ResultsViewerWidget(QWidget):
 
     def updateIndicator(self, own, total):
         """Updates the indicator label and tooltip"""
-        self.indicator.setText('%d of %d' % (own, total))
-        self.indicator.setToolTip('Search result %d out of %d' %
-                                  (own, total))
+        self.indicator.setText("%d of %d" % (own, total))
+        self.indicator.setToolTip("Search result %d out of %d" % (own, total))
 
     def clear(self):
         """Clean up"""
@@ -382,8 +373,7 @@ class ResultsViewerWidget(QWidget):
 
         if isinstance(self.selectedItem, MatchTableFileItem):
             # This is a top level item
-            topItemIndex = self.resultsTree.indexOfTopLevelItem(
-                self.selectedItem)
+            topItemIndex = self.resultsTree.indexOfTopLevelItem(self.selectedItem)
             self.resultsTree.takeTopLevelItem(topItemIndex)
         else:
             # This is a file item, i.e. a child
@@ -392,8 +382,7 @@ class ResultsViewerWidget(QWidget):
             parentItem.takeChild(childIndex)
             if parentItem.childCount() == 0:
                 # The top level item needs to be deleted too
-                topItemIndex = self.resultsTree.indexOfTopLevelItem(
-                    parentItem)
+                topItemIndex = self.resultsTree.indexOfTopLevelItem(parentItem)
                 self.resultsTree.takeTopLevelItem(topItemIndex)
 
         if self.resultsTree.topLevelItemCount() > 0:
@@ -413,16 +402,16 @@ class ResultsViewerWidget(QWidget):
             total += matchCount
             topLevelItem.setText(2, matchText)
 
-        headerLabels = ["File name / line (total files: " +
-                        str(fileCount) + ")",
-                        '',
-                        "Text (total matches: " + str(total) + ")"]
+        headerLabels = [
+            "File name / line (total files: " + str(fileCount) + ")",
+            "",
+            "Text (total matches: " + str(total) + ")",
+        ]
         self.resultsTree.setHeaderLabels(headerLabels)
 
     def doAgain(self, resultsViewer):
         """Performs the same search again"""
-        GlobalData().searchProviders[self.__providerId].searchAgain(
-            self.searchId, self.__parameters, resultsViewer)
+        GlobalData().searchProviders[self.__providerId].searchAgain(self.searchId, self.__parameters, resultsViewer)
 
     def canDoAgain(self):
         """Tells if the do again functionality is available"""
@@ -442,7 +431,6 @@ class ResultsViewerWidget(QWidget):
 
 
 class SearchResultsViewer(QWidget):
-
     """Search results viewer tab widget"""
 
     def __init__(self, parent=None):
@@ -462,8 +450,7 @@ class SearchResultsViewer(QWidget):
         self.__noneLabel.setFont(self.__headerFont)
         self.__noneLabel.setAutoFillBackground(True)
         noneLabelPalette = self.__noneLabel.palette()
-        noneLabelPalette.setColor(QPalette.Background,
-                                  GlobalData().skin['nolexerPaper'])
+        noneLabelPalette.setColor(QPalette.Background, GlobalData().skin["nolexerPaper"])
         self.__noneLabel.setPalette(noneLabelPalette)
 
         self.__createLayout(parent)
@@ -476,25 +463,19 @@ class SearchResultsViewer(QWidget):
         del parent  # unused argument
 
         # Buttons etc.
-        self.clearButton = QAction(getIcon('trash.png'),
-                                   'Delete current results', self)
+        self.clearButton = QAction(getIcon("trash.png"), "Delete current results", self)
         self.clearButton.triggered.connect(self.__clear)
 
-        self.prevButton = QAction(getIcon('1leftarrow.png'),
-                                  'Previous results', self)
+        self.prevButton = QAction(getIcon("1leftarrow.png"), "Previous results", self)
         self.prevButton.triggered.connect(self.__previous)
 
-        self.nextButton = QAction(getIcon('1rightarrow.png'),
-                                  'Next results', self)
+        self.nextButton = QAction(getIcon("1rightarrow.png"), "Next results", self)
         self.nextButton.triggered.connect(self.__next)
 
-        self.doAgainButton = QAction(getIcon('searchagain.png'),
-                                     'Do again', self)
+        self.doAgainButton = QAction(getIcon("searchagain.png"), "Do again", self)
         self.doAgainButton.triggered.connect(self.__doAgain)
 
-        self.removeItemButton = QAction(getIcon('delitem.png'),
-                                        'Remove currently selected item (Del)',
-                                        self)
+        self.removeItemButton = QAction(getIcon("delitem.png"), "Remove currently selected item (Del)", self)
         self.removeItemButton.triggered.connect(self.__removeItem)
 
         # The toolbar
@@ -583,8 +564,7 @@ class SearchResultsViewer(QWidget):
     def onBufferModified(self, fileName, uuid):
         """Triggered when a buffer is modified"""
         for index in range(self.__results.count()):
-            self.__results.widget(index).resultsTree.onBufferModified(
-                fileName, uuid)
+            self.__results.widget(index).resultsTree.onBufferModified(fileName, uuid)
 
     def __previous(self):
         """Switch to the previous results"""
@@ -656,13 +636,10 @@ class SearchResultsViewer(QWidget):
     def showReport(self, providerId, results, parameters, searchId=None):
         """Shows the find in files results"""
         # Memorize the screen width
-        searchTooltip.setScreenWidth(
-            GlobalData().application.desktop().screenGeometry().width())
+        searchTooltip.setScreenWidth(GlobalData().application.desktop().screenGeometry().width())
 
         if searchId is None:
-            resultWidget = ResultsViewerWidget(providerId, results,
-                                               parameters,
-                                               str(uuid1()), self)
+            resultWidget = ResultsViewerWidget(providerId, results, parameters, str(uuid1()), self)
             index = self.__results.addWidget(resultWidget)
         else:
             # Find the widget with this searchId
@@ -673,9 +650,7 @@ class SearchResultsViewer(QWidget):
                     break
             if not found:
                 # add as a new one
-                resultWidget = ResultsViewerWidget(providerId, results,
-                                                   parameters,
-                                                   str(uuid1()), self)
+                resultWidget = ResultsViewerWidget(providerId, results, parameters, str(uuid1()), self)
                 index = self.__results.addWidget(resultWidget)
             else:
                 # Repopulate it
@@ -698,4 +673,3 @@ class SearchResultsViewer(QWidget):
     def __saveProjectResults(self):
         """Serialize to the disk the search results"""
         # Should not overwrite empty results when IDE is loaded
-

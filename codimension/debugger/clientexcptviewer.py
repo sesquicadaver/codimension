@@ -19,7 +19,6 @@
 
 """Client exceptions viewer"""
 
-
 import os.path
 
 from ui.itemdelegates import NoOutlineHeightDelegate
@@ -51,7 +50,6 @@ EXCEPTION_ITEM = 1
 
 
 class StackFrameItem(QTreeWidgetItem):
-
     """One stack trace frame"""
 
     def __init__(self, parentItem, fileName, lineNumber, funcName, funcArgs):
@@ -87,11 +85,9 @@ class StackFrameItem(QTreeWidgetItem):
 
 
 class ExceptionItem(QTreeWidgetItem):
-
     """One exception item"""
 
-    def __init__(self, parentItem, exceptionType, exceptionMessage,
-                 stackTrace):
+    def __init__(self, parentItem, exceptionType, exceptionMessage, stackTrace):
         QTreeWidgetItem.__init__(self, parentItem)
         self.__count = 1
         self.__exceptionType = exceptionType
@@ -101,11 +97,10 @@ class ExceptionItem(QTreeWidgetItem):
             self.setText(0, str(exceptionType))
             self.setToolTip(0, "Type: " + str(exceptionType))
         else:
-            self.setText(0, str(exceptionType) + ", " +
-                         getDisplayValue(exceptionMessage))
+            self.setText(0, str(exceptionType) + ", " + getDisplayValue(exceptionMessage))
             tooltip = "Type: " + str(exceptionType) + "\n" + "Message: "
             tooltipMessage = getTooltipValue(exceptionMessage)
-            if '\r' in tooltipMessage or '\n' in tooltipMessage:
+            if "\r" in tooltipMessage or "\n" in tooltipMessage:
                 tooltip += "\n" + tooltipMessage
             else:
                 tooltip += tooltipMessage
@@ -117,8 +112,7 @@ class ExceptionItem(QTreeWidgetItem):
                 lineNumber = entry[1]
                 funcName = entry[2]
                 funcArguments = entry[3]
-                StackFrameItem(self, fileName, lineNumber,
-                               funcName, funcArguments)
+                StackFrameItem(self, fileName, lineNumber, funcName, funcArguments)
 
     @staticmethod
     def getType():
@@ -137,12 +131,16 @@ class ExceptionItem(QTreeWidgetItem):
         """Increments the counter of the same exceptions"""
         self.__count += 1
         if self.__exceptionMessage == "" or self.__exceptionMessage is None:
-            self.setText(0, str(self.__exceptionType) +
-                         " (" + str(self.__count) + " times)")
+            self.setText(0, str(self.__exceptionType) + " (" + str(self.__count) + " times)")
         else:
-            self.setText(0, str(self.__exceptionType) +
-                         " (" + str(self.__count) + " times), " +
-                         getDisplayValue(self.__exceptionMessage))
+            self.setText(
+                0,
+                str(self.__exceptionType)
+                + " ("
+                + str(self.__count)
+                + " times), "
+                + getDisplayValue(self.__exceptionMessage),
+            )
 
     def equal(self, exceptionType, exceptionMessage, stackTrace):
         """Returns True if the exceptions are equal"""
@@ -160,15 +158,13 @@ class ExceptionItem(QTreeWidgetItem):
 
         for index in range(count):
             child = self.child(index)
-            otherLocation = stackTrace[index][0] + ":" + \
-                            str(stackTrace[index][1])
+            otherLocation = stackTrace[index][0] + ":" + str(stackTrace[index][1])
             if otherLocation != child.getLocation():
                 return False
         return True
 
 
 class ClientExceptionsViewer(QWidget):
-
     """Implements the client exceptions viewer for a debugger"""
 
     sigClientExceptionsCleared = pyqtSignal()
@@ -191,10 +187,8 @@ class ClientExceptionsViewer(QWidget):
     def __createPopupMenu(self):
         """Creates the popup menu"""
         self.__excptMenu = QMenu()
-        self.__addToIgnoreMenuItem = self.__excptMenu.addAction(
-            "Add to ignore list", self.__onAddToIgnore)
-        self.__jumpToCodeMenuItem = self.__excptMenu.addAction(
-            "Jump to code", self.__onJumpToCode)
+        self.__addToIgnoreMenuItem = self.__excptMenu.addAction("Add to ignore list", self.__onAddToIgnore)
+        self.__jumpToCodeMenuItem = self.__excptMenu.addAction("Jump to code", self.__onJumpToCode)
 
     def __createLayout(self):
         """Creates the widget layout"""
@@ -203,9 +197,8 @@ class ClientExceptionsViewer(QWidget):
         verticalLayout.setSpacing(0)
 
         self.__excptLabel = HeaderFitLabel(self)
-        self.__excptLabel.setText('Exceptions')
-        self.__excptLabel.setSizePolicy(QSizePolicy.Expanding,
-                                        QSizePolicy.Fixed)
+        self.__excptLabel.setText("Exceptions")
+        self.__excptLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.__excptLabel.setMinimumWidth(10)
 
         self.headerToolbar = QToolBar(self)
@@ -224,18 +217,15 @@ class ClientExceptionsViewer(QWidget):
         self.exceptionsList.setItemDelegate(NoOutlineHeightDelegate(4))
         self.exceptionsList.setContextMenuPolicy(Qt.CustomContextMenu)
 
-        self.__addToIgnoreButton = QAction(
-            getIcon('add.png'), "Add exception to the list of ignored", self)
+        self.__addToIgnoreButton = QAction(getIcon("add.png"), "Add exception to the list of ignored", self)
         self.__addToIgnoreButton.triggered.connect(self.__onAddToIgnore)
         self.__addToIgnoreButton.setEnabled(False)
 
-        self.__jumpToCodeButton = QAction(
-            getIcon('gotoline.png'), "Jump to the code", self)
+        self.__jumpToCodeButton = QAction(getIcon("gotoline.png"), "Jump to the code", self)
         self.__jumpToCodeButton.triggered.connect(self.__onJumpToCode)
         self.__jumpToCodeButton.setEnabled(False)
 
-        self.__delAllButton = QAction(
-            getIcon('trash.png'), "Delete all the client exceptions", self)
+        self.__delAllButton = QAction(getIcon("trash.png"), "Delete all the client exceptions", self)
         self.__delAllButton.triggered.connect(self.__onDelAll)
         self.__delAllButton.setEnabled(False)
 
@@ -251,15 +241,11 @@ class ClientExceptionsViewer(QWidget):
         self.toolbar.addWidget(ToolBarExpandingSpacer(self.toolbar))
         self.toolbar.addAction(self.__delAllButton)
 
-        self.exceptionsList.itemDoubleClicked.connect(
-            self.__onExceptionDoubleClicked)
-        self.exceptionsList.customContextMenuRequested.connect(
-            self.__showContextMenu)
-        self.exceptionsList.itemSelectionChanged.connect(
-            self.__onSelectionChanged)
+        self.exceptionsList.itemDoubleClicked.connect(self.__onExceptionDoubleClicked)
+        self.exceptionsList.customContextMenuRequested.connect(self.__showContextMenu)
+        self.exceptionsList.itemSelectionChanged.connect(self.__onSelectionChanged)
 
-        self.exceptionsList.setHeaderLabels(["Exception",
-                                             "Function", "Arguments"])
+        self.exceptionsList.setHeaderLabels(["Exception", "Function", "Arguments"])
 
         verticalLayout.addWidget(self.headerToolbar)
         verticalLayout.addWidget(self.toolbar)
@@ -277,7 +263,7 @@ class ClientExceptionsViewer(QWidget):
 
     def __onExceptionDoubleClicked(self, item, column):
         """Triggered when an exception is double clicked"""
-        del item    # unused argument
+        del item  # unused argument
         del column  # unused argument
         if self.__currentItem is not None:
             if self.__currentItem.getType() == STACK_FRAME_ITEM:
@@ -291,10 +277,8 @@ class ClientExceptionsViewer(QWidget):
         """Shows the frames list context menu"""
         self.__currentItem = self.exceptionsList.itemAt(coord)
 
-        self.__addToIgnoreMenuItem.setEnabled(
-            self.__addToIgnoreButton.isEnabled())
-        self.__jumpToCodeMenuItem.setEnabled(
-            self.__jumpToCodeButton.isEnabled())
+        self.__addToIgnoreMenuItem.setEnabled(self.__addToIgnoreButton.isEnabled())
+        self.__jumpToCodeMenuItem.setEnabled(self.__jumpToCodeButton.isEnabled())
 
         if self.__currentItem is not None:
             self.__excptMenu.popup(QCursor.pos())
@@ -302,8 +286,7 @@ class ClientExceptionsViewer(QWidget):
     def __onAddToIgnore(self):
         """Adds an exception into the ignore list"""
         if self.__currentItem is not None:
-            self.__ignoredExceptionsViewer.addExceptionFilter(
-                str(self.__currentItem.getExceptionType()))
+            self.__ignoredExceptionsViewer.addExceptionFilter(str(self.__currentItem.getExceptionType()))
             self.__addToIgnoreButton.setEnabled(False)
 
     def __onJumpToCode(self):
@@ -311,7 +294,7 @@ class ClientExceptionsViewer(QWidget):
         if self.__currentItem is not None:
             if self.__currentItem.getType() == STACK_FRAME_ITEM:
                 fileName = self.__currentItem.getFileName()
-                if '<' not in fileName and '>' not in fileName:
+                if "<" not in fileName and ">" not in fileName:
                     lineNumber = self.__currentItem.getLineNumber()
 
                     editorsManager = GlobalData().mainWindow.editorsManager()
@@ -335,8 +318,7 @@ class ClientExceptionsViewer(QWidget):
                 self.__updateExceptionsLabel()
                 return
 
-        item = ExceptionItem(self.exceptionsList, exceptionType,
-                             exceptionMessage, stackTrace)
+        item = ExceptionItem(self.exceptionsList, exceptionType, exceptionMessage, stackTrace)
         self.exceptionsList.clearSelection()
         self.exceptionsList.setCurrentItem(item)
         self.__updateExceptionsLabel()
@@ -369,7 +351,7 @@ class ClientExceptionsViewer(QWidget):
             self.__currentItem = selected[0]
             if self.__currentItem.getType() == STACK_FRAME_ITEM:
                 fileName = self.__currentItem.getFileName()
-                if '<' in fileName or '>' in fileName:
+                if "<" in fileName or ">" in fileName:
                     self.__jumpToCodeButton.setEnabled(False)
                 else:
                     self.__jumpToCodeButton.setEnabled(True)
@@ -377,8 +359,11 @@ class ClientExceptionsViewer(QWidget):
             else:
                 self.__jumpToCodeButton.setEnabled(False)
                 excType = str(self.__currentItem.getExceptionType())
-                if self.__ignoredExceptionsViewer.isIgnored(excType) or \
-                   " " in excType or excType.startswith("unhandled"):
+                if (
+                    self.__ignoredExceptionsViewer.isIgnored(excType)
+                    or " " in excType
+                    or excType.startswith("unhandled")
+                ):
                     self.__addToIgnoreButton.setEnabled(False)
                 else:
                     self.__addToIgnoreButton.setEnabled(True)

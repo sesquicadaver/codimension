@@ -33,84 +33,85 @@ SYNTAX_ERROR_AT_START = -400000
 STOPPED_BY_REQUEST = -500000
 UNHANDLED_EXCEPTION = -600000
 
-METHOD_STDOUT = 'Stdout'
-METHOD_STDERR = 'Stderr'
-METHOD_STDIN = 'Stdin'
+METHOD_STDOUT = "Stdout"
+METHOD_STDERR = "Stderr"
+METHOD_STDIN = "Stdin"
 
-METHOD_CLIENT_OUTPUT = 'ClientOutput'
-METHOD_THREAD_LIST = 'ThreadList'                       # to/from IDE
-METHOD_THREAD_SET = 'ThreadSet'                         # to/from IDE
-METHOD_VARIABLES = 'Variables'                          # to/from IDE
-METHOD_VARIABLE = 'Variable'                            # to/from IDE
-METHOD_FORK_TO = 'ForkTo'                               # to/from IDE
-METHOD_CALL_TRACE = 'CallTrace'                         # to/from IDE
+METHOD_CLIENT_OUTPUT = "ClientOutput"
+METHOD_THREAD_LIST = "ThreadList"  # to/from IDE
+METHOD_THREAD_SET = "ThreadSet"  # to/from IDE
+METHOD_VARIABLES = "Variables"  # to/from IDE
+METHOD_VARIABLE = "Variable"  # to/from IDE
+METHOD_FORK_TO = "ForkTo"  # to/from IDE
+METHOD_CALL_TRACE = "CallTrace"  # to/from IDE
 
-METHOD_DEBUG_STARTUP = 'DebugStartup'                   # to IDE
-METHOD_LINE = 'Line'                                    # to IDE
-METHOD_EXCEPTION = 'Exception'                          # to IDE
-METHOD_STACK = 'Stack'                                  # to IDE
-METHOD_BP_CONDITION_ERROR = 'BPConditionError'          # to IDE
-METHOD_WP_CONDITION_ERROR = 'WPConditionError'          # to IDE
-METHOD_CLEAR_BP = 'ClearBreakpoint'                     # to IDE
-METHOD_CLEAR_WP = 'ClearWatchpoint'                     # to IDE
-METHOD_SYNTAX_ERROR = 'SyntaxError'                     # to IDE
-METHOD_SIGNAL = 'Signal'                                # to IDE
-METHOD_EXEC_STATEMENT_ERROR = 'ExecStatementError'      # to IDE
-METHOD_EXEC_STATEMENT_OUTPUT = 'ExecStatementOutput'    # to IDE
+METHOD_DEBUG_STARTUP = "DebugStartup"  # to IDE
+METHOD_LINE = "Line"  # to IDE
+METHOD_EXCEPTION = "Exception"  # to IDE
+METHOD_STACK = "Stack"  # to IDE
+METHOD_BP_CONDITION_ERROR = "BPConditionError"  # to IDE
+METHOD_WP_CONDITION_ERROR = "WPConditionError"  # to IDE
+METHOD_CLEAR_BP = "ClearBreakpoint"  # to IDE
+METHOD_CLEAR_WP = "ClearWatchpoint"  # to IDE
+METHOD_SYNTAX_ERROR = "SyntaxError"  # to IDE
+METHOD_SIGNAL = "Signal"  # to IDE
+METHOD_EXEC_STATEMENT_ERROR = "ExecStatementError"  # to IDE
+METHOD_EXEC_STATEMENT_OUTPUT = "ExecStatementOutput"  # to IDE
 
-METHOD_CONTINUE = 'Continue'                            # from IDE
-METHOD_STEP_QUIT = 'StepQuit'                           # from IDE
-METHOD_STEP_OUT = 'StepOut'                             # from IDE
-METHOD_STEP_OVER = 'StepOver'                           # from IDE
-METHOD_STEP = 'Step'                                    # from IDE
-METHOD_MOVE_IP = 'MoveIP'                               # from IDE
-METHOD_SET_BP = 'SetBreakpoint'                         # from IDE
-METHOD_BP_ENABLE = 'EnableBreakpoint'                   # from IDE
-METHOD_BP_IGNORE = 'IgnoreBreakpoint'                   # from IDE
-METHOD_SET_WP = 'SetWatchpoint'                         # from IDE
-METHOD_WP_ENABLE = 'EnableWatchpoint'                   # from IDE
-METHOD_WP_IGNORE = 'IgnoreWatchpoint'                   # from IDE
-METHOD_SET_ENVIRONMENT = 'SetEnvironment'               # from IDE
-METHOD_EXECUTE_STATEMENT = 'ExecuteStatement'           # from IDE
-METHOD_SHUTDOWN = 'Shutdown'                            # from IDE
-METHOD_SET_FILTER = 'SetFilter'                         # from IDE
+METHOD_CONTINUE = "Continue"  # from IDE
+METHOD_STEP_QUIT = "StepQuit"  # from IDE
+METHOD_STEP_OUT = "StepOut"  # from IDE
+METHOD_STEP_OVER = "StepOver"  # from IDE
+METHOD_STEP = "Step"  # from IDE
+METHOD_MOVE_IP = "MoveIP"  # from IDE
+METHOD_SET_BP = "SetBreakpoint"  # from IDE
+METHOD_BP_ENABLE = "EnableBreakpoint"  # from IDE
+METHOD_BP_IGNORE = "IgnoreBreakpoint"  # from IDE
+METHOD_SET_WP = "SetWatchpoint"  # from IDE
+METHOD_WP_ENABLE = "EnableWatchpoint"  # from IDE
+METHOD_WP_IGNORE = "IgnoreWatchpoint"  # from IDE
+METHOD_SET_ENVIRONMENT = "SetEnvironment"  # from IDE
+METHOD_EXECUTE_STATEMENT = "ExecuteStatement"  # from IDE
+METHOD_SHUTDOWN = "Shutdown"  # from IDE
+METHOD_SET_FILTER = "SetFilter"  # from IDE
 
-METHOD_PROC_ID_INFO = 'ProcIDInfo'
-METHOD_PROLOGUE_CONTINUE = 'PrologueContinue'
-METHOD_EPILOGUE_EXIT = 'EpilogueExit'
-METHOD_EPILOGUE_EXIT_CODE = 'EpilogueExitCode'
+METHOD_PROC_ID_INFO = "ProcIDInfo"
+METHOD_PROLOGUE_CONTINUE = "PrologueContinue"
+METHOD_EPILOGUE_EXIT = "EpilogueExit"
+METHOD_EPILOGUE_EXIT_CODE = "EpilogueExitCode"
 
 VAR_TYPE_DISP_STRINGS = {
-    '__': 'Hidden Attributes',
-    'NoneType': 'None',
-    'type': 'Type',
-    'bool': 'Boolean',
-    'int': 'Integer',
-    'long': 'Long Integer',
-    'float': 'Float',
-    'complex': 'Complex',
-    'str': 'String',
-    'unicode': 'Unicode String',
-    'tuple': 'Tuple',
-    'list': 'List/Array',
-    'dict': 'Dictionary/Hash/Map',
-    'dict-proxy': 'Dictionary Proxy',
-    'set': 'Set',
-    'frozenset': 'Frozen Set',
-    'file': 'File',
-    'xrange': 'X Range',
-    'slice': 'Slice',
-    'buffer': 'Buffer',
-    'class': 'Class',
-    'instance': 'Class Instance',
-    'method': 'Class Method',
-    'property': 'Class Property',
-    'generator': 'Generator',
-    'function': 'Function',
-    'builtin_function_or_method': 'Builtin Function',
-    'code': 'Code',
-    'module': 'Module',
-    'ellipsis': 'Ellipsis',
-    'traceback': 'Traceback',
-    'frame': 'Frame',
-    'other': 'Other'}
+    "__": "Hidden Attributes",
+    "NoneType": "None",
+    "type": "Type",
+    "bool": "Boolean",
+    "int": "Integer",
+    "long": "Long Integer",
+    "float": "Float",
+    "complex": "Complex",
+    "str": "String",
+    "unicode": "Unicode String",
+    "tuple": "Tuple",
+    "list": "List/Array",
+    "dict": "Dictionary/Hash/Map",
+    "dict-proxy": "Dictionary Proxy",
+    "set": "Set",
+    "frozenset": "Frozen Set",
+    "file": "File",
+    "xrange": "X Range",
+    "slice": "Slice",
+    "buffer": "Buffer",
+    "class": "Class",
+    "instance": "Class Instance",
+    "method": "Class Method",
+    "property": "Class Property",
+    "generator": "Generator",
+    "function": "Function",
+    "builtin_function_or_method": "Builtin Function",
+    "code": "Code",
+    "module": "Module",
+    "ellipsis": "Ellipsis",
+    "traceback": "Traceback",
+    "frame": "Frame",
+    "other": "Other",
+}

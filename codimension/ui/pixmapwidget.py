@@ -61,11 +61,11 @@ FORMAT_STRINGS = {
     QImage.Format_ARGB8555_Premultiplied: "24-bit ARGB",
     QImage.Format_RGB888: "24-bit RGB",
     QImage.Format_RGB444: "16-bit RGB",
-    QImage.Format_ARGB4444_Premultiplied: "16-bit ARGB"}
+    QImage.Format_ARGB4444_Premultiplied: "16-bit ARGB",
+}
 
 
 class PixmapWidget(QScrollArea):
-
     """The pixmap widget"""
 
     sigEscapePressed = pyqtSignal()
@@ -75,8 +75,7 @@ class PixmapWidget(QScrollArea):
 
         self.pixmapLabel = QLabel()
         self.pixmapLabel.setBackgroundRole(QPalette.Base)
-        self.pixmapLabel.setSizePolicy(QSizePolicy.Ignored,
-                                       QSizePolicy.Ignored)
+        self.pixmapLabel.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.pixmapLabel.setScaledContents(True)
 
         self.zoom = 1.0
@@ -105,8 +104,7 @@ class PixmapWidget(QScrollArea):
             if (self.fileSize % 1024) >= 512:
                 kiloBytes += 1
             fileSizeString = str(kiloBytes) + "kb"
-        self.info = str(image.width()) + "px/" + \
-            str(image.height()) + "px/" + fileSizeString
+        self.info = str(image.width()) + "px/" + str(image.height()) + "px/" + fileSizeString
         try:
             self.formatInfo = FORMAT_STRINGS[image.format()]
         except Exception:
@@ -144,15 +142,13 @@ class PixmapWidget(QScrollArea):
 
     def __adjustScrollBar(self, scrollBar, factor):
         """Adjusts a scrollbar by a certain factor"""
-        scrollBar.setValue(int(factor * scrollBar.value() +
-                               ((factor - 1) * scrollBar.pageStep() / 2)))
+        scrollBar.setValue(int(factor * scrollBar.value() + ((factor - 1) * scrollBar.pageStep() / 2)))
 
     def setReadOnly(self, newValue):
         """Make it similar to a text editor"""
 
 
 class PixmapTabWidget(QWidget, MainWindowTabWidgetBase):
-
     """Pixmap viewer tab widget"""
 
     sigEscapePressed = pyqtSignal()
@@ -183,13 +179,12 @@ class PixmapTabWidget(QWidget, MainWindowTabWidgetBase):
     def __createLayout(self):
         """Creates the toolbar and layout"""
         # Buttons
-        printButton = QAction(getIcon('printer.png'), 'Print', self)
+        printButton = QAction(getIcon("printer.png"), "Print", self)
         # printButton.setShortcut('Ctrl+')
         printButton.triggered.connect(self.__onPrint)
         printButton.setVisible(False)
 
-        printPreviewButton = QAction(getIcon('printpreview.png'),
-                                     'Print preview', self)
+        printPreviewButton = QAction(getIcon("printpreview.png"), "Print preview", self)
         # printPreviewButton.setShortcut('Ctrl+')
         printPreviewButton.triggered.connect(self.__onPrintPreview)
         printPreviewButton.setVisible(False)
@@ -197,20 +192,18 @@ class PixmapTabWidget(QWidget, MainWindowTabWidgetBase):
         fixedSpacer = QWidget()
         fixedSpacer.setFixedHeight(16)
 
-        zoomInButton = QAction(getIcon('zoomin.png'), 'Zoom in (Ctrl+=)', self)
-        zoomInButton.setShortcut('Ctrl+=')
+        zoomInButton = QAction(getIcon("zoomin.png"), "Zoom in (Ctrl+=)", self)
+        zoomInButton.setShortcut("Ctrl+=")
         zoomInButton.triggered.connect(self.onZoomIn)
         self.__zoomInSynonim = QShortcut("Ctrl++", self)
         self.__zoomInSynonim.activated.connect(self.onZoomIn)
 
-        zoomOutButton = QAction(getIcon('zoomout.png'),
-                                'Zoom out (Ctrl+-)', self)
-        zoomOutButton.setShortcut('Ctrl+-')
+        zoomOutButton = QAction(getIcon("zoomout.png"), "Zoom out (Ctrl+-)", self)
+        zoomOutButton.setShortcut("Ctrl+-")
         zoomOutButton.triggered.connect(self.onZoomOut)
 
-        zoomResetButton = QAction(getIcon('zoomreset.png'),
-                                  'Zoom reset (Ctrl+0)', self)
-        zoomResetButton.setShortcut('Ctrl+0')
+        zoomResetButton = QAction(getIcon("zoomreset.png"), "Zoom reset (Ctrl+0)", self)
+        zoomResetButton.setShortcut("Ctrl+0")
         zoomResetButton.triggered.connect(self.onZoomReset)
 
         # Toolbar
@@ -236,8 +229,7 @@ class PixmapTabWidget(QWidget, MainWindowTabWidgetBase):
 
         self.__outsideChangesBar = OutsideChangeWidget(self.__viewer)
         self.__outsideChangesBar.sigReloadRequest.connect(self.__onReload)
-        self.__outsideChangesBar.reloadAllNonModifiedRequest.connect(
-            self.reloadAllNonModified)
+        self.__outsideChangesBar.reloadAllNonModifiedRequest.connect(self.reloadAllNonModified)
         self.__outsideChangesBar.hide()
 
         self.setLayout(hLayout)
@@ -298,7 +290,7 @@ class PixmapTabWidget(QWidget, MainWindowTabWidgetBase):
 
     def __onContextMenu(self, pos):
         """Triggered when a context menu is requested"""
-        del pos     # unused argument
+        del pos  # unused argument
         pluginMenus = self.__editorsManager.getPluginMenus()
         if pluginMenus:
             contextMenu = QMenu()
@@ -334,7 +326,7 @@ class PixmapTabWidget(QWidget, MainWindowTabWidgetBase):
 
     def reloadAllNonModified(self):
         """Triggered when a request to reload all the
-           non-modified files is received
+        non-modified files is received
         """
         self.reloadAllNonModifiedRequest.emit()
 
@@ -404,8 +396,7 @@ class PixmapTabWidget(QWidget, MainWindowTabWidgetBase):
         if not os.path.exists(self.__fileName):
             return True
         path = os.path.realpath(self.__fileName)
-        return self.__diskModTime != os.path.getmtime(path) or \
-            self.__diskSize != os.path.getsize(path)
+        return self.__diskModTime != os.path.getmtime(path) or self.__diskSize != os.path.getsize(path)
 
     def doesFileExist(self):
         """Returns True if the loaded file still exists"""
@@ -413,14 +404,13 @@ class PixmapTabWidget(QWidget, MainWindowTabWidgetBase):
 
     def setReloadDialogShown(self, value=True):
         """Sets the new value of the flag which tells if the reloading
-           dialogue has already been displayed
+        dialogue has already been displayed
         """
         self.__reloadDlgShown = value
 
     def getReloadDialogShown(self):
         """Tells if the reload dialog has already been shown"""
-        return self.__reloadDlgShown and \
-            not self.__outsideChangesBar.isVisible()
+        return self.__reloadDlgShown and not self.__outsideChangesBar.isVisible()
 
     def updateModificationTime(self, fileName):
         """Updates the modification time"""

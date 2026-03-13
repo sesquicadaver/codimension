@@ -30,7 +30,6 @@ from .proftable import ProfileTableViewer
 
 
 class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):
-
     """Profiling results widget"""
 
     sigEscapePressed = pyqtSignal()
@@ -44,10 +43,8 @@ class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):
         stats = pstats.Stats(dataFile)
         stats.calc_callees()
 
-        self.__profTable = ProfileTableViewer(scriptName, params, reportTime,
-                                              dataFile, stats, self)
-        self.__profGraph = ProfileGraphViewer(scriptName, params, reportTime,
-                                              dataFile, stats, self)
+        self.__profTable = ProfileTableViewer(scriptName, params, reportTime, dataFile, stats, self)
+        self.__profGraph = ProfileGraphViewer(scriptName, params, reportTime, dataFile, stats, self)
         self.__profTable.hide()
 
         self.__profTable.sigEscapePressed.connect(self.__onEsc)
@@ -58,43 +55,36 @@ class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):
     def __createLayout(self):
         """Creates the toolbar and layout"""
         # Buttons
-        self.__toggleViewButton = QAction(getIcon('tableview.png'),
-                                          'Switch to table view', self)
+        self.__toggleViewButton = QAction(getIcon("tableview.png"), "Switch to table view", self)
         self.__toggleViewButton.setCheckable(True)
         self.__toggleViewButton.toggled.connect(self.__switchView)
 
-        self.__togglePathButton = QAction(getIcon('longpath.png'),
-                                          'Show full paths for item location',
-                                          self)
+        self.__togglePathButton = QAction(getIcon("longpath.png"), "Show full paths for item location", self)
         self.__togglePathButton.setCheckable(True)
         self.__togglePathButton.toggled.connect(self.__togglePath)
         self.__togglePathButton.setEnabled(False)
 
-        self.__printButton = QAction(getIcon('printer.png'), 'Print', self)
+        self.__printButton = QAction(getIcon("printer.png"), "Print", self)
         self.__printButton.triggered.connect(self.__onPrint)
         self.__printButton.setEnabled(False)
 
-        self.__printPreviewButton = QAction(getIcon('printpreview.png'),
-                                            'Print preview', self)
+        self.__printPreviewButton = QAction(getIcon("printpreview.png"), "Print preview", self)
         self.__printPreviewButton.triggered.connect(self.__onPrintPreview)
         self.__printPreviewButton.setEnabled(False)
 
         fixedSpacer = QWidget()
         fixedSpacer.setFixedHeight(16)
 
-        self.__zoomInButton = QAction(getIcon('zoomin.png'),
-                                      'Zoom in (Ctrl+=)', self)
-        self.__zoomInButton.setShortcut('Ctrl+=')
+        self.__zoomInButton = QAction(getIcon("zoomin.png"), "Zoom in (Ctrl+=)", self)
+        self.__zoomInButton.setShortcut("Ctrl+=")
         self.__zoomInButton.triggered.connect(self.onZoomIn)
 
-        self.__zoomOutButton = QAction(getIcon('zoomout.png'),
-                                       'Zoom out (Ctrl+-)', self)
-        self.__zoomOutButton.setShortcut('Ctrl+-')
+        self.__zoomOutButton = QAction(getIcon("zoomout.png"), "Zoom out (Ctrl+-)", self)
+        self.__zoomOutButton.setShortcut("Ctrl+-")
         self.__zoomOutButton.triggered.connect(self.onZoomOut)
 
-        self.__zoomResetButton = QAction(getIcon('zoomreset.png'),
-                                         'Zoom reset (Ctrl+0)', self)
-        self.__zoomResetButton.setShortcut('Ctrl+0')
+        self.__zoomResetButton = QAction(getIcon("zoomreset.png"), "Zoom reset (Ctrl+0)", self)
+        self.__zoomResetButton.setShortcut("Ctrl+0")
         self.__zoomResetButton.triggered.connect(self.onZoomReset)
 
         # Toolbar
@@ -140,8 +130,8 @@ class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):
         if state:
             self.__profGraph.hide()
             self.__profTable.show()
-            self.__toggleViewButton.setIcon(getIcon('profdgmview.png'))
-            self.__toggleViewButton.setToolTip('Switch to diagram view')
+            self.__toggleViewButton.setIcon(getIcon("profdgmview.png"))
+            self.__toggleViewButton.setToolTip("Switch to diagram view")
             self.__zoomInButton.setEnabled(False)
             self.__zoomOutButton.setEnabled(False)
             self.__zoomResetButton.setEnabled(False)
@@ -150,8 +140,8 @@ class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):
         else:
             self.__profTable.hide()
             self.__profGraph.show()
-            self.__toggleViewButton.setIcon(getIcon('tableview.png'))
-            self.__toggleViewButton.setToolTip('Switch to table view')
+            self.__toggleViewButton.setIcon(getIcon("tableview.png"))
+            self.__toggleViewButton.setToolTip("Switch to table view")
             self.__zoomInButton.setEnabled(True)
             self.__zoomOutButton.setEnabled(True)
             self.__zoomResetButton.setEnabled(True)
@@ -162,11 +152,11 @@ class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):
         """Triggered when full path/file name is switched"""
         self.__profTable.togglePath(state)
         if state:
-            fName = 'shortpath.png'
-            tip = 'Show file names only for item location'
+            fName = "shortpath.png"
+            tip = "Show file names only for item location"
         else:
-            fName = 'longpath.png'
-            tip = 'Show full paths for item location'
+            fName = "longpath.png"
+            tip = "Show full paths for item location"
         self.__togglePathButton.setIcon(getIcon(fName))
         self.__togglePathButton.setToolTip(tip)
 
@@ -237,8 +227,7 @@ class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):
 
     def setFileName(self, name):
         """Sets the file name - not applicable"""
-        raise Exception("Setting a file name for profile results "
-                        "is not applicable")
+        raise Exception("Setting a file name for profile results is not applicable")
 
     def setEncoding(self, newEncoding):
         """Not applicable for the profiler results viewer"""
@@ -250,5 +239,4 @@ class ProfileResultsWidget(QWidget, MainWindowTabWidgetBase):
 
     def setShortName(self, name):
         """Sets the display name - not applicable"""
-        raise Exception("Setting a file name for profiler "
-                        "results is not applicable")
+        raise Exception("Setting a file name for profiler results is not applicable")

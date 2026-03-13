@@ -24,23 +24,20 @@ from utils.colorfont import getZoomedMonoFont
 
 
 class MatchTooltip(QFrame):
-
     """Custom tooltip"""
 
     def __init__(self):
         QFrame.__init__(self)
 
         # Avoid the border around the window
-        self.setWindowFlags(Qt.SplashScreen |
-                            Qt.WindowStaysOnTopHint |
-                            Qt.X11BypassWindowManagerHint)
+        self.setWindowFlags(Qt.SplashScreen | Qt.WindowStaysOnTopHint | Qt.X11BypassWindowManagerHint)
 
         # Make the frame nice looking
         self.setFrameShape(QFrame.StyledPanel)
         self.setLineWidth(2)
 
-        self.__cellHeight = 20     # default
-        self.__screenWidth = 600   # default
+        self.__cellHeight = 20  # default
+        self.__screenWidth = 600  # default
 
         # On slow network connections when XServer is used the cursor movement
         # is delivered with a considerable delay which causes improper tooltip
@@ -87,7 +84,7 @@ class MatchTooltip(QFrame):
         self.info.setAutoFillBackground(True)
         self.info.setFont(getZoomedMonoFont())
         self.info.setFrameShape(QFrame.StyledPanel)
-        self.info.setStyleSheet('padding: 4px')
+        self.info.setStyleSheet("padding: 4px")
         verticalLayout.addWidget(self.info)
 
         self.location = QLabel()
@@ -128,8 +125,7 @@ class MatchTooltip(QFrame):
     def __onTimer(self):
         """Triggered by the show tooltip timer"""
         currentPos = QCursor.pos()
-        if abs(currentPos.x() - self.startPosition.x()) <= 2 and \
-           abs(currentPos.y() - self.startPosition.y()) <= 2:
+        if abs(currentPos.x() - self.startPosition.x()) <= 2 and abs(currentPos.y() - self.startPosition.y()) <= 2:
             # No movement since last time, show the tooltip
             self.show()
             return
@@ -153,4 +149,3 @@ class MatchTooltip(QFrame):
             self.move(self.__getTooltipPos())
             self.raise_()
             QFrame.show(self)
-

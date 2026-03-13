@@ -25,7 +25,6 @@ from .fileutils import loadJSON, saveJSON
 
 
 class FilePositions:
-
     """Loads/stores/saves the last position in files"""
 
     def __init__(self):
@@ -47,32 +46,27 @@ class FilePositions:
         if not dirName.endswith(os.path.sep):
             dirName += os.path.sep
         if not os.path.isdir(dirName):
-            raise Exception('Directory name is expected for files '
-                            'positions. The given ' + dirName + ' is not.')
+            raise Exception("Directory name is expected for files positions. The given " + dirName + " is not.")
 
-        self.__fpFileName = dirName + 'lastpositions.json'
+        self.__fpFileName = dirName + "lastpositions.json"
         if os.path.exists(self.__fpFileName):
             FilePositions.load(self)
 
     def load(self):
         """Loads the saved positions file"""
         if self.__fpFileName:
-            self.__filePos = loadJSON(self.__fpFileName,
-                                      'file editing positions', {})
+            self.__filePos = loadJSON(self.__fpFileName, "file editing positions", {})
 
     def save(self):
         """Saves the positions into a file"""
         if self.__fpFileName:
-            saveJSON(self.__fpFileName, self.__filePos,
-                     'file editing positions')
+            saveJSON(self.__fpFileName, self.__filePos, "file editing positions")
 
     def getFilePosition(self, fileName):
         """Provides the position or (-1,-1,-1,-1,-1) if not found"""
         return self.__filePos.get(fileName, (-1, -1, -1, -1, -1))
 
-    def updateFilePosition(self, fileName, line, pos, firstLine,
-                           horizontalPos, verticalPos):
+    def updateFilePosition(self, fileName, line, pos, firstLine, horizontalPos, verticalPos):
         """Updates the position for the file"""
-        self.__filePos[fileName] = (line, pos, firstLine,
-                                    horizontalPos, verticalPos)
+        self.__filePos[fileName] = (line, pos, firstLine, horizontalPos, verticalPos)
         FilePositions.save(self)

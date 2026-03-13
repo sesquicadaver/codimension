@@ -32,7 +32,6 @@ from .textmixin import TextMixin
 
 
 class LoopJumpBase(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
-
     """Base class for 'break' and 'continue'"""
 
     def __init__(self, ref, canvas, x, y, bgColor, fgColor, borderColor):
@@ -70,9 +69,10 @@ class LoopJumpBase(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
         self.appendCommentBadges()
         if self.aboveBadges.hasAny():
             self.minHeight += self.aboveBadges.height + settings.badgeToScopeVPadding
-        self.minWidth = max(settings.mainLine + settings.badgeGroupSpacing +
-                            self.aboveBadges.width + settings.hCellPadding,
-                            self.minWidth)
+        self.minWidth = max(
+            settings.mainLine + settings.badgeGroupSpacing + self.aboveBadges.width + settings.hCellPadding,
+            self.minWidth,
+        )
 
         self.height = self.minHeight
         self.width = self.minWidth
@@ -105,20 +105,22 @@ class LoopJumpBase(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
 
         # Add the connector as a separate scene item to make the selection
         # working properly
-        self.connector = Connector(self.canvas,
-                                   baseX + settings.mainLine, baseY,
-                                   baseX + settings.mainLine,
-                                   baseY + settings.vCellPadding + takenByBadges)
+        self.connector = Connector(
+            self.canvas,
+            baseX + settings.mainLine,
+            baseY,
+            baseX + settings.mainLine,
+            baseY + settings.vCellPadding + takenByBadges,
+        )
         scene.addItem(self.connector)
 
         # Setting the rectangle is important for the selection and for
         # redrawing. Thus the selection pen with must be considered too.
         penWidth = settings.selectPenWidth - 1
         self.__calculateSize()
-        self.setRect(self.xPos - penWidth,
-                     self.yPos - penWidth,
-                     self.rectWidth + 2 * penWidth,
-                     self.rectHeight + 2 * penWidth)
+        self.setRect(
+            self.xPos - penWidth, self.yPos - penWidth, self.rectWidth + 2 * penWidth, self.rectHeight + 2 * penWidth
+        )
         scene.addItem(self)
 
     def paintCell(self, painter, rectRadius):
@@ -147,21 +149,24 @@ class LoopJumpBase(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
 
 
 class BreakCell(LoopJumpBase):
-
     """Represents a single break statement"""
 
     def __init__(self, ref, canvas, x, y):
-        LoopJumpBase.__init__(self, ref, canvas, x, y,
-                              canvas.settings.breakBGColor,
-                              canvas.settings.breakFGColor,
-                              canvas.settings.breakBorderColor)
+        LoopJumpBase.__init__(
+            self,
+            ref,
+            canvas,
+            x,
+            y,
+            canvas.settings.breakBGColor,
+            canvas.settings.breakFGColor,
+            canvas.settings.breakBorderColor,
+        )
         self.kind = CellElement.BREAK
 
     def render(self):
         """Renders the cell"""
-        return self.renderCell('break',
-                               self.canvas.settings.breakHPadding,
-                               self.canvas.settings.breakVPadding)
+        return self.renderCell("break", self.canvas.settings.breakHPadding, self.canvas.settings.breakVPadding)
 
     def paint(self, painter, option, widget):
         """Draws the cell"""
@@ -172,34 +177,36 @@ class BreakCell(LoopJumpBase):
 
     def getSelectTooltip(self):
         """Provides the tooltip"""
-        return 'Break at ' + CellElement.getLinesSuffix(self.getLineRange())
+        return "Break at " + CellElement.getLinesSuffix(self.getLineRange())
 
 
 class ContinueCell(LoopJumpBase):
-
     """Represents a single continue statement"""
 
     def __init__(self, ref, canvas, x, y):
-        LoopJumpBase.__init__(self, ref, canvas, x, y,
-                              canvas.settings.continueBGColor,
-                              canvas.settings.continueFGColor,
-                              canvas.settings.continueBorderColor)
+        LoopJumpBase.__init__(
+            self,
+            ref,
+            canvas,
+            x,
+            y,
+            canvas.settings.continueBGColor,
+            canvas.settings.continueFGColor,
+            canvas.settings.continueBorderColor,
+        )
         self.kind = CellElement.CONTINUE
 
     def render(self):
         """Renders the cell"""
-        return self.renderCell('continue',
-                               self.canvas.settings.continueHPadding,
-                               self.canvas.settings.continueVPadding)
+        return self.renderCell("continue", self.canvas.settings.continueHPadding, self.canvas.settings.continueVPadding)
 
     def paint(self, painter, option, widget):
         """Draws the break statement"""
-        del option      # unused argument
-        del widget      # unused argument
+        del option  # unused argument
+        del widget  # unused argument
 
         self.paintCell(painter, self.canvas.settings.continueRectRadius)
 
     def getSelectTooltip(self):
         """Provides the tooltip"""
         return "Continue at " + CellElement.getLinesSuffix(self.getLineRange())
-

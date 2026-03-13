@@ -43,8 +43,7 @@ from .viewitems import AttributeItemType, ClassItemType, DecoratorItemType, Func
 
 
 class ClassesViewer(QWidget):
-
-    """ The classes viewer widget """
+    """The classes viewer widget"""
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -59,18 +58,16 @@ class ClassesViewer(QWidget):
         # create the context menu
         self.__menu = QMenu(self)
         self.__jumpMenuItem = self.__menu.addAction(
-            getIcon('definition.png'), 'Jump to definition',
-            self.__goToDefinition)
+            getIcon("definition.png"), "Jump to definition", self.__goToDefinition
+        )
         self.__menu.addSeparator()
-        self.__findMenuItem = self.__menu.addAction(
-            getIcon('findusage.png'), 'Find occurences', self.__findWhereUsed)
+        self.__findMenuItem = self.__menu.addAction(getIcon("findusage.png"), "Find occurences", self.__findWhereUsed)
         self.__menu.addSeparator()
         self.__copyMenuItem = self.__menu.addAction(
-            getIcon('copymenu.png'), 'Copy path to clipboard',
-            self.clViewer.copyToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.clViewer.copyToClipboard
+        )
         self.clViewer.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.clViewer.customContextMenuRequested.connect(
-            self.__handleShowContextMenu)
+        self.clViewer.customContextMenuRequested.connect(self.__handleShowContextMenu)
 
         GlobalData().project.sigProjectChanged.connect(self.__onProjectChanged)
         self.clViewer.sigSelectionChanged.connect(self.__selectionChanged)
@@ -89,16 +86,11 @@ class ClassesViewer(QWidget):
         self.clViewer = ClassesBrowser()
 
         # Toolbar part - buttons
-        self.definitionButton = QAction(
-            getIcon('definition.png'),
-            'Jump to highlighted item definition', self)
+        self.definitionButton = QAction(getIcon("definition.png"), "Jump to highlighted item definition", self)
         self.definitionButton.triggered.connect(self.__goToDefinition)
-        self.findButton = QAction(
-            getIcon('findusage.png'),
-            'Find highlighted item occurences', self)
+        self.findButton = QAction(getIcon("findusage.png"), "Find highlighted item occurences", self)
         self.findButton.triggered.connect(self.__findWhereUsed)
-        self.copyPathButton = QAction(
-            getIcon('copymenu.png'), 'Copy path to clipboard', self)
+        self.copyPathButton = QAction(getIcon("copymenu.png"), "Copy path to clipboard", self)
         self.copyPathButton.triggered.connect(self.clViewer.copyToClipboard)
 
         self.toolbar = QToolBar(self)
@@ -111,13 +103,11 @@ class ClassesViewer(QWidget):
         self.toolbar.addAction(self.copyPathButton)
 
         filterLabel = QLabel("  Filter ")
-        filterLabel.setStyleSheet('background: transparent')
+        filterLabel.setStyleSheet("background: transparent")
         self.toolbar.addWidget(filterLabel)
         self.filterEdit = CDMComboBox(True, self.toolbar)
-        self.filterEdit.setSizePolicy(QSizePolicy.Expanding,
-                                      QSizePolicy.Expanding)
-        self.filterEdit.lineEdit().setToolTip(
-            "Space separated regular expressions")
+        self.filterEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.filterEdit.lineEdit().setToolTip("Space separated regular expressions")
         self.toolbar.addWidget(self.filterEdit)
         self.filterEdit.editTextChanged.connect(self.__filterChanged)
         self.filterEdit.itemAdded.connect(self.__filterItemAdded)
@@ -167,8 +157,7 @@ class ClassesViewer(QWidget):
         # Move the focus to the list and select the first row
         self.clViewer.clearSelection()
         flags = QItemSelectionModel.SelectCurrent | QItemSelectionModel.Rows
-        self.clViewer.setSelection(QRect(0, 0, self.clViewer.width(), 1),
-                                   flags)
+        self.clViewer.setSelection(QRect(0, 0, self.clViewer.width(), 1), flags)
         self.clViewer.setFocus()
 
     def __onProjectChanged(self, what):
@@ -180,8 +169,7 @@ class ClassesViewer(QWidget):
 
             project = GlobalData().project
             if project.isLoaded():
-                self.filterEdit.editTextChanged.disconnect(
-                    self.__filterChanged)
+                self.filterEdit.editTextChanged.disconnect(self.__filterChanged)
                 self.filterEdit.addItems(project.findClassHistory)
                 self.filterEdit.editTextChanged.connect(self.__filterChanged)
             self.filterEdit.clearEditText()
@@ -209,10 +197,9 @@ class ClassesViewer(QWidget):
         return
 
     def __findWhereUsed(self):
-        """ Find where used context menu handler """
+        """Find where used context menu handler"""
         if self.__contextItem is not None:
-            GlobalData().mainWindow.findWhereUsed(self.__contextItem.getPath(),
-                                                  self.__contextItem.sourceObj)
+            GlobalData().mainWindow.findWhereUsed(self.__contextItem.getPath(), self.__contextItem.sourceObj)
 
     def __updateButtons(self):
         """Updates the toolbar buttons depending on what is selected"""
@@ -227,8 +214,7 @@ class ClassesViewer(QWidget):
             self.copyPathButton.setEnabled(True)
             return
 
-        if self.__contextItem.itemType in [FunctionItemType, ClassItemType,
-                                           AttributeItemType, GlobalItemType]:
+        if self.__contextItem.itemType in [FunctionItemType, ClassItemType, AttributeItemType, GlobalItemType]:
             self.definitionButton.setEnabled(True)
             self.findButton.setEnabled(True)
             self.copyPathButton.setEnabled(True)

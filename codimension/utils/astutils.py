@@ -24,5 +24,4 @@ import ast
 
 def parseSourceToAST(source, filename):
     """Parses the source code to an ast tree."""
-    return ast.parse(source, filename, mode='exec', type_comments=True)
-
+    return ast.parse(source, filename, mode="exec", type_comments=True)

@@ -43,32 +43,29 @@ from utils.pixmapcache import getIcon
 
 
 class StackFrameItem(QTreeWidgetItem):
-
     """Single stack frame item data structure"""
 
     def __init__(self, fileName, lineNumber, funcName, funcArgs, frameNumber):
         shortened = os.path.basename(fileName) + ":" + str(lineNumber)
 
         self.__lineNumber = lineNumber
-        QTreeWidgetItem.__init__(self, ["", shortened,
-                                        funcName, funcArgs, fileName])
+        QTreeWidgetItem.__init__(self, ["", shortened, funcName, funcArgs, fileName])
 
         self.__isCurrent = False
         self.__frameNumber = frameNumber
 
-        tooltip = ['Location: ' + fileName + ':' + str(lineNumber)]
+        tooltip = ["Location: " + fileName + ":" + str(lineNumber)]
         if funcName:
-            tooltip += ['Function: ' + funcName,
-                        'Arguments: ' + funcArgs]
-        self.setToolTip(0, '\n'.join(tooltip))
+            tooltip += ["Function: " + funcName, "Arguments: " + funcArgs]
+        self.setToolTip(0, "\n".join(tooltip))
 
     def setCurrent(self, value):
         """Mark the current stack frame with an icon if so"""
         self.__isCurrent = value
         if value:
-            self.setIcon(0, getIcon('currentframe.png'))
+            self.setIcon(0, getIcon("currentframe.png"))
         else:
-            self.setIcon(0, getIcon('empty.png'))
+            self.setIcon(0, getIcon("empty.png"))
 
     def getFrameNumber(self):
         """Provides the frame number"""
@@ -88,7 +85,6 @@ class StackFrameItem(QTreeWidgetItem):
 
 
 class StackViewer(QWidget):
-
     """Implements the stack viewer for a debugger"""
 
     def __init__(self, debugger, parent=None):
@@ -104,11 +100,10 @@ class StackViewer(QWidget):
     def __createPopupMenu(self):
         """Creates the popup menu"""
         self.__framesMenu = QMenu()
-        self.__setCurrentMenuItem = self.__framesMenu.addAction(
-            "Set current (single click)", self.__onSetCurrent)
+        self.__setCurrentMenuItem = self.__framesMenu.addAction("Set current (single click)", self.__onSetCurrent)
         self.__jumpMenuItem = self.__framesMenu.addAction(
-            "Set current and jump to the source (double click)",
-            self.__onSetCurrentAndJump)
+            "Set current and jump to the source (double click)", self.__onSetCurrentAndJump
+        )
 
     def __createLayout(self):
         """Creates the widget layout"""
@@ -117,17 +112,15 @@ class StackViewer(QWidget):
         verticalLayout.setSpacing(0)
 
         self.__stackLabel = HeaderFitLabel(self)
-        self.__stackLabel.setText('Stack')
-        self.__stackLabel.setSizePolicy(QSizePolicy.Expanding,
-                                        QSizePolicy.Fixed)
+        self.__stackLabel.setText("Stack")
+        self.__stackLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.__stackLabel.setMinimumWidth(10)
 
         self.__showHideButton = QToolButton()
         self.__showHideButton.setAutoRaise(True)
-        self.__showHideButton.setIcon(getIcon('less.png'))
-        self.__showHideButton.setFixedSize(self.__stackLabel.height(),
-                                           self.__stackLabel.height())
-        self.__showHideButton.setToolTip('Hide frames list')
+        self.__showHideButton.setIcon(getIcon("less.png"))
+        self.__showHideButton.setFixedSize(self.__stackLabel.height(), self.__stackLabel.height())
+        self.__showHideButton.setToolTip("Hide frames list")
         self.__showHideButton.setFocusPolicy(Qt.NoFocus)
         self.__showHideButton.clicked.connect(self.__onShowHide)
 
@@ -153,14 +146,10 @@ class StackViewer(QWidget):
         self.__framesList.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.__framesList.itemClicked.connect(self.__onFrameClicked)
-        self.__framesList.itemDoubleClicked.connect(
-            self.__onFrameDoubleClicked)
-        self.__framesList.customContextMenuRequested.connect(
-            self.__showContextMenu)
+        self.__framesList.itemDoubleClicked.connect(self.__onFrameDoubleClicked)
+        self.__framesList.customContextMenuRequested.connect(self.__showContextMenu)
 
-        self.__framesList.setHeaderLabels(['', 'File:line',
-                                           'Function', 'Arguments',
-                                           'Full path'])
+        self.__framesList.setHeaderLabels(["", "File:line", "Function", "Arguments", "Full path"])
 
         verticalLayout.addWidget(self.headerToolbar)
         verticalLayout.addWidget(self.__framesList)
@@ -173,15 +162,15 @@ class StackViewer(QWidget):
             self.splitterSize = self.parent().sizes()[1]
 
             self.__framesList.setVisible(False)
-            self.__showHideButton.setIcon(getIcon('more.png'))
-            self.__showHideButton.setToolTip('Show frames list')
+            self.__showHideButton.setIcon(getIcon("more.png"))
+            self.__showHideButton.setToolTip("Show frames list")
 
             self.setMinimumHeight(self.headerToolbar.height())
             self.setMaximumHeight(self.headerToolbar.height())
         else:
             self.__framesList.setVisible(True)
-            self.__showHideButton.setIcon(getIcon('less.png'))
-            self.__showHideButton.setToolTip('Hide frames list')
+            self.__showHideButton.setIcon(getIcon("less.png"))
+            self.__showHideButton.setToolTip("Hide frames list")
 
             self.setMinimumHeight(self.__minH)
             self.setMaximumHeight(self.__maxH)
@@ -198,8 +187,7 @@ class StackViewer(QWidget):
     def __resizeColumns(self):
         """Resize the files list columns"""
         self.__framesList.header().setStretchLastSection(True)
-        self.__framesList.header().resizeSections(
-            QHeaderView.ResizeToContents)
+        self.__framesList.header().resizeSections(QHeaderView.ResizeToContents)
         self.__framesList.header().resizeSection(0, 22)
         self.__framesList.header().setSectionResizeMode(0, QHeaderView.Fixed)
 
@@ -213,25 +201,23 @@ class StackViewer(QWidget):
         for item in stack:
             fName = item[0]
             lineNo = item[1]
-            funcName = ''
-            funcArgs = ''
+            funcName = ""
+            funcArgs = ""
             if len(item) >= 3:
                 funcName = item[2]
             if len(item) >= 4:
                 funcArgs = item[3]
 
-            if funcName.startswith('<'):
-                funcName = ''
-                funcArgs = ''
+            if funcName.startswith("<"):
+                funcName = ""
+                funcArgs = ""
 
-            item = StackFrameItem(fName, lineNo,
-                                  funcName, funcArgs, frameNumber)
+            item = StackFrameItem(fName, lineNo, funcName, funcArgs, frameNumber)
             self.__framesList.addTopLevelItem(item)
             frameNumber += 1
         self.__resizeColumns()
         self.__framesList.topLevelItem(0).setCurrent(True)
-        self.__stackLabel.setText("Stack (total: " +
-                                  str(len(stack)) + ")")
+        self.__stackLabel.setText("Stack (total: " + str(len(stack)) + ")")
 
     def getFrameNumber(self):
         """Provides the current frame number"""
@@ -273,8 +259,7 @@ class StackViewer(QWidget):
         """Shows the frames list context menu"""
         self.__contextItem = self.__framesList.itemAt(coord)
         if self.__contextItem is not None:
-            self.__setCurrentMenuItem.setEnabled(
-                not self.__contextItem.isCurrent())
+            self.__setCurrentMenuItem.setEnabled(not self.__contextItem.isCurrent())
             self.__framesMenu.popup(QCursor.pos())
 
     def __onSetCurrent(self):

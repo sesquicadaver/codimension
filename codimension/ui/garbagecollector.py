@@ -24,7 +24,6 @@
 
 """Custom garbage collector"""
 
-
 import gc
 import logging
 
@@ -32,13 +31,12 @@ from .qt import QObject, QTimer
 
 
 class GarbageCollector(QObject):
+    """Disable automatic garbage collection and instead collect manually
+    every INTERVAL milliseconds.
 
-    '''Disable automatic garbage collection and instead collect manually
-       every INTERVAL milliseconds.
-
-       This is done to ensure that garbage collection only happens in the GUI
-       thread, as otherwise Qt can crash.
-    '''
+    This is done to ensure that garbage collection only happens in the GUI
+    thread, as otherwise Qt can crash.
+    """
 
     INTERVAL = 10000
 
@@ -65,8 +63,7 @@ class GarbageCollector(QObject):
                 logging.debug("collecting gen 1, found: %d unreachable", num)
                 if lvl2 > self.threshold[2]:
                     num = gc.collect(2)
-                    logging.debug("collecting gen 2, found: %d unreachable",
-                                  num)
+                    logging.debug("collecting gen 2, found: %d unreachable", num)
 
     def debug_cycles(self):
         """Debugging support"""

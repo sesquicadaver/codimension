@@ -28,10 +28,11 @@ from utils.run import checkOutput
 
 def splitWithQuotasRespect(line):
     """Splits the space separated values and respects quoted values"""
+
     def skipSpaces(line, startPos):
         """Provides index of first non-space char"""
         while startPos < len(line):
-            if line[startPos] != ' ':
+            if line[startPos] != " ":
                 return startPos
             startPos += 1
         return startPos
@@ -39,7 +40,7 @@ def splitWithQuotasRespect(line):
     def skipTillSpace(line, startPos):
         """Provides index of first space char"""
         while startPos < len(line):
-            if line[startPos] == ' ':
+            if line[startPos] == " ":
                 return startPos
             startPos += 1
         return startPos
@@ -48,7 +49,7 @@ def splitWithQuotasRespect(line):
         """Provides index of a closing quote"""
         while startPos < len(line):
             if line[startPos] == '"':
-                if line[startPos - 1] == '\\':
+                if line[startPos - 1] == "\\":
                     startPos += 1
                     continue
                 return startPos
@@ -69,7 +70,7 @@ def splitWithQuotasRespect(line):
         if line[startIndex] == '"':
             # Beginning of a quoted value
             nextIndex = skipTillClosedQuote(line, startIndex + 1)
-            result.append(line[startIndex + 1:nextIndex])
+            result.append(line[startIndex + 1 : nextIndex])
             index = nextIndex + 1
         else:
             nextIndex = skipTillSpace(line, startIndex)
@@ -78,8 +79,7 @@ def splitWithQuotasRespect(line):
     return result
 
 
-class Graph():
-
+class Graph:
     """Holds a description of a single graph"""
 
     def __init__(self):
@@ -121,13 +121,12 @@ class Graph():
         self.height = float(parts[3].strip())
 
 
-class Edge():
-
+class Edge:
     """Holds a single graph edge description"""
 
     def __init__(self):
-        self.tail  = ""
-        self.head  = ""
+        self.tail = ""
+        self.head = ""
         self.points = []
 
         self.label = ""
@@ -140,8 +139,7 @@ class Edge():
     def normalize(self, graph, scaleX, scaleY):
         """Scales to the screen coordinates"""
         self.labelX = self.labelX * graph.scale * scaleX + graph.hSpace
-        self.labelY = graph.height - self.labelY * graph.scale * scaleY + \
-                      graph.vSpace
+        self.labelY = graph.height - self.labelY * graph.scale * scaleY + graph.vSpace
 
         index = 0
         while index < len(self.points):
@@ -150,8 +148,7 @@ class Edge():
             self.points[index][0] = self.points[index][0] + graph.hSpace
             # y
             self.points[index][1] = self.points[index][1] * graph.scale * scaleY
-            self.points[index][1] = graph.height - self.points[index][1] + \
-                                    graph.vSpace
+            self.points[index][1] = graph.height - self.points[index][1] + graph.vSpace
             index = index + 1
 
     def initFromLine(self, line):
@@ -163,8 +160,7 @@ class Edge():
         parts = splitWithQuotasRespect(line.strip())
 
         if len(parts) < 8:
-            raise Exception("Unexpected number of parts in 'edge' "
-                            "statement. Line: " + line)
+            raise Exception("Unexpected number of parts in 'edge' statement. Line: " + line)
 
         self.tail = parts[1]
         self.head = parts[2]
@@ -172,13 +168,11 @@ class Edge():
         numberOfPoints = int(parts[3])
 
         if len(parts) < (numberOfPoints * 2 + 5):
-            raise Exception("Unexpected number of parts in 'edge' "
-                            "statement. Line: " + line)
+            raise Exception("Unexpected number of parts in 'edge' statement. Line: " + line)
 
         point = 0
         while point < numberOfPoints:
-            self.points.append([float(parts[point * 2 + 4]),
-                                float(parts[point * 2 + 4 + 1])])
+            self.points.append([float(parts[point * 2 + 4]), float(parts[point * 2 + 4 + 1])])
             point += 1
 
         # It is possible that there are spaces in the label
@@ -189,7 +183,7 @@ class Edge():
         self.color = ""
 
         # Strip the points description
-        parts = parts[numberOfPoints * 2 + 4:]
+        parts = parts[numberOfPoints * 2 + 4 :]
         if len(parts) == 2:
             # There is no label
             self.style = parts[0]
@@ -203,7 +197,6 @@ class Edge():
 
 
 class Node:
-
     """Holds a single node description"""
 
     def __init__(self):
@@ -221,8 +214,7 @@ class Node:
     def normalize(self, graph, scaleX, scaleY):
         """Scales to the screen coordinates"""
         self.posX = self.posX * graph.scale * scaleX + graph.hSpace
-        self.posY = graph.height - self.posY * graph.scale * scaleY + \
-                    graph.vSpace
+        self.posY = graph.height - self.posY * graph.scale * scaleY + graph.vSpace
         self.width = self.width * graph.scale * scaleX
         self.height = self.height * graph.scale * scaleY
 
@@ -234,8 +226,7 @@ class Node:
 
         parts = splitWithQuotasRespect(line.strip())
         if len(parts) < 11:
-            raise Exception("Unexpected number of parts in 'node' "
-                            "statement. Line: " + line)
+            raise Exception("Unexpected number of parts in 'node' statement. Line: " + line)
 
         self.name = parts[1]
         self.posX = float(parts[2].strip())
@@ -254,11 +245,11 @@ def getGraphFromPlainDotData(content):
     graph = Graph()
     expectContinue = False
     combinedLine = ""
-    for line in content.split('\n'):
+    for line in content.split("\n"):
         line = line.strip()
         if line == "":
             continue
-        if line.endswith('\\'):
+        if line.endswith("\\"):
             combinedLine += line[:-1]
             expectContinue = True
             continue

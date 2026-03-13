@@ -40,7 +40,6 @@ CLIENT_DEBUG = False
 
 
 class DebugClient(DebugClientBase, DebugBase, ThreadExtension):
-
     """
     Class implementing the client side of the debugger
     """
@@ -53,7 +52,7 @@ class DebugClient(DebugClientBase, DebugBase, ThreadExtension):
 
 # We are normally called by the debugger to execute directly.
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     debugClient = DebugClient()
     try:
         debugClient.main()

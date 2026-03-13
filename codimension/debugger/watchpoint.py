@@ -21,11 +21,9 @@
 
 
 class Watchpoint:
-
     """Represents a single watchpoint"""
 
-    def __init__(self, condition=None, special=False,
-                 temporary=False, enabled=True, ignoreCount=0):
+    def __init__(self, condition=None, special=False, temporary=False, enabled=True, ignoreCount=0):
         self.__condition = condition
         self.__special = special
         self.__temporary = temporary
@@ -58,17 +56,19 @@ class Watchpoint:
 
     def serialize(self):
         """Serializes the watchpoint to a string"""
-        return {'condition': self.__condition,
-                'special': self.__special,
-                'temp': self.__temporary,
-                'enabled': self.__enabled,
-                'ignorecnt':self.__ignoreCount}
+        return {
+            "condition": self.__condition,
+            "special": self.__special,
+            "temp": self.__temporary,
+            "enabled": self.__enabled,
+            "ignorecnt": self.__ignoreCount,
+        }
 
     def deserialize(self, source):
         """Deserializes the watchpoint"""
-        self.__condition = source.get('condition', None)
-        self.__special = source.get('special', False)
-        self.__temporary = source.get('temp', False)
-        self.__enabled = source.get('enabled', False)
-        self.__ignoreCount = source.get('ignorecnt', 0)
+        self.__condition = source.get("condition", None)
+        self.__special = source.get("special", False)
+        self.__temporary = source.get("temp", False)
+        self.__enabled = source.get("enabled", False)
+        self.__ignoreCount = source.get("ignorecnt", 0)
         return self.isValid()

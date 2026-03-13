@@ -36,20 +36,20 @@ from utils.pixmapcache import getPixmap
 # Pixmaps for the margin - populated once
 MARKS: dict[int, object] = {}
 
-class CDMFlakesMargin(QWidget):
 
+class CDMFlakesMargin(QWidget):
     """Pyflakes area widget"""
 
     EXC_MARK = 1
     CURRENT_MARK = 2
     FLAKES_MARK = 3
 
-    COMPLEXITY_A_MARK = ord('A')
-    COMPLEXITY_B_MARK = ord('B')
-    COMPLEXITY_C_MARK = ord('C')
-    COMPLEXITY_D_MARK = ord('D')
-    COMPLEXITY_E_MARK = ord('E')
-    COMPLEXITY_F_MARK = ord('F')
+    COMPLEXITY_A_MARK = ord("A")
+    COMPLEXITY_B_MARK = ord("B")
+    COMPLEXITY_C_MARK = ord("C")
+    COMPLEXITY_D_MARK = ord("D")
+    COMPLEXITY_E_MARK = ord("E")
+    COMPLEXITY_F_MARK = ord("F")
 
     def __init__(self, parent):
         QWidget.__init__(self, parent)
@@ -60,29 +60,29 @@ class CDMFlakesMargin(QWidget):
 
         self.__messages = {}
         self.__ccMessages = {}
-        self.__bgColor = GlobalData().skin['flakesMarginPaper']
+        self.__bgColor = GlobalData().skin["flakesMarginPaper"]
         self.__noTooltip = True
 
         self.currentDebugLine = None
         self.excptionLine = None
 
         if not MARKS:
-            MARKS[self.CURRENT_MARK] = getPixmap('dbgcurrentmarker.png')
-            MARKS[self.EXC_MARK] = getPixmap('dbgexcptmarker.png')
-            MARKS[self.FLAKES_MARK] = getPixmap('pyflakesmsgmarker.png')
-            MARKS[self.COMPLEXITY_A_MARK] = getPixmap('complexity-a.png')
-            MARKS[self.COMPLEXITY_B_MARK] = getPixmap('complexity-b.png')
-            MARKS[self.COMPLEXITY_C_MARK] = getPixmap('complexity-c.png')
-            MARKS[self.COMPLEXITY_D_MARK] = getPixmap('complexity-d.png')
-            MARKS[self.COMPLEXITY_E_MARK] = getPixmap('complexity-e.png')
-            MARKS[self.COMPLEXITY_F_MARK] = getPixmap('complexity-f.png')
+            MARKS[self.CURRENT_MARK] = getPixmap("dbgcurrentmarker.png")
+            MARKS[self.EXC_MARK] = getPixmap("dbgexcptmarker.png")
+            MARKS[self.FLAKES_MARK] = getPixmap("pyflakesmsgmarker.png")
+            MARKS[self.COMPLEXITY_A_MARK] = getPixmap("complexity-a.png")
+            MARKS[self.COMPLEXITY_B_MARK] = getPixmap("complexity-b.png")
+            MARKS[self.COMPLEXITY_C_MARK] = getPixmap("complexity-c.png")
+            MARKS[self.COMPLEXITY_D_MARK] = getPixmap("complexity-d.png")
+            MARKS[self.COMPLEXITY_E_MARK] = getPixmap("complexity-e.png")
+            MARKS[self.COMPLEXITY_F_MARK] = getPixmap("complexity-f.png")
 
             for item in MARKS:
                 if MARKS[item].height() != MARKS[item].width():
-                    logging.error('analysis margin pixmap needs to be square')
+                    logging.error("analysis margin pixmap needs to be square")
 
         self.myUUID = None
-        if hasattr(self._qpart._parent, 'getUUID'):
+        if hasattr(self._qpart._parent, "getUUID"):
             self.myUUID = self._qpart._parent.getUUID()
 
         mainWindow = GlobalData().mainWindow
@@ -98,8 +98,7 @@ class CDMFlakesMargin(QWidget):
 
         block = self._qpart.firstVisibleBlock()
         geometry = self._qpart.blockBoundingGeometry(block)
-        blockBoundingGeometry = geometry.translated(
-            self._qpart.contentOffset())
+        blockBoundingGeometry = geometry.translated(self._qpart.contentOffset())
         top = blockBoundingGeometry.top()
         # bottom = top + blockBoundingGeometry.height()
 
@@ -123,7 +122,7 @@ class CDMFlakesMargin(QWidget):
                 if pixmap:
                     xPos = 0
                     yPos = top
-                    pixmapSide = self.width()   # Pixmap is square!
+                    pixmapSide = self.width()  # Pixmap is square!
                     if oneLineHeight >= pixmapSide:
                         # More than enough vertical space, width is fixed
                         yPos += math.ceil((oneLineHeight - pixmapSide) / 2)
@@ -132,8 +131,10 @@ class CDMFlakesMargin(QWidget):
                         xPos += math.ceil((pixmapSide - oneLineHeight) / 2)
                         pixmapSide = oneLineHeight
                     targetRect = QRectF(
-                        float(xPos), float(yPos),
-                        float(pixmapSide), float(pixmapSide),
+                        float(xPos),
+                        float(yPos),
+                        float(pixmapSide),
+                        float(pixmapSide),
                     )
                     sourceRect = QRectF(0, 0, pixmap.width(), pixmap.height())
                     painter.drawPixmap(targetRect, pixmap, sourceRect)
@@ -142,22 +143,21 @@ class CDMFlakesMargin(QWidget):
     def mouseMoveEvent(self, event):
         """Tooltips for the marks"""
         if not self.__noTooltip:
-            blockNumber = self._qpart.cursorForPosition(
-                event.pos()).blockNumber()
+            blockNumber = self._qpart.cursorForPosition(event.pos()).blockNumber()
             lineno = blockNumber + 1
             msg = None
 
             if lineno == self.excptionLine:
-                msg = 'Exception line'
+                msg = "Exception line"
             elif lineno == self.currentDebugLine:
-                msg = 'Current debugger line'
+                msg = "Current debugger line"
             elif lineno in self.__ccMessages:
                 msg = self.__ccMessages[lineno][0]
             elif lineno in self.__messages:
-                msg = ''
+                msg = ""
                 for part in self.__messages[lineno]:
                     if msg:
-                        msg += '<br/>'
+                        msg += "<br/>"
                     msg += escape(part)
                 msg = "<p style='white-space:pre'>" + msg + "</p>"
 
@@ -219,20 +219,16 @@ class CDMFlakesMargin(QWidget):
 
         for lineno in self.__messages:
             if lineno > 0:
-                self.setBlockValue(
-                    self._qpart.document().findBlockByNumber(lineno - 1), 1)
+                self.setBlockValue(self._qpart.document().findBlockByNumber(lineno - 1), 1)
 
         self.__ccMessages = {}
         for item in ccMessages:
             if item.lineno not in self.__messages:
                 complexity = cc_rank(item.complexity)
-                if complexity != 'A':
-                    msg = 'Cyclomatic complexity is ' + complexity + \
-                          ' (value: ' + str(item.complexity) + ')'
+                if complexity != "A":
+                    msg = "Cyclomatic complexity is " + complexity + " (value: " + str(item.complexity) + ")"
                     self.__ccMessages[item.lineno] = (msg, ord(complexity))
-                    self.setBlockValue(
-                        self._qpart.document().findBlockByNumber(
-                            item.lineno - 1), 1)
+                    self.setBlockValue(self._qpart.document().findBlockByNumber(item.lineno - 1), 1)
 
         self.__noTooltip = False
         self.update()

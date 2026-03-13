@@ -19,7 +19,6 @@
 
 """debugger context viewer"""
 
-
 from ui.qt import QSplitter, Qt, QVBoxLayout, QWidget
 
 from .stackviewer import StackViewer
@@ -28,7 +27,6 @@ from .variablesviewer import VariablesViewer
 
 
 class DebuggerContext(QWidget):
-
     """Implements the debugger context viewer"""
 
     def __init__(self, debugger, parent=None):
@@ -73,8 +71,8 @@ class DebuggerContext(QWidget):
 
     def __onClientLine(self, fileName, line, forStack):
         """Handles the signal from the debugged program"""
-        del fileName    # unused argument
-        del line        # unused argument
+        del fileName  # unused argument
+        del line  # unused argument
         if not forStack:
             self.__debugger.remoteThreadList()
             self.__debugger.remoteClientVariables(1, 0)  # globals
@@ -106,8 +104,8 @@ class DebuggerContext(QWidget):
 
     def __onClientThreadSet(self):
         """Handles the event of setting the current thread by the client"""
-        self.__debugger.remoteClientVariables(1, 0)   # globals
-        self.__debugger.remoteClientVariables(0, 0)   # locals
+        self.__debugger.remoteClientVariables(1, 0)  # globals
+        self.__debugger.remoteClientVariables(0, 0)  # locals
 
     def switchControl(self, isInIDE):
         """Switches the UI depending where the control flow is"""

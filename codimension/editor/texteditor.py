@@ -19,7 +19,6 @@
 
 """Text editor implementation"""
 
-
 import logging
 import os.path
 
@@ -53,7 +52,6 @@ NO_MODIFIER = int(Qt.NoModifier)
 
 
 class TextEditor(QutepartWrapper, EditorContextMenuMixin):
-
     """Text editor implementation"""
 
     sigEscapePressed = pyqtSignal()
@@ -68,8 +66,8 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
         skin = GlobalData().skin
-        self.setPaper(skin['nolexerPaper'])
-        self.setColor(skin['nolexerColor'])
+        self.setPaper(skin["nolexerPaper"])
+        self.setColor(skin["nolexerColor"])
 
         self.onTextZoomChanged()
         self.__initMargins(debugger)
@@ -86,7 +84,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         self.updateSettings()
 
         # Completion support
-        self.__completionPrefix = ''
+        self.__completionPrefix = ""
         self.__completionLine = -1
         self.__completionPos = -1
         self.__completer = CodeCompleter(self)
@@ -105,7 +103,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         self.installEventFilter(self)
 
     def _drawIndentMarkersAndEdge(self, paintEventRect):
-        """"Overriden function"""
+        """ "Overriden function"""
         # At the termination time the indenter is set to None to release
         # the editor reference. However a paint event may still appear for
         # the editor to be closed. The paint event uses the indenter in the
@@ -119,46 +117,49 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
     def __initHotKeys(self):
         """Initializes a map for the hot keys event filter"""
-        self.autoIndentLineAction.setShortcut('Ctrl+Shift+I')
+        self.autoIndentLineAction.setShortcut("Ctrl+Shift+I")
 
         self.invokeCompletionAction.setEnabled(False)
         self.invokeCompletionAction.deleteLater()
         self.invokeCompletionAction = None
 
         self.__hotKeys = {
-            CTRL_SHIFT: {Qt.Key_T: self.onJumpToTop,
-                         Qt.Key_M: self.onJumpToMiddle,
-                         Qt.Key_B: self.onJumpToBottom},
-            SHIFT: {Qt.Key_Delete: self.onShiftDel,
-                    Qt.Key_Backtab: self.dedentLine,
-                    Qt.Key_End: self.onShiftEnd,
-                    Qt.Key_Home: self.onShiftHome},
-            CTRL: {Qt.Key_X: self.onShiftDel,
-                   Qt.Key_C: self.onCtrlC,
-                   Qt.Key_Insert: self.onCtrlC,
-                   Qt.Key_Apostrophe: self.onHighlight,
-                   Qt.Key_Period: self.onNextHighlight,
-                   Qt.Key_Comma: self.onPrevHighlight,
-                   Qt.Key_M: self.onCommentUncomment,
-                   Qt.Key_Space: self.onAutoComplete,
-                   Qt.Key_F1: self.onTagHelp,
-                   Qt.Key_Backslash: self.onGotoDefinition,
-                   Qt.Key_BracketRight: self.onOccurences,
-                   Qt.Key_Slash: self.onShowCalltip,
-                   Qt.Key_Minus: Settings().onTextZoomOut,
-                   Qt.Key_Equal: Settings().onTextZoomIn,
-                   Qt.Key_0: Settings().onTextZoomReset,
-                   Qt.Key_Home: self.onFirstChar,
-                   Qt.Key_End: self.onLastChar,
-                   Qt.Key_B: self.highlightInOutline,
-                   Qt.Key_QuoteLeft: self.highlightInCFlow},
+            CTRL_SHIFT: {Qt.Key_T: self.onJumpToTop, Qt.Key_M: self.onJumpToMiddle, Qt.Key_B: self.onJumpToBottom},
+            SHIFT: {
+                Qt.Key_Delete: self.onShiftDel,
+                Qt.Key_Backtab: self.dedentLine,
+                Qt.Key_End: self.onShiftEnd,
+                Qt.Key_Home: self.onShiftHome,
+            },
+            CTRL: {
+                Qt.Key_X: self.onShiftDel,
+                Qt.Key_C: self.onCtrlC,
+                Qt.Key_Insert: self.onCtrlC,
+                Qt.Key_Apostrophe: self.onHighlight,
+                Qt.Key_Period: self.onNextHighlight,
+                Qt.Key_Comma: self.onPrevHighlight,
+                Qt.Key_M: self.onCommentUncomment,
+                Qt.Key_Space: self.onAutoComplete,
+                Qt.Key_F1: self.onTagHelp,
+                Qt.Key_Backslash: self.onGotoDefinition,
+                Qt.Key_BracketRight: self.onOccurences,
+                Qt.Key_Slash: self.onShowCalltip,
+                Qt.Key_Minus: Settings().onTextZoomOut,
+                Qt.Key_Equal: Settings().onTextZoomIn,
+                Qt.Key_0: Settings().onTextZoomReset,
+                Qt.Key_Home: self.onFirstChar,
+                Qt.Key_End: self.onLastChar,
+                Qt.Key_B: self.highlightInOutline,
+                Qt.Key_QuoteLeft: self.highlightInCFlow,
+            },
             ALT: {Qt.Key_U: self.onScopeBegin},
-            CTRL_KEYPAD: {Qt.Key_Minus: Settings().onTextZoomOut,
-                          Qt.Key_Plus: Settings().onTextZoomIn,
-                          Qt.Key_0: Settings().onTextZoomReset},
-            NO_MODIFIER: {Qt.Key_Home: self.onHome,
-                          Qt.Key_End: self.moveToLineEnd,
-                          Qt.Key_F12: self.makeLineFirst}}
+            CTRL_KEYPAD: {
+                Qt.Key_Minus: Settings().onTextZoomOut,
+                Qt.Key_Plus: Settings().onTextZoomIn,
+                Qt.Key_0: Settings().onTextZoomReset,
+            },
+            NO_MODIFIER: {Qt.Key_Home: self.onHome, Qt.Key_End: self.moveToLineEnd, Qt.Key_F12: self.makeLineFirst},
+        }
 
         # Not all the derived classes need certain tool functionality
         if hasattr(self._parent, "getType"):
@@ -167,8 +168,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
                 if hasattr(self._parent, "onOpenImport"):
                     self.__hotKeys[CTRL][Qt.Key_I] = self._parent.onOpenImport
         if hasattr(self._parent, "onNavigationBar"):
-            self.__hotKeys[NO_MODIFIER][Qt.Key_F2] = \
-                self._parent.onNavigationBar
+            self.__hotKeys[NO_MODIFIER][Qt.Key_F2] = self._parent.onNavigationBar
 
     # Arguments: obj, event
     def eventFilter(self, _, event):
@@ -176,9 +176,17 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         if event.type() == QEvent.KeyPress:
             key = event.key()
             if self.isReadOnly():
-                if key in [Qt.Key_Delete, Qt.Key_Backspace, Qt.Key_Backtab,
-                           Qt.Key_X, Qt.Key_Tab, Qt.Key_Space, Qt.Key_Slash,
-                           Qt.Key_Z, Qt.Key_Y]:
+                if key in [
+                    Qt.Key_Delete,
+                    Qt.Key_Backspace,
+                    Qt.Key_Backtab,
+                    Qt.Key_X,
+                    Qt.Key_Tab,
+                    Qt.Key_Space,
+                    Qt.Key_Slash,
+                    Qt.Key_Z,
+                    Qt.Key_Y,
+                ]:
                     return True
 
             modifiers = int(event.modifiers())
@@ -222,23 +230,23 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         """Updates the editor settings"""
         settings = Settings()
 
-        if settings['verticalEdge']:
-            self.lineLengthEdge = settings['editorEdge']
-            self.lineLengthEdgeColor = GlobalData().skin['edgeColor']
+        if settings["verticalEdge"]:
+            self.lineLengthEdge = settings["editorEdge"]
+            self.lineLengthEdgeColor = GlobalData().skin["edgeColor"]
             self.drawSolidEdge = True
         else:
             self.lineLengthEdge = None
 
-        self.drawAnyWhitespace = settings['showSpaces']
-        self.drawIncorrectIndentation = settings['showSpaces']
+        self.drawAnyWhitespace = settings["showSpaces"]
+        self.drawIncorrectIndentation = settings["showSpaces"]
 
-        if settings['currentLineVisible']:
+        if settings["currentLineVisible"]:
             skin = GlobalData().skin
-            self.currentLineColor = skin['currentLinePaper']
+            self.currentLineColor = skin["currentLinePaper"]
         else:
             self.currentLineColor = None
 
-        if settings['lineWrap']:
+        if settings["lineWrap"]:
             self.setWordWrapMode(QTextOption.WrapAnywhere)
         else:
             self.setWordWrapMode(QTextOption.NoWrap)
@@ -256,15 +264,15 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         """Initializes the editor margins"""
         self.addMargin(CDMLineNumberMargin(self))
         self.addMargin(CDMFlakesMargin(self))
-        self.getMargin('cdm_flakes_margin').setVisible(False)
+        self.getMargin("cdm_flakes_margin").setVisible(False)
 
         if debugger:
             self.addMargin(CDMBreakpointMargin(self, debugger))
-            self.getMargin('cdm_bpoint_margin').setVisible(False)
+            self.getMargin("cdm_bpoint_margin").setVisible(False)
 
     def highlightCurrentDebuggerLine(self, line, asException):
         """Highlights the current debugger line"""
-        margin = self.getMargin('cdm_flakes_margin')
+        margin = self.getMargin("cdm_flakes_margin")
         if margin:
             if asException:
                 margin.setExceptionLine(line)
@@ -273,7 +281,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
     def clearCurrentDebuggerLine(self):
         """Removes the current debugger line marker"""
-        margin = self.getMargin('cdm_flakes_margin')
+        margin = self.getMargin("cdm_flakes_margin")
         if margin:
             margin.clearDebugMarks()
 
@@ -286,9 +294,9 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
             # Copied from enki (enki/core/document.py: _readFile()):
             # Strip last EOL. Qutepart adds it when saving file
-            if content.endswith('\r\n'):
+            if content.endswith("\r\n"):
                 content = content[:-2]
-            elif content.endswith('\n') or content.endswith('\r'):
+            elif content.endswith("\n") or content.endswith("\r"):
                 content = content[:-1]
 
             self.text = content
@@ -308,15 +316,14 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         """Writes the text to a file"""
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
 
-        if Settings()['removeTrailingOnSave']:
+        if Settings()["removeTrailingOnSave"]:
             self.removeTrailingWhitespaces()
 
         try:
             encoding = detectWriteEncoding(self, fileName)
             if encoding is None:
                 QApplication.restoreOverrideCursor()
-                logging.error('Could not detect write encoding for ' +
-                              fileName)
+                logging.error("Could not detect write encoding for " + fileName)
                 return False
 
             writeEncodedFile(fileName, self.textForSaving(), encoding)
@@ -342,8 +349,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         QPlainTextEdit.setReadOnly(self, mode)
         if mode:
             # Otherwise the cursor is suppressed in the RO mode
-            self.setTextInteractionFlags(self.textInteractionFlags() |
-                                         Qt.TextSelectableByKeyboard)
+            self.setTextInteractionFlags(self.textInteractionFlags() | Qt.TextSelectableByKeyboard)
         self.increaseIndentAction.setEnabled(not mode)
         self.decreaseIndentAction.setEnabled(not mode)
         self.autoIndentLineAction.setEnabled(not mode)
@@ -364,9 +370,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         if self.isReadOnly():
             # Space scrolls
             # Ctrl+X/Shift+Del/Alt+D/Alt+X deletes something
-            if key in [Qt.Key_Delete, Qt.Key_Backspace,
-                       Qt.Key_Space, Qt.Key_X, Qt.Key_Tab,
-                       Qt.Key_Z, Qt.Key_Y]:
+            if key in [Qt.Key_Delete, Qt.Key_Backspace, Qt.Key_Space, Qt.Key_X, Qt.Key_Tab, Qt.Key_Z, Qt.Key_Y]:
                 return
 
             # Qutepart has its own handler and lets to insert new lines when
@@ -384,7 +388,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             QutepartWrapper.keyPressEvent(self, event)
             QApplication.processEvents()
             if key == Qt.Key_Backspace:
-                if self.__completionPrefix == '':
+                if self.__completionPrefix == "":
                     self.__completer.hide()
                     self.setFocus()
                 else:
@@ -405,7 +409,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             QApplication.processEvents()
 
             if line == self.__openedLine:
-                self.lines[line] = ''
+                self.lines[line] = ""
 
             # If the new line has one or more spaces then it is a candidate for
             # automatic trimming
@@ -415,8 +419,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             if pos > 0 and len(text.strip()) == 0:
                 self.__openedLine = line
 
-        elif key in [Qt.Key_Up, Qt.Key_PageUp,
-                     Qt.Key_Down, Qt.Key_PageDown]:
+        elif key in [Qt.Key_Up, Qt.Key_PageUp, Qt.Key_Down, Qt.Key_PageDown]:
             line, _ = self.cursorPosition
             lineToTrim = line if line == self.__openedLine else None
 
@@ -427,7 +430,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
                 line, _ = self.cursorPosition
                 if line != lineToTrim:
                     # The cursor was really moved to another line
-                    self.lines[lineToTrim] = ''
+                    self.lines[lineToTrim] = ""
             self.__openedLine = None
 
         elif key == Qt.Key_Escape:
@@ -444,9 +447,10 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
                 currentPosition = self.absCursorPosition
                 if pos != 0:
                     char = self.lines[line][pos - 1]
-                    if char not in [' ', ':', '{', '}', '[', ']', ',',
-                                    '<', '>', '+', '!', ')'] and \
-                       currentPosition != self.__lastTabPosition:
+                    if (
+                        char not in [" ", ":", "{", "}", "[", "]", ",", "<", ">", "+", "!", ")"]
+                        and currentPosition != self.__lastTabPosition
+                    ):
                         self.__lastTabPosition = currentPosition
                         self.onAutoComplete()
                         event.accept()
@@ -457,12 +461,11 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
                     QutepartWrapper.keyPressEvent(self, event)
                     self.__lastTabPosition = currentPosition
 
-        elif key == Qt.Key_Z and \
-            int(event.modifiers()) == (Qt.ControlModifier + Qt.ShiftModifier):
+        elif key == Qt.Key_Z and int(event.modifiers()) == (Qt.ControlModifier + Qt.ShiftModifier):
             event.accept()
 
         elif key == Qt.Key_ParenLeft:
-            if Settings()['editorCalltips']:
+            if Settings()["editorCalltips"]:
                 QutepartWrapper.keyPressEvent(self, event)
                 self.onShowCalltip(False)
             else:
@@ -495,7 +498,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
             if self.__openedLine is not None:
                 self.__skipChangeCursor = True
-                self.lines[self.__openedLine] = ''
+                self.lines[self.__openedLine] = ""
                 self.__skipChangeCursor = False
                 self.__openedLine = None
 
@@ -525,22 +528,20 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
                     stripCount = 1
                 else:
                     # Strip up to two characters if the next char is a ' '
-                    if txt[nonSpaceIndex + 1] == ' ':
+                    if txt[nonSpaceIndex + 1] == " ":
                         stripCount = 2
                     else:
                         stripCount = 1
-                newTxt = txt[:nonSpaceIndex] + txt[nonSpaceIndex +
-                                                   stripCount:]
+                newTxt = txt[:nonSpaceIndex] + txt[nonSpaceIndex + stripCount :]
                 if not newTxt.strip():
-                    newTxt = ''
+                    newTxt = ""
                 self.lines[line] = newTxt
             else:
                 # need to comment
                 if nonSpaceIndex is None:
-                    self.lines[line] = '# '
+                    self.lines[line] = "# "
                 else:
-                    newTxt = '# '.join((txt[:nonSpaceIndex],
-                                        txt[nonSpaceIndex:]))
+                    newTxt = "# ".join((txt[:nonSpaceIndex], txt[nonSpaceIndex:]))
                     self.lines[line] = newTxt
 
             # Jump to the beginning of the next line
@@ -608,17 +609,15 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
         parts = []
         for definition in definitions:
-            header = 'Type: ' + definition[3]
+            header = "Type: " + definition[3]
             if definition[5]:
-                header += '\nModule: ' + definition[5]
-            parts.append(header + '\n\n' + definition[4])
+                header += "\nModule: " + definition[5]
+            parts.append(header + "\n\n" + definition[4])
 
         if parts:
-            QToolTip.showText(self.mapToGlobal(self.cursorRect().bottomLeft()),
-                              '<pre>' + '\n\n'.join(parts) + '</pre>')
+            QToolTip.showText(self.mapToGlobal(self.cursorRect().bottomLeft()), "<pre>" + "\n\n".join(parts) + "</pre>")
         else:
-            GlobalData().mainWindow.showStatusBarMessage(
-                "Definition is not found")
+            GlobalData().mainWindow.showStatusBarMessage("Definition is not found")
 
     def makeLineFirst(self):
         """Make the cursor line the first on the screen"""
@@ -675,15 +674,12 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
         if definitions:
             if len(definitions) == 1:
-                GlobalData().mainWindow.openFile(
-                    definitions[0][0], definitions[0][1],
-                    definitions[0][2] + 1)
+                GlobalData().mainWindow.openFile(definitions[0][0], definitions[0][1], definitions[0][2] + 1)
             else:
                 if hasattr(self._parent, "importsBar"):
                     self._parent.importsBar.showDefinitions(definitions)
         else:
-            GlobalData().mainWindow.showStatusBarMessage(
-                "Definition is not found")
+            GlobalData().mainWindow.showStatusBarMessage("Definition is not found")
 
     def onScopeBegin(self):
         """The user requested jumping to the current scope begin"""
@@ -707,15 +703,14 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
         if not signatures:
             if showMessage:
-                GlobalData().mainWindow.showStatusBarMessage(
-                    "No calltip found")
+                GlobalData().mainWindow.showStatusBarMessage("No calltip found")
             return
 
         # For the time being let's take only the first signature...
         calltipParams = []
         for param in signatures[0].params:
-            calltipParams.append(param.description[len(param.type) + 1:])
-        calltip = signatures[0].name + '(' + ', '.join(calltipParams) + ')'
+            calltipParams.append(param.description[len(param.type) + 1 :])
+        calltip = signatures[0].name + "(" + ", ".join(calltipParams) + ")"
 
         self.__calltip = Calltip(self)
         self.__calltip.showCalltip(calltip, signatures[0].index)
@@ -769,8 +764,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         if self._parent.getType() == MainWindowTabWidgetBase.VCSAnnotateViewer:
             return
         if not os.path.isabs(self._parent.getFileName()):
-            GlobalData().mainWindow.showStatusBarMessage(
-                "Please save the buffer and try again")
+            GlobalData().mainWindow.showStatusBarMessage("Please save the buffer and try again")
             return
 
         fileName = self._parent.getFileName()
@@ -800,18 +794,22 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             result[index].addMatch(definition.name, lineno)
 
         if len(result) == 0:
-            GlobalData().mainWindow.showStatusBarMessage('No occurences found')
+            GlobalData().mainWindow.showStatusBarMessage("No occurences found")
             return
 
         # There are found items
-        GlobalData().mainWindow.showStatusBarMessage('')
+        GlobalData().mainWindow.showStatusBarMessage("")
 
         GlobalData().mainWindow.displayFindInFiles(
             OccurrencesSearchProvider().getName(),
-            result, {'name': definitions[0].name,
-                     'filename': fileName,
-                     'line': self.cursorPosition[0] + 1,
-                     'column': self.cursorPosition[1]})
+            result,
+            {
+                "name": definitions[0].name,
+                "filename": fileName,
+                "line": self.cursorPosition[0] + 1,
+                "column": self.cursorPosition[1],
+            },
+        )
 
     def insertCompletion(self, text):
         """Triggered when a completion is selected"""
@@ -823,14 +821,14 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             if text != currentWord and text != self.__completionPrefix:
                 with self:
                     lineContent = self.lines[line]
-                    leftPart = lineContent[0:pos - prefixLength]
+                    leftPart = lineContent[0 : pos - prefixLength]
                     rightPart = lineContent[pos:]
                     self.lines[line] = leftPart + text + rightPart
 
             newPos = pos + len(text) - prefixLength
             self.cursorPosition = line, newPos
 
-            self.__completionPrefix = ''
+            self.__completionPrefix = ""
             self.__completer.hide()
 
             # The next time there is nothing to insert for sure
@@ -852,12 +850,11 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
     def clearAnalysisMessages(self):
         """Clears all the analysis markers"""
-        self.getMargin('cdm_flakes_margin').clearAnalysisMessages()
+        self.getMargin("cdm_flakes_margin").clearAnalysisMessages()
 
     def setAnalysisMessages(self, messages, ccMessages):
         """Shows up analysis messages"""
-        self.getMargin('cdm_flakes_margin').setAnalysisMessages(messages,
-                                                                ccMessages)
+        self.getMargin("cdm_flakes_margin").setAnalysisMessages(messages, ccMessages)
 
     def highlightInCFlow(self):
         """Triggered when highlight in the control flow is requested"""
@@ -871,34 +868,34 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         skin = GlobalData().skin
         if debugOn:
             if disableEditing:
-                self.setLinenoMarginBackgroundColor(skin['marginPaperDebug'])
-                self.setLinenoMarginForegroundColor(skin['marginColorDebug'])
+                self.setLinenoMarginBackgroundColor(skin["marginPaperDebug"])
+                self.setLinenoMarginForegroundColor(skin["marginColorDebug"])
                 self.setReadOnly(True)
         else:
-            self.setLinenoMarginBackgroundColor(skin['marginPaper'])
-            self.setLinenoMarginForegroundColor(skin['marginColor'])
+            self.setLinenoMarginBackgroundColor(skin["marginPaper"])
+            self.setLinenoMarginForegroundColor(skin["marginColor"])
             self.setReadOnly(False)
 
-        bpointMargin = self.getMargin('cdm_bpoint_margin')
+        bpointMargin = self.getMargin("cdm_bpoint_margin")
         if bpointMargin:
             bpointMargin.setDebugMode(debugOn, disableEditing)
 
     def restoreBreakpoints(self):
         """Restores the breakpoints"""
-        bpointMargin = self.getMargin('cdm_bpoint_margin')
+        bpointMargin = self.getMargin("cdm_bpoint_margin")
         if bpointMargin:
             bpointMargin.restoreBreakpoints()
 
     def isLineBreakable(self):
         """True if a line is breakable"""
-        bpointMargin = self.getMargin('cdm_bpoint_margin')
+        bpointMargin = self.getMargin("cdm_bpoint_margin")
         if bpointMargin:
             return bpointMargin.isLineBreakable()
         return False
 
     def validateBreakpoints(self):
         """Checks breakpoints and deletes those which are invalid"""
-        bpointMargin = self.getMargin('cdm_bpoint_margin')
+        bpointMargin = self.getMargin("cdm_bpoint_margin")
         if bpointMargin:
             bpointMargin.validateBreakpoints()
 
@@ -912,13 +909,13 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
     def setLinenoMarginBackgroundColor(self, color):
         """Sets the margins background"""
-        linenoMargin = self.getMargin('cdm_line_number_margin')
+        linenoMargin = self.getMargin("cdm_line_number_margin")
         if linenoMargin:
             linenoMargin.setBackgroundColor(color)
 
     def setLinenoMarginForegroundColor(self, color):
         """Sets the lineno margin foreground color"""
-        linenoMargin = self.getMargin('cdm_line_number_margin')
+        linenoMargin = self.getMargin("cdm_line_number_margin")
         if linenoMargin:
             linenoMargin.setForegroundColor(color)
 
@@ -937,7 +934,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
         for margin in self.getMargins():
             margin.clear()
-            if hasattr(margin, 'onClose'):
+            if hasattr(margin, "onClose"):
                 margin.onClose()
             margin.deleteLater()
         self._margins = None
@@ -948,7 +945,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         """Resize the parent panels if required"""
         QutepartWrapper.resizeEvent(self, event)
         self.hideCompleter()
-        if hasattr(self._parent, 'resizeBars'):
+        if hasattr(self._parent, "resizeBars"):
             self._parent.resizeBars()
 
     def getFileName(self):

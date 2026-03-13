@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-""" Provides versions of various components used by codimension """
+"""Provides versions of various components used by codimension"""
 
 import logging
 import shutil
@@ -56,26 +56,30 @@ def getCodimensionVersion():
     import sys
 
     from .globals import GlobalData
+
     return GlobalData().version, abspath(sys.argv[0])
 
 
 def getPythonInterpreterVersion():
     """Provides the python interpreter version"""
     import sys
-    return ".".join([str(sys.version_info.major),
-                     str(sys.version_info.minor),
-                     str(sys.version_info.micro)]), sys.executable
+
+    return ".".join(
+        [str(sys.version_info.major), str(sys.version_info.minor), str(sys.version_info.micro)]
+    ), sys.executable
 
 
 def getQtVersion():
     """Provides the Qt version"""
     from ui.qt import QT_VERSION_STR
+
     return QT_VERSION_STR
 
 
 def getGraphvizVersion():
     """Provides the graphviz version"""
     from .globals import GlobalData
+
     if not GlobalData().graphvizAvailable:
         return "Not installed", None
 
@@ -84,8 +88,7 @@ def getGraphvizVersion():
         return "Not installed", None
 
     try:
-        result = subprocess.run(
-            [path, '-V'], capture_output=True, text=True, timeout=5)
+        result = subprocess.run([path, "-V"], capture_output=True, text=True, timeout=5)
         status, output = result.returncode, result.stdout + result.stderr
         if status != 0:
             return "Not installed", None
@@ -106,6 +109,7 @@ def getGraphvizVersion():
 def getJavaVersion():
     """Provides java version"""
     from .globals import GlobalData
+
     if not GlobalData().javaAvailable:
         return "Not installed", None
 
@@ -114,8 +118,7 @@ def getJavaVersion():
         return "Not installed", None
 
     try:
-        result = subprocess.run(
-            [path, '-version'], capture_output=True, text=True, timeout=5)
+        result = subprocess.run([path, "-version"], capture_output=True, text=True, timeout=5)
         status, output = result.returncode, result.stdout + result.stderr
         if status != 0:
             return "Not installed", None
@@ -123,8 +126,8 @@ def getJavaVersion():
         for line in output.splitlines():
             # E.g. openjdk version "1.8.0_212"
             line = line.strip()
-            if 'version' in line:
-                ver = line.split('version', 1)[1].strip()
+            if "version" in line:
+                ver = line.split("version", 1)[1].strip()
                 if ver.startswith('"') and ver.endswith('"'):
                     ver = ver[1:-1]
                 return ver, path
@@ -139,9 +142,7 @@ def getPlantUMLVersion():
         return "n/a", None
 
     try:
-        result = subprocess.run(
-            ['java', '-jar', JAR_PATH, '-version'],
-            capture_output=True, text=True, timeout=5)
+        result = subprocess.run(["java", "-jar", JAR_PATH, "-version"], capture_output=True, text=True, timeout=5)
         status, output = result.returncode, result.stdout + result.stderr
         if status != 0:
             return "n/a", None
@@ -149,8 +150,8 @@ def getPlantUMLVersion():
         for line in output.splitlines():
             # PlantUML version 1.2019.05 (Sat Apr 20 11:45:36 GMT-05:00 2019)
             line = line.strip()
-            if line.startswith('PlantUML version'):
-                return line.split('version', 1)[1].strip(), JAR_PATH
+            if line.startswith("PlantUML version"):
+                return line.split("version", 1)[1].strip(), JAR_PATH
     except Exception:
         return "n/a", None
     return "could not determine", JAR_PATH
@@ -164,107 +165,200 @@ def getComponentInfo():
     #                     <license url>
     # A list is used to have some kind of priority ordering
     version, path = getCodimensionVersion()
-    components.append(("Codimension IDE", version,
-                       "http://codimension.org/", None,
-                       "GPL-3.0",
-                       "http://www.gnu.org/licenses/gpl-3.0.html",
-                       path))
-    version, path = getPackageVersionAndLocation('cdmpyparser')
-    components.append(("Codimension python parser", version,
-                       "http://codimension.org/", None,
-                       "GPL-3.0",
-                       "http://www.gnu.org/licenses/gpl-3.0.html",
-                       path))
-    version, path = getPackageVersionAndLocation('cdmcfparser')
-    components.append(("Codimension python control flow parser",
-                       version,
-                       "http://codimension.org/", None,
-                       "GPL-3.0",
-                       "http://www.gnu.org/licenses/gpl-3.0.html",
-                       path))
+    components.append(
+        (
+            "Codimension IDE",
+            version,
+            "http://codimension.org/",
+            None,
+            "GPL-3.0",
+            "http://www.gnu.org/licenses/gpl-3.0.html",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("cdmpyparser")
+    components.append(
+        (
+            "Codimension python parser",
+            version,
+            "http://codimension.org/",
+            None,
+            "GPL-3.0",
+            "http://www.gnu.org/licenses/gpl-3.0.html",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("cdmcfparser")
+    components.append(
+        (
+            "Codimension python control flow parser",
+            version,
+            "http://codimension.org/",
+            None,
+            "GPL-3.0",
+            "http://www.gnu.org/licenses/gpl-3.0.html",
+            path,
+        )
+    )
     version, path = getPythonInterpreterVersion()
-    components.append(("Python interpreter", version,
-                       "http://www.python.org/", None,
-                       "Open source license",
-                       "http://www.python.org/psf/license/",
-                       path))
-    version, path = getPackageVersionAndLocation('PyQt5')
-    components.append(("PyQt", version,
-                       "http://www.riverbankcomputing.com/software/pyqt/intro",
-                       None, "GPL-2.0/GPL-3.0/Commercial/Embedded",
-                       "http://www.riverbankcomputing.com/"
-                       "software/pyqt/license",
-                       path))
-    version, path = getPackageVersionAndLocation('qutepart')
-    components.append(("qutepart", version,
-                       "https://github.com/andreikop/qutepart",
-                       None,
-                       "LGPL-2.1",
-                       "http://www.gnu.org/licenses/lgpl-2.1.html",
-                       path))
-    components.append(("Qt", getQtVersion(),
-                       "http://qt-project.org/", None,
-                       "LGPL-2.1/Commercial",
-                       "http://www.gnu.org/licenses/lgpl-2.1.html",
-                       None))
-    version, path = getPackageVersionAndLocation('pyflakes')
-    components.append(("pyflakes", version,
-                       "https://pypi.python.org/pypi/pyflakes", None,
-                       "pyflakes license", "see the package",
-                       path))
-    version, path = getPackageVersionAndLocation('python-magic')
-    components.append(("python-magic", version,
-                       "https://pypi.python.org/pypi/python-magic/", None,
-                       "MIT license",
-                       "https://opensource.org/licenses/MIT",
-                       path))
+    components.append(
+        (
+            "Python interpreter",
+            version,
+            "http://www.python.org/",
+            None,
+            "Open source license",
+            "http://www.python.org/psf/license/",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("PyQt5")
+    components.append(
+        (
+            "PyQt",
+            version,
+            "http://www.riverbankcomputing.com/software/pyqt/intro",
+            None,
+            "GPL-2.0/GPL-3.0/Commercial/Embedded",
+            "http://www.riverbankcomputing.com/software/pyqt/license",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("qutepart")
+    components.append(
+        (
+            "qutepart",
+            version,
+            "https://github.com/andreikop/qutepart",
+            None,
+            "LGPL-2.1",
+            "http://www.gnu.org/licenses/lgpl-2.1.html",
+            path,
+        )
+    )
+    components.append(
+        (
+            "Qt",
+            getQtVersion(),
+            "http://qt-project.org/",
+            None,
+            "LGPL-2.1/Commercial",
+            "http://www.gnu.org/licenses/lgpl-2.1.html",
+            None,
+        )
+    )
+    version, path = getPackageVersionAndLocation("pyflakes")
+    components.append(
+        (
+            "pyflakes",
+            version,
+            "https://pypi.python.org/pypi/pyflakes",
+            None,
+            "pyflakes license",
+            "see the package",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("python-magic")
+    components.append(
+        (
+            "python-magic",
+            version,
+            "https://pypi.python.org/pypi/python-magic/",
+            None,
+            "MIT license",
+            "https://opensource.org/licenses/MIT",
+            path,
+        )
+    )
     version, path = getGraphvizVersion()
-    components.append(("graphviz", version,
-                       "http://www.graphviz.org/", None,
-                       "Eclipse Public License 1.0",
-                       "http://www.graphviz.org/License.php",
-                       path))
-    version, path = getPackageVersionAndLocation('gprof2dot')
-    components.append(("gprof2dot", version,
-                       "https://github.com/jrfonseca/gprof2dot", None,
-                       "LGPL", "http://www.gnu.org/licenses/lgpl.html",
-                       path))
-    version, path = getPackageVersionAndLocation('yapsy')
-    components.append(("yapsy", version,
-                       "http://yapsy.sourceforge.net", None,
-                       "BSD License",
-                       "http://opensource.org/licenses/bsd-license.php",
-                       path))
-    version, path = getPackageVersionAndLocation('jedi')
-    components.append(("jedi", version,
-                       "http://jedi.readthedocs.io", None,
-                       "MIT License",
-                       "https://opensource.org/licenses/MIT",
-                       path))
-    version, path = getPackageVersionAndLocation('radon')
-    components.append(("radon", version,
-                       "https://radon.readthedocs.org/", None,
-                       "MIT License",
-                       "https://opensource.org/licenses/MIT",
-                       path))
-    version, path = getPackageVersionAndLocation('vulture')
-    components.append(("vulture", version,
-                       "https://github.com/jendrikseipp/vulture", None,
-                       "MIT License",
-                       "https://opensource.org/licenses/MIT",
-                       path))
-    version, path = getPackageVersionAndLocation('mistune')
-    components.append(("mistune", version,
-                       "https://github.com/lepture/mistune", None,
-                       "BSD 3-Clause License",
-                       "https://opensource.org/licenses/BSD-3-Clause",
-                       path))
+    components.append(
+        (
+            "graphviz",
+            version,
+            "http://www.graphviz.org/",
+            None,
+            "Eclipse Public License 1.0",
+            "http://www.graphviz.org/License.php",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("gprof2dot")
+    components.append(
+        (
+            "gprof2dot",
+            version,
+            "https://github.com/jrfonseca/gprof2dot",
+            None,
+            "LGPL",
+            "http://www.gnu.org/licenses/lgpl.html",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("yapsy")
+    components.append(
+        (
+            "yapsy",
+            version,
+            "http://yapsy.sourceforge.net",
+            None,
+            "BSD License",
+            "http://opensource.org/licenses/bsd-license.php",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("jedi")
+    components.append(
+        (
+            "jedi",
+            version,
+            "http://jedi.readthedocs.io",
+            None,
+            "MIT License",
+            "https://opensource.org/licenses/MIT",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("radon")
+    components.append(
+        (
+            "radon",
+            version,
+            "https://radon.readthedocs.org/",
+            None,
+            "MIT License",
+            "https://opensource.org/licenses/MIT",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("vulture")
+    components.append(
+        (
+            "vulture",
+            version,
+            "https://github.com/jendrikseipp/vulture",
+            None,
+            "MIT License",
+            "https://opensource.org/licenses/MIT",
+            path,
+        )
+    )
+    version, path = getPackageVersionAndLocation("mistune")
+    components.append(
+        (
+            "mistune",
+            version,
+            "https://github.com/lepture/mistune",
+            None,
+            "BSD 3-Clause License",
+            "https://opensource.org/licenses/BSD-3-Clause",
+            path,
+        )
+    )
     version, path = getJavaVersion()
     components.append(("java", version, None, None, None, None, path))
     version, path = getPlantUMLVersion()
-    components.append(('PlantUML', version,
-                       'http://plantuml.com/', None,
-                       'MIT License',
-                       'https://opensource.org/licenses/MIT',
-                       path))
+    components.append(
+        ("PlantUML", version, "http://plantuml.com/", None, "MIT License", "https://opensource.org/licenses/MIT", path)
+    )
     return components

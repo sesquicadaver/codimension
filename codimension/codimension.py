@@ -39,7 +39,7 @@ import warnings
 from optparse import OptionParser
 
 # Suppress pkg_resources deprecation from external plugins (cdmpylintplugin, etc.)
-warnings.filterwarnings('ignore', message='.*pkg_resources.*deprecated.*', category=UserWarning)
+warnings.filterwarnings("ignore", message=".*pkg_resources.*deprecated.*", category=UserWarning)
 
 # Workaround if link is used
 sys.argv[0] = os.path.realpath(__file__)
@@ -51,20 +51,22 @@ if srcDir not in sys.path:
     sys.path.insert(0, srcDir)
 
 # Use the python parser in the qutepart component
-os.environ['QPART_CPARSER'] = 'N'
+os.environ["QPART_CPARSER"] = "N"
 
 # Python 3.12+: inject imp compatibility shim for yapsy (imp module was removed)
-if sys.version_info >= (3, 12) and 'imp' not in sys.modules:
+if sys.version_info >= (3, 12) and "imp" not in sys.modules:
     import imp_compat as _imp_shim
-    sys.modules['imp'] = _imp_shim
+
+    sys.modules["imp"] = _imp_shim
 
 # Inject pkg_resources compat when unavailable (setuptools 82+ removed it)
-if 'pkg_resources' not in sys.modules:
+if "pkg_resources" not in sys.modules:
     try:
         import pkg_resources  # noqa: F401
     except ImportError:
         import pkg_resources_compat as _pkg_resources_shim
-        sys.modules['pkg_resources'] = _pkg_resources_shim
+
+        sys.modules["pkg_resources"] = _pkg_resources_shim
 
 # Install cdmpyparser/cdmcfparser fallbacks for Python 3.11+ (before any imports)
 import parsers  # noqa: F401, E402
@@ -83,13 +85,13 @@ GlobalData().originalSysPath = originalSysPath
 
 try:
     import cdmverspec
+
     VER = cdmverspec.version
 except ImportError:
-    VER = '0.0.0'
+    VER = "0.0.0"
 
 
 class CodimensionUILauncher:
-
     """Wrapper class to launch Codimension"""
 
     def __init__(self):
@@ -114,8 +116,7 @@ class CodimensionUILauncher:
             logLevel = logging.INFO
 
         # Default output stream is stderr
-        logging.basicConfig(level=logLevel,
-                            format='%(levelname) -10s %(asctime)s %(message)s')
+        logging.basicConfig(level=logLevel, format="%(levelname) -10s %(asctime)s %(message)s")
 
         # Memorize the root logging handlers
         self.rootLoggingHandlers = logging.root.handlers
@@ -128,14 +129,13 @@ class CodimensionUILauncher:
         from utils.fileutils import isFileOpenable
 
         if not os.path.exists(fName):
-            self.__delayedWarnings.append('File does not exist: ' + fName)
+            self.__delayedWarnings.append("File does not exist: " + fName)
             return False
         if not os.path.isfile(fName):
-            self.__delayedWarnings.append('The ' + fName + ' is not a file')
+            self.__delayedWarnings.append("The " + fName + " is not a file")
             return False
         if not isFileOpenable(fName):
-            self.__delayedWarnings.append('The file ' + fName +
-                                          ' could not be opened in Codimension')
+            self.__delayedWarnings.append("The file " + fName + " could not be opened in Codimension")
             return False
         return True
 
@@ -163,24 +163,30 @@ class CodimensionUILauncher:
             for fName in self.__args:
                 mime, _, _ = getFileProperties(fName)
                 if isCDMProjectMime(mime):
-                    raise Exception('A Codimension project file (' +
-                                    fName + ') must not come '
-                                    'together with other files')
+                    raise Exception(
+                        "A Codimension project file (" + fName + ") must not come together with other files"
+                    )
         return None
 
     def main(self):
         """The codimension driver"""
-        usageMessage = 'Usage: %prog [options] [project file | python files]'
-        parser = OptionParser(usage=usageMessage, version='%prog ' + VER)
+        usageMessage = "Usage: %prog [options] [project file | python files]"
+        parser = OptionParser(usage=usageMessage, version="%prog " + VER)
 
         parser.add_option(
-            '--debug', action='store_true', dest='debug',
+            "--debug",
+            action="store_true",
+            dest="debug",
             default=False,
-            help='switch on debug and info messages (default: Off)')
+            help="switch on debug and info messages (default: Off)",
+        )
         parser.add_option(
-            '--clean-start', action='store_true', dest='cleanStart',
+            "--clean-start",
+            action="store_true",
+            dest="cleanStart",
             default=False,
-            help='do not restore previous IDE state (default: Off)')
+            help="do not restore previous IDE state (default: Off)",
+        )
 
         self.__options, self.__args = parser.parse_args()
         self.setupLogging()
@@ -200,22 +206,21 @@ class CodimensionUILauncher:
 
         # Load the skin
         globalData.skin = Skin()
-        globalData.skin.loadByName(settings['skin'])
+        globalData.skin.loadByName(settings["skin"])
 
-        self.__delayedWarnings += settings.validateZoom(
-            globalData.skin.minTextZoom, globalData.skin.minCFlowZoom)
+        self.__delayedWarnings += settings.validateZoom(globalData.skin.minTextZoom, globalData.skin.minCFlowZoom)
 
         # QT on UBUNTU has a bug - the main menu bar does not generate the
         # 'aboutToHide' signal (though 'aboutToShow' is generated properly. This
         # prevents codimension working properly so the hack below disables the
         # global menu bar for codimension and makes it working properly.
-        os.environ['QT_X11_NO_NATIVE_MENUBAR'] = '1'
+        os.environ["QT_X11_NO_NATIVE_MENUBAR"] = "1"
 
         # Create QT application
-        codimensionApp = CodimensionApplication(sys.argv, settings['style'])
+        codimensionApp = CodimensionApplication(sys.argv, settings["style"])
         globalData.application = codimensionApp
 
-        logging.debug('Starting codimension v.%s', VER)
+        logging.debug("Starting codimension v.%s", VER)
 
         try:
             # Process command line arguments
@@ -232,10 +237,10 @@ class CodimensionUILauncher:
         globalData.screenWidth = screenSize.width()
         globalData.screenHeight = screenSize.height()
 
-        self.__splash.showMessage('Importing packages...')
+        self.__splash.showMessage("Importing packages...")
         from ui.mainwindow import CodimensionMainWindow
 
-        self.__splash.showMessage('Generating main window...')
+        self.__splash.showMessage("Generating main window...")
         mainWindow = CodimensionMainWindow(self.__splash, settings)
         codimensionApp.setMainWindow(mainWindow)
         globalData.mainWindow = mainWindow
@@ -256,14 +261,14 @@ class CodimensionUILauncher:
         """UI launchpad"""
         globalData = GlobalData()
 
-        self.__splash.showMessage('Loading plugins...')
+        self.__splash.showMessage("Loading plugins...")
         globalData.pluginManager.load()
 
         settings = Settings()
         mainWindow = globalData.mainWindow
-        mainWindow.getToolbar().setVisible(settings['showMainToolBar'])
+        mainWindow.getToolbar().setVisible(settings["showMainToolBar"])
 
-        if not settings['showFSViewer']:
+        if not settings["showFSViewer"]:
             mainWindow.projectViewer.onShowHide(True)
 
         needSignal = True
@@ -271,7 +276,7 @@ class CodimensionUILauncher:
             # Codimension will not load anything.
             pass
         elif self.__projectFile:
-            self.__splash.showMessage('Loading project...')
+            self.__splash.showMessage("Loading project...")
             globalData.project.loadProject(self.__projectFile)
             needSignal = False
         elif self.__args:
@@ -280,7 +285,7 @@ class CodimensionUILauncher:
             # be opened
             for fName in self.__args:
                 mainWindow.openFile(os.path.abspath(fName), -1)
-        elif settings['projectLoaded']:
+        elif settings["projectLoaded"]:
             # Do not auto-load last project (fast startup for large projects).
             # User can pick one from Recent Projects tab.
             pass
@@ -289,10 +294,9 @@ class CodimensionUILauncher:
 
         # Signal for triggering browsers layout
         if needSignal:
-            globalData.project.sigProjectChanged.emit(
-                CodimensionProject.CompleteProject)
+            globalData.project.sigProjectChanged.emit(CodimensionProject.CompleteProject)
             # Show Recent Projects tab when starting without project
-            if settings['recentProjects']:
+            if settings["recentProjects"]:
                 mainWindow.activateRecentTab()
 
         # The editors positions can be restored properly only when the editors
@@ -301,8 +305,7 @@ class CodimensionUILauncher:
         # initialize themselves and then manually call the main window handler
         # to restore the editors. The last step is to connect the signal.
         mainWindow.onProjectChanged(CodimensionProject.CompleteProject)
-        globalData.project.sigProjectChanged.connect(
-            mainWindow.onProjectChanged)
+        globalData.project.sigProjectChanged.connect(mainWindow.onProjectChanged)
 
         self.__splash.finish(globalData.mainWindow)
         self.__splash = None
@@ -326,61 +329,55 @@ def exceptionHook(excType, excValue, tracebackObj):
             globalData.application.quit()
         return
 
-    error = '%s: %s' % (excType.__name__, excValue)
-    stackTraceString = ''.join(traceback.format_exception(excType, excValue,
-                                                          tracebackObj))
+    error = "%s: %s" % (excType.__name__, excValue)
+    stackTraceString = "".join(traceback.format_exception(excType, excValue, tracebackObj))
 
     # Save the traceback to a file explicitly together with a log window
     # content.
-    excptFileName = SETTINGS_DIR + 'unhandledexceptions.log'
+    excptFileName = SETTINGS_DIR + "unhandledexceptions.log"
     try:
         savedOK = True
-        with open(excptFileName, 'a',
-                  encoding=DEFAULT_ENCODING) as diskfile:
-            diskfile.write('------ Unhandled exception report at ' +
-                           str(datetime.datetime.now()) + '\n')
-            diskfile.write('Traceback:\n')
+        with open(excptFileName, "a", encoding=DEFAULT_ENCODING) as diskfile:
+            diskfile.write("------ Unhandled exception report at " + str(datetime.datetime.now()) + "\n")
+            diskfile.write("Traceback:\n")
             diskfile.write(stackTraceString)
 
-            diskfile.write('Log window:\n')
+            diskfile.write("Log window:\n")
             if globalData.mainWindow is not None:
                 # i.e. the log window is available, save its content too
                 logWindowContent = globalData.mainWindow.getLogViewerContent()
                 logWindowContent = logWindowContent.strip()
                 if logWindowContent:
                     diskfile.write(logWindowContent)
-                    diskfile.write('\n')
+                    diskfile.write("\n")
                 else:
-                    diskfile.write('Nothing is there\n')
+                    diskfile.write("Nothing is there\n")
             else:
-                diskfile.write('Has not been created yet\n')
-            diskfile.write('------\n\n')
+                diskfile.write("Has not been created yet\n")
+            diskfile.write("------\n\n")
     except OSError:
         savedOK = False
 
     # This output will be to a console if the application has not started yet
     # or to a log window otherwise.
-    logging.error('Unhandled exception is caught\n%s', stackTraceString)
+    logging.error("Unhandled exception is caught\n%s", stackTraceString)
 
     # Display the message as a QT modal dialog box if the application
     # has started
     if globalData.application is not None:
         message = "<html><body>"
         if savedOK:
-            message += "Stack trace and log window content saved in " + \
-                       excptFileName + ".<br>"
+            message += "Stack trace and log window content saved in " + excptFileName + ".<br>"
         else:
-            message += "Failed to save stack trace and log window " \
-                       "content in " + excptFileName + ".<br>"
+            message += "Failed to save stack trace and log window content in " + excptFileName + ".<br>"
 
-        lines = stackTraceString.split('\n')
+        lines = stackTraceString.split("\n")
         if len(lines) > 32:
-            message += "First 32 lines of the stack trace " \
-                       "(the rest is truncated):" \
-                       "<pre>" + "\n".join(lines[:32]) + "<pre>"
+            message += (
+                "First 32 lines of the stack trace (the rest is truncated):<pre>" + "\n".join(lines[:32]) + "<pre>"
+            )
         else:
-            message += "Stack trace:" + \
-                       "<pre>" + stackTraceString + "</pre>"
+            message += "Stack trace:" + "<pre>" + stackTraceString + "</pre>"
         message += "</body></html>"
         QMessageBox.critical(None, "Unhandled exception: " + error, message)
         globalData.application.exit(1)
@@ -395,9 +392,9 @@ def main():
     if launcher.rootLoggingHandlers:
         logging.root.handlers = launcher.rootLoggingHandlers
 
-    logging.debug('Exiting codimension')
+    logging.debug("Exiting codimension")
     sys.exit(retCode)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

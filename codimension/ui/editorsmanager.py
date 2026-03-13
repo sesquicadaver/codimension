@@ -81,7 +81,6 @@ from .welcomewidget import WelcomeWidget
 
 
 class ClickableTabBar(QTabBar):
-
     """Intercepts clicking on the toolbar"""
 
     sigCurrentTabClicked = pyqtSignal()
@@ -101,12 +100,11 @@ class ClickableTabBar(QTabBar):
 
     def focusInEvent(self, event):
         """Passes focus to the current tab"""
-        del event   # unused argument
+        del event  # unused argument
         self.parent().setFocus()
 
 
 class EditorsManager(QTabWidget):
-
     """Tab bar with editors"""
 
     sigBufferModified = pyqtSignal(str, str)
@@ -142,7 +140,7 @@ class EditorsManager(QTabWidget):
         self.createNavigationButtons()
 
         self.__debugMode = False
-        self.__debugScript = ""     # If a single script is debugged
+        self.__debugScript = ""  # If a single script is debugged
         self.__createdWithinDebugSession = []
         self.__mainWindow.debugModeChanged.connect(self.__onDebugMode)
 
@@ -154,8 +152,7 @@ class EditorsManager(QTabWidget):
         self.history.historyChanged.connect(self.__onHistoryChanged)
 
         self.__welcomeWidget = WelcomeWidget()
-        self.addTab(self.__welcomeWidget,
-                    self.__welcomeWidget.getShortName())
+        self.addTab(self.__welcomeWidget, self.__welcomeWidget.getShortName())
         self.__welcomeWidget.sigEscapePressed.connect(self.__onESC)
 
         self.__helpWidget = QuickHelpWidget()
@@ -174,45 +171,38 @@ class EditorsManager(QTabWidget):
         # Context menu
         self.__tabContextMenu = QMenu(self)
         self.__highlightInPrjAct = self.__tabContextMenu.addAction(
-            getIcon("highlightmenu.png"), "&Highlight in project browser",
-            self.onHighlightInPrj)
+            getIcon("highlightmenu.png"), "&Highlight in project browser", self.onHighlightInPrj
+        )
         self.__highlightInFSAct = self.__tabContextMenu.addAction(
-            getIcon("highlightmenu.png"), "H&ighlight in file system browser",
-            self.onHighlightInFS)
+            getIcon("highlightmenu.png"), "H&ighlight in file system browser", self.onHighlightInFS
+        )
         self.__tabContextMenu.addSeparator()
-        self.__cloneAct = self.__tabContextMenu.addAction(
-            getIcon("clonetabmenu.png"), "&Clone", self.onClone)
+        self.__cloneAct = self.__tabContextMenu.addAction(getIcon("clonetabmenu.png"), "&Clone", self.onClone)
         self.__copyFullPathAct = self.__tabContextMenu.addAction(
-            getIcon("copymenu.png"), "Copy full &path to clipboard",
-            self.__copyTabFullPath)
+            getIcon("copymenu.png"), "Copy full &path to clipboard", self.__copyTabFullPath
+        )
         self.__copyDirPathAct = self.__tabContextMenu.addAction(
-            getIcon(""), "Copy directory p&ath to clipboard",
-            self.__copyTabDirPath)
+            getIcon(""), "Copy directory p&ath to clipboard", self.__copyTabDirPath
+        )
         self.__copyFileNameAct = self.__tabContextMenu.addAction(
-            getIcon(""), "Copy &file name to clipboard",
-            self.__copyTabFileName)
-        self.__reloadAct = self.__tabContextMenu.addAction(
-            getIcon("reload.png"), "&Reload", self.onReload)
-        self.__closeOtherAct = self.__tabContextMenu.addAction(
-            getIcon(""), "Close oth&er tabs", self.onCloseOther)
+            getIcon(""), "Copy &file name to clipboard", self.__copyTabFileName
+        )
+        self.__reloadAct = self.__tabContextMenu.addAction(getIcon("reload.png"), "&Reload", self.onReload)
+        self.__closeOtherAct = self.__tabContextMenu.addAction(getIcon(""), "Close oth&er tabs", self.onCloseOther)
         self.__tabContextMenu.addSeparator()
         self.__delCurrentAct = self.__tabContextMenu.addAction(
-            getIcon("trash.png"), "Close and &delete from disk",
-            self.__closeDelete)
+            getIcon("trash.png"), "Close and &delete from disk", self.__closeDelete
+        )
         self.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
-        self.tabBar().customContextMenuRequested.connect(
-            self.__showTabContextMenu)
+        self.tabBar().customContextMenuRequested.connect(self.__showTabContextMenu)
         self.tabBar().sigCurrentTabClicked.connect(self.__currentTabClicked)
 
         # Plugins context menus support
         self.__pluginMenus = {}
-        GlobalData().pluginManager.sigPluginActivated.connect(
-            self.__onPluginActivated)
-        GlobalData().pluginManager.sigPluginDeactivated.connect(
-            self.__onPluginDeactivated)
+        GlobalData().pluginManager.sigPluginActivated.connect(self.__onPluginActivated)
+        GlobalData().pluginManager.sigPluginDeactivated.connect(self.__onPluginDeactivated)
 
-        self.__mainWindow.vcsManager.sigVCSFileStatus.connect(
-            self.__onVCSStatus)
+        self.__mainWindow.vcsManager.sigVCSFileStatus.connect(self.__onVCSStatus)
 
     def __currentTabClicked(self):
         """Triggered when the currently active tab is clicked"""
@@ -230,20 +220,16 @@ class EditorsManager(QTabWidget):
         """Returns True if highlight in project should be enabled"""
         widget = self.currentWidget()
         widgetType = widget.getType()
-        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor,
-                              MainWindowTabWidgetBase.PictureViewer]:
+        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]:
             return False
         fName = widget.getFileName()
-        return os.path.isabs(fName) and \
-               GlobalData().project.isLoaded() and \
-               GlobalData().project.isProjectFile(fName)
+        return os.path.isabs(fName) and GlobalData().project.isLoaded() and GlobalData().project.isProjectFile(fName)
 
     def isHighlightInFSAvailable(self):
         """Returns True if the highlight in FS should be enabled"""
         widget = self.currentWidget()
         widgetType = widget.getType()
-        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor,
-                              MainWindowTabWidgetBase.PictureViewer]:
+        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]:
             return False
         fName = widget.getFileName()
         return os.path.isabs(fName)
@@ -256,22 +242,18 @@ class EditorsManager(QTabWidget):
         if tabIndex == clickedIndex:
             widget = self.widget(tabIndex)
             widgetType = widget.getType()
-            if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor,
-                                  MainWindowTabWidgetBase.PictureViewer]:
+            if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]:
                 return
 
             fName = widget.getFileName()
-            self.__cloneAct.setEnabled(
-                widgetType == MainWindowTabWidgetBase.PlainTextEditor)
+            self.__cloneAct.setEnabled(widgetType == MainWindowTabWidgetBase.PlainTextEditor)
             self.__closeOtherAct.setEnabled(self.closeOtherAvailable())
             self.__copyFullPathAct.setEnabled(fName != "")
             self.__copyDirPathAct.setEnabled(fName != "")
             self.__copyFileNameAct.setEnabled(fName != "")
             self.__delCurrentAct.setEnabled(fName != "")
-            self.__highlightInPrjAct.setEnabled(
-                self.isHighlightInPrjAvailable())
-            self.__highlightInFSAct.setEnabled(
-                self.isHighlightInFSAvailable())
+            self.__highlightInPrjAct.setEnabled(self.isHighlightInPrjAvailable())
+            self.__highlightInFSAct.setEnabled(self.isHighlightInFSAvailable())
 
             if fName != "":
                 if not widget.doesFileExist():
@@ -295,34 +277,31 @@ class EditorsManager(QTabWidget):
 
     def __copyTabFullPath(self):
         """Triggered when copy path to clipboard item is selected"""
-        QApplication.clipboard().setText(
-            self.widget(self.currentIndex()).getFileName())
+        QApplication.clipboard().setText(self.widget(self.currentIndex()).getFileName())
 
     def __copyTabDirPath(self):
         """Triggered when copy dir path to clipboard is selected"""
-        QApplication.clipboard().setText(
-            os.path.dirname(self.widget(self.currentIndex()).getFileName()) +
-            os.path.sep)
+        QApplication.clipboard().setText(os.path.dirname(self.widget(self.currentIndex()).getFileName()) + os.path.sep)
 
     def __copyTabFileName(self):
         """Triggered when copy the file name to clipboard is selected"""
-        QApplication.clipboard().setText(
-            os.path.basename(self.widget(self.currentIndex()).getFileName()))
+        QApplication.clipboard().setText(os.path.basename(self.widget(self.currentIndex()).getFileName()))
 
     def __closeDelete(self):
         """Triggered when the current tab is requested to be closed and the
-           loaded file deleted from the disk
+        loaded file deleted from the disk
         """
         tabIndex = self.currentIndex()
         widget = self.widget(tabIndex)
         fileName = widget.getFileName()
 
         res = QMessageBox.warning(
-            self, "Close tab and delete",
-            "<p>Are you sure to close the tab and delete "
-            "<b>" + fileName + "</b> from the disk?</p>",
+            self,
+            "Close tab and delete",
+            "<p>Are you sure to close the tab and delete <b>" + fileName + "</b> from the disk?</p>",
             QMessageBox.StandardButtons(QMessageBox.Cancel | QMessageBox.Yes),
-            QMessageBox.Cancel)
+            QMessageBox.Cancel,
+        )
         if res == QMessageBox.Cancel:
             return
 
@@ -333,8 +312,7 @@ class EditorsManager(QTabWidget):
                     widget.getEditor().deleteAllBreakpoints()
                 os.remove(fileName)
             else:
-                logging.info("Could not find " + fileName +
-                             " on the disk. Ignoring and closing tab.")
+                logging.info("Could not find " + fileName + " on the disk. Ignoring and closing tab.")
         except Exception as exc:
             logging.error(str(exc))
             return
@@ -348,8 +326,7 @@ class EditorsManager(QTabWidget):
         if GlobalData().project.isLoaded():
             widget = self.currentWidget()
             widgetType = widget.getType()
-            if widgetType in [MainWindowTabWidgetBase.PlainTextEditor,
-                              MainWindowTabWidgetBase.PictureViewer]:
+            if widgetType in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]:
                 fName = widget.getFileName()
                 if os.path.isabs(fName):
                     GlobalData().mainWindow.highlightInPrj(fName)
@@ -358,8 +335,7 @@ class EditorsManager(QTabWidget):
         """Triggered when the file is to be highlighted in the FS tree"""
         widget = self.currentWidget()
         widgetType = widget.getType()
-        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor,
-                              MainWindowTabWidgetBase.PictureViewer]:
+        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]:
             fName = widget.getFileName()
             if os.path.isabs(fName):
                 GlobalData().mainWindow.highlightInFS(fName)
@@ -376,8 +352,7 @@ class EditorsManager(QTabWidget):
         line, pos = editor.cursorPosition
 
         # Create a new tab
-        self.newTabClicked(editor.text,
-                           self.getNewCloneName(widget.getShortName()))
+        self.newTabClicked(editor.text, self.getNewCloneName(widget.getShortName()))
 
         # Put the cursor to the exact same position as it was in the cloned tab
         newWidget = self.currentWidget()
@@ -399,27 +374,26 @@ class EditorsManager(QTabWidget):
 
         if notSaved:
             # There are not saved files
-            logging.error("Please close or save the modified files "
-                          "explicitly (" + ", ".join(notSaved) + ")")
+            logging.error("Please close or save the modified files explicitly (" + ", ".join(notSaved) + ")")
 
         for index in toClose:
             self.__onCloseRequest(index)
 
     def __installActions(self):
         """Installs various key combinations handlers"""
-        findAction = QShortcut('Ctrl+F', self)
+        findAction = QShortcut("Ctrl+F", self)
         findAction.activated.connect(self.onFind)
-        replaceAction = QShortcut('Ctrl+R', self)
+        replaceAction = QShortcut("Ctrl+R", self)
         replaceAction.activated.connect(self.onReplace)
-        closeTabAction = QShortcut('Ctrl+F4', self)
+        closeTabAction = QShortcut("Ctrl+F4", self)
         closeTabAction.activated.connect(self.onCloseTab)
-        nextTabAction = QShortcut('Ctrl+PgUp', self)
+        nextTabAction = QShortcut("Ctrl+PgUp", self)
         nextTabAction.activated.connect(self.__onPrevTab)
-        flipTabAction = QShortcut('Ctrl+Tab', self)
+        flipTabAction = QShortcut("Ctrl+Tab", self)
         flipTabAction.activated.connect(self.__onFlipTab)
-        prevTabAction = QShortcut('Ctrl+PgDown', self)
+        prevTabAction = QShortcut("Ctrl+PgDown", self)
         prevTabAction.activated.connect(self.__onNextTab)
-        gotoAction = QShortcut('Ctrl+G', self)
+        gotoAction = QShortcut("Ctrl+G", self)
         gotoAction.activated.connect(self.onGoto)
 
     def registerAuxWidgets(self, findReplace, goto):
@@ -442,7 +416,7 @@ class EditorsManager(QTabWidget):
     def getNewDisassemblyName(self, path):
         """Provides a dummy name for a new tab disassembly"""
         basename = os.path.basename(path)
-        candidate = basename + '.dis'
+        candidate = basename + ".dis"
         index = -1
         while True:
             for _, _, editor in self.getTextEditors():
@@ -451,14 +425,14 @@ class EditorsManager(QTabWidget):
             else:
                 return candidate
             index += 1
-            candidate = basename + '.' + str(index) + '.dis'
+            candidate = basename + "." + str(index) + ".dis"
 
     def getNewCloneName(self, shortName):
         """Provides a new name for a cloned file"""
         self.newCloneIndex += 1
-        if '.' in shortName:
-            parts = shortName.split('.')
-            name = '.'.join(parts[0:len(parts) - 1])
+        if "." in shortName:
+            parts = shortName.split(".")
+            name = ".".join(parts[0 : len(parts) - 1])
             ext = parts[-1]
             return name + "-clone" + str(self.newCloneIndex) + "." + ext
 
@@ -488,8 +462,7 @@ class EditorsManager(QTabWidget):
                 newIndex = count - 1
             self.activateTab(newIndex)
 
-    def newTabClicked(self, initialContent=None, shortName=None,
-                      mime=None):
+    def newTabClicked(self, initialContent=None, shortName=None, mime=None):
         """new tab click handler"""
         if self.widget(0) == self.__welcomeWidget:
             # It is the only welcome widget on the screen
@@ -498,8 +471,7 @@ class EditorsManager(QTabWidget):
 
         newWidget = TextEditorTabWidget(self, self.__debugger)
         newWidget.sigReloadRequest.connect(self.onReload)
-        newWidget.reloadAllNonModifiedRequest.connect(
-            self.onReloadAllNonModified)
+        newWidget.reloadAllNonModifiedRequest.connect(self.onReloadAllNonModified)
         newWidget.sigTabRunChanged.connect(self.onTabRunChanged)
         editor = newWidget.getEditor()
         if shortName is None:
@@ -508,8 +480,7 @@ class EditorsManager(QTabWidget):
             newWidget.setShortName(shortName)
 
         if mime is None:
-            editor.mime, _, xmlSyntaxFile = \
-                getFileProperties(newWidget.getShortName())
+            editor.mime, _, xmlSyntaxFile = getFileProperties(newWidget.getShortName())
         else:
             editor.mime = mime
             xmlSyntaxFile = getXmlSyntaxFileByMime(mime)
@@ -544,13 +515,11 @@ class EditorsManager(QTabWidget):
         newWidget.updateStatus()
         self.setWidgetDebugMode(newWidget)
 
-        self.sigFileTypeChanged.emit(newWidget.getShortName(),
-                                     newWidget.getUUID(),
-                                     editor.mime if editor.mime else '')
+        self.sigFileTypeChanged.emit(newWidget.getShortName(), newWidget.getUUID(), editor.mime if editor.mime else "")
         self.sigTextEditorTabAdded.emit(0)
 
     def onDefaultProjectDoc(self, fName):
-        """"Default project doc"""
+        """ "Default project doc"""
         if self.widget(0) == self.__welcomeWidget:
             # It is the only welcome widget on the screen
             self.removeTab(0)
@@ -558,14 +527,12 @@ class EditorsManager(QTabWidget):
 
         newWidget = TextEditorTabWidget(self, self.__debugger)
         newWidget.sigReloadRequest.connect(self.onReload)
-        newWidget.reloadAllNonModifiedRequest.connect(
-            self.onReloadAllNonModified)
+        newWidget.reloadAllNonModifiedRequest.connect(self.onReloadAllNonModified)
         newWidget.sigTabRunChanged.connect(self.onTabRunChanged)
         editor = newWidget.getEditor()
         newWidget.setShortName(os.path.basename(fName))
 
-        editor.mime, _, xmlSyntaxFile = \
-                getFileProperties(newWidget.getShortName())
+        editor.mime, _, xmlSyntaxFile = getFileProperties(newWidget.getShortName())
 
         editor.text = getDefaultProjectDoc(fName)
         editor.eol = detectEolString(editor.text)
@@ -588,15 +555,12 @@ class EditorsManager(QTabWidget):
         newWidget.updateStatus()
         self.setWidgetDebugMode(newWidget)
 
-        self.sigFileTypeChanged.emit(newWidget.getShortName(),
-                                     newWidget.getUUID(),
-                                     editor.mime if editor.mime else '')
+        self.sigFileTypeChanged.emit(newWidget.getShortName(), newWidget.getUUID(), editor.mime if editor.mime else "")
         self.sigTextEditorTabAdded.emit(0)
 
     def __updateControls(self):
         """Updates the navigation buttons status"""
-        self.navigationButton.setEnabled(
-            self.widget(0) != self.__welcomeWidget)
+        self.navigationButton.setEnabled(self.widget(0) != self.__welcomeWidget)
 
     def __onHistoryChanged(self):
         """historyChanged signal handler"""
@@ -624,24 +588,22 @@ class EditorsManager(QTabWidget):
             widget = self.currentWidget()
             fileName = widget.getFileName()
 
-            if fileName and widget.isDiskFileModified() and \
-               widget.doesFileExist():
+            if fileName and widget.isDiskFileModified() and widget.doesFileExist():
                 # Both: the disk and the tab were modified
                 self._updateIconAndTooltip(index)
 
                 res = QMessageBox.warning(
-                    widget, "Close Tab",
-                    "<p>The file <b>" + fileName +
-                    "</b> was modified by another process after it was opened "
+                    widget,
+                    "Close Tab",
+                    "<p>The file <b>" + fileName + "</b> was modified by another process after it was opened "
                     "and modified in this tab.</p>"
                     "<p>Do you want to save the tab content "
                     "(potentially losing other changes) and close the tab, "
                     "discard your changes and close the tab or "
                     "cancel closing the tab?</p>",
-                    QMessageBox.StandardButtons(
-                        QMessageBox.Cancel | QMessageBox.Discard |
-                        QMessageBox.Save),
-                    QMessageBox.Save)
+                    QMessageBox.StandardButtons(QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save),
+                    QMessageBox.Save,
+                )
 
                 if res == QMessageBox.Save:
                     if not self.onSave(-1, True):
@@ -654,15 +616,15 @@ class EditorsManager(QTabWidget):
                 # The case when the disk file is the same as the currently
                 # loaded
                 res = QMessageBox.warning(
-                    widget, "Close Tab",
+                    widget,
+                    "Close Tab",
                     "<p>The tab content was modified.</p>"
                     "<p>Do you want to save the tab content and close, "
                     "discard your changes and close the tab or "
                     "cancel closing the tab?</p>",
-                    QMessageBox.StandardButtons(
-                        QMessageBox.Cancel | QMessageBox.Discard |
-                        QMessageBox.Save),
-                    QMessageBox.Save)
+                    QMessageBox.StandardButtons(QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save),
+                    QMessageBox.Save,
+                )
                 if res == QMessageBox.Save:
                     if not self.onSave():
                         # Failed to save
@@ -684,8 +646,7 @@ class EditorsManager(QTabWidget):
         if not wasDiscard and not enforced:
             self.updateFilePosition(index)
 
-        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor,
-                          MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             # Terminate the syntax highlight if needed
             self.__disconnectEditorWidget(self.widget(index))
             self.widget(index).terminate()
@@ -695,8 +656,7 @@ class EditorsManager(QTabWidget):
         self.sigTabClosed.emit(closingUUID)
 
         # Check if it is necessary to add a file to the recent history
-        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor,
-                          MainWindowTabWidgetBase.PictureViewer]:
+        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]:
             # Yes, it needs to be saved if it was saved at least once
             fileName = self.widget(index).getFileName()
             if os.path.isabs(fileName) and os.path.exists(fileName):
@@ -707,8 +667,7 @@ class EditorsManager(QTabWidget):
 
         if self.count() == 0:
             self.setTabsClosable(False)
-            self.addTab(self.__welcomeWidget,
-                        self.__welcomeWidget.getShortName())
+            self.addTab(self.__welcomeWidget, self.__welcomeWidget.getShortName())
             self.__welcomeWidget.setFocus()
             self.gotoWidget.hide()
             self.findReplaceWidget.hide()
@@ -752,9 +711,7 @@ class EditorsManager(QTabWidget):
                 mdView = widget.getMDView()
                 scrollHPos, scrollVPos = mdView.getScrollbarPositions()
 
-            updateFilePosition(
-                fileName, line, pos, editor.firstVisibleLine(),
-                scrollHPos, scrollVPos)
+            updateFilePosition(fileName, line, pos, editor.firstVisibleLine(), scrollHPos, scrollVPos)
 
     def restoreFilePosition(self, index):
         """Restores the file position"""
@@ -765,8 +722,7 @@ class EditorsManager(QTabWidget):
         if not os.path.isabs(widget.getFileName()):
             return
         if widget.getType() == MainWindowTabWidgetBase.PlainTextEditor:
-            line, pos, firstVisible, _, _ = \
-                getFilePosition(widget.getFileName())
+            line, pos, firstVisible, _, _ = getFilePosition(widget.getFileName())
             editor = widget.getEditor()
             if line != -1:
                 editor.gotoLine(line + 1, pos + 1, firstVisible + 1)
@@ -840,7 +796,7 @@ class EditorsManager(QTabWidget):
         for index in range(self.count()):
             items.append([self.tabIcon(index), self.tabText(index), index])
 
-        if Settings()['tablistsortalpha']:
+        if Settings()["tablistsortalpha"]:
             items.sort(key=lambda c: c[1])
         else:
             items.sort(key=lambda c: c[2])
@@ -860,7 +816,7 @@ class EditorsManager(QTabWidget):
         if self.currentIndex() == index:
             return
 
-        if Settings()['taborderpreserved']:
+        if Settings()["taborderpreserved"]:
             self.activateTab(index)
         else:
             if index != 0:
@@ -907,8 +863,7 @@ class EditorsManager(QTabWidget):
         if widget.doesFileExist():
             if widget.isDiskFileModified():
                 if not widget.getReloadDialogShown():
-                    widget.showOutsideChangesBar(
-                        self.__countDiskModifiedUnchanged() > 1)
+                    widget.showOutsideChangesBar(self.__countDiskModifiedUnchanged() > 1)
                     # Just in case check the other tabs
                     self.checkOutsideFileChanges()
 
@@ -924,9 +879,10 @@ class EditorsManager(QTabWidget):
         shortName = self.__helpWidget.getShortName()
         # Check if it is already opened
         for index in range(self.count()):
-            if self.widget(index).getShortName() == shortName and \
-               self.widget(index).getType() == \
-                    MainWindowTabWidgetBase.HTMLViewer:
+            if (
+                self.widget(index).getShortName() == shortName
+                and self.widget(index).getType() == MainWindowTabWidgetBase.HTMLViewer
+            ):
                 # Found
                 self.activateTab(index)
                 return
@@ -958,17 +914,14 @@ class EditorsManager(QTabWidget):
         if fileName and os.path.isabs(fileName):
             # It makes sense to test if a file disappeared or modified
             if not widget.doesFileExist():
-                self.setTabToolTip(widgetIndex,
-                                   "The file does not exist on the disk")
-                icon = getIcon('disappearedfile.png')
+                self.setTabToolTip(widgetIndex, "The file does not exist on the disk")
+                icon = getIcon("disappearedfile.png")
                 self.setTabIcon(widgetIndex, icon)
                 self.history.updateIconForTab(widget.getUUID(), icon)
                 return
             if widget.isDiskFileModified():
-                self.setTabToolTip(widgetIndex,
-                                   "The file has been modified "
-                                   "outside codimension")
-                icon = getIcon('modifiedfile.png')
+                self.setTabToolTip(widgetIndex, "The file has been modified outside codimension")
+                icon = getIcon("modifiedfile.png")
                 self.setTabIcon(widgetIndex, icon)
                 self.history.updateIconForTab(widget.getUUID(), icon)
                 return
@@ -983,24 +936,22 @@ class EditorsManager(QTabWidget):
 
         try:
             info = GlobalData().getModInfo(fileName)
-            if info.errors  or info.lexerErrors:
-                icon = getIcon('filepythonbroken.png')
+            if info.errors or info.lexerErrors:
+                icon = getIcon("filepythonbroken.png")
                 self.setTabIcon(widgetIndex, icon)
-                self.setTabToolTip(widgetIndex,
-                                   "The disk version of file "
-                                   "has parsing errors")
+                self.setTabToolTip(widgetIndex, "The disk version of file has parsing errors")
                 self.history.updateIconForTab(widget.getUUID(), icon)
             else:
                 self.setTabIcon(widgetIndex, QIcon())
                 self.history.updateIconForTab(widget.getUUID(), QIcon())
 
-                if info.docstring is not None and Settings()['editorTooltips']:
+                if info.docstring is not None and Settings()["editorTooltips"]:
                     self.setTabToolTip(widgetIndex, info.docstring.text)
                 else:
                     self.setTabToolTip(widgetIndex, "")
         except Exception:
             self.setTabToolTip(widgetIndex, "")
-            icon = getIcon('filepythonbroken.png')
+            icon = getIcon("filepythonbroken.png")
             self.setTabIcon(widgetIndex, icon)
             self.history.updateIconForTab(widget.getUUID(), icon)
 
@@ -1123,14 +1074,12 @@ class EditorsManager(QTabWidget):
 
     def showDisassembly(self, scriptPath, disassembly):
         """Shows the disassembled code"""
-        self.newTabClicked(disassembly,
-                           self.getNewDisassemblyName(scriptPath),
-                           mime='text/plain')
+        self.newTabClicked(disassembly, self.getNewDisassemblyName(scriptPath), mime="text/plain")
 
     def showAnnotated(self, fileName, text, lineRevisions, revisionInfo):
         """Shows the annotated text widget"""
         try:
-            parts = os.path.basename(fileName).split('.')
+            parts = os.path.basename(fileName).split(".")
             parts[0] += "-annotate"
             shortName = ".".join(parts)
             tooltip = "Annotated file: " + fileName
@@ -1140,8 +1089,7 @@ class EditorsManager(QTabWidget):
             newWidget = VCSAnnotateViewerTabWidget(self)
             newWidget.sigEscapePressed.connect(self.__onESC)
 
-            newWidget.setAnnotatedContent(shortName, text, lineRevisions,
-                                          revisionInfo)
+            newWidget.setAnnotatedContent(shortName, text, lineRevisions, revisionInfo)
             if self.widget(0) == self.__welcomeWidget:
                 # It is the only welcome widget on the screen
                 self.removeTab(0)
@@ -1193,8 +1141,7 @@ class EditorsManager(QTabWidget):
             item = cfEditor.getDocItemByAnchor(lineOrAnchor)
             if item:
                 cfEditor.view().scrollTo(item)
-                editor.gotoLine(item.cmlRef.ref.beginLine,
-                                item.cmlRef.ref.beginPos)
+                editor.gotoLine(item.cmlRef.ref.beginLine, item.cmlRef.ref.beginPos)
                 return True
 
         # Not found anchor or it is not python
@@ -1228,13 +1175,12 @@ class EditorsManager(QTabWidget):
 
         if not isFileSearchable(fileName):
             mime, _, _ = getFileProperties(fileName)
-            if mime != 'inode/x-empty':
+            if mime != "inode/x-empty":
                 return False
         try:
             newWidget = TextEditorTabWidget(self, self.__debugger)
             newWidget.sigReloadRequest.connect(self.onReload)
-            newWidget.reloadAllNonModifiedRequest.connect(
-                self.onReloadAllNonModified)
+            newWidget.reloadAllNonModifiedRequest.connect(self.onReloadAllNonModified)
             newWidget.sigTabRunChanged.connect(self.onTabRunChanged)
             newWidget.readFile(fileName)
 
@@ -1260,8 +1206,7 @@ class EditorsManager(QTabWidget):
                 addRecentFile(fileName)
             self.setWidgetDebugMode(newWidget)
 
-            self.sigFileTypeChanged.emit(fileName, newWidget.getUUID(),
-                                         editor.mime if editor.mime else '')
+            self.sigFileTypeChanged.emit(fileName, newWidget.getUUID(), editor.mime if editor.mime else "")
             QApplication.processEvents()
             if self._gotoLine(lineOrAnchor, pos, newWidget) is None:
                 self.restoreFilePosition(None)
@@ -1310,21 +1255,21 @@ class EditorsManager(QTabWidget):
         if fileName:
             # This is the buffer which has the corresponding file on FS
             existedBefore = os.path.exists(fileName)
-            if widget.isDiskFileModified() and \
-               widget.doesFileExist() and not forced:
+            if widget.isDiskFileModified() and widget.doesFileExist() and not forced:
                 if index != self.currentIndex():
                     self.activateTab(index)
                 self._updateIconAndTooltip(index)
                 widget.setReloadDialogShown(True)
                 # The disk file was modified
                 dlg = QMessageBox(
-                    QMessageBox.Warning, "Save File",
-                    "<p>The file <b>" + fileName +
-                    "</b> was modified by another process after it was opened "
+                    QMessageBox.Warning,
+                    "Save File",
+                    "<p>The file <b>" + fileName + "</b> was modified by another process after it was opened "
                     "in this tab, so by saving it you could potentially "
                     "overwrite other changes.</p>"
                     "<p>Do you want to save the tab content, "
-                    "reload losing your changes, or cancel saving?</p>")
+                    "reload losing your changes, or cancel saving?</p>",
+                )
                 dlg.addButton(QMessageBox.Cancel)
                 dlg.addButton(QMessageBox.Save)
                 dlg.addButton(QMessageBox.RestoreDefaults)
@@ -1350,6 +1295,12 @@ class EditorsManager(QTabWidget):
                 # Error saving
                 return False
 
+            for callback in getattr(GlobalData(), "afterSaveCallbacks", []):
+                try:
+                    callback(widget, fileName)
+                except Exception as exc:
+                    logging.error("afterSave callback failed: %s", exc)
+
             editor.document().setModified(False)
 
             # The disk access has happened anyway so it does not make sense
@@ -1367,9 +1318,7 @@ class EditorsManager(QTabWidget):
                 widget.updateStatus()
                 self.updateStatusBar()
                 self.__mainWindow.updateRunDebugButtons()
-                self.sigFileTypeChanged.emit(
-                    fileName, widget.getUUID(),
-                    newFileMime if newFileMime else '')
+                self.sigFileTypeChanged.emit(fileName, widget.getUUID(), newFileMime if newFileMime else "")
 
             self._updateIconAndTooltip(index)
             if GlobalData().project.fileName == fileName:
@@ -1397,7 +1346,7 @@ class EditorsManager(QTabWidget):
         """Creates the common save as dialog"""
         dialog = QFileDialog(self, title)
         dialog.setFileMode(QFileDialog.AnyFile)
-        dialog.setLabelText(QFileDialog.Accept, 'Save')
+        dialog.setLabelText(QFileDialog.Accept, "Save")
         if nameFilter:
             dialog.setNameFilter(nameFilter)
 
@@ -1417,36 +1366,37 @@ class EditorsManager(QTabWidget):
     def __checkPermissionsOnSave(self, widget, fName):
         """Checks the common permissions before saving"""
         if os.path.isdir(fName):
-            logging.error('A file must be selected')
+            logging.error("A file must be selected")
             return False
 
         if os.path.exists(fName):
             if not os.access(fName, os.W_OK):
-                logging.error('There is no write permissions for ' + fName)
+                logging.error("There is no write permissions for " + fName)
                 return False
 
             if widget.getFileName() != fName:
                 if self.isFileOpened(fName):
                     QMessageBox.critical(
-                        self, 'Save file', '<p>The file <b>' + fName +
-                        '</b> is opened in another tab.</p>'
-                        '<p>Cannot save under this name.')
+                        self,
+                        "Save file",
+                        "<p>The file <b>" + fName + "</b> is opened in another tab.</p><p>Cannot save under this name.",
+                    )
                     return False
                 else:
                     res = QMessageBox.warning(
-                        self, 'Save as is about to overwrite existing file',
-                        '<p>The file <b>' + fName + '</b> already exists.</p>',
-                        QMessageBox.StandardButtons(QMessageBox.Abort |
-                                                    QMessageBox.Save),
-                        QMessageBox.Abort)
+                        self,
+                        "Save as is about to overwrite existing file",
+                        "<p>The file <b>" + fName + "</b> already exists.</p>",
+                        QMessageBox.StandardButtons(QMessageBox.Abort | QMessageBox.Save),
+                        QMessageBox.Abort,
+                    )
                     if res == QMessageBox.Abort or res == QMessageBox.Cancel:
                         return False
         else:
             # Check write permissions to the directory
             dirName = os.path.dirname(fName)
             if not os.access(dirName, os.W_OK):
-                logging.error('There is no write permissions for the '
-                              'directory ' + dirName)
+                logging.error("There is no write permissions for the directory " + dirName)
                 return False
         return True
 
@@ -1467,16 +1417,15 @@ class EditorsManager(QTabWidget):
             widget = self.widget(index)
             widgetType = widget.getType()
 
-        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor,
-                              MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             return True
 
         if index != self.currentIndex():
             self.activateTab(index)
 
-        dialog = self.__getSaveAsDialog('Save file as...')
+        dialog = self.__getSaveAsDialog("Save file as...")
 
-        if widget.getFileName().lower() in ['', 'n/a']:
+        if widget.getFileName().lower() in ["", "n/a"]:
             newFile = True
             oldShortName = widget.getShortName()
             collapsedGroups = getCollapsedGroups(oldShortName)
@@ -1502,13 +1451,18 @@ class EditorsManager(QTabWidget):
 
         # OK, the file name was properly selected
         if self.__debugMode and self.__debugScript == fileName:
-            logging.error("Cannot overwrite a script "
-                          "which is currently debugged.")
+            logging.error("Cannot overwrite a script which is currently debugged.")
             return False
 
         if not widget.writeFile(fileName):
             # Failed to write, inform and exit
             return False
+
+        for callback in getattr(GlobalData(), "afterSaveCallbacks", []):
+            try:
+                callback(widget, fileName)
+            except Exception as exc:
+                logging.error("afterSave callback failed: %s", exc)
 
         # Sets the proper file name even if there were no changes in the
         # content
@@ -1524,8 +1478,7 @@ class EditorsManager(QTabWidget):
                 # It is safe and the syntax may change to None too
                 editor.detectSyntax(xmlSyntaxFile)
                 editor.clearAnalysisMessages()
-                self.sigFileTypeChanged.emit(fileName, widget.getUUID(),
-                                             newType if newType else '')
+                self.sigFileTypeChanged.emit(fileName, widget.getUUID(), newType if newType else "")
             self._updateIconAndTooltip(index, newType)
 
         if GlobalData().project.fileName == fileName:
@@ -1562,15 +1515,13 @@ class EditorsManager(QTabWidget):
         """Saves the current tab diagram to a file"""
         widget = self.currentWidget()
         widgetType = widget.getType()
-        if widgetType not in [MainWindowTabWidgetBase.GeneratedDiagram,
-                              MainWindowTabWidgetBase.ProfileViewer]:
+        if widgetType not in [MainWindowTabWidgetBase.GeneratedDiagram, MainWindowTabWidgetBase.ProfileViewer]:
             return
         if widgetType == MainWindowTabWidgetBase.ProfileViewer:
             if not widget.isDiagramActive():
                 return
 
-        dialog = self.__getSaveAsDialog('Save diagram as...',
-                                        'PNG files (*.png)')
+        dialog = self.__getSaveAsDialog("Save diagram as...", "PNG files (*.png)")
         dialog.setDirectory(self.__getDefaultSaveDir())
         if widgetType == MainWindowTabWidgetBase.GeneratedDiagram:
             dialog.selectFile("imports-diagram.png")
@@ -1612,8 +1563,7 @@ class EditorsManager(QTabWidget):
         if widget.isDiagramActive():
             return
 
-        dialog = self.__getSaveAsDialog('Save data as CSV file...',
-                                        'CSV files (*.csv)')
+        dialog = self.__getSaveAsDialog("Save data as CSV file...", "CSV files (*.csv)")
         dialog.setDirectory(self.__getDefaultSaveDir())
         dialog.selectFile("profiling-table.csv")
         if dialog.exec_() != QDialog.Accepted:
@@ -1643,8 +1593,7 @@ class EditorsManager(QTabWidget):
 
     def onFind(self):
         """Triggered when Ctrl+F is received"""
-        validWidgets = [MainWindowTabWidgetBase.PlainTextEditor,
-                        MainWindowTabWidgetBase.VCSAnnotateViewer]
+        validWidgets = [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]
         if self.currentWidget().getType() in validWidgets:
             self.gotoWidget.hide()
 
@@ -1664,13 +1613,11 @@ class EditorsManager(QTabWidget):
             word, _, startPos, _ = editor.getCurrentOrSelection()
             if word:
                 editor.absCursorPosition = startPos
-            self.findReplaceWidget.show(self.findReplaceWidget.MODE_REPLACE,
-                                        word)
+            self.findReplaceWidget.show(self.findReplaceWidget.MODE_REPLACE, word)
 
     def onGoto(self):
         """Triggered when Ctrl+G is received"""
-        validWidgets = [MainWindowTabWidgetBase.PlainTextEditor,
-                        MainWindowTabWidgetBase.VCSAnnotateViewer]
+        validWidgets = [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]
         if self.currentWidget().getType() in validWidgets:
             self.findReplaceWidget.hide()
             self.gotoWidget.show()
@@ -1689,8 +1636,7 @@ class EditorsManager(QTabWidget):
         """Prepares the history menu item"""
         entry = self.history.getEntry(index)
         text = entry.displayName
-        if entry.tabType in [MainWindowTabWidgetBase.PlainTextEditor,
-                             MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if entry.tabType in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             text += ", " + str(entry.line + 1) + ":" + str(entry.pos + 1)
         act = menu.addAction(entry.icon, text)
         act.setData(index)
@@ -1707,8 +1653,7 @@ class EditorsManager(QTabWidget):
 
         index = 0
         while index <= currentIndex:
-            self.__addHistoryMenuItem(self.__historyBackMenu,
-                                      index, currentIndex)
+            self.__addHistoryMenuItem(self.__historyBackMenu, index, currentIndex)
             index += 1
 
     def __showHistoryFwdMenu(self):
@@ -1720,8 +1665,7 @@ class EditorsManager(QTabWidget):
 
         index = currentIndex
         while index <= maxIndex:
-            self.__addHistoryMenuItem(self.__historyFwdMenu,
-                                      index, currentIndex)
+            self.__addHistoryMenuItem(self.__historyFwdMenu, index, currentIndex)
             index += 1
 
     def __activateHistoryTab(self):
@@ -1731,16 +1675,16 @@ class EditorsManager(QTabWidget):
         index = self.getIndexByUUID(entry.uuid)
         widget = self.getWidgetByUUID(entry.uuid)
         self.activateTab(index)
-        if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor,
-                                MainWindowTabWidgetBase.VCSAnnotateViewer]:
-            if widget.getLine() != entry.line or \
-               widget.getPos() != entry.pos or \
-               widget.getEditor().firstVisibleLine() != entry.firstVisible:
+        if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
+            if (
+                widget.getLine() != entry.line
+                or widget.getPos() != entry.pos
+                or widget.getEditor().firstVisibleLine() != entry.firstVisible
+            ):
                 # Need to jump to the memorized position because something
                 # has been changed
                 editor = widget.getEditor()
-                editor.gotoLine(entry.line + 1, entry.pos + 1,
-                                entry.firstVisible + 1)
+                editor.gotoLine(entry.line + 1, entry.pos + 1, entry.firstVisible + 1)
         self.__skipHistoryUpdate = False
 
     def historyForwardClicked(self):
@@ -1794,7 +1738,7 @@ class EditorsManager(QTabWidget):
         # Sometimes a signal comes from a tab which has already been closed
         # so the check is done for the current widget
         if currentWidget.isModified():
-            title = Settings()['modifiedFormat'] % currentWidget.getShortName()
+            title = Settings()["modifiedFormat"] % currentWidget.getShortName()
             self.setTabText(index, title)
         else:
             self.setTabText(index, currentWidget.getShortName())
@@ -1802,8 +1746,7 @@ class EditorsManager(QTabWidget):
     def __contentChanged(self):
         """Triggered when a buffer content is changed"""
         currentWidget = self.currentWidget()
-        self.sigBufferModified.emit(currentWidget.getFileName(),
-                                    currentWidget.getUUID())
+        self.sigBufferModified.emit(currentWidget.getFileName(), currentWidget.getUUID())
 
     def __onESC(self):
         """The editor detected ESC pressed"""
@@ -1814,8 +1757,7 @@ class EditorsManager(QTabWidget):
         # No aux on screen, remove the indicators then if it is an editor
         # widget
         widget = self.currentWidget()
-        if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor,
-                                MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             widget.getEditor().clearSearchIndicators()
 
     def __cursorPositionChanged(self):
@@ -1838,52 +1780,51 @@ class EditorsManager(QTabWidget):
         mainWindow = self.__mainWindow
 
         mainWindow.sbLanguage.setText(currentWidget.getLanguage())
-        editorWidgets = [MainWindowTabWidgetBase.PlainTextEditor,
-                         MainWindowTabWidgetBase.VCSAnnotateViewer]
+        editorWidgets = [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]
         if currentWidget.getType() in editorWidgets:
             mime = currentWidget.getMime()
             if mime:
-                mainWindow.sbLanguage.setToolTip('Mime type: ' + mime)
+                mainWindow.sbLanguage.setToolTip("Mime type: " + mime)
             else:
-                mainWindow.sbLanguage.setToolTip('Mime type: unknown')
+                mainWindow.sbLanguage.setToolTip("Mime type: unknown")
         else:
-            mainWindow.sbLanguage.setToolTip('')
+            mainWindow.sbLanguage.setToolTip("")
 
         eol = currentWidget.getEol()
-        mainWindow.sbEol.setText(eol if eol else 'n/a')
+        mainWindow.sbEol.setText(eol if eol else "n/a")
 
         cPos = currentWidget.getPos()
         if cPos is not None:
-            mainWindow.sbPos.setText('Pos: ' + str(cPos + 1))
+            mainWindow.sbPos.setText("Pos: " + str(cPos + 1))
         else:
-            mainWindow.sbPos.setText('Pos: n/a')
+            mainWindow.sbPos.setText("Pos: n/a")
         cLine = currentWidget.getLine()
         if cLine is not None:
-            mainWindow.sbLine.setText('Line: ' + str(cLine + 1))
+            mainWindow.sbLine.setText("Line: " + str(cLine + 1))
         else:
-            mainWindow.sbLine.setText('Line: n/a')
+            mainWindow.sbLine.setText("Line: n/a")
 
         rwMode = currentWidget.getRWMode()
         if rwMode:
             mainWindow.sbWritable.setText(rwMode)
-            mainWindow.sbWritable.setToolTip('')
+            mainWindow.sbWritable.setToolTip("")
         else:
-            mainWindow.sbWritable.setText('   ')
-            mainWindow.sbWritable.setToolTip('RW mode: unknown')
+            mainWindow.sbWritable.setText("   ")
+            mainWindow.sbWritable.setToolTip("RW mode: unknown")
 
         enc = currentWidget.getEncoding()
         if enc:
             mainWindow.sbEncoding.setText(enc)
-            mainWindow.sbEncoding.setToolTip('')
+            mainWindow.sbEncoding.setToolTip("")
         else:
-            mainWindow.sbEncoding.setText('   ')
-            mainWindow.sbEncoding.setToolTip('Encoding: unknown')
+            mainWindow.sbEncoding.setText("   ")
+            mainWindow.sbEncoding.setToolTip("Encoding: unknown")
 
         fName = currentWidget.getFileName()
         if fName:
             mainWindow.sbFile.setPath("File: " + fName)
         else:
-            mainWindow.sbFile.setPath('File: n/a')
+            mainWindow.sbFile.setPath("File: n/a")
         if self.__debugMode:
             mainWindow.setRunToLineButtonState()
 
@@ -1901,8 +1842,7 @@ class EditorsManager(QTabWidget):
             mainWindow.sbVCSStatus.setVisible(True)
             vcsManager.drawStatus(mainWindow.sbVCSStatus, currentVCSStatus)
 
-        validWidgets = [MainWindowTabWidgetBase.PlainTextEditor,
-                        MainWindowTabWidgetBase.PictureViewer]
+        validWidgets = [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]
         if currentWidget.getType() in validWidgets:
             fileName = currentWidget.getFileName()
             if fileName.startswith(os.path.sep):
@@ -1934,8 +1874,7 @@ class EditorsManager(QTabWidget):
             return True
 
         # There are not saved files
-        logging.error("Please close or save the modified files first (" +
-                      ", ".join(notSaved) + ")")
+        logging.error("Please close or save the modified files first (" + ", ".join(notSaved) + ")")
         self.activateTab(firstIndex)
         return False
 
@@ -1949,8 +1888,7 @@ class EditorsManager(QTabWidget):
         if self.closeRequest():
             # Need to call terminate for all the text editors if so
             for index in range(self.count()):
-                editorWidgets = [MainWindowTabWidgetBase.PlainTextEditor,
-                                 MainWindowTabWidgetBase.VCSAnnotateViewer]
+                editorWidgets = [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]
                 if self.widget(index).getType() in editorWidgets:
                     self.__disconnectEditorWidget(self.widget(index))
                     self.widget(index).terminate()
@@ -2002,19 +1940,19 @@ class EditorsManager(QTabWidget):
         for index in range(self.count()):
             item = self.widget(index)
             itemType = item.getType()
-            if itemType == MainWindowTabWidgetBase.HTMLViewer and \
-               item.getShortName() == helpShortName:
-                status.append({'active': item == curWidget,
-                               'path': 'help',
-                               'mdFullView': False,
-                               'mdFullViewReadOnly': False})
+            if itemType == MainWindowTabWidgetBase.HTMLViewer and item.getShortName() == helpShortName:
+                status.append(
+                    {"active": item == curWidget, "path": "help", "mdFullView": False, "mdFullViewReadOnly": False}
+                )
                 continue
-            if itemType in [MainWindowTabWidgetBase.PlainTextEditor,
-                            MainWindowTabWidgetBase.PictureViewer,
-                            MainWindowTabWidgetBase.MDViewer]:
+            if itemType in [
+                MainWindowTabWidgetBase.PlainTextEditor,
+                MainWindowTabWidgetBase.PictureViewer,
+                MainWindowTabWidgetBase.MDViewer,
+            ]:
                 fileName = item.getFileName()
                 if not fileName:
-                    continue    # New, not saved yet file
+                    continue  # New, not saved yet file
 
                 # Need to save the file name only. The cursor position is saved
                 # in another file.
@@ -2031,10 +1969,14 @@ class EditorsManager(QTabWidget):
                     mdFullView = False
                     mdFullViewReadOnly = False
 
-                status.append({'active': item == curWidget,
-                               'path': pathToSave,
-                               'mdFullView': mdFullView,
-                               'mdFullViewReadOnly': mdFullViewReadOnly})
+                status.append(
+                    {
+                        "active": item == curWidget,
+                        "path": pathToSave,
+                        "mdFullView": mdFullView,
+                        "mdFullViewReadOnly": mdFullViewReadOnly,
+                    }
+                )
         return status
 
     def restoreTabs(self, status):
@@ -2050,11 +1992,11 @@ class EditorsManager(QTabWidget):
         activeIndex = -1
         for index in range(len(status) - 1, -1, -1):
             record = status[index]
-            if record['active']:
+            if record["active"]:
                 activeIndex = index
-            fileName = record['path']
+            fileName = record["path"]
 
-            if fileName == 'help':
+            if fileName == "help":
                 # Help widget
                 if self.widget(0) == self.__welcomeWidget:
                     # It is the only welcome widget on the screen
@@ -2070,14 +2012,12 @@ class EditorsManager(QTabWidget):
                 fileName = os.path.abspath(prjDir + os.path.sep + fileName)
 
             if not os.path.exists(fileName):
-                logging.warning('Cannot restore last session tab. '
-                                'File is not found (' +
-                                fileName + ')')
+                logging.warning("Cannot restore last session tab. File is not found (" + fileName + ")")
                 continue
 
-            mdFullView = record.get('mdFullView', False)
+            mdFullView = record.get("mdFullView", False)
             if mdFullView:
-                mdFullViewReadOnly = record.get('mdFullViewReadOnly', False)
+                mdFullViewReadOnly = record.get("mdFullViewReadOnly", False)
                 self.openMarkdownFullView(fileName, mdFullViewReadOnly)
                 continue
 
@@ -2098,8 +2038,7 @@ class EditorsManager(QTabWidget):
         if self.count() == 0:
             # No one was restored - display the welcome widget
             self.setTabsClosable(False)
-            self.addTab(self.__welcomeWidget,
-                        self.__welcomeWidget.getShortName())
+            self.addTab(self.__welcomeWidget, self.__welcomeWidget.getShortName())
             activeIndex = 0
             self.activateTab(activeIndex)
             self.history.clear()
@@ -2119,19 +2058,19 @@ class EditorsManager(QTabWidget):
 
     def onTextZoomChanged(self):
         """Triggered when a text zoom is changed"""
-        GlobalData().mainWindow.showStatusBarMessage(
-            "Setting text zoom to " + str(Settings()['zoom']), 10000)
+        GlobalData().mainWindow.showStatusBarMessage("Setting text zoom to " + str(Settings()["zoom"]), 10000)
         for index in range(self.count()):
             item = self.widget(index)
-            if item.getType() in [MainWindowTabWidgetBase.PlainTextEditor,
-                                  MainWindowTabWidgetBase.VCSAnnotateViewer,
-                                  MainWindowTabWidgetBase.DiffViewer]:
+            if item.getType() in [
+                MainWindowTabWidgetBase.PlainTextEditor,
+                MainWindowTabWidgetBase.VCSAnnotateViewer,
+                MainWindowTabWidgetBase.DiffViewer,
+            ]:
                 item.onTextZoomChanged()
 
     def onFlowZoomChanged(self):
         """Triggered when a flow diagram zoom is changed"""
-        GlobalData().mainWindow.showStatusBarMessage(
-            "Setting flow zoom to " + str(Settings()['flowZoom']), 10000)
+        GlobalData().mainWindow.showStatusBarMessage("Setting flow zoom to " + str(Settings()["flowZoom"]), 10000)
         for index in range(self.count()):
             item = self.widget(index)
             if item.getType() in [MainWindowTabWidgetBase.PlainTextEditor]:
@@ -2150,8 +2089,7 @@ class EditorsManager(QTabWidget):
         """makes all the text editors updating settings"""
         for index in range(self.count()):
             item = self.widget(index)
-            if item.getType() in [MainWindowTabWidgetBase.PlainTextEditor,
-                                  MainWindowTabWidgetBase.VCSAnnotateViewer]:
+            if item.getType() in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
                 item.getEditor().updateSettings()
                 if item.isDiskFileModified():
                     # This will make the modification markers re-drawn
@@ -2162,8 +2100,7 @@ class EditorsManager(QTabWidget):
         """Resets all the buffers match cache"""
         for index in range(self.count()):
             item = self.widget(index)
-            if item.getType() in [MainWindowTabWidgetBase.PlainTextEditor,
-                                  MainWindowTabWidgetBase.VCSAnnotateViewer]:
+            if item.getType() in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
                 item.getEditor().resetMatchCache()
 
     def updateCFEditorsSettings(self):
@@ -2216,8 +2153,7 @@ class EditorsManager(QTabWidget):
         if currentWidget.doesFileExist():
             if currentWidget.isDiskFileModified():
                 if not currentWidget.getReloadDialogShown():
-                    currentWidget.showOutsideChangesBar(
-                        self.__countDiskModifiedUnchanged() > 1)
+                    currentWidget.showOutsideChangesBar(self.__countDiskModifiedUnchanged() > 1)
 
     def checkOutsidePathChange(self, path):
         """Checks outside changes for a certain path"""
@@ -2233,13 +2169,12 @@ class EditorsManager(QTabWidget):
                 if currentWidget == widget:
                     if widget.doesFileExist():
                         if not widget.getReloadDialogShown():
-                            widget.showOutsideChangesBar(
-                                self.__countDiskModifiedUnchanged() > 1)
+                            widget.showOutsideChangesBar(self.__countDiskModifiedUnchanged() > 1)
                 break
 
     def __countDiskModifiedUnchanged(self):
         """Returns the number of buffers with non modified
-           content for which the disk file is modified
+        content for which the disk file is modified
         """
         cnt = 0
         for index in range(self.count()):
@@ -2259,8 +2194,7 @@ class EditorsManager(QTabWidget):
     def reloadTab(self, index):
         """Reloads a single tab"""
         # This may happened for a text file or for a picture
-        isTextEditor = self.widget(index).getType() == \
-            MainWindowTabWidgetBase.PlainTextEditor
+        isTextEditor = self.widget(index).getType() == MainWindowTabWidgetBase.PlainTextEditor
 
         try:
             if isTextEditor:
@@ -2286,7 +2220,7 @@ class EditorsManager(QTabWidget):
 
     def onReloadAllNonModified(self):
         """Called when all the disk changed and not
-           modified files should be reloaded
+        modified files should be reloaded
         """
         for index in range(self.count()):
             if not self.widget(index).isModified():
@@ -2379,42 +2313,47 @@ class EditorsManager(QTabWidget):
     def zoomIn(self):
         """Called if main menu item is selected"""
         widget = self.currentWidget()
-        if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor,
-                                MainWindowTabWidgetBase.VCSAnnotateViewer,
-                                MainWindowTabWidgetBase.PictureViewer,
-                                MainWindowTabWidgetBase.GeneratedDiagram,
-                                MainWindowTabWidgetBase.ProfileViewer,
-                                MainWindowTabWidgetBase.DiffViewer]:
+        if widget.getType() in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+            MainWindowTabWidgetBase.PictureViewer,
+            MainWindowTabWidgetBase.GeneratedDiagram,
+            MainWindowTabWidgetBase.ProfileViewer,
+            MainWindowTabWidgetBase.DiffViewer,
+        ]:
             widget.onZoomIn()
 
     def zoomOut(self):
         """Called if main menu item is selected"""
         widget = self.currentWidget()
-        if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor,
-                                MainWindowTabWidgetBase.VCSAnnotateViewer,
-                                MainWindowTabWidgetBase.PictureViewer,
-                                MainWindowTabWidgetBase.GeneratedDiagram,
-                                MainWindowTabWidgetBase.ProfileViewer,
-                                MainWindowTabWidgetBase.DiffViewer]:
+        if widget.getType() in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+            MainWindowTabWidgetBase.PictureViewer,
+            MainWindowTabWidgetBase.GeneratedDiagram,
+            MainWindowTabWidgetBase.ProfileViewer,
+            MainWindowTabWidgetBase.DiffViewer,
+        ]:
             widget.onZoomOut()
 
     def zoomReset(self):
         """Called if main menu item is selected"""
         widget = self.currentWidget()
-        if widget.getType() in [MainWindowTabWidgetBase.PlainTextEditor,
-                                MainWindowTabWidgetBase.VCSAnnotateViewer,
-                                MainWindowTabWidgetBase.PictureViewer,
-                                MainWindowTabWidgetBase.GeneratedDiagram,
-                                MainWindowTabWidgetBase.ProfileViewer,
-                                MainWindowTabWidgetBase.DiffViewer]:
+        if widget.getType() in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+            MainWindowTabWidgetBase.PictureViewer,
+            MainWindowTabWidgetBase.GeneratedDiagram,
+            MainWindowTabWidgetBase.ProfileViewer,
+            MainWindowTabWidgetBase.DiffViewer,
+        ]:
             widget.onZoomReset()
 
     def isCopyAvailable(self):
         """Checks if Ctrl+C works for the current widget"""
         widget = self.currentWidget()
         widgetType = widget.getType()
-        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor,
-                          MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             return True
         if widgetType == MainWindowTabWidgetBase.HTMLViewer:
             return widget.getViewer().isCopyAvailable()
@@ -2428,21 +2367,19 @@ class EditorsManager(QTabWidget):
         """Called when Ctrl+C is selected via main menu"""
         widget = self.currentWidget()
         widgetType = widget.getType()
-        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor,
-                          MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             widget.getEditor().onCtrlC()
             return
         if widgetType == MainWindowTabWidgetBase.HTMLViewer:
             widget.getViewer().copy()
             return
-        if widgetType in [MainWindowTabWidgetBase.GeneratedDiagram,
-                          MainWindowTabWidgetBase.ProfileViewer]:
+        if widgetType in [MainWindowTabWidgetBase.GeneratedDiagram, MainWindowTabWidgetBase.ProfileViewer]:
             widget.onCopy()
             return
 
     def setTooltips(self, switchOn):
         """Sets the tooltips mode"""
-        del switchOn    # unused argument
+        del switchOn  # unused argument
         for index in range(self.count()):
             widget = self.widget(index)
             widgetType = widget.getType()
@@ -2461,9 +2398,9 @@ class EditorsManager(QTabWidget):
             self.__pluginMenus[plugin.getPath()] = menu
             self.sigPluginContextMenuAdded.emit(menu, len(self.__pluginMenus))
         except Exception as exc:
-            logging.error("Error populating " + pluginName +
-                          " plugin buffer context menu: " +
-                          str(exc) + ". Ignore and continue.")
+            logging.error(
+                "Error populating " + pluginName + " plugin buffer context menu: " + str(exc) + ". Ignore and continue."
+            )
 
     def __onPluginDeactivated(self, plugin):
         """Triggered when a plugin is deactivated"""
@@ -2472,14 +2409,13 @@ class EditorsManager(QTabWidget):
             if path in self.__pluginMenus:
                 menu = self.__pluginMenus[path]
                 del self.__pluginMenus[path]
-                self.sigPluginContextMenuRemoved.emit(menu,
-                                                      len(self.__pluginMenus))
+                self.sigPluginContextMenuRemoved.emit(menu, len(self.__pluginMenus))
                 menu = None
         except Exception as exc:
             pluginName = plugin.getName()
-            logging.error("Error removing " + pluginName +
-                          " plugin buffer context menu: " +
-                          str(exc) + ". Ignore and continue.")
+            logging.error(
+                "Error removing " + pluginName + " plugin buffer context menu: " + str(exc) + ". Ignore and continue."
+            )
 
     def getPluginMenus(self):
         """Provides a reference to the registered plugin menus map"""
@@ -2489,23 +2425,20 @@ class EditorsManager(QTabWidget):
         """Triggered when a status was updated"""
         for index in range(self.count()):
             widget = self.widget(index)
-            allowedWidgets = [MainWindowTabWidgetBase.PlainTextEditor,
-                              MainWindowTabWidgetBase.PictureViewer]
+            allowedWidgets = [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]
             if widget.getType() in allowedWidgets:
                 if widget.getFileName() == path:
                     widget.setVCSStatus(status)
                     if self.currentIndex() == index:
                         self.__mainWindow.sbVCSStatus.setVisible(True)
-                        self.__mainWindow.vcsManager.drawStatus(
-                            self.__mainWindow.sbVCSStatus, status)
+                        self.__mainWindow.vcsManager.drawStatus(self.__mainWindow.sbVCSStatus, status)
                     break
 
     def sendAllTabsVCSStatusRequest(self):
         """Sends the status requests for all the opened TABS (text/picture)"""
         for index in range(self.count()):
             widget = self.widget(index)
-            allowedWidgets = [MainWindowTabWidgetBase.PlainTextEditor,
-                              MainWindowTabWidgetBase.PictureViewer]
+            allowedWidgets = [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]
             if widget.getType() in allowedWidgets:
                 fileName = widget.getFileName()
                 if os.path.isabs(fileName):

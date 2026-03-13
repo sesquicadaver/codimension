@@ -37,8 +37,7 @@ def getNowTimestamp():
     return printableTimestamp(datetime.now())
 
 
-class IOConsoleMsg():
-
+class IOConsoleMsg:
     """Holds a single message"""
 
     __slots__ = ["msgType", "msgText", "timestamp"]
@@ -59,7 +58,6 @@ class IOConsoleMsg():
 
 
 class IOConsoleMessages:
-
     """Holds a list of messages"""
 
     def __init__(self):
@@ -71,10 +69,10 @@ class IOConsoleMessages:
         self.msgs.append(msg)
         self.size += 1
 
-        if self.size <= Settings()['ioconsolemaxmsgs']:
+        if self.size <= Settings()["ioconsolemaxmsgs"]:
             return False
 
-        removeCount = Settings()['ioconsoledelchunk']
+        removeCount = Settings()["ioconsoledelchunk"]
         self.msgs = self.msgs[removeCount:]
         self.size -= removeCount
         return True
@@ -104,11 +102,12 @@ class IOConsoleMessages:
                 outputIndex = -1
                 continue
 
-            if msg.msgType not in [IOConsoleMsg.STDOUT_MESSAGE,
-                                   IOConsoleMsg.STDERR_MESSAGE,
-                                   IOConsoleMsg.STDIN_MESSAGE]:
-                raise Exception("Unexpected message IO console type: " +
-                                str(msg.msgType))
+            if msg.msgType not in [
+                IOConsoleMsg.STDOUT_MESSAGE,
+                IOConsoleMsg.STDERR_MESSAGE,
+                IOConsoleMsg.STDIN_MESSAGE,
+            ]:
+                raise Exception("Unexpected message IO console type: " + str(msg.msgType))
 
             if msg.msgType == IOConsoleMsg.STDOUT_MESSAGE:
                 stream = "out"
@@ -120,23 +119,20 @@ class IOConsoleMessages:
             parts = msg.msgText.splitlines()
             if parts:
                 if outputIndex == -1:
-                    buf.append(stream + " " + msg.getTimestamp() +
-                               " " + parts[0])
+                    buf.append(stream + " " + msg.getTimestamp() + " " + parts[0])
                     outputIndex = len(buf) - 1
                 else:
                     spaces = len(buf[outputIndex]) - len(emptyPrefix) - 1
                     buf[outputIndex] += parts[0]
-                    buf.append(stream + " " + msg.getTimestamp() +
-                               " " + " " * spaces + "^")
+                    buf.append(stream + " " + msg.getTimestamp() + " " + " " * spaces + "^")
 
                 parts = parts[1:]
                 if parts:
                     for part in parts:
-                        buf.append(stream + " " + msg.getTimestamp() +
-                                   " " + part)
+                        buf.append(stream + " " + msg.getTimestamp() + " " + part)
                     outputIndex = len(buf) - 1
 
-            if msg.msgText.endswith('\n') or msg.msgText.endswith('\r'):
+            if msg.msgText.endswith("\n") or msg.msgText.endswith("\r"):
                 outputIndex = -1
 
         return "\n".join(buf)

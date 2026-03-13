@@ -33,7 +33,6 @@ from utils.misc import extendInstance
 
 
 class CDMLineNumberMargin(QWidget):
-
     """Line number area widget"""
 
     _LEFT_MARGIN = 5
@@ -43,10 +42,10 @@ class CDMLineNumberMargin(QWidget):
         QWidget.__init__(self, parent)
 
         extendInstance(self, MarginBase)
-        MarginBase.__init__(self, parent, 'cdm_line_number_margin', 0)
+        MarginBase.__init__(self, parent, "cdm_line_number_margin", 0)
 
-        self.__bgColor = GlobalData().skin['marginPaper']
-        self.__fgColor = GlobalData().skin['marginColor']
+        self.__bgColor = GlobalData().skin["marginPaper"]
+        self.__fgColor = GlobalData().skin["marginColor"]
 
         self.__width = self.__calculateWidth()
         self.onTextZoomChanged()
@@ -79,16 +78,14 @@ class CDMLineNumberMargin(QWidget):
 
         block = self._qpart.firstVisibleBlock()
         blockNumber = block.blockNumber()
-        top = int(self._qpart.blockBoundingGeometry(block).
-                  translated(self._qpart.contentOffset()).top())
+        top = int(self._qpart.blockBoundingGeometry(block).translated(self._qpart.contentOffset()).top())
         bottom = top + int(self._qpart.blockBoundingRect(block).height())
 
         boundingRect = self._qpart.blockBoundingRect(block)
         availableWidth = self.__width - self._RIGHT_MARGIN - self._LEFT_MARGIN
 
         # The margin font could be smaller than the main area font
-        topShift = int((self._qpart.fontMetrics().height() -
-                        self.fontMetrics().height()) / 2)
+        topShift = int((self._qpart.fontMetrics().height() - self.fontMetrics().height()) / 2)
         if topShift < 0:
             topShift = 0
 
@@ -96,10 +93,9 @@ class CDMLineNumberMargin(QWidget):
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
                 number = str(blockNumber + 1)
-                painter.drawText(self._LEFT_MARGIN, top + topShift,
-                                 availableWidth,
-                                 availableHeight,
-                                 Qt.AlignRight, number)
+                painter.drawText(
+                    self._LEFT_MARGIN, top + topShift, availableWidth, availableHeight, Qt.AlignRight, number
+                )
             block = block.next()
             boundingRect = self._qpart.blockBoundingRect(block)
             top = bottom
@@ -109,7 +105,7 @@ class CDMLineNumberMargin(QWidget):
     def __calculateWidth(self):
         """Calculates the margin width"""
         digits = len(str(max(1, self._qpart.blockCount())))
-        digitsWidth = self.fontMetrics().width('9') * digits
+        digitsWidth = self.fontMetrics().width("9") * digits
         return self._LEFT_MARGIN + digitsWidth + self._RIGHT_MARGIN
 
     def width(self):

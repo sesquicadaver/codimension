@@ -19,7 +19,6 @@
 
 """Welcome screen"""
 
-
 import os.path
 import sys
 
@@ -30,7 +29,6 @@ from .texttabwidget import TextTabWidget
 
 
 class WelcomeWidget(TextTabWidget):
-
     """Welcome screen"""
 
     httpAddress = "http://codimension.org"
@@ -54,23 +52,28 @@ class WelcomeWidget(TextTabWidget):
         if projectMDFile:
             if os.path.exists(projectMDFile):
                 relativeMDFile = project.getRelativePath(projectMDFile)
-                projectPart = """<p align="left">The currently lodaded project
-<b>""" + GlobalData().project.getProjectName() + """</b> provides documentation.
+                projectPart = (
+                    """<p align="left">The currently lodaded project
+<b>"""
+                    + GlobalData().project.getProjectName()
+                    + """</b> provides documentation.
 <br>Open it by clicking
-<a href="action://project-cocumentation">""" + relativeMDFile + """</a>
+<a href="action://project-cocumentation">"""
+                    + relativeMDFile
+                    + """</a>
 or clicking any time the main toolbar button with the markdown icon.</p>
 
 <br>
 <hr>
 <br>"""
+                )
 
-        pixmapPath = os.path.dirname(os.path.realpath(sys.argv[0])) + \
-            os.path.sep + 'pixmaps' + os.path.sep
-        logoPath = pixmapPath + 'logo-48x48.png'
-        welcome = "  Codimension version " + str(GlobalData().version) + \
-            " <font size=-2>(GPL v3)</font>"
+        pixmapPath = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep + "pixmaps" + os.path.sep
+        logoPath = pixmapPath + "logo-48x48.png"
+        welcome = "  Codimension version " + str(GlobalData().version) + " <font size=-2>(GPL v3)</font>"
 
-        return """
+        return (
+            """
 <body bgcolor="#EFF0F2">
 <p>
 <table cellspacing="0" cellpadding="8" width="100%"
@@ -78,12 +81,16 @@ or clicking any time the main toolbar button with the markdown icon.</p>
 <tr>
   <td width="1%" valign="middle">
       <a href="http://codimension.org">
-      <img border="0" align="left" src='file:""" + logoPath + """'
+      <img border="0" align="left" src='file:"""
+            + logoPath
+            + """'
            width="48" height="48">
       </a>
   </td>
   <td valign="middle">
-      <h2 align="left">&nbsp;""" + welcome + """</h2>
+      <h2 align="left">&nbsp;"""
+            + welcome
+            + """</h2>
   </td>
 </tr>
 </table>
@@ -91,7 +98,9 @@ or clicking any time the main toolbar button with the markdown icon.</p>
 <table cellspacing="0" cellpadding="8" width="100%"
        align="left" bgcolor="#EFF0F2" border="0" style="width: 100%">
 <tr>
-  <td>""" + projectPart + """
+  <td>"""
+            + projectPart
+            + """
     <p align="left">Press <b>F1</b> any time for the Keyboard Shortcut
        Reference or follow this <a href="action://F1">link</a>.</p>
     <p align="left">The IDE also features the documentation available
@@ -112,4 +121,4 @@ or clicking any time the main toolbar button with the markdown icon.</p>
 </tr>
 </table></p>
 </body>"""
-
+        )

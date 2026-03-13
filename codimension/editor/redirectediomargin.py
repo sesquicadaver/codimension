@@ -31,17 +31,18 @@ from .redirectedmsg import IOConsoleMsg
 
 
 class CDMRedirectedIOMargin(QWidget):
-
     """Redirected IO margin widget"""
 
     _LEFT_MARGIN = 5
     _RIGHT_MARGIN = 3
 
     # Prefixes should match the message rendering (when copied to clipboard)
-    MSG_TYPE_PROPS = {IOConsoleMsg.IDE_MESSAGE: ['ide ', None],
-                      IOConsoleMsg.STDOUT_MESSAGE: ['out ', None],
-                      IOConsoleMsg.STDERR_MESSAGE: ['err ', None],
-                      IOConsoleMsg.STDIN_MESSAGE: [' in ', None]}
+    MSG_TYPE_PROPS = {
+        IOConsoleMsg.IDE_MESSAGE: ["ide ", None],
+        IOConsoleMsg.STDOUT_MESSAGE: ["out ", None],
+        IOConsoleMsg.STDERR_MESSAGE: ["err ", None],
+        IOConsoleMsg.STDIN_MESSAGE: [" in ", None],
+    }
 
     def __init__(self, parent):
         QWidget.__init__(self, parent)
@@ -52,21 +53,17 @@ class CDMRedirectedIOMargin(QWidget):
         self.__data = {}
 
         extendInstance(self, MarginBase)
-        MarginBase.__init__(self, parent, 'cdm_redirected_io_margin', 0)
+        MarginBase.__init__(self, parent, "cdm_redirected_io_margin", 0)
         self.setMouseTracking(True)
 
         skin = GlobalData().skin
-        self.__bgColor = skin['marginPaper']
-        self.__fgColor = skin['marginColor']   # default
+        self.__bgColor = skin["marginPaper"]
+        self.__fgColor = skin["marginColor"]  # default
 
-        CDMRedirectedIOMargin.MSG_TYPE_PROPS[IOConsoleMsg.IDE_MESSAGE][1] = \
-            skin['ioconsoleMarginIDEMsgColor']
-        CDMRedirectedIOMargin.MSG_TYPE_PROPS[IOConsoleMsg.STDOUT_MESSAGE][1] = \
-            skin['ioconsoleMarginStdoutColor']
-        CDMRedirectedIOMargin.MSG_TYPE_PROPS[IOConsoleMsg.STDERR_MESSAGE][1] = \
-            skin['ioconsoleMarginStderrColor']
-        CDMRedirectedIOMargin.MSG_TYPE_PROPS[IOConsoleMsg.STDIN_MESSAGE][1] = \
-            skin['ioconsoleMarginStdinColor']
+        CDMRedirectedIOMargin.MSG_TYPE_PROPS[IOConsoleMsg.IDE_MESSAGE][1] = skin["ioconsoleMarginIDEMsgColor"]
+        CDMRedirectedIOMargin.MSG_TYPE_PROPS[IOConsoleMsg.STDOUT_MESSAGE][1] = skin["ioconsoleMarginStdoutColor"]
+        CDMRedirectedIOMargin.MSG_TYPE_PROPS[IOConsoleMsg.STDERR_MESSAGE][1] = skin["ioconsoleMarginStderrColor"]
+        CDMRedirectedIOMargin.MSG_TYPE_PROPS[IOConsoleMsg.STDIN_MESSAGE][1] = skin["ioconsoleMarginStdinColor"]
 
         self.__width = self.__calculateWidth()
         self.onTextZoomChanged()
@@ -95,16 +92,14 @@ class CDMRedirectedIOMargin(QWidget):
 
         block = self._qpart.firstVisibleBlock()
         blockNumber = block.blockNumber()
-        top = int(self._qpart.blockBoundingGeometry(block).
-                  translated(self._qpart.contentOffset()).top())
+        top = int(self._qpart.blockBoundingGeometry(block).translated(self._qpart.contentOffset()).top())
         bottom = top + int(self._qpart.blockBoundingRect(block).height())
 
         boundingRect = self._qpart.blockBoundingRect(block)
         availableWidth = self.__width - self._RIGHT_MARGIN - self._LEFT_MARGIN
 
         # The margin font could be smaller than the main area font
-        topShift = int((self._qpart.fontMetrics().height() -
-                        self.fontMetrics().height()) / 2)
+        topShift = int((self._qpart.fontMetrics().height() - self.fontMetrics().height()) / 2)
         if topShift < 0:
             topShift = 0
 
@@ -120,10 +115,9 @@ class CDMRedirectedIOMargin(QWidget):
                     if color is None:
                         color = self.__fgColor
                     painter.setPen(color)
-                    painter.drawText(self._LEFT_MARGIN, top + topShift,
-                                     availableWidth,
-                                     availableHeight,
-                                     Qt.AlignRight, text)
+                    painter.drawText(
+                        self._LEFT_MARGIN, top + topShift, availableWidth, availableHeight, Qt.AlignRight, text
+                    )
             block = block.next()
             boundingRect = self._qpart.blockBoundingRect(block)
             top = bottom
@@ -132,8 +126,7 @@ class CDMRedirectedIOMargin(QWidget):
 
     def mouseMoveEvent(self, event):
         """Tooltips for the text"""
-        blockNumber = self._qpart.cursorForPosition(
-            event.pos()).blockNumber()
+        blockNumber = self._qpart.cursorForPosition(event.pos()).blockNumber()
         lineno = blockNumber + 1
         if lineno in self.__data:
             props = self.__data.get(lineno, [(None, None, None)])
@@ -141,12 +134,9 @@ class CDMRedirectedIOMargin(QWidget):
             for prop in props:
                 if prop[1]:
                     msgType = prop[2]
-                    tooltipItems.append(
-                        CDMRedirectedIOMargin.MSG_TYPE_PROPS[msgType][0] +
-                        prop[1])
+                    tooltipItems.append(CDMRedirectedIOMargin.MSG_TYPE_PROPS[msgType][0] + prop[1])
             if tooltipItems:
-                tooltip = "<p style='white-space:pre'>" + \
-                          escape('\n'.join(tooltipItems)) + "</p>"
+                tooltip = "<p style='white-space:pre'>" + escape("\n".join(tooltipItems)) + "</p>"
             QToolTip.showText(event.globalPos(), tooltip)
         else:
             QToolTip.hideText()
@@ -154,8 +144,8 @@ class CDMRedirectedIOMargin(QWidget):
 
     def __calculateWidth(self):
         """Calculates the margin width"""
-        digits = len('88:88:88.888')   # Basically it is a timestamp
-        digitsWidth = self.fontMetrics().width('9') * digits
+        digits = len("88:88:88.888")  # Basically it is a timestamp
+        digitsWidth = self.fontMetrics().width("9") * digits
         return self._LEFT_MARGIN + digitsWidth + self._RIGHT_MARGIN
 
     def width(self):

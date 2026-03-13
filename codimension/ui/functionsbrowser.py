@@ -32,11 +32,10 @@ from .objectsbrowserbase import ObjectsBrowser
 
 
 class FunctionsBrowser(ObjectsBrowser):
-
     """Functions browser"""
 
     def __init__(self, parent=None):
         ObjectsBrowser.__init__(self, FunctionsBrowserModel(), parent)
 
-        self.setWindowTitle('Functions browser')
-        self.setWindowIcon(getIcon('icon.png'))
+        self.setWindowTitle("Functions browser")
+        self.setWindowIcon(getIcon("icon.png"))

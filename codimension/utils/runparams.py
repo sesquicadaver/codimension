@@ -28,7 +28,6 @@ DEBUG = 2
 
 
 class RunParameters:
-
     """Stores the script run parameters"""
 
     InheritParentEnv = 0
@@ -50,35 +49,31 @@ class RunParameters:
 
     def runParamsToJSON(self):
         """Converts the instance to a serializable structure"""
-        return {'__class__': 'RunParameters',
-                '__values__': self.__params}
+        return {"__class__": "RunParameters", "__values__": self.__params}
 
     def runParamsFromJSON(self, jsonObj):
         """Populates the values from the json object"""
-        self.__params = jsonObj['__values__']
+        self.__params = jsonObj["__values__"]
 
 
 # Default parameters
 DEFAULT_RUN_PARAMETERS = {
     # Cmd line arguments
-    'arguments': '',
-
+    "arguments": "",
     # Working dir part
-    'useScriptLocation': True,
-    'specificDir': '',
-
+    "useScriptLocation": True,
+    "specificDir": "",
     # Environment
-    'envType': RunParameters.InheritParentEnv,
-    'additionToParentEnv': {},
-    'specificEnv': {},
-
+    "envType": RunParameters.InheritParentEnv,
+    "additionToParentEnv": {},
+    "specificEnv": {},
     # Path to python
-    'useInherited': True,
-    'customInterpreter': '',
-
+    "useInherited": True,
+    "customInterpreter": "",
     # Way to run
-    'redirected': True,
-    'customTerminal': ''}
+    "redirected": True,
+    "customTerminal": "",
+}
 
 
 # JSON serialization/deserialization support
@@ -88,13 +83,13 @@ def runParamsToJSON(pythonObj):
     """Custom serialization"""
     if isinstance(pythonObj, RunParameters):
         return pythonObj.runParamsToJSON()
-    raise TypeError(repr(pythonObj) + ' is not JSON serializable')
+    raise TypeError(repr(pythonObj) + " is not JSON serializable")
 
 
 def runParamsFromJSON(jsonObj):
     """Custom deserialization"""
-    if '__class__' in jsonObj:
-        if jsonObj['__class__'] == 'RunParameters':
+    if "__class__" in jsonObj:
+        if jsonObj["__class__"] == "RunParameters":
             params = RunParameters()
             params.runParamsFromJSON(jsonObj)
             return params

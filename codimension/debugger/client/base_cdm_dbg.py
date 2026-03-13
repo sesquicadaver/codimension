@@ -45,13 +45,12 @@ RECURSION_LIMIT = 64
 
 
 def setRecursionLimit(limit):
-    " Sets the recursion limit "
+    "Sets the recursion limit"
     global RECURSION_LIMIT
     RECURSION_LIMIT = limit
 
 
 class DebugBase(object):
-
     """
     Base class of the debugger - the part which is external to IDE.
     """
@@ -61,7 +60,7 @@ class DebugBase(object):
     lib = os.path.dirname(inspect.__file__)
 
     # Tuple required because it's accessed a lot of times by startswith method
-    pathsToSkip = ('<', os.path.dirname(__file__), inspect.__file__[:-1])
+    pathsToSkip = ("<", os.path.dirname(__file__), inspect.__file__[:-1])
     filesToSkip = {}
 
     # Cache for fixed file names
@@ -77,7 +76,7 @@ class DebugBase(object):
         self.isMainThread = False
         self.quitting = False
         self.id = -1
-        self.name = ''
+        self.name = ""
 
         self.tracePythonLibs(0)
 
@@ -141,15 +140,15 @@ class DebugBase(object):
             frmnr -= 1
 
         try:
-            if '__pypy__' in sys.builtin_module_names:
+            if "__pypy__" in sys.builtin_module_names:
                 import __pypy__
+
                 __pypy__.locals_to_fast(cf)
                 return
         except Exception:
             pass
 
-        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(cf),
-                                              ctypes.c_int(0))
+        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(cf), ctypes.c_int(0))
 
     def step(self, traceMode):
         """Performs step in this thread"""
@@ -175,40 +174,39 @@ class DebugBase(object):
 
     def profileWithRecursion(self, frame, event, arg):
         """Traces some stuff independent of the debugger trace function"""
-        if event == 'return':
+        if event == "return":
             self.cFrame = frame.f_back
             self.__recursionDepth -= 1
             if self._dbgClient.callTraceEnabled:
                 self.__sendCallTrace(event, frame, self.cFrame)
-        elif event == 'call':
+        elif event == "call":
             if self._dbgClient.callTraceEnabled:
                 self.__sendCallTrace(event, self.cFrame, frame)
             self.cFrame = frame
             self.__recursionDepth += 1
             if self.__recursionDepth > RECURSION_LIMIT:
-                raise RuntimeError('maximum recursion depth exceeded\n'
-                                   '(offending frame is two down the stack)')
+                raise RuntimeError("maximum recursion depth exceeded\n(offending frame is two down the stack)")
 
     def profile(self, frame, event, arg):
         """Traces some stuff independant of the debugger trace function"""
-        if event == 'return':
+        if event == "return":
             self.__sendCallTrace(event, frame, frame.f_back)
-        elif event == 'call':
+        elif event == "call":
             self.__sendCallTrace(event, frame.f_back, frame)
 
     def __sendCallTrace(self, event, fromFrame, toFrame):
         """Sends a call/return trace"""
         if not self.__skipFrame(fromFrame) and not self.__skipFrame(toFrame):
             fromInfo = {
-                "filename": self._dbgClient.absPath(
-                    self.fix_frame_filename(fromFrame)),
+                "filename": self._dbgClient.absPath(self.fix_frame_filename(fromFrame)),
                 "linenumber": fromFrame.f_lineno,
-                "codename": fromFrame.f_code.co_name}
+                "codename": fromFrame.f_code.co_name,
+            }
             toInfo = {
-                "filename": self._dbgClient.absPath(
-                    self.fix_frame_filename(toFrame)),
+                "filename": self._dbgClient.absPath(self.fix_frame_filename(toFrame)),
                 "linenumber": toFrame.f_lineno,
-                "codename": toFrame.f_code.co_name}
+                "codename": toFrame.f_code.co_name,
+            }
             self._dbgClient.sendCallTrace(event, fromInfo, toInfo)
 
     def trace_dispatch(self, frame, event, arg):
@@ -221,60 +219,57 @@ class DebugBase(object):
             if self.quitting:
                 raise SystemExit
 
-        if event == 'line':
+        if event == "line":
             if self.stop_here(frame) or self.break_here(frame):
-                if (self.stop_everywhere and frame.f_back and
-                        frame.f_back.f_code.co_name == "sendJSONCommand"):
+                if self.stop_everywhere and frame.f_back and frame.f_back.f_code.co_name == "sendJSONCommand":
                     # Just stepped into print statement, so skip these frames
                     self._set_stopinfo(None, frame.f_back)
                 else:
                     self.user_line(frame)
             return self.trace_dispatch
 
-        if event == 'call':
-            if (self.stop_here(frame) or
-                    self.__checkBreakInFrame(frame) or
-                    Watch.WATCHES != []):
+        if event == "call":
+            if self.stop_here(frame) or self.__checkBreakInFrame(frame) or Watch.WATCHES != []:
                 return self.trace_dispatch
             # No need to trace this function
             return
 
-        if event == 'return':
+        if event == "return":
             if frame == self.returnframe:
                 # Only true if we didn't stopped in this frame, because it's
                 # belonging to the eric debugger.
                 self._set_stopinfo(None, frame.f_back)
             return
 
-        if event == 'exception':
+        if event == "exception":
             if not self.__skipFrame(frame):
                 # When stepping with next/until/return in a generator frame,
                 # skip the internal StopIteration exception (with no traceback)
                 # triggered by a subiterator run with the 'yield from'
                 # statement.
-                if not (frame.f_code.co_flags & CO_GENERATOR and
-                        arg[0] is StopIteration and arg[2] is None):
+                if not (frame.f_code.co_flags & CO_GENERATOR and arg[0] is StopIteration and arg[2] is None):
                     self.user_exception(arg)
             # Stop at the StopIteration or GeneratorExit exception when the
             # user has set stopframe in a generator by issuing a return
             # command, or a next/until command at the last statement in the
             # generator before the exception.
-            elif (self.stopframe and frame is not self.stopframe and
-                  self.stopframe.f_code.co_flags & CO_GENERATOR and
-                  arg[0] in (StopIteration, GeneratorExit)):
+            elif (
+                self.stopframe
+                and frame is not self.stopframe
+                and self.stopframe.f_code.co_flags & CO_GENERATOR
+                and arg[0] in (StopIteration, GeneratorExit)
+            ):
                 self.user_exception(arg)
             return
 
-        if event == 'c_call':
+        if event == "c_call":
             return
-        if event == 'c_exception':
+        if event == "c_exception":
             return
-        if event == 'c_return':
+        if event == "c_return":
             return
 
-        print('DebugBase.trace_dispatch:'
-              ' unknown debugging event: ',
-              repr(event))
+        print("DebugBase.trace_dispatch: unknown debugging event: ", repr(event))
         return self.trace_dispatch
 
     def set_trace(self, frame=None):
@@ -316,6 +311,7 @@ class DebugBase(object):
         """Starts a given command under debugger control"""
         if globalsDict is None:
             import __main__
+
             globalsDict = __main__.__dict__
 
         if localsDict is None:
@@ -401,7 +397,7 @@ class DebugBase(object):
     def fix_frame_filename(self, frame):
         """Fixups the filename for a given frame"""
         # get module name from __file__
-        fn = frame.f_globals.get('__file__')
+        fn = frame.f_globals.get("__file__")
         try:
             return self._fnCache[fn]
         except KeyError:
@@ -409,7 +405,7 @@ class DebugBase(object):
                 return frame.f_code.co_filename
 
             absFilename = os.path.abspath(fn)
-            if absFilename.endswith(('.pyc', '.pyo', '.pyd')):
+            if absFilename.endswith((".pyc", ".pyo", ".pyd")):
                 fixedName = absFilename[:-1]
                 if not os.path.exists(fixedName):
                     fixedName = absFilename
@@ -422,15 +418,11 @@ class DebugBase(object):
     def __checkBreakInFrame(self, frame):
         """Checks if the function/method has a line number which is a bp"""
         try:
-            return Breakpoint.BREAK_IN_FRAME_CACHE[
-                frame.f_globals.get('__file__'),
-                frame.f_code.co_firstlineno]
+            return Breakpoint.BREAK_IN_FRAME_CACHE[frame.f_globals.get("__file__"), frame.f_code.co_firstlineno]
         except KeyError:
             filename = self.fix_frame_filename(frame)
             if filename not in Breakpoint.BREAK_IN_FILE:
-                Breakpoint.BREAK_IN_FRAME_CACHE[
-                    frame.f_globals.get('__file__'),
-                    frame.f_code.co_firstlineno] = False
+                Breakpoint.BREAK_IN_FRAME_CACHE[frame.f_globals.get("__file__"), frame.f_code.co_firstlineno] = False
                 return False
             lineNo = frame.f_code.co_firstlineno
             lineNumbers = [lineNo]
@@ -445,21 +437,16 @@ class DebugBase(object):
 
             for bp in Breakpoint.BREAK_IN_FILE[filename]:
                 if bp in lineNumbers:
-                    Breakpoint.BREAK_IN_FRAME_CACHE[
-                        frame.f_globals.get('__file__'),
-                        frame.f_code.co_firstlineno] = True
+                    Breakpoint.BREAK_IN_FRAME_CACHE[frame.f_globals.get("__file__"), frame.f_code.co_firstlineno] = True
                     return True
-            Breakpoint.BREAK_IN_FRAME_CACHE[
-                frame.f_globals.get('__file__'),
-                frame.f_code.co_firstlineno] = False
+            Breakpoint.BREAK_IN_FRAME_CACHE[frame.f_globals.get("__file__"), frame.f_code.co_firstlineno] = False
             return False
 
     def break_here(self, frame):
         """Reimplemented from bdb.py to fix the filename from the frame"""
         filename = self.fix_frame_filename(frame)
         if (filename, frame.f_lineno) in Breakpoint.BREAKS:
-            bp, flag = Breakpoint.effectiveBreak(
-                filename, frame.f_lineno, frame)
+            bp, flag = Breakpoint.effectiveBreak(filename, frame.f_lineno, frame)
             if bp:
                 # flag says ok to delete temp. bp
                 if flag and bp.temporary:
@@ -509,22 +496,20 @@ class DebugBase(object):
             # Always show at least one stack frame, even if it's from
             # codimension
             if stack and os.path.basename(fname).startswith(
-                    ('base_cdm_dbg.py', "clientbase_cdm_dbg.py",
-                     "threadextension_cdm_dbg.py", "threading.py")):
+                ("base_cdm_dbg.py", "clientbase_cdm_dbg.py", "threadextension_cdm_dbg.py", "threading.py")
+            ):
                 break
 
             fline = fr.f_lineno
             ffunc = fr.f_code.co_name
 
-            if ffunc == '?':
-                ffunc = ''
+            if ffunc == "?":
+                ffunc = ""
 
             if ffunc and not ffunc.startswith("<"):
                 argInfo = getArgValues(fr)
                 try:
-                    fargs = formatArgValues(
-                        argInfo.args, argInfo.varargs,
-                        argInfo.keywords, argInfo.locals)
+                    fargs = formatArgValues(argInfo.args, argInfo.varargs, argInfo.keywords, argInfo.locals)
                 except Exception:
                     fargs = ""
             else:
@@ -566,8 +551,7 @@ class DebugBase(object):
         """Reimplemented to report an exception to the debug server"""
         exctype, excval, exctb = excinfo
 
-        if ((exctype in [GeneratorExit, StopIteration] and not unhandled)
-            or exctype is SystemExit):
+        if (exctype in [GeneratorExit, StopIteration] and not unhandled) or exctype is SystemExit:
             # ignore these
             return
 
@@ -595,23 +579,27 @@ class DebugBase(object):
                 realSyntaxError = True
 
             if realSyntaxError:
-                self._dbgClient.sendSyntaxError(
-                    message, filename, lineno, charno)
+                self._dbgClient.sendSyntaxError(message, filename, lineno, charno)
                 self._dbgClient.eventLoop()
                 return
 
         self.skipFrames = 0
-        if (exctype is RuntimeError and
-                str(excval).startswith('maximum recursion depth exceeded') or
-                exctype is RecursionError):
-            excval = 'maximum recursion depth exceeded'
+        if (
+            exctype is RuntimeError
+            and str(excval).startswith("maximum recursion depth exceeded")
+            or exctype is RecursionError
+        ):
+            excval = "maximum recursion depth exceeded"
             depth = 0
             tb = exctb
             while tb:
                 tb = tb.tb_next
 
-                if (tb and tb.tb_frame.f_code.co_name == 'trace_dispatch' and
-                        __file__.startswith(tb.tb_frame.f_code.co_filename)):
+                if (
+                    tb
+                    and tb.tb_frame.f_code.co_name == "trace_dispatch"
+                    and __file__.startswith(tb.tb_frame.f_code.co_filename)
+                ):
                     depth = 1
                 self.skipFrames += depth
 
@@ -621,7 +609,7 @@ class DebugBase(object):
         exctype = self.__extractExceptionName(exctype)
 
         if excval is None:
-            excval = ''
+            excval = ""
 
         if unhandled:
             exctypetxt = "Unhandled {0!s}".format(str(exctype))
@@ -640,7 +628,7 @@ class DebugBase(object):
             frlist.reverse()
 
             self.currentFrame = frlist[0]
-            stack = self.getStack(frlist[self.skipFrames:])
+            stack = self.getStack(frlist[self.skipFrames :])
 
         self._dbgClient.lockClient()
         self._dbgClient.currentThread = self
@@ -717,22 +705,19 @@ class DebugBase(object):
         if self.__skipFrame(frame):
             return False
 
-        return (self.stop_everywhere or
-                frame is self.stopframe or
-                frame is self.returnframe)
+        return self.stop_everywhere or frame is self.stopframe or frame is self.returnframe
 
     def tracePythonLibs(self, enable):
         """Updates the settings to trace into Python libraries"""
         pathsToSkip = list(self.pathsToSkip)
         # don't trace into Python library?
         if enable:
-            pathsToSkip = [x for x in pathsToSkip if not x.endswith(
-                ("site-packages", "dist-packages", self.lib))]
+            pathsToSkip = [x for x in pathsToSkip if not x.endswith(("site-packages", "dist-packages", self.lib))]
         else:
             pathsToSkip.append(self.lib)
-            localLib = [x for x in sys.path
-                        if x.endswith(("site-packages", "dist-packages")) and
-                        not x.startswith(self.lib)]
+            localLib = [
+                x for x in sys.path if x.endswith(("site-packages", "dist-packages")) and not x.startswith(self.lib)
+            ]
             pathsToSkip.extend(localLib)
 
         self.pathsToSkip = tuple(set(pathsToSkip))

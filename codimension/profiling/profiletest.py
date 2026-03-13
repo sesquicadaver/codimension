@@ -19,6 +19,7 @@
 #
 
 """Profiler test"""
+
 # import sys
 import time
 
@@ -29,44 +30,50 @@ while False:
 
 
 v = range(175)
-z = (x*x for x in range(10))
-c = compile('sum([1, 2, 3])', '', 'single')
+z = (x * x for x in range(10))
+c = compile("sum([1, 2, 3])", "", "single")
 e = Ellipsis
 
-raise Exception('dkdkdkd')
+raise Exception("dkdkdkd")
 
 try:
-    raise Exception('hey')
+    raise Exception("hey")
 except Exception:
     import sys
+
     x1, x2, x3 = sys.exc_info()
+
 
 class A:
     def __init__(self):
         self.__d = 10
         self.d = 20
+
     def f(self):
         pass
+
     @property
     def x(self):
         return self.__x
 
-def f( bla ):
-    " F function docstring "
+
+def f(bla):
+    "F function docstring"
     if bla == -1:
         return -1
-#    if bla >= 5:
-#        return -1
-    return f( bla + 1 )
+    #    if bla >= 5:
+    #        return -1
+    return f(bla + 1)
 
-def g( foo ):
-    " g function doc "
-    f( foo )
+
+def g(foo):
+    "g function doc"
+    f(foo)
+
 
 a = A()
 b = set()
-c = {1: '1', 2: '2'}
+c = {1: "1", 2: "2"}
 
-f( 0 )
-g( -1 )
-
+f(0)
+g(-1)

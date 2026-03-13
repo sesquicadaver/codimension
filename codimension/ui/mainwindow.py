@@ -120,7 +120,6 @@ from .spacers import ToolBarExpandingSpacer, ToolBarHSpacer
 
 
 class EditorsManagerWidget(QWidget):
-
     """Tab widget which has tabs with editors and viewers"""
 
     def __init__(self, parent, debugger):
@@ -130,11 +129,9 @@ class EditorsManagerWidget(QWidget):
         self.editorsManager = EditorsManager(parent, debugger)
         self.findReplaceWidget = FindReplaceWidget(self.editorsManager)
         self.gotoLineWidget = GotoLineWidget(self.editorsManager)
-        self.editorsManager.registerAuxWidgets(self.findReplaceWidget,
-                                               self.gotoLineWidget)
+        self.editorsManager.registerAuxWidgets(self.findReplaceWidget, self.gotoLineWidget)
 
-        self.editorsManager.setSizePolicy(QSizePolicy.Preferred,
-                                          QSizePolicy.Expanding)
+        self.editorsManager.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(1, 1, 1, 1)
 
@@ -146,7 +143,6 @@ class EditorsManagerWidget(QWidget):
 
 
 class CodimensionMainWindow(QMainWindow):
-
     """Main application window"""
 
     DEBUG_ACTION_GO = 1
@@ -184,15 +180,11 @@ class CodimensionMainWindow(QMainWindow):
         self.vcsManager = VCSManager()
 
         self.__debugger = CodimensionDebugger(self)
-        self.__debugger.sigDebuggerStateChanged.connect(
-            self.__onDebuggerStateChanged)
+        self.__debugger.sigDebuggerStateChanged.connect(self.__onDebuggerStateChanged)
         self.__debugger.sigClientLine.connect(self.__onDebuggerCurrentLine)
-        self.__debugger.sigClientException.connect(
-            self.__onDebuggerClientException)
-        self.__debugger.sigClientSyntaxError.connect(
-            self.__onDebuggerClientSyntaxError)
-        self.__debugger.getBreakPointModel().sigBreakpoinsChanged.connect(
-            self.__onBreakpointsModelChanged)
+        self.__debugger.sigClientException.connect(self.__onDebuggerClientException)
+        self.__debugger.sigClientSyntaxError.connect(self.__onDebuggerClientSyntaxError)
+        self.__debugger.getBreakPointModel().sigBreakpoinsChanged.connect(self.__onBreakpointsModelChanged)
 
         self.__initialisation = True
 
@@ -204,18 +196,15 @@ class CodimensionMainWindow(QMainWindow):
         # This one is approximate, the one in restoreWindowPosition()
         # is precise
         screenSize = GlobalData().application.desktop().screenGeometry()
-        if screenSize.width() != settings['screenwidth'] or \
-           screenSize.height() != settings['screenheight']:
+        if screenSize.width() != settings["screenwidth"] or screenSize.height() != settings["screenheight"]:
             # The screen resolution has been changed, use the default pos
-            defXPos, defYpos, \
-            defWidth, defHeight = settings.getDefaultGeometry()
+            defXPos, defYpos, defWidth, defHeight = settings.getDefaultGeometry()
             self.resize(defWidth, defHeight)
             self.move(defXPos, defYpos)
         else:
             # No changes in the screen resolution
-            self.resize(settings['width'], settings['height'])
-            self.move(settings['xpos'] + settings['xdelta'],
-                      settings['ypos'] + settings['ydelta'])
+            self.resize(settings["width"], settings["height"])
+            self.move(settings["xpos"] + settings["xdelta"], settings["ypos"] + settings["ydelta"])
 
         splash.showMessage("Creating toolbar...")
         self.__createToolBar()
@@ -231,8 +220,8 @@ class CodimensionMainWindow(QMainWindow):
 
         self.__horizontalSplitter = None
         self.__verticalSplitter = None
-        self.__horizontalSplitterSizes = settings['hSplitterSizes']
-        self.__verticalSplitterSizes = settings['vSplitterSizes']
+        self.__horizontalSplitterSizes = settings["hSplitterSizes"]
+        self.__verticalSplitterSizes = settings["vSplitterSizes"]
 
         self.logViewer = None
         self.__createLayout()
@@ -247,18 +236,15 @@ class CodimensionMainWindow(QMainWindow):
 
         self._runManager = RunManager(self)
         self._runManager.sigProfilingResults.connect(self.onProfileResults)
-        self._runManager.sigDebugSessionPrologueStarted.connect(
-            self.__debugger.onDebugSessionStarted)
-        self._runManager.sigIncomingMessage.connect(
-            self.__debugger.onIncomingMessage)
-        self._runManager.sigProcessFinished.connect(
-            self.__debugger.onProcessFinished)
+        self._runManager.sigDebugSessionPrologueStarted.connect(self.__debugger.onDebugSessionStarted)
+        self._runManager.sigIncomingMessage.connect(self.__debugger.onIncomingMessage)
+        self._runManager.sigProcessFinished.connect(self.__debugger.onProcessFinished)
 
         settings.sigTextZoomChanged.connect(self.onTextZoomChanged)
 
         # Flow UI/markdown renderer
         self.__detachedRenderer = DetachedRendererWindow(settings, self.em)
-        if settings['floatingRenderer']:
+        if settings["floatingRenderer"]:
             self.__detachedRenderer.show()
 
         self.__registerSearchProviders()
@@ -266,26 +252,22 @@ class CodimensionMainWindow(QMainWindow):
     def restoreWindowPosition(self):
         """Makes sure that the window frame delta is proper"""
         screenSize = GlobalData().application.desktop().screenGeometry()
-        if screenSize.width() != self.settings['screenwidth'] or \
-           screenSize.height() != self.settings['screenheight']:
+        if screenSize.width() != self.settings["screenwidth"] or screenSize.height() != self.settings["screenheight"]:
             # The screen resolution has been changed, save the new values
-            self.settings['screenwidth'] = screenSize.width()
-            self.settings['screenheight'] = screenSize.height()
-            self.settings['xdelta'] = self.settings['xpos'] - self.x()
-            self.settings['ydelta'] = self.settings['ypos'] - self.y()
-            self.settings['xpos'] = self.x()
-            self.settings['ypos'] = self.y()
+            self.settings["screenwidth"] = screenSize.width()
+            self.settings["screenheight"] = screenSize.height()
+            self.settings["xdelta"] = self.settings["xpos"] - self.x()
+            self.settings["ydelta"] = self.settings["ypos"] - self.y()
+            self.settings["xpos"] = self.x()
+            self.settings["ypos"] = self.y()
         else:
             # Screen resolution is the same as before
-            if self.settings['xpos'] != self.x() or \
-               self.settings['ypos'] != self.y():
+            if self.settings["xpos"] != self.x() or self.settings["ypos"] != self.y():
                 # The saved delta is incorrect, update it
-                self.settings['xdelta'] = self.settings['xpos'] - self.x() + \
-                                          self.settings['xdelta']
-                self.settings['ydelta'] = self.settings['ypos'] - self.y() + \
-                                          self.settings['ydelta']
-                self.settings['xpos'] = self.x()
-                self.settings['ypos'] = self.y()
+                self.settings["xdelta"] = self.settings["xpos"] - self.x() + self.settings["xdelta"]
+                self.settings["ydelta"] = self.settings["ypos"] - self.y() + self.settings["ydelta"]
+                self.settings["xpos"] = self.x()
+                self.settings["ypos"] = self.y()
         self.__initialisation = False
 
     def _onMaximizeEditor(self):
@@ -311,92 +293,65 @@ class CodimensionMainWindow(QMainWindow):
 
         # Create tabs on bars
         self.logViewer = LogViewer()
-        self._bottomSideBar.addTab(self.logViewer, getIcon('logviewer.png'),
-                                   'Log', 'log', 0)
-        self._bottomSideBar.tabButton('log', QTabBar.RightSide).resize(0, 0)
+        self._bottomSideBar.addTab(self.logViewer, getIcon("logviewer.png"), "Log", "log", 0)
+        self._bottomSideBar.tabButton("log", QTabBar.RightSide).resize(0, 0)
         sys.stdout.appendToStdout.connect(self.toStdout)
         sys.stderr.appendToStderr.connect(self.toStderr)
 
         # replace logging streamer to self.stdout
         logging.root.handlers = []
         handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(
-            logging.Formatter("%(levelname) -10s %(asctime)s %(message)s",
-                              None))
+        handler.setFormatter(logging.Formatter("%(levelname) -10s %(asctime)s %(message)s", None))
         logging.root.addHandler(handler)
 
         self.projectViewer = ProjectViewer(self)
-        self._leftSideBar.addTab(self.projectViewer, getIcon(''),
-                                 'Project', 'project', 0)
+        self._leftSideBar.addTab(self.projectViewer, getIcon(""), "Project", "project", 0)
         self.em.sigFileUpdated.connect(self.projectViewer.onFileUpdated)
         self.em.sigFileTypeChanged.connect(self.projectViewer.onFileTypeChanged)
         self.recentProjectsViewer = RecentProjectsViewer(self)
-        self._leftSideBar.addTab(self.recentProjectsViewer, getIcon(''),
-                                 'Recent', 'recent', 1)
+        self._leftSideBar.addTab(self.recentProjectsViewer, getIcon(""), "Recent", "recent", 1)
         self.em.sigFileUpdated.connect(self.recentProjectsViewer.onFileUpdated)
-        self.em.sigFileTypeChanged.connect(
-            self.recentProjectsViewer.onFileTypeChanged)
-        self.em.sigBufferSavedAs.connect(
-            self.recentProjectsViewer.onFileUpdated)
-        self.projectViewer.sigFileUpdated.connect(
-            self.recentProjectsViewer.onFileUpdated)
+        self.em.sigFileTypeChanged.connect(self.recentProjectsViewer.onFileTypeChanged)
+        self.em.sigBufferSavedAs.connect(self.recentProjectsViewer.onFileUpdated)
+        self.projectViewer.sigFileUpdated.connect(self.recentProjectsViewer.onFileUpdated)
 
         self.classesViewer = ClassesViewer()
         self.em.sigFileUpdated.connect(self.classesViewer.onFileUpdated)
-        self._leftSideBar.addTab(self.classesViewer, getIcon(''),
-                                 'Classes', 'classes', 2)
+        self._leftSideBar.addTab(self.classesViewer, getIcon(""), "Classes", "classes", 2)
         self.functionsViewer = FunctionsViewer()
         self.em.sigFileUpdated.connect(self.functionsViewer.onFileUpdated)
-        self._leftSideBar.addTab(self.functionsViewer, getIcon(''),
-                                 'Functions', 'functions', 3)
+        self._leftSideBar.addTab(self.functionsViewer, getIcon(""), "Functions", "functions", 3)
         self.globalsViewer = GlobalsViewer()
         self.em.sigFileUpdated.connect(self.globalsViewer.onFileUpdated)
-        self._leftSideBar.addTab(self.globalsViewer, getIcon(''),
-                                 'Globals', 'globals', 4)
+        self._leftSideBar.addTab(self.globalsViewer, getIcon(""), "Globals", "globals", 4)
 
-        self._leftSideBar.sigCurrentTabChanged.connect(
-            self.__onLeftSideBarTabChanged)
+        self._leftSideBar.sigCurrentTabChanged.connect(self.__onLeftSideBarTabChanged)
 
         # Create search results viewer
         self.searchResultsViewer = SearchResultsViewer()
-        self._bottomSideBar.addTab(
-            self.searchResultsViewer,
-            getIcon('findindir.png'), 'Search results', 'search', 1)
-        self._bottomSideBar.tabButton('search', QTabBar.RightSide).resize(0, 0)
+        self._bottomSideBar.addTab(self.searchResultsViewer, getIcon("findindir.png"), "Search results", "search", 1)
+        self._bottomSideBar.tabButton("search", QTabBar.RightSide).resize(0, 0)
 
         # Create outline viewer
         self.outlineViewer = FileOutlineViewer(self.em, self)
-        self._rightSideBar.addTab(self.outlineViewer, getIcon(''),
-                                  'File outline', 'fileoutline', 0)
+        self._rightSideBar.addTab(self.outlineViewer, getIcon(""), "File outline", "fileoutline", 0)
 
         # Create the pyflakes viewer
-        self.__pyflakesViewer = PyflakesViewer(self.em,
-                                               self.sbPyflakes,
-                                               self.sbCC,
-                                               self)
+        self.__pyflakesViewer = PyflakesViewer(self.em, self.sbPyflakes, self.sbCC, self)
 
         self.debuggerContext = DebuggerContext(self.__debugger)
-        self._rightSideBar.addTab(
-            self.debuggerContext,
-            getIcon(''), 'Debugger', 'debugger', 1)
-        self._rightSideBar.setTabEnabled('debugger', False)
+        self._rightSideBar.addTab(self.debuggerContext, getIcon(""), "Debugger", "debugger", 1)
+        self._rightSideBar.setTabEnabled("debugger", False)
 
         self.debuggerExceptions = DebuggerExceptions()
-        self._rightSideBar.addTab(
-            self.debuggerExceptions,
-            getIcon(''), 'Exceptions', 'exceptions', 2)
-        self.debuggerExceptions.sigClientExceptionsCleared.connect(
-            self.__onClientExceptionsCleared)
+        self._rightSideBar.addTab(self.debuggerExceptions, getIcon(""), "Exceptions", "exceptions", 2)
+        self.debuggerExceptions.sigClientExceptionsCleared.connect(self.__onClientExceptionsCleared)
 
-        self.debuggerBreakWatchPoints = DebuggerBreakWatchPoints(
-            self, self.__debugger)
-        self._rightSideBar.addTab(
-            self.debuggerBreakWatchPoints,
-            getIcon(''), 'Breakpoints', 'breakpoints', 3)
+        self.debuggerBreakWatchPoints = DebuggerBreakWatchPoints(self, self.__debugger)
+        self._rightSideBar.addTab(self.debuggerBreakWatchPoints, getIcon(""), "Breakpoints", "breakpoints", 3)
 
         self.debuggerCallTrace = CallTraceViewer(self.__debugger, self)
-        self._rightSideBar.addTab(
-            self.debuggerCallTrace, getIcon(''), 'Call Trace', 'calltrace', 4)
+        self._rightSideBar.addTab(self.debuggerCallTrace, getIcon(""), "Call Trace", "calltrace", 4)
 
         # Create splitters
         self.__horizontalSplitter = QSplitter(Qt.Horizontal)
@@ -428,13 +383,13 @@ class CodimensionMainWindow(QMainWindow):
 
     def restoreSplitterSizes(self):
         """Restore the side bar state"""
-        self.__horizontalSplitter.setSizes(self.settings['hSplitterSizes'])
-        self.__verticalSplitter.setSizes(self.settings['vSplitterSizes'])
-        if self.settings['leftBarMinimized']:
+        self.__horizontalSplitter.setSizes(self.settings["hSplitterSizes"])
+        self.__verticalSplitter.setSizes(self.settings["vSplitterSizes"])
+        if self.settings["leftBarMinimized"]:
             self._leftSideBar.shrink()
-        if self.settings['bottomBarMinimized']:
+        if self.settings["bottomBarMinimized"]:
             self._bottomSideBar.shrink()
-        if self.settings['rightBarMinimized']:
+        if self.settings["rightBarMinimized"]:
             self._rightSideBar.shrink()
 
         # Setup splitters movement handlers
@@ -448,31 +403,28 @@ class CodimensionMainWindow(QMainWindow):
         if globalData.graphvizAvailable:
             logging.debug("The 'dot' utility is available")
         else:
-            logging.warning("The 'dot' utility is not found. "
-                            "Some functionality will not be available.")
+            logging.warning("The 'dot' utility is not found. Some functionality will not be available.")
         if globalData.javaAvailable:
-            logging.debug('java is available')
+            logging.debug("java is available")
         else:
-            logging.warning('java is not found. '
-                            'Some functionality will not be available.')
+            logging.warning("java is not found. Some functionality will not be available.")
 
     def vSplitterMoved(self, pos, index):
         """Vertical splitter moved handler"""
-        del pos     # unused argument
-        del index   # unused argument
+        del pos  # unused argument
+        del index  # unused argument
 
         newSizes = list(self.__verticalSplitter.sizes())
 
         if not self._bottomSideBar.isMinimized():
             self.__verticalSplitterSizes[0] = newSizes[0]
 
-        self.__verticalSplitterSizes[1] = sum(newSizes) - \
-            self.__verticalSplitterSizes[0]
+        self.__verticalSplitterSizes[1] = sum(newSizes) - self.__verticalSplitterSizes[0]
 
     def hSplitterMoved(self, pos, index):
         """Horizontal splitter moved handler"""
-        del pos     # unused argument
-        del index   # unused argument
+        del pos  # unused argument
+        del index  # unused argument
 
         newSizes = list(self.__horizontalSplitter.sizes())
 
@@ -481,9 +433,9 @@ class CodimensionMainWindow(QMainWindow):
         if not self._rightSideBar.isMinimized():
             self.__horizontalSplitterSizes[2] = newSizes[2]
 
-        self.__horizontalSplitterSizes[1] = sum(newSizes) - \
-            self.__horizontalSplitterSizes[0] - \
-            self.__horizontalSplitterSizes[2]
+        self.__horizontalSplitterSizes[1] = (
+            sum(newSizes) - self.__horizontalSplitterSizes[0] - self.__horizontalSplitterSizes[2]
+        )
 
     def __onLeftSideBarTabChanged(self, index):
         """Lazy-load Classes/Functions/Globals when their tab is first shown."""
@@ -498,23 +450,22 @@ class CodimensionMainWindow(QMainWindow):
         if index < 0:
             return
         tabName = self._leftSideBar.getTabName(index)
-        if tabName == 'classes':
+        if tabName == "classes":
             self.classesViewer.clViewer.model().sourceModel().populateIfNeeded()
-        elif tabName == 'functions':
+        elif tabName == "functions":
             self.functionsViewer.funcViewer.model().sourceModel().populateIfNeeded()
-        elif tabName == 'globals':
+        elif tabName == "globals":
             self.globalsViewer.globalsViewer.model().sourceModel().populateIfNeeded()
 
     def __createToolBar(self):
         """creates the buttons bar"""
         # Imports diagram button and its menu
         importsMenu = QMenu(self)
-        importsDlgAct = importsMenu.addAction(
-            getIcon('detailsdlg.png'), 'Fine tuned imports diagram')
+        importsDlgAct = importsMenu.addAction(getIcon("detailsdlg.png"), "Fine tuned imports diagram")
         importsDlgAct.triggered.connect(self._onImportDgmTuned)
         self.importsDiagramButton = QToolButton(self)
-        self.importsDiagramButton.setIcon(getIcon('importsdiagram.png'))
-        self.importsDiagramButton.setToolTip('Generate imports diagram')
+        self.importsDiagramButton.setIcon(getIcon("importsdiagram.png"))
+        self.importsDiagramButton.setToolTip("Generate imports diagram")
         self.importsDiagramButton.setPopupMode(QToolButton.DelayedPopup)
         self.importsDiagramButton.setMenu(importsMenu)
         self.importsDiagramButton.setFocusPolicy(Qt.NoFocus)
@@ -522,12 +473,11 @@ class CodimensionMainWindow(QMainWindow):
 
         # Run project button and its menu
         runProjectMenu = QMenu(self)
-        runProjectAct = runProjectMenu.addAction(
-            getIcon('detailsdlg.png'), 'Set run parameters')
+        runProjectAct = runProjectMenu.addAction(getIcon("detailsdlg.png"), "Set run parameters")
         runProjectAct.triggered.connect(self.onRunProjectDlg)
         self.runProjectButton = QToolButton(self)
-        self.runProjectButton.setIcon(getIcon('run.png'))
-        self.runProjectButton.setToolTip('Project is not loaded')
+        self.runProjectButton.setIcon(getIcon("run.png"))
+        self.runProjectButton.setToolTip("Project is not loaded")
         self.runProjectButton.setPopupMode(QToolButton.DelayedPopup)
         self.runProjectButton.setMenu(runProjectMenu)
         self.runProjectButton.setFocusPolicy(Qt.NoFocus)
@@ -535,12 +485,11 @@ class CodimensionMainWindow(QMainWindow):
 
         # profile project button and its menu
         profileProjectMenu = QMenu(self)
-        profileProjectAct = profileProjectMenu.addAction(
-            getIcon('detailsdlg.png'), 'Set profile parameters')
+        profileProjectAct = profileProjectMenu.addAction(getIcon("detailsdlg.png"), "Set profile parameters")
         profileProjectAct.triggered.connect(self.onProfileProjectDlg)
         self.profileProjectButton = QToolButton(self)
-        self.profileProjectButton.setIcon(getIcon('profile.png'))
-        self.profileProjectButton.setToolTip('Project is not loaded')
+        self.profileProjectButton.setIcon(getIcon("profile.png"))
+        self.profileProjectButton.setToolTip("Project is not loaded")
         self.profileProjectButton.setPopupMode(QToolButton.DelayedPopup)
         self.profileProjectButton.setMenu(profileProjectMenu)
         self.profileProjectButton.setFocusPolicy(Qt.NoFocus)
@@ -548,102 +497,81 @@ class CodimensionMainWindow(QMainWindow):
 
         # Debug project button and its menu
         debugProjectMenu = QMenu(self)
-        debugProjectAct = debugProjectMenu.addAction(
-            getIcon('detailsdlg.png'), 'Set debug parameters')
+        debugProjectAct = debugProjectMenu.addAction(getIcon("detailsdlg.png"), "Set debug parameters")
         debugProjectAct.triggered.connect(self.onDebugProjectDlg)
         self.debugProjectButton = QToolButton(self)
-        self.debugProjectButton.setIcon(getIcon('debugger.png'))
-        self.debugProjectButton.setToolTip('Project is not loaded')
+        self.debugProjectButton.setIcon(getIcon("debugger.png"))
+        self.debugProjectButton.setToolTip("Project is not loaded")
         self.debugProjectButton.setPopupMode(QToolButton.DelayedPopup)
         self.debugProjectButton.setMenu(debugProjectMenu)
         self.debugProjectButton.setFocusPolicy(Qt.NoFocus)
         self.debugProjectButton.clicked.connect(self.onDebugProject)
         self.debugProjectButton.setVisible(True)
 
-        packageDiagramButton = QAction(
-            getIcon('packagediagram.png'), 'Generate package diagram', self)
+        packageDiagramButton = QAction(getIcon("packagediagram.png"), "Generate package diagram", self)
         packageDiagramButton.setEnabled(False)
         packageDiagramButton.setVisible(False)
-        applicationDiagramButton = QAction(
-            getIcon('applicationdiagram.png'), 'Generate application diagram',
-            self)
+        applicationDiagramButton = QAction(getIcon("applicationdiagram.png"), "Generate application diagram", self)
         applicationDiagramButton.setEnabled(False)
         applicationDiagramButton.setVisible(False)
 
-        self.__findInFilesButton = QAction(
-            getIcon('findindir.png'), 'Find in files (Ctrl+Shift+F)', self)
+        self.__findInFilesButton = QAction(getIcon("findindir.png"), "Find in files (Ctrl+Shift+F)", self)
         self.__findInFilesButton.triggered.connect(self.findInFilesClicked)
-        self.__findNameButton = QAction(
-            getIcon('findname.png'), 'Find name in project (Alt+Shift+S)',
-            self)
+        self.__findNameButton = QAction(getIcon("findname.png"), "Find name in project (Alt+Shift+S)", self)
         self.__findNameButton.triggered.connect(self.findNameClicked)
-        self.__findFileButton = QAction(
-            getIcon('findfile.png'), 'Find project file (Alt+Shift+O)', self)
+        self.__findFileButton = QAction(getIcon("findfile.png"), "Find project file (Alt+Shift+O)", self)
         self.__findFileButton.triggered.connect(self.findFileClicked)
-        self.__deadCodeButton = QAction(
-            getIcon('deadcode.png'), 'Find project dead code (Alt+Shift+D)',
-            self)
+        self.__deadCodeButton = QAction(getIcon("deadcode.png"), "Find project dead code (Alt+Shift+D)", self)
         self.__deadCodeButton.triggered.connect(self.projectDeadCodeClicked)
-        self.__projectDocButton = QAction(
-            getIcon('markdown.png'), 'Project documentation', self)
+        self.__projectDocButton = QAction(getIcon("markdown.png"), "Project documentation", self)
         self.__projectDocButton.triggered.connect(self.projectDocClicked)
 
         # Debugger buttons
-        self.__dbgStop = QAction(
-            getIcon('dbgstop.png'),
-            'Stop debugging session (F10)', self)
+        self.__dbgStop = QAction(getIcon("dbgstop.png"), "Stop debugging session (F10)", self)
         self.__dbgStop.triggered.connect(self._onStopDbgSession)
         self.__dbgStop.setVisible(False)
-        self.__dbgRestart = QAction(
-            getIcon('dbgrestart.png'), 'Restart debugging section (F4)', self)
+        self.__dbgRestart = QAction(getIcon("dbgrestart.png"), "Restart debugging section (F4)", self)
         self.__dbgRestart.triggered.connect(self._onRestartDbgSession)
         self.__dbgRestart.setVisible(False)
-        self.__dbgGo = QAction(getIcon('dbggo.png'), 'Continue (F6)', self)
+        self.__dbgGo = QAction(getIcon("dbggo.png"), "Continue (F6)", self)
         self.__dbgGo.triggered.connect(self._onDbgGo)
         self.__dbgGo.setVisible(False)
-        self.__dbgNext = QAction(
-            getIcon('dbgnext.png'), 'Step over (F8)', self)
+        self.__dbgNext = QAction(getIcon("dbgnext.png"), "Step over (F8)", self)
         self.__dbgNext.triggered.connect(self._onDbgNext)
         self.__dbgNext.setVisible(False)
-        self.__dbgStepInto = QAction(
-            getIcon('dbgstepinto.png'), 'Step into (F7)', self)
+        self.__dbgStepInto = QAction(getIcon("dbgstepinto.png"), "Step into (F7)", self)
         self.__dbgStepInto.triggered.connect(self._onDbgStepInto)
         self.__dbgStepInto.setVisible(False)
-        self.__dbgRunToLine = QAction(
-            getIcon('dbgruntoline.png'), 'Run to cursor (Shift+F6)', self)
+        self.__dbgRunToLine = QAction(getIcon("dbgruntoline.png"), "Run to cursor (Shift+F6)", self)
         self.__dbgRunToLine.triggered.connect(self._onDbgRunToLine)
         self.__dbgRunToLine.setVisible(False)
-        self.__dbgReturn = QAction(
-            getIcon('dbgreturn.png'), 'Step out (F9)', self)
+        self.__dbgReturn = QAction(getIcon("dbgreturn.png"), "Step out (F9)", self)
         self.__dbgReturn.triggered.connect(self._onDbgReturn)
         self.__dbgReturn.setVisible(False)
-        self.__dbgJumpToCurrent = QAction(
-            getIcon('dbgtocurrent.png'),
-            'Show current debugger line (Ctrl+W)', self)
+        self.__dbgJumpToCurrent = QAction(getIcon("dbgtocurrent.png"), "Show current debugger line (Ctrl+W)", self)
         self.__dbgJumpToCurrent.triggered.connect(self._onDbgJumpToCurrent)
         self.__dbgJumpToCurrent.setVisible(False)
 
         dumpDebugSettingsMenu = QMenu(self)
         dumpDebugSettingsAct = dumpDebugSettingsMenu.addAction(
-            getIcon('detailsdlg.png'),
-            'Dump settings with complete environment')
+            getIcon("detailsdlg.png"), "Dump settings with complete environment"
+        )
         dumpDebugSettingsAct.triggered.connect(self._onDumpFullDebugSettings)
         self.__dbgDumpSettingsButton = QToolButton(self)
-        self.__dbgDumpSettingsButton.setIcon(getIcon('dbgsettings.png'))
-        self.__dbgDumpSettingsButton.setToolTip('Dump debug session settings')
+        self.__dbgDumpSettingsButton.setIcon(getIcon("dbgsettings.png"))
+        self.__dbgDumpSettingsButton.setToolTip("Dump debug session settings")
         self.__dbgDumpSettingsButton.setPopupMode(QToolButton.DelayedPopup)
         self.__dbgDumpSettingsButton.setMenu(dumpDebugSettingsMenu)
         self.__dbgDumpSettingsButton.setFocusPolicy(Qt.NoFocus)
-        self.__dbgDumpSettingsButton.clicked.connect(
-            self._onDumpDebugSettings)
+        self.__dbgDumpSettingsButton.clicked.connect(self._onDumpDebugSettings)
 
         self.floatingRendererButton = QToolButton(self)
-        self.floatingRendererButton.setObjectName('floatingRendererButton')
-        self.floatingRendererButton.setIcon(getIcon('floatingrenderer.png'))
-        self.floatingRendererButton.setToolTip('Floating/embedded renderer')
+        self.floatingRendererButton.setObjectName("floatingRendererButton")
+        self.floatingRendererButton.setIcon(getIcon("floatingrenderer.png"))
+        self.floatingRendererButton.setToolTip("Floating/embedded renderer")
         self.floatingRendererButton.setFocusPolicy(Qt.NoFocus)
         self.floatingRendererButton.setCheckable(True)
-        self.floatingRendererButton.setChecked(self.settings['floatingRenderer'])
+        self.floatingRendererButton.setChecked(self.settings["floatingRenderer"])
         self.floatingRendererButton.clicked.connect(self._onFloatingRenderer)
 
         self.__toolbar = QToolBar()
@@ -667,8 +595,7 @@ class CodimensionMainWindow(QMainWindow):
         self.__toolbar.addAction(self.__projectDocButton)
 
         # Debugger part begin
-        self.__toolbar.addWidget(
-            ToolBarHSpacer(self.__toolbar, 40)).setObjectName('debugSpacer')
+        self.__toolbar.addWidget(ToolBarHSpacer(self.__toolbar, 40)).setObjectName("debugSpacer")
         self.__toolbar.addAction(self.__dbgStop)
         self.__toolbar.addAction(self.__dbgRestart)
         self.__toolbar.addAction(self.__dbgGo)
@@ -677,11 +604,9 @@ class CodimensionMainWindow(QMainWindow):
         self.__toolbar.addAction(self.__dbgRunToLine)
         self.__toolbar.addAction(self.__dbgReturn)
         self.__toolbar.addAction(self.__dbgJumpToCurrent)
-        self.__dbgDumpSettingsAct = self.__toolbar.addWidget(
-            self.__dbgDumpSettingsButton)
+        self.__dbgDumpSettingsAct = self.__toolbar.addWidget(self.__dbgDumpSettingsButton)
 
-        self.__toolbar.addWidget(
-            ToolBarExpandingSpacer(self.__toolbar)).setObjectName('expandingSpacer')
+        self.__toolbar.addWidget(ToolBarExpandingSpacer(self.__toolbar)).setObjectName("expandingSpacer")
         self.__toolbar.addWidget(self.floatingRendererButton)
 
         # Heck! The only QAction can be hidden
@@ -703,14 +628,16 @@ class CodimensionMainWindow(QMainWindow):
         # So, make a wild guess instead and do not save the status if
         # maximized.
         availGeom = GlobalData().application.desktop().availableGeometry()
-        if self.width() + abs(self.settings['xdelta']) > availGeom.width() or \
-           self.height() + abs(self.settings['ydelta']) > availGeom.height():
+        if (
+            self.width() + abs(self.settings["xdelta"]) > availGeom.width()
+            or self.height() + abs(self.settings["ydelta"]) > availGeom.height()
+        ):
             return True
         return False
 
     def resizeEvent(self, resizeEv):
         """Triggered when the window is resized"""
-        del resizeEv    # unused argument
+        del resizeEv  # unused argument
         QTimer.singleShot(1, self.__resizeEventdelayed)
 
     def __resizeEventdelayed(self):
@@ -720,8 +647,8 @@ class CodimensionMainWindow(QMainWindow):
         if self.__guessMaximized():
             return
 
-        self.settings['width'] = self.width()
-        self.settings['height'] = self.height()
+        self.settings["width"] = self.width()
+        self.settings["height"] = self.height()
         self.vSplitterMoved(0, 0)
         self.hSplitterMoved(0, 0)
 
@@ -733,8 +660,8 @@ class CodimensionMainWindow(QMainWindow):
     def __moveEventDelayed(self):
         """Memorizes the new window position"""
         if not self.__initialisation and not self.__guessMaximized():
-            self.settings['xpos'] = self.x()
-            self.settings['ypos'] = self.y()
+            self.settings["xpos"] = self.x()
+            self.settings["ypos"] = self.y()
 
     def onProjectChanged(self, what):
         """Slot to receive sigProjectChanged signal"""
@@ -753,7 +680,7 @@ class CodimensionMainWindow(QMainWindow):
             self._prjImportDgmAct.setEnabled(projectLoaded)
             self._prjImportsDgmDlgAct.setEnabled(projectLoaded)
 
-            self.settings['projectLoaded'] = projectLoaded
+            self.settings["projectLoaded"] = projectLoaded
             if projectLoaded:
                 # The editor tabs must be loaded after a VCS plugin has a
                 # chance to receive sigProjectChanged signal where it reads
@@ -774,18 +701,14 @@ class CodimensionMainWindow(QMainWindow):
     def updateWindowTitle(self):
         """Updates the main window title with the current so file"""
         if GlobalData().project.isLoaded():
-            self.setWindowTitle('Codimension for Python 3: ' +
-                                os.path.basename(
-                                    GlobalData().project.fileName))
+            self.setWindowTitle("Codimension for Python 3: " + os.path.basename(GlobalData().project.fileName))
         else:
-            self.setWindowTitle(
-                'Codimension for Python 3: no project selected')
+            self.setWindowTitle("Codimension for Python 3: no project selected")
 
     def updateToolbarStatus(self):
         """Enables/disables the toolbar buttons"""
         projectLoaded = GlobalData().project.isLoaded()
-        self.importsDiagramButton.setEnabled(projectLoaded and
-                                             GlobalData().graphvizAvailable)
+        self.importsDiagramButton.setEnabled(projectLoaded and GlobalData().graphvizAvailable)
         self.__findNameButton.setEnabled(projectLoaded)
         self.__findFileButton.setEnabled(projectLoaded)
         self.__deadCodeButton.setEnabled(projectLoaded)
@@ -795,18 +718,15 @@ class CodimensionMainWindow(QMainWindow):
         """Updates the run/debug buttons statuses"""
         if self.debugMode:
             self.runProjectButton.setEnabled(False)
-            self.runProjectButton.setToolTip("Cannot run project - "
-                                             "debug in progress")
+            self.runProjectButton.setToolTip("Cannot run project - debug in progress")
             self.debugProjectButton.setEnabled(False)
-            self.debugProjectButton.setToolTip("Cannot debug project - "
-                                               "debug in progress")
+            self.debugProjectButton.setToolTip("Cannot debug project - debug in progress")
             self._prjDebugAct.setEnabled(False)
             self._prjDebugDlgAct.setEnabled(False)
             self._tabDebugAct.setEnabled(False)
             self._tabDebugDlgAct.setEnabled(False)
             self.profileProjectButton.setEnabled(False)
-            self.profileProjectButton.setToolTip("Cannot profile project - "
-                                                 "debug in progress")
+            self.profileProjectButton.setToolTip("Cannot profile project - debug in progress")
             return
 
         if not GlobalData().project.isLoaded():
@@ -822,16 +742,13 @@ class CodimensionMainWindow(QMainWindow):
 
         if not GlobalData().isProjectScriptValid():
             self.runProjectButton.setEnabled(False)
-            self.runProjectButton.setToolTip(
-                "Cannot run project - script is not specified or invalid")
+            self.runProjectButton.setToolTip("Cannot run project - script is not specified or invalid")
             self.debugProjectButton.setEnabled(False)
-            self.debugProjectButton.setToolTip(
-                "Cannot debug project - script is not specified or invalid")
+            self.debugProjectButton.setToolTip("Cannot debug project - script is not specified or invalid")
             self._prjDebugAct.setEnabled(False)
             self._prjDebugDlgAct.setEnabled(False)
             self.profileProjectButton.setEnabled(False)
-            self.profileProjectButton.setToolTip(
-                "Cannot profile project - script is not specified or invalid")
+            self.profileProjectButton.setToolTip("Cannot profile project - script is not specified or invalid")
             return
 
         self.runProjectButton.setEnabled(True)
@@ -847,16 +764,13 @@ class CodimensionMainWindow(QMainWindow):
         """Triggered when the find in files button is clicked"""
         txt = ""
         currentWidget = self.em.currentWidget()
-        if currentWidget.getType() in \
-           [MainWindowTabWidgetBase.PlainTextEditor]:
+        if currentWidget.getType() in [MainWindowTabWidgetBase.PlainTextEditor]:
             txt, _, _, _ = currentWidget.getEditor().getCurrentOrSelection()
 
         dlg = FindInFilesDialog(FindInFilesDialog.IN_PROJECT, txt, "")
         dlg.exec_()
         if dlg.searchResults:
-            self.displayFindInFiles(FindInFilesSearchProvider().getName(),
-                                    dlg.searchResults,
-                                    dlg.getParameters())
+            self.displayFindInFiles(FindInFilesSearchProvider().getName(), dlg.searchResults, dlg.getParameters())
 
     def toStdout(self, txt):
         """Triggered when a new message comes"""
@@ -870,7 +784,7 @@ class CodimensionMainWindow(QMainWindow):
 
     def showLogTab(self):
         """Makes sure that the log tab is visible"""
-        self._activateSideTab('log')
+        self._activateSideTab("log")
 
     def openFile(self, path, lineNo, pos=0):
         """User double clicked on a file or an item in a file"""
@@ -925,11 +839,11 @@ class CodimensionMainWindow(QMainWindow):
         if isImageViewable(mime):
             self.openPixmapFile(path)
             return
-        if mime != 'inode/x-empty' and not isFileSearchable(path):
+        if mime != "inode/x-empty" and not isFileSearchable(path):
             logging.error("Cannot open non-text file for editing")
             return
 
-        if path.lower().endswith('readme'):
+        if path.lower().endswith("readme"):
             print(path)
             print(mime)
         self.openFile(path, lineNo)
@@ -937,11 +851,11 @@ class CodimensionMainWindow(QMainWindow):
     def closeEvent(self, event):
         """Triggered when the IDE is closed"""
         # Save the side bars status
-        self.settings['vSplitterSizes'] = self.__verticalSplitterSizes
-        self.settings['hSplitterSizes'] = self.__horizontalSplitterSizes
-        self.settings['bottomBarMinimized'] = self._bottomSideBar.isMinimized()
-        self.settings['leftBarMinimized'] = self._leftSideBar.isMinimized()
-        self.settings['rightBarMinimized'] = self._rightSideBar.isMinimized()
+        self.settings["vSplitterSizes"] = self.__verticalSplitterSizes
+        self.settings["hSplitterSizes"] = self.__horizontalSplitterSizes
+        self.settings["bottomBarMinimized"] = self._bottomSideBar.isMinimized()
+        self.settings["leftBarMinimized"] = self._leftSideBar.isMinimized()
+        self.settings["rightBarMinimized"] = self._rightSideBar.isMinimized()
 
         # Ask the editors manager to close all the editors
         if self.em.getUnsavedCount() == 0:
@@ -1018,8 +932,8 @@ class CodimensionMainWindow(QMainWindow):
         index = self._bottomSideBar.count - 1
         while index >= 0:
             widget = self._bottomSideBar.widget(index)
-            if hasattr(widget, 'procuuid'):
-                if hasattr(widget, 'onTextZoomChanged'):
+            if hasattr(widget, "procuuid"):
+                if hasattr(widget, "onTextZoomChanged"):
                     widget.onTextZoomChanged()
             index -= 1
 
@@ -1058,8 +972,7 @@ class CodimensionMainWindow(QMainWindow):
         """Edits the timepale file"""
         if fileName is not None:
             if not os.path.exists(fileName):
-                logging.error("The template file %s disappeared from the file "
-                              "system.", fileName)
+                logging.error("The template file %s disappeared from the file system.", fileName)
                 return
             self.openFile(fileName, -1)
 
@@ -1074,15 +987,14 @@ class CodimensionMainWindow(QMainWindow):
 
     def displayFindInFiles(self, providerId, searchResults, parameters):
         """Displays the results on a tab"""
-        self.searchResultsViewer.showReport(providerId, searchResults,
-                                            parameters)
-        self.activateBottomTab('search')
+        self.searchResultsViewer.showReport(providerId, searchResults, parameters)
+        self.activateBottomTab("search")
 
     def activateBottomTab(self, tabName):
         """Makes sure the bottom bar is visible and activates the required tab"""
         if self._bottomSideBar.height() == 0:
             # It was hidden completely, so need to move the slider
-            splitterSizes = self.settings['vSplitterSizes']
+            splitterSizes = self.settings["vSplitterSizes"]
             splitterSizes[0] -= 200
             splitterSizes[1] += 200
             self.__verticalSplitter.setSizes(splitterSizes)
@@ -1148,8 +1060,7 @@ class CodimensionMainWindow(QMainWindow):
 
     def _onImportDgmTuned(self):
         """Runs the settings dialog first"""
-        dlg = ImportsDiagramDialog(ImportsDiagramDialog.ProjectFiles,
-                                   "", self)
+        dlg = ImportsDiagramDialog(ImportsDiagramDialog.ProjectFiles, "", self)
         if dlg.exec_() == QDialog.Accepted:
             self.__generateImportDiagram(dlg.options)
 
@@ -1160,8 +1071,7 @@ class CodimensionMainWindow(QMainWindow):
 
     def __generateImportDiagram(self, options):
         """Show the generation progress and display the diagram"""
-        progressDlg = ImportsDiagramProgress(ImportsDiagramDialog.ProjectFiles,
-                                             options)
+        progressDlg = ImportsDiagramProgress(ImportsDiagramDialog.ProjectFiles, options)
         if progressDlg.exec_() == QDialog.Accepted:
             self.openDiagram(progressDlg.scene, "Generated for the project")
 
@@ -1256,9 +1166,7 @@ class CodimensionMainWindow(QMainWindow):
         """Checks and logs error message if so. Returns True if all is OK"""
         if not GlobalData().isProjectScriptValid():
             self.updateRunDebugButtons()
-            logging.error("Invalid project script. "
-                          "Use project properties dialog to "
-                          "select existing python script.")
+            logging.error("Invalid project script. Use project properties dialog to select existing python script.")
             return False
         return True
 
@@ -1267,126 +1175,110 @@ class CodimensionMainWindow(QMainWindow):
         currentWidget = self.em.currentWidget()
         if currentWidget is None:
             return False
-        return currentWidget.getType() in \
-            [MainWindowTabWidgetBase.PlainTextEditor,
-             MainWindowTabWidgetBase.VCSAnnotateViewer] and \
-            isPythonMime(currentWidget.getMime())
+        return currentWidget.getType() in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+        ] and isPythonMime(currentWidget.getMime())
 
     def _verticalEdgeChanged(self):
         """Editor setting changed"""
-        self.settings['verticalEdge'] = not self.settings['verticalEdge']
+        self.settings["verticalEdge"] = not self.settings["verticalEdge"]
         self.em.updateEditorsSettings()
 
     def _showSpacesChanged(self):
         """Editor setting changed"""
-        self.settings['showSpaces'] = not self.settings['showSpaces']
+        self.settings["showSpaces"] = not self.settings["showSpaces"]
         self.em.updateEditorsSettings()
 
     def _lineWrapChanged(self):
         """Editor setting changed"""
-        self.settings['lineWrap'] = not self.settings['lineWrap']
+        self.settings["lineWrap"] = not self.settings["lineWrap"]
         self.em.updateEditorsSettings()
 
     def _showBraceMatchChanged(self):
         """Editor setting changed"""
-        self.settings['showBraceMatch'] = not self.settings['showBraceMatch']
+        self.settings["showBraceMatch"] = not self.settings["showBraceMatch"]
         self.em.updateEditorsSettings()
 
     def _indentationGuidesChanged(self):
         """Editor setting changed"""
-        self.settings['indentationGuides'] = \
-            not self.settings['indentationGuides']
+        self.settings["indentationGuides"] = not self.settings["indentationGuides"]
         self.em.updateEditorsSettings()
 
     def _currentLineVisibleChanged(self):
         """Editor setting changed"""
-        self.settings['currentLineVisible'] = \
-            not self.settings['currentLineVisible']
+        self.settings["currentLineVisible"] = not self.settings["currentLineVisible"]
         self.em.updateEditorsSettings()
 
     def _homeToFirstNonSpaceChanged(self):
         """Editor setting changed"""
-        self.settings['jumpToFirstNonSpace'] = \
-            not self.settings['jumpToFirstNonSpace']
+        self.settings["jumpToFirstNonSpace"] = not self.settings["jumpToFirstNonSpace"]
         self.em.updateEditorsSettings()
 
     def _removeTrailingChanged(self):
         """Editor setting changed"""
-        self.settings['removeTrailingOnSave'] = \
-            not self.settings['removeTrailingOnSave']
+        self.settings["removeTrailingOnSave"] = not self.settings["removeTrailingOnSave"]
 
     def _editorCalltipsChanged(self):
         """Editor calltips changed"""
-        self.settings['editorCalltips'] = not self.settings['editorCalltips']
+        self.settings["editorCalltips"] = not self.settings["editorCalltips"]
 
     def _showNavBarChanged(self):
         """Editor setting changed"""
-        self.settings['showNavigationBar'] = \
-            not self.settings['showNavigationBar']
+        self.settings["showNavigationBar"] = not self.settings["showNavigationBar"]
         self.em.updateEditorsSettings()
 
     def _showCFNavBarChanged(self):
         """Control flow toolbar visibility changed"""
-        self.settings['showCFNavigationBar'] = \
-            not self.settings['showCFNavigationBar']
+        self.settings["showCFNavigationBar"] = not self.settings["showCFNavigationBar"]
         self.em.updateCFEditorsSettings()
 
     def _showMainToolbarChanged(self):
         """Main toolbar visibility changed"""
-        self.settings['showMainToolBar'] = \
-            not self.settings['showMainToolBar']
-        self.__toolbar.setVisible(self.settings['showMainToolBar'])
+        self.settings["showMainToolBar"] = not self.settings["showMainToolBar"]
+        self.__toolbar.setVisible(self.settings["showMainToolBar"])
 
     def _projectTooltipsChanged(self):
         """Tooltips setting changed"""
-        self.settings['projectTooltips'] = \
-            not self.settings['projectTooltips']
-        self.projectViewer.setTooltips(self.settings['projectTooltips'])
+        self.settings["projectTooltips"] = not self.settings["projectTooltips"]
+        self.projectViewer.setTooltips(self.settings["projectTooltips"])
 
     def _recentTooltipsChanged(self):
         """Tooltips setting changed"""
-        self.settings['recentTooltips'] = \
-            not self.settings['recentTooltips']
-        self.recentProjectsViewer.setTooltips(self.settings['recentTooltips'])
+        self.settings["recentTooltips"] = not self.settings["recentTooltips"]
+        self.recentProjectsViewer.setTooltips(self.settings["recentTooltips"])
 
     def _classesTooltipsChanged(self):
         """Tooltips setting changed"""
-        self.settings['classesTooltips'] = \
-            not self.settings['classesTooltips']
-        self.classesViewer.setTooltips(self.settings['classesTooltips'])
+        self.settings["classesTooltips"] = not self.settings["classesTooltips"]
+        self.classesViewer.setTooltips(self.settings["classesTooltips"])
 
     def _functionsTooltipsChanged(self):
         """Tooltips setting changed"""
-        self.settings['functionsTooltips'] = \
-            not self.settings['functionsTooltips']
-        self.functionsViewer.setTooltips(self.settings['functionsTooltips'])
+        self.settings["functionsTooltips"] = not self.settings["functionsTooltips"]
+        self.functionsViewer.setTooltips(self.settings["functionsTooltips"])
 
     def _outlineTooltipsChanged(self):
         """Tooltips setting changed"""
-        self.settings.outlineTooltips = \
-            not self.settings['outlineTooltips']
-        self.outlineViewer.setTooltips(self.settings['outlineTooltips'])
+        self.settings.outlineTooltips = not self.settings["outlineTooltips"]
+        self.outlineViewer.setTooltips(self.settings["outlineTooltips"])
 
     def _findNameTooltipsChanged(self):
         """Tooltips setting changed"""
-        self.settings['findNameTooltips'] = \
-            not self.settings['findNameTooltips']
+        self.settings["findNameTooltips"] = not self.settings["findNameTooltips"]
 
     def _findFileTooltipsChanged(self):
         """Tooltips setting changed"""
-        self.settings['findFileTooltips'] = \
-            not self.settings['findFileTooltips']
+        self.settings["findFileTooltips"] = not self.settings["findFileTooltips"]
 
     def _editorTooltipsChanged(self):
         """Tooltips setting changed"""
-        self.settings['editorTooltips'] = \
-            not self.settings['editorTooltips']
-        self.em.setTooltips(self.settings['editorTooltips'])
+        self.settings["editorTooltips"] = not self.settings["editorTooltips"]
+        self.em.setTooltips(self.settings["editorTooltips"])
 
     def _tabOrderPreservedChanged(self):
         """Tab order preserved option changed"""
-        self.settings['taborderpreserved'] = \
-            not self.settings['taborderpreserved']
+        self.settings["taborderpreserved"] = not self.settings["taborderpreserved"]
 
     def _openTabsMenuTriggered(self, act):
         """Tab list settings menu triggered"""
@@ -1401,14 +1293,14 @@ class CodimensionMainWindow(QMainWindow):
 
     def _onSkin(self, skinName):
         """Triggers when a skin is selected"""
-        if self.settings['skin'] != skinName.data():
+        if self.settings["skin"] != skinName.data():
             logging.info("Please restart codimension to apply the new skin")
-            self.settings['skin'] = skinName.data()
+            self.settings["skin"] = skinName.data()
 
     def _onStyle(self, styleName):
         """Sets the selected style"""
         QApplication.setStyle(styleName.data())
-        self.settings['style'] = styleName.data().lower()
+        self.settings["style"] = styleName.data().lower()
 
     def checkOutsideFileChanges(self):
         """Checks if there are changes in the currently opened files"""
@@ -1456,22 +1348,22 @@ class CodimensionMainWindow(QMainWindow):
 
         # Tabs at the right
         if newState:
-            self._rightSideBar.setTabEnabled('debugger', True)    # vars etc.
+            self._rightSideBar.setTabEnabled("debugger", True)  # vars etc.
             self.debuggerContext.clear()
             self.debuggerExceptions.clear()
             self.debuggerCallTrace.clear()
-            self._rightSideBar.setTabText('exceptions', 'Exceptions')
+            self._rightSideBar.setTabText("exceptions", "Exceptions")
             self._rightSideBar.show()
-            self._rightSideBar.setCurrentTab('debugger')
+            self._rightSideBar.setCurrentTab("debugger")
             self._rightSideBar.raise_()
             self.__lastDebugAction = None
             self._debugDumpSettingsAct.setEnabled(True)
             self._debugDumpSettingsEnvAct.setEnabled(True)
         else:
             if not self._rightSideBar.isMinimized():
-                if self._rightSideBar.currentTabName() == 'debugger':
-                    self._rightSideBar.setCurrentTab('fileoutline')
-            self._rightSideBar.setTabEnabled('debugger', False)    # vars etc.
+                if self._rightSideBar.currentTabName() == "debugger":
+                    self._rightSideBar.setCurrentTab("fileoutline")
+            self._rightSideBar.setTabEnabled("debugger", False)  # vars etc.
 
         self.debugModeChanged.emit(newState)
 
@@ -1506,10 +1398,9 @@ class CodimensionMainWindow(QMainWindow):
             self.sbDebugState.setText("Debugger: running")
         QApplication.processEvents()
 
-    def __onDebuggerCurrentLine(self, fileName, lineNumber,
-                                isStack, asException=False):
+    def __onDebuggerCurrentLine(self, fileName, lineNumber, isStack, asException=False):
         """Triggered when the client reported a new line"""
-        del isStack     # unused argument
+        del isStack  # unused argument
         self.__removeCurrenDebugLineHighlight()
 
         self.__lastDebugFileName = fileName
@@ -1517,14 +1408,11 @@ class CodimensionMainWindow(QMainWindow):
         self.__lastDebugAsException = asException
         self._onDbgJumpToCurrent()
 
-    def __onDebuggerClientException(self, excType, excMessage,
-                                    excStackTrace, isUnhandled):
+    def __onDebuggerClientException(self, excType, excMessage, excStackTrace, isUnhandled):
         """Debugged program exception handler"""
-        self.debuggerExceptions.addException(excType, excMessage,
-                                             excStackTrace)
+        self.debuggerExceptions.addException(excType, excMessage, excStackTrace)
         count = self.debuggerExceptions.getTotalClientExceptionCount()
-        self._rightSideBar.setTabText('exceptions',
-                                      'Exceptions (' + str(count) + ')')
+        self._rightSideBar.setTabText("exceptions", "Exceptions (" + str(count) + ")")
         self.debuggerExceptions.setFocus()
 
         # The information about the exception is stored in the exception window
@@ -1534,10 +1422,10 @@ class CodimensionMainWindow(QMainWindow):
 
         if isUnhandled:
             self._rightSideBar.show()
-            self._rightSideBar.setCurrentTab('exceptions')
+            self._rightSideBar.setCurrentTab("exceptions")
             self._rightSideBar.raise_()
 
-            message = 'Unhandled exception'
+            message = "Unhandled exception"
             if not excStackTrace:
                 message += ": no stack trace reported"
             message += ". The debugging session is closed"
@@ -1564,7 +1452,7 @@ class CodimensionMainWindow(QMainWindow):
 
         # Should stop at the exception
         self._rightSideBar.show()
-        self._rightSideBar.setCurrentTab('exceptions')
+        self._rightSideBar.setCurrentTab("exceptions")
         self._rightSideBar.raise_()
 
         fileName = excStackTrace[0][0]
@@ -1577,28 +1465,24 @@ class CodimensionMainWindow(QMainWindow):
         # for the time beeing.
         self.debuggerContext.onClientStack(excStackTrace)
 
-        self.__debugger.remoteClientVariables(1, 0) # globals
-        self.__debugger.remoteClientVariables(0, 0) # locals
+        self.__debugger.remoteClientVariables(1, 0)  # globals
+        self.__debugger.remoteClientVariables(0, 0)  # locals
         self.debuggerExceptions.setFocus()
 
-    def __onDebuggerClientSyntaxError(self, procuuid, errMessage, fileName,
-                                      lineNo, charNo):
+    def __onDebuggerClientSyntaxError(self, procuuid, errMessage, fileName, lineNo, charNo):
         """Triggered when the client reported a syntax error"""
         if errMessage is None:
-            message = "The program being debugged contains an unspecified " \
-                      "syntax error."
+            message = "The program being debugged contains an unspecified syntax error."
         else:
             # Jump to the source code
             self.em.openFile(fileName, lineNo)
             editor = self.em.currentWidget().getEditor()
             editor.gotoLine(lineNo, charNo)
 
-            message = "Syntax error: '" + \
-                errMessage + "' at line " + str(lineNo) + ", position " + \
-                str(charNo) + "."
+            message = "Syntax error: '" + errMessage + "' at line " + str(lineNo) + ", position " + str(charNo) + "."
 
         runParameters, _ = self.__debugger.getRunDebugParameters()
-        if runParameters['redirected']:
+        if runParameters["redirected"]:
             self._runManager.appendIDEMessage(procuuid, message)
         else:
             logging.error(message)
@@ -1709,9 +1593,7 @@ class CodimensionMainWindow(QMainWindow):
         self.__lastDebugAction = self.DEBUG_ACTION_RUN_TO_LINE
         currentWidget = self.em.currentWidget()
 
-        self.__debugger.remoteBreakpoint(currentWidget.getFileName(),
-                                         currentWidget.getLine() + 1,
-                                         True, None, True)
+        self.__debugger.remoteBreakpoint(currentWidget.getFileName(), currentWidget.getLine() + 1, True, None, True)
         self.__debugger.remoteContinue()
 
     def _onDbgReturn(self):
@@ -1721,17 +1603,18 @@ class CodimensionMainWindow(QMainWindow):
 
     def _onDbgJumpToCurrent(self):
         """Jump to the current debug line"""
-        if self.__lastDebugFileName is None or \
-           self.__lastDebugLineNumber is None or \
-           self.__lastDebugAsException is None:
+        if (
+            self.__lastDebugFileName is None
+            or self.__lastDebugLineNumber is None
+            or self.__lastDebugAsException is None
+        ):
             return
 
         self.em.openFile(self.__lastDebugFileName, self.__lastDebugLineNumber)
 
         editor = self.em.currentWidget().getEditor()
         editor.gotoLine(self.__lastDebugLineNumber)
-        editor.highlightCurrentDebuggerLine(self.__lastDebugLineNumber,
-                                            self.__lastDebugAsException)
+        editor.highlightCurrentDebuggerLine(self.__lastDebugLineNumber, self.__lastDebugAsException)
         self.em.currentWidget().setFocus()
 
     def __loadProject(self, projectFile):
@@ -1748,7 +1631,7 @@ class CodimensionMainWindow(QMainWindow):
 
     def _openFile(self):
         """Triggers when Ctrl+O is pressed"""
-        dialog = QFileDialog(self, 'Open file')
+        dialog = QFileDialog(self, "Open file")
         dialog.setFileMode(QFileDialog.ExistingFiles)
         dialog.setOption(QFileDialog.DontUseNativeDialog, True)
         urls = []
@@ -1805,11 +1688,10 @@ class CodimensionMainWindow(QMainWindow):
         """Triggered when ebedded Codimension help is requested"""
         # File name to get the embedded help
         exeDir = os.path.dirname(os.path.realpath(sys.argv[0]))
-        docPath = os.path.dirname(exeDir) + os.path.sep + 'doc' + os.path.sep
-        startMD = docPath + 'index.md'
+        docPath = os.path.dirname(exeDir) + os.path.sep + "doc" + os.path.sep
+        startMD = docPath + "index.md"
         if not os.path.exists(startMD):
-            logging.error('Documentation is not found. '
-                          ' Expected here: %s', startMD)
+            logging.error("Documentation is not found.  Expected here: %s", startMD)
         else:
             self.em.openMarkdownFullView(startMD, True)
 
@@ -1821,8 +1703,7 @@ class CodimensionMainWindow(QMainWindow):
     @staticmethod
     def _onAllShortcurs():
         """Triggered when opening key bindings page is requested"""
-        QDesktopServices.openUrl(
-            QUrl("http://codimension.org/documentation/cheatsheet.html"))
+        QDesktopServices.openUrl(QUrl("http://codimension.org/documentation/cheatsheet.html"))
 
     def _onAbout(self):
         """Triggered when 'About' info is requested"""
@@ -1839,12 +1720,11 @@ class CodimensionMainWindow(QMainWindow):
             self._leftSideBar.show()
             self._leftSideBar.setCurrentTab(name)
             self._leftSideBar.raise_()
-        elif name in ['fileoutline', 'debugger', 'exceptions',
-                      'breakpoints', 'calltrace']:
+        elif name in ["fileoutline", "debugger", "exceptions", "breakpoints", "calltrace"]:
             self._rightSideBar.show()
             self._rightSideBar.setCurrentTab(name)
             self._rightSideBar.raise_()
-        elif name in ['log', 'search']:
+        elif name in ["log", "search"]:
             self._bottomSideBar.show()
             self._bottomSideBar.setCurrentTab(name)
             self._bottomSideBar.raise_()
@@ -1867,7 +1747,7 @@ class CodimensionMainWindow(QMainWindow):
         definitions = getOccurrences(None, fileName, item.line, item.pos)
         QApplication.restoreOverrideCursor()
 
-        self.showStatusBarMessage('')
+        self.showStatusBarMessage("")
         result = []
         for definition in definitions:
             if definition.line is None or definition.module_path is None:
@@ -1890,15 +1770,14 @@ class CodimensionMainWindow(QMainWindow):
             result[index].addMatch(item.name, lineno)
 
         if len(result) == 0:
-            self.showStatusBarMessage('No occurrences found')
+            self.showStatusBarMessage("No occurrences found")
             return
 
-        self.displayFindInFiles(OccurrencesSearchProvider().getName(),
-                                result,
-                                {'name': item.name,
-                                 'filename': fileName,
-                                 'line': item.line,
-                                 'column': item.column})
+        self.displayFindInFiles(
+            OccurrencesSearchProvider().getName(),
+            result,
+            {"name": item.name, "filename": fileName, "line": item.line, "column": item.column},
+        )
 
     def _onTabOpenImport(self):
         """Triggered when open import is requested"""
@@ -2013,7 +1892,7 @@ class CodimensionMainWindow(QMainWindow):
             dirName = dialog.importDirList.item(index).text()
             if dirName.startswith(baseDir):
                 # Replace paths with relative if needed
-                dirName = dirName[len(baseDir):]
+                dirName = dirName[len(baseDir) :]
                 if dirName == "":
                     dirName = "."
             importDirs.append(dirName)
@@ -2028,18 +1907,21 @@ class CodimensionMainWindow(QMainWindow):
 
         GlobalData().project.createNew(
             dialog.absProjectFileName,
-            {'scriptname': dialog.scriptEdit.text().strip(),
-             'mddocfile': dialog.mdDocEdit.text().strip(),
-             'creationdate': dialog.creationDateEdit.text().strip(),
-             'author': dialog.authorEdit.text().strip(),
-             'license': dialog.licenseEdit.text().strip(),
-             'copyright': dialog.copyrightEdit.text().strip(),
-             'version': dialog.versionEdit.text().strip(),
-             'email': dialog.emailEdit.text().strip(),
-             'description': dialog.descriptionEdit.toPlainText().strip(),
-             'encoding': dialog.encodingCombo.currentText().strip(),
-             'importdirs': importDirs,
-             'pythoninterpreter': dialog.venvEdit.text().strip()})
+            {
+                "scriptname": dialog.scriptEdit.text().strip(),
+                "mddocfile": dialog.mdDocEdit.text().strip(),
+                "creationdate": dialog.creationDateEdit.text().strip(),
+                "author": dialog.authorEdit.text().strip(),
+                "license": dialog.licenseEdit.text().strip(),
+                "copyright": dialog.copyrightEdit.text().strip(),
+                "version": dialog.versionEdit.text().strip(),
+                "email": dialog.emailEdit.text().strip(),
+                "description": dialog.descriptionEdit.toPlainText().strip(),
+                "encoding": dialog.encodingCombo.currentText().strip(),
+                "importdirs": importDirs,
+                "pythoninterpreter": dialog.venvEdit.text().strip(),
+            },
+        )
 
         QApplication.restoreOverrideCursor()
         self.settings.addRecentProject(dialog.absProjectFileName)
@@ -2048,7 +1930,7 @@ class CodimensionMainWindow(QMainWindow):
         """Shows up a dialog to open a project"""
         if self.debugMode:
             return
-        dialog = QFileDialog(self, 'Open project')
+        dialog = QFileDialog(self, "Open project")
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setOption(QFileDialog.DontUseNativeDialog, True)
         dialog.setNameFilter("Codimension project files (*.cdm3)")
@@ -2065,13 +1947,11 @@ class CodimensionMainWindow(QMainWindow):
         fileNames = dialog.selectedFiles()
         fileName = os.path.realpath(str(fileNames[0]))
         if fileName == GlobalData().project.fileName:
-            logging.warning("The selected project to load is "
-                            "the currently loaded one.")
+            logging.warning("The selected project to load is the currently loaded one.")
             return
 
         if not isCDMProjectFile(fileName):
-            logging.warning("Codimension project file "
-                            "must have .cdm3 extension")
+            logging.warning("Codimension project file must have .cdm3 extension")
             return
 
         self.__loadProject(fileName)
@@ -2119,7 +1999,7 @@ class CodimensionMainWindow(QMainWindow):
             code = getFileDisassembled(path, optimization)
             self.em.showDisassembly(path, code)
         except Exception as exc:
-            logging.error('Cannot disassemble %s: %s', path, str(exc))
+            logging.error("Cannot disassemble %s: %s", path, str(exc))
 
     def showBufferDisassembly(self, content, encoding, path, optimization):
         """Triggered when a disassembler for a buffer is requested"""
@@ -2127,16 +2007,15 @@ class CodimensionMainWindow(QMainWindow):
             code = getBufferDisassembled(content, encoding, path, optimization)
             self.em.showDisassembly(path, code)
         except Exception as exc:
-            logging.error('Cannot disassemble buffer %s: %s', path, str(exc))
+            logging.error("Cannot disassemble buffer %s: %s", path, str(exc))
 
     def showPycDisassembly(self, path):
         """Triggered when a disassembly for a .pyc file is requested"""
         try:
-            code = getCompiledfileDisassembled(
-                path, os.path.basename(path).replace('.pyc', '.py'), None)
+            code = getCompiledfileDisassembled(path, os.path.basename(path).replace(".pyc", ".py"), None)
             self.em.showDisassembly(path, code)
         except Exception as exc:
-            logging.error('Cannot disassemble pyc file: %s', str(exc))
+            logging.error("Cannot disassemble pyc file: %s", str(exc))
 
     def highlightInPrj(self, path):
         """Triggered when the file is to be highlighted in a project tree"""
@@ -2171,17 +2050,16 @@ class CodimensionMainWindow(QMainWindow):
 
     def __onClientExceptionsCleared(self):
         """Triggered when the user cleared the client exceptions"""
-        self._rightSideBar.setTabText('exceptions', "Exceptions")
+        self._rightSideBar.setTabText("exceptions", "Exceptions")
 
     def __onBreakpointsModelChanged(self):
         """Triggered when something is changed in the breakpoints list"""
-        enabledCount, disabledCount = \
-            self.__debugger.getBreakPointModel().getCounts()
+        enabledCount, disabledCount = self.__debugger.getBreakPointModel().getCounts()
         total = enabledCount + disabledCount
         title = "Breakpoints"
         if total > 0:
             title += " (" + str(total) + ")"
-        self._rightSideBar.setTabText('breakpoints', title)
+        self._rightSideBar.setTabText("breakpoints", title)
 
     def setDebugTabAvailable(self, enabled):
         """Sets a new status of the corresponding actions.
@@ -2203,10 +2081,8 @@ class CodimensionMainWindow(QMainWindow):
     def __initPluginSupport(self):
         """Initializes the main window plugin support"""
         self._pluginMenus = {}
-        GlobalData().pluginManager.sigPluginActivated.connect(
-            self.__onPluginActivated)
-        GlobalData().pluginManager.sigPluginDeactivated.connect(
-            self.__onPluginDeactivated)
+        GlobalData().pluginManager.sigPluginActivated.connect(self.__onPluginActivated)
+        GlobalData().pluginManager.sigPluginDeactivated.connect(self.__onPluginDeactivated)
 
     def __onPluginActivated(self, plugin):
         """Triggered when a plugin is activated"""
@@ -2220,8 +2096,7 @@ class CodimensionMainWindow(QMainWindow):
             self._pluginMenus[plugin.getPath()] = pluginMenu
             self._recomposePluginMenu()
         except Exception as exc:
-            logging.error("Error populating %s plugin main menu: %s. Ignore "
-                          "and continue.", pluginName, str(exc))
+            logging.error("Error populating %s plugin main menu: %s. Ignore and continue.", pluginName, str(exc))
 
     def __onPluginDeactivated(self, plugin):
         """Triggered when a plugin is deactivated"""
@@ -2232,25 +2107,24 @@ class CodimensionMainWindow(QMainWindow):
                 self._recomposePluginMenu()
         except Exception as exc:
             pluginName = plugin.getName()
-            logging.error("Error removing %s plugin main menu: %s. Ignore "
-                          "and continue.", pluginName, str(exc))
+            logging.error("Error removing %s plugin main menu: %s. Ignore and continue.", pluginName, str(exc))
 
     def activateProjectTab(self):
         """Activates the project tab"""
         self._leftSideBar.show()
-        self._leftSideBar.setCurrentTab('project')
+        self._leftSideBar.setCurrentTab("project")
         self._leftSideBar.raise_()
 
     def activateRecentTab(self):
         """Activates the Recent Projects tab (for picking a project to load)"""
         self._leftSideBar.show()
-        self._leftSideBar.setCurrentTab('recent')
+        self._leftSideBar.setCurrentTab("recent")
         self._leftSideBar.raise_()
 
     def activateOutlineTab(self):
         """Activates the outline tab"""
         self._rightSideBar.show()
-        self._rightSideBar.setCurrentTab('fileoutline')
+        self._rightSideBar.setCurrentTab("fileoutline")
         self._rightSideBar.raise_()
 
     def __dumpDebugSettings(self, fileName, fullEnvironment):
@@ -2258,13 +2132,13 @@ class CodimensionMainWindow(QMainWindow):
         runParameters = getRunParameters(fileName)
         debugSettings = self.settings.getDebuggerSettings()
         workingDir = getWorkingDir(fileName, runParameters)
-        arguments = parseCommandLineArguments(runParameters['arguments'])
+        arguments = parseCommandLineArguments(runParameters["arguments"])
         environment = getNoArgsEnvironment(runParameters)
 
         env = "Environment: "
-        if runParameters['envType'] == runParameters.InheritParentEnv:
+        if runParameters["envType"] == runParameters.InheritParentEnv:
             env += "inherit parent"
-        elif runParameters['envType'] == runParameters.InheritParentEnvPlus:
+        elif runParameters["envType"] == runParameters.InheritParentEnvPlus:
             env += "inherit parent and add/modify"
         else:
             env += "specific"
@@ -2277,51 +2151,55 @@ class CodimensionMainWindow(QMainWindow):
             keys.sort()
             for key in keys:
                 env += "\n    " + key + " = " + environment[key]
-                if 'PATH' in key:
+                if "PATH" in key:
                     pathVariables.append(key)
         else:
-            if runParameters['envType'] == runParameters.InheritParentEnvPlus:
-                container = runParameters['additionToParentEnv']
-                keys = list(runParameters['additionToParentEnv'].keys())
+            if runParameters["envType"] == runParameters.InheritParentEnvPlus:
+                container = runParameters["additionToParentEnv"]
+                keys = list(runParameters["additionToParentEnv"].keys())
                 keys.sort()
                 for key in keys:
-                    env += "\n    " + key + " = " + \
-                        runParameters['additionToParentEnv'][key]
-                    if 'PATH' in key:
+                    env += "\n    " + key + " = " + runParameters["additionToParentEnv"][key]
+                    if "PATH" in key:
                         pathVariables.append(key)
-            elif runParameters['envType'] == runParameters.SpecificEnvironment:
-                container = runParameters['specificEnv']
-                keys = list(runParameters['specificEnv'].keys())
+            elif runParameters["envType"] == runParameters.SpecificEnvironment:
+                container = runParameters["specificEnv"]
+                keys = list(runParameters["specificEnv"].keys())
                 keys.sort()
                 for key in keys:
-                    env += "\n    " + key + " = " + \
-                        runParameters['specificEnv'][key]
-                    if 'PATH' in key:
+                    env += "\n    " + key + " = " + runParameters["specificEnv"][key]
+                    if "PATH" in key:
                         pathVariables.append(key)
 
         if pathVariables:
             env += "\nDetected PATH-containing variables:"
             for key in pathVariables:
                 env += "\n    " + key
-                for item in container[key].split(':'):
+                for item in container[key].split(":"):
                     env += "\n        " + item
 
-        if runParameters['redirected']:
+        if runParameters["redirected"]:
             terminal = "IO: redirected to IDE"
         else:
             terminal = "IO: custom terminal"
 
-        logging.info("\n".join(
-            ["Current debug session settings",
-             "Script: " + fileName,
-             "Arguments: " + " ".join(arguments),
-             "Working directory: " + workingDir,
-             env, terminal,
-             "Report exceptions: " + str(debugSettings.reportExceptions),
-             "Trace interpreter libs: " + str(debugSettings.traceInterpreter),
-             "Stop at first line: " + str(debugSettings.stopAtFirstLine),
-             "Fork without asking: " + str(debugSettings.autofork),
-             "Debug child process: " + str(debugSettings.followChild)]))
+        logging.info(
+            "\n".join(
+                [
+                    "Current debug session settings",
+                    "Script: " + fileName,
+                    "Arguments: " + " ".join(arguments),
+                    "Working directory: " + workingDir,
+                    env,
+                    terminal,
+                    "Report exceptions: " + str(debugSettings.reportExceptions),
+                    "Trace interpreter libs: " + str(debugSettings.traceInterpreter),
+                    "Stop at first line: " + str(debugSettings.stopAtFirstLine),
+                    "Fork without asking: " + str(debugSettings.autofork),
+                    "Debug child process: " + str(debugSettings.followChild),
+                ]
+            )
+        )
 
     def _onDumpDebugSettings(self, action=None):
         """Triggered when dumping visible settings was requested"""
@@ -2389,25 +2267,19 @@ class CodimensionMainWindow(QMainWindow):
         """Passes the focus to the flow UI if it is there"""
         return self.em.passFocusToFlow()
 
-    def onProfileResults(self, path, outfile,
-                         startTime, finishTime, redirected):
+    def onProfileResults(self, path, outfile, startTime, finishTime, redirected):
         """Triggered when profiling run finished"""
         del redirected  # unused argument
         del finishTime  # unused argument
 
         if not os.path.exists(outfile):
-            logging.error('No profiling results found for %s', path)
+            logging.error("No profiling results found for %s", path)
             return
 
         try:
             QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-            widget = ProfileResultsWidget(path,
-                                          getRunParameters(path),
-                                          startTime,
-                                          outfile,
-                                          self)
-            tooltip = 'Profiling report for ' + os.path.basename(path) + \
-                ' at ' + startTime
+            widget = ProfileResultsWidget(path, getRunParameters(path), startTime, outfile, self)
+            tooltip = "Profiling report for " + os.path.basename(path) + " at " + startTime
             self.em.showProfileReport(widget, tooltip)
         except Exception as exc:
             logging.error(str(exc))
@@ -2419,7 +2291,7 @@ class CodimensionMainWindow(QMainWindow):
     def _onFloatingRenderer(self, action=None):
         """Triggered when the renderer type button is triggered"""
         del action  # unused argument
-        self.settings['floatingRenderer'] = not self.settings['floatingRenderer']
+        self.settings["floatingRenderer"] = not self.settings["floatingRenderer"]
 
         if self.floatingRendererButton.isChecked():
             # Need to make the renderer floating
@@ -2439,4 +2311,3 @@ class CodimensionMainWindow(QMainWindow):
         GlobalData().registerSearchProvider(FindInFilesSearchProvider())
         GlobalData().registerSearchProvider(VultureSearchProvider())
         GlobalData().registerSearchProvider(OccurrencesSearchProvider())
-

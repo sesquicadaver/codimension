@@ -53,13 +53,12 @@ from .viewitems import (
 
 
 class OutlineBrowserModel(BrowserModelBase):
-
     """Class implementing the file outline browser model"""
 
     def __init__(self, shortName, info, parent=None):
         BrowserModelBase.__init__(self, shortName, parent)
         self.populateModel(info)
-        self.setTooltips(Settings()['outlineTooltips'])
+        self.setTooltips(Settings()["outlineTooltips"])
 
     def populateModel(self, info):
         """Populates the browser model"""
@@ -77,12 +76,10 @@ class OutlineBrowserModel(BrowserModelBase):
 
 
 class OutlineBrowser(FilesBrowser):
-
     """File outline browser"""
 
     def __init__(self, uuid, shortName, info, parent=None):
-        FilesBrowser.__init__(self, OutlineBrowserModel(shortName, info),
-                              False, parent)
+        FilesBrowser.__init__(self, OutlineBrowserModel(shortName, info), False, parent)
 
         self.__bufferUUID = uuid
         self.__bufferBroken = False
@@ -92,8 +89,8 @@ class OutlineBrowser(FilesBrowser):
         self.__brokenHeaderBackground = self.__getBrokenHeaderBackground()
         self.setHeaderHighlight(False)
 
-        self.setWindowTitle('File outline')
-        self.setWindowIcon(getIcon('icon.png'))
+        self.setWindowTitle("File outline")
+        self.setWindowIcon(getIcon("icon.png"))
 
     @staticmethod
     def __converttohex(value):
@@ -106,10 +103,14 @@ class OutlineBrowser(FilesBrowser):
     @staticmethod
     def __toCSSColor(rgba):
         """Converts the color to the CSS format"""
-        return ''.join(['#',
-                        OutlineBrowser.__converttohex(rgba[0]),
-                        OutlineBrowser.__converttohex(rgba[1]),
-                        OutlineBrowser.__converttohex(rgba[2])])
+        return "".join(
+            [
+                "#",
+                OutlineBrowser.__converttohex(rgba[0]),
+                OutlineBrowser.__converttohex(rgba[1]),
+                OutlineBrowser.__converttohex(rgba[2]),
+            ]
+        )
 
     def __getOriginalHeaderBackground(self):
         """Retrieves the original header color as a string useful for CSS"""
@@ -119,8 +120,7 @@ class OutlineBrowser(FilesBrowser):
 
     def __getBrokenHeaderBackground(self):
         """Returns the broken header bg color as a string useful for CSS"""
-        return self.__toCSSColor(
-            GlobalData().skin['outdatedOutlineColor'].getRgb())
+        return self.__toCSSColor(GlobalData().skin["outdatedOutlineColor"].getRgb())
 
     def setHeaderHighlight(self, switchOn):
         """Sets or removes the header highlight"""
@@ -131,9 +131,7 @@ class OutlineBrowser(FilesBrowser):
             color = self.__origHeaderBackground
             self.__bufferBroken = False
 
-        self.header().setStyleSheet(
-            'QHeaderView[highlightHeader="true"] '
-            '{ background-color: ' + color + ' }')
+        self.header().setStyleSheet('QHeaderView[highlightHeader="true"] { background-color: ' + color + " }")
         self.header().setProperty("highlightHeader", True)
         self.header().style().unpolish(self.header())
         self.header().style().polish(self.header())
@@ -151,38 +149,52 @@ class OutlineBrowser(FilesBrowser):
 
     def mouseDoubleClickEvent(self, mouseEvent):
         """Reimplemented to disable expanding/collapsing of items when
-           double-clicking. Instead the double-clicked entry is opened.
+        double-clicking. Instead the double-clicked entry is opened.
         """
         index = self.indexAt(mouseEvent.pos())
         if not index.isValid():
             return
 
         item = self.model().item(index)
-        if item.itemType in [GlobalsItemType,
-                             ImportsItemType, FunctionsItemType,
-                             ClassesItemType, StaticAttributesItemType,
-                             InstanceAttributesItemType,
-                             DirectoryItemType, SysPathItemType]:
+        if item.itemType in [
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+            DirectoryItemType,
+            SysPathItemType,
+        ]:
             QTreeView.mouseDoubleClickEvent(self, mouseEvent)
         else:
             self.openItem(item)
 
     def openItem(self, item):
         """Handles the case when an item is activated"""
-        if item.itemType in [GlobalsItemType,
-                             ImportsItemType, FunctionsItemType,
-                             ClassesItemType, StaticAttributesItemType,
-                             InstanceAttributesItemType]:
+        if item.itemType in [
+            GlobalsItemType,
+            ImportsItemType,
+            FunctionsItemType,
+            ClassesItemType,
+            StaticAttributesItemType,
+            InstanceAttributesItemType,
+        ]:
             return
 
-        if item.itemType in [CodingItemType, ImportItemType, FunctionItemType,
-                             ClassItemType, DecoratorItemType,
-                             AttributeItemType, GlobalItemType,
-                             ImportWhatItemType]:
+        if item.itemType in [
+            CodingItemType,
+            ImportItemType,
+            FunctionItemType,
+            ClassItemType,
+            DecoratorItemType,
+            AttributeItemType,
+            GlobalItemType,
+            ImportWhatItemType,
+        ]:
             # Check if the used info has no errors
             if not self.__bufferBroken:
-                GlobalData().mainWindow.gotoInBuffer(self.__bufferUUID,
-                                                     item.sourceObj.line)
+                GlobalData().mainWindow.gotoInBuffer(self.__bufferUUID, item.sourceObj.line)
                 return
 
             # The info has errors, try to reparse the current buffer and see
@@ -192,12 +204,10 @@ class OutlineBrowser(FilesBrowser):
             infoItem = getItemForDisplayPath(currentInfo, displayPath)
             if infoItem is None:
                 # Not found, try luck with the old info
-                GlobalData().mainWindow.gotoInBuffer(self.__bufferUUID,
-                                                     item.sourceObj.line)
+                GlobalData().mainWindow.gotoInBuffer(self.__bufferUUID, item.sourceObj.line)
                 return
             # Found in the new parsed info - use the new line
-            GlobalData().mainWindow.gotoInBuffer(self.__bufferUUID,
-                                                 infoItem.line)
+            GlobalData().mainWindow.gotoInBuffer(self.__bufferUUID, infoItem.line)
 
     def __expandItem(self, item):
         """Expands the given item"""
@@ -314,8 +324,7 @@ class OutlineBrowser(FilesBrowser):
                     if item.itemType == ClassesItemType:
                         self.__expandItem(item)
                         for item in item.childItems:
-                            if self.__classMatch(item.sourceObj,
-                                                 scopeObj.line):
+                            if self.__classMatch(item.sourceObj, scopeObj.line):
                                 self.__selectItem(item)
                                 currentItem = item
                                 found = True

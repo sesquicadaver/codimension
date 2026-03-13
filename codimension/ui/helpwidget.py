@@ -25,7 +25,6 @@ from .texttabwidget import TextTabWidget
 
 
 class QuickHelpWidget(TextTabWidget):
-
     """Quick help screen"""
 
     def __init__(self, parent=None):
@@ -35,7 +34,8 @@ class QuickHelpWidget(TextTabWidget):
         #              os.path.sep + 'pixmaps' + os.path.sep
         # logoPath = pixmapPath + 'logo.png'
 
-        self.setHTML("""
+        self.setHTML(
+            """
 <html>
 <div>
 
@@ -271,10 +271,13 @@ class QuickHelpWidget(TextTabWidget):
            bindings.
     </p>
 
-    <br><br>""" + self.generateCMLHelp() + """
+    <br><br>"""
+            + self.generateCMLHelp()
+            + """
 </div>
 </body>
-</html>""")
+</html>"""
+        )
 
         self.setFileName("")
         self.setShortName("Quick help")
@@ -282,29 +285,39 @@ class QuickHelpWidget(TextTabWidget):
     @staticmethod
     def generateCMLHelp():
         """Generates CML comments help"""
-        cmlHelpHeader = """<h3 align="center">CML Comments Reference<br>
-                        (CML version """ + str(CMLVersion.VERSION) + ")</h3>"
+        cmlHelpHeader = (
+            """<h3 align="center">CML Comments Reference<br>
+                        (CML version """
+            + str(CMLVersion.VERSION)
+            + ")</h3>"
+        )
 
         cmlCodes = list(CMLVersion.COMMENT_TYPES.keys())
         cmlCodes.sort()
 
-        rows = ['<tr><td width="15%" bgcolor="#E9E9F3"></td>'
-                '<td width="85%" bgcolor="#F6F4E4">' +
-                CMLVersion.description().replace('\n', '<br/>') +
-                '</td></tr>']
+        rows = [
+            '<tr><td width="15%" bgcolor="#E9E9F3"></td>'
+            '<td width="85%" bgcolor="#F6F4E4">' + CMLVersion.description().replace("\n", "<br/>") + "</td></tr>"
+        ]
         for code in cmlCodes:
             descr = CMLVersion.COMMENT_TYPES[code].description()
             descr = descr.replace("\n", "<br/>")
-            rows.append("""<tr><td width="15%" bgcolor="#E9E9F3">""" + code +
-                        """</td><td width="85%" bgcolor="#F6F4E4">""" + descr +
-                        "</td></tr>")
+            rows.append(
+                """<tr><td width="15%" bgcolor="#E9E9F3">"""
+                + code
+                + """</td><td width="85%" bgcolor="#F6F4E4">"""
+                + descr
+                + "</td></tr>"
+            )
 
-        return cmlHelpHeader + \
-               """<p align="center">
+        return (
+            cmlHelpHeader
+            + """<p align="center">
                   <table border="0" cellspacing="1"
-                         cellpadding="4" width="95%" align="center">""" + \
-               "\n".join(rows) + \
-               """</table></p>"""
+                         cellpadding="4" width="95%" align="center">"""
+            + "\n".join(rows)
+            + """</table></p>"""
+        )
 
     def setFocus(self):
         """Sets the focus to the nested html displaying editor"""

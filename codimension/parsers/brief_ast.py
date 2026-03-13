@@ -17,13 +17,13 @@
 import ast
 from sys import maxsize
 
-VERSION = '3.4.0-ast'
+VERSION = "3.4.0-ast"
 
 
 def trim_docstring(docstring):
     """PEP 257 docstring trimming."""
     if not docstring:
-        return ''
+        return ""
     lines = docstring.expandtabs().splitlines()
     indent = maxsize
     for line in lines[1:]:
@@ -38,19 +38,20 @@ def trim_docstring(docstring):
         del lines[-1]
     while lines and not lines[0]:
         del lines[0]
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def _abs_pos(source: str, lineno: int, col_offset: int) -> int:
     """Compute 0-based absolute position from line/col."""
-    lines = source.split('\n')
+    lines = source.split("\n")
     if lineno < 1:
         return 0
-    return sum(len(line) + 1 for line in lines[:lineno - 1]) + col_offset
+    return sum(len(line) + 1 for line in lines[: lineno - 1]) + col_offset
 
 
 # Re-export all classes for cdmpyparser API compatibility
 # (copied from cdmpyparser - data structures only)
+
 
 class ModuleInfoBase:
     __slots__ = ["name", "line", "pos", "absPosition"]
@@ -62,13 +63,13 @@ class ModuleInfoBase:
         self.absPosition = absPosition
 
     def isPrivate(self):
-        return self.name.startswith('__')
+        return self.name.startswith("__")
 
     def isProtected(self):
-        return not self.isPrivate() and self.name.startswith('_')
+        return not self.isPrivate() and self.name.startswith("_")
 
     def _getLPA(self):
-        return ':'.join([str(self.line), str(self.pos), str(self.absPosition)])
+        return ":".join([str(self.line), str(self.pos), str(self.absPosition)])
 
     def getDisplayName(self):
         return self.name
@@ -89,10 +90,10 @@ class ImportWhat(ModuleInfoBase):
 
     def __init__(self, whatName, line, pos, absPosition):
         super().__init__(whatName, line, pos, absPosition)
-        self.alias = ''
+        self.alias = ""
 
     def __str__(self):
-        if self.alias == '':
+        if self.alias == "":
             return self.name + "[" + self._getLPA() + "]"
         return self.name + "[" + self._getLPA() + "] as " + self.alias
 
@@ -193,20 +194,30 @@ class Argument:
     def __str__(self):
         output = self.name
         if self.annotation is not None:
-            output += ': ' + self.annotation
+            output += ": " + self.annotation
         if self.value is not None:
-            output += '=' + self.value
+            output += "=" + self.value
         return output
 
 
 class Function(ModuleInfoBase):
-    __slots__ = ["keywordLine", "keywordPos", "colonLine", "colonPos",
-                 "docstring", "arguments", "decorators", "functions",
-                 "classes", "isAsync", "returnAnnotation"]
+    __slots__ = [
+        "keywordLine",
+        "keywordPos",
+        "colonLine",
+        "colonPos",
+        "docstring",
+        "arguments",
+        "decorators",
+        "functions",
+        "classes",
+        "isAsync",
+        "returnAnnotation",
+    ]
 
-    def __init__(self, funcName, line, pos, absPosition,
-                 keywordLine, keywordPos, colonLine, colonPos, isAsync,
-                 returnAnnotation):
+    def __init__(
+        self, funcName, line, pos, absPosition, keywordLine, keywordPos, colonLine, colonPos, isAsync, returnAnnotation
+    ):
         super().__init__(funcName, line, pos, absPosition)
         self.keywordLine = keywordLine
         self.keywordPos = keywordPos
@@ -221,43 +232,65 @@ class Function(ModuleInfoBase):
         self.classes = []
 
     def isStaticMethod(self):
-        return any(d.name == 'staticmethod' for d in self.decorators)
+        return any(d.name == "staticmethod" for d in self.decorators)
 
     def niceStringify(self, level):
-        out = level * "    " + "Function[" + str(self.keywordLine) + ":" + \
-              str(self.keywordPos) + ":" + self._getLPA() + ":" + \
-              str(self.colonLine) + ":" + str(self.colonPos) + "]: '" + self.name + "'"
+        out = (
+            level * "    "
+            + "Function["
+            + str(self.keywordLine)
+            + ":"
+            + str(self.keywordPos)
+            + ":"
+            + self._getLPA()
+            + ":"
+            + str(self.colonLine)
+            + ":"
+            + str(self.colonPos)
+            + "]: '"
+            + self.name
+            + "'"
+        )
         if self.isAsync:
             out += " (async)"
         if self.returnAnnotation is not None:
             out += " -> '" + self.returnAnnotation + "'"
         for item in self.arguments:
-            out += '\n' + level * "    " + "Argument: '" + str(item) + "'"
+            out += "\n" + level * "    " + "Argument: '" + str(item) + "'"
         for item in self.decorators:
-            out += '\n' + level * "    " + str(item)
+            out += "\n" + level * "    " + str(item)
         if self.docstring is not None:
-            out += '\n' + level * "    " + str(self.docstring)
+            out += "\n" + level * "    " + str(self.docstring)
         for item in self.functions:
-            out += '\n' + item.niceStringify(level + 1)
+            out += "\n" + item.niceStringify(level + 1)
         for item in self.classes:
-            out += '\n' + item.niceStringify(level + 1)
+            out += "\n" + item.niceStringify(level + 1)
         return out
 
     def getDisplayName(self):
         displayName = ("async " if self.isAsync else "") + self.name + "("
         displayName += ", ".join(str(a) for a in self.arguments) + ")"
         if self.returnAnnotation is not None:
-            displayName += ' -> ' + self.returnAnnotation
+            displayName += " -> " + self.returnAnnotation
         return displayName
 
 
 class Class(ModuleInfoBase):
-    __slots__ = ["keywordLine", "keywordPos", "colonLine", "colonPos",
-                 "docstring", "base", "decorators", "classAttributes",
-                 "instanceAttributes", "functions", "classes"]
+    __slots__ = [
+        "keywordLine",
+        "keywordPos",
+        "colonLine",
+        "colonPos",
+        "docstring",
+        "base",
+        "decorators",
+        "classAttributes",
+        "instanceAttributes",
+        "functions",
+        "classes",
+    ]
 
-    def __init__(self, className, line, pos, absPosition,
-                 keywordLine, keywordPos, colonLine, colonPos):
+    def __init__(self, className, line, pos, absPosition, keywordLine, keywordPos, colonLine, colonPos):
         super().__init__(className, line, pos, absPosition)
         self.keywordLine = keywordLine
         self.keywordPos = keywordPos
@@ -272,23 +305,36 @@ class Class(ModuleInfoBase):
         self.classes = []
 
     def niceStringify(self, level):
-        out = level * "    " + "Class[" + str(self.keywordLine) + ":" + \
-              str(self.keywordPos) + ":" + self._getLPA() + ":" + \
-              str(self.colonLine) + ":" + str(self.colonPos) + "]: '" + self.name + "'"
+        out = (
+            level * "    "
+            + "Class["
+            + str(self.keywordLine)
+            + ":"
+            + str(self.keywordPos)
+            + ":"
+            + self._getLPA()
+            + ":"
+            + str(self.colonLine)
+            + ":"
+            + str(self.colonPos)
+            + "]: '"
+            + self.name
+            + "'"
+        )
         for item in self.base:
-            out += '\n' + level * "    " + "Base class: '" + item + "'"
+            out += "\n" + level * "    " + "Base class: '" + item + "'"
         for item in self.decorators:
-            out += '\n' + level * "    " + str(item)
+            out += "\n" + level * "    " + str(item)
         if self.docstring is not None:
-            out += '\n' + level * "    " + str(self.docstring)
+            out += "\n" + level * "    " + str(self.docstring)
         for item in self.classAttributes:
-            out += '\n' + level * "    " + str(item)
+            out += "\n" + level * "    " + str(item)
         for item in self.instanceAttributes:
-            out += '\n' + level * "    " + str(item)
+            out += "\n" + level * "    " + str(item)
         for item in self.functions:
-            out += '\n' + item.niceStringify(level + 1)
+            out += "\n" + item.niceStringify(level + 1)
         for item in self.classes:
-            out += '\n' + item.niceStringify(level + 1)
+            out += "\n" + item.niceStringify(level + 1)
         return out
 
     def getDisplayName(self):
@@ -296,10 +342,20 @@ class Class(ModuleInfoBase):
 
 
 class BriefModuleInfo:
-    __slots__ = ["isOK", "docstring", "encoding", "imports", "globals",
-                 "functions", "classes", "errors", "lexerErrors",
-                 "objectsStack", "_BriefModuleInfo__lastImport",
-                 "_BriefModuleInfo__lastDecorators"]
+    __slots__ = [
+        "isOK",
+        "docstring",
+        "encoding",
+        "imports",
+        "globals",
+        "functions",
+        "classes",
+        "errors",
+        "lexerErrors",
+        "objectsStack",
+        "_BriefModuleInfo__lastImport",
+        "_BriefModuleInfo__lastDecorators",
+    ]
 
     def __init__(self):
         self.isOK = True
@@ -321,23 +377,23 @@ class BriefModuleInfo:
             out += str(self.docstring)
         if self.encoding is not None:
             if out:
-                out += '\n'
+                out += "\n"
             out += str(self.encoding)
         for item in self.imports:
             if out:
-                out += '\n'
+                out += "\n"
             out += str(item)
         for item in self.globals:
             if out:
-                out += '\n'
+                out += "\n"
             out += str(item)
         for item in self.functions:
             if out:
-                out += '\n'
+                out += "\n"
             out += item.niceStringify(0)
         for item in self.classes:
             if out:
-                out += '\n'
+                out += "\n"
             out += item.niceStringify(0)
         return out
 
@@ -355,22 +411,32 @@ class BriefModuleInfo:
                 return
         self.globals.append(Global(name, line, pos, absPosition))
 
-    def _onClass(self, name, line, pos, absPosition,
-                 keywordLine, keywordPos, colonLine, colonPos, level):
+    def _onClass(self, name, line, pos, absPosition, keywordLine, keywordPos, colonLine, colonPos, level):
         self._flush_level(level)
-        c = Class(name, line, pos, absPosition, keywordLine, keywordPos,
-                  colonLine, colonPos)
+        c = Class(name, line, pos, absPosition, keywordLine, keywordPos, colonLine, colonPos)
         if self.__lastDecorators is not None:
             c.decorators = self.__lastDecorators
             self.__lastDecorators = None
         self.objectsStack.append(c)
 
-    def _onFunction(self, name, line, pos, absPosition,
-                    keywordLine, keywordPos, colonLine, colonPos, level,
-                    isAsync, returnAnnotation):
+    def _onFunction(
+        self,
+        name,
+        line,
+        pos,
+        absPosition,
+        keywordLine,
+        keywordPos,
+        colonLine,
+        colonPos,
+        level,
+        isAsync,
+        returnAnnotation,
+    ):
         self._flush_level(level)
-        f = Function(name, line, pos, absPosition, keywordLine, keywordPos,
-                     colonLine, colonPos, isAsync, returnAnnotation)
+        f = Function(
+            name, line, pos, absPosition, keywordLine, keywordPos, colonLine, colonPos, isAsync, returnAnnotation
+        )
         if self.__lastDecorators is not None:
             f.decorators = self.__lastDecorators
             self.__lastDecorators = None
@@ -401,7 +467,7 @@ class BriefModuleInfo:
         if level < 1:
             return
         parent = self.objectsStack[level - 1]
-        if not hasattr(parent, 'instanceAttributes'):
+        if not hasattr(parent, "instanceAttributes"):
             return  # Inside function: local variable, not instance attribute
         attributes = parent.instanceAttributes
         for item in attributes:
@@ -424,8 +490,7 @@ class BriefModuleInfo:
 
     def _onDocstring(self, docstr, startLine, endLine):
         if self.objectsStack:
-            self.objectsStack[-1].docstring = Docstring(
-                trim_docstring(docstr), startLine, endLine)
+            self.objectsStack[-1].docstring = Docstring(trim_docstring(docstr), startLine, endLine)
         else:
             self.docstring = Docstring(trim_docstring(docstr), startLine, endLine)
 
@@ -473,7 +538,7 @@ def _annotation_str(node):
     if isinstance(node, ast.Constant):
         return str(node.value)
     try:
-        return ast.unparse(node) if hasattr(ast, 'unparse') else None
+        return ast.unparse(node) if hasattr(ast, "unparse") else None
     except Exception:
         return None
 
@@ -481,7 +546,7 @@ def _annotation_str(node):
 def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None:
     """Populate BriefModuleInfo from AST."""
     try:
-        tree = ast.parse(source, filename, mode='exec', type_comments=True)
+        tree = ast.parse(source, filename, mode="exec", type_comments=True)
     except SyntaxError as e:
         mod_info.isOK = False
         mod_info.errors.append(str(e))
@@ -492,8 +557,8 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
     def pos(node):
         if node is None:
             return 1, 1, 0
-        ln = getattr(node, 'lineno', 1) or 1
-        co = getattr(node, 'col_offset', 0) or 0
+        ln = getattr(node, "lineno", 1) or 1
+        co = getattr(node, "col_offset", 0) or 0
         return ln, co + 1, _abs_pos(source, ln, co)
 
     def docstring_from_node(node):
@@ -502,7 +567,7 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             first = node.body[0]
             if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant):
                 if isinstance(first.value.value, str):
-                    end_ln = getattr(first, 'end_lineno', first.lineno) or first.lineno
+                    end_ln = getattr(first, "end_lineno", first.lineno) or first.lineno
                     return (doc, first.lineno, end_ln)
         return None
 
@@ -512,14 +577,15 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
         first = tree.body[0]
         if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant):
             if isinstance(first.value.value, str):
-                end_ln = getattr(first, 'end_lineno', first.lineno) or first.lineno
+                end_ln = getattr(first, "end_lineno", first.lineno) or first.lineno
                 mod_info._onDocstring(doc, first.lineno, end_ln)
 
     # Encoding from first lines
     import re
-    for i, line in enumerate(source.split('\n')[:2]):
-        if 'coding' in line or 'encoding' in line.lower():
-            m = re.search(r'coding[:=]\s*([-\w.]+)', line)
+
+    for i, line in enumerate(source.split("\n")[:2]):
+        if "coding" in line or "encoding" in line.lower():
+            m = re.search(r"coding[:=]\s*([-\w.]+)", line)
             if m:
                 ln = i + 1
                 mod_info._onEncoding(m.group(1).strip(), ln, 1, _abs_pos(source, ln, 0))
@@ -535,8 +601,8 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                     mod_info._onAs(alias.asname)
         elif isinstance(node, ast.ImportFrom):
             ln, p, ap = pos(node)
-            level = getattr(node, 'level', 0) or 0
-            mod_name = ('.' * level) + (node.module or '')
+            level = getattr(node, "level", 0) or 0
+            mod_name = ("." * level) + (node.module or "")
             mod_info._onImport(mod_name, ln, p, ap)
             for alias in node.names:
                 mod_info._onWhat(alias.name, ln, p, ap)
@@ -557,23 +623,23 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                 dec_name = dec.id
             elif isinstance(dec, ast.Call) and isinstance(dec.func, ast.Name):
                 dec_name = dec.func.id
-            elif hasattr(ast, 'unparse'):
+            elif hasattr(ast, "unparse"):
                 try:
                     dec_name = ast.unparse(dec)
                 except Exception:
-                    dec_name = 'decorator'
+                    dec_name = "decorator"
             if dec_name:
                 ln, p, ap = pos(dec)
                 mod_info._onDecorator(dec_name, ln, p, ap)
         ln, p, ap = pos(node)
         kw_ln, kw_p = ln, p
-        colon_ln = getattr(node, 'end_lineno', ln) or ln
+        colon_ln = getattr(node, "end_lineno", ln) or ln
         colon_p = 1
         mod_info._onClass(node.name, ln, p, ap, kw_ln, kw_p, colon_ln, colon_p, level)
         for base in node.bases:
             if isinstance(base, ast.Name):
                 mod_info._onBaseClass(base.id)
-            elif hasattr(ast, 'unparse'):
+            elif hasattr(ast, "unparse"):
                 try:
                     mod_info._onBaseClass(ast.unparse(base))
                 except Exception:
@@ -601,39 +667,36 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                 dec_name = dec.id
             elif isinstance(dec, ast.Call) and isinstance(dec.func, ast.Name):
                 dec_name = dec.func.id
-            elif hasattr(ast, 'unparse'):
+            elif hasattr(ast, "unparse"):
                 try:
                     dec_name = ast.unparse(dec)
                 except Exception:
-                    dec_name = 'decorator'
+                    dec_name = "decorator"
             if dec_name:
                 ln, p, ap = pos(dec)
                 mod_info._onDecorator(dec_name, ln, p, ap)
         ln, p, ap = pos(node)
         kw_ln, kw_p = ln, p
-        colon_ln = getattr(node, 'end_lineno', ln) or ln
+        colon_ln = getattr(node, "end_lineno", ln) or ln
         colon_p = 1
         ret_ann = _annotation_str(node.returns)
         is_async = isinstance(node, ast.AsyncFunctionDef)
-        mod_info._onFunction(node.name, ln, p, ap, kw_ln, kw_p, colon_ln, colon_p,
-                            level, is_async, ret_ann)
+        mod_info._onFunction(node.name, ln, p, ap, kw_ln, kw_p, colon_ln, colon_p, level, is_async, ret_ann)
         args = node.args.args
         defaults = node.args.defaults or []
         for arg in args:
             ann = _annotation_str(arg.annotation)
-            mod_info._onArgument(arg.arg if arg.arg != '*' else '*', ann)
+            mod_info._onArgument(arg.arg if arg.arg != "*" else "*", ann)
         for default in reversed(defaults):
             try:
-                val = ast.unparse(default) if hasattr(ast, 'unparse') else str(default)
+                val = ast.unparse(default) if hasattr(ast, "unparse") else str(default)
                 mod_info._onArgumentValue(val)
             except Exception:
                 pass
         if node.args.vararg:
-            mod_info._onArgument('*' + node.args.vararg.arg,
-                                 _annotation_str(node.args.vararg.annotation))
+            mod_info._onArgument("*" + node.args.vararg.arg, _annotation_str(node.args.vararg.annotation))
         if node.args.kwarg:
-            mod_info._onArgument('**' + node.args.kwarg.arg,
-                                 _annotation_str(node.args.kwarg.annotation))
+            mod_info._onArgument("**" + node.args.kwarg.arg, _annotation_str(node.args.kwarg.annotation))
         ds = docstring_from_node(node)
         if ds:
             mod_info._onDocstring(ds[0], ds[1], ds[2])
@@ -659,14 +722,14 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
 def getBriefModuleInfoFromMemory(content: str) -> BriefModuleInfo:
     """Build brief module info from string content."""
     mod_info = BriefModuleInfo()
-    _ast_to_brief(mod_info, content, '<string>')
+    _ast_to_brief(mod_info, content, "<string>")
     mod_info.flush()
     return mod_info
 
 
 def getBriefModuleInfoFromFile(fileName: str) -> BriefModuleInfo:
     """Build brief module info from file."""
-    with open(fileName, encoding='utf-8', errors='replace') as f:
+    with open(fileName, encoding="utf-8", errors="replace") as f:
         content = f.read()
     mod_info = BriefModuleInfo()
     _ast_to_brief(mod_info, content, fileName)

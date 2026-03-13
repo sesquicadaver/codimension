@@ -50,30 +50,23 @@ def __isSystem(resolvedPath):
 
 def collectImportResolutions(content, fileName):
     """Provides classified import information and errors if so"""
-    depClasses = {'system': [],
-                  'project': [],
-                  'other': [],
-                  'unresolved': [],
-                  'totalCount': 0,
-                  'errors': []}
+    depClasses = {"system": [], "project": [], "other": [], "unresolved": [], "totalCount": 0, "errors": []}
     try:
-        for resolution in getImportResolutions(fileName,
-                                               getImportsList(content)):
+        for resolution in getImportResolutions(fileName, getImportsList(content)):
             if resolution.isResolved():
                 if resolution.builtIn:
-                    depClasses['system'].append(resolution)
+                    depClasses["system"].append(resolution)
                 elif __isLocalOrProject(fileName, resolution.path):
-                    depClasses['project'].append(resolution)
+                    depClasses["project"].append(resolution)
                 elif __isSystem(resolution.path):
-                    depClasses['system'].append(resolution)
+                    depClasses["system"].append(resolution)
                 else:
-                    depClasses['unresolved'].append(resolution)
+                    depClasses["unresolved"].append(resolution)
             else:
-                depClasses['unresolved'].append(resolution)
+                depClasses["unresolved"].append(resolution)
 
-            depClasses['totalCount'] += 1
+            depClasses["totalCount"] += 1
     except Exception as exc:
-        depClasses['errors'].append(str(exc))
+        depClasses["errors"].append(str(exc))
 
     return depClasses
-

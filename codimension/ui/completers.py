@@ -25,26 +25,20 @@
 
 """Various kinds of completers"""
 
-
 from .qt import QCompleter, QDir, QDirModel, QStringListModel
 
 
 class FileCompleter(QCompleter):
-
     """Completer for file names"""
 
-    def __init__(self, parent=None,
-                 completionMode=QCompleter.PopupCompletion,
-                 showHidden=False):
+    def __init__(self, parent=None, completionMode=QCompleter.PopupCompletion, showHidden=False):
         QCompleter.__init__(self, parent)
         self.__model = QDirModel(self)
 
         if showHidden:
-            filters = QDir.Filters(QDir.Dirs | QDir.Files | QDir.Drives |
-                                   QDir.AllDirs | QDir.Hidden)
+            filters = QDir.Filters(QDir.Dirs | QDir.Files | QDir.Drives | QDir.AllDirs | QDir.Hidden)
         else:
-            filters = QDir.Filters(QDir.Dirs | QDir.Files |
-                                   QDir.Drives | QDir.AllDirs)
+            filters = QDir.Filters(QDir.Dirs | QDir.Files | QDir.Drives | QDir.AllDirs)
         self.__model.setFilter(filters)
 
         self.setModel(self.__model)
@@ -55,12 +49,9 @@ class FileCompleter(QCompleter):
 
 
 class DirCompleter(QCompleter):
-
     """Completer for directory names"""
 
-    def __init__(self, parent=None,
-                 completionMode=QCompleter.PopupCompletion,
-                 showHidden=False):
+    def __init__(self, parent=None, completionMode=QCompleter.PopupCompletion, showHidden=False):
         QCompleter.__init__(self, parent)
         self.__model = QDirModel(self)
 
@@ -78,11 +69,9 @@ class DirCompleter(QCompleter):
 
 
 class StringListCompleter(QCompleter):
-
     """Completer for strings lists"""
 
-    def __init__(self, parent=None, strings=None,
-                 completionMode=QCompleter.PopupCompletion):
+    def __init__(self, parent=None, strings=None, completionMode=QCompleter.PopupCompletion):
         if strings is None:
             strings = []
         QCompleter.__init__(self, parent)

@@ -27,7 +27,6 @@ from .qt import QAction, QHBoxLayout, QSize, QSizePolicy, Qt, QToolBar, QVBoxLay
 
 
 class DiffViewer(QWidget):
-
     """The diff viewer widget at the bottom"""
 
     NODIFF = None
@@ -43,7 +42,7 @@ class DiffViewer(QWidget):
         self.__tooltip = ""
         self.__inClear = False
 
-        paperColor = GlobalData().skin['nolexerPaper'].name()
+        paperColor = GlobalData().skin["nolexerPaper"].name()
         '<html><body bgcolor="' + paperColor + '"></body></html>'
         self.viewer.setHTML(self.NODIFF)
         self.__updateToolbarButtons()
@@ -53,13 +52,11 @@ class DiffViewer(QWidget):
         self.viewer = HTMLTabWidget()
 
         # Buttons
-        self.__sendUpButton = QAction(getIcon('senddiffup.png'),
-                                      'Send to Main Editing Area', self)
+        self.__sendUpButton = QAction(getIcon("senddiffup.png"), "Send to Main Editing Area", self)
         self.__sendUpButton.triggered.connect(self.__sendUp)
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.__clearButton = QAction(getIcon('trash.png'),
-                                     'Clear Generated Diff', self)
+        self.__clearButton = QAction(getIcon("trash.png"), "Clear Generated Diff", self)
         self.__clearButton.triggered.connect(self.__clear)
 
         # Toolbar
@@ -95,7 +92,7 @@ class DiffViewer(QWidget):
             self.viewer.onTextZoomChanged()
             return
 
-        if content == '' or content is None:
+        if content == "" or content is None:
             self.__clear()
         else:
             self.viewer.setHTML(content)
@@ -111,8 +108,7 @@ class DiffViewer(QWidget):
     def __sendUp(self):
         """Triggered when the content should be sent to the main editor area"""
         if not self.__isEmpty:
-            GlobalData().mainWindow.showDiffInMainArea(self.viewer.getHTML(),
-                                                       self.__tooltip)
+            GlobalData().mainWindow.showDiffInMainArea(self.viewer.getHTML(), self.__tooltip)
 
     def __clear(self):
         """Triggered when the content should be cleared"""

@@ -47,7 +47,6 @@ from utils.settings import Settings
 
 
 class WatchPointView(QTreeView):
-
     """Watch expression viewer widget"""
 
     sigSelectionChanged = pyqtSignal(QModelIndex)
@@ -100,8 +99,7 @@ class WatchPointView(QTreeView):
 
     def __resort(self):
         """Resorts the tree"""
-        self.model().sort(self.header().sortIndicatorSection(),
-                          self.header().sortIndicatorOrder())
+        self.model().sort(self.header().sortIndicatorSection(), self.header().sortIndicatorOrder())
 
     def __toSourceIndex(self, index):
         """Converts an index to a source index"""
@@ -117,11 +115,9 @@ class WatchPointView(QTreeView):
             return
 
         if selected:
-            flags = QItemSelectionModel.SelectionFlags(
-                QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
+            flags = QItemSelectionModel.SelectionFlags(QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
         else:
-            flags = QItemSelectionModel.SelectionFlags(
-                QItemSelectionModel.Deselect | QItemSelectionModel.Rows)
+            flags = QItemSelectionModel.SelectionFlags(QItemSelectionModel.Deselect | QItemSelectionModel.Rows)
         self.selectionModel().select(index, flags)
 
     def __createPopupMenus(self):
@@ -142,29 +138,21 @@ class WatchPointView(QTreeView):
         self.backMenuActions = {}
         self.backMenu = QMenu()
         self.backMenu.addAction("Add", self.__addWatchPoint)
-        self.backMenuActions["EnableAll"] = \
-            self.backMenu.addAction("Enable all", self.__enableAllWatchPoints)
-        self.backMenuActions["DisableAll"] = \
-            self.backMenu.addAction("Disable all",
-                                    self.__disableAllWatchPoints)
-        self.backMenuActions["DeleteAll"] = \
-            self.backMenu.addAction("Delete all",
-                                    self.__deleteAllWatchPoints)
+        self.backMenuActions["EnableAll"] = self.backMenu.addAction("Enable all", self.__enableAllWatchPoints)
+        self.backMenuActions["DisableAll"] = self.backMenu.addAction("Disable all", self.__disableAllWatchPoints)
+        self.backMenuActions["DeleteAll"] = self.backMenu.addAction("Delete all", self.__deleteAllWatchPoints)
         self.backMenu.aboutToShow.connect(self.__showBackMenu)
 
         self.multiMenu = QMenu()
         self.multiMenu.addAction("Add", self.__addWatchPoint)
         self.multiMenu.addSeparator()
-        self.multiMenu.addAction("Enable selected",
-                                 self.__enableSelectedWatchPoints)
+        self.multiMenu.addAction("Enable selected", self.__enableSelectedWatchPoints)
         self.multiMenu.addAction("Enable all", self.__enableAllWatchPoints)
         self.multiMenu.addSeparator()
-        self.multiMenu.addAction("Disable selected",
-                                 self.__disableSelectedWatchPoints)
+        self.multiMenu.addAction("Disable selected", self.__disableSelectedWatchPoints)
         self.multiMenu.addAction("Disable all", self.__disableAllWatchPoints)
         self.multiMenu.addSeparator()
-        self.multiMenu.addAction("Delete selected",
-                                 self.__deleteSelectedWatchPoints)
+        self.multiMenu.addAction("Delete selected", self.__deleteSelectedWatchPoints)
         self.multiMenu.addAction("Delete all", self.__deleteAllWatchPoints)
 
     def __showContextMenu(self, coord):
@@ -183,22 +171,21 @@ class WatchPointView(QTreeView):
         else:
             self.backMenu.popup(coord)
 
-    def __findDuplicates(self, cond, special,
-                         showMessage=False, index=QModelIndex()):
+    def __findDuplicates(self, cond, special, showMessage=False, index=QModelIndex()):
         """Checks if an entry already exists"""
         idx = self.__model.getWatchPointIndex(cond, special)
         duplicate = idx.isValid() and idx.internalPointer() != index.internalPointer()
-#        if showMessage and duplicate:
-#            if not special:
-#                msg = """<p>A watch expression '<b>%1</b>'"""
-#                                  """ already exists.</p>""".arg(Utilities.html_encode(unicode(cond)))
-#            else:
-#                msg = self.trUtf8("""<p>A watch expression '<b>%1</b>'"""
-#                                  """ for the variable <b>%2</b> already exists.</p>""")\
-#                        .arg(special)\
-#                        .arg(Utilities.html_encode(unicode(cond)))
-#            KQMessageBox.warning(None,
-#                "Watch expression already exists", msg)
+        #        if showMessage and duplicate:
+        #            if not special:
+        #                msg = """<p>A watch expression '<b>%1</b>'"""
+        #                                  """ already exists.</p>""".arg(Utilities.html_encode(unicode(cond)))
+        #            else:
+        #                msg = self.trUtf8("""<p>A watch expression '<b>%1</b>'"""
+        #                                  """ for the variable <b>%2</b> already exists.</p>""")\
+        #                        .arg(special)\
+        #                        .arg(Utilities.html_encode(unicode(cond)))
+        #            KQMessageBox.warning(None,
+        #                "Watch expression already exists", msg)
         return duplicate
 
     def __clearSelection(self):
@@ -208,13 +195,13 @@ class WatchPointView(QTreeView):
 
     def __addWatchPoint(self):
         """Adds watch expression via a context menu entry"""
-#        dlg = EditWatchpointDialog( ( "", False, True, 0, "" ), self )
-#        if dlg.exec_() == QDialog.Accepted:
-#            cond, temp, enabled, ignorecount, special = dlg.getData()
-#            if not self.__findDuplicates(cond, special, True):
-#                self.__model.addWatchPoint(cond, special, (temp, enabled, ignorecount))
-#                self.__resizeColumns()
-#                self.__resort()
+        #        dlg = EditWatchpointDialog( ( "", False, True, 0, "" ), self )
+        #        if dlg.exec_() == QDialog.Accepted:
+        #            cond, temp, enabled, ignorecount, special = dlg.getData()
+        #            if not self.__findDuplicates(cond, special, True):
+        #                self.__model.addWatchPoint(cond, special, (temp, enabled, ignorecount))
+        #                self.__resizeColumns()
+        #                self.__resort()
         return
 
     def __doubleClicked(self, index):
@@ -238,15 +225,15 @@ class WatchPointView(QTreeView):
 
             cond, special, temp, enabled, count = wp[:5]
 
-#            dlg = EditWatchpointDialog(
-#                (cond, temp, enabled, count, special), self)
-#            if dlg.exec_() == QDialog.Accepted:
-#                cond, temp, enabled, count, special = dlg.getData()
-#                if not self.__findDuplicates(cond, special, True, sindex):
-#                    self.__model.setWatchPointByIndex(sindex,
-#                        unicode(cond), unicode(special), (temp, enabled, count))
-#                    self.__resizeColumns()
-#                    self.__resort()
+        #            dlg = EditWatchpointDialog(
+        #                (cond, temp, enabled, count, special), self)
+        #            if dlg.exec_() == QDialog.Accepted:
+        #                cond, temp, enabled, count, special = dlg.getData()
+        #                if not self.__findDuplicates(cond, special, True, sindex):
+        #                    self.__model.setWatchPointByIndex(sindex,
+        #                        unicode(cond), unicode(special), (temp, enabled, count))
+        #                    self.__resizeColumns()
+        #                    self.__resort()
         return
 
     def __setWpEnabled(self, index, enabled):
@@ -351,7 +338,6 @@ class WatchPointView(QTreeView):
 
 
 class WatchPointViewer(QWidget):
-
     """Implements the watch point viewer for a debugger"""
 
     def __init__(self, parent, wpointModel):
@@ -364,14 +350,14 @@ class WatchPointViewer(QWidget):
 
         GlobalData().project.sigProjectChanged.connect(self.__onProjectChanged)
 
-        if not Settings()['showWatchPointViewer']:
+        if not Settings()["showWatchPointViewer"]:
             self.__onShowHide(True)
 
     def __createPopupMenu(self):
         """Creates the popup menu"""
-#        self.__excptMenu = QMenu()
-#        self.__removeMenuItem = self.__excptMenu.addAction(
-#                    "Remove from ignore list", self.__onRemoveFromIgnore )
+        #        self.__excptMenu = QMenu()
+        #        self.__removeMenuItem = self.__excptMenu.addAction(
+        #                    "Remove from ignore list", self.__onRemoveFromIgnore )
         return
 
     def __createLayout(self, wpointModel):
@@ -385,9 +371,11 @@ class WatchPointViewer(QWidget):
         self.headerFrame.setAutoFillBackground(True)
         headerPalette = self.headerFrame.palette()
         headerBackground = headerPalette.color(QPalette.Background)
-        headerBackground.setRgb(min(headerBackground.red() + 30, 255),
-                                min(headerBackground.green() + 30, 255),
-                                min(headerBackground.blue() + 30, 255))
+        headerBackground.setRgb(
+            min(headerBackground.red() + 30, 255),
+            min(headerBackground.green() + 30, 255),
+            min(headerBackground.blue() + 30, 255),
+        )
         headerPalette.setColor(QPalette.Background, headerBackground)
         self.headerFrame.setPalette(headerPalette)
         self.headerFrame.setFixedHeight(24)
@@ -399,7 +387,7 @@ class WatchPointViewer(QWidget):
 
         self.__showHideButton = QToolButton()
         self.__showHideButton.setAutoRaise(True)
-        self.__showHideButton.setIcon(getIcon('less.png'))
+        self.__showHideButton.setIcon(getIcon("less.png"))
         self.__showHideButton.setFixedSize(20, 20)
         self.__showHideButton.setToolTip("Hide ignored exceptions list")
         self.__showHideButton.setFocusPolicy(Qt.NoFocus)
@@ -416,7 +404,7 @@ class WatchPointViewer(QWidget):
         self.__wpointsList = WatchPointView(self, wpointModel)
 
         self.__enableButton = QToolButton()
-        self.__enableButton.setIcon(getIcon('add.png'))
+        self.__enableButton.setIcon(getIcon("add.png"))
         self.__enableButton.setFixedSize(24, 24)
         self.__enableButton.setToolTip("Enable/disable the watchpoint")
         self.__enableButton.setFocusPolicy(Qt.NoFocus)
@@ -426,7 +414,7 @@ class WatchPointViewer(QWidget):
         expandingSpacer = QSpacerItem(10, 10, QSizePolicy.Expanding)
 
         self.__jumpToCodeButton = QToolButton()
-        self.__jumpToCodeButton.setIcon(getIcon('gotoline.png'))
+        self.__jumpToCodeButton.setIcon(getIcon("gotoline.png"))
         self.__jumpToCodeButton.setFixedSize(24, 24)
         self.__jumpToCodeButton.setToolTip("Jump to the code")
         self.__jumpToCodeButton.setFocusPolicy(Qt.NoFocus)
@@ -438,8 +426,7 @@ class WatchPointViewer(QWidget):
         toolbarLayout.addSpacerItem(expandingSpacer)
         toolbarLayout.addWidget(self.__jumpToCodeButton)
 
-        self.__wpointsList.sigSelectionChanged.connect(
-            self.__onSelectionChanged)
+        self.__wpointsList.sigSelectionChanged.connect(self.__onSelectionChanged)
 
         verticalLayout.addWidget(self.headerFrame)
         verticalLayout.addLayout(toolbarLayout)
@@ -447,7 +434,7 @@ class WatchPointViewer(QWidget):
 
     def clear(self):
         """Clears the content"""
-#        self.__wpointsList.clear()
+        #        self.__wpointsList.clear()
         self.__updateTitle()
         self.__jumpToCodeButton.setEnabled(False)
         self.__currentItem = None
@@ -462,7 +449,7 @@ class WatchPointViewer(QWidget):
             self.__wpointsList.setVisible(False)
             self.__enableButton.setVisible(False)
             self.__jumpToCodeButton.setVisible(False)
-            self.__showHideButton.setIcon(getIcon('more.png'))
+            self.__showHideButton.setIcon(getIcon("more.png"))
             self.__showHideButton.setToolTip("Show watchpoints list")
 
             self.__minH = self.minimumHeight()
@@ -471,18 +458,18 @@ class WatchPointViewer(QWidget):
             self.setMinimumHeight(self.headerFrame.height())
             self.setMaximumHeight(self.headerFrame.height())
 
-            Settings()['showWatchPointViewer'] = False
+            Settings()["showWatchPointViewer"] = False
         else:
             self.__wpointsList.setVisible(True)
             self.__enableButton.setVisible(True)
             self.__jumpToCodeButton.setVisible(True)
-            self.__showHideButton.setIcon(getIcon('less.png'))
+            self.__showHideButton.setIcon(getIcon("less.png"))
             self.__showHideButton.setToolTip("Hide watchpoints list")
 
             self.setMinimumHeight(self.__minH)
             self.setMaximumHeight(self.__maxH)
 
-            Settings()['showWatchPointViewer'] = True
+            Settings()["showWatchPointViewer"] = True
 
     def __onSelectionChanged(self, index):
         """Triggered when the current item is changed"""
@@ -505,8 +492,7 @@ class WatchPointViewer(QWidget):
         if count == 0:
             self.__watchpointLabel.setText("Watchpoints")
         else:
-            self.__watchpointLabel.setText("Watchpoints (total: " +
-                                           str(count) + ")")
+            self.__watchpointLabel.setText("Watchpoints (total: " + str(count) + ")")
 
     def getTotalCount(self):
         """Provides the total number of watch points"""

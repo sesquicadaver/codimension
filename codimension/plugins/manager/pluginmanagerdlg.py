@@ -39,22 +39,21 @@ from ui.qt import (
 )
 from utils.pixmapcache import getIcon
 
-STATE_COL = 0       # Enabled/disabled
-CONFLICT_COL = 1    # Exclamation sign
-TYPE_COL = 2        # Sys/user
+STATE_COL = 0  # Enabled/disabled
+CONFLICT_COL = 1  # Exclamation sign
+TYPE_COL = 2  # Sys/user
 NAME_COL = 3
 VERSION_COL = 4
-SETTINGS_COL = 5    # Settings button
+SETTINGS_COL = 5  # Settings button
 
 
 class SettingsButton(QPushButton):
-
     """Custom settings button"""
 
     CustomClick = pyqtSignal(int)
 
     def __init__(self):
-        QPushButton.__init__(self, getIcon('pluginsettings.png'), "")
+        QPushButton.__init__(self, getIcon("pluginsettings.png"), "")
         self.setFixedSize(24, 24)
         self.setFocusPolicy(Qt.NoFocus)
 
@@ -67,7 +66,6 @@ class SettingsButton(QPushButton):
 
 
 class PluginItem(QTreeWidgetItem):
-
     """Single plugin item"""
 
     def __init__(self, pluginManager, cdmPlugin, active, category):
@@ -79,19 +77,18 @@ class PluginItem(QTreeWidgetItem):
         ver = self.plugin.getVersion()
         QTreeWidgetItem.__init__(self, ["", "", "", name, ver])
 
-        if self.plugin.conflictType not in [pluginManager.NO_CONFLICT,
-                                            pluginManager.USER_DISABLED]:
-            self.setIcon(CONFLICT_COL, getIcon('pluginconflict.png'))
+        if self.plugin.conflictType not in [pluginManager.NO_CONFLICT, pluginManager.USER_DISABLED]:
+            self.setIcon(CONFLICT_COL, getIcon("pluginconflict.png"))
             self.setToolTip(CONFLICT_COL, self.plugin.conflictMessage)
 
         self.setToolTip(STATE_COL, "Enable / disable")
         self.setToolTip(CONFLICT_COL, "Conflict")
 
         if self.plugin.isUser():
-            self.setIcon(TYPE_COL, getIcon('pluginuser.png'))
+            self.setIcon(TYPE_COL, getIcon("pluginuser.png"))
             self.setToolTip(TYPE_COL, "User plugin")
         else:
-            self.setIcon(TYPE_COL, getIcon('pluginsystem.png'))
+            self.setIcon(TYPE_COL, getIcon("pluginsystem.png"))
             self.setToolTip(TYPE_COL, "System wide plugin")
 
         self.setFlags(self.flags() | Qt.ItemIsUserCheckable)
@@ -102,7 +99,6 @@ class PluginItem(QTreeWidgetItem):
 
 
 class PluginsDialog(QDialog):
-
     """Codimension plugins dialog"""
 
     def __init__(self, pluginManager, parent=None):
@@ -110,7 +106,7 @@ class PluginsDialog(QDialog):
         self.setWindowTitle("Plugin Manager")
 
         self.__pluginManager = pluginManager
-        self.__configFuncs = {} # int -> callable
+        self.__configFuncs = {}  # int -> callable
 
         self.__createLayout()
         self.__populate()
@@ -135,13 +131,10 @@ class PluginsDialog(QDialog):
         self.__pluginsView.setUniformRowHeights(True)
 
         # Alert | system/user | Enable | Name | Version
-        self.__pluginsHeader = QTreeWidgetItem(["", "", "",
-                                                "Name", "Version", ""])
+        self.__pluginsHeader = QTreeWidgetItem(["", "", "", "Name", "Version", ""])
         self.__pluginsView.setHeaderItem(self.__pluginsHeader)
-        self.__pluginsView.header().setSortIndicator(NAME_COL,
-                                                     Qt.AscendingOrder)
-        self.__pluginsView.itemSelectionChanged.connect(
-            self.__pluginSelectionChanged)
+        self.__pluginsView.header().setSortIndicator(NAME_COL, Qt.AscendingOrder)
+        self.__pluginsView.itemSelectionChanged.connect(self.__pluginSelectionChanged)
         self.__pluginsView.itemChanged.connect(self.__onItemChanged)
 
         layout.addWidget(self.__pluginsView)
@@ -201,16 +194,14 @@ class PluginsDialog(QDialog):
 
         for category in self.__pluginManager.activePlugins:
             for cdmPlugin in self.__pluginManager.activePlugins[category]:
-                newItem = PluginItem(self.__pluginManager, cdmPlugin,
-                                     True, category)
+                newItem = PluginItem(self.__pluginManager, cdmPlugin, True, category)
                 self.__pluginsView.addTopLevelItem(newItem)
                 settingsButton = self.__createConfigButton()
 
                 try:
                     configFunction = cdmPlugin.getObject().getConfigFunction()
                     if configFunction is None:
-                        settingsButton.setToolTip(
-                            "Plugin does not need configuring")
+                        settingsButton.setToolTip("Plugin does not need configuring")
                         settingsButton.setEnabled(False)
                     else:
                         settingsButton.setToolTip("Click to configure")
@@ -219,42 +210,33 @@ class PluginsDialog(QDialog):
                         settingsButton.index = index
                         index += 1
                 except Exception:
-                    settingsButton.setToolTip("Bad plugin interface. No "
-                                              "configuration function "
-                                              "received.")
+                    settingsButton.setToolTip("Bad plugin interface. No configuration function received.")
                     settingsButton.setEnabled(False)
 
-                self.__pluginsView.setItemWidget(newItem, SETTINGS_COL,
-                                                 settingsButton)
+                self.__pluginsView.setItemWidget(newItem, SETTINGS_COL, settingsButton)
 
         for category in self.__pluginManager.inactivePlugins:
             for cdmPlugin in self.__pluginManager.inactivePlugins[category]:
-                newItem = PluginItem(self.__pluginManager, cdmPlugin,
-                                     False, category)
+                newItem = PluginItem(self.__pluginManager, cdmPlugin, False, category)
                 self.__pluginsView.addTopLevelItem(newItem)
                 settingsButton = self.__createConfigButton()
 
                 try:
                     configFunction = cdmPlugin.getObject().getConfigFunction()
                     if configFunction is None:
-                        settingsButton.setToolTip(
-                            "Plugin does not need configuring")
+                        settingsButton.setToolTip("Plugin does not need configuring")
                         settingsButton.setEnabled(False)
                     else:
-                        settingsButton.setToolTip(
-                            "Enable plugin and then click to configure")
+                        settingsButton.setToolTip("Enable plugin and then click to configure")
                         settingsButton.setEnabled(False)
                         self.__configFuncs[index] = configFunction
                         settingsButton.index = index
                         index += 1
                 except Exception:
-                    settingsButton.setToolTip("Bad plugin interface. No "
-                                              "configuration function "
-                                              "received.")
+                    settingsButton.setToolTip("Bad plugin interface. No configuration function received.")
                     settingsButton.setEnabled(False)
 
-                self.__pluginsView.setItemWidget(newItem, SETTINGS_COL,
-                                                 settingsButton)
+                self.__pluginsView.setItemWidget(newItem, SETTINGS_COL, settingsButton)
 
         for cdmPlugin in self.__pluginManager.unknownPlugins:
             newItem = PluginItem(self.__pluginManager, cdmPlugin, False, None)
@@ -262,38 +244,29 @@ class PluginsDialog(QDialog):
             settingsButton = self.__createConfigButton()
             settingsButton.setToolTip("Unknown plugins are not configurable")
             settingsButton.setEnabled(False)
-            self.__pluginsView.setItemWidget(newItem, SETTINGS_COL,
-                                             settingsButton)
+            self.__pluginsView.setItemWidget(newItem, SETTINGS_COL, settingsButton)
 
         self.__sortPlugins()
         self.__resizePlugins()
 
     def __sortPlugins(self):
         """Sorts the plugins table"""
-        self.__pluginsView.sortItems(
-            self.__pluginsView.sortColumn(),
-            self.__pluginsView.header().sortIndicatorOrder())
+        self.__pluginsView.sortItems(self.__pluginsView.sortColumn(), self.__pluginsView.header().sortIndicatorOrder())
 
     def __resizePlugins(self):
         """Resizes the plugins table"""
         self.__pluginsView.header().setStretchLastSection(False)
-        self.__pluginsView.header().resizeSections(
-            QHeaderView.ResizeToContents)
+        self.__pluginsView.header().resizeSections(QHeaderView.ResizeToContents)
         self.__pluginsView.header().resizeSection(STATE_COL, 28)
-        self.__pluginsView.header().setSectionResizeMode(STATE_COL,
-                                                         QHeaderView.Fixed)
+        self.__pluginsView.header().setSectionResizeMode(STATE_COL, QHeaderView.Fixed)
         self.__pluginsView.header().resizeSection(CONFLICT_COL, 28)
-        self.__pluginsView.header().setSectionResizeMode(CONFLICT_COL,
-                                                         QHeaderView.Fixed)
+        self.__pluginsView.header().setSectionResizeMode(CONFLICT_COL, QHeaderView.Fixed)
         self.__pluginsView.header().resizeSection(TYPE_COL, 28)
-        self.__pluginsView.header().setSectionResizeMode(TYPE_COL,
-                                                         QHeaderView.Fixed)
+        self.__pluginsView.header().setSectionResizeMode(TYPE_COL, QHeaderView.Fixed)
 
-        self.__pluginsView.header().setSectionResizeMode(VERSION_COL,
-                                                         QHeaderView.Stretch)
+        self.__pluginsView.header().setSectionResizeMode(VERSION_COL, QHeaderView.Stretch)
         self.__pluginsView.header().resizeSection(SETTINGS_COL, 24)
-        self.__pluginsView.header().setSectionResizeMode(SETTINGS_COL,
-                                                         QHeaderView.Fixed)
+        self.__pluginsView.header().setSectionResizeMode(SETTINGS_COL, QHeaderView.Fixed)
 
     def __pluginSelectionChanged(self):
         """Triggered when an item is selected"""
@@ -311,20 +284,15 @@ class PluginsDialog(QDialog):
         if item is None:
             return
 
-        self.__details.addTopLevelItem(
-            QTreeWidgetItem(["Author", item.plugin.getAuthor()]))
-        self.__details.addTopLevelItem(
-            QTreeWidgetItem(["Path", os.path.normpath(item.plugin.getPath())]))
-        self.__details.addTopLevelItem(
-            QTreeWidgetItem(["Description", item.plugin.getDescription()]))
-        self.__details.addTopLevelItem(
-            QTreeWidgetItem(["Web site", item.plugin.getWebsite()]))
+        self.__details.addTopLevelItem(QTreeWidgetItem(["Author", item.plugin.getAuthor()]))
+        self.__details.addTopLevelItem(QTreeWidgetItem(["Path", os.path.normpath(item.plugin.getPath())]))
+        self.__details.addTopLevelItem(QTreeWidgetItem(["Description", item.plugin.getDescription()]))
+        self.__details.addTopLevelItem(QTreeWidgetItem(["Web site", item.plugin.getWebsite()]))
 
         copyright = item.plugin.getCopyright()
         if copyright is not None:
             if copyright.lower() != "unknown":
-                self.__details.addTopLevelItem(
-                    QTreeWidgetItem(["Copyright", copyright]))
+                self.__details.addTopLevelItem(QTreeWidgetItem(["Copyright", copyright]))
 
         for name in item.plugin.getDetails():
             value = item.plugin.getDetails()[name]
@@ -345,17 +313,13 @@ class PluginsDialog(QDialog):
             settingsButton = self.__pluginsView.itemWidget(item, SETTINGS_COL)
             settingsButton.setEnabled(False)
             if settingsButton.index != -1:
-                settingsButton.setToolTip(
-                    "Enable plugin and then click to configure")
+                settingsButton.setToolTip("Enable plugin and then click to configure")
 
             if item.category in self.__pluginManager.inactivePlugins:
-                self.__pluginManager. \
-                    inactivePlugins[item.category].append(item.plugin)
+                self.__pluginManager.inactivePlugins[item.category].append(item.plugin)
             else:
-                self.__pluginManager. \
-                    inactivePlugins[item.category] = [item.plugin]
-            self.__pluginManager. \
-                activePlugins[item.category].remove(item.plugin)
+                self.__pluginManager.inactivePlugins[item.category] = [item.plugin]
+            self.__pluginManager.activePlugins[item.category].remove(item.plugin)
             self.__pluginManager.saveDisabledPlugins()
             self.__inItemChange = False
             self.__pluginManager.sendPluginDeactivated(item.plugin)
@@ -373,16 +337,13 @@ class PluginsDialog(QDialog):
             item.plugin.enable()
             item.active = True
             if item.category in self.__pluginManager.activePlugins:
-                self.__pluginManager. \
-                    activePlugins[item.category].append(item.plugin)
+                self.__pluginManager.activePlugins[item.category].append(item.plugin)
             else:
-                self.__pluginManager. \
-                    activePlugins[item.category] = [item.plugin]
-            self.__pluginManager. \
-                inactivePlugins[item.category].remove(item.plugin)
+                self.__pluginManager.activePlugins[item.category] = [item.plugin]
+            self.__pluginManager.inactivePlugins[item.category].remove(item.plugin)
             self.__pluginManager.saveDisabledPlugins()
             self.__errorsText.setText("")
-            item.setIcon(CONFLICT_COL, getIcon('empty.png'))
+            item.setIcon(CONFLICT_COL, getIcon("empty.png"))
             item.setToolTip(CONFLICT_COL, "")
 
             settingsButton = self.__pluginsView.itemWidget(item, SETTINGS_COL)
@@ -392,13 +353,10 @@ class PluginsDialog(QDialog):
             self.__pluginManager.sendPluginActivated(item.plugin)
         except Exception as exc:
             item.setCheckState(STATE_COL, Qt.Unchecked)
-            self.__errorsText.setText(
-                "Error activating the plugin, exception is generated:\n" +
-                str(exc))
+            self.__errorsText.setText("Error activating the plugin, exception is generated:\n" + str(exc))
         except Exception:
             item.setCheckState(STATE_COL, Qt.Unchecked)
-            self.__errorsText.setText(
-                "Error activating the plugin, unknown exception")
+            self.__errorsText.setText("Error activating the plugin, unknown exception")
 
         self.__inItemChange = False
 
@@ -410,5 +368,4 @@ class PluginsDialog(QDialog):
         try:
             self.__configFuncs[index]()
         except Exception as exc:
-            logging.error("Error calling the plugin configuration function. "
-                          "Message: " + str(exc))
+            logging.error("Error calling the plugin configuration function. Message: " + str(exc))

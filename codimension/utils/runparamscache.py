@@ -32,7 +32,6 @@ from .runparams import RunParameters, runParamsFromJSON, runParamsToJSON
 
 
 class RunParametersCache:
-
     """Provides the run parameters cache"""
 
     def __init__(self):
@@ -56,11 +55,11 @@ class RunParametersCache:
         if not dirName.endswith(os.path.sep):
             dirName += os.path.sep
         if not os.path.isdir(dirName):
-            raise Exception('Directory name is expected for the '
-                            'run parameters cache. The given ' +
-                            dirName + ' is not.')
+            raise Exception(
+                "Directory name is expected for the run parameters cache. The given " + dirName + " is not."
+            )
 
-        self.__rpFileName = dirName + 'runparams.json'
+        self.__rpFileName = dirName + "runparams.json"
         if os.path.exists(self.__rpFileName):
             RunParametersCache.load(self)
 
@@ -68,25 +67,20 @@ class RunParametersCache:
         """Loads the cache from the given file"""
         if self.__rpFileName:
             try:
-                with open(self.__rpFileName, 'r',
-                          encoding=DEFAULT_ENCODING) as diskfile:
-                    self.__cache = json.load(diskfile,
-                                             object_hook=runParamsFromJSON)
+                with open(self.__rpFileName, "r", encoding=DEFAULT_ENCODING) as diskfile:
+                    self.__cache = json.load(diskfile, object_hook=runParamsFromJSON)
             except Exception as exc:
-                logging.error('Error loading run paramaters cache '
-                              '(from %s): %s', self.__rpFileName, str(exc))
+                logging.error("Error loading run paramaters cache (from %s): %s", self.__rpFileName, str(exc))
                 self.__cache = {}
 
     def save(self):
         """Saves the cache into the given file"""
         if self.__rpFileName:
             try:
-                with open(self.__rpFileName, 'w',
-                          encoding=DEFAULT_ENCODING) as diskfile:
+                with open(self.__rpFileName, "w", encoding=DEFAULT_ENCODING) as diskfile:
                     json.dump(self.__cache, diskfile, default=runParamsToJSON)
             except Exception as exc:
-                logging.error('Error saving run paramaters cache (to %s): %s',
-                              self.__rpFileName, str(exc))
+                logging.error("Error saving run paramaters cache (to %s): %s", self.__rpFileName, str(exc))
 
     def getRunParameters(self, path):
         """Provides the required parameters object"""

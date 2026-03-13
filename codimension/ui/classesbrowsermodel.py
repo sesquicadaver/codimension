@@ -31,15 +31,13 @@ from .viewitems import TreeViewClassItem
 
 
 class ClassesBrowserModel(BrowserModelBase):
-
     """Class implementing the project browser model"""
 
     def __init__(self, parent=None):
         BrowserModelBase.__init__(self, ["Name", "File name", "Line"], parent)
-        self.setTooltips(Settings()['classesTooltips'])
+        self.setTooltips(Settings()["classesTooltips"])
         self.__needsPopulate = False
-        self.globalData.project.sigProjectChanged.connect(
-            self.__onProjectChanged)
+        self.globalData.project.sigProjectChanged.connect(self.__onProjectChanged)
 
     def populateIfNeeded(self):
         """Populates the model when the tab is first shown (lazy loading)."""
@@ -78,8 +76,7 @@ class ClassesBrowserModel(BrowserModelBase):
         itemsToDelete = []
         for path in deletedPythonFiles:
             for item in self.rootItem.childItems:
-                if os.path.realpath(path) == \
-                   os.path.realpath(item.getPath()):
+                if os.path.realpath(path) == os.path.realpath(item.getPath()):
                     itemsToDelete.append(item)
 
         for item in itemsToDelete:

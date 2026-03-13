@@ -46,17 +46,18 @@ def getuser():
 
     import os
 
-    for name in ('LOGNAME', 'USER', 'LNAME', 'USERNAME'):
+    for name in ("LOGNAME", "USER", "LNAME", "USERNAME"):
         user = os.environ.get(name)
         if user:
             return user
 
     # If this fails, the exception will "explain" why
     import pwd
+
     return pwd.getpwuid(os.getuid())[0]
 
 
-def getpass(prompt='Password: '):
+def getpass(prompt="Password: "):
     """Function to prompt for a password, with echo turned off"""
     return input(prompt, False)
 

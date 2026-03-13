@@ -19,7 +19,6 @@
 
 """Find name feature implementation"""
 
-
 from cdmpyparser import getBriefModuleInfoFromMemory
 from utils.diskvaluesrelay import getFindNameHistory, setFindNameHistory
 from utils.fileutils import isPythonFile
@@ -46,8 +45,7 @@ from .qt import (
 )
 
 
-class NameItem():
-
+class NameItem:
     """Names list item"""
 
     def __init__(self, parent, icon, name, fileName, line, tooltip):
@@ -75,7 +73,7 @@ class NameItem():
         """Provides a value for the column"""
         if column == 0:
             return self.name
-        return ''
+        return ""
 
     def appendChild(self, child):
         """Appends a child item"""
@@ -108,7 +106,6 @@ class NameItem():
 
 
 class FindNameModel(QAbstractItemModel):
-
     """Find name data model implementation"""
 
     def __init__(self, parent=None):
@@ -116,7 +113,7 @@ class FindNameModel(QAbstractItemModel):
 
         self.rootItem = NameItem(None, None, "Name", "", "", "")
         self.count = 0
-        self.showTooltips = Settings()['findNameTooltips']
+        self.showTooltips = Settings()["findNameTooltips"]
         self.__populateModel()
 
     def __populateModel(self):
@@ -139,15 +136,13 @@ class FindNameModel(QAbstractItemModel):
                 if widget is None:
                     info = GlobalData().briefModinfoCache.get(fname)
                 else:
-                    info = getBriefModuleInfoFromMemory(
-                        widget.getEditor().text)
+                    info = getBriefModuleInfoFromMemory(widget.getEditor().text)
                 self.__populateInfo(info, fname)
 
     def __populateInfo(self, info, fname):
         """Populates parsed info from a python file"""
         for item in info.globals:
-            newItem = NameItem(self.rootItem, getIcon('globalvar.png'),
-                               item.name, fname, item.line, "")
+            newItem = NameItem(self.rootItem, getIcon("globalvar.png"), item.name, fname, item.line, "")
             self.rootItem.appendChild(newItem)
             self.count += 1
 
@@ -159,30 +154,27 @@ class FindNameModel(QAbstractItemModel):
     def __polulateClass(self, klass, prefix, fname):
         """Recursively populates the given class"""
         if klass.isPrivate():
-            icon = getIcon('class_private.png')
+            icon = getIcon("class_private.png")
         elif klass.isProtected():
-            icon = getIcon('class_protected.png')
+            icon = getIcon("class_protected.png")
         else:
-            icon = getIcon('class.png')
+            icon = getIcon("class.png")
 
         tooltip = ""
         if self.showTooltips and klass.docstring is not None:
             tooltip = klass.docstring.text
 
-        classItem = NameItem(self.rootItem, icon, prefix + klass.name,
-                             fname, klass.line, tooltip)
+        classItem = NameItem(self.rootItem, icon, prefix + klass.name, fname, klass.line, tooltip)
         self.rootItem.appendChild(classItem)
         self.count += 1
 
         for item in klass.classAttributes:
-            newItem = NameItem(self.rootItem, getIcon('attributes.png'),
-                               prefix + item.name, fname, item.line, "")
+            newItem = NameItem(self.rootItem, getIcon("attributes.png"), prefix + item.name, fname, item.line, "")
             self.rootItem.appendChild(newItem)
             self.count += 1
 
         for item in klass.instanceAttributes:
-            newItem = NameItem(self.rootItem, getIcon('attributes.png'),
-                               prefix + item.name, fname, item.line, "")
+            newItem = NameItem(self.rootItem, getIcon("attributes.png"), prefix + item.name, fname, item.line, "")
             self.rootItem.appendChild(newItem)
             self.count += 1
 
@@ -197,8 +189,7 @@ class FindNameModel(QAbstractItemModel):
         if self.showTooltips and func.docstring is not None:
             tooltip = func.docstring.text
 
-        funcItem = NameItem(self.rootItem, getIcon('method.png'),
-                            prefix + func.name, fname, func.line, tooltip)
+        funcItem = NameItem(self.rootItem, getIcon("method.png"), prefix + func.name, fname, func.line, tooltip)
         self.rootItem.appendChild(funcItem)
         self.count += 1
 
@@ -247,8 +238,7 @@ class FindNameModel(QAbstractItemModel):
             item = index.internalPointer()
             if index.column() < item.columnCount():
                 return item.data(index.column())
-            if index.column() == item.columnCount() and \
-                 index.column() < self.columnCount(self.parent(index)):
+            if index.column() == item.columnCount() and index.column() < self.columnCount(self.parent(index)):
                 # This is for the case when an item under a multi-column
                 # parent doesn't have a value for all the columns
                 return ""
@@ -281,9 +271,7 @@ class FindNameModel(QAbstractItemModel):
         # The model/view framework considers negative values out-of-bounds,
         # however in python they work when indexing into lists. So make sure
         # we return an invalid index for out-of-bounds row/col
-        if row < 0 or column < 0 or \
-           row >= self.rowCount(parent) or \
-           column >= self.columnCount(parent):
+        if row < 0 or column < 0 or row >= self.rowCount(parent) or column >= self.columnCount(parent):
             return QModelIndex()
 
         if not parent.isValid():
@@ -339,13 +327,12 @@ class FindNameModel(QAbstractItemModel):
 
 
 class FindNameSortFilterProxyModel(QSortFilterProxyModel):
-
     """Find name dialog sort filter proxy model"""
 
     def __init__(self, parent=None):
         QSortFilterProxyModel.__init__(self, parent)
-        self.__sortColumn = None    # Avoid pylint complains
-        self.__sortOrder = None     # Avoid pylint complains
+        self.__sortColumn = None  # Avoid pylint complains
+        self.__sortOrder = None  # Avoid pylint complains
 
         self.__filters = []
         self.__filtersCount = 0
@@ -394,7 +381,7 @@ class FindNameSortFilterProxyModel(QSortFilterProxyModel):
     def filterAcceptsRow(self, sourceRow, _):
         """Filters rows"""
         if self.__filtersCount == 0 or self.__sourceModelRoot is None:
-            return True     # No filters
+            return True  # No filters
 
         nameToMatch = self.__sourceModelRoot.child(sourceRow).name
         for regexp in self.__filters:
@@ -404,7 +391,6 @@ class FindNameSortFilterProxyModel(QSortFilterProxyModel):
 
 
 class NamesBrowser(QTreeView):
-
     """List of names widget implementation"""
 
     def __init__(self, parent=None):
@@ -452,8 +438,7 @@ class NamesBrowser(QTreeView):
 
     def _resort(self):
         """Re-sorts the tree"""
-        self.model().sort(self.header().sortIndicatorSection(),
-                          self.header().sortIndicatorOrder())
+        self.model().sort(self.header().sortIndicatorSection(), self.header().sortIndicatorOrder())
 
     def openCurrentItem(self):
         """Triggers when an item is clicked or double clicked"""
@@ -463,10 +448,10 @@ class NamesBrowser(QTreeView):
 
     def openItem(self, item):
         """Handles the case when an item is activated"""
-        infoLine = item.tooltip.split('\n')[-1]
-        parts = infoLine.split(':')
+        infoLine = item.tooltip.split("\n")[-1]
+        parts = infoLine.split(":")
         line = int(parts[-1])
-        fname = ':'.join(parts[:-1])
+        fname = ":".join(parts[:-1])
 
         GlobalData().mainWindow.openFile(fname, line)
         self.__parentDialog.onClose()
@@ -489,7 +474,6 @@ class NamesBrowser(QTreeView):
 
 
 class FindNameDialog(QDialog):
-
     """Find name dialog implementation"""
 
     def __init__(self, what="", parent=None):
@@ -531,8 +515,7 @@ class FindNameDialog(QDialog):
             title += "project: "
         else:
             title += "opened files: "
-        title += str(self.__namesBrowser.getVisible()) + " of " + \
-                 str(self.__namesBrowser.getTotal())
+        title += str(self.__namesBrowser.getVisible()) + " of " + str(self.__namesBrowser.getTotal())
         self.setWindowTitle(title)
 
     def __createLayout(self):
@@ -546,8 +529,7 @@ class FindNameDialog(QDialog):
 
         self.findCombo = EnterSensitiveComboBox(self)
         self.__tuneCombo(self.findCombo)
-        self.findCombo.lineEdit().setToolTip("Regular expression "
-                                             "to search for")
+        self.findCombo.lineEdit().setToolTip("Regular expression to search for")
         verticalLayout.addWidget(self.findCombo)
         self.findCombo.enterClicked.connect(self.__enterInFilter)
 
@@ -557,8 +539,7 @@ class FindNameDialog(QDialog):
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            comboBox.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(comboBox.sizePolicy().hasHeightForWidth())
         comboBox.setSizePolicy(sizePolicy)
         comboBox.setEditable(True)
         comboBox.setInsertPolicy(QComboBox.InsertAtTop)

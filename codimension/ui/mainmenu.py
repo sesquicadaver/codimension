@@ -19,7 +19,6 @@
 
 """Codimension main window menu"""
 
-
 import os.path
 
 from utils.diskvaluesrelay import getRecentFiles
@@ -37,11 +36,10 @@ def getAccelerator(count):
     """Provides an accelerator text for a menu item"""
     if count < 10:
         return "&" + str(count) + ".  "
-    return "&" + chr(count - 10 + ord('a')) + ".  "
+    return "&" + chr(count - 10 + ord("a")) + ".  "
 
 
 class MainWindowMenuMixin:
-
     """Main window menu mixin"""
 
     def __init__(self):
@@ -50,44 +48,48 @@ class MainWindowMenuMixin:
     def _initMainMenu(self):
         """Initializes the main menu bar"""
         menuBar = self.menuBar()
-        for member in [self.__buildProjectMenu, self.__buildTabMenu,
-                       self.__buildEditMenu, self.__buildSearchMenu,
-                       self.__buildRunMenu, self.__buildDebugMenu,
-                       self.__buildToolsMenu, self.__buildDiagramsMenu,
-                       self.__buildViewMenu, self.__buildOptionsMenu,
-                       self.__buildPluginsMenu, self.__buildHelpMenu]:
+        for member in [
+            self.__buildProjectMenu,
+            self.__buildTabMenu,
+            self.__buildEditMenu,
+            self.__buildSearchMenu,
+            self.__buildRunMenu,
+            self.__buildDebugMenu,
+            self.__buildToolsMenu,
+            self.__buildDiagramsMenu,
+            self.__buildViewMenu,
+            self.__buildOptionsMenu,
+            self.__buildPluginsMenu,
+            self.__buildHelpMenu,
+        ]:
             menuBar.addMenu(member(menuBar))
 
     def __buildProjectMenu(self, menuBar):
         """Builds a project menu"""
         prjMenu = QMenu("&Project", menuBar)
-        prjMenu.setObjectName('project')
+        prjMenu.setObjectName("project")
         prjMenu.aboutToShow.connect(self.__prjAboutToShow)
         prjMenu.aboutToHide.connect(self.__prjAboutToHide)
         self.__newProjectAct = prjMenu.addAction(
-            getIcon('createproject.png'), "&New project",
-            self._createNewProject, 'Ctrl+Shift+N')
+            getIcon("createproject.png"), "&New project", self._createNewProject, "Ctrl+Shift+N"
+        )
         self.__openProjectAct = prjMenu.addAction(
-            getIcon('project.png'), '&Open project',
-            self._openProject, 'Ctrl+Shift+O')
+            getIcon("project.png"), "&Open project", self._openProject, "Ctrl+Shift+O"
+        )
         self._unloadProjectAct = prjMenu.addAction(
-            getIcon('unloadproject.png'), '&Unload project',
-            self.projectViewer.unloadProject)
+            getIcon("unloadproject.png"), "&Unload project", self.projectViewer.unloadProject
+        )
         self._projectPropsAct = prjMenu.addAction(
-            getIcon('smalli.png'), '&Properties',
-            self.projectViewer.projectProperties)
+            getIcon("smalli.png"), "&Properties", self.projectViewer.projectProperties
+        )
         prjMenu.addSeparator()
         self._prjTemplateMenu = QMenu("Project-specific &template", self)
-        self.__createPrjTemplateAct = self._prjTemplateMenu.addAction(
-            getIcon('generate.png'), '&Create')
-        self.__createPrjTemplateAct.triggered.connect(
-            self._onCreatePrjTemplate)
-        self.__editPrjTemplateAct = self._prjTemplateMenu.addAction(
-            getIcon('edit.png'), '&Edit')
+        self.__createPrjTemplateAct = self._prjTemplateMenu.addAction(getIcon("generate.png"), "&Create")
+        self.__createPrjTemplateAct.triggered.connect(self._onCreatePrjTemplate)
+        self.__editPrjTemplateAct = self._prjTemplateMenu.addAction(getIcon("edit.png"), "&Edit")
         self.__editPrjTemplateAct.triggered.connect(self._onEditPrjTemplate)
         self._prjTemplateMenu.addSeparator()
-        self.__delPrjTemplateAct = self._prjTemplateMenu.addAction(
-            getIcon('trash.png'), '&Delete')
+        self.__delPrjTemplateAct = self._prjTemplateMenu.addAction(getIcon("trash.png"), "&Delete")
         self.__delPrjTemplateAct.triggered.connect(self._onDelPrjTemplate)
         prjMenu.addMenu(self._prjTemplateMenu)
         prjMenu.addSeparator()
@@ -96,61 +98,51 @@ class MainWindowMenuMixin:
         prjMenu.addMenu(self.__recentPrjMenu)
         prjMenu.addSeparator()
         self.__quitAct = prjMenu.addAction(
-            getIcon('exitmenu.png'), "E&xit codimension",
-            QApplication.closeAllWindows, "Ctrl+Q")
+            getIcon("exitmenu.png"), "E&xit codimension", QApplication.closeAllWindows, "Ctrl+Q"
+        )
         return prjMenu
 
     def __buildTabMenu(self, menuBar):
         """Build the tab menu"""
         tabMenu = QMenu("&Tab", menuBar)
-        tabMenu.setObjectName('tab')
+        tabMenu.setObjectName("tab")
         tabMenu.aboutToShow.connect(self.__tabAboutToShow)
         tabMenu.aboutToHide.connect(self.__tabAboutToHide)
-        self.__newTabAct = tabMenu.addAction(
-            getIcon('filemenu.png'), "&New tab",
-            self.em.newTabClicked, 'Ctrl+N')
-        self.__openFileAct = tabMenu.addAction(
-            getIcon('filemenu.png'), '&Open file', self._openFile, 'Ctrl+O')
-        self.__cloneTabAct = tabMenu.addAction(
-            getIcon('clonetabmenu.png'), '&Clone tab', self.em.onClone)
-        self.__closeOtherTabsAct = tabMenu.addAction(
-            getIcon(''), 'Close oth&er tabs', self.em.onCloseOther)
-        self.__closeTabAct = tabMenu.addAction(
-            getIcon('closetabmenu.png'), 'Close &tab', self.em.onCloseTab)
+        self.__newTabAct = tabMenu.addAction(getIcon("filemenu.png"), "&New tab", self.em.newTabClicked, "Ctrl+N")
+        self.__openFileAct = tabMenu.addAction(getIcon("filemenu.png"), "&Open file", self._openFile, "Ctrl+O")
+        self.__cloneTabAct = tabMenu.addAction(getIcon("clonetabmenu.png"), "&Clone tab", self.em.onClone)
+        self.__closeOtherTabsAct = tabMenu.addAction(getIcon(""), "Close oth&er tabs", self.em.onCloseOther)
+        self.__closeTabAct = tabMenu.addAction(getIcon("closetabmenu.png"), "Close &tab", self.em.onCloseTab)
         tabMenu.addSeparator()
-        self.__saveFileAct = tabMenu.addAction(
-            getIcon('savemenu.png'), '&Save', self.em.onSave, 'Ctrl+S')
+        self.__saveFileAct = tabMenu.addAction(getIcon("savemenu.png"), "&Save", self.em.onSave, "Ctrl+S")
         self.__saveFileAsAct = tabMenu.addAction(
-            getIcon('saveasmenu.png'),
-            'Save &as...', self.em.onSaveAs, "Ctrl+Shift+S")
+            getIcon("saveasmenu.png"), "Save &as...", self.em.onSaveAs, "Ctrl+Shift+S"
+        )
         self.__tabJumpToDefAct = tabMenu.addAction(
-            getIcon('definition.png'), "&Jump to definition",
-            self._onTabJumpToDef)
-        self.__calltipAct = tabMenu.addAction(
-            getIcon('calltip.png'), 'Show &calltip', self._onShowCalltip)
+            getIcon("definition.png"), "&Jump to definition", self._onTabJumpToDef
+        )
+        self.__calltipAct = tabMenu.addAction(getIcon("calltip.png"), "Show &calltip", self._onShowCalltip)
         self.__tabJumpToScopeBeginAct = tabMenu.addAction(
-            getIcon('jumpupscopemenu.png'),
-            'Jump to scope &begin', self._onTabJumpToScopeBegin)
-        self.__tabOpenImportAct = tabMenu.addAction(
-            getIcon('imports.png'), 'Open &import(s)', self._onTabOpenImport)
-        self.__openAsFileAct = tabMenu.addAction(
-            getIcon('filemenu.png'), 'O&pen as file', self._onOpenAsFile)
+            getIcon("jumpupscopemenu.png"), "Jump to scope &begin", self._onTabJumpToScopeBegin
+        )
+        self.__tabOpenImportAct = tabMenu.addAction(getIcon("imports.png"), "Open &import(s)", self._onTabOpenImport)
+        self.__openAsFileAct = tabMenu.addAction(getIcon("filemenu.png"), "O&pen as file", self._onOpenAsFile)
         self.__downloadAndShowAct = tabMenu.addAction(
-            getIcon('filemenu.png'), 'Download and show',
-            self._onDownloadAndShow)
+            getIcon("filemenu.png"), "Download and show", self._onDownloadAndShow
+        )
         self.__openInBrowserAct = tabMenu.addAction(
-            getIcon('homepagemenu.png'), 'Open in browser',
-            self._onOpenInBrowser)
+            getIcon("homepagemenu.png"), "Open in browser", self._onOpenInBrowser
+        )
         tabMenu.addSeparator()
         self.__highlightInPrjAct = tabMenu.addAction(
-            getIcon('highlightmenu.png'), 'Highlight in project browser',
-            self.em.onHighlightInPrj)
+            getIcon("highlightmenu.png"), "Highlight in project browser", self.em.onHighlightInPrj
+        )
         self.__highlightInFSAct = tabMenu.addAction(
-            getIcon('highlightmenu.png'), 'Highlight in file system browser',
-            self.em.onHighlightInFS)
+            getIcon("highlightmenu.png"), "Highlight in file system browser", self.em.onHighlightInFS
+        )
         self.__highlightInOutlineAct = tabMenu.addAction(
-            getIcon('highlightmenu.png'), 'Highlight in outline browser',
-            self._onHighlightInOutline)
+            getIcon("highlightmenu.png"), "Highlight in outline browser", self._onHighlightInOutline
+        )
         tabMenu.addSeparator()
         self.__recentFilesMenu = QMenu("&Recent files", self)
         self.__recentFilesMenu.triggered.connect(self._onRecentFile)
@@ -160,352 +152,298 @@ class MainWindowMenuMixin:
     def __buildEditMenu(self, menuBar):
         """Builds edit menu"""
         editMenu = QMenu("&Edit", menuBar)
-        editMenu.setObjectName('edit')
+        editMenu.setObjectName("edit")
         editMenu.aboutToShow.connect(self.__editAboutToShow)
         editMenu.aboutToHide.connect(self.__editAboutToHide)
-        self.__undoAct = editMenu.addAction(
-            getIcon('undo.png'), '&Undo', self._onUndo)
-        self.__redoAct = editMenu.addAction(
-            getIcon('redo.png'), '&Redo', self._onRedo)
+        self.__undoAct = editMenu.addAction(getIcon("undo.png"), "&Undo", self._onUndo)
+        self.__redoAct = editMenu.addAction(getIcon("redo.png"), "&Redo", self._onRedo)
         editMenu.addSeparator()
-        self.__cutAct = editMenu.addAction(
-            getIcon('cutmenu.png'), 'Cu&t', self._onCut)
-        self.__copyAct = editMenu.addAction(
-            getIcon('copymenu.png'), '&Copy', self.em.onCopy)
-        self.__pasteAct = editMenu.addAction(
-            getIcon('pastemenu.png'), '&Paste', self._onPaste)
-        self.__selectAllAct = editMenu.addAction(
-            getIcon('selectallmenu.png'), 'Select &all', self._onSelectAll)
+        self.__cutAct = editMenu.addAction(getIcon("cutmenu.png"), "Cu&t", self._onCut)
+        self.__copyAct = editMenu.addAction(getIcon("copymenu.png"), "&Copy", self.em.onCopy)
+        self.__pasteAct = editMenu.addAction(getIcon("pastemenu.png"), "&Paste", self._onPaste)
+        self.__selectAllAct = editMenu.addAction(getIcon("selectallmenu.png"), "Select &all", self._onSelectAll)
         editMenu.addSeparator()
-        self.__commentAct = editMenu.addAction(
-            getIcon('commentmenu.png'), 'C&omment/uncomment', self._onComment)
-        self.__duplicateAct = editMenu.addAction(
-            getIcon('duplicatemenu.png'), '&Duplicate line', self._onDuplicate)
+        self.__commentAct = editMenu.addAction(getIcon("commentmenu.png"), "C&omment/uncomment", self._onComment)
+        self.__duplicateAct = editMenu.addAction(getIcon("duplicatemenu.png"), "&Duplicate line", self._onDuplicate)
         self.__autocompleteAct = editMenu.addAction(
-            getIcon('autocompletemenu.png'), 'Autoco&mplete',
-            self._onAutocomplete)
+            getIcon("autocompletemenu.png"), "Autoco&mplete", self._onAutocomplete
+        )
         self.__expandTabsAct = editMenu.addAction(
-            getIcon('expandtabs.png'), 'Expand tabs (&4 spaces)',
-            self._onExpandTabs)
+            getIcon("expandtabs.png"), "Expand tabs (&4 spaces)", self._onExpandTabs
+        )
         self.__trailingSpacesAct = editMenu.addAction(
-            getIcon('trailingws.png'), 'Remove trailing &spaces',
-            self._onRemoveTrailingSpaces)
+            getIcon("trailingws.png"), "Remove trailing &spaces", self._onRemoveTrailingSpaces
+        )
         return editMenu
 
     def __buildSearchMenu(self, menuBar):
         """Build the search menu"""
         searchMenu = QMenu("&Search", menuBar)
-        searchMenu.setObjectName('search')
+        searchMenu.setObjectName("search")
         searchMenu.aboutToShow.connect(self.__searchAboutToShow)
         searchMenu.aboutToHide.connect(self.__searchAboutToHide)
         self.__searchInFilesAct = searchMenu.addAction(
-            getIcon('findindir.png'), "Find in file&s",
-            self.findInFilesClicked, "Ctrl+Shift+F")
+            getIcon("findindir.png"), "Find in file&s", self.findInFilesClicked, "Ctrl+Shift+F"
+        )
         searchMenu.addSeparator()
         self._findNameMenuAct = searchMenu.addAction(
-            getIcon('findname.png'), 'Find &name in project',
-            self.findNameClicked, 'Alt+Shift+S')
+            getIcon("findname.png"), "Find &name in project", self.findNameClicked, "Alt+Shift+S"
+        )
         self._findProjectFileAct = searchMenu.addAction(
-            getIcon('findfile.png'), 'Find &project file',
-            self.findFileClicked, 'Alt+Shift+O')
+            getIcon("findfile.png"), "Find &project file", self.findFileClicked, "Alt+Shift+O"
+        )
         searchMenu.addSeparator()
         self.__findOccurencesAct = searchMenu.addAction(
-            getIcon('findindir.png'), 'Find &occurrences',
-            self._onFindOccurences)
-        self.__findAct = searchMenu.addAction(
-            getIcon('findindir.png'), '&Find...', self._onFind)
-        self.__findNextAct = searchMenu.addAction(
-            getIcon('1rightarrow.png'), "&Next highlight", self._onFindNext)
+            getIcon("findindir.png"), "Find &occurrences", self._onFindOccurences
+        )
+        self.__findAct = searchMenu.addAction(getIcon("findindir.png"), "&Find...", self._onFind)
+        self.__findNextAct = searchMenu.addAction(getIcon("1rightarrow.png"), "&Next highlight", self._onFindNext)
         self.__findPrevAct = searchMenu.addAction(
-            getIcon('1leftarrow.png'), "Pre&vious highlight",
-            self._onFindPrevious)
-        self.__replaceAct = searchMenu.addAction(
-            getIcon('replace.png'), '&Replace...', self._onReplace)
-        self.__goToLineAct = searchMenu.addAction(
-            getIcon('gotoline.png'), '&Go to line...', self._onGoToLine)
+            getIcon("1leftarrow.png"), "Pre&vious highlight", self._onFindPrevious
+        )
+        self.__replaceAct = searchMenu.addAction(getIcon("replace.png"), "&Replace...", self._onReplace)
+        self.__goToLineAct = searchMenu.addAction(getIcon("gotoline.png"), "&Go to line...", self._onGoToLine)
         return searchMenu
 
     def __buildRunMenu(self, menuBar):
         """Build the run menu"""
         runMenu = QMenu("&Run", menuBar)
-        runMenu.setObjectName('run')
+        runMenu.setObjectName("run")
         runMenu.aboutToShow.connect(self.__runAboutToShow)
-        self.__prjRunAct = runMenu.addAction(
-            getIcon('run.png'), 'Run &project main script',
-            self.onRunProject)
+        self.__prjRunAct = runMenu.addAction(getIcon("run.png"), "Run &project main script", self.onRunProject)
         self.__prjRunDlgAct = runMenu.addAction(
-            getIcon('detailsdlg.png'), 'Run p&roject main script...',
-            self.onRunProjectDlg)
-        self._tabRunAct = runMenu.addAction(
-            getIcon('run.png'), 'Run &tab script', self.onRunTab)
-        self._tabRunDlgAct = runMenu.addAction(
-            getIcon('detailsdlg.png'), 'Run t&ab script...', self.onRunTabDlg)
+            getIcon("detailsdlg.png"), "Run p&roject main script...", self.onRunProjectDlg
+        )
+        self._tabRunAct = runMenu.addAction(getIcon("run.png"), "Run &tab script", self.onRunTab)
+        self._tabRunDlgAct = runMenu.addAction(getIcon("detailsdlg.png"), "Run t&ab script...", self.onRunTabDlg)
         runMenu.addSeparator()
         self.__prjProfileAct = runMenu.addAction(
-            getIcon('profile.png'), 'Profile project main script',
-            self.onProfileProject)
+            getIcon("profile.png"), "Profile project main script", self.onProfileProject
+        )
         self.__prjProfileDlgAct = runMenu.addAction(
-            getIcon('profile.png'), 'Profile project main script...',
-            self.onProfileProjectDlg)
-        self._tabProfileAct = runMenu.addAction(
-            getIcon('profile.png'), 'Profile tab script', self.onProfileTab)
+            getIcon("profile.png"), "Profile project main script...", self.onProfileProjectDlg
+        )
+        self._tabProfileAct = runMenu.addAction(getIcon("profile.png"), "Profile tab script", self.onProfileTab)
         self._tabProfileDlgAct = runMenu.addAction(
-            getIcon('profile.png'), 'Profile tab script...',
-            self.onProfileTabDlg)
+            getIcon("profile.png"), "Profile tab script...", self.onProfileTabDlg
+        )
         return runMenu
 
     def __buildDebugMenu(self, menuBar):
         """Build the debug menu"""
         dbgMenu = QMenu("Debu&g", menuBar)
-        dbgMenu.setObjectName('debug')
+        dbgMenu.setObjectName("debug")
         dbgMenu.aboutToShow.connect(self.__debugAboutToShow)
         self._prjDebugAct = dbgMenu.addAction(
-            getIcon('debugger.png'), 'Debug &project main script',
-            self.onDebugProject, "Shift+F5")
+            getIcon("debugger.png"), "Debug &project main script", self.onDebugProject, "Shift+F5"
+        )
         self._prjDebugDlgAct = dbgMenu.addAction(
-            getIcon('detailsdlg.png'), 'Debug p&roject main script...',
-            self.onDebugProjectDlg, "Ctrl+Shift+F5")
-        self._tabDebugAct = dbgMenu.addAction(
-            getIcon('debugger.png'), 'Debug &tab script',
-            self.onDebugTab, "F5")
+            getIcon("detailsdlg.png"), "Debug p&roject main script...", self.onDebugProjectDlg, "Ctrl+Shift+F5"
+        )
+        self._tabDebugAct = dbgMenu.addAction(getIcon("debugger.png"), "Debug &tab script", self.onDebugTab, "F5")
         self._tabDebugDlgAct = dbgMenu.addAction(
-            getIcon('detailsdlg.png'), 'Debug t&ab script...',
-            self.onDebugTabDlg, "Ctrl+F5")
+            getIcon("detailsdlg.png"), "Debug t&ab script...", self.onDebugTabDlg, "Ctrl+F5"
+        )
         dbgMenu.addSeparator()
         self._debugStopAct = dbgMenu.addAction(
-            getIcon('dbgstop.png'), 'Stop debugging session',
-            self._onStopDbgSession, "F10")
+            getIcon("dbgstop.png"), "Stop debugging session", self._onStopDbgSession, "F10"
+        )
         self._debugStopAct.setEnabled(False)
         self._debugRestartAct = dbgMenu.addAction(
-            getIcon('dbgrestart.png'), 'Restart session',
-            self._onRestartDbgSession, "F4")
+            getIcon("dbgrestart.png"), "Restart session", self._onRestartDbgSession, "F4"
+        )
         self._debugRestartAct.setEnabled(False)
         dbgMenu.addSeparator()
-        self._debugContinueAct = dbgMenu.addAction(
-            getIcon('dbggo.png'), 'Continue', self._onDbgGo, "F6")
+        self._debugContinueAct = dbgMenu.addAction(getIcon("dbggo.png"), "Continue", self._onDbgGo, "F6")
         self._debugContinueAct.setEnabled(False)
-        self._debugStepInAct = dbgMenu.addAction(
-            getIcon('dbgstepinto.png'), 'Step in', self._onDbgStepInto, "F7")
+        self._debugStepInAct = dbgMenu.addAction(getIcon("dbgstepinto.png"), "Step in", self._onDbgStepInto, "F7")
         self._debugStepInAct.setEnabled(False)
-        self._debugStepOverAct = dbgMenu.addAction(
-            getIcon('dbgnext.png'), 'Step over', self._onDbgNext, "F8")
+        self._debugStepOverAct = dbgMenu.addAction(getIcon("dbgnext.png"), "Step over", self._onDbgNext, "F8")
         self._debugStepOverAct.setEnabled(False)
-        self._debugStepOutAct = dbgMenu.addAction(
-            getIcon('dbgreturn.png'), 'Step out', self._onDbgReturn, "F9")
+        self._debugStepOutAct = dbgMenu.addAction(getIcon("dbgreturn.png"), "Step out", self._onDbgReturn, "F9")
         self._debugStepOutAct.setEnabled(False)
         self._debugRunToCursorAct = dbgMenu.addAction(
-            getIcon('dbgruntoline.png'), 'Run to cursor',
-            self._onDbgRunToLine, "Shift+F6")
+            getIcon("dbgruntoline.png"), "Run to cursor", self._onDbgRunToLine, "Shift+F6"
+        )
         self._debugRunToCursorAct.setEnabled(False)
         self._debugJumpToCurrentAct = dbgMenu.addAction(
-            getIcon('dbgtocurrent.png'), 'Show current line',
-            self._onDbgJumpToCurrent, "Ctrl+W")
+            getIcon("dbgtocurrent.png"), "Show current line", self._onDbgJumpToCurrent, "Ctrl+W"
+        )
         self._debugJumpToCurrentAct.setEnabled(False)
         dbgMenu.addSeparator()
 
         self.__dumpDbgSettingsMenu = QMenu("Dump debug settings", self)
         dbgMenu.addMenu(self.__dumpDbgSettingsMenu)
         self._debugDumpSettingsAct = self.__dumpDbgSettingsMenu.addAction(
-            getIcon('dbgsettings.png'), 'Debug session settings',
-            self._onDumpDebugSettings)
+            getIcon("dbgsettings.png"), "Debug session settings", self._onDumpDebugSettings
+        )
         self._debugDumpSettingsAct.setEnabled(False)
         self._debugDumpSettingsEnvAct = self.__dumpDbgSettingsMenu.addAction(
-            getIcon('detailsdlg.png'),
-            'Session settings with complete environment',
-            self._onDumpFullDebugSettings)
+            getIcon("detailsdlg.png"), "Session settings with complete environment", self._onDumpFullDebugSettings
+        )
         self._debugDumpSettingsEnvAct.setEnabled(False)
         self.__dumpDbgSettingsMenu.addSeparator()
-        self.__debugDumpScriptSettingsAct = \
-            self.__dumpDbgSettingsMenu.addAction(
-                getIcon('dbgsettings.png'), 'Current script settings',
-                self._onDumpScriptDebugSettings)
+        self.__debugDumpScriptSettingsAct = self.__dumpDbgSettingsMenu.addAction(
+            getIcon("dbgsettings.png"), "Current script settings", self._onDumpScriptDebugSettings
+        )
         self.__debugDumpScriptSettingsAct.setEnabled(False)
-        self.__debugDumpScriptSettingsEnvAct = \
-            self.__dumpDbgSettingsMenu.addAction(
-                getIcon('detailsdlg.png'),
-                'Current script settings with complete environment',
-                self._onDumpScriptFullDebugSettings)
+        self.__debugDumpScriptSettingsEnvAct = self.__dumpDbgSettingsMenu.addAction(
+            getIcon("detailsdlg.png"),
+            "Current script settings with complete environment",
+            self._onDumpScriptFullDebugSettings,
+        )
         self.__debugDumpScriptSettingsEnvAct.setEnabled(False)
         self.__dumpDbgSettingsMenu.addSeparator()
-        self.__debugDumpProjectSettingsAct = \
-            self.__dumpDbgSettingsMenu.addAction(
-                getIcon('dbgsettings.png'), 'Project main script settings',
-                self._onDumpProjectDebugSettings)
+        self.__debugDumpProjectSettingsAct = self.__dumpDbgSettingsMenu.addAction(
+            getIcon("dbgsettings.png"), "Project main script settings", self._onDumpProjectDebugSettings
+        )
         self.__debugDumpProjectSettingsAct.setEnabled(False)
-        self.__debugDumpPrjSettingsEnvAct = \
-            self.__dumpDbgSettingsMenu.addAction(
-                getIcon('detailsdlg.png'),
-                'Project script settings with complete environment',
-                self._onDumpProjectFullDebugSettings)
+        self.__debugDumpPrjSettingsEnvAct = self.__dumpDbgSettingsMenu.addAction(
+            getIcon("detailsdlg.png"),
+            "Project script settings with complete environment",
+            self._onDumpProjectFullDebugSettings,
+        )
         self.__debugDumpPrjSettingsEnvAct.setEnabled(False)
-        self.__dumpDbgSettingsMenu.aboutToShow.connect(
-            self.__onDumpDbgSettingsAboutToShow)
+        self.__dumpDbgSettingsMenu.aboutToShow.connect(self.__onDumpDbgSettingsAboutToShow)
         return dbgMenu
 
     def __buildToolsMenu(self, menuBar):
         """Build the tools menu"""
         toolsMenu = QMenu("T&ools", menuBar)
-        toolsMenu.setObjectName('tools')
+        toolsMenu.setObjectName("tools")
         toolsMenu.aboutToShow.connect(self.__toolsAboutToShow)
 
         self._deadCodeMenuAct = toolsMenu.addAction(
-            getIcon('deadcode.png'), 'Find project &dead code',
-            self.projectDeadCodeClicked, 'Alt+Shift+D')
+            getIcon("deadcode.png"), "Find project &dead code", self.projectDeadCodeClicked, "Alt+Shift+D"
+        )
         self._tabDeadCodeAct = toolsMenu.addAction(
-            getIcon('deadcode.png'), 'Find tab dead code',
-            self.tabDeadCodeClicked, '')
+            getIcon("deadcode.png"), "Find tab dead code", self.tabDeadCodeClicked, ""
+        )
         toolsMenu.addSeparator()
-        self.disasmMenu = QMenu('Disassembly', self)
-        self.disasmMenu.setIcon(getIcon('disassembly.png'))
-        self.disasmAct0 = self.disasmMenu.addAction(
-            getIcon(''), 'Disassembly (no optimization)',
-            self.onDisasm0)
-        self.disasmAct1 = self.disasmMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 1)',
-            self.onDisasm1)
-        self.disasmAct2 = self.disasmMenu.addAction(
-            getIcon(''), 'Disassembly (optimization level 2)',
-            self.onDisasm2)
+        self.disasmMenu = QMenu("Disassembly", self)
+        self.disasmMenu.setIcon(getIcon("disassembly.png"))
+        self.disasmAct0 = self.disasmMenu.addAction(getIcon(""), "Disassembly (no optimization)", self.onDisasm0)
+        self.disasmAct1 = self.disasmMenu.addAction(getIcon(""), "Disassembly (optimization level 1)", self.onDisasm1)
+        self.disasmAct2 = self.disasmMenu.addAction(getIcon(""), "Disassembly (optimization level 2)", self.onDisasm2)
         toolsMenu.addMenu(self.disasmMenu)
         return toolsMenu
 
     def __buildDiagramsMenu(self, menuBar):
         """Builds the diagram menu"""
         diagramsMenu = QMenu("&Diagrams", menuBar)
-        diagramsMenu.setObjectName('diagrams')
+        diagramsMenu.setObjectName("diagrams")
         diagramsMenu.aboutToShow.connect(self.__diagramsAboutToShow)
         self._prjImportDgmAct = diagramsMenu.addAction(
-            getIcon('importsdiagram.png'), '&Project imports diagram',
-            self._onImportDgm)
+            getIcon("importsdiagram.png"), "&Project imports diagram", self._onImportDgm
+        )
         self._prjImportsDgmDlgAct = diagramsMenu.addAction(
-            getIcon('detailsdlg.png'), 'P&roject imports diagram...',
-            self._onImportDgmTuned)
+            getIcon("detailsdlg.png"), "P&roject imports diagram...", self._onImportDgmTuned
+        )
         self.__tabImportDgmAct = diagramsMenu.addAction(
-            getIcon('importsdiagram.png'), '&Tab imports diagram',
-            self._onTabImportDgm)
+            getIcon("importsdiagram.png"), "&Tab imports diagram", self._onTabImportDgm
+        )
         self.__tabImportDgmDlgAct = diagramsMenu.addAction(
-            getIcon('detailsdlg.png'), 'T&ab imports diagram...',
-            self._onTabImportDgmTuned)
+            getIcon("detailsdlg.png"), "T&ab imports diagram...", self._onTabImportDgmTuned
+        )
         return diagramsMenu
 
     def __buildViewMenu(self, menuBar):
         """Build the view menu"""
         viewMenu = QMenu("&View", menuBar)
-        viewMenu.setObjectName('view')
+        viewMenu.setObjectName("view")
         viewMenu.aboutToShow.connect(self.__viewAboutToShow)
         viewMenu.aboutToHide.connect(self.__viewAboutToHide)
         self.__shrinkBarsAct = viewMenu.addAction(
-            getIcon('shrinkmenu.png'), "&Hide sidebars",
-            self._onMaximizeEditor, 'F11')
+            getIcon("shrinkmenu.png"), "&Hide sidebars", self._onMaximizeEditor, "F11"
+        )
         self.__leftSideBarMenu = QMenu("&Left sidebar", self)
         self.__leftSideBarMenu.triggered.connect(self._activateSideTab)
-        self.__prjBarAct = self.__leftSideBarMenu.addAction(
-            getIcon('project.png'), 'Activate &project tab')
-        self.__prjBarAct.setData('project')
-        self.__recentBarAct = self.__leftSideBarMenu.addAction(
-            getIcon('project.png'), 'Activate &recent tab')
-        self.__recentBarAct.setData('recent')
-        self.__classesBarAct = self.__leftSideBarMenu.addAction(
-            getIcon('class.png'), 'Activate &classes tab')
-        self.__classesBarAct.setData('classes')
-        self.__funcsBarAct = self.__leftSideBarMenu.addAction(
-            getIcon('fx.png'), 'Activate &functions tab')
-        self.__funcsBarAct.setData('functions')
-        self.__globsBarAct = self.__leftSideBarMenu.addAction(
-            getIcon('globalvar.png'), 'Activate &globals tab')
-        self.__globsBarAct.setData('globals')
+        self.__prjBarAct = self.__leftSideBarMenu.addAction(getIcon("project.png"), "Activate &project tab")
+        self.__prjBarAct.setData("project")
+        self.__recentBarAct = self.__leftSideBarMenu.addAction(getIcon("project.png"), "Activate &recent tab")
+        self.__recentBarAct.setData("recent")
+        self.__classesBarAct = self.__leftSideBarMenu.addAction(getIcon("class.png"), "Activate &classes tab")
+        self.__classesBarAct.setData("classes")
+        self.__funcsBarAct = self.__leftSideBarMenu.addAction(getIcon("fx.png"), "Activate &functions tab")
+        self.__funcsBarAct.setData("functions")
+        self.__globsBarAct = self.__leftSideBarMenu.addAction(getIcon("globalvar.png"), "Activate &globals tab")
+        self.__globsBarAct.setData("globals")
         self.__leftSideBarMenu.addSeparator()
         self.__hideLeftSideBarAct = self.__leftSideBarMenu.addAction(
-            getIcon(""), '&Hide left sidebar', self._leftSideBar.shrink)
+            getIcon(""), "&Hide left sidebar", self._leftSideBar.shrink
+        )
         viewMenu.addMenu(self.__leftSideBarMenu)
 
         self.__rightSideBarMenu = QMenu("&Right sidebar", self)
         self.__rightSideBarMenu.triggered.connect(self._activateSideTab)
         self.__outlineBarAct = self.__rightSideBarMenu.addAction(
-            getIcon('filepython.png'), 'Activate file &outline tab')
-        self.__outlineBarAct.setData('fileoutline')
-        self.__debugBarAct = self.__rightSideBarMenu.addAction(
-            getIcon(''), 'Activate &debug tab')
-        self.__debugBarAct.setData('debugger')
-        self.__excptBarAct = self.__rightSideBarMenu.addAction(
-            getIcon(''), 'Activate &exceptions tab')
-        self.__excptBarAct.setData('excptions')
-        self.__bpointBarAct = self.__rightSideBarMenu.addAction(
-            getIcon(''), 'Activate &breakpoints tab')
-        self.__bpointBarAct.setData('breakpoints')
-        self.__calltraceBarAct = self.__rightSideBarMenu.addAction(
-            getIcon(''), 'Activate &call trace tab')
-        self.__calltraceBarAct.setData('calltrace')
+            getIcon("filepython.png"), "Activate file &outline tab"
+        )
+        self.__outlineBarAct.setData("fileoutline")
+        self.__debugBarAct = self.__rightSideBarMenu.addAction(getIcon(""), "Activate &debug tab")
+        self.__debugBarAct.setData("debugger")
+        self.__excptBarAct = self.__rightSideBarMenu.addAction(getIcon(""), "Activate &exceptions tab")
+        self.__excptBarAct.setData("excptions")
+        self.__bpointBarAct = self.__rightSideBarMenu.addAction(getIcon(""), "Activate &breakpoints tab")
+        self.__bpointBarAct.setData("breakpoints")
+        self.__calltraceBarAct = self.__rightSideBarMenu.addAction(getIcon(""), "Activate &call trace tab")
+        self.__calltraceBarAct.setData("calltrace")
         self.__rightSideBarMenu.addSeparator()
         self.__hideRightSideBarAct = self.__rightSideBarMenu.addAction(
-            getIcon(""), '&Hide right sidebar', self._rightSideBar.shrink)
+            getIcon(""), "&Hide right sidebar", self._rightSideBar.shrink
+        )
         viewMenu.addMenu(self.__rightSideBarMenu)
 
         self.__bottomSideBarMenu = QMenu("&Bottom sidebar", self)
         self.__bottomSideBarMenu.triggered.connect(self._activateSideTab)
-        self.__logBarAct = self.__bottomSideBarMenu.addAction(
-            getIcon('logviewer.png'), 'Activate &log tab')
-        self.__logBarAct.setData('log')
-        self.__searchBarAct = self.__bottomSideBarMenu.addAction(
-            getIcon('findindir.png'), 'Activate &search tab')
-        self.__searchBarAct.setData('search')
+        self.__logBarAct = self.__bottomSideBarMenu.addAction(getIcon("logviewer.png"), "Activate &log tab")
+        self.__logBarAct.setData("log")
+        self.__searchBarAct = self.__bottomSideBarMenu.addAction(getIcon("findindir.png"), "Activate &search tab")
+        self.__searchBarAct.setData("search")
         self.__bottomSideBarMenu.addSeparator()
         self.__hideBottomSideBarAct = self.__bottomSideBarMenu.addAction(
-            getIcon(""), '&Hide bottom sidebar', self._bottomSideBar.shrink)
+            getIcon(""), "&Hide bottom sidebar", self._bottomSideBar.shrink
+        )
         viewMenu.addMenu(self.__bottomSideBarMenu)
         viewMenu.addSeparator()
-        self.__zoomInAct = viewMenu.addAction(
-            getIcon('zoomin.png'), 'Zoom &in', self.em.zoomIn)
-        self.__zoomOutAct = viewMenu.addAction(
-            getIcon('zoomout.png'), 'Zoom &out', self.em.zoomOut)
-        self.__zoom11Act = viewMenu.addAction(
-            getIcon('zoomreset.png'), 'Zoom r&eset', self.em.zoomReset)
+        self.__zoomInAct = viewMenu.addAction(getIcon("zoomin.png"), "Zoom &in", self.em.zoomIn)
+        self.__zoomOutAct = viewMenu.addAction(getIcon("zoomout.png"), "Zoom &out", self.em.zoomOut)
+        self.__zoom11Act = viewMenu.addAction(getIcon("zoomreset.png"), "Zoom r&eset", self.em.zoomReset)
         return viewMenu
 
     def __buildOptionsMenu(self, menuBar):
         """Build the options menu"""
         optionsMenu = QMenu("Optio&ns", menuBar)
-        optionsMenu.setObjectName('options')
+        optionsMenu.setObjectName("options")
         optionsMenu.aboutToShow.connect(self.__optionsAboutToShow)
 
         self.__ideTemplateMenu = QMenu("IDE-wide &template", self)
-        self.__ideCreateTemplateAct = self.__ideTemplateMenu.addAction(
-            getIcon('generate.png'), '&Create')
-        self.__ideCreateTemplateAct.triggered.connect(
-            self._onCreateIDETemplate)
-        self.__ideEditTemplateAct = self.__ideTemplateMenu.addAction(
-            getIcon('edit.png'), '&Edit')
+        self.__ideCreateTemplateAct = self.__ideTemplateMenu.addAction(getIcon("generate.png"), "&Create")
+        self.__ideCreateTemplateAct.triggered.connect(self._onCreateIDETemplate)
+        self.__ideEditTemplateAct = self.__ideTemplateMenu.addAction(getIcon("edit.png"), "&Edit")
         self.__ideEditTemplateAct.triggered.connect(self._onEditIDETemplate)
         self.__ideTemplateMenu.addSeparator()
-        self.__ideDelTemplateAct = self.__ideTemplateMenu.addAction(
-            getIcon('trash.png'), '&Delete')
+        self.__ideDelTemplateAct = self.__ideTemplateMenu.addAction(getIcon("trash.png"), "&Delete")
         self.__ideDelTemplateAct.triggered.connect(self._onDelIDETemplate)
         optionsMenu.addMenu(self.__ideTemplateMenu)
 
         optionsMenu.addSeparator()
         optionItems = [
-            ('Show vertical edge', 'verticalEdge', self._verticalEdgeChanged),
-            ('Show whitespaces', 'showSpaces', self._showSpacesChanged),
-            ('Wrap long lines', 'lineWrap', self._lineWrapChanged),
-            ('Show brace matching', 'showBraceMatch',
-             self._showBraceMatchChanged),
-            ('Show indentation guides', 'indentationGuides',
-             self._indentationGuidesChanged),
-            ('Highlight current line', 'currentLineVisible',
-             self._currentLineVisibleChanged),
-            ('HOME to first non-space', 'jumpToFirstNonSpace',
-             self._homeToFirstNonSpaceChanged),
-            ('Auto remove trailing spaces on save', 'removeTrailingOnSave',
-             self._removeTrailingChanged),
-            ('Editor calltips', 'editorCalltips', self._editorCalltipsChanged),
-            ('Show navigation bar', 'showNavigationBar',
-             self._showNavBarChanged),
-            ('Show control flow navigation bar', 'showCFNavigationBar',
-             self._showCFNavBarChanged),
-            ('Show main toolbar', 'showMainToolBar',
-             self._showMainToolbarChanged)]
+            ("Show vertical edge", "verticalEdge", self._verticalEdgeChanged),
+            ("Show whitespaces", "showSpaces", self._showSpacesChanged),
+            ("Wrap long lines", "lineWrap", self._lineWrapChanged),
+            ("Show brace matching", "showBraceMatch", self._showBraceMatchChanged),
+            ("Show indentation guides", "indentationGuides", self._indentationGuidesChanged),
+            ("Highlight current line", "currentLineVisible", self._currentLineVisibleChanged),
+            ("HOME to first non-space", "jumpToFirstNonSpace", self._homeToFirstNonSpaceChanged),
+            ("Auto remove trailing spaces on save", "removeTrailingOnSave", self._removeTrailingChanged),
+            ("Editor calltips", "editorCalltips", self._editorCalltipsChanged),
+            ("Show navigation bar", "showNavigationBar", self._showNavBarChanged),
+            ("Show control flow navigation bar", "showCFNavigationBar", self._showCFNavBarChanged),
+            ("Show main toolbar", "showMainToolBar", self._showMainToolbarChanged),
+        ]
 
-        for (name, valueName, handler) in optionItems:
+        for name, valueName, handler in optionItems:
             act = optionsMenu.addAction(name)
             act.setCheckable(True)
             act.setChecked(self.settings[valueName])
@@ -514,35 +452,33 @@ class MainWindowMenuMixin:
         optionsMenu.addSeparator()
         redirectedMenu = optionsMenu.addMenu("Redirected I/O")
         optionItems = [
-            ('Reuse I/O console if available and clear', CLEAR_AND_REUSE),
-            ('Reuse I/O console if available without clearing',
-             NO_CLEAR_AND_REUSE),
-            ('Create new I/O console for a new session', NO_REUSE)]
+            ("Reuse I/O console if available and clear", CLEAR_AND_REUSE),
+            ("Reuse I/O console if available without clearing", NO_CLEAR_AND_REUSE),
+            ("Create new I/O console for a new session", NO_REUSE),
+        ]
 
         self.__ioGroup = QActionGroup(self)
-        for (name, data) in optionItems:
+        for name, data in optionItems:
             act = redirectedMenu.addAction(name)
             act.setCheckable(True)
             act.setData(data)
             act.setActionGroup(self.__ioGroup)
-            act.setChecked(self.settings['ioconsolereuse'] == data)
+            act.setChecked(self.settings["ioconsolereuse"] == data)
         redirectedMenu.triggered.connect(self._reuseIOConsoleChanged)
 
         tooltipsMenu = optionsMenu.addMenu("Tooltips")
         optionItems = [
-            ('&Project tab', 'projectTooltips', self._projectTooltipsChanged),
-            ('&Recent tab', 'recentTooltips', self._recentTooltipsChanged),
-            ('&Classes tab', 'classesTooltips', self._classesTooltipsChanged),
-            ('&Functions tab', 'functionsTooltips',
-             self._functionsTooltipsChanged),
-            ('&Outline tab', 'outlineTooltips', self._outlineTooltipsChanged),
-            ('Find &name dialog', 'findNameTooltips',
-             self._findNameTooltipsChanged),
-            ('Find fi&le dialog', 'findFileTooltips',
-             self._findFileTooltipsChanged),
-            ('&Editor tabs', 'editorTooltips', self._editorTooltipsChanged)]
+            ("&Project tab", "projectTooltips", self._projectTooltipsChanged),
+            ("&Recent tab", "recentTooltips", self._recentTooltipsChanged),
+            ("&Classes tab", "classesTooltips", self._classesTooltipsChanged),
+            ("&Functions tab", "functionsTooltips", self._functionsTooltipsChanged),
+            ("&Outline tab", "outlineTooltips", self._outlineTooltipsChanged),
+            ("Find &name dialog", "findNameTooltips", self._findNameTooltipsChanged),
+            ("Find fi&le dialog", "findFileTooltips", self._findFileTooltipsChanged),
+            ("&Editor tabs", "editorTooltips", self._editorTooltipsChanged),
+        ]
 
-        for (name, valueName, handler) in optionItems:
+        for name, valueName, handler in optionItems:
             act = tooltipsMenu.addAction(name)
             act.setCheckable(True)
             act.setChecked(self.settings[valueName])
@@ -558,23 +494,22 @@ class MainWindowMenuMixin:
         self.__tabsort.setCheckable(True)
         self.__tabsort.setData(-2)
         self.__tabsort.setActionGroup(self.__navigationSortGroup)
-        if self.settings['tablistsortalpha']:
+        if self.settings["tablistsortalpha"]:
             self.__alphasort.setChecked(True)
         else:
             self.__tabsort.setChecked(True)
         openTabsMenu.addSeparator()
-        tabOrderPreservedAct = openTabsMenu.addAction(
-            "Tab order preserved on selection")
+        tabOrderPreservedAct = openTabsMenu.addAction("Tab order preserved on selection")
         tabOrderPreservedAct.setCheckable(True)
         tabOrderPreservedAct.setData(0)
-        tabOrderPreservedAct.setChecked(self.settings['taborderpreserved'])
+        tabOrderPreservedAct.setChecked(self.settings["taborderpreserved"])
         tabOrderPreservedAct.changed.connect(self._tabOrderPreservedChanged)
         openTabsMenu.triggered.connect(self._openTabsMenuTriggered)
 
         optionsMenu.addSeparator()
         skinsMenu = optionsMenu.addMenu("Skins")
         self.__skinsGroup = QActionGroup(self)
-        currentSkin = self.settings['skin']
+        currentSkin = self.settings["skin"]
         for skin in getSkinsList():
             skinAct = skinsMenu.addAction(skin)
             skinAct.setData(skin)
@@ -596,49 +531,36 @@ class MainWindowMenuMixin:
         styleMenu.triggered.connect(self._onStyle)
         styleMenu.aboutToShow.connect(self.__styleAboutToShow)
 
-        fontIcon = getIcon('fontmenu.png')
-        optionsMenu.addAction(fontIcon, 'Text editor mono font...',
-                              self.__onEditorFont)
-        optionsMenu.addAction(fontIcon, 'Text editor margin font...',
-                              self.__onEditorMarginFont)
-        optionsMenu.addAction(fontIcon, 'Control flow mono font...',
-                              self.__onControlFlowFont)
-        optionsMenu.addAction(fontIcon, 'Control flow badge font...',
-                              self.__onControlFlowBadgeFont)
+        fontIcon = getIcon("fontmenu.png")
+        optionsMenu.addAction(fontIcon, "Text editor mono font...", self.__onEditorFont)
+        optionsMenu.addAction(fontIcon, "Text editor margin font...", self.__onEditorMarginFont)
+        optionsMenu.addAction(fontIcon, "Control flow mono font...", self.__onControlFlowFont)
+        optionsMenu.addAction(fontIcon, "Control flow badge font...", self.__onControlFlowBadgeFont)
         return optionsMenu
 
     def __buildPluginsMenu(self, menuBar):
         """Build the plugins menu"""
         self.__pluginsMenu = QMenu("P&lugins", menuBar)
-        self.__pluginsMenu.setObjectName('plugins')
+        self.__pluginsMenu.setObjectName("plugins")
         self._recomposePluginMenu()
         return self.__pluginsMenu
 
     def __buildHelpMenu(self, menuBar):
         """Build the help menu"""
         helpMenu = QMenu("&Help", menuBar)
-        helpMenu.setObjectName('help')
+        helpMenu.setObjectName("help")
         helpMenu.aboutToShow.connect(self.__helpAboutToShow)
         helpMenu.aboutToHide.connect(self.__helpAboutToHide)
-        self.__embeddedHelpAct = helpMenu.addAction(
-            getIcon('embhelpmenu.png'),
-            '&Documentation', self._onEmbeddedHelp)
-        self.__shortcutsAct = helpMenu.addAction(
-            getIcon('shortcutsmenu.png'),
-            '&Major shortcuts', self.em.onHelp, 'F1')
-        self.__contextHelpAct = helpMenu.addAction(
-            getIcon('helpviewer.png'),
-            'Current &word help', self._onContextHelp)
+        self.__embeddedHelpAct = helpMenu.addAction(getIcon("embhelpmenu.png"), "&Documentation", self._onEmbeddedHelp)
+        self.__shortcutsAct = helpMenu.addAction(getIcon("shortcutsmenu.png"), "&Major shortcuts", self.em.onHelp, "F1")
+        self.__contextHelpAct = helpMenu.addAction(getIcon("helpviewer.png"), "Current &word help", self._onContextHelp)
         helpMenu.addSeparator()
         self.__allShotcutsAct = helpMenu.addAction(
-            getIcon('allshortcutsmenu.png'),
-            '&All shortcuts (web page)', self._onAllShortcurs)
-        self.__homePageAct = helpMenu.addAction(
-            getIcon('homepagemenu.png'),
-            'Codimension &home page', self._onHomePage)
+            getIcon("allshortcutsmenu.png"), "&All shortcuts (web page)", self._onAllShortcurs
+        )
+        self.__homePageAct = helpMenu.addAction(getIcon("homepagemenu.png"), "Codimension &home page", self._onHomePage)
         helpMenu.addSeparator()
-        self.__aboutAct = helpMenu.addAction(
-            getIcon("logo.png"), "A&bout codimension", self._onAbout)
+        self.__aboutAct = helpMenu.addAction(getIcon("logo.png"), "A&bout codimension", self._onAbout)
         return helpMenu
 
     def __prjAboutToShow(self):
@@ -651,12 +573,12 @@ class MainWindowMenuMixin:
         self.__recentPrjMenu.clear()
         addedCount = 0
         currentPrj = GlobalData().project.fileName
-        for item in self.settings['recentProjects']:
+        for item in self.settings["recentProjects"]:
             if item != currentPrj:
                 addedCount += 1
                 act = self.__recentPrjMenu.addAction(
-                    getAccelerator(addedCount) +
-                    os.path.basename(item).replace(".cdm3", ""))
+                    getAccelerator(addedCount) + os.path.basename(item).replace(".cdm3", "")
+                )
                 act.setData(item)
                 act.setEnabled(not self.debugMode and os.path.exists(item))
         self.__recentPrjMenu.setEnabled(addedCount > 0)
@@ -685,10 +607,8 @@ class MainWindowMenuMixin:
 
         self.__cloneTabAct.setEnabled(plainTextBuffer)
         self.__closeOtherTabsAct.setEnabled(self.em.closeOtherAvailable())
-        self.__saveFileAct.setEnabled(
-            plainTextBuffer or isGeneratedDiagram or isProfileViewer)
-        self.__saveFileAsAct.setEnabled(
-            plainTextBuffer or isGeneratedDiagram or isProfileViewer)
+        self.__saveFileAct.setEnabled(plainTextBuffer or isGeneratedDiagram or isProfileViewer)
+        self.__saveFileAsAct.setEnabled(plainTextBuffer or isGeneratedDiagram or isProfileViewer)
         self.__closeTabAct.setEnabled(self.em.isTabClosable())
         self.__tabJumpToDefAct.setEnabled(isPythonBuffer)
         self.__calltipAct.setEnabled(isPythonBuffer)
@@ -697,19 +617,15 @@ class MainWindowMenuMixin:
         if plainTextBuffer:
             editor = self.em.currentWidget().getEditor()
             self.__openAsFileAct.setEnabled(editor.openAsFileAvailable())
-            self.__downloadAndShowAct.setEnabled(
-                editor.downloadAndShowAvailable())
-            self.__openInBrowserAct.setEnabled(
-                editor.downloadAndShowAvailable())
+            self.__downloadAndShowAct.setEnabled(editor.downloadAndShowAvailable())
+            self.__openInBrowserAct.setEnabled(editor.downloadAndShowAvailable())
         else:
             self.__openAsFileAct.setEnabled(False)
             self.__downloadAndShowAct.setEnabled(False)
             self.__openInBrowserAct.setEnabled(False)
 
-        self.__highlightInPrjAct.setEnabled(
-            self.em.isHighlightInPrjAvailable())
-        self.__highlightInFSAct.setEnabled(
-            self.em.isHighlightInFSAvailable())
+        self.__highlightInPrjAct.setEnabled(self.em.isHighlightInPrjAvailable())
+        self.__highlightInFSAct.setEnabled(self.em.isHighlightInFSAvailable())
         self.__highlightInOutlineAct.setEnabled(isPythonBuffer)
 
         self.__closeTabAct.setShortcut("Ctrl+F4")
@@ -724,8 +640,7 @@ class MainWindowMenuMixin:
 
         for item in getRecentFiles():
             addedCount += 1
-            act = self.__recentFilesMenu.addAction(
-                getAccelerator(addedCount) + item)
+            act = self.__recentFilesMenu.addAction(getAccelerator(addedCount) + item)
             act.setData(item)
             act.setEnabled(os.path.exists(item))
 
@@ -748,13 +663,12 @@ class MainWindowMenuMixin:
         isPythonBuffer = self._isPythonBuffer()
         currentWidget = self.em.currentWidget()
 
-        self.__findOccurencesAct.setEnabled(
-            isPythonBuffer and os.path.isabs(currentWidget.getFileName()))
+        self.__findOccurencesAct.setEnabled(isPythonBuffer and os.path.isabs(currentWidget.getFileName()))
         self.__goToLineAct.setEnabled(isPlainTextBuffer)
         self.__findAct.setEnabled(isPlainTextBuffer)
         self.__replaceAct.setEnabled(
-            isPlainTextBuffer and currentWidget.getType() !=
-            MainWindowTabWidgetBase.VCSAnnotateViewer)
+            isPlainTextBuffer and currentWidget.getType() != MainWindowTabWidgetBase.VCSAnnotateViewer
+        )
         self.__findNextAct.setEnabled(isPlainTextBuffer)
         self.__findPrevAct.setEnabled(isPlainTextBuffer)
 
@@ -779,8 +693,7 @@ class MainWindowMenuMixin:
         isPythonBuffer = self._isPythonBuffer()
         widget = self.em.currentWidget()
 
-        enabled = isPythonBuffer and \
-            widget.getType() != MainWindowTabWidgetBase.VCSAnnotateViewer
+        enabled = isPythonBuffer and widget.getType() != MainWindowTabWidgetBase.VCSAnnotateViewer
         self.__tabImportDgmAct.setEnabled(enabled)
         self.__tabImportDgmDlgAct.setEnabled(enabled)
 
@@ -821,8 +734,7 @@ class MainWindowMenuMixin:
         isGeneratedDiagram = self.__isGeneratedDiagram()
         isProfileViewer = self.__isProfileViewer()
         isDiffViewer = self.__isDiffViewer()
-        zoomEnabled = isPlainTextBuffer or isGraphicsBuffer or \
-                      isGeneratedDiagram or isDiffViewer
+        zoomEnabled = isPlainTextBuffer or isGraphicsBuffer or isGeneratedDiagram or isDiffViewer
         if not zoomEnabled and isProfileViewer:
             zoomEnabled = self.em.currentWidget().isZoomApplicable()
         self.__zoomInAct.setEnabled(zoomEnabled)
@@ -866,18 +778,15 @@ class MainWindowMenuMixin:
 
         editable = isPlainBuffer and not editor.isReadOnly()
         self.__undoAct.setShortcut("Ctrl+Z")
-        self.__undoAct.setEnabled(isPlainBuffer and
-                                  editor.document().isUndoAvailable())
+        self.__undoAct.setEnabled(isPlainBuffer and editor.document().isUndoAvailable())
         self.__redoAct.setShortcut("Ctrl+Y")
-        self.__redoAct.setEnabled(isPlainBuffer and
-                                  editor.document().isRedoAvailable())
+        self.__redoAct.setEnabled(isPlainBuffer and editor.document().isRedoAvailable())
         self.__cutAct.setShortcut("Ctrl+X")
         self.__cutAct.setEnabled(editable)
         self.__copyAct.setShortcut("Ctrl+C")
         self.__copyAct.setEnabled(self.em.isCopyAvailable())
         self.__pasteAct.setShortcut("Ctrl+V")
-        self.__pasteAct.setEnabled(editable and
-                                   QApplication.clipboard().text() != "")
+        self.__pasteAct.setEnabled(editable and QApplication.clipboard().text() != "")
         self.__selectAllAct.setShortcut("Ctrl+A")
         self.__selectAllAct.setEnabled(isPlainBuffer)
         self.__commentAct.setShortcut("Ctrl+M")
@@ -913,15 +822,14 @@ class MainWindowMenuMixin:
 
     def __styleAboutToShow(self):
         """Style menu is about to show"""
-        currentStyle = self.settings['style'].lower()
+        currentStyle = self.settings["style"].lower()
         for item in self.__styles:
             item[1].setChecked(item[0].lower() == currentStyle)
 
     def _recomposePluginMenu(self):
         """Recomposes the plugin menu"""
         self.__pluginsMenu.clear()
-        self.__pluginsMenu.addAction(getIcon('pluginmanagermenu.png'),
-                                     'Plugin &manager', self._onPluginManager)
+        self.__pluginsMenu.addAction(getIcon("pluginmanagermenu.png"), "Plugin &manager", self._onPluginManager)
         if self._pluginMenus:
             self.__pluginsMenu.addSeparator()
         for path in self._pluginMenus:
@@ -932,9 +840,10 @@ class MainWindowMenuMixin:
         currentWidget = self.em.currentWidget()
         if currentWidget is None:
             return False
-        return currentWidget.getType() in \
-            [MainWindowTabWidgetBase.PlainTextEditor,
-             MainWindowTabWidgetBase.VCSAnnotateViewer]
+        return currentWidget.getType() in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+        ]
 
     def __isGraphicsBuffer(self):
         """True if is pictures viewer"""
@@ -971,10 +880,9 @@ class MainWindowMenuMixin:
 
     def _reuseIOConsoleChanged(self, act):
         """Triggered when a reuse I/O setting is changed"""
-        self.settings['ioconsolereuse'] = act.data()
+        self.settings["ioconsolereuse"] = act.data()
 
-    def __selectFont(self, scalable, nonScalable, mono, proportional,
-                     title, settingName):
+    def __selectFont(self, scalable, nonScalable, mono, proportional, title, settingName):
         """Returns the new font or None"""
         dialog = QFontDialog(self)
         dialog.setOption(QFontDialog.DontUseNativeDialog, True)
@@ -982,7 +890,7 @@ class MainWindowMenuMixin:
         dialog.setOption(QFontDialog.NonScalableFonts, nonScalable)
         dialog.setOption(QFontDialog.MonospacedFonts, mono)
         dialog.setOption(QFontDialog.ProportionalFonts, proportional)
-        dialog.setWindowTitle('Select ' + title + ' for zoom level 0')
+        dialog.setWindowTitle("Select " + title + " for zoom level 0")
         dialog.setCurrentFont(GlobalData().skin[settingName])
 
         if dialog.exec_():
@@ -993,8 +901,7 @@ class MainWindowMenuMixin:
 
     def __onEditorFont(self):
         """Select editor font"""
-        font = self.__selectFont(False, False, True, False,
-                                 'editor font', 'monoFont')
+        font = self.__selectFont(False, False, True, False, "editor font", "monoFont")
         if font is not None:
             GlobalData().skin.setTextMonoFont(font)
             self.em.onTextZoomChanged()
@@ -1002,25 +909,21 @@ class MainWindowMenuMixin:
 
     def __onEditorMarginFont(self):
         """Select editor margin font"""
-        font = self.__selectFont(True, False, True, True,
-                                 'editor margin font', 'lineNumFont')
+        font = self.__selectFont(True, False, True, True, "editor margin font", "lineNumFont")
         if font is not None:
             GlobalData().skin.setMarginFont(font)
             self.em.onTextZoomChanged()
 
     def __onControlFlowFont(self):
         """Select the control flow mono font"""
-        font = self.__selectFont(False, False, True, False,
-                                 'control flow mono font', 'cfMonoFont')
+        font = self.__selectFont(False, False, True, False, "control flow mono font", "cfMonoFont")
         if font is not None:
             GlobalData().skin.setFlowMonoFont(font)
             self.em.onFlowZoomChanged()
 
     def __onControlFlowBadgeFont(self):
         """Select the control flow badge font"""
-        font = self.__selectFont(True, False, True, True,
-                                 'control flow badge font', 'badgeFont')
+        font = self.__selectFont(True, False, True, True, "control flow badge font", "badgeFont")
         if font is not None:
             GlobalData().skin.setFlowBadgeFont(font)
             self.em.onFlowZoomChanged()
-

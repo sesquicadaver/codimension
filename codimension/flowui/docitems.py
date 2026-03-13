@@ -47,15 +47,18 @@ from .routines import getDoclinkIconAndTooltip
 
 
 class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
-
     """Base class for all doc cells"""
 
     def __init__(self, itemRef, cmlRef, canvas, x, y):
         CommentCellBase.__init__(self, itemRef, canvas, x, y)
-        ColorMixin.__init__(self, None, canvas.settings.docLinkBGColor,
-                            canvas.settings.docLinkFGColor,
-                            canvas.settings.docLinkBorderColor,
-                            colorSpec=cmlRef)
+        ColorMixin.__init__(
+            self,
+            None,
+            canvas.settings.docLinkBGColor,
+            canvas.settings.docLinkFGColor,
+            canvas.settings.docLinkBorderColor,
+            colorSpec=cmlRef,
+        )
         QGraphicsRectItem.__init__(self, canvas.scopeRectangle)
         self.cmlRef = cmlRef
         pixmapFile, tooltip = getDoclinkIconAndTooltip(self.cmlRef)
@@ -85,13 +88,11 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
         # [file:]absolute path
         # [file:]relative path. The relative is tried to the current file
         #                       and then to the project root
-        if self.cmlRef.link.startswith('http://') or \
-           self.cmlRef.link.startswith('https://'):
+        if self.cmlRef.link.startswith("http://") or self.cmlRef.link.startswith("https://"):
             QDesktopServices.openUrl(QUrl(self.cmlRef.link))
             return
 
-        fileName, anchorOrLine = resolveLinkPath(
-            self.cmlRef.link, self.getEditor().getFileName())
+        fileName, anchorOrLine = resolveLinkPath(self.cmlRef.link, self.getEditor().getFileName())
         if fileName:
             GlobalData().mainWindow.openFile(fileName, anchorOrLine)
 
@@ -99,7 +100,7 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
         """Renders the cell"""
         settings = self.canvas.settings
         title = self.cmlRef.getTitle()
-        self.setupText(self, customText=title, customReplacement='')
+        self.setupText(self, customText=title, customReplacement="")
 
         contentWidth = self.iconItem.iconWidth()
         contentHeight = self.iconItem.iconHeight()
@@ -109,13 +110,12 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
 
         self.boxWidth = 2 * settings.hDocLinkPadding + contentWidth
         self.minWidth = self.boxWidth + 2 * settings.hCellPadding
-        self.minHeight = 2 * (settings.vCellPadding +
-                              settings.vDocLinkPadding) + contentHeight
+        self.minHeight = 2 * (settings.vCellPadding + settings.vDocLinkPadding) + contentHeight
 
         self.height = self.minHeight
         self.width = self.minWidth
 
-        print(f'Render for: {self.text} height: {self.height} width: {self.width}')
+        print(f"Render for: {self.text} height: {self.height} width: {self.width}")
         return (self.width, self.height)
 
     def adjustWidth(self):
@@ -126,11 +126,11 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
         The width of this cell will take whatever is needed considering
         the comment shift to the left.
         """
-        print(f'adjust width 1 for: {self.text}')
+        print(f"adjust width 1 for: {self.text}")
         if self.kind == CellElement.ABOVE_DOC:
             return
 
-        print(f'ADJUSTMENT was: {self.width}')
+        print(f"ADJUSTMENT was: {self.width}")
         cellToTheLeft = self.canvas.cells[self.addr[1]][self.addr[0] - 1]
         settings = self.canvas.settings
         spareWidth = cellToTheLeft.width - cellToTheLeft.minWidth
@@ -140,7 +140,7 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
         else:
             self.minWidth = cellWidth - spareWidth
         self.width = self.minWidth
-        print(f'ADJUSTMENT became: {self.width}')
+        print(f"ADJUSTMENT became: {self.width}")
 
     def draw(self, scene, baseX, baseY):
         """Draws the cell"""
@@ -155,9 +155,7 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
         if cellToTheLeft.kind != CellElement.CONNECTOR:
             self._leftEdge = self.baseX
         else:
-            self._leftEdge = \
-                cellToTheLeft.baseX + \
-                settings.mainLine + settings.hCellPadding
+            self._leftEdge = cellToTheLeft.baseX + settings.mainLine + settings.hCellPadding
 
         # Bottom adjustment
         yShift = self.height - self.minHeight
@@ -165,22 +163,25 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
 
         settings = self.canvas.settings
         penWidth = settings.selectPenWidth - 1
-        self.setRect(self._leftEdge + settings.hCellPadding - penWidth,
-                     baseY + settings.vCellPadding - penWidth,
-                     self.boxWidth + 2 * penWidth,
-                     self.minHeight - 2 * settings.vCellPadding + 2 * penWidth)
+        self.setRect(
+            self._leftEdge + settings.hCellPadding - penWidth,
+            baseY + settings.vCellPadding - penWidth,
+            self.boxWidth + 2 * penWidth,
+            self.minHeight - 2 * settings.vCellPadding + 2 * penWidth,
+        )
         scene.addItem(self)
 
         self.iconItem.setPos(
             self._leftEdge + settings.hCellPadding + settings.hDocLinkPadding,
-            baseY + self.minHeight / 2 - self.iconItem.iconHeight() / 2)
+            baseY + self.minHeight / 2 - self.iconItem.iconHeight() / 2,
+        )
         scene.addItem(self.iconItem)
         return
 
     def paint(self, painter, option, widget):
         """Draws the independent comment"""
-        del option      # unused argument
-        del widget      # unused argument
+        del option  # unused argument
+        del widget  # unused argument
 
         settings = self.canvas.settings
         painter.setPen(self.getPainterPen(self.isSelected(), self.borderColor))
@@ -209,9 +210,11 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
             pen = QPen(self.fgColor)
             painter.setPen(pen)
             textRect = QRectF(
-                self._leftEdge + settings.hCellPadding +
-                settings.hDocLinkPadding + self.iconItem.iconWidth() +
-                settings.hDocLinkPadding,
+                self._leftEdge
+                + settings.hCellPadding
+                + settings.hDocLinkPadding
+                + self.iconItem.iconWidth()
+                + settings.hDocLinkPadding,
                 baseY + settings.vCellPadding + settings.vDocLinkPadding,
                 self.textRect.width(),
                 self.textRect.height(),
@@ -232,12 +235,10 @@ class DocCellBase(CommentCellBase, ColorMixin, IconMixin, QGraphicsRectItem):
 
     def getSelectTooltip(self):
         """Provides the tooltip"""
-        return 'Link/anchor at ' + \
-               CellElement.getLinesSuffix(self.getLineRange())
+        return "Link/anchor at " + CellElement.getLinesSuffix(self.getLineRange())
 
 
 class IndependentDocCell(DocCellBase):
-
     """Represents a single independent CML doc comment"""
 
     def __init__(self, ref, canvas, x, y):
@@ -251,29 +252,30 @@ class IndependentDocCell(DocCellBase):
         settings = self.canvas.settings
 
         cellToTheLeft = self.canvas.cells[self.addr[1]][self.addr[0] - 1]
-        self._leftEdge = \
-            cellToTheLeft.baseX + settings.mainLine + settings.hCellPadding
+        self._leftEdge = cellToTheLeft.baseX + settings.mainLine + settings.hCellPadding
 
         # May be later the connector will look different for two cases below
         if self.leadingForElse:
             self.connector = Connector(
-                self.canvas, self._leftEdge + settings.hCellPadding,
+                self.canvas,
+                self._leftEdge + settings.hCellPadding,
                 self.baseY + self.minHeight / 2,
                 cellToTheLeft.baseX + settings.mainLine,
-                self.baseY + self.minHeight / 2)
+                self.baseY + self.minHeight / 2,
+            )
         else:
             self.connector = Connector(
-                self.canvas, self._leftEdge + settings.hCellPadding,
+                self.canvas,
+                self._leftEdge + settings.hCellPadding,
                 self.baseY + self.minHeight / 2,
                 cellToTheLeft.baseX + settings.mainLine,
-                self.baseY + self.minHeight / 2)
+                self.baseY + self.minHeight / 2,
+            )
         self.connector.penColor = self.borderColor
         self.connector.penWidth = settings.boxLineWidth
 
 
-
 class LeadingDocCell(DocCellBase):
-
     """Represents a single leading CML doc comment"""
 
     def __init__(self, itemRef, cmlRef, canvas, x, y):
@@ -293,29 +295,22 @@ class LeadingDocCell(DocCellBase):
             # not implemented yet
             self._leftEdge = self.baseX
         else:
-            self._leftEdge = \
-                cellToTheLeft.baseX + \
-                settings.mainLine + settings.hCellPadding
+            self._leftEdge = cellToTheLeft.baseX + settings.mainLine + settings.hCellPadding
 
         shift = self.hShift * 2 * settings.openGroupHSpacer
         self._leftEdge += shift
 
         self.connector = Connector(self.canvas, 0, 0, 0, 0)
         connectorPath = QPainterPath()
-        connectorPath.moveTo(self._leftEdge + settings.hCellPadding,
-                             baseY + self.minHeight / 2)
-        connectorPath.lineTo(self._leftEdge,
-                             baseY + self.minHeight / 2)
-        connectorPath.lineTo(self._leftEdge - settings.hCellPadding,
-                             baseY + self.minHeight + settings.vCellPadding)
+        connectorPath.moveTo(self._leftEdge + settings.hCellPadding, baseY + self.minHeight / 2)
+        connectorPath.lineTo(self._leftEdge, baseY + self.minHeight / 2)
+        connectorPath.lineTo(self._leftEdge - settings.hCellPadding, baseY + self.minHeight + settings.vCellPadding)
         self.connector.setPath(connectorPath)
         self.connector.penColor = self.borderColor
         self.connector.penWidth = settings.boxLineWidth
 
 
-
 class AboveDocCell(DocCellBase):
-
     """Represents a single leading doc link which is above certain blocks.
 
     Blocks are: try/except or for/else or while/else
@@ -343,13 +338,11 @@ class AboveDocCell(DocCellBase):
             if self.hanging:
                 yShift = settings.vCellPadding
             self.connector = Connector(
-                self.canvas, baseX + mainLine, baseY + yShift,
-                baseX + mainLine, baseY + self.height + yShift)
+                self.canvas, baseX + mainLine, baseY + yShift, baseX + mainLine, baseY + self.height + yShift
+            )
             scene.addItem(self.connector)
 
-        DocCellBase.draw(self, scene,
-                         baseX + mainLine +
-                         self.canvas.settings.hCellPadding, baseY)
+        DocCellBase.draw(self, scene, baseX + mainLine + self.canvas.settings.hCellPadding, baseY)
 
     def _setupConnector(self):
         """Sets the path for painting"""
@@ -365,13 +358,9 @@ class AboveDocCell(DocCellBase):
 
         self.connector = Connector(self.canvas, 0, 0, 0, 0)
         connectorPath = QPainterPath()
-        connectorPath.moveTo(self._leftEdge + settings.hCellPadding,
-                             baseY + self.minHeight / 2)
-        connectorPath.lineTo(self._leftEdge,
-                             baseY + self.minHeight / 2)
-        connectorPath.lineTo(self._leftEdge - settings.hCellPadding,
-                             baseY + self.minHeight + settings.vCellPadding)
+        connectorPath.moveTo(self._leftEdge + settings.hCellPadding, baseY + self.minHeight / 2)
+        connectorPath.lineTo(self._leftEdge, baseY + self.minHeight / 2)
+        connectorPath.lineTo(self._leftEdge - settings.hCellPadding, baseY + self.minHeight + settings.vCellPadding)
         self.connector.setPath(connectorPath)
         self.connector.penColor = self.borderColor
         self.connector.penWidth = settings.boxLineWidth
-

@@ -46,7 +46,7 @@ from utils.settings import Settings
 def getMarginBits():
     """Provides the number of block value bits to cover maxBreakpoints value"""
     # 0 means no block value so +1 is required
-    distinctValues = Settings()['maxBreakpoints'] + 1
+    distinctValues = Settings()["maxBreakpoints"] + 1
     bits = 1
     while True:
         if 2**bits >= distinctValues:
@@ -55,7 +55,6 @@ def getMarginBits():
 
 
 class CDMBreakpointMargin(QWidget):
-
     """Breakpoints area widget"""
 
     BPOINT_MARK = 1
@@ -66,28 +65,28 @@ class CDMBreakpointMargin(QWidget):
         QWidget.__init__(self, parent)
 
         extendInstance(self, MarginBase)
-        MarginBase.__init__(self, parent,
-                            "cdm_bpoint_margin", getMarginBits())
+        MarginBase.__init__(self, parent, "cdm_bpoint_margin", getMarginBits())
         self.setMouseTracking(True)
 
         self.__debugger = debugger
-        self.__breakpoints = {}     # block handle -> Breakpoint instance
+        self.__breakpoints = {}  # block handle -> Breakpoint instance
         self.__breakableLines = None
-        self.__maxBreakpoints = Settings()['maxBreakpoints']
-        self.__bgColor = GlobalData().skin['bpointsMarginPaper']
+        self.__maxBreakpoints = Settings()["maxBreakpoints"]
+        self.__bgColor = GlobalData().skin["bpointsMarginPaper"]
 
         self.__marks = {
-            self.BPOINT_MARK: [getPixmap('dbgbpointmarker.png'), 0],
-            self.TMP_BPOINT_MARK: [getPixmap('dbgtmpbpointmarker.png'), 0],
-            self.DISABLED_BPOINT_MARK: [getPixmap('dbgdisbpointmarker.png'), 0]}
+            self.BPOINT_MARK: [getPixmap("dbgbpointmarker.png"), 0],
+            self.TMP_BPOINT_MARK: [getPixmap("dbgtmpbpointmarker.png"), 0],
+            self.DISABLED_BPOINT_MARK: [getPixmap("dbgdisbpointmarker.png"), 0],
+        }
 
         for item in self.__marks:
             self.__marks[item][1] = self.__marks[item][0].height()
             if self.__marks[item][0].height() != self.__marks[item][0].width():
-                logging.error('breakpoint margin pixmap needs to be square')
+                logging.error("breakpoint margin pixmap needs to be square")
 
         self.myUUID = None
-        if hasattr(self._qpart._parent, 'getUUID'):
+        if hasattr(self._qpart._parent, "getUUID"):
             self.myUUID = self._qpart._parent.getUUID()
 
         mainWindow = GlobalData().mainWindow
@@ -100,8 +99,7 @@ class CDMBreakpointMargin(QWidget):
 
         bpointModel = self.__debugger.getBreakPointModel()
         bpointModel.rowsAboutToBeRemoved.connect(self.__deleteBreakPoints)
-        bpointModel.sigDataAboutToBeChanged.connect(
-            self.__breakPointDataAboutToBeChanged)
+        bpointModel.sigDataAboutToBeChanged.connect(self.__breakPointDataAboutToBeChanged)
         bpointModel.dataChanged.connect(self.__changeBreakPoints)
         bpointModel.rowsInserted.connect(self.__addBreakPoints)
 
@@ -113,8 +111,7 @@ class CDMBreakpointMargin(QWidget):
 
         block = self._qpart.firstVisibleBlock()
         geometry = self._qpart.blockBoundingGeometry(block)
-        blockBoundingGeometry = geometry.translated(
-            self._qpart.contentOffset())
+        blockBoundingGeometry = geometry.translated(self._qpart.contentOffset())
         top = blockBoundingGeometry.top()
         # bottom = top + blockBoundingGeometry.height()
 
@@ -158,11 +155,11 @@ class CDMBreakpointMargin(QWidget):
             if blockValue != 0:
                 bpoint = self.__breakpoints[blockValue]
                 if not bpoint.isEnabled():
-                    msg = 'Disabled breakpoint'
+                    msg = "Disabled breakpoint"
                 elif bpoint.isTemporary():
-                    msg = 'Temporary breakpoint'
+                    msg = "Temporary breakpoint"
                 else:
-                    msg = 'Regular breakpoint'
+                    msg = "Regular breakpoint"
 
             if msg:
                 QToolTip.showText(event.globalPos(), msg)
@@ -183,7 +180,7 @@ class CDMBreakpointMargin(QWidget):
 
     def __onFileTypeChanged(self, fileName, uuid, newFileType):
         """Triggered on the changed file type"""
-        del fileName    # unused argument
+        del fileName  # unused argument
         if uuid == self.myUUID:
             MarginBase.setVisible(self, isPythonMime(newFileType))
 
@@ -191,23 +188,19 @@ class CDMBreakpointMargin(QWidget):
         """Restores the breakpoints"""
         for _, bpoint in self.__breakpoints.items():
             line = bpoint.getLineNumber()
-            self.setBlockValue(
-                self._qpart.document().findBlockByNumber(line - 1), 0)
+            self.setBlockValue(self._qpart.document().findBlockByNumber(line - 1), 0)
         self.__breakpoints = {}
-        self.__addBreakPoints(
-            QModelIndex(), 0,
-            self.__debugger.getBreakPointModel().rowCount() - 1)
+        self.__addBreakPoints(QModelIndex(), 0, self.__debugger.getBreakPointModel().rowCount() - 1)
         self.validateBreakpoints()
         self.update()
 
     def setDebugMode(self, debugOn, disableEditing):
         """Called to switch between debug/development"""
-        del debugOn         # unused argument
+        del debugOn  # unused argument
         del disableEditing  # unused argument
         self.__breakableLines = None
 
-    def isLineBreakable(self, line=None, enforceRecalc=False,
-                        enforceSure=False):
+    def isLineBreakable(self, line=None, enforceRecalc=False, enforceSure=False):
         """True if a breakpoint could be placed on the current line"""
         fileName = self._qpart._parent.getFileName()
 
@@ -222,8 +215,7 @@ class CDMBreakpointMargin(QWidget):
         if self.__breakableLines is not None and not enforceRecalc:
             return line in self.__breakableLines
 
-        self.__breakableLines = getBreakpointLines(fileName, self._qpart.text,
-                                                   enforceRecalc)
+        self.__breakableLines = getBreakpointLines(fileName, self._qpart.text, enforceRecalc)
 
         if self.__breakableLines is None:
             if not enforceSure:
@@ -236,17 +228,16 @@ class CDMBreakpointMargin(QWidget):
 
     def newBreakpointWithProperties(self, bpoint):
         """Sets a new breakpoint and its properties"""
-        if len(self.__breakpoints) >= Settings()['maxBreakpoints']:
-            logging.error('The max number of breakpoints per file (' +
-                          str(Settings()['maxBreakpoints']) +
-                          ') is exceeded')
+        if len(self.__breakpoints) >= Settings()["maxBreakpoints"]:
+            logging.error(
+                "The max number of breakpoints per file (" + str(Settings()["maxBreakpoints"]) + ") is exceeded"
+            )
             return
 
         line = bpoint.getLineNumber()
         bpointHandle = self.__getAvailableHandle()
         self.__breakpoints[bpointHandle] = bpoint
-        self.setBlockValue(self._qpart.document().findBlockByNumber(line - 1),
-                           bpointHandle)
+        self.setBlockValue(self._qpart.document().findBlockByNumber(line - 1), bpointHandle)
         self.update()
 
     def deleteAllBreakpoints(self):
@@ -257,8 +248,7 @@ class CDMBreakpointMargin(QWidget):
         """Clears a breakpoint"""
         for handle, bpoint in self.__breakpoints.items():
             if bpoint.getLineNumber() == line:
-                self.setBlockValue(
-                    self._qpart.document().findBlockByNumber(line - 1), 0)
+                self.setBlockValue(self._qpart.document().findBlockByNumber(line - 1), 0)
                 del self.__breakpoints[handle]
                 self.update()
                 return
@@ -269,8 +259,7 @@ class CDMBreakpointMargin(QWidget):
             return
 
         fileName = self._qpart._parent.getFileName()
-        breakableLines = getBreakpointLines(fileName, self._qpart.text,
-                                            True, False)
+        breakableLines = getBreakpointLines(fileName, self._qpart.text, True, False)
 
         toBeDeleted = []
         for _, bpoint in self.__breakpoints.items():
@@ -281,17 +270,14 @@ class CDMBreakpointMargin(QWidget):
         if toBeDeleted:
             model = self.__debugger.getBreakPointModel()
             for line in toBeDeleted:
-                location = ':'.join([fileName, str(line)])
+                location = ":".join([fileName, str(line)])
                 if breakableLines is None:
-                    msg = 'Breakpoint at ' + location + ' does not point to ' \
-                          'a breakable line (file is not compilable).'
+                    msg = "Breakpoint at " + location + " does not point to a breakable line (file is not compilable)."
                 else:
-                    msg = 'Breakpoint at ' + location + ' does not point to ' \
-                          'a breakable line anymore.'
-                logging.warning(msg + ' The breakpoint is deleted.')
+                    msg = "Breakpoint at " + location + " does not point to a breakable line anymore."
+                logging.warning(msg + " The breakpoint is deleted.")
                 index = model.getBreakPointIndex(fileName, line)
-                self.setBlockValue(
-                    self._qpart.document().findBlockByNumber(line - 1), 0)
+                self.setBlockValue(self._qpart.document().findBlockByNumber(line - 1), 0)
                 model.deleteBreakPointByIndex(index)
 
     def __getAvailableHandle(self):
@@ -346,13 +332,11 @@ class CDMBreakpointMargin(QWidget):
 
     def __changeBreakPoints(self, startIndex, endIndex):
         """Sets changed breakpoints"""
-        self.__addBreakPoints(QModelIndex(),
-                              startIndex.row(), endIndex.row())
+        self.__addBreakPoints(QModelIndex(), startIndex.row(), endIndex.row())
 
     def __breakPointDataAboutToBeChanged(self, startIndex, endIndex):
         """Handles the dataAboutToBeChanged signal of the breakpoint model"""
-        self.__deleteBreakPoints(QModelIndex(),
-                                 startIndex.row(), endIndex.row())
+        self.__deleteBreakPoints(QModelIndex(), startIndex.row(), endIndex.row())
 
     def __toggleBreakpoint(self, line, temporary=False):
         """Toggles the line breakpoint"""
@@ -364,8 +348,7 @@ class CDMBreakpointMargin(QWidget):
                 index = model.getBreakPointIndex(fileName, line)
                 model.deleteBreakPointByIndex(index)
                 if not bpoint.isEnabled():
-                    self.setBlockValue(
-                        self._qpart.document().findBlockByNumber(line - 1), 0)
+                    self.setBlockValue(self._qpart.document().findBlockByNumber(line - 1), 0)
                 elif bpoint.isTemporary():
                     self.__addBreakpoint(line, False, False)
                 else:
@@ -374,9 +357,11 @@ class CDMBreakpointMargin(QWidget):
         if len(self.__breakpoints) < self.__maxBreakpoints:
             self.__addBreakpoint(line, temporary)
         else:
-            logging.error('Max breakpoint number per file (' +
-                          str(self.__maxBreakpoints) +
-                          ') has been reached. The breakpoint is not added.')
+            logging.error(
+                "Max breakpoint number per file ("
+                + str(self.__maxBreakpoints)
+                + ") has been reached. The breakpoint is not added."
+            )
 
     def __deleteBreakPointsInLineRange(self, startFrom, count):
         """Deletes breakpoints which fall into the given lines range"""
@@ -392,8 +377,7 @@ class CDMBreakpointMargin(QWidget):
             fileName = self._qpart._parent.getFileName()
             for line in toBeDeleted:
                 index = model.getBreakPointIndex(fileName, line)
-                self.setBlockValue(
-                    self._qpart.document().findBlockByNumber(line - 1), 0)
+                self.setBlockValue(self._qpart.document().findBlockByNumber(line - 1), 0)
                 model.deleteBreakPointByIndex(index)
 
     def __onBlockClicked(self, block):
@@ -411,15 +395,16 @@ class CDMBreakpointMargin(QWidget):
 
         fileName = self._qpart._parent.getFileName()
         if fileName is None or fileName == "" or not os.path.isabs(fileName):
-            logging.warning("The buffer has to be saved "
-                            "before setting breakpoints")
+            logging.warning("The buffer has to be saved before setting breakpoints")
             return
 
         breakableLines = getBreakpointLines("", self._qpart.text, True, False)
         if breakableLines is None:
-            logging.warning("The breakable lines could not be identified "
-                            "due to the file compilation errors. Fix the code "
-                            "and try again.")
+            logging.warning(
+                "The breakable lines could not be identified "
+                "due to the file compilation errors. Fix the code "
+                "and try again."
+            )
             return
 
         breakableLines = list(breakableLines)
@@ -519,7 +504,6 @@ class CDMBreakpointMargin(QWidget):
 
         bpointModel = self.__debugger.getBreakPointModel()
         bpointModel.rowsAboutToBeRemoved.disconnect(self.__deleteBreakPoints)
-        bpointModel.sigDataAboutToBeChanged.disconnect(
-            self.__breakPointDataAboutToBeChanged)
+        bpointModel.sigDataAboutToBeChanged.disconnect(self.__breakPointDataAboutToBeChanged)
         bpointModel.dataChanged.disconnect(self.__changeBreakPoints)
         bpointModel.rowsInserted.disconnect(self.__addBreakPoints)

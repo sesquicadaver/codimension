@@ -43,7 +43,6 @@ from .viewitems import AttributeItemType, ClassItemType, DecoratorItemType, Func
 
 
 class FunctionsViewer(QWidget):
-
     """The free functions (including nested) viewer widget"""
 
     def __init__(self, parent=None):
@@ -59,22 +58,18 @@ class FunctionsViewer(QWidget):
         # create the context menu
         self.__menu = QMenu(self)
         self.__jumpMenuItem = self.__menu.addAction(
-            getIcon('definition.png'), 'Jump to definition',
-            self.__goToDefinition)
+            getIcon("definition.png"), "Jump to definition", self.__goToDefinition
+        )
         self.__menu.addSeparator()
-        self.__findMenuItem = self.__menu.addAction(
-            getIcon('findusage.png'), 'Find occurences',
-            self.__findWhereUsed)
+        self.__findMenuItem = self.__menu.addAction(getIcon("findusage.png"), "Find occurences", self.__findWhereUsed)
         self.__menu.addSeparator()
         self.__copyMenuItem = self.__menu.addAction(
-            getIcon('copymenu.png'), 'Copy path to clipboard',
-            self.funcViewer.copyToClipboard)
+            getIcon("copymenu.png"), "Copy path to clipboard", self.funcViewer.copyToClipboard
+        )
         self.funcViewer.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.funcViewer.customContextMenuRequested.connect(
-            self.__handleShowContextMenu)
+        self.funcViewer.customContextMenuRequested.connect(self.__handleShowContextMenu)
 
-        GlobalData().project.sigProjectChanged.connect(
-            self.__onProjectChanged)
+        GlobalData().project.sigProjectChanged.connect(self.__onProjectChanged)
         self.funcViewer.sigSelectionChanged.connect(self.__selectionChanged)
         self.funcViewer.sigOpeningItem.connect(self.itemActivated)
         self.funcViewer.sigModelFilesChanged.connect(self.modelFilesChanged)
@@ -91,15 +86,11 @@ class FunctionsViewer(QWidget):
         self.funcViewer = FunctionsBrowser()
 
         # Toolbar part - buttons
-        self.definitionButton = QAction(
-            getIcon('definition.png'),
-            'Jump to highlighted item definition', self)
+        self.definitionButton = QAction(getIcon("definition.png"), "Jump to highlighted item definition", self)
         self.definitionButton.triggered.connect(self.__goToDefinition)
-        self.findButton = QAction(
-            getIcon('findusage.png'), 'Find highlighted item occurences', self)
+        self.findButton = QAction(getIcon("findusage.png"), "Find highlighted item occurences", self)
         self.findButton.triggered.connect(self.__findWhereUsed)
-        self.copyPathButton = QAction(
-            getIcon('copymenu.png'), 'Copy path to clipboard', self)
+        self.copyPathButton = QAction(getIcon("copymenu.png"), "Copy path to clipboard", self)
         self.copyPathButton.triggered.connect(self.funcViewer.copyToClipboard)
 
         self.toolbar = QToolBar(self)
@@ -112,13 +103,11 @@ class FunctionsViewer(QWidget):
         self.toolbar.addAction(self.copyPathButton)
 
         filterLabel = QLabel("  Filter ")
-        filterLabel.setStyleSheet('background: transparent')
+        filterLabel.setStyleSheet("background: transparent")
         self.toolbar.addWidget(filterLabel)
         self.filterEdit = CDMComboBox(True, self.toolbar)
-        self.filterEdit.setSizePolicy(QSizePolicy.Expanding,
-                                      QSizePolicy.Expanding)
-        self.filterEdit.lineEdit().setToolTip(
-            "Space separated regular expressions")
+        self.filterEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.filterEdit.lineEdit().setToolTip("Space separated regular expressions")
         self.toolbar.addWidget(self.filterEdit)
         self.filterEdit.editTextChanged.connect(self.__filterChanged)
         self.filterEdit.itemAdded.connect(self.__filterItemAdded)
@@ -151,8 +140,8 @@ class FunctionsViewer(QWidget):
 
     def itemActivated(self, path, line):
         """Handles the item activation"""
-        del path    # unused argument
-        del line    # unused argument
+        del path  # unused argument
+        del line  # unused argument
         self.filterEdit.addItem(self.filterEdit.lineEdit().text())
 
     def __filterItemAdded(self):
@@ -170,8 +159,7 @@ class FunctionsViewer(QWidget):
         # Move the focus to the list and select the first row
         self.funcViewer.clearSelection()
         flags = QItemSelectionModel.SelectCurrent | QItemSelectionModel.Rows
-        self.funcViewer.setSelection(QRect(0, 0, self.funcViewer.width(), 1),
-                                     flags)
+        self.funcViewer.setSelection(QRect(0, 0, self.funcViewer.width(), 1), flags)
         self.funcViewer.setFocus()
 
     def __onProjectChanged(self, what):
@@ -183,8 +171,7 @@ class FunctionsViewer(QWidget):
 
             project = GlobalData().project
             if project.isLoaded():
-                self.filterEdit.editTextChanged.disconnect(
-                    self.__filterChanged)
+                self.filterEdit.editTextChanged.disconnect(self.__filterChanged)
                 self.filterEdit.addItems(project.findFunctionHistory)
                 self.filterEdit.editTextChanged.connect(self.__filterChanged)
             self.filterEdit.clearEditText()
@@ -212,9 +199,7 @@ class FunctionsViewer(QWidget):
     def __findWhereUsed(self):
         """Find where used context menu handler"""
         if self.__contextItem is not None:
-            GlobalData().mainWindow.findWhereUsed(
-                self.__contextItem.getPath(),
-                self.__contextItem.sourceObj)
+            GlobalData().mainWindow.findWhereUsed(self.__contextItem.getPath(), self.__contextItem.sourceObj)
 
     def __updateButtons(self):
         """Updates the toolbar buttons depending on what is selected"""
@@ -229,15 +214,14 @@ class FunctionsViewer(QWidget):
             self.copyPathButton.setEnabled(True)
             return
 
-        if self.__contextItem.itemType in [FunctionItemType, ClassItemType,
-                                           AttributeItemType, GlobalItemType]:
+        if self.__contextItem.itemType in [FunctionItemType, ClassItemType, AttributeItemType, GlobalItemType]:
             self.definitionButton.setEnabled(True)
             self.findButton.setEnabled(True)
             self.copyPathButton.setEnabled(True)
 
     def onFileUpdated(self, fileName, uuid):
         """Triggered when the file is updated"""
-        del uuid    # unused argument
+        del uuid  # unused argument
         self.funcViewer.onFileUpdated(fileName)
 
     def modelFilesChanged(self):

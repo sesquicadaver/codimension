@@ -54,11 +54,10 @@ from utils.pixmapcache import getIcon
 
 
 class ImportsDgmEdgeLabel(QGraphicsTextItem):
-
     """Connector label"""
 
     def __init__(self, edge, modObj):
-        text = edge.label.replace('\\n', '\n')
+        text = edge.label.replace("\\n", "\n")
         QGraphicsTextItem.__init__(self, text)
         self.__modObj = modObj
 
@@ -68,8 +67,7 @@ class ImportsDgmEdgeLabel(QGraphicsTextItem):
         metric = QFontMetrics(font)
         rec = metric.boundingRect(0, 0, 10000, 10000, Qt.AlignLeft, text)
 
-        self.setPos(edge.labelX - rec.width() / 2,
-                    edge.labelY - rec.height() / 2)
+        self.setPos(edge.labelX - rec.width() / 2, edge.labelY - rec.height() / 2)
 
         # To make double click delivered
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -90,7 +88,6 @@ class ImportsDgmEdgeLabel(QGraphicsTextItem):
 
 
 class ImportsDgmDocConn(QGraphicsPathItem):
-
     """Connection to a docstring note"""
 
     def __init__(self, edge, modObj):
@@ -104,19 +101,25 @@ class ImportsDgmDocConn(QGraphicsPathItem):
         index = 1
         while index + 3 <= len(edge.points):
             painterPath.cubicTo(
-                edge.points[index][0], edge.points[index][1],
-                edge.points[index+1][0], edge.points[index+1][1],
-                edge.points[index+2][0], edge.points[index+2][1])
+                edge.points[index][0],
+                edge.points[index][1],
+                edge.points[index + 1][0],
+                edge.points[index + 1][1],
+                edge.points[index + 2][0],
+                edge.points[index + 2][1],
+            )
             index = index + 3
         if index + 2 <= len(edge.points):
             painterPath.quadTo(
-                edge.points[index+1][0], edge.points[index+1][1],
-                edge.points[index+2][0], edge.points[index+2][1])
+                edge.points[index + 1][0],
+                edge.points[index + 1][1],
+                edge.points[index + 2][0],
+                edge.points[index + 2][1],
+            )
             index = index + 2
 
         if index + 1 <= len(edge.points):
-            painterPath.lineTo(
-                edge.points[index+1][0], edge.points[index+1][1])
+            painterPath.lineTo(edge.points[index + 1][0], edge.points[index + 1][1])
 
         self.setPath(painterPath)
 
@@ -131,7 +134,6 @@ class ImportsDgmDocConn(QGraphicsPathItem):
 
 
 class ImportsDgmDependConn(QGraphicsPathItem):
-
     """Connection to a dependency module"""
 
     def __init__(self, edge, modObj, connObj):
@@ -145,30 +147,43 @@ class ImportsDgmDependConn(QGraphicsPathItem):
 
         index = 1
         while index + 3 <= len(edge.points):
-            painterPath.cubicTo(edge.points[index][0], edge.points[index][1],
-                                edge.points[index+1][0],edge.points[index+1][1],
-                                edge.points[index+2][0],edge.points[index+2][1])
+            painterPath.cubicTo(
+                edge.points[index][0],
+                edge.points[index][1],
+                edge.points[index + 1][0],
+                edge.points[index + 1][1],
+                edge.points[index + 2][0],
+                edge.points[index + 2][1],
+            )
             index = index + 3
         if index + 2 <= len(edge.points):
-            painterPath.quadTo(edge.points[index+1][0], edge.points[index+1][1],
-                               edge.points[index+2][0], edge.points[index+2][1])
+            painterPath.quadTo(
+                edge.points[index + 1][0],
+                edge.points[index + 1][1],
+                edge.points[index + 2][0],
+                edge.points[index + 2][1],
+            )
             index = index + 2
 
         if index + 1 <= len(edge.points):
-            painterPath.lineTo(edge.points[index+1][0], edge.points[index+1][1])
+            painterPath.lineTo(edge.points[index + 1][0], edge.points[index + 1][1])
 
         lastIndex = len(edge.points) - 1
-        self.addArrow(painterPath,
-                      edge.points[lastIndex-1][0], edge.points[lastIndex-1][1],
-                      edge.points[lastIndex][0], edge.points[lastIndex][1])
+        self.addArrow(
+            painterPath,
+            edge.points[lastIndex - 1][0],
+            edge.points[lastIndex - 1][1],
+            edge.points[lastIndex][0],
+            edge.points[lastIndex][1],
+        )
         self.setPath(painterPath)
 
     def addArrow(self, painterPath, startX, startY, endX, endY):
         """Add arrows to the edges
-           http://kapo-cpp.blogspot.com/2008/10/drawing-arrows-with-cairo.html
+        http://kapo-cpp.blogspot.com/2008/10/drawing-arrows-with-cairo.html
         """
         arrowLength = 12.0
-        arrowDegrees = 0.15      # Radian
+        arrowDegrees = 0.15  # Radian
 
         angle = math.atan2(endY - startY, endX - startX) + math.pi
         arrowX1 = endX + arrowLength * math.cos(angle - arrowDegrees)
@@ -192,7 +207,6 @@ class ImportsDgmDependConn(QGraphicsPathItem):
 
 
 class ImportsDgmUnknownModule(QGraphicsRectItem):
-
     """Unknown module"""
 
     def __init__(self, node):
@@ -201,8 +215,7 @@ class ImportsDgmUnknownModule(QGraphicsRectItem):
 
         posX = node.posX - node.width / 2.0
         posY = node.posY - node.height / 2.0
-        QGraphicsRectItem.__init__(self, posX, posY,
-                                   node.width, node.height)
+        QGraphicsRectItem.__init__(self, posX, posY, node.width, node.height)
         pen = QPen(QColor(153, 0, 0))
         pen.setWidth(2)
         self.setPen(pen)
@@ -229,7 +242,6 @@ class ImportsDgmUnknownModule(QGraphicsRectItem):
 
 
 class ImportsDgmBuiltInModule(QGraphicsRectItem):
-
     """Built-in module"""
 
     def __init__(self, node):
@@ -238,8 +250,7 @@ class ImportsDgmBuiltInModule(QGraphicsRectItem):
 
         posX = node.posX - node.width / 2.0
         posY = node.posY - node.height / 2.0
-        QGraphicsRectItem.__init__(self, posX, posY,
-                                   node.width, node.height)
+        QGraphicsRectItem.__init__(self, posX, posY, node.width, node.height)
         pen = QPen(QColor(0, 0, 0))
         pen.setWidth(2)
         self.setPen(pen)
@@ -266,7 +277,6 @@ class ImportsDgmBuiltInModule(QGraphicsRectItem):
 
 
 class ImportsDgmSystemWideModule(QGraphicsRectItem):
-
     """Systemwide module"""
 
     def __init__(self, node, refFile, docstring):
@@ -277,8 +287,7 @@ class ImportsDgmSystemWideModule(QGraphicsRectItem):
 
         posX = node.posX - node.width / 2.0
         posY = node.posY - node.height / 2.0
-        QGraphicsRectItem.__init__(self, posX, posY,
-                                   node.width, node.height)
+        QGraphicsRectItem.__init__(self, posX, posY, node.width, node.height)
         pen = QPen(QColor(0, 0, 0))
         pen.setWidth(2)
         self.setPen(pen)
@@ -317,7 +326,6 @@ class ImportsDgmSystemWideModule(QGraphicsRectItem):
 
 
 class ImportsDgmDetailedModuleBase(QGraphicsRectItem):
-
     """Base class which calculates section heights"""
 
     def __init__(self, node, refFile, srcobj, deviceDPI):
@@ -329,8 +337,7 @@ class ImportsDgmDetailedModuleBase(QGraphicsRectItem):
 
         posX = node.posX - node.width / 2.0
         posY = node.posY - node.height / 2.0
-        QGraphicsRectItem.__init__(self, posX, posY,
-                                   node.width, node.height)
+        QGraphicsRectItem.__init__(self, posX, posY, node.width, node.height)
         pen = QPen(QColor(0, 0, 0))
         pen.setWidth(2)
         self.setPen(pen)
@@ -377,15 +384,16 @@ class ImportsDgmDetailedModuleBase(QGraphicsRectItem):
                 # Draw a separation line
                 yMid = posY + self.__pixelsPerLine / 2.0
                 painter.drawLine(
-                    int(posX + 1), int(yMid),
-                    int(posX + self.__node.width), int(yMid),
+                    int(posX + 1),
+                    int(yMid),
+                    int(posX + self.__node.width),
+                    int(yMid),
                 )
             elif self.__lines[index] != "":
                 # Draw a text line
                 # Sometimes the bottom part of 'g' is not drawn so I add 2
                 # spare pixels.
-                rect = QRectF(posX, posY, self.__node.width,
-                              self.__pixelsPerLine + 2)
+                rect = QRectF(posX, posY, self.__node.width, self.__pixelsPerLine + 2)
                 painter.drawText(rect, Qt.AlignCenter, self.__lines[index])
             occupiedPixels += self.__pixelsPerLine
             posY -= self.__pixelsPerLine
@@ -405,27 +413,22 @@ class ImportsDgmDetailedModuleBase(QGraphicsRectItem):
 
 
 class ImportsDgmModuleOfInterest(ImportsDgmDetailedModuleBase):
-
     """Module of interest"""
 
     def __init__(self, node, refFile, srcobj, deviceDPI):
-        ImportsDgmDetailedModuleBase.__init__(self, node, refFile,
-                                              srcobj, deviceDPI)
+        ImportsDgmDetailedModuleBase.__init__(self, node, refFile, srcobj, deviceDPI)
         self.setBrush(QColor(224, 236, 255))
 
 
 class ImportsDgmOtherPrjModule(ImportsDgmDetailedModuleBase):
-
     """Other in-project module"""
 
     def __init__(self, node, refFile, srcobj, deviceDPI):
-        ImportsDgmDetailedModuleBase.__init__(self, node, refFile,
-                                              srcobj, deviceDPI)
+        ImportsDgmDetailedModuleBase.__init__(self, node, refFile, srcobj, deviceDPI)
         self.setBrush(QColor(240, 240, 110))
 
 
 class ImportsDgmDocNote(QGraphicsRectItem):
-
     """Docstring box"""
 
     def __init__(self, node, refFile, srcobj):
@@ -436,8 +439,7 @@ class ImportsDgmDocNote(QGraphicsRectItem):
 
         posX = node.posX - node.width / 2.0
         posY = node.posY - node.height / 2.0
-        QGraphicsRectItem.__init__(self, posX, posY,
-                                   node.width, node.height)
+        QGraphicsRectItem.__init__(self, posX, posY, node.width, node.height)
         pen = QPen(QColor(0, 0, 0))
         pen.setWidth(2)
         self.setPen(pen)
@@ -472,12 +474,10 @@ class ImportsDgmDocNote(QGraphicsRectItem):
 
     def mouseDoubleClickEvent(self, event):
         """Open the clicked file as the new one"""
-        GlobalData().mainWindow.openFile(self.__refFile,
-                                         self.__srcobj.line)
+        GlobalData().mainWindow.openFile(self.__refFile, self.__srcobj.line)
 
 
 class DiagramWidget(QGraphicsView):
-
     """Widget to show a generated diagram"""
 
     sigEscapePressed = pyqtSignal()
@@ -492,8 +492,7 @@ class DiagramWidget(QGraphicsView):
         if event.key() == Qt.Key_Escape:
             self.sigEscapePressed.emit()
             event.accept()
-        elif event.key() == Qt.Key_C and \
-             event.modifiers() == Qt.ControlModifier:
+        elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
             self.onCopy()
             event.accept()
         else:
@@ -501,7 +500,7 @@ class DiagramWidget(QGraphicsView):
 
     def setScene(self, scene):
         """Sets the scene to display"""
-        scene.setBackgroundBrush(GlobalData().skin['nolexerPaper'])
+        scene.setBackgroundBrush(GlobalData().skin["nolexerPaper"])
         QGraphicsView.setScene(self, scene)
 
     def resetZoom(self):
@@ -531,8 +530,7 @@ class DiagramWidget(QGraphicsView):
     def __getImage(self):
         """Renders the diagram to an image"""
         scene = self.scene()
-        image = QImage(scene.width(), scene.height(),
-                       QImage.Format_ARGB32_Premultiplied)
+        image = QImage(scene.width(), scene.height(), QImage.Format_ARGB32_Premultiplied)
         painter = QPainter(image)
         # If switched on then rectangles edges will not be sharp
         # painter.setRenderHint( QPainter.Antialiasing )
@@ -550,7 +548,6 @@ class DiagramWidget(QGraphicsView):
 
 
 class ImportDgmTabWidget(QWidget, MainWindowTabWidgetBase):
-
     """Widget for an editors manager"""
 
     sigEscapePressed = pyqtSignal()
@@ -567,30 +564,27 @@ class ImportDgmTabWidget(QWidget, MainWindowTabWidgetBase):
     def __createLayout(self):
         """Creates the toolbar and layout"""
         # Buttons
-        printButton = QAction(getIcon('printer.png'), 'Print', self)
+        printButton = QAction(getIcon("printer.png"), "Print", self)
         # printButton.setShortcut('Ctrl+')
         printButton.triggered.connect(self.__onPrint)
 
-        printPreviewButton = QAction(
-            getIcon('printpreview.png'), 'Print preview', self)
+        printPreviewButton = QAction(getIcon("printpreview.png"), "Print preview", self)
         # printPreviewButton.setShortcut('Ctrl+')
         printPreviewButton.triggered.connect(self.__onPrintPreview)
 
         fixedSpacer = QWidget()
         fixedSpacer.setFixedHeight(16)
 
-        zoomInButton = QAction(getIcon('zoomin.png'), 'Zoom in (Ctrl+=)', self)
-        zoomInButton.setShortcut('Ctrl+=')
+        zoomInButton = QAction(getIcon("zoomin.png"), "Zoom in (Ctrl+=)", self)
+        zoomInButton.setShortcut("Ctrl+=")
         zoomInButton.triggered.connect(self.onZoomIn)
 
-        zoomOutButton = QAction(
-            getIcon('zoomout.png'), 'Zoom out (Ctrl+-)', self)
-        zoomOutButton.setShortcut('Ctrl+-')
+        zoomOutButton = QAction(getIcon("zoomout.png"), "Zoom out (Ctrl+-)", self)
+        zoomOutButton.setShortcut("Ctrl+-")
         zoomOutButton.triggered.connect(self.onZoomOut)
 
-        zoomResetButton = QAction(
-            getIcon('zoomreset.png'), 'Zoom reset (Ctrl+0)', self)
-        zoomResetButton.setShortcut('Ctrl+0')
+        zoomResetButton = QAction(getIcon("zoomreset.png"), "Zoom reset (Ctrl+0)", self)
+        zoomResetButton.setShortcut("Ctrl+0")
         zoomResetButton.triggered.connect(self.onZoomReset)
 
         # Toolbar

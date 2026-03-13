@@ -19,7 +19,6 @@
 
 """UI support for detected outside changes of files"""
 
-
 from utils.globals import GlobalData
 
 from .qt import (
@@ -38,7 +37,6 @@ from .qt import (
 
 
 class OutsideChangeWidget(QFrame):
-
     """Frameless dialogue to deal with outside changes"""
 
     sigReloadRequest = pyqtSignal()
@@ -71,9 +69,7 @@ class OutsideChangeWidget(QFrame):
 
     def __createLayout(self):
         """Creates the widget layout"""
-        self.__messageLabel = QLabel("This file has been modified "
-                                     "outside of codimension. What "
-                                     "would you like to do?")
+        self.__messageLabel = QLabel("This file has been modified outside of codimension. What would you like to do?")
         self.__messageLabel.setWordWrap(True)
         self.__messageLabel.setAlignment(Qt.AlignHCenter)
         palette = self.__messageLabel.palette()
@@ -89,8 +85,7 @@ class OutsideChangeWidget(QFrame):
 
         txt = "Reload all non-modified buffers"
         self.__reloadAllNonChangedButton = QPushButton(txt, self)
-        self.__reloadAllNonChangedButton.clicked.connect(
-            self.__reloadAllNonModified)
+        self.__reloadAllNonChangedButton.clicked.connect(self.__reloadAllNonModified)
 
         # This will prevent the buttons growing wider than necessary
         fontMetrics = QFontMetrics(self.__reloadAllNonChangedButton.font())
@@ -107,7 +102,6 @@ class OutsideChangeWidget(QFrame):
 
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.move(5, 5)
-
 
         self.__markers.append(QFrame(self.parent()))
         self.__markers.append(QFrame(self.parent()))

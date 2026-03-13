@@ -32,28 +32,26 @@ from .qt import QApplication, QColor, QSplashScreen, Qt
 
 
 class SplashScreen(QSplashScreen):
-
     """Splash screen class"""
 
     def __init__(self):
-        self.labelAlignment = Qt.Alignment(Qt.AlignBottom |
-                                           Qt.AlignRight |
-                                           Qt.AlignAbsolute)
+        self.labelAlignment = Qt.Alignment(Qt.AlignBottom | Qt.AlignRight | Qt.AlignAbsolute)
 
         # The window flags are needed for some X Servers. E.g. Xwin-32
         # on windows draws a normal window outline if the flags are not here
-        QSplashScreen.__init__(self, None, getPixmap('splash.png'),
-                               Qt.SplashScreen |
-                               Qt.WindowStaysOnTopHint |
-                               Qt.X11BypassWindowManagerHint)
+        QSplashScreen.__init__(
+            self,
+            None,
+            getPixmap("splash.png"),
+            Qt.SplashScreen | Qt.WindowStaysOnTopHint | Qt.X11BypassWindowManagerHint,
+        )
 
         self.show()
         QApplication.flush()
 
     def showMessage(self, msg):
         """Show the message in the bottom part of the splashscreen"""
-        QSplashScreen.showMessage(self, msg,
-                                  self.labelAlignment, QColor(Qt.black))
+        QSplashScreen.showMessage(self, msg, self.labelAlignment, QColor(Qt.black))
         QApplication.processEvents()
 
     def clearMessage(self):

@@ -40,7 +40,6 @@ from .qt import (
 
 
 class TagHelpViewer(QWidget):
-
     """The tag help viewer widget"""
 
     def __init__(self, parent=None):
@@ -58,16 +57,14 @@ class TagHelpViewer(QWidget):
         # create the context menu
         self.__menu = QMenu(self)
         self.__selectAllMenuItem = self.__menu.addAction(
-            getIcon('selectall.png'), 'Select All', self.__textEdit.selectAll)
-        self.__copyMenuItem = self.__menu.addAction(
-            getIcon('copymenu.png'), 'Copy', self.__textEdit.copy)
+            getIcon("selectall.png"), "Select All", self.__textEdit.selectAll
+        )
+        self.__copyMenuItem = self.__menu.addAction(getIcon("copymenu.png"), "Copy", self.__textEdit.copy)
         self.__menu.addSeparator()
-        self.__clearMenuItem = self.__menu.addAction(
-            getIcon('trash.png'), 'Clear', self.__clear)
+        self.__clearMenuItem = self.__menu.addAction(getIcon("trash.png"), "Clear", self.__clear)
 
         self.__textEdit.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.__textEdit.customContextMenuRequested.connect(
-            self.__handleShowContextMenu)
+        self.__textEdit.customContextMenuRequested.connect(self.__handleShowContextMenu)
         self.__textEdit.copyAvailable.connect(self.__onCopyAvailable)
 
         self.__updateToolbarButtons()
@@ -81,15 +78,13 @@ class TagHelpViewer(QWidget):
         self.__textEdit.setReadOnly(True)
 
         # Buttons
-        self.__selectAllButton = QAction(
-            getIcon('selectall.png'), 'Select all', self)
+        self.__selectAllButton = QAction(getIcon("selectall.png"), "Select all", self)
         self.__selectAllButton.triggered.connect(self.__textEdit.selectAll)
-        self.__copyButton = QAction(
-            getIcon('copymenu.png'), 'Copy to clipboard', self)
+        self.__copyButton = QAction(getIcon("copymenu.png"), "Copy to clipboard", self)
         self.__copyButton.triggered.connect(self.__textEdit.copy)
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.__clearButton = QAction(getIcon('trash.png'), 'Clear all', self)
+        self.__clearButton = QAction(getIcon("trash.png"), "Clear all", self)
         self.__clearButton.triggered.connect(self.__clear)
 
         # Toolbar
@@ -106,9 +101,8 @@ class TagHelpViewer(QWidget):
         toolbar.addAction(self.__clearButton)
 
         self.__header = QLabel("Signature: none", self)
-        self.__header.setObjectName('signature')
-        self.__header.setStyleSheet('QFrame#signature {' +
-                                    getLabelStyle(self.__header) + '}')
+        self.__header.setObjectName("signature")
+        self.__header.setStyleSheet("QFrame#signature {" + getLabelStyle(self.__header) + "}")
         self.__header.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Fixed)
         self.__header.setFixedHeight(HEADER_HEIGHT)
         verticalLayout = QVBoxLayout()
@@ -164,8 +158,8 @@ class TagHelpViewer(QWidget):
             self.__isEmpty = False
 
         if calltipDisplayable:
-            if '\n' in calltip:
-                calltip = calltip.split('\n')[0]
+            if "\n" in calltip:
+                calltip = calltip.split("\n")[0]
             self.__header.setText("Signature: " + calltip.strip())
         else:
             self.__header.setText("Signature: n/a")

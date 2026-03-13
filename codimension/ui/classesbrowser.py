@@ -26,11 +26,10 @@ from .objectsbrowserbase import ObjectsBrowser
 
 
 class ClassesBrowser(ObjectsBrowser):
-
     """Classes browser"""
 
     def __init__(self, parent=None):
         ObjectsBrowser.__init__(self, ClassesBrowserModel(), parent)
 
-        self.setWindowTitle('Classes browser')
-        self.setWindowIcon(getIcon('icon.png'))
+        self.setWindowTitle("Classes browser")
+        self.setWindowIcon(getIcon("icon.png"))

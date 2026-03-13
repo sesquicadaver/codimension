@@ -31,15 +31,15 @@ jobs:
           pip install -e .
           pip install ruff mypy
 
-      - name: Ruff check (cdmplugins)
+      - name: Ruff check (codimension, cdmplugins)
         run: |
           . .venv/bin/activate
-          ruff check cdmplugins
+          ruff check codimension cdmplugins
 
-      - name: Ruff format (check only, cdmplugins)
+      - name: Ruff format (check only)
         run: |
           . .venv/bin/activate
-          ruff format --check cdmplugins
+          ruff format --check codimension cdmplugins
 
       - name: Mypy (cdmplugins)
         run: |

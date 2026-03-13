@@ -36,7 +36,6 @@ from .viewitems import AttributeItemType, ClassItemType, FunctionItemType, Globa
 
 
 class OutlineAttributes:
-
     """Holds all the attributes associated with an outline browser"""
 
     def __init__(self):
@@ -48,8 +47,7 @@ class OutlineAttributes:
 
 
 class FileOutlineViewer(QWidget):
-
-    """ The file outline viewer widget """
+    """The file outline viewer widget"""
 
     def __init__(self, editorsManager, parent=None):
         QWidget.__init__(self, parent)
@@ -59,8 +57,7 @@ class FileOutlineViewer(QWidget):
         self.__editorsManager.currentChanged.connect(self.__onTabChanged)
         self.__editorsManager.sigTabClosed.connect(self.__onTabClosed)
         self.__editorsManager.sigBufferSavedAs.connect(self.__onSavedBufferAs)
-        self.__editorsManager.sigFileTypeChanged.connect(
-            self.__onFileTypeChanged)
+        self.__editorsManager.sigFileTypeChanged.connect(self.__onFileTypeChanged)
 
         self.__outlineBrowsers = {}  # UUID -> OutlineAttributes
         self.__currentUUID = None
@@ -73,12 +70,11 @@ class FileOutlineViewer(QWidget):
         self.toolbar = None
         self.__createLayout()
 
-        self.__modifiedFormat = Settings()['modifiedFormat']
+        self.__modifiedFormat = Settings()["modifiedFormat"]
 
         # create the context menu
         self.__menu = QMenu(self)
-        self.__findMenuItem = self.__menu.addAction(
-            getIcon('findusage.png'), 'Find where used', self.__findWhereUsed)
+        self.__findMenuItem = self.__menu.addAction(getIcon("findusage.png"), "Find where used", self.__findWhereUsed)
 
     def setTooltips(self, switchOn):
         """Sets the tooltips mode"""
@@ -88,20 +84,16 @@ class FileOutlineViewer(QWidget):
     def __connectOutlineBrowser(self, browser):
         """Connects a new buffer signals"""
         browser.setContextMenuPolicy(Qt.CustomContextMenu)
-        browser.customContextMenuRequested.connect(
-            self.__handleShowContextMenu)
+        browser.customContextMenuRequested.connect(self.__handleShowContextMenu)
         browser.sigFirstSelectedItem.connect(self.__selectionChanged)
 
     def __createLayout(self):
         """Helper to create the viewer layout"""
         # Toolbar part - buttons
-        self.findButton = QAction(
-            getIcon('findusage.png'), 'Find where highlighted item is used',
-            self)
+        self.findButton = QAction(getIcon("findusage.png"), "Find where highlighted item is used", self)
         self.findButton.setVisible(False)
         self.findButton.triggered.connect(self.__findWhereUsed)
-        self.showParsingErrorsButton = QAction(
-            getIcon('showparsingerrors.png'), 'Show lexer/parser errors', self)
+        self.showParsingErrorsButton = QAction(getIcon("showparsingerrors.png"), "Show lexer/parser errors", self)
         self.showParsingErrorsButton.triggered.connect(self.__showParserError)
         self.showParsingErrorsButton.setEnabled(False)
 
@@ -123,8 +115,7 @@ class FileOutlineViewer(QWidget):
         self.__noneLabel.setFont(headerFont)
         self.__noneLabel.setAutoFillBackground(True)
         noneLabelPalette = self.__noneLabel.palette()
-        noneLabelPalette.setColor(QPalette.Background,
-                                  GlobalData().skin['nolexerPaper'])
+        noneLabelPalette.setColor(QPalette.Background, GlobalData().skin["nolexerPaper"])
         self.__noneLabel.setPalette(noneLabelPalette)
 
         self.__layout = QVBoxLayout()
@@ -138,15 +129,15 @@ class FileOutlineViewer(QWidget):
     def __selectionChanged(self, index):
         """Handles the changed selection"""
         if index.isValid():
-            self.__outlineBrowsers[self.__currentUUID].contentItem = \
-                self.__outlineBrowsers[
-                    self.__currentUUID].browser.model().item(index)
+            self.__outlineBrowsers[self.__currentUUID].contentItem = (
+                self.__outlineBrowsers[self.__currentUUID].browser.model().item(index)
+            )
         else:
             self.__outlineBrowsers[self.__currentUUID].contentItem = None
         self.__updateButtons()
 
     def __handleShowContextMenu(self, coord):
-        """ Show the context menu """
+        """Show the context menu"""
         browser = self.__outlineBrowsers[self.__currentUUID].browser
         index = browser.indexAt(coord)
         if not index.isValid():
@@ -164,16 +155,13 @@ class FileOutlineViewer(QWidget):
         """Jump to definition context menu handler"""
         contextItem = self.__outlineBrowsers[self.__currentUUID].contentItem
         if contextItem is not None:
-            self.__outlineBrowsers[
-                self.__currentUUID].browser.openItem(contextItem)
+            self.__outlineBrowsers[self.__currentUUID].browser.openItem(contextItem)
 
     def __findWhereUsed(self):
         """Find where used context menu handler"""
         contextItem = self.__outlineBrowsers[self.__currentUUID].contentItem
         if contextItem is not None:
-            GlobalData().mainWindow.findWhereUsed(
-                contextItem.getPath(),
-                contextItem.sourceObj)
+            GlobalData().mainWindow.findWhereUsed(contextItem.getPath(), contextItem.sourceObj)
 
     def __updateButtons(self):
         """Updates the toolbar buttons depending on what is selected"""
@@ -181,8 +169,7 @@ class FileOutlineViewer(QWidget):
 
         contextItem = self.__outlineBrowsers[self.__currentUUID].contentItem
         if contextItem is None:
-            if contextItem.itemType in [FunctionItemType, ClassItemType,
-                                        AttributeItemType, GlobalItemType]:
+            if contextItem.itemType in [FunctionItemType, ClassItemType, AttributeItemType, GlobalItemType]:
                 self.findButton.setEnabled(True)
 
     def __onTabChanged(self, index):
@@ -204,8 +191,7 @@ class FileOutlineViewer(QWidget):
             self.__noneLabel.show()
             self.showParsingErrorsButton.setEnabled(False)
             return
-        if widget.getType() not in [MainWindowTabWidgetBase.PlainTextEditor,
-                                    MainWindowTabWidgetBase.VCSAnnotateViewer]:
+        if widget.getType() not in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.VCSAnnotateViewer]:
             if self.__currentUUID is not None:
                 self.__outlineBrowsers[self.__currentUUID].browser.hide()
                 self.__currentUUID = None
@@ -298,8 +284,7 @@ class FileOutlineViewer(QWidget):
             if not self.__outlineBrowsers[self.__currentUUID].changed:
                 self.__outlineBrowsers[self.__currentUUID].changed = True
                 browser = self.__outlineBrowsers[self.__currentUUID].browser
-                fName = self.__outlineBrowsers[
-                    self.__currentUUID].shortFileName
+                fName = self.__outlineBrowsers[self.__currentUUID].shortFileName
                 title = self.__modifiedFormat % fName
                 browser.model().sourceModel().updateRootData(0, title)
         self.__updateTimer.start(1500)
@@ -377,7 +362,7 @@ class FileOutlineViewer(QWidget):
 
     def __onFileTypeChanged(self, fileName, uuid, newFileType):
         """Triggered when the current buffer file type is changed, e.g. .cgi"""
-        del fileName    # unused argument
+        del fileName  # unused argument
         if isPythonMime(newFileType):
             # The file became a python one
             if uuid not in self.__outlineBrowsers:

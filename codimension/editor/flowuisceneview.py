@@ -27,11 +27,7 @@ from .flowuikeyboard import CFSceneKeyboardMixin
 from .flowuimouse import CFSceneMouseMixin
 
 
-class CFGraphicsScene(QGraphicsScene,
-                      CFSceneContextMenuMixin,
-                      CFSceneMouseMixin,
-                      CFSceneKeyboardMixin):
-
+class CFGraphicsScene(QGraphicsScene, CFSceneContextMenuMixin, CFSceneMouseMixin, CFSceneKeyboardMixin):
     """Reimplemented graphics scene"""
 
     def __init__(self, navBar, parent=None):
@@ -104,9 +100,7 @@ class CFGraphicsScene(QGraphicsScene,
         self.terminateMenus()
 
 
-
 class CFGraphicsView(QGraphicsView):
-
     """Central widget"""
 
     def __init__(self, navBar, parent):
@@ -144,8 +138,7 @@ class CFGraphicsView(QGraphicsView):
     def getVisibleRect(self):
         """Provides the visible rectangle"""
         topLeft = self.mapToScene(QPoint(0, 0))
-        bottomRight = self.mapToScene(QPoint(self.viewport().width(),
-                                             self.viewport().height()))
+        bottomRight = self.mapToScene(QPoint(self.viewport().width(), self.viewport().height()))
         return QRectF(topLeft, bottomRight)
 
     def scrollTo(self, item, makeFirstOnScreen=False):
@@ -167,8 +160,10 @@ class CFGraphicsView(QGraphicsView):
                 return
 
             # The item is fully visible vertically
-            if itemRect.topLeft().y() >= visibleRect.topLeft().y() and \
-               itemRect.bottomLeft().y() <= visibleRect.bottomLeft().y():
+            if (
+                itemRect.topLeft().y() >= visibleRect.topLeft().y()
+                and itemRect.bottomLeft().y() <= visibleRect.bottomLeft().y()
+            ):
                 self.__hScrollToItem(item)
                 return
 

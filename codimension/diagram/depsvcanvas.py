@@ -28,7 +28,6 @@ from .depsitems import SelfModule
 
 
 class DepsVirtualCanvas:
-
     """Holds the dependencies diagram representation"""
 
     def __init__(self, settings, xAddr, yAddr, parent):
@@ -65,8 +64,7 @@ class DepsVirtualCanvas:
             lastIndex += 1
             if needScopeEdge:
                 if self.__currentScopeClass:
-                    self.cells[lastIndex].append(
-                        ScopeHSideEdge(self.__currentCF, self, 0, lastIndex))
+                    self.cells[lastIndex].append(ScopeHSideEdge(self.__currentCF, self, 0, lastIndex))
         lastIndex = len(self.cells[row]) - 1
         while lastIndex < column:
             self.cells[row].append(VacantCell(None, self, lastIndex, row))
@@ -90,13 +88,11 @@ class DepsVirtualCanvas:
         vacantRow = 0
 
         # Avoid glueing to the top view edge
-        self.__allocateAndSet(vacantRow, 1,
-                              VSpacerCell(None, self, 1, vacantRow))
+        self.__allocateAndSet(vacantRow, 1, VSpacerCell(None, self, 1, vacantRow))
         vacantRow += 1
 
-        needConnector = depClasses['totalCount'] > 0
-        self.__allocateAndSet(vacantRow, 1,
-                              SelfModule(fileName, needConnector, self, 1, vacantRow))
+        needConnector = depClasses["totalCount"] > 0
+        self.__allocateAndSet(vacantRow, 1, SelfModule(fileName, needConnector, self, 1, vacantRow))
 
     def render(self):
         """Preforms rendering for all the cells"""
@@ -149,20 +145,16 @@ class DepsVirtualCanvas:
             for cell in row:
                 if self.settings.debug:
                     if cell.kind == CellElement.VCANVAS:
-                        rect = Rectangle(self, currentX + 1, currentY + 1,
-                                         cell.width - 2, cell.height -2)
+                        rect = Rectangle(self, currentX + 1, currentY + 1, cell.width - 2, cell.height - 2)
                         rect.pen = QPen(QColor(255, 0, 0, 255))
                         rect.brush = QBrush(QColor(255, 0, 0, 127))
-                        rect.setToolTip('Canvas ' + str(cell.width) + 'x' +
-                                        str(cell.height))
+                        rect.setToolTip("Canvas " + str(cell.width) + "x" + str(cell.height))
                         scene.addItem(rect)
                     else:
-                        rect = Rectangle(self, currentX, currentY,
-                                         cell.width, cell.height)
+                        rect = Rectangle(self, currentX, currentY, cell.width, cell.height)
                         rect.pen = QPen(QColor(0, 255, 0, 255))
                         rect.brush = QBrush(QColor(0, 255, 0, 127))
-                        rect.setToolTip('Item ' + str(cell) +
-                                        ' ' + str(cell.kind))
+                        rect.setToolTip("Item " + str(cell) + " " + str(cell.kind))
                         scene.addItem(rect)
                 cell.draw(scene, currentX, currentY)
                 currentX += cell.width
@@ -181,4 +173,3 @@ class DepsVirtualCanvas:
                 for cell in row:
                     if isinstance(cell, DepsVirtualCanvas):
                         cell.cleanup()
-

@@ -19,13 +19,11 @@
 
 """Dialog to enter a new text for a graphics item"""
 
-
 from ui.qt import QDialog, QDialogButtonBox, QLabel, Qt, QTextEdit, QVBoxLayout
 from utils.colorfont import getZoomedMonoFont
 
 
 class ReplaceTextDialog(QDialog):
-
     """Replace text input dialog"""
 
     def __init__(self, windowTitle, labelText, parent=None):

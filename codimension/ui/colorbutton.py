@@ -23,7 +23,6 @@ from .qt import QColorDialog, QPushButton, pyqtSignal
 
 
 class ColorButton(QPushButton):
-
     """A button which uses the selected color as its background"""
 
     sigColorChanged = pyqtSignal()
@@ -39,9 +38,9 @@ class ColorButton(QPushButton):
         if color != self.__color:
             self.__color = color
             if self.__color:
-                self.setStyleSheet('background-color: ' + self.__color.name())
+                self.setStyleSheet("background-color: " + self.__color.name())
             else:
-                self.setStyleSheet('')
+                self.setStyleSheet("")
             self.sigColorChanged.emit()
 
     def color(self):

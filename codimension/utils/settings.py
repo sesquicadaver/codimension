@@ -42,8 +42,7 @@ from .searchenv import SearchEnvironment
 from .userencodings import FileEncodings
 from .webresourcecache import WebResourceCache
 
-SETTINGS_DIR = os.path.join(os.path.realpath(QDir.homePath()),
-                            CONFIG_DIR) + os.path.sep
+SETTINGS_DIR = os.path.join(os.path.realpath(QDir.homePath()), CONFIG_DIR) + os.path.sep
 
 CLEAR_AND_REUSE = 0
 NO_CLEAR_AND_REUSE = 1
@@ -51,7 +50,6 @@ NO_REUSE = 2
 
 
 class ProfilerSettings:
-
     """Holds IDE-wide profiler options"""
 
     def __init__(self):
@@ -60,22 +58,21 @@ class ProfilerSettings:
 
     def profSettingsToJSON(self):
         """Converts the instance to a serializable structure"""
-        return {'__class__': 'ProfilerSettings',
-                '__values__': {'nodeLimit': self.nodeLimit,
-                               'edgeLimit': self.edgeLimit}}
+        return {
+            "__class__": "ProfilerSettings",
+            "__values__": {"nodeLimit": self.nodeLimit, "edgeLimit": self.edgeLimit},
+        }
 
     def profSettingsFromJSON(self, jsonObj):
         """Populates the values from the json object"""
-        self.nodeLimit = jsonObj['__values__']['nodeLimit']
-        self.edgeLimit = jsonObj['__values__']['edgeLimit']
+        self.nodeLimit = jsonObj["__values__"]["nodeLimit"]
+        self.edgeLimit = jsonObj["__values__"]["edgeLimit"]
 
     def __eq__(self, other):
-        return self.nodeLimit == other.nodeLimit and \
-               self.edgeLimit == other.edgeLimit
+        return self.nodeLimit == other.nodeLimit and self.edgeLimit == other.edgeLimit
 
 
 class DebuggerSettings:
-
     """Holds IDE-wide debugger options"""
 
     def __init__(self):
@@ -87,141 +84,142 @@ class DebuggerSettings:
 
     def debugSettingsToJSON(self):
         """Converts the instance to a serializable structure"""
-        return {'__class__': 'DebuggerSettings',
-                '__values__': {'reportExceptions': self.reportExceptions,
-                               'traceInterpreter': self.traceInterpreter,
-                               'stopAtFirstLine': self.stopAtFirstLine,
-                               'autofork': self.autofork,
-                               'followChild': self.followChild}}
+        return {
+            "__class__": "DebuggerSettings",
+            "__values__": {
+                "reportExceptions": self.reportExceptions,
+                "traceInterpreter": self.traceInterpreter,
+                "stopAtFirstLine": self.stopAtFirstLine,
+                "autofork": self.autofork,
+                "followChild": self.followChild,
+            },
+        }
 
     def debugSettingsFromJSON(self, jsonObj):
         """Populates the values from the json object"""
-        self.reportExceptions = jsonObj['__values__']['reportExceptions']
-        self.traceInterpreter = jsonObj['__values__']['traceInterpreter']
-        self.stopAtFirstLine = jsonObj['__values__']['stopAtFirstLine']
-        self.autofork = jsonObj['__values__']['autofork']
-        self.followChild = jsonObj['__values__']['followChild']
+        self.reportExceptions = jsonObj["__values__"]["reportExceptions"]
+        self.traceInterpreter = jsonObj["__values__"]["traceInterpreter"]
+        self.stopAtFirstLine = jsonObj["__values__"]["stopAtFirstLine"]
+        self.autofork = jsonObj["__values__"]["autofork"]
+        self.followChild = jsonObj["__values__"]["followChild"]
 
     def __eq__(self, other):
-        return self.reportExceptions == other.reportExceptions and \
-               self.traceInterpreter == other.traceInterpreter and \
-               self.stopAtFirstLine == other.stopAtFirstLine and \
-               self.autofork == other.autofork and \
-               self.followChild == other.followChild
+        return (
+            self.reportExceptions == other.reportExceptions
+            and self.traceInterpreter == other.traceInterpreter
+            and self.stopAtFirstLine == other.stopAtFirstLine
+            and self.autofork == other.autofork
+            and self.followChild == other.followChild
+        )
 
 
 _DEFAULT_SETTINGS = {
     # general
-    'zoom': 0,
-    'flowZoom': 0,
-    'smartZoom': 0,
-    'xpos': 50,
-    'ypos': 50,
-    'width': 750,
-    'height': 550,
-    'rendererxpos': 425,
-    'rendererypos': 75,
-    'rendererwidth': 375,
-    'rendererheight': 550,
-    'screenwidth': 0,
-    'screenheight': 0,
-    'xdelta': 0,
-    'ydelta': 0,
-    'skin': 'default',
-    'modifiedFormat': '%s *',
-    'verticalEdge': True,
-    'showSpaces': True,
-    'lineWrap': False,
-    'showBraceMatch': True,
-    'indentationGuides': False,
-    'currentLineVisible': True,
-    'jumpToFirstNonSpace': False,
-    'removeTrailingOnSave': False,
-    'showFSViewer': True,
-    'showWatchPointViewer': True,
-    'showNavigationBar': True,
-    'showCFNavigationBar': True,
-    'showMainToolBar': True,
-    'profilerLimits': ProfilerSettings(),
-    'debuggerSettings': DebuggerSettings(),
-    'debugGLFilter': 0,
-    'editorEdge': 80,
-    'projectTooltips': True,
-    'recentTooltips': True,
-    'classesTooltips': True,
-    'functionsTooltips': True,
-    'outlineTooltips': True,
-    'findNameTooltips': True,
-    'findFileTooltips': True,
-    'editorTooltips': True,
-    'editorCalltips': True,
-    'leftBarMinimized': False,
-    'bottomBarMinimized': False,
-    'rightBarMinimized': False,
-    'projectLoaded': False,
-    'clearDebugIO': False,
-    'floatingRenderer': False,
-    'hSplitterSizes': [200, 450, 575],
-    'vSplitterSizes': [400, 150],
-    'flowSplitterSizes': [225, 225],
-    'style': 'fusion',
-    'vcsstatusupdateinterval': 30,      # seconds
-    'tablistsortalpha': True,
-    'taborderpreserved': False,
-    'maxRecentProjects': 32,
-    'maxRecentFiles': 32,
-    'maxSearchEntries': 32,
-    'maxHighlightedMatches': 256,
-    'maxBreakpoints': 63,               # per file
-    'encoding': 'utf-8',
-    'hidedocstrings': False,
-    'hidecomments': False,
-    'hideexcepts': False,
-    'hidedecors': False,
-    'disasmLevel': 0,                   # 0 -> no optimization
-
+    "zoom": 0,
+    "flowZoom": 0,
+    "smartZoom": 0,
+    "xpos": 50,
+    "ypos": 50,
+    "width": 750,
+    "height": 550,
+    "rendererxpos": 425,
+    "rendererypos": 75,
+    "rendererwidth": 375,
+    "rendererheight": 550,
+    "screenwidth": 0,
+    "screenheight": 0,
+    "xdelta": 0,
+    "ydelta": 0,
+    "skin": "default",
+    "modifiedFormat": "%s *",
+    "verticalEdge": True,
+    "showSpaces": True,
+    "lineWrap": False,
+    "showBraceMatch": True,
+    "indentationGuides": False,
+    "currentLineVisible": True,
+    "jumpToFirstNonSpace": False,
+    "removeTrailingOnSave": False,
+    "showFSViewer": True,
+    "showWatchPointViewer": True,
+    "showNavigationBar": True,
+    "showCFNavigationBar": True,
+    "showMainToolBar": True,
+    "profilerLimits": ProfilerSettings(),
+    "debuggerSettings": DebuggerSettings(),
+    "debugGLFilter": 0,
+    "editorEdge": 80,
+    "projectTooltips": True,
+    "recentTooltips": True,
+    "classesTooltips": True,
+    "functionsTooltips": True,
+    "outlineTooltips": True,
+    "findNameTooltips": True,
+    "findFileTooltips": True,
+    "editorTooltips": True,
+    "editorCalltips": True,
+    "leftBarMinimized": False,
+    "bottomBarMinimized": False,
+    "rightBarMinimized": False,
+    "projectLoaded": False,
+    "clearDebugIO": False,
+    "floatingRenderer": False,
+    "hSplitterSizes": [200, 450, 575],
+    "vSplitterSizes": [400, 150],
+    "flowSplitterSizes": [225, 225],
+    "style": "fusion",
+    "vcsstatusupdateinterval": 30,  # seconds
+    "tablistsortalpha": True,
+    "taborderpreserved": False,
+    "maxRecentProjects": 32,
+    "maxRecentFiles": 32,
+    "maxSearchEntries": 32,
+    "maxHighlightedMatches": 256,
+    "maxBreakpoints": 63,  # per file
+    "encoding": "utf-8",
+    "hidedocstrings": False,
+    "hidecomments": False,
+    "hideexcepts": False,
+    "hidedecors": False,
+    "disasmLevel": 0,  # 0 -> no optimization
     # Debug variable filters
-    'dbgfltlocal': True,
-    'dbgfltglobal': True,
-    'dbgflthidden': True,
-    'dbgflttype': False,
-    'dbgfltmethod': False,
-    'dbgfltfunc': False,
-    'dbgfltbuiltin': False,
-    'dbgfltmodule': False,
-    'dbgfltnotype': False,
-
-    'calltrace': True,
-
+    "dbgfltlocal": True,
+    "dbgfltglobal": True,
+    "dbgflthidden": True,
+    "dbgflttype": False,
+    "dbgfltmethod": False,
+    "dbgfltfunc": False,
+    "dbgfltbuiltin": False,
+    "dbgfltmodule": False,
+    "dbgfltnotype": False,
+    "calltrace": True,
     # The IO redirect console
-    'ioconsolemaxmsgs': 10000,
-    'ioconsoledelchunk': 512,
-    'ioconsolelinewrap': False,
-    'ioconsoleshowspaces': True,
-    'ioconsoleautoscroll': True,
-    'ioconsolereuse': CLEAR_AND_REUSE,
-
-    'navbarglobalsimports': False,
-
-    'recentProjects': [],
-    'projectFilesFilters': ['^\\.', '.*\\~$', '.*\\.pyc$',
-                            '.*\\.swp$', '.*\\.pyo$', '__pycache__'],
-    'ignoredExceptions': [],
-    'disabledPlugins': [],
-    'vcsindicators': [[-1, 'vcsunversioned.png', None,
-                       '220,220,255,255', 'Not under VCS control'],
-                      [-2, 'vcsstatuserror.png', None,
-                       '255,160,160,255', 'Error getting status']]}
+    "ioconsolemaxmsgs": 10000,
+    "ioconsoledelchunk": 512,
+    "ioconsolelinewrap": False,
+    "ioconsoleshowspaces": True,
+    "ioconsoleautoscroll": True,
+    "ioconsolereuse": CLEAR_AND_REUSE,
+    "navbarglobalsimports": False,
+    "recentProjects": [],
+    "projectFilesFilters": ["^\\.", ".*\\~$", ".*\\.pyc$", ".*\\.swp$", ".*\\.pyo$", "__pycache__"],
+    "ignoredExceptions": [],
+    "disabledPlugins": [],
+    "vcsindicators": [
+        [-1, "vcsunversioned.png", None, "220,220,255,255", "Not under VCS control"],
+        [-2, "vcsstatuserror.png", None, "255,160,160,255", "Error getting status"],
+    ],
+}
 
 
 def settingsFromJSON(jsonObj):
     """Custom deserialization"""
-    if '__class__' in jsonObj:
-        if jsonObj['__class__'] == 'ProfilerSettings':
+    if "__class__" in jsonObj:
+        if jsonObj["__class__"] == "ProfilerSettings":
             pSettings = ProfilerSettings()
             pSettings.profSettingsFromJSON(jsonObj)
             return pSettings
-        if jsonObj['__class__'] == 'DebuggerSettings':
+        if jsonObj["__class__"] == "DebuggerSettings":
             dSettings = DebuggerSettings()
             dSettings.debugSettingsFromJSON(jsonObj)
             return dSettings
@@ -234,18 +232,19 @@ def settingsToJSON(pythonObj):
         return pythonObj.profSettingsToJSON()
     if isinstance(pythonObj, DebuggerSettings):
         return pythonObj.debugSettingsToJSON()
-    raise TypeError(repr(pythonObj) + ' is not JSON serializable')
+    raise TypeError(repr(pythonObj) + " is not JSON serializable")
 
 
-class SettingsWrapper(QObject,
-                      DebuggerEnvironment,
-                      SearchEnvironment,
-                      FileSystemEnvironment,
-                      RunParametersCache,
-                      FilePositions,
-                      FileEncodings,
-                      FlowUICollapsedGroups):
-
+class SettingsWrapper(
+    QObject,
+    DebuggerEnvironment,
+    SearchEnvironment,
+    FileSystemEnvironment,
+    RunParametersCache,
+    FilePositions,
+    FileEncodings,
+    FlowUICollapsedGroups,
+):
     """Provides settings singleton facility"""
 
     MAX_SMART_ZOOM = 4
@@ -290,10 +289,8 @@ class SettingsWrapper(QObject,
         FileEncodings.setup(self, SETTINGS_DIR)
         FlowUICollapsedGroups.setup(self, SETTINGS_DIR)
 
-        self.webResourceCache = WebResourceCache(SETTINGS_DIR + os.path.sep +
-                                                 'webresourcecache')
-        self.plantUMLCache = PlantUMLCache(SETTINGS_DIR + os.path.sep +
-                                           'plantumlcache')
+        self.webResourceCache = WebResourceCache(SETTINGS_DIR + os.path.sep + "webresourcecache")
+        self.plantUMLCache = PlantUMLCache(SETTINGS_DIR + os.path.sep + "plantumlcache")
 
         # Save the config file name
         self.__fullFileName = SETTINGS_DIR + "settings.json"
@@ -308,50 +305,54 @@ class SettingsWrapper(QObject,
 
         # Load the previous session settings
         try:
-            with open(self.__fullFileName, "r",
-                      encoding=SETTINGS_ENCODING) as diskfile:
+            with open(self.__fullFileName, "r", encoding=SETTINGS_ENCODING) as diskfile:
                 diskValues = json.load(diskfile, object_hook=settingsFromJSON)
         except Exception as exc:
             # Bad error - save default
-            self.__saveErrors('Could not read setting from ' +
-                              self.__fullFileName + ': ' + str(exc) +
-                              'Overwriting with the default settings...')
+            self.__saveErrors(
+                "Could not read setting from "
+                + self.__fullFileName
+                + ": "
+                + str(exc)
+                + "Overwriting with the default settings..."
+            )
             self.flush()
             return
 
         for item, val in diskValues.items():
             if item in self.__values:
                 if type(self.__values[item]) is not type(val):
-                    readErrors.append("Settings '" + item +
-                                      "' type from the disk file " +
-                                      self.__fullFileName +
-                                      ' does not match the expected one. '
-                                      'The default value is used.')
+                    readErrors.append(
+                        "Settings '"
+                        + item
+                        + "' type from the disk file "
+                        + self.__fullFileName
+                        + " does not match the expected one. "
+                        "The default value is used."
+                    )
                 else:
                     self.__values[item] = val
             else:
-                readErrors.append('Disk file ' + self.__fullFileName +
-                                  " contains extra value '" + item +
-                                  "'. It will be lost.")
+                readErrors.append(
+                    "Disk file " + self.__fullFileName + " contains extra value '" + item + "'. It will be lost."
+                )
 
         # If format is bad then overwrite the file
         if readErrors:
             self.__saveErrors("\n".join(readErrors))
             self.flush()
 
-        SearchEnvironment.setLimit(self, self.__values['maxSearchEntries'])
-        FileSystemEnvironment.setLimit(self, self.__values['maxRecentFiles'])
+        SearchEnvironment.setLimit(self, self.__values["maxSearchEntries"])
+        FileSystemEnvironment.setLimit(self, self.__values["maxRecentFiles"])
 
     @staticmethod
     def __saveErrors(message):
         """Appends the message to the startup errors file"""
         try:
-            with open(SETTINGS_DIR + 'startupmessages.log', 'a',
-                      encoding=SETTINGS_ENCODING) as diskfile:
-                diskfile.write('------ Startup report at ' +
-                               str(datetime.datetime.now()) + '\n')
+            with open(SETTINGS_DIR + "startupmessages.log", "a", encoding=SETTINGS_ENCODING) as diskfile:
+                diskfile.write("------ Startup report at " + str(datetime.datetime.now()) + "\n")
                 diskfile.write(message)
-                diskfile.write('\n------\n\n')
+                diskfile.write("\n------\n\n")
         except Exception:
             # This is not that important
             pass
@@ -359,27 +360,24 @@ class SettingsWrapper(QObject,
     def flush(self):
         """Writes the settings to the disk"""
         try:
-            with open(self.__fullFileName, 'w',
-                      encoding=SETTINGS_ENCODING) as diskfile:
-                json.dump(self.__values, diskfile,
-                          default=settingsToJSON, indent=4)
+            with open(self.__fullFileName, "w", encoding=SETTINGS_ENCODING) as diskfile:
+                json.dump(self.__values, diskfile, default=settingsToJSON, indent=4)
         except Exception as exc:
-            logging.error('Error saving setting (to %s): %s',
-                          self.__fullFileName, str(exc))
+            logging.error("Error saving setting (to %s): %s", self.__fullFileName, str(exc))
 
     def addRecentProject(self, projectFile, needFlush=True):
         """Adds the recent project to the list"""
         absProjectFile = os.path.realpath(projectFile)
-        recentProjects = self.__values['recentProjects']
+        recentProjects = self.__values["recentProjects"]
 
         if absProjectFile in recentProjects:
             recentProjects.remove(absProjectFile)
 
         recentProjects.insert(0, absProjectFile)
-        limit = self.__values['maxRecentProjects']
+        limit = self.__values["maxRecentProjects"]
         if len(recentProjects) > limit:
             recentProjects = recentProjects[0:limit]
-        self.__values['recentProjects'] = recentProjects
+        self.__values["recentProjects"] = recentProjects
         if needFlush:
             self.flush()
         self.sigRecentListChanged.emit()
@@ -387,11 +385,11 @@ class SettingsWrapper(QObject,
     def deleteRecentProject(self, projectFile, needFlush=True):
         """Deletes the recent project from the list"""
         absProjectFile = os.path.realpath(projectFile)
-        recentProjects = self.__values['recentProjects']
+        recentProjects = self.__values["recentProjects"]
 
         if absProjectFile in recentProjects:
             recentProjects.remove(absProjectFile)
-            self.__values['recentProjects'] = recentProjects
+            self.__values["recentProjects"] = recentProjects
             if needFlush:
                 self.flush()
             self.sigRecentListChanged.emit()
@@ -399,37 +397,43 @@ class SettingsWrapper(QObject,
     @staticmethod
     def getDefaultGeometry():
         """Provides the default window size and location"""
-        return _DEFAULT_SETTINGS['xpos'], _DEFAULT_SETTINGS['ypos'], \
-               _DEFAULT_SETTINGS['width'], _DEFAULT_SETTINGS['height']
+        return (
+            _DEFAULT_SETTINGS["xpos"],
+            _DEFAULT_SETTINGS["ypos"],
+            _DEFAULT_SETTINGS["width"],
+            _DEFAULT_SETTINGS["height"],
+        )
 
     @staticmethod
     def getDefaultRendererWindowGeometry():
         """Provides the default renderer window size and location"""
         # A bit shifted down and half of the width of the main window
-        return _DEFAULT_SETTINGS['rendererxpos'], \
-               _DEFAULT_SETTINGS['rendererypos'], \
-               _DEFAULT_SETTINGS['rendererwidth'], \
-               _DEFAULT_SETTINGS['rendererheight']
+        return (
+            _DEFAULT_SETTINGS["rendererxpos"],
+            _DEFAULT_SETTINGS["rendererypos"],
+            _DEFAULT_SETTINGS["rendererwidth"],
+            _DEFAULT_SETTINGS["rendererheight"],
+        )
 
     def getProfilerSettings(self):
         """Provides the profiler IDE-wide settings"""
-        return self.__values['profilerLimits']
+        return self.__values["profilerLimits"]
 
     def setProfilerSettings(self, newValue, needFlush=True):
         """Updates the profiler settings"""
-        if self.__values['profilerLimits'] != newValue:
-            self.__values['profilerLimits'] = newValue
+        if self.__values["profilerLimits"] != newValue:
+            self.__values["profilerLimits"] = newValue
             if needFlush:
                 self.flush()
 
     def getDebuggerSettings(self):
         """Provides the debugger IDE-wide settings"""
-        return self.__values['debuggerSettings']
+        return self.__values["debuggerSettings"]
 
     def setDebuggerSettings(self, newValue, needFlush=True):
         """Updates the debugger settings"""
-        if self.__values['debuggerSettings'] != newValue:
-            self.__values['debuggerSettings'] = newValue
+        if self.__values["debuggerSettings"] != newValue:
+            self.__values["debuggerSettings"] = newValue
             if needFlush:
                 self.flush()
 
@@ -438,32 +442,42 @@ class SettingsWrapper(QObject,
         self.minTextZoom = minTextZoom
         self.minCFlowZoom = minCFlowZoom
         warnings = []
-        if self.__values['zoom'] < minTextZoom:
-            warnings.append('The current text zoom (' +
-                            str(self.__values['zoom']) +
-                            ') will be adjusted to ' + str(minTextZoom) +
-                            ' due to it is less than min fonts allowed.')
-            self.__values['zoom'] = minTextZoom
-        if self.__values['flowZoom'] < minCFlowZoom:
-            warnings.append('The current flow zoom (' +
-                            str(self.__values['flowZoom']) +
-                            ') will be adjusted to ' + str(minCFlowZoom) +
-                            ' due to it is less than min fonts allowed.')
-            self.__values['flowZoom'] = minCFlowZoom
-        if self.__values['smartZoom'] < SettingsWrapper.MIN_SMART_ZOOM:
-            warnings.append('The current smart zoom (' +
-                            str(self.__values['smartZoom']) +
-                            ') will be adjusted to ' +
-                            str(SettingsWrapper.MIN_SMART_ZOOM) +
-                            ' due to it is less than min allowed.')
-            self.__values['smartZoom'] = SettingsWrapper.MIN_SMART_ZOOM
-        elif self.__values['smartZoom'] > SettingsWrapper.MAX_SMART_ZOOM:
-            warnings.append('The current smart zoom (' +
-                            str(self.__values['smartZoom']) +
-                            ') will be adjusted to ' +
-                            str(SettingsWrapper.MAX_SMART_ZOOM) +
-                            ' due to it is larger than max allowed.')
-            self.__values['smartZoom'] = SettingsWrapper.MAX_SMART_ZOOM
+        if self.__values["zoom"] < minTextZoom:
+            warnings.append(
+                "The current text zoom ("
+                + str(self.__values["zoom"])
+                + ") will be adjusted to "
+                + str(minTextZoom)
+                + " due to it is less than min fonts allowed."
+            )
+            self.__values["zoom"] = minTextZoom
+        if self.__values["flowZoom"] < minCFlowZoom:
+            warnings.append(
+                "The current flow zoom ("
+                + str(self.__values["flowZoom"])
+                + ") will be adjusted to "
+                + str(minCFlowZoom)
+                + " due to it is less than min fonts allowed."
+            )
+            self.__values["flowZoom"] = minCFlowZoom
+        if self.__values["smartZoom"] < SettingsWrapper.MIN_SMART_ZOOM:
+            warnings.append(
+                "The current smart zoom ("
+                + str(self.__values["smartZoom"])
+                + ") will be adjusted to "
+                + str(SettingsWrapper.MIN_SMART_ZOOM)
+                + " due to it is less than min allowed."
+            )
+            self.__values["smartZoom"] = SettingsWrapper.MIN_SMART_ZOOM
+        elif self.__values["smartZoom"] > SettingsWrapper.MAX_SMART_ZOOM:
+            warnings.append(
+                "The current smart zoom ("
+                + str(self.__values["smartZoom"])
+                + ") will be adjusted to "
+                + str(SettingsWrapper.MAX_SMART_ZOOM)
+                + " due to it is larger than max allowed."
+            )
+            self.__values["smartZoom"] = SettingsWrapper.MAX_SMART_ZOOM
 
         if warnings:
             self.flush()
@@ -474,71 +488,71 @@ class SettingsWrapper(QObject,
 
     def __setitem__(self, key, value):
         self.__values[key] = value
-        if key == 'flowSplitterSizes':
+        if key == "flowSplitterSizes":
             self.sigFlowSplitterChanged.emit()
-        elif key == 'hidedocstrings':
+        elif key == "hidedocstrings":
             self.sigHideDocstringsChanged.emit()
-        elif key == 'hidecomments':
+        elif key == "hidecomments":
             self.sigHideCommentsChanged.emit()
-        elif key == 'hideexcepts':
+        elif key == "hideexcepts":
             self.sigHideExceptsChanged.emit()
-        elif key == 'hidedecors':
+        elif key == "hidedecors":
             self.sigHideDecorsChanged.emit()
-        elif key == 'disasmLevel':
+        elif key == "disasmLevel":
             self.sigDisasmLevelChanged.emit()
         self.flush()
 
     def onTextZoomIn(self):
         """Triggered when the text is zoomed in"""
-        self.__values['zoom'] += 1
+        self.__values["zoom"] += 1
         self.flush()
         self.sigTextZoomChanged.emit()
 
     def onTextZoomOut(self):
         """Triggered when the text is zoomed out"""
-        if self.__values['zoom'] > self.minTextZoom:
-            self.__values['zoom'] -= 1
+        if self.__values["zoom"] > self.minTextZoom:
+            self.__values["zoom"] -= 1
             self.flush()
             self.sigTextZoomChanged.emit()
 
     def onTextZoomReset(self):
         """Triggered when the text zoom is reset"""
-        if self.__values['zoom'] != 0:
-            self.__values['zoom'] = 0
+        if self.__values["zoom"] != 0:
+            self.__values["zoom"] = 0
             self.flush()
             self.sigTextZoomChanged.emit()
 
     def onSmartZoomIn(self):
         """Triggered when the smart zoom is changed"""
-        if self.__values['smartZoom'] < SettingsWrapper.MAX_SMART_ZOOM:
-            self.__values['smartZoom'] += 1
+        if self.__values["smartZoom"] < SettingsWrapper.MAX_SMART_ZOOM:
+            self.__values["smartZoom"] += 1
             self.flush()
             self.sigSmartZoomChanged.emit()
 
     def onSmartZoomOut(self):
         """Triggered when the smart zoom is changed"""
-        if self.__values['smartZoom'] > SettingsWrapper.MIN_SMART_ZOOM:
-            self.__values['smartZoom'] -= 1
+        if self.__values["smartZoom"] > SettingsWrapper.MIN_SMART_ZOOM:
+            self.__values["smartZoom"] -= 1
             self.flush()
             self.sigSmartZoomChanged.emit()
 
     def onFlowZoomIn(self):
         """Triggered when the flow is zoomed in"""
-        self.__values['flowZoom'] += 1
+        self.__values["flowZoom"] += 1
         self.flush()
         self.sigFlowZoomChanged.emit()
 
     def onFlowZoomOut(self):
         """Triggered when the flow is zoomed out"""
-        if self.__values['flowZoom'] > self.minCFlowZoom:
-            self.__values['flowZoom'] -= 1
+        if self.__values["flowZoom"] > self.minCFlowZoom:
+            self.__values["flowZoom"] -= 1
             self.flush()
             self.sigFlowZoomChanged.emit()
 
     def onFlowZoomReset(self):
         """Triggered when the flow zoom is reset"""
-        if self.__values['flowZoom'] != 0:
-            self.__values['flowZoom'] = 0
+        if self.__values["flowZoom"] != 0:
+            self.__values["flowZoom"] = 0
             self.flush()
             self.sigFlowZoomChanged.emit()
 

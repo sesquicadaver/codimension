@@ -19,7 +19,6 @@
 
 """Wrapper to profile a script with redirected IO"""
 
-
 import os.path
 import socket
 import sys
@@ -41,8 +40,8 @@ from PyQt5.QtNetwork import QAbstractSocket, QHostAddress, QTcpSocket
 # If set to true then the client prints debug messages on the original stderr
 CLIENT_DEBUG = False
 
-WAIT_CONTINUE_TIMEOUT = 5       # in seconds
-WAIT_EXIT_COMMAND_TIMEOUT = 5   # in seconds
+WAIT_CONTINUE_TIMEOUT = 5  # in seconds
+WAIT_EXIT_COMMAND_TIMEOUT = 5  # in seconds
 PROFILE_WRAPPER = None
 PROFILE_CLIENT_ORIG_INPUT = None
 
@@ -56,16 +55,16 @@ def profileClientInput(prompt="", echo=True):
 
 # Use our own input().
 try:
-    PROFILE_CLIENT_ORIG_INPUT = __builtins__.__dict__['input']
-    __builtins__.__dict__['input'] = profileClientInput
+    PROFILE_CLIENT_ORIG_INPUT = __builtins__.__dict__["input"]
+    __builtins__.__dict__["input"] = profileClientInput
 except (AttributeError, KeyError):
     import __main__
-    PROFILE_CLIENT_ORIG_INPUT = __main__.__builtins__.__dict__['input']
-    __main__.__builtins__.__dict__['input'] = profileClientInput
+
+    PROFILE_CLIENT_ORIG_INPUT = __main__.__builtins__.__dict__["input"]
+    __main__.__builtins__.__dict__["input"] = profileClientInput
 
 
-class RedirectedIOProfileWrapper():
-
+class RedirectedIOProfileWrapper:
     """Wrapper to profile a script with redirected IO"""
 
     def __init__(self):
@@ -79,24 +78,21 @@ class RedirectedIOProfileWrapper():
 
     def main(self):
         """Profile wrapper driver"""
-        if '--' not in sys.argv:
+        if "--" not in sys.argv:
             print("Unexpected arguments", file=sys.stderr)
             return 1
 
         self.__procuuid, host, port, outfile, args = self.parseArgs()
-        if self.__procuuid is None or host is None or \
-           port is None or outfile is None:
+        if self.__procuuid is None or host is None or port is None or outfile is None:
             print("Not enough arguments", file=sys.stderr)
             return 1
 
         remoteAddress = self.resolveHost(host)
         self.connect(remoteAddress, port)
-        sendJSONCommand(self.__socket, METHOD_PROC_ID_INFO,
-                        self.__procuuid, None)
+        sendJSONCommand(self.__socket, METHOD_PROC_ID_INFO, self.__procuuid, None)
 
         try:
-            waitForIDEMessage(self.__socket, METHOD_PROLOGUE_CONTINUE,
-                              WAIT_CONTINUE_TIMEOUT)
+            waitForIDEMessage(self.__socket, METHOD_PROLOGUE_CONTINUE, WAIT_CONTINUE_TIMEOUT)
         except Exception as exc:
             print(str(exc), file=sys.stderr)
             return 1
@@ -144,8 +140,7 @@ class RedirectedIOProfileWrapper():
 
         # Send the return code back
         try:
-            sendJSONCommand(self.__socket, METHOD_EPILOGUE_EXIT_CODE,
-                            self.__procuuid, {'exitCode': retCode})
+            sendJSONCommand(self.__socket, METHOD_EPILOGUE_EXIT_CODE, self.__procuuid, {"exitCode": retCode})
         except Exception as exc:
             print(str(exc), file=sys.stderr)
             self.close()
@@ -162,7 +157,7 @@ class RedirectedIOProfileWrapper():
         else:
             self.__socket.connectToHost(remoteAddress, port)
         if not self.__socket.waitForConnected(1000):
-            raise Exception('Cannot connect to the IDE')
+            raise Exception("Cannot connect to the IDE")
         self.__socket.setSocketOption(QAbstractSocket.KeepAliveOption, 1)
         self.__socket.setSocketOption(QAbstractSocket.LowDelayOption, 1)
         self.__socket.disconnected.connect(self.__onDisconnected)
@@ -176,16 +171,16 @@ class RedirectedIOProfileWrapper():
         """Profiles the python script"""
         try:
             # In Py 2.x, the builtins were in __builtin__
-            builtins = sys.modules['__builtin__']
+            builtins = sys.modules["__builtin__"]
         except KeyError:
             # In Py 3.x, they're in builtins
-            builtins = sys.modules['builtins']
+            builtins = sys.modules["builtins"]
 
         fileName = arguments[0]
 
-        oldMainMod = sys.modules['__main__']
-        mainMod = types.ModuleType('__main__')
-        sys.modules['__main__'] = mainMod
+        oldMainMod = sys.modules["__main__"]
+        mainMod = types.ModuleType("__main__")
+        sys.modules["__main__"] = mainMod
         mainMod.__file__ = fileName
         mainMod.__builtins__ = builtins
 
@@ -201,19 +196,19 @@ class RedirectedIOProfileWrapper():
         if normCWD != normScriptDir:
             sys.path.insert(0, os.path.dirname(fileName))
 
-        with open(fileName, 'rb') as fileToRead:
+        with open(fileName, "rb") as fileToRead:
             source = fileToRead.read()
 
         # We have the source.  `compile` still needs the last line to be clean,
         # so make sure it is, then compile a code object from it.
-        if not source or source[-1] != b'\n':
-            source += b'\n'
+        if not source or source[-1] != b"\n":
+            source += b"\n"
 
-        code = compile(source, fileName, 'exec')
+        code = compile(source, fileName, "exec")
         runctx(code, mainMod.__dict__, None, outfile)
 
         # Restore the old __main__
-        sys.modules['__main__'] = oldMainMod
+        sys.modules["__main__"] = oldMainMod
 
         # Restore the old argv and path
         sys.argv = oldArgv
@@ -226,8 +221,7 @@ class RedirectedIOProfileWrapper():
                 # disconnected before it has a chance to read the script
                 # exit code. Wait for the explicit command to exit guarantees
                 # that all the data will be received.
-                waitForIDEMessage(self.__socket, METHOD_EPILOGUE_EXIT,
-                                  WAIT_EXIT_COMMAND_TIMEOUT)
+                waitForIDEMessage(self.__socket, METHOD_EPILOGUE_EXIT, WAIT_EXIT_COMMAND_TIMEOUT)
         finally:
             if self.__socket:
                 self.__socket.close()
@@ -235,11 +229,9 @@ class RedirectedIOProfileWrapper():
 
     def input(self, prompt, echo):
         """Implements input() using the redirected input"""
-        sendJSONCommand(self.__socket, METHOD_STDIN, self.__procuuid,
-                        {'prompt': prompt, 'echo': echo})
-        params = waitForIDEMessage(self.__socket, METHOD_STDIN,
-                                   60 * 60 * 24 * 7)
-        return params['input']
+        sendJSONCommand(self.__socket, METHOD_STDIN, self.__procuuid, {"prompt": prompt, "echo": echo})
+        params = waitForIDEMessage(self.__socket, METHOD_STDIN, 60 * 60 * 24 * 7)
+        return params["input"]
 
     @staticmethod
     def resolveHost(host):
@@ -250,8 +242,7 @@ class RedirectedIOProfileWrapper():
         except ValueError:
             # version = 'v4'
             family = socket.AF_INET
-        return socket.getaddrinfo(host, None, family,
-                                  socket.SOCK_STREAM)[0][4][0]
+        return socket.getaddrinfo(host, None, family, socket.SOCK_STREAM)[0][4][0]
 
     @staticmethod
     def parseArgs():
@@ -263,23 +254,23 @@ class RedirectedIOProfileWrapper():
         args = sys.argv[1:]
 
         while args[0]:
-            if args[0] in ['--host']:
+            if args[0] in ["--host"]:
                 host = args[1]
                 del args[0]
                 del args[0]
-            elif args[0] in ['--port']:
+            elif args[0] in ["--port"]:
                 port = int(args[1])
                 del args[0]
                 del args[0]
-            elif args[0] in ['--procuuid']:
+            elif args[0] in ["--procuuid"]:
                 procuuid = args[1]
                 del args[0]
                 del args[0]
-            elif args[0] in ['--outfile']:
+            elif args[0] in ["--outfile"]:
                 outfile = args[1]
                 del args[0]
                 del args[0]
-            elif args[0] == '--':
+            elif args[0] == "--":
                 del args[0]
                 break
 

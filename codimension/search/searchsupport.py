@@ -19,7 +19,6 @@
 
 """Search support"""
 
-
 import logging
 import re
 from html import escape
@@ -31,13 +30,12 @@ from utils.globals import GlobalData
 
 
 class Match:
-
     """Stores info about one match in a file"""
 
     def __init__(self, line, start, finish):
-        self.line = line        # Matched line
-        self.start = start      # Match start pos
-        self.finish = finish    # Match end pos
+        self.line = line  # Matched line
+        self.start = start  # Match start pos
+        self.finish = finish  # Match end pos
         self.tooltip = "not implemented"
         self.text = ""
 
@@ -53,16 +51,15 @@ def getSearchItemIndex(items, fileName):
 
 
 class ItemToSearchIn:
-
     """Stores information about one item to search in"""
 
     contextLines = 15
 
     def __init__(self, fname, bufferID):
-        self.fileName = fname       # Could be absolute -> for existing files
-                                    # or relative -> for newly created
+        self.fileName = fname  # Could be absolute -> for existing files
+        # or relative -> for newly created
         self.bufferUUID = bufferID  # Non empty for currently opened files
-        self.tooltip = ""           # For python files only -> docstring
+        self.tooltip = ""  # For python files only -> docstring
         self.matches = []
 
     def addMatch(self, name, lineNumber, customMessage=None):
@@ -77,16 +74,15 @@ class ItemToSearchIn:
                 if widget is not None:
                     content = widget.getEditor().lines
                 else:
-                    raise Exception('Inconsistency. Buffer disappeared.')
+                    raise Exception("Inconsistency. Buffer disappeared.")
             else:
                 content = getFileContent(self.fileName).splitlines()
             self.__fillInMatch(match, content, name, lineNumber, customMessage)
         except Exception as exc:
-            logging.error('Error adding match: %s', str(exc))
+            logging.error("Error adding match: %s", str(exc))
         self.matches.append(match)
 
-    def __fillInMatch(self, match, content, name, lineNumber,
-                      customMessage=None):
+    def __fillInMatch(self, match, content, name, lineNumber, customMessage=None):
         """Fills in the match fields from the content"""
         # Form the regexp corresponding to a single word search
         line = content[lineNumber - 1]
@@ -108,9 +104,7 @@ class ItemToSearchIn:
             match.start = 0
             match.finish = len(line)
 
-        match.tooltip = self.__buildTooltip(content, lineNumber - 1,
-                                            len(content),
-                                            match.start, match.finish)
+        match.tooltip = self.__buildTooltip(content, lineNumber - 1, len(content), match.start, match.finish)
 
         self.__extractDocstring(content)
 
@@ -140,10 +134,9 @@ class ItemToSearchIn:
             content = getFileContent(self.fileName).splitlines()
             self.__lookThroughLines(content, expression)
         except Exception as exc:
-            logging.error('Error searching in %s: %s', self.fileName, str(exc))
+            logging.error("Error searching in %s: %s", self.fileName, str(exc))
 
-    def __buildTooltip(self, content, lineIndex, totalLines,
-                       startPos, finishPos):
+    def __buildTooltip(self, content, lineIndex, totalLines, startPos, finishPos):
         """Forms the tooltip for the given match"""
         start, end = self.__calculateContextStart(lineIndex, totalLines)
         lines = content[start:end]
@@ -154,28 +147,29 @@ class ItemToSearchIn:
             if index != matchIndex:
                 lines[index] = escape(lines[index])
 
-        lines[matchIndex] = \
-            escape(lines[matchIndex][:startPos]) + \
-            "<b>" + \
-            escape(lines[matchIndex][startPos:finishPos]) + \
-            "</b>" + \
-            escape(lines[matchIndex][finishPos:])
+        lines[matchIndex] = (
+            escape(lines[matchIndex][:startPos])
+            + "<b>"
+            + escape(lines[matchIndex][startPos:finishPos])
+            + "</b>"
+            + escape(lines[matchIndex][finishPos:])
+        )
 
         # Strip empty lines at the end and at the beginning
         index = len(lines) - 1
         while index >= 0:
-            if lines[index].strip() == '':
+            if lines[index].strip() == "":
                 del lines[index]
                 index -= 1
                 continue
             break
         while len(lines) > 0:
-            if lines[0].strip() == '':
+            if lines[0].strip() == "":
                 del lines[0]
                 continue
             break
 
-        return '<p>' + '<br/>'.join(lines).replace(' ', '&nbsp;') + '</p>'
+        return "<p>" + "<br/>".join(lines).replace(" ", "&nbsp;") + "</p>"
 
     def __lookThroughLines(self, content, expression):
         """Searches through all the given lines"""
@@ -187,15 +181,11 @@ class ItemToSearchIn:
             if contains:
                 match = Match(lineIndex + 1, contains.start(), contains.end())
                 match.text = line.strip()
-                match.tooltip = self.__buildTooltip(content, lineIndex,
-                                                    totalLines,
-                                                    match.start, match.finish)
+                match.tooltip = self.__buildTooltip(content, lineIndex, totalLines, match.start, match.finish)
                 self.matches.append(match)
                 if len(self.matches) > 1024:
                     # Too much entries, stop here
-                    logging.warning("More than 1024 matches in %s. Stop "
-                                    "further search in this file.",
-                                    self.fileName)
+                    logging.warning("More than 1024 matches in %s. Stop further search in this file.", self.fileName)
                     break
             lineIndex += 1
 
@@ -228,4 +218,3 @@ class ItemToSearchIn:
         if end < totalLines:
             return start, end
         return totalLines - ItemToSearchIn.contextLines, totalLines
-
