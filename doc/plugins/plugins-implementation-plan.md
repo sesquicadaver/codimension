@@ -4,7 +4,7 @@
 
 **Версія:** 1.0  
 **Дата:** 2025-03  
-**Статус:** План
+**Статус:** Виконано (критерії готовності пройдені)
 
 ---
 
@@ -40,8 +40,8 @@
 ### Фаза 0: Підготовка (1–2 дні)
 
 - [ ] Створити спільний базовий клас `LintDriverBase` (опціонально) для driver-ів
-- [ ] Перевірити сумісність з CI (ruff, mypy у venv)
-- [ ] Оновити Living Specification: матриця ТЗ → модуль → тести
+- [x] Перевірити сумісність з CI (ruff, mypy у venv)
+- [x] Оновити Living Specification: матриця ТЗ → модуль → тести
 
 ### Фаза 1: Coverage (pytest-cov) — 3–5 днів ✅
 **Пріоритет:** Високий. Потрібен для CI та Living Specification.
@@ -250,10 +250,10 @@ pip-audit>=2.0.0
 
 ## 6. Документація
 
-- [ ] Оновити `doc/plugins/plugins.md` — перелік нових плагінів
-- [ ] Додати опис кожного плагіна (короткий)
+- [x] Оновити `doc/plugins/plugins.md` — перелік нових плагінів
+- [x] Додати опис кожного плагіна (короткий)
 - [ ] Оновити ChangeLog при кожному релізі
-- [ ] Living Specification: ТЗ → модуль → тест
+- [x] Living Specification: ТЗ → модуль → тест — [living-specification.md](living-specification.md)
 
 ---
 
@@ -270,9 +270,9 @@ pip-audit>=2.0.0
 
 ## 8. Критерії готовності
 
-- [ ] Усі плагіни в `cdmplugins/`
-- [ ] setup.py оновлено
-- [ ] requirements.txt оновлено
-- [ ] Документація оновлена
-- [ ] CI проходить (ruff, mypy)
-- [ ] Smoke-тест: codimension запускається, плагіни активуються
+- [x] Усі плагіни в `cdmplugins/`
+- [x] setup.py оновлено
+- [x] requirements.txt оновлено
+- [x] Документація оновлена
+- [x] CI проходить (ruff, mypy) — `.github/workflows/ci.yml`
+- [x] Smoke-тест: codimension запускається, плагіни активуються

@@ -17,7 +17,6 @@ Uses --cov-report=json:<file> and parses coverage.py JSON format.
 
 import json
 import os.path
-import sys
 import tempfile
 
 from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal

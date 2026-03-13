@@ -18,7 +18,7 @@ import os.path
 
 from ui.qt import QObject, QThread, pyqtSignal
 
-from .todoscanner import scan_project, scan_directory, scan_single_file
+from .todoscanner import scan_directory, scan_project, scan_single_file
 
 
 class _TodoScanWorker(QObject):

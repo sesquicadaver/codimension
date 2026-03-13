@@ -16,7 +16,6 @@ No separate result tab — success/error shown in status bar.
 """
 
 import os.path
-import sys
 
 from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
 from utils.run import getProjectPythonPath

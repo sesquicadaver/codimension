@@ -13,16 +13,27 @@
 
 import os.path
 
-from ui.qt import (
-    QWidget, QLabel, QPalette, QSizePolicy, QAction, Qt,
-    QHBoxLayout, QVBoxLayout, QToolBar, QSize,
-    QTreeWidget, QTreeWidgetItem, QHeaderView, QFrame,
-)
 from ui.itemdelegates import NoOutlineHeightDelegate
 from ui.labels import HeaderFitPathLabel, HeaderLabel
+from ui.qt import (
+    QAction,
+    QFrame,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QPalette,
+    QSize,
+    QSizePolicy,
+    Qt,
+    QToolBar,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 from ui.spacers import ToolBarExpandingSpacer
-from utils.pixmapcache import getIcon
 from utils.globals import GlobalData
+from utils.pixmapcache import getIcon
 
 
 class PytestResultViewer(QWidget):
@@ -42,11 +53,10 @@ class PytestResultViewer(QWidget):
         self.__noneLabel.setFont(font)
         self.__noneLabel.setAutoFillBackground(True)
         noneLabelPalette = self.__noneLabel.palette()
-        noneLabelPalette.setColor(QPalette.Background,
-                                  GlobalData().skin['nolexerPaper'])
+        noneLabelPalette.setColor(QPalette.Background, GlobalData().skin["nolexerPaper"])
         self.__noneLabel.setPalette(noneLabelPalette)
 
-        self.clearButton = QAction(getIcon('trash.png'), 'Clear', self)
+        self.clearButton = QAction(getIcon("trash.png"), "Clear", self)
         self.clearButton.triggered.connect(self.clear)
 
         self.toolbar = QToolBar(self)
@@ -65,7 +75,7 @@ class PytestResultViewer(QWidget):
         self.__resultsTree.setItemsExpandable(True)
         self.__resultsTree.setUniformRowHeights(True)
         self.__resultsTree.setItemDelegate(NoOutlineHeightDelegate(4))
-        self.__resultsTree.setHeaderLabels(['Test', 'Status'])
+        self.__resultsTree.setHeaderLabels(["Test", "Status"])
         self.__resultsTree.itemActivated.connect(self.__resultActivated)
 
         self.__fileLabel = HeaderFitPathLabel(None, self)
@@ -112,7 +122,7 @@ class PytestResultViewer(QWidget):
     def onPathLabelDoubleClick(self):
         """Opens the file on double click."""
         if self.__results and self.__ide:
-            self.__ide.mainWindow.openFile(self.__results['FileName'], -1)
+            self.__ide.mainWindow.openFile(self.__results["FileName"], -1)
 
     def __resultActivated(self, item, column):
         """Handles activation - pytest tests don't have line numbers in our parse."""
@@ -129,37 +139,39 @@ class PytestResultViewer(QWidget):
         self.__results = results
         self.__updateButtons()
 
-        if 'ProcessError' in results:
-            item = QTreeWidgetItem(['Error', results['ProcessError']])
+        if "ProcessError" in results:
+            item = QTreeWidgetItem(["Error", results["ProcessError"]])
             self.__resultsTree.addTopLevelItem(item)
             return
 
-        tooltip = ' '.join(['pytest results for',
-                            os.path.basename(results['FileName']),
-                            'at', results['Timestamp']])
-        self.__ide.sideBars['bottom'].setTabToolTip('pytest', tooltip)
+        tooltip = " ".join(["pytest results for", os.path.basename(results["FileName"]), "at", results["Timestamp"]])
+        self.__ide.sideBars["bottom"].setTabToolTip("pytest", tooltip)
 
-        self.__fileLabel.setPath(results['FileName'])
-        self.__timestampLabel.setText(results['Timestamp'])
+        self.__fileLabel.setPath(results["FileName"])
+        self.__timestampLabel.setText(results["Timestamp"])
 
-        tests = results.get('Tests', [])
+        tests = results.get("Tests", [])
         if tests:
-            passed = sum(1 for t in tests if t.get('status') == 'PASSED')
-            failed = sum(1 for t in tests if t.get('status') == 'FAILED')
-            parent = QTreeWidgetItem([
-                f'Tests: {passed} passed, {failed} failed',
-                '',
-            ])
+            passed = sum(1 for t in tests if t.get("status") == "PASSED")
+            failed = sum(1 for t in tests if t.get("status") == "FAILED")
+            parent = QTreeWidgetItem(
+                [
+                    f"Tests: {passed} passed, {failed} failed",
+                    "",
+                ]
+            )
             self.__resultsTree.addTopLevelItem(parent)
             for t in tests:
-                item = QTreeWidgetItem([
-                    t.get('name', ''),
-                    t.get('status', ''),
-                ])
+                item = QTreeWidgetItem(
+                    [
+                        t.get("name", ""),
+                        t.get("status", ""),
+                    ]
+                )
                 parent.addChild(item)
             parent.setExpanded(True)
         else:
-            item = QTreeWidgetItem(['', 'No tests found or parse failed'])
+            item = QTreeWidgetItem(["", "No tests found or parse failed"])
             self.__resultsTree.addTopLevelItem(item)
 
         self.__resultsTree.header().resizeSections(QHeaderView.ResizeToContents)

@@ -72,9 +72,7 @@ class TodoPanelPlugin(WizardInterface):
             "todopanel",
             2,
         )
-        self.ide.sideBars["bottom"].tabButton(
-            "todopanel", QTabBar.RightSide
-        ).resize(0, 0)
+        self.ide.sideBars["bottom"].tabButton("todopanel", QTabBar.RightSide).resize(0, 0)
 
         self.__viewer.clear()
 
@@ -83,9 +81,7 @@ class TodoPanelPlugin(WizardInterface):
         self.__viewer.setRefreshCallback(self.__run)
 
         if self.__globalShortcut is None:
-            self.__globalShortcut = QShortcut(
-                QKeySequence("Ctrl+Shift+O"), self.ide.mainWindow, self.__run
-            )
+            self.__globalShortcut = QShortcut(QKeySequence("Ctrl+Shift+O"), self.ide.mainWindow, self.__run)
         else:
             self.__globalShortcut.setKey(QKeySequence("Ctrl+Shift+O"))
 
@@ -223,9 +219,5 @@ class TodoPanelPlugin(WizardInterface):
 
     def __onPeriodicRefresh(self):
         """Periodic timer: refresh only when panel has results and not busy."""
-        if (
-            self.__viewer is not None
-            and self.__viewer.hasResults()
-            and self.__canRun()
-        ):
+        if self.__viewer is not None and self.__viewer.hasResults() and self.__canRun():
             self.__run()

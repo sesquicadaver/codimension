@@ -74,7 +74,8 @@ class BanditDriver(QWidget):
         processEnvironment = QProcessEnvironment()
         processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
-        self.__process.start(sys.executable, self.__args)
+        self.__pythonPath = getProjectPythonPath(self.__ide.project)
+        self.__process.start(self.__pythonPath, self.__args)
 
         if not self.__process.waitForStarted():
             self.__process = None
