@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Git plugin dialogs: Commit, Create branch, Create PR."""
+"""Git plugin dialogs: Commit, Create branch, Create PR, Repo override."""
 
 from ui.qt import (
     QCheckBox,
@@ -122,3 +122,36 @@ class CreatePRDialog(QDialog):
             self.__titleEdit.text().strip(),
             self.__bodyEdit.toPlainText().strip(),
         )
+
+
+class RepoOverrideDialog(QDialog):
+    """Dialog to set GitHub repository override (owner/repo or URL)."""
+
+    def __init__(self, parent=None):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Git — Repository (override)")
+
+        try:
+            from .gitconfig import get_github_repo_override
+
+            current = get_github_repo_override()
+        except ImportError:
+            current = ""
+
+        layout = QVBoxLayout(self)
+        grid = QGridLayout()
+        self.__repoEdit = QLineEdit(self)
+        self.__repoEdit.setPlaceholderText("owner/repo or https://github.com/owner/repo")
+        self.__repoEdit.setText(current)
+        grid.addWidget(QLabel("Repository:", self), 0, 0)
+        grid.addWidget(self.__repoEdit, 0, 1)
+        layout.addLayout(grid)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def get_repo_override(self):
+        """Return the repository override value."""
+        return self.__repoEdit.text().strip()
