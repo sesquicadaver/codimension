@@ -27,7 +27,7 @@ import socket
 
 from utils.diskvaluesrelay import getRecentFiles
 from utils.globals import GlobalData
-from utils.misc import getIDETemplateFile, getProjectTemplateFile
+from utils.misc import getIDETemplateFile, getLocaleDate, getProjectTemplateFile
 from utils.pixmapcache import getIcon
 from utils.settings import CLEAR_AND_REUSE, NO_CLEAR_AND_REUSE, NO_REUSE
 from utils.skin import getSkinsList
