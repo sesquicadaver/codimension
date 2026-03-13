@@ -210,7 +210,7 @@ def getPackages():
 # dependencies
 setup(name='codimension',
       description=getDescription(),
-      python_requires='>=3.11',
+      python_requires='>=3.10',
       long_description=getLongDescription(),
       # long_description_content_type does not really work so far
       # long_description_content_type='text/markdown',
@@ -224,6 +224,7 @@ setup(name='codimension',
                    'License :: OSI Approved :: GNU General Public License (GPL)',
                    'Operating System :: POSIX :: Linux',
                    'Programming Language :: Python :: 3',
+                   'Programming Language :: Python :: 3.10',
                    'Programming Language :: Python :: 3.11',
                    'Programming Language :: Python :: 3.12',
                    'Programming Language :: Python :: 3.13'],
