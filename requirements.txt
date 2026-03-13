@@ -1,11 +1,11 @@
-# Python 3.11+ dependencies
-# cdmpyparser/cdmcfparser: C extensions for Python <3.11 only (node.h removed in 3.10+).
-# On 3.11+ codimension uses built-in pure-Python ast fallbacks (brief_ast, flow_ast).
+# Python version-specific dependencies
+# cdmpyparser/cdmcfparser: C extensions have python_requires='>=3.5,<3.10' on PyPI.
+# On Python 3.10+ codimension uses built-in pure-Python ast fallbacks (brief_ast, flow_ast).
 # setuptools: provides distutils for Python 3.12+ (distutils removed in stdlib).
 # setuptools: distutils for Python 3.12+; pkg_resources compat in codimension for setuptools 82+
 setuptools>=65.0; python_version >= "3.12"
-cdmpyparser>=3.3.2; python_version < "3.11"
-cdmcfparser>=2.4.0; python_version < "3.11"
+cdmpyparser>=3.3.2; python_version < "3.10"
+cdmcfparser>=2.4.0; python_version < "3.10"
 cdmgcplugin>=1.0.4
 cdmpylintplugin>=1.0.4
 cdmsysinfoplugin>=1.0.0

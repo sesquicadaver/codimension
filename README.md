@@ -1,6 +1,6 @@
 # Codimension Python 3 IDE
 
-**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінальний проєкт не підтримується понад 4 роки. Цей форк — активна версія з підтримкою Python 3.11+.
+**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінальний проєкт не підтримується понад 4 роки. Цей форк — активна версія з підтримкою Python 3.10+.
 
 Експериментальна Python IDE з графічним аналізом коду (flow diagram, algorithmic tree).
 
@@ -28,7 +28,7 @@
 
 ## Встановлення
 
-**Потрібно:** Python 3.11+
+**Потрібно:** Python 3.10+
 
 Рекомендовано — у віртуальному середовищі:
 
@@ -78,3 +78,5 @@ GPL v3. Див. [LICENSE](LICENSE).
 ```shell
 sudo apt-get install g++ python3-dev libpcre3-dev
 ```
+
+**Ubuntu 22.04 (Python 3.10):** Підтримується. cdmpyparser/cdmcfparser не встановлюються на 3.10+ — використовуються вбудовані fallbacks.
