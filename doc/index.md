@@ -2,6 +2,10 @@
 
 Документація IDE Codimension — форку [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Оригінальний проєкт не підтримується; активна розробка ведеться у форку.
 
+## Встановлення
+
+- [Детальна інструкція з встановлення](INSTALL.md)
+
 ## Загальні теми
 
 - [Технологія](technology/technology.md)

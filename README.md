@@ -28,40 +28,35 @@
 
 ## Встановлення
 
-**Потрібно:** Python 3.10+
+**Потрібно:** Python 3.10+  
+**Платформи:** Linux (основна), Windows, macOS
 
-Рекомендовано — у віртуальному середовищі:
+**Детальна інструкція:** [doc/INSTALL.md](doc/INSTALL.md)
+
+### Швидкий старт (з PyPI) — Linux / macOS
 
 ```shell
-python -m venv .venv
+python3 -m venv .venv
+.venv/bin/pip install --upgrade pip
 .venv/bin/pip install codimension
 .venv/bin/codimension
 ```
 
-Для діаграм залежностей потрібен graphviz:
+*Windows: використовуйте `py -3` та `.venv\Scripts\` — див. [doc/INSTALL.md](doc/INSTALL.md).*
+
+### Розробка (з вихідного коду) — Linux / macOS
 
 ```shell
-sudo apt-get install graphviz
-```
-
-Для PlantUML — Java:
-
-```shell
-sudo apt-get install default-jre
-```
-
-## Розробка
-
-```shell
-# Клонувати цей форк (не оригінальний репозиторій)
 git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
-python -m venv .venv
+python3 -m venv .venv
+.venv/bin/pip install --upgrade pip
 .venv/bin/pip install -r requirements.txt
 .venv/bin/pip install -e .
-
 .venv/bin/codimension
 ```
+
+*Windows та інші платформи — [doc/INSTALL.md](doc/INSTALL.md).*
 
 Додаткові можливості форку: `excludeFromAnalysis` (властивості проєкту), автоматичне виключення venv з аналізу.
 
@@ -73,10 +68,8 @@ GPL v3. Див. [LICENSE](LICENSE).
 
 ## Troubleshooting
 
-Потрібні: g++, python3-dev, libpcre3-dev (Ubuntu):
+Короткий список — повний опис у [doc/INSTALL.md](doc/INSTALL.md):
 
-```shell
-sudo apt-get install g++ python3-dev libpcre3-dev
-```
-
-**Ubuntu 22.04 (Python 3.10):** Підтримується. cdmpyparser/cdmcfparser не встановлюються на 3.10+ — використовуються вбудовані fallbacks.
+- **Системні пакети:** `sudo apt-get install g++ python3-dev libpcre3-dev graphviz`
+- **Ubuntu 22.04:** Підтримується (Python 3.10)
+- **`.venv` з іншого комп'ютера:** Видалити і створити новий локально (`rm -rf .venv` → `python3 -m venv .venv` → встановити залежності)
