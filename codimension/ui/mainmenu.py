@@ -19,7 +19,11 @@
 
 """Codimension main window menu"""
 
+import datetime
+import os
 import os.path
+import pwd
+import socket
 
 from utils.diskvaluesrelay import getRecentFiles
 from utils.globals import GlobalData
@@ -600,18 +604,94 @@ class MainWindowMenuMixin:
         self.__openProjectAct.setEnabled(True)
 
     def _onGitRepository(self):
-        """Open Git repository override dialog (Project → Git repository)."""
+        """Open Git repository dialog: clone and open project (Project → Git repository)."""
         try:
             from cdmplugins.git.gitconfig import save_repo_override
             from cdmplugins.git.gitdialogs import RepoOverrideDialog
-
-            dlg = RepoOverrideDialog(self)
-            if dlg.exec_() == QDialog.Accepted:
-                save_repo_override(dlg.get_repo_override())
+            from cdmplugins.git.gitdriver import clone_repo, find_cdm3_in_dir
         except ImportError:
             QMessageBox.information(
                 self, "Git", "Git plugin is not available. Install and enable the Git plugin."
             )
+            return
+
+        dlg = RepoOverrideDialog(self)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+
+        repo = dlg.get_repo_override()
+        clone_to = dlg.get_clone_to()
+        open_after = dlg.get_open_after_clone()
+
+        if not repo:
+            QMessageBox.warning(self, "Git", "Repository address is required.")
+            return
+
+        save_repo_override(repo)
+
+        if not clone_to:
+            return
+
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        try:
+            ok, err, cloned_path = clone_repo(repo, clone_to)
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if not ok:
+            QMessageBox.warning(self, "Git", f"Clone failed: {err}")
+            return
+
+        if not open_after or not cloned_path:
+            return
+
+        cdm3_path = find_cdm3_in_dir(cloned_path)
+        if cdm3_path:
+            self.__loadProject(cdm3_path)
+            return
+
+        project_name = os.path.basename(cloned_path.rstrip(os.sep)) or "project"
+        project_file = os.path.join(cloned_path.rstrip(os.sep), project_name + ".cdm3")
+
+        try:
+            user_record = pwd.getpwuid(os.getuid())
+            author = user_record[4].split(",")[0].strip() if user_record[4] else user_record[0]
+            try:
+                email = user_record[0] + "@" + socket.gethostname()
+            except Exception:
+                email = ""
+        except Exception:
+            author = ""
+            email = ""
+
+        if self.em.closeRequest():
+            QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+            try:
+                prj = GlobalData().project
+                prj.tabsStatus = self.em.getTabsStatus()
+                self.em.closeAll()
+                GlobalData().project.createNew(
+                    project_file,
+                    {
+                        "scriptname": "",
+                        "mddocfile": "",
+                        "creationdate": getLocaleDate(),
+                        "author": author,
+                        "license": "GPL v3",
+                        "copyright": "Copyright (c) " + author + ", " + str(datetime.date.today().year),
+                        "version": "0.0.1",
+                        "email": email,
+                        "description": "",
+                        "encoding": "",
+                        "importdirs": ["."],
+                        "pythoninterpreter": "",
+                    },
+                )
+                self.settings.addRecentProject(project_file)
+                if not self._leftSideBar.isMinimized():
+                    self.activateProjectTab()
+            finally:
+                QApplication.restoreOverrideCursor()
 
     def __tabAboutToShow(self):
         """Triggered when tab menu is about to show"""
