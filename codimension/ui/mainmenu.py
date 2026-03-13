@@ -28,6 +28,10 @@ import sys
 
 from utils.diskvaluesrelay import getRecentFiles
 from utils.globals import GlobalData
+from utils.importutils import (
+    generateRequirementsFromProject,
+    writeRequirementsFile,
+)
 from utils.misc import getIDETemplateFile, getLocaleDate, getProjectTemplateFile
 from utils.pixmapcache import getIcon
 from utils.settings import CLEAR_AND_REUSE, NO_CLEAR_AND_REUSE, NO_REUSE
@@ -351,6 +355,13 @@ class MainWindowMenuMixin:
             getIcon("deadcode.png"), "Find tab dead code", self.tabDeadCodeClicked, ""
         )
         toolsMenu.addSeparator()
+        self.__projectUtilitiesMenu = QMenu("Project utilities", self)
+        self.__projectUtilitiesMenu.setIcon(getIcon("project.png"))
+        self._generateRequirementsAct = self.__projectUtilitiesMenu.addAction(
+            getIcon("generate.png"), "Generate requirements file", self._onGenerateRequirementsFile
+        )
+        toolsMenu.addMenu(self.__projectUtilitiesMenu)
+        toolsMenu.addSeparator()
         self.disasmMenu = QMenu("Disassembly", self)
         self.disasmMenu.setIcon(getIcon("disassembly.png"))
         self.disasmAct0 = self.disasmMenu.addAction(getIcon(""), "Disassembly (no optimization)", self.onDisasm0)
@@ -629,6 +640,72 @@ class MainWindowMenuMixin:
         self.__newProjectAct.setEnabled(True)
         self.__openProjectAct.setEnabled(True)
 
+    def _onGenerateRequirementsFile(self):
+        """Generate requirements.txt from unresolved imports (Tools → Project utilities)."""
+        project = GlobalData().project
+        if not project.isLoaded():
+            QMessageBox.warning(self, "Project", "No project loaded.")
+            return
+
+        projectDir = project.getProjectDir()
+        reqPath = os.path.join(projectDir, "requirements.txt")
+
+        def progressCallback(current, total, message):
+            QApplication.processEvents()
+
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        try:
+            packages, _ = generateRequirementsFromProject(project.filesList, progressCallback)
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if not packages:
+            QMessageBox.information(
+                self,
+                "Generate requirements",
+                "No third-party packages detected from unresolved imports.\n"
+                "All imports are either resolved or from the standard library.",
+            )
+            return
+
+        mode = "w"
+        if os.path.isfile(reqPath):
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Generate requirements")
+            msg.setText(
+                f"requirements.txt already exists.\n"
+                f"Detected packages: {', '.join(sorted(packages))}"
+            )
+            overwriteBtn = msg.addButton("Overwrite", QMessageBox.ActionRole)
+            appendBtn = msg.addButton("Append new only", QMessageBox.ActionRole)
+            cancelBtn = msg.addButton("Cancel", QMessageBox.RejectRole)
+            msg.setDefaultButton(appendBtn)
+            msg.exec_()
+            clicked = msg.clickedButton()
+            if clicked == cancelBtn:
+                return
+            if clicked == appendBtn:
+                mode = "a"
+
+        try:
+            written = writeRequirementsFile(reqPath, packages, mode)
+            if written > 0:
+                QMessageBox.information(
+                    self,
+                    "Generate requirements",
+                    f"Wrote {written} package(s) to requirements.txt.",
+                )
+            else:
+                QMessageBox.information(
+                    self,
+                    "Generate requirements",
+                    "All detected packages are already in requirements.txt.",
+                )
+        except OSError as exc:
+            QMessageBox.warning(
+                self, "Generate requirements", f"Cannot write file: {exc}"
+            )
+
     def _onGitRepository(self):
         """Open Git repository dialog: clone and open project (Project → Git repository)."""
         try:
@@ -849,6 +926,8 @@ class MainWindowMenuMixin:
 
         self._deadCodeMenuAct.setEnabled(projectLoaded)
         self._tabDeadCodeAct.setEnabled(isPythonBuffer)
+        self.__projectUtilitiesMenu.setEnabled(projectLoaded)
+        self._generateRequirementsAct.setEnabled(projectLoaded)
         self.disasmMenu.setEnabled(isPythonBuffer)
 
     def __viewAboutToShow(self):
