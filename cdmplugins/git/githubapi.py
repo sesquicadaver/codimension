@@ -21,11 +21,43 @@ import urllib.error
 import urllib.request
 
 
-def _get_owner_repo(git_root: str) -> tuple[str, str] | None:
-    """Parse remote URL to get owner/repo. Returns (owner, repo) or None."""
+def _parse_repo_spec(spec: str) -> tuple[str, str] | None:
+    """Parse owner/repo from spec. Returns (owner, repo) or None.
+
+    Accepts: owner/repo, https://github.com/owner/repo, https://github.com/owner/repo.git
+    """
+    spec = spec.strip()
+    if not spec:
+        return None
+    # https://github.com/owner/repo or git@github.com:owner/repo.git
+    m = re.search(r"github\.com[:/]([^/]+)/([^/\s?#]+?)(?:\.git)?$", spec)
+    if m:
+        return (m.group(1), m.group(2).removesuffix(".git"))
+    # owner/repo (no scheme)
+    if "/" in spec and "://" not in spec:
+        parts = spec.split("/", 1)
+        if len(parts) == 2 and parts[0] and parts[1]:
+            return (parts[0], parts[1].removesuffix(".git"))
+    return None
+
+
+def _get_owner_repo(git_root: str | None = None) -> tuple[str, str] | None:
+    """Get owner/repo from config override or git remote. Returns (owner, repo) or None.
+
+    When github_repo_override is set, git_root is optional (View PRs without git repo).
+    """
     try:
-        from .gitconfig import get_default_remote
+        from .gitconfig import get_default_remote, get_github_repo_override
         from .gitdriver import run_git
+
+        override = get_github_repo_override()
+        if override:
+            pair = _parse_repo_spec(override)
+            if pair:
+                return pair
+
+        if not git_root:
+            return None
 
         remote = get_default_remote()
         stdout, _, code = run_git(git_root, ["remote", "get-url", remote])
@@ -36,10 +68,7 @@ def _get_owner_repo(git_root: str) -> tuple[str, str] | None:
         if code != 0 or not stdout.strip():
             return None
         url = stdout.strip()
-        # https://github.com/owner/repo.git or git@github.com:owner/repo.git
-        m = re.search(r"github\.com[:/]([^/]+)/([^/\s]+?)(?:\.git)?$", url)
-        if m:
-            return (m.group(1), m.group(2).removesuffix(".git"))
+        return _parse_repo_spec(url)
     except Exception:
         pass
     return None
@@ -82,8 +111,11 @@ def _api_request(
         return None, str(e)
 
 
-def get_repo_prs_url(git_root: str) -> str | None:
-    """Return GitHub PRs page URL for the repo, or None."""
+def get_repo_prs_url(git_root: str | None = None) -> str | None:
+    """Return GitHub PRs page URL for the repo, or None.
+
+    When github_repo_override is set, git_root can be None.
+    """
     pair = _get_owner_repo(git_root)
     if not pair:
         return None
