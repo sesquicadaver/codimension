@@ -14,7 +14,7 @@
 import json
 import os.path
 
-from ..lintdriverbase import LintDriverBase
+from cdmplugins.lintdriverbase import LintDriverBase
 
 
 class RuffDriver(LintDriverBase):
