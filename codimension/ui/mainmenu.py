@@ -676,7 +676,7 @@ class MainWindowMenuMixin:
 
         cdm3_path = find_cdm3_in_dir(cloned_path)
         if cdm3_path:
-            self.__loadProject(cdm3_path)
+            self._loadProject(cdm3_path)
             return
 
         project_name = os.path.basename(cloned_path.rstrip(os.sep)) or "project"
