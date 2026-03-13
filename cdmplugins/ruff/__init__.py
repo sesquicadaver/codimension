@@ -87,7 +87,9 @@ class RuffPlugin(WizardInterface):
 
     def deactivate(self):
         """Deactivates the plugin."""
-        self.__globalShortcut.setKey(0)
+        if self.__globalShortcut is not None:
+            self.__globalShortcut.setKey(0)
+            self.__globalShortcut = None
 
         self.__resultViewer = None
         self.ide.sideBars['bottom'].removeTab('ruff')
@@ -106,12 +108,15 @@ class RuffPlugin(WizardInterface):
         self.ide.editorsManager.sigFileTypeChanged.disconnect(
             self.__fileTypeChanged)
 
-        self.__mainRunAction.deleteLater()
-        self.__mainRunAction = None
-        self.__mainMenu.deleteLater()
-        self.__mainMenu = None
-        self.__mainMenuSeparator.deleteLater()
-        self.__mainMenuSeparator = None
+        if self.__mainRunAction is not None:
+            self.__mainRunAction.deleteLater()
+            self.__mainRunAction = None
+        if self.__mainMenu is not None:
+            self.__mainMenu.deleteLater()
+            self.__mainMenu = None
+        if self.__mainMenuSeparator is not None:
+            self.__mainMenuSeparator.deleteLater()
+            self.__mainMenuSeparator = None
 
         WizardInterface.deactivate(self)
 
@@ -137,7 +142,7 @@ class RuffPlugin(WizardInterface):
 
     def __canRun(self, editorWidget):
         """Tells if ruff can be run for the given editor widget."""
-        if self.__ruffDriver.isInProcess():
+        if self.__ruffDriver is None or self.__ruffDriver.isInProcess():
             return False, None
         if editorWidget.getType() != MainWindowTabWidgetBase.PlainTextEditor:
             return False, None
@@ -159,6 +164,8 @@ class RuffPlugin(WizardInterface):
             return
 
         enc = editorWidget.getEncoding()
+        if self.__ruffDriver is None:
+            return
         message = self.__ruffDriver.start(editorWidget.getFileName(), enc)
         if message is None:
             self.__switchToRunning()
@@ -171,7 +178,7 @@ class RuffPlugin(WizardInterface):
         error = results.get('ProcessError', None)
         if error:
             logging.error(error)
-        else:
+        elif self.__resultViewer is not None:
             self.__resultViewer.showResults(results)
             self.ide.mainWindow.activateBottomTab('ruff')
 
@@ -232,10 +239,12 @@ class RuffPlugin(WizardInterface):
 
     def __bufferMenuAboutToShow(self):
         """The buffer context menu is about to show."""
-        self.__bufferRunAction.setEnabled(
-            self.__canRun(self.ide.currentEditorWidget)[0])
+        if self.__bufferRunAction is not None:
+            self.__bufferRunAction.setEnabled(
+                self.__canRun(self.ide.currentEditorWidget)[0])
 
     def __mainMenuAboutToShow(self):
         """The main menu is about to show."""
-        self.__mainRunAction.setEnabled(
-            self.__canRun(self.ide.currentEditorWidget)[0])
+        if self.__mainRunAction is not None:
+            self.__mainRunAction.setEnabled(
+                self.__canRun(self.ide.currentEditorWidget)[0])
