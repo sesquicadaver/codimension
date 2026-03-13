@@ -39,3 +39,7 @@ exclude = ["doc/", ".*"]
 # cdmplugins import plugins, ui, utils — resolved when codimension pkg dir is in path
 extraPaths = ["codimension"]
 reportMissingImports = "warning"
+# PyQt5 re-exports via ui.qt; optional/None patterns in plugin lifecycle
+reportAttributeAccessIssue = "none"
+reportIncompatibleMethodOverride = "none"
+reportOptionalMemberAccess = "none"
