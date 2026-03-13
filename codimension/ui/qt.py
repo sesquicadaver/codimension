@@ -43,6 +43,7 @@ from PyQt5.QtCore import (
     QSortFilterProxyModel,
     QStringListModel,
     Qt,
+    QThread,
     QTimer,
     QUrl,
     pyqtSignal,

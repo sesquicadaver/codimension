@@ -62,4 +62,11 @@ jobs:
           . .venv/bin/activate
           pip install --upgrade pip
           pip install -e .
-          codimension --help
+          # Import check (no display required); codimension --help needs X11
+          python -c "import codimension; import cdmplugins; print('OK')"
+
+      - name: Pytest (plugin tests)
+        run: |
+          . .venv/bin/activate
+          pip install pytest
+          pytest tests/ -v --tb=short
