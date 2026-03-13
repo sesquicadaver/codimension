@@ -244,6 +244,7 @@ __all__ = [
     "QTextCursor",
     "QTextDocument",
     "QTextEdit",
+    "QThread",
     "QTimer",
     "QToolBar",
     "QToolButton",
