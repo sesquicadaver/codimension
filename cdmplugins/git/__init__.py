@@ -122,15 +122,12 @@ class GitPlugin(VersionControlSystemInterface):
         return result
 
     def populateMainMenu(self, parentMenu):
-        """Populate the main menu: Settings for Git/GitHub access."""
+        """Populate the main menu: Git/GitHub actions. Settings via Plugin Manager only."""
         from utils.pixmapcache import getIcon
 
         parentMenu.setIcon(getIcon("pluginsettings.png"))
-        parentMenu.addAction(
-            getIcon("pluginsettings.png"),
-            "Settings...",
-            self.__configure,
-        )
+        parentMenu.addAction("Create pull request...", self.__onCreatePR)
+        parentMenu.addAction("View pull requests", self.__onViewPRs)
 
     def populateFileContextMenu(self, parentMenu):
         """Populate the file context menu."""
@@ -146,6 +143,9 @@ class GitPlugin(VersionControlSystemInterface):
         parentMenu.addAction("Push", self.__onDirPush)
         parentMenu.addAction("Pull", self.__onDirPull)
         parentMenu.addAction("Create branch", self.__onDirCreateBranch)
+        parentMenu.addSeparator()
+        parentMenu.addAction("Create pull request...", self.__onDirCreatePR)
+        parentMenu.addAction("View pull requests", self.__onDirViewPRs)
 
     def populateBufferContextMenu(self, parentMenu):
         """Populate the buffer context menu."""
@@ -162,6 +162,74 @@ class GitPlugin(VersionControlSystemInterface):
         dlg = GitConfigDialog(self.ide.mainWindow)
         if dlg.exec_() == QDialog.Accepted:
             save_config(*dlg.get_values())
+
+    def __get_repo_path(self):
+        """Get path for Git/GitHub ops: project dir or current file dir."""
+        if self.ide.project.isLoaded():
+            return self.ide.project.getProjectDir()
+        widget = self.ide.currentEditorWidget
+        if widget is not None and hasattr(widget, "getFileName"):
+            path = widget.getFileName()
+            if path and os.path.isabs(path):
+                return os.path.dirname(path) + os.path.sep
+        return os.getcwd() + os.path.sep
+
+    def __onCreatePR(self):
+        """Create pull request from current branch."""
+        path = self.__get_repo_path()
+        root = find_git_root(path)
+        if root is None:
+            QMessageBox.warning(
+                self.ide.mainWindow,
+                "Git",
+                "Not a Git repository. Open a project or file in a Git repo.",
+            )
+            return
+        from .gitdialogs import CreatePRDialog
+
+        dlg = CreatePRDialog(root, self.ide.mainWindow)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        base, title, body = dlg.get_values()
+        if not title.strip():
+            QMessageBox.warning(
+                self.ide.mainWindow, "Git", "PR title is required."
+            )
+            return
+        from .githubapi import create_pull_request
+
+        url, err = create_pull_request(root, base.strip() or "main", title.strip(), body.strip())
+        if err:
+            QMessageBox.warning(self.ide.mainWindow, "Git", err)
+            return
+        self.ide.showStatusBarMessage("PR created: " + (url or ""), 5000)
+        if url:
+            self.PathChanged.emit(root)
+
+    def __onViewPRs(self):
+        """View pull requests in browser or output."""
+        path = self.__get_repo_path()
+        root = find_git_root(path)
+        if root is None:
+            QMessageBox.warning(
+                self.ide.mainWindow,
+                "Git",
+                "Not a Git repository. Open a project or file in a Git repo.",
+            )
+            return
+        from .githubapi import get_repo_prs_url
+
+        url = get_repo_prs_url(root)
+        if not url:
+            QMessageBox.warning(
+                self.ide.mainWindow,
+                "Git",
+                "Could not determine GitHub repo URL from remote.",
+            )
+            return
+        from ui.qt import QDesktopServices, QUrl
+
+        QDesktopServices.openUrl(QUrl(url))
 
     def __get_path_from_menu(self, parent_menu):
         """Get the selected path from the parent menu data."""
@@ -300,3 +368,54 @@ class GitPlugin(VersionControlSystemInterface):
             return
         if self.__run_git_op(path, ["checkout", "-b", name.strip()], "Branch created"):
             pass
+
+    def __onDirCreatePR(self):
+        """Create PR from directory context."""
+        path = self.__get_path_from_menu(self.__dirParentMenu)
+        if not path:
+            return
+        root = find_git_root(path)
+        if root is None:
+            QMessageBox.warning(self.ide.mainWindow, "Git", "Not a Git repository.")
+            return
+        from .gitdialogs import CreatePRDialog
+
+        dlg = CreatePRDialog(root, self.ide.mainWindow)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        base, title, body = dlg.get_values()
+        if not title.strip():
+            QMessageBox.warning(self.ide.mainWindow, "Git", "PR title is required.")
+            return
+        from .githubapi import create_pull_request
+
+        url, err = create_pull_request(root, base.strip() or "main", title.strip(), body.strip())
+        if err:
+            QMessageBox.warning(self.ide.mainWindow, "Git", err)
+            return
+        self.ide.showStatusBarMessage("PR created: " + (url or ""), 5000)
+        if url:
+            self.PathChanged.emit(root)
+
+    def __onDirViewPRs(self):
+        """View PRs from directory context."""
+        path = self.__get_path_from_menu(self.__dirParentMenu)
+        if not path:
+            return
+        root = find_git_root(path)
+        if root is None:
+            QMessageBox.warning(self.ide.mainWindow, "Git", "Not a Git repository.")
+            return
+        from ui.qt import QDesktopServices, QUrl
+
+        from .githubapi import get_repo_prs_url
+
+        url = get_repo_prs_url(root)
+        if not url:
+            QMessageBox.warning(
+                self.ide.mainWindow,
+                "Git",
+                "Could not determine GitHub repo URL from remote.",
+            )
+            return
+        QDesktopServices.openUrl(QUrl(url))

@@ -9,9 +9,18 @@
 # (at your option) any later version.
 #
 
-"""Git plugin dialogs: Commit, Create branch."""
+"""Git plugin dialogs: Commit, Create branch, Create PR."""
 
-from ui.qt import QCheckBox, QDialog, QDialogButtonBox, QGridLayout, QLabel, QLineEdit, QVBoxLayout
+from ui.qt import (
+    QCheckBox,
+    QDialog,
+    QDialogButtonBox,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QTextEdit,
+    QVBoxLayout,
+)
 
 
 class CommitDialog(QDialog):
@@ -70,3 +79,46 @@ class CreateBranchDialog(QDialog):
     def get_branch_name(self):
         """Return the branch name."""
         return self.__nameEdit.text()
+
+
+class CreatePRDialog(QDialog):
+    """Dialog for creating a pull request."""
+
+    def __init__(self, git_root, parent=None):
+        QDialog.__init__(self, parent)
+        self.setWindowTitle("Create Pull Request")
+        self.__gitRoot = git_root
+
+        layout = QVBoxLayout(self)
+        grid = QGridLayout()
+
+        self.__baseEdit = QLineEdit(self)
+        self.__baseEdit.setPlaceholderText("main")
+        self.__baseEdit.setText("main")
+        grid.addWidget(QLabel("Base branch:", self), 0, 0)
+        grid.addWidget(self.__baseEdit, 0, 1)
+
+        self.__titleEdit = QLineEdit(self)
+        self.__titleEdit.setPlaceholderText("PR title")
+        grid.addWidget(QLabel("Title:", self), 1, 0)
+        grid.addWidget(self.__titleEdit, 1, 1)
+
+        self.__bodyEdit = QTextEdit(self)
+        self.__bodyEdit.setPlaceholderText("Description (optional)")
+        self.__bodyEdit.setMaximumHeight(120)
+        grid.addWidget(QLabel("Body:", self), 2, 0)
+        grid.addWidget(self.__bodyEdit, 2, 1)
+
+        layout.addLayout(grid)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def get_values(self):
+        """Return (base_branch, title, body)."""
+        return (
+            self.__baseEdit.text().strip(),
+            self.__titleEdit.text().strip(),
+            self.__bodyEdit.toPlainText().strip(),
+        )

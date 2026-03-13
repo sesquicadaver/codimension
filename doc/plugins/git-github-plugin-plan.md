@@ -217,7 +217,8 @@ def findGitRoot(path: str) -> str | None:
 - Шлях до `git` (за замовчуванням: `git` з PATH)
 - Шлях до `gh` (за замовчуванням: `gh` з PATH)
 - Default remote (origin)
-- Автоперевірка `gh auth status` при старті
+- **GitHub token (PAT)** — для REST API (Create PR, View PRs). Fine-grained або classic (ghp_xxx).
+- Доступ: Plugin Manager → Git → іконка налаштувань (одне місце, без дублікатів)
 
 ---
 
