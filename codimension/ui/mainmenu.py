@@ -19,17 +19,36 @@
 
 """Codimension main window menu"""
 
+import datetime
+import os
 import os.path
+import pwd
+import socket
+import sys
 
 from utils.diskvaluesrelay import getRecentFiles
 from utils.globals import GlobalData
-from utils.misc import getIDETemplateFile, getProjectTemplateFile
+from utils.importutils import (
+    generateRequirementsFromProject,
+    writeRequirementsFile,
+)
+from utils.misc import getIDETemplateFile, getLocaleDate, getProjectTemplateFile
 from utils.pixmapcache import getIcon
 from utils.settings import CLEAR_AND_REUSE, NO_CLEAR_AND_REUSE, NO_REUSE
 from utils.skin import getSkinsList
 
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from .qt import QActionGroup, QApplication, QFontDialog, QMenu, QStyleFactory
+from .qt import (
+    QActionGroup,
+    QApplication,
+    QCursor,
+    QDialog,
+    QFontDialog,
+    QMenu,
+    QMessageBox,
+    QStyleFactory,
+    Qt,
+)
 
 
 def getAccelerator(count):
@@ -37,6 +56,21 @@ def getAccelerator(count):
     if count < 10:
         return "&" + str(count) + ".  "
     return "&" + chr(count - 10 + ord("a")) + ".  "
+
+
+def _ensure_cdmplugins_in_path():
+    """Ensure cdmplugins package is importable (add project root to sys.path when needed)."""
+    try:
+        import cdmplugins  # noqa: F401
+    except ImportError:
+        try:
+            import plugins
+
+            root = os.path.dirname(os.path.dirname(os.path.dirname(plugins.__file__)))
+            if root not in sys.path:
+                sys.path.insert(0, root)
+        except Exception:
+            pass
 
 
 class MainWindowMenuMixin:
@@ -82,6 +116,7 @@ class MainWindowMenuMixin:
         self._projectPropsAct = prjMenu.addAction(
             getIcon("smalli.png"), "&Properties", self.projectViewer.projectProperties
         )
+        self.__gitRepoAct = prjMenu.addAction("Git &repository...", self._onGitRepository)
         prjMenu.addSeparator()
         self._prjTemplateMenu = QMenu("Project-specific &template", self)
         self.__createPrjTemplateAct = self._prjTemplateMenu.addAction(getIcon("generate.png"), "&Create")
@@ -319,6 +354,13 @@ class MainWindowMenuMixin:
         self._tabDeadCodeAct = toolsMenu.addAction(
             getIcon("deadcode.png"), "Find tab dead code", self.tabDeadCodeClicked, ""
         )
+        toolsMenu.addSeparator()
+        self.__projectUtilitiesMenu = QMenu("Project utilities", self)
+        self.__projectUtilitiesMenu.setIcon(getIcon("project.png"))
+        self._generateRequirementsAct = self.__projectUtilitiesMenu.addAction(
+            getIcon("generate.png"), "Generate requirements file", self._onGenerateRequirementsFile
+        )
+        toolsMenu.addMenu(self.__projectUtilitiesMenu)
         toolsMenu.addSeparator()
         self.disasmMenu = QMenu("Disassembly", self)
         self.disasmMenu.setIcon(getIcon("disassembly.png"))
@@ -598,6 +640,165 @@ class MainWindowMenuMixin:
         self.__newProjectAct.setEnabled(True)
         self.__openProjectAct.setEnabled(True)
 
+    def _onGenerateRequirementsFile(self):
+        """Generate requirements.txt from unresolved imports (Tools → Project utilities)."""
+        project = GlobalData().project
+        if not project.isLoaded():
+            QMessageBox.warning(self, "Project", "No project loaded.")
+            return
+
+        projectDir = project.getProjectDir()
+        reqPath = os.path.join(projectDir, "requirements.txt")
+
+        def progressCallback(current, total, message):
+            QApplication.processEvents()
+
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        try:
+            packages, _ = generateRequirementsFromProject(project.filesList, progressCallback)
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if not packages:
+            QMessageBox.information(
+                self,
+                "Generate requirements",
+                "No third-party packages detected from unresolved imports.\n"
+                "All imports are either resolved or from the standard library.",
+            )
+            return
+
+        mode = "w"
+        if os.path.isfile(reqPath):
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Generate requirements")
+            msg.setText(
+                f"requirements.txt already exists.\n"
+                f"Detected packages: {', '.join(sorted(packages))}"
+            )
+            msg.addButton("Overwrite", QMessageBox.ActionRole)
+            appendBtn = msg.addButton("Append new only", QMessageBox.ActionRole)
+            cancelBtn = msg.addButton("Cancel", QMessageBox.RejectRole)
+            msg.setDefaultButton(appendBtn)
+            msg.exec_()
+            clicked = msg.clickedButton()
+            if clicked == cancelBtn:
+                return
+            if clicked == appendBtn:
+                mode = "a"
+
+        try:
+            written = writeRequirementsFile(reqPath, packages, mode)
+            if written > 0:
+                QMessageBox.information(
+                    self,
+                    "Generate requirements",
+                    f"Wrote {written} package(s) to requirements.txt.",
+                )
+            else:
+                QMessageBox.information(
+                    self,
+                    "Generate requirements",
+                    "All detected packages are already in requirements.txt.",
+                )
+        except OSError as exc:
+            QMessageBox.warning(
+                self, "Generate requirements", f"Cannot write file: {exc}"
+            )
+
+    def _onGitRepository(self):
+        """Open Git repository dialog: clone and open project (Project → Git repository)."""
+        try:
+            _ensure_cdmplugins_in_path()
+            from cdmplugins.git.gitconfig import save_repo_override
+            from cdmplugins.git.gitdialogs import RepoOverrideDialog
+            from cdmplugins.git.gitdriver import clone_repo, find_cdm3_in_dir
+        except ImportError:
+            QMessageBox.information(
+                self,
+                "Git",
+                "Git plugin is not available. Install and enable the Git plugin.",
+            )
+            return
+
+        dlg = RepoOverrideDialog(self)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+
+        repo = dlg.get_repo_override()
+        clone_to = dlg.get_clone_to()
+        open_after = dlg.get_open_after_clone()
+
+        if not repo:
+            QMessageBox.warning(self, "Git", "Repository address is required.")
+            return
+
+        save_repo_override(repo)
+
+        if not clone_to:
+            return
+
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        try:
+            ok, err, cloned_path = clone_repo(repo, clone_to)
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        if not ok:
+            QMessageBox.warning(self, "Git", f"Clone failed: {err}")
+            return
+
+        if not open_after or not cloned_path:
+            return
+
+        cdm3_path = find_cdm3_in_dir(cloned_path)
+        if cdm3_path:
+            self._loadProject(cdm3_path)
+            return
+
+        project_name = os.path.basename(cloned_path.rstrip(os.sep)) or "project"
+        project_file = os.path.join(cloned_path.rstrip(os.sep), project_name + ".cdm3")
+
+        try:
+            user_record = pwd.getpwuid(os.getuid())
+            author = user_record[4].split(",")[0].strip() if user_record[4] else user_record[0]
+            try:
+                email = user_record[0] + "@" + socket.gethostname()
+            except Exception:
+                email = ""
+        except Exception:
+            author = ""
+            email = ""
+
+        if self.em.closeRequest():
+            QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+            try:
+                prj = GlobalData().project
+                prj.tabsStatus = self.em.getTabsStatus()
+                self.em.closeAll()
+                GlobalData().project.createNew(
+                    project_file,
+                    {
+                        "scriptname": "",
+                        "mddocfile": "",
+                        "creationdate": getLocaleDate(),
+                        "author": author,
+                        "license": "GPL v3",
+                        "copyright": "Copyright (c) " + author + ", " + str(datetime.date.today().year),
+                        "version": "0.0.1",
+                        "email": email,
+                        "description": "",
+                        "encoding": "",
+                        "importdirs": ["."],
+                        "pythoninterpreter": "",
+                    },
+                )
+                self.settings.addRecentProject(project_file)
+                if not self._leftSideBar.isMinimized():
+                    self.activateProjectTab()
+            finally:
+                QApplication.restoreOverrideCursor()
+
     def __tabAboutToShow(self):
         """Triggered when tab menu is about to show"""
         plainTextBuffer = self.__isPlainTextBuffer()
@@ -725,6 +926,8 @@ class MainWindowMenuMixin:
 
         self._deadCodeMenuAct.setEnabled(projectLoaded)
         self._tabDeadCodeAct.setEnabled(isPythonBuffer)
+        self.__projectUtilitiesMenu.setEnabled(projectLoaded)
+        self._generateRequirementsAct.setEnabled(projectLoaded)
         self.disasmMenu.setEnabled(isPythonBuffer)
 
     def __viewAboutToShow(self):

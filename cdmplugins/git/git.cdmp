@@ -1,0 +1,10 @@
+[Core]
+Name = Git
+Module = .
+
+[Documentation]
+Author = Codimension
+Version = 1.0.0
+Website = https://github.com/sesquicadaver/codimension
+Description = Git VCS plugin: status, commit, push, pull, branch
+License = GPL v.3

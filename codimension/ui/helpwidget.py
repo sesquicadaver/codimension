@@ -40,6 +40,7 @@ class QuickHelpWidget(TextTabWidget):
 <div>
 
     <h2 align="center">Keyboard Shortcut Reference</h2>
+    <p align="center"><small>Codimension 4.11.0</small></p>
 
     <h3>Tools</h3>
     <p align="center">
@@ -54,8 +55,8 @@ class QuickHelpWidget(TextTabWidget):
         <tr>
           <td bgcolor="#E9E9F3">Ctrl+I</td>
           <td bgcolor="#F6F4E4">Open import / select import to open</td>
-          <td bgcolor="#E9E9F3"></td>
-          <td bgcolor="#F6F4E4"></td>
+          <td bgcolor="#E9E9F3">Tools → Project utilities</td>
+          <td bgcolor="#F6F4E4">Generate requirements file</td>
         </tr>
       </table>
     </p>

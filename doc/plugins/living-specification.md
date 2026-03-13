@@ -23,6 +23,7 @@
 | **Референс: Mypy** | cdmplugins.mypy | mypy.cdmp, __init__.py, mypydriver.py (LintDriverBase), mypyresultviewer.py | Smoke: Run mypy (Ctrl+Shift+M) |
 | **Референс: Pytest** | cdmplugins.pytest | pytest.cdmp, __init__.py, pytestdriver.py, pytestresultviewer.py | Smoke: Run pytest (Ctrl+Shift+T) |
 | **Базовий клас** | cdmplugins.lintdriverbase | lintdriverbase.py | Використовується ruff, bandit, mypy |
+| **Git VCS** | cdmplugins.git | git.cdmp, __init__.py, gitdriver.py, gitstatusparser.py, gitdialogs.py, gitconfig.py, githubapi.py | Smoke: status, Create PR, View PRs; unit: tests/test_gitstatusparser.py |
 
 ---
 
@@ -34,6 +35,7 @@
 | Ruff format | `ruff format --check codimension cdmplugins` | .github/workflows/ci.yml |
 | Mypy | `mypy $(find cdmplugins -name '*.py')` | .github/workflows/ci.yml |
 | Smoke | `import codimension; import cdmplugins` | .github/workflows/ci.yml |
+| pip-audit | `pip-audit` (smoke job) | .github/workflows/ci.yml |
 | Pytest | `pytest tests/` | .github/workflows/ci.yml |
 
 ---

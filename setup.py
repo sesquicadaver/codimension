@@ -145,7 +145,9 @@ def getPackageData():
                     ('cdmplugins.ruffformat',
                      'cdmplugins/ruffformat/'),
                     ('cdmplugins.todopanel',
-                     'cdmplugins/todopanel/')]
+                     'cdmplugins/todopanel/'),
+                    ('cdmplugins.git',
+                     'cdmplugins/git/')]
 
     # If a skin needs to be added, then the following item should be also
     # appended:
@@ -200,7 +202,8 @@ def getPackages():
             'cdmplugins.bandit',
             'cdmplugins.pipaudit',
             'cdmplugins.ruffformat',
-            'cdmplugins.todopanel']
+            'cdmplugins.todopanel',
+            'cdmplugins.git']
     # If a myskin skin is to be added as well, then one more package should
     # be mentioned: ..., 'codimension.skins.myskin']
 

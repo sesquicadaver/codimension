@@ -4,6 +4,14 @@
     <name>Codimension</name>
     <summary>Experimental Python 3 Development Environment</summary>
 
+    <releases>
+        <release version="4.11.0" date="2025-03-13">
+            <description>
+                <p>Tools → Project utilities → Generate requirements file; Git clone fix; import hints.</p>
+            </description>
+        </release>
+    </releases>
+
     <metadata_license>GPLv3</metadata_license>
     <project_license>GPLv3</project_license>
     <developer_name>Sergey Satskiy</developer_name>

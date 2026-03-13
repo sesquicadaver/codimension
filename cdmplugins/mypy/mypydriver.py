@@ -14,7 +14,7 @@
 import json
 import os.path
 
-from ..lintdriverbase import LintDriverBase
+from cdmplugins.lintdriverbase import LintDriverBase
 
 
 class MypyDriver(LintDriverBase):
@@ -22,14 +22,18 @@ class MypyDriver(LintDriverBase):
 
     def buildArgs(self, fileName):
         """Build mypy command args."""
+        try:
+            from .mypyconfig import load_extra_args
+            extra = load_extra_args()
+        except ImportError:
+            extra = []
         return [
             "-m",
             "mypy",
             "--output",
             "json",
             "--no-error-summary",
-            os.path.basename(fileName),
-        ]
+        ] + extra + [os.path.basename(fileName)]
 
     def parseOutput(self, stdout, stderr, results):
         """Parse mypy JSON output into Diagnostics."""

@@ -459,3 +459,139 @@ def resolveImports(fileName, imports):
             errors.append(resolution.errMessage)
 
     return result, errors
+
+
+# Standard library modules (common). Unresolved third-party suggests missing deps.
+_STDLIB_MODULES = frozenset(
+    {
+        "os", "io", "sys", "re", "json", "math", "datetime", "time", "logging",
+        "pathlib", "subprocess", "argparse", "collections", "itertools", "functools",
+        "typing", "abc", "copy", "hashlib", "uuid", "tempfile", "shutil", "glob",
+        "socket", "threading", "multiprocessing", "asyncio", "contextlib",
+        "unittest", "doctest", "pdb", "traceback", "warnings", "importlib",
+        "configparser", "csv", "xml", "html", "email", "urllib", "http",
+        "sqlite3", "pickle", "shelve", "getpass", "platform", "errno", "ctypes",
+    }
+)
+
+
+def getUnresolvedPackageNames(errors):
+    """Extract top-level package names from resolveImports error messages.
+
+    Returns set of names (e.g. {'numpy', 'cryptography', 'pymavlink'}).
+    Excludes known stdlib modules.
+    """
+    import re
+
+    names = set()
+    for err in errors:
+        m = re.search(r"'import ([^']+)'", err)
+        if m:
+            top = m.group(1).split(".")[0]
+            if top not in _STDLIB_MODULES:
+                names.add(top)
+            continue
+        m = re.search(r"'from ([^']+) import", err)
+        if m:
+            top = m.group(1).split(".")[0]
+            if top not in _STDLIB_MODULES:
+                names.add(top)
+    return names
+
+
+def getRequirementsHint(projectDir, unresolvedPackages):
+    """Return hint string for missing dependencies, or None."""
+    if not projectDir or not unresolvedPackages:
+        return None
+    reqPath = os.path.join(projectDir, "requirements.txt")
+    if os.path.isfile(reqPath):
+        return (
+            "Unresolved imports (possibly missing dependencies): "
+            + ", ".join(sorted(unresolvedPackages))
+            + ". Consider: pip install -r requirements.txt"
+        )
+    return (
+        "Unresolved imports (possibly missing dependencies): "
+        + ", ".join(sorted(unresolvedPackages))
+        + ". Consider: pip install " + " ".join(sorted(unresolvedPackages))
+    )
+
+
+def generateRequirementsFromProject(filesList, progressCallback=None):
+    """Scan project Python files for unresolved imports and collect third-party package names.
+
+    Args:
+        filesList: Iterable of file/dir paths from project (full paths; dirs end with sep).
+        progressCallback: Optional callable(current, total, message) for progress updates.
+
+    Returns:
+        (packages_set, error_count): Set of top-level package names, count of resolved errors.
+    """
+    from .fileutils import isPythonFile
+
+    allErrors = []
+    pythonFiles = []
+    for item in filesList:
+        if item.endswith(os.sep):
+            continue
+        if isPythonFile(item):
+            pythonFiles.append(item)
+
+    total = len(pythonFiles)
+    for idx, fName in enumerate(pythonFiles):
+        if progressCallback:
+            progressCallback(idx, total, "Scanning " + os.path.basename(fName) + "...")
+        try:
+            info = GlobalData().briefModinfoCache.get(fName)
+            _, errors = resolveImports(fName, info.imports)
+            allErrors.extend(errors)
+        except Exception:
+            pass
+
+    packages = getUnresolvedPackageNames(allErrors)
+    return packages, len(allErrors)
+
+
+def _parseRequirementsPackageName(line):
+    """Extract package name from a requirements line (e.g. 'numpy>=1.0' -> 'numpy')."""
+    import re
+    line = line.strip().split("#")[0].strip()
+    if not line or line.startswith("-"):
+        return None
+    match = re.match(r"^([a-zA-Z0-9_-]+)", line)
+    return match.group(1).lower() if match else None
+
+
+def writeRequirementsFile(path, packages, mode="w"):
+    """Write package names to requirements.txt.
+
+    Args:
+        path: Full path to requirements.txt.
+        packages: Iterable of package names (e.g. {'numpy', 'requests'}).
+        mode: 'w' to overwrite, 'a' to append (only new packages).
+
+    Returns:
+        Number of lines written.
+    """
+    from .config import DEFAULT_ENCODING
+
+    sortedPkgs = sorted(packages)
+    if not sortedPkgs:
+        return 0
+
+    existing = set()
+    if mode == "a" and os.path.isfile(path):
+        with open(path, "r", encoding=DEFAULT_ENCODING) as f:
+            for line in f:
+                pkg = _parseRequirementsPackageName(line)
+                if pkg:
+                    existing.add(pkg)
+        sortedPkgs = [p for p in sortedPkgs if p.lower() not in existing]
+
+    if not sortedPkgs:
+        return 0
+
+    with open(path, mode, encoding=DEFAULT_ENCODING) as f:
+        for pkg in sortedPkgs:
+            f.write(pkg + "\n")
+    return len(sortedPkgs)

@@ -17,7 +17,7 @@ Runs Bandit security linter with JSON output.
 import json
 import os.path
 
-from ..lintdriverbase import LintDriverBase
+from cdmplugins.lintdriverbase import LintDriverBase
 
 
 class BanditDriver(LintDriverBase):
@@ -25,14 +25,18 @@ class BanditDriver(LintDriverBase):
 
     def buildArgs(self, fileName):
         """Build bandit command args. -q: quiet for JSON output."""
+        try:
+            from .banditconfig import load_extra_args
+            extra = load_extra_args()
+        except ImportError:
+            extra = []
         return [
             "-m",
             "bandit",
             "-f",
             "json",
             "-q",
-            os.path.basename(fileName),
-        ]
+        ] + extra + [os.path.basename(fileName)]
 
     def parseOutput(self, stdout, stderr, results):
         """Parse bandit JSON output into Diagnostics."""

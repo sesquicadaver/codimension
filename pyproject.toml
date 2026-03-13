@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "codimension"
-version = "0.0.1"
+dynamic = ["version"]
 description = "Experimental Python 3 IDE with graphics-based code analysis (fork, Python 3.10+)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,6 +38,9 @@ warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 exclude = ["doc/", ".*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "codimension.cdmverspec.version"}
 
 [tool.pyright]
 # cdmplugins import plugins, ui, utils — resolved when codimension pkg dir is in path

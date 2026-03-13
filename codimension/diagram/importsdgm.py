@@ -39,7 +39,7 @@ from ui.qt import (
 )
 from utils.fileutils import isPythonFile
 from utils.globals import GlobalData
-from utils.importutils import resolveImports
+from utils.importutils import getRequirementsHint, getUnresolvedPackageNames, resolveImports
 from utils.pixmapcache import getPixmap
 
 from .importsdgmgraphics import (
@@ -643,10 +643,7 @@ class ImportsDiagramProgress(QDialog):
         # Analyze what was imported
         resolvedImports, errors = resolveImports(fName, info.imports)
         if errors:
-            message = "Errors while analyzing " + fName + ":"
-            for err in errors:
-                message += "\n    " + err
-            logging.warning(message)
+            self.__allImportErrors.extend(errors)
 
         for item in resolvedImports:
             importName = item[0]  # from name
@@ -693,6 +690,7 @@ class ImportsDiagramProgress(QDialog):
         self.__participantFiles = []
         self.__projectImportDirs = []
         self.__projectImportsCache = {}
+        self.__allImportErrors = []
 
         self.dataModel.clear()
         self.__inProgress = True
@@ -769,6 +767,20 @@ class ImportsDiagramProgress(QDialog):
         self.infoLabel.setText("Done")
         QApplication.processEvents()
         self.__inProgress = False
+
+        if self.__allImportErrors:
+            unresolved = getUnresolvedPackageNames(self.__allImportErrors)
+            hint = getRequirementsHint(
+                GlobalData().project.getProjectDir() if GlobalData().project.isLoaded() else None,
+                unresolved,
+            )
+            if hint:
+                logging.warning(hint)
+            else:
+                for err in self.__allImportErrors[:10]:
+                    logging.warning(err)
+                if len(self.__allImportErrors) > 10:
+                    logging.warning("... and %d more", len(self.__allImportErrors) - 10)
 
         self.accept()
 
