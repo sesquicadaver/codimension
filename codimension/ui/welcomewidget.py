@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - graphics python two-way code editor and analyzer
-# Copyright (C) 2010-2016  Sergey Satskiy <sergey.satskiy@gmail.com>
+# codimension - graphics Python two-way code editor and analyzer
+# Copyright (C) 2010-2025  Sergey Satskiy <sergey.satskiy@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,12 +53,12 @@ class WelcomeWidget(TextTabWidget):
             if os.path.exists(projectMDFile):
                 relativeMDFile = project.getRelativePath(projectMDFile)
                 projectPart = (
-                    """<p align="left">The currently lodaded project
+                    """<p align="left">The currently loaded project
 <b>"""
                     + GlobalData().project.getProjectName()
                     + """</b> provides documentation.
 <br>Open it by clicking
-<a href="action://project-cocumentation">"""
+<a href="action://project-documentation">"""
                     + relativeMDFile
                     + """</a>
 or clicking any time the main toolbar button with the markdown icon.</p>
@@ -112,10 +112,9 @@ or clicking any time the main toolbar button with the markdown icon.</p>
     <br>
 
     <p align="left">
-       Visit the project home page
-       <a href="http://codimension.org">
-          http://codimension.org</a>
-          for more information.
+       More information:
+       <a href="https://github.com/sesquicadaver/codimension">GitHub (fork)</a>,
+       <a href="http://codimension.org">Codimension home page</a>.
     </p>
   </td>
 </tr>
