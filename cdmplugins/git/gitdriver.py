@@ -126,6 +126,43 @@ def clone_repo(repo_spec: str, target_dir: str, timeout: int = 120) -> tuple[boo
     return True, "", cloned
 
 
+def list_branches(git_root: str, include_remote: bool = False) -> list[tuple[str, bool]]:
+    """Return list of (branch_name, is_current).
+
+    include_remote: if True, include remote-tracking branches (origin/branch).
+    """
+    args = ["branch", "-a"] if include_remote else ["branch"]
+    stdout, _, code = run_git(git_root, args)
+    if code != 0:
+        return []
+    result = []
+    seen = set()
+    for line in stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        is_current = line.startswith("* ")
+        name = line.lstrip("* ").strip()
+        if name.startswith("remotes/"):
+            name = name[8:]
+            if "/HEAD -> " in name or name.endswith("/HEAD"):
+                continue
+        if " -> " in name:
+            continue
+        if name and name not in seen:
+            seen.add(name)
+            result.append((name, is_current))
+    return result
+
+
+def get_current_branch(git_root: str) -> str | None:
+    """Return current branch name or None."""
+    stdout, _, code = run_git(git_root, ["rev-parse", "--abbrev-ref", "HEAD"])
+    if code != 0 or not stdout.strip():
+        return None
+    return stdout.strip()
+
+
 def find_cdm3_in_dir(dir_path: str) -> str | None:
     """Find first .cdm3 file in directory (non-recursive). Returns path or None."""
     dir_path = dir_path.rstrip(os.sep) + os.sep
