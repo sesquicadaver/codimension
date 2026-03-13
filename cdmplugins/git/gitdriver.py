@@ -12,10 +12,20 @@
 """Execute git commands via subprocess.
 
 Used from getStatus (VCSPluginThread) and from UI handlers.
+Uses configured git path from gitconfig.
 """
 
 import os
 import subprocess
+
+
+def _git_executable():
+    """Return path to git executable (from config or default)."""
+    try:
+        from .gitconfig import get_git_path
+        return get_git_path()
+    except ImportError:
+        return "git"
 
 
 def find_git_root(path: str) -> str | None:
@@ -42,7 +52,7 @@ def run_git(cwd: str, args: list[str], timeout: int = 30) -> tuple[str, str, int
     """
     try:
         result = subprocess.run(
-            ["git"] + args,
+            [_git_executable()] + args,
             cwd=cwd,
             capture_output=True,
             text=True,

@@ -22,14 +22,18 @@ class RuffDriver(LintDriverBase):
 
     def buildArgs(self, fileName):
         """Build ruff check command args."""
+        try:
+            from .ruffconfig import load_extra_args
+            extra = load_extra_args()
+        except ImportError:
+            extra = []
         return [
             "-m",
             "ruff",
             "check",
             "--output-format",
             "json",
-            os.path.basename(fileName),
-        ]
+        ] + extra + [os.path.basename(fileName)]
 
     def parseOutput(self, stdout, stderr, results):
         """Parse ruff JSON output into Diagnostics."""

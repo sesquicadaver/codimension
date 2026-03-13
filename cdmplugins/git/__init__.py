@@ -144,6 +144,18 @@ class GitPlugin(VersionControlSystemInterface):
         """Populate the buffer context menu."""
         del parentMenu
 
+    def getConfigFunction(self):
+        """Return config dialog callable for git path, gh path, default remote."""
+        return self.__configure
+
+    def __configure(self):
+        """Open Git configuration dialog."""
+        from .gitconfig import GitConfigDialog, save_config
+
+        dlg = GitConfigDialog(self.ide.mainWindow)
+        if dlg.exec_() == QDialog.Accepted:
+            save_config(*dlg.get_values())
+
     def __get_path_from_menu(self, parent_menu):
         """Get the selected path from the parent menu data."""
         if parent_menu is None:

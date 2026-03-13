@@ -137,6 +137,20 @@ class BanditPlugin(WizardInterface):
         self.__bufferRunAction = parentMenu.addAction(getIcon("run.png"), "Run bandit\t(Ctrl+Shift+B)", self.__run)
         parentMenu.aboutToShow.connect(self.__bufferMenuAboutToShow)
 
+    def getConfigFunction(self):
+        """Return config dialog for extra bandit arguments."""
+        return self.__configure
+
+    def __configure(self):
+        """Open Bandit configuration dialog."""
+        from ui.qt import QDialog
+
+        from .banditconfig import BanditConfigDialog, save_extra_args
+
+        dlg = BanditConfigDialog(self.ide.mainWindow)
+        if dlg.exec_() == QDialog.Accepted:
+            save_extra_args(dlg.get_extra_args())
+
     def __canRun(self, editorWidget):
         """Tells if bandit can be run for the given editor widget."""
         if self.__banditDriver.isInProcess():
