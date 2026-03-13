@@ -44,11 +44,11 @@ When running in a virtual environment, Codimension also looks for plugins in
 and installed there: **Ruff** (Ctrl+Shift+R), **Mypy** (Ctrl+Shift+M),
 **Pytest** (Ctrl+Shift+T), **Coverage** (Ctrl+Shift+C),
 **Bandit** (Ctrl+Shift+B), **pip-audit** (Ctrl+Shift+A), **Ruff format** (Ctrl+Shift+F, config: format-on-save),
-**TODO panel** (Ctrl+Shift+O).
+**TODO panel** (Ctrl+Shift+O), **Git** (VCS: status, commit, push, pull, add, branch).
 
 Ruff, Bandit, and Mypy drivers share the base class `LintDriverBase` (cdmplugins/lintdriverbase.py).
 
-**Плани розробки:** [plugins-implementation-plan.md](plugins-implementation-plan.md) (фази 0–5 виконано), [git-github-plugin-plan.md](git-github-plugin-plan.md) (майбутній Git/GitHub плагін).
+**Плани розробки:** [plugins-implementation-plan.md](plugins-implementation-plan.md) (фази 0–5 виконано), [git-github-plugin-plan.md](git-github-plugin-plan.md) (Git: фази 0–2 виконано).
 
 The next pieces which are important for Codimension are a plugin name and a
 plugin version. A name and a version are stored in a plugin description file
