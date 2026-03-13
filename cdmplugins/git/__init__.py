@@ -137,7 +137,7 @@ class GitPlugin(VersionControlSystemInterface):
         parentMenu.addAction("Show diff", self.__onFileDiff)
 
     def populateDirectoryContextMenu(self, parentMenu):
-        """Populate the directory context menu."""
+        """Populate the directory context menu (Project → Git)."""
         self.__dirParentMenu = parentMenu
         parentMenu.addAction("Commit", self.__onDirCommit)
         parentMenu.addAction("Push", self.__onDirPush)
@@ -146,6 +146,8 @@ class GitPlugin(VersionControlSystemInterface):
         parentMenu.addSeparator()
         parentMenu.addAction("Create pull request...", self.__onDirCreatePR)
         parentMenu.addAction("View pull requests", self.__onDirViewPRs)
+        parentMenu.addSeparator()
+        parentMenu.addAction("Repository (override)...", self.__onDirRepoOverride)
 
     def populateBufferContextMenu(self, parentMenu):
         """Populate the buffer context menu."""
@@ -209,14 +211,7 @@ class GitPlugin(VersionControlSystemInterface):
     def __onViewPRs(self):
         """View pull requests in browser or output."""
         path = self.__get_repo_path()
-        root = find_git_root(path)
-        if root is None:
-            QMessageBox.warning(
-                self.ide.mainWindow,
-                "Git",
-                "Not a Git repository. Open a project or file in a Git repo.",
-            )
-            return
+        root = find_git_root(path) if path else None
         from .githubapi import get_repo_prs_url
 
         url = get_repo_prs_url(root)
@@ -419,3 +414,12 @@ class GitPlugin(VersionControlSystemInterface):
             )
             return
         QDesktopServices.openUrl(QUrl(url))
+
+    def __onDirRepoOverride(self):
+        """Set repository override from Project → Git context menu."""
+        from .gitconfig import save_repo_override
+        from .gitdialogs import RepoOverrideDialog
+
+        dlg = RepoOverrideDialog(self.ide.mainWindow)
+        if dlg.exec_() == QDialog.Accepted:
+            save_repo_override(dlg.get_repo_override())
