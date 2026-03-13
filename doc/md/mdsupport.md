@@ -242,7 +242,7 @@ Pixmaps are supported as
 Here are examples:
 
 ```markdown
-![Local absolute path pixmap](/home/username/codimension/codimension/pixmaps/add.png)
+![Local absolute path pixmap](~/codimension/codimension/pixmaps/add.png)
 ![Local relative path pixmap](./add.png)
 ![Local relative path pixmap](add.png)
 ![Pixmap from the internet](http://codimension.org/assets/cdm/images/shouldInstall.png)
