@@ -1,5 +1,13 @@
 2025 Mar 13
 
+* Tools → Project utilities → Generate requirements file:
+  - utils/importutils.py: generateRequirementsFromProject(), writeRequirementsFile()
+  - ui/mainmenu.py: підменю Project utilities, _onGenerateRequirementsFile
+  - Сканування Python-файлів проєкту, збір невирішених імпортів, запис у requirements.txt
+  - Діалог Overwrite/Append при наявному requirements.txt
+
+2025 Mar 13
+
 * doc/plugins: documentation audit (plugins-implementation-plan v1.1):
   - living-specification.md: pip-audit у CI-перевірках
   - plugins.md: посилання на plugins-implementation-plan, git-github-plugin-plan
