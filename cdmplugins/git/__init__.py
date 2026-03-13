@@ -126,6 +126,7 @@ class GitPlugin(VersionControlSystemInterface):
         from utils.pixmapcache import getIcon
 
         parentMenu.setIcon(getIcon("pluginsettings.png"))
+        parentMenu.addAction("Switch branch", self.__onSwitchBranch)
         parentMenu.addAction("Create pull request...", self.__onCreatePR)
         parentMenu.addAction("View pull requests", self.__onViewPRs)
 
@@ -143,6 +144,7 @@ class GitPlugin(VersionControlSystemInterface):
         parentMenu.addAction("Push", self.__onDirPush)
         parentMenu.addAction("Pull", self.__onDirPull)
         parentMenu.addAction("Create branch", self.__onDirCreateBranch)
+        parentMenu.addAction("Switch branch", self.__onDirSwitchBranch)
         parentMenu.addSeparator()
         parentMenu.addAction("Create pull request...", self.__onDirCreatePR)
         parentMenu.addAction("View pull requests", self.__onDirViewPRs)
@@ -360,6 +362,54 @@ class GitPlugin(VersionControlSystemInterface):
             QMessageBox.warning(self.ide.mainWindow, "Git", "Branch name is required.")
             return
         if self.__run_git_op(path, ["checkout", "-b", name.strip()], "Branch created"):
+            pass
+
+    def __onDirSwitchBranch(self):
+        """Switch to selected branch."""
+        path = self.__get_path_from_menu(self.__dirParentMenu)
+        if not path:
+            return
+        root = find_git_root(path)
+        if root is None:
+            QMessageBox.warning(self.ide.mainWindow, "Git", "Not a Git repository.")
+            return
+        from .gitdialogs import SelectBranchDialog
+
+        dlg = SelectBranchDialog(root, self.ide.mainWindow)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        branch = dlg.get_selected_branch()
+        if not branch:
+            return
+        args = ["checkout", branch]
+        if branch.startswith("origin/"):
+            args = ["checkout", "--track", branch]
+        if self.__run_git_op(path, args, "Switched to " + branch):
+            pass
+
+    def __onSwitchBranch(self):
+        """Switch branch from main menu."""
+        path = self.__get_repo_path()
+        root = find_git_root(path)
+        if root is None:
+            QMessageBox.warning(
+                self.ide.mainWindow,
+                "Git",
+                "Not a Git repository. Open a project or file in a Git repo.",
+            )
+            return
+        from .gitdialogs import SelectBranchDialog
+
+        dlg = SelectBranchDialog(root, self.ide.mainWindow)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        branch = dlg.get_selected_branch()
+        if not branch:
+            return
+        args = ["checkout", branch]
+        if branch.startswith("origin/"):
+            args = ["checkout", "--track", branch]
+        if self.__run_git_op(path, args, "Switched to " + branch):
             pass
 
     def __onDirCreatePR(self):
