@@ -459,3 +459,59 @@ def resolveImports(fileName, imports):
             errors.append(resolution.errMessage)
 
     return result, errors
+
+
+# Standard library modules (common). Unresolved third-party suggests missing deps.
+_STDLIB_MODULES = frozenset(
+    {
+        "os", "io", "sys", "re", "json", "math", "datetime", "time", "logging",
+        "pathlib", "subprocess", "argparse", "collections", "itertools", "functools",
+        "typing", "abc", "copy", "hashlib", "uuid", "tempfile", "shutil", "glob",
+        "socket", "threading", "multiprocessing", "asyncio", "contextlib",
+        "unittest", "doctest", "pdb", "traceback", "warnings", "importlib",
+        "configparser", "csv", "xml", "html", "email", "urllib", "http",
+        "sqlite3", "pickle", "shelve", "getpass", "platform", "errno", "ctypes",
+    }
+)
+
+
+def getUnresolvedPackageNames(errors):
+    """Extract top-level package names from resolveImports error messages.
+
+    Returns set of names (e.g. {'numpy', 'cryptography', 'pymavlink'}).
+    Excludes known stdlib modules.
+    """
+    import re
+
+    names = set()
+    for err in errors:
+        m = re.search(r"'import ([^']+)'", err)
+        if m:
+            top = m.group(1).split(".")[0]
+            if top not in _STDLIB_MODULES:
+                names.add(top)
+            continue
+        m = re.search(r"'from ([^']+) import", err)
+        if m:
+            top = m.group(1).split(".")[0]
+            if top not in _STDLIB_MODULES:
+                names.add(top)
+    return names
+
+
+def getRequirementsHint(projectDir, unresolvedPackages):
+    """Return hint string for missing dependencies, or None."""
+    if not projectDir or not unresolvedPackages:
+        return None
+    reqPath = os.path.join(projectDir, "requirements.txt")
+    if os.path.isfile(reqPath):
+        return (
+            "Unresolved imports (possibly missing dependencies): "
+            + ", ".join(sorted(unresolvedPackages))
+            + ". Consider: pip install -r requirements.txt"
+        )
+    return (
+        "Unresolved imports (possibly missing dependencies): "
+        + ", ".join(sorted(unresolvedPackages))
+        + ". Consider: pip install " + " ".join(sorted(unresolvedPackages))
+    )
