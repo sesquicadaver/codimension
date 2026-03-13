@@ -33,7 +33,17 @@ from utils.settings import CLEAR_AND_REUSE, NO_CLEAR_AND_REUSE, NO_REUSE
 from utils.skin import getSkinsList
 
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
-from .qt import QActionGroup, QApplication, QDialog, QFontDialog, QMenu, QMessageBox, QStyleFactory
+from .qt import (
+    QActionGroup,
+    QApplication,
+    QCursor,
+    QDialog,
+    QFontDialog,
+    QMenu,
+    QMessageBox,
+    QStyleFactory,
+    Qt,
+)
 
 
 def getAccelerator(count):
