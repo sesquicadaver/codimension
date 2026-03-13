@@ -24,6 +24,7 @@ import os
 import os.path
 import pwd
 import socket
+import sys
 
 from utils.diskvaluesrelay import getRecentFiles
 from utils.globals import GlobalData
@@ -51,6 +52,21 @@ def getAccelerator(count):
     if count < 10:
         return "&" + str(count) + ".  "
     return "&" + chr(count - 10 + ord("a")) + ".  "
+
+
+def _ensure_cdmplugins_in_path():
+    """Ensure cdmplugins package is importable (add project root to sys.path when needed)."""
+    try:
+        import cdmplugins  # noqa: F401
+    except ImportError:
+        try:
+            import plugins
+
+            root = os.path.dirname(os.path.dirname(os.path.dirname(plugins.__file__)))
+            if root not in sys.path:
+                sys.path.insert(0, root)
+        except Exception:
+            pass
 
 
 class MainWindowMenuMixin:
@@ -616,12 +632,15 @@ class MainWindowMenuMixin:
     def _onGitRepository(self):
         """Open Git repository dialog: clone and open project (Project → Git repository)."""
         try:
+            _ensure_cdmplugins_in_path()
             from cdmplugins.git.gitconfig import save_repo_override
             from cdmplugins.git.gitdialogs import RepoOverrideDialog
             from cdmplugins.git.gitdriver import clone_repo, find_cdm3_in_dir
         except ImportError:
             QMessageBox.information(
-                self, "Git", "Git plugin is not available. Install and enable the Git plugin."
+                self,
+                "Git",
+                "Git plugin is not available. Install and enable the Git plugin.",
             )
             return
 
