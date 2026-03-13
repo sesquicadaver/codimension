@@ -30,6 +30,8 @@ CONFIG_GIT_PATH = "git_path"
 CONFIG_GH_PATH = "gh_path"
 CONFIG_DEFAULT_REMOTE = "default_remote"
 CONFIG_GITHUB_TOKEN = "github_token"
+CONFIG_GITHUB_USERNAME = "github_username"
+CONFIG_GITHUB_REPO_OVERRIDE = "github_repo_override"
 
 DEFAULT_GIT = "git"
 DEFAULT_GH = "gh"
@@ -37,12 +39,15 @@ DEFAULT_REMOTE = "origin"
 
 
 def load_config():
-    """Load git plugin config. Returns dict with git_path, gh_path, default_remote, github_token."""
+    """Load git plugin config. Returns dict with git_path, gh_path, default_remote,
+    github_token, github_username, github_repo_override."""
     result = {
         CONFIG_GIT_PATH: DEFAULT_GIT,
         CONFIG_GH_PATH: DEFAULT_GH,
         CONFIG_DEFAULT_REMOTE: DEFAULT_REMOTE,
         CONFIG_GITHUB_TOKEN: "",
+        CONFIG_GITHUB_USERNAME: "",
+        CONFIG_GITHUB_REPO_OVERRIDE: "",
     }
     if not os.path.exists(CONFIG_FILE):
         return result
@@ -62,19 +67,34 @@ def load_config():
             result[CONFIG_GITHUB_TOKEN] = config.get(
                 CONFIG_SECTION, CONFIG_GITHUB_TOKEN, fallback=""
             ).strip()
+            result[CONFIG_GITHUB_USERNAME] = config.get(
+                CONFIG_SECTION, CONFIG_GITHUB_USERNAME, fallback=""
+            ).strip()
+            result[CONFIG_GITHUB_REPO_OVERRIDE] = config.get(
+                CONFIG_SECTION, CONFIG_GITHUB_REPO_OVERRIDE, fallback=""
+            ).strip()
     except (configparser.Error, OSError):
         pass
     return result
 
 
-def save_config(git_path, gh_path, default_remote, github_token=""):
+def save_config(
+    git_path,
+    gh_path,
+    default_remote,
+    github_username="",
+    github_token="",
+):
     """Save git plugin config."""
+    cfg = load_config()
     config = configparser.ConfigParser()
     config[CONFIG_SECTION] = {
         CONFIG_GIT_PATH: (git_path or "").strip() or DEFAULT_GIT,
         CONFIG_GH_PATH: (gh_path or "").strip() or DEFAULT_GH,
         CONFIG_DEFAULT_REMOTE: (default_remote or "").strip() or DEFAULT_REMOTE,
         CONFIG_GITHUB_TOKEN: (github_token or "").strip(),
+        CONFIG_GITHUB_USERNAME: (github_username or "").strip(),
+        CONFIG_GITHUB_REPO_OVERRIDE: cfg.get(CONFIG_GITHUB_REPO_OVERRIDE, ""),
     }
     try:
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -101,6 +121,35 @@ def get_default_remote():
 def get_github_token():
     """Return configured GitHub Personal Access Token (PAT)."""
     return load_config()[CONFIG_GITHUB_TOKEN]
+
+
+def get_github_username():
+    """Return configured GitHub username (for Git credential / HTTPS push)."""
+    return load_config()[CONFIG_GITHUB_USERNAME]
+
+
+def get_github_repo_override():
+    """Return manual repo override: owner/repo or full URL. Empty = use git remote."""
+    return load_config()[CONFIG_GITHUB_REPO_OVERRIDE]
+
+
+def save_repo_override(repo_override: str):
+    """Save only the repository override field."""
+    cfg = load_config()
+    config = configparser.ConfigParser()
+    config[CONFIG_SECTION] = {
+        CONFIG_GIT_PATH: cfg[CONFIG_GIT_PATH],
+        CONFIG_GH_PATH: cfg[CONFIG_GH_PATH],
+        CONFIG_DEFAULT_REMOTE: cfg[CONFIG_DEFAULT_REMOTE],
+        CONFIG_GITHUB_TOKEN: cfg[CONFIG_GITHUB_TOKEN],
+        CONFIG_GITHUB_USERNAME: cfg[CONFIG_GITHUB_USERNAME],
+        CONFIG_GITHUB_REPO_OVERRIDE: (repo_override or "").strip(),
+    }
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            config.write(f)
+    except OSError:
+        pass
 
 
 class GitConfigDialog(QDialog):
@@ -132,12 +181,18 @@ class GitConfigDialog(QDialog):
         grid.addWidget(QLabel("Default remote:", self), 2, 0)
         grid.addWidget(self.__remoteEdit, 2, 1)
 
+        self.__usernameEdit = QLineEdit(self)
+        self.__usernameEdit.setPlaceholderText("GitHub username")
+        self.__usernameEdit.setText(cfg.get(CONFIG_GITHUB_USERNAME, ""))
+        grid.addWidget(QLabel("GitHub username:", self), 3, 0)
+        grid.addWidget(self.__usernameEdit, 3, 1)
+
         self.__tokenEdit = QLineEdit(self)
         self.__tokenEdit.setPlaceholderText("ghp_xxx or fine-grained token")
         self.__tokenEdit.setEchoMode(QLineEdit.Password)
         self.__tokenEdit.setText(cfg.get(CONFIG_GITHUB_TOKEN, ""))
-        grid.addWidget(QLabel("GitHub token (PAT):", self), 3, 0)
-        grid.addWidget(self.__tokenEdit, 3, 1)
+        grid.addWidget(QLabel("GitHub token (PAT):", self), 4, 0)
+        grid.addWidget(self.__tokenEdit, 4, 1)
 
         layout.addLayout(grid)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
@@ -146,10 +201,11 @@ class GitConfigDialog(QDialog):
         layout.addWidget(buttons)
 
     def get_values(self):
-        """Return (git_path, gh_path, default_remote, github_token)."""
+        """Return (git_path, gh_path, default_remote, github_username, github_token)."""
         return (
             self.__gitEdit.text().strip() or DEFAULT_GIT,
             self.__ghEdit.text().strip() or DEFAULT_GH,
             self.__remoteEdit.text().strip() or DEFAULT_REMOTE,
+            self.__usernameEdit.text().strip(),
             self.__tokenEdit.text().strip(),
         )
