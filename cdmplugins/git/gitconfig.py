@@ -14,7 +14,7 @@
 import configparser
 import os.path
 
-from ui.qt import QDialog, QDialogButtonBox, QFormLayout, QLineEdit
+from ui.qt import QDialog, QDialogButtonBox, QGridLayout, QLabel, QLineEdit, QVBoxLayout
 from utils.settings import SETTINGS_DIR
 
 CONFIG_FILE = SETTINGS_DIR + "git.plugin.conf"
@@ -93,27 +93,32 @@ class GitConfigDialog(QDialog):
         self.setWindowTitle("Git — Configuration")
 
         cfg = load_config()
-        layout = QFormLayout(self)
+        layout = QVBoxLayout(self)
+        grid = QGridLayout()
 
         self.__gitEdit = QLineEdit(self)
         self.__gitEdit.setPlaceholderText(DEFAULT_GIT)
         self.__gitEdit.setText(cfg[CONFIG_GIT_PATH])
-        layout.addRow("Path to git:", self.__gitEdit)
+        grid.addWidget(QLabel("Path to git:", self), 0, 0)
+        grid.addWidget(self.__gitEdit, 0, 1)
 
         self.__ghEdit = QLineEdit(self)
         self.__ghEdit.setPlaceholderText(DEFAULT_GH)
         self.__ghEdit.setText(cfg[CONFIG_GH_PATH])
-        layout.addRow("Path to gh (GitHub CLI):", self.__ghEdit)
+        grid.addWidget(QLabel("Path to gh (GitHub CLI):", self), 1, 0)
+        grid.addWidget(self.__ghEdit, 1, 1)
 
         self.__remoteEdit = QLineEdit(self)
         self.__remoteEdit.setPlaceholderText(DEFAULT_REMOTE)
         self.__remoteEdit.setText(cfg[CONFIG_DEFAULT_REMOTE])
-        layout.addRow("Default remote:", self.__remoteEdit)
+        grid.addWidget(QLabel("Default remote:", self), 2, 0)
+        grid.addWidget(self.__remoteEdit, 2, 1)
 
+        layout.addLayout(grid)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
-        layout.addRow(buttons)
+        layout.addWidget(buttons)
 
     def get_values(self):
         """Return (git_path, gh_path, default_remote)."""
