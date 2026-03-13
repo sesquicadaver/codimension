@@ -1,9 +1,9 @@
 [project]
 name = "codimension"
 version = "0.0.1"
-description = "Experimental Python 3 IDE with graphics-based code analysis (fork, Python 3.11+)"
+description = "Experimental Python 3 IDE with graphics-based code analysis (fork, Python 3.10+)"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 # Fork of https://github.com/SergeySatskiy/codimension (unmaintained). Active: https://github.com/sesquicadaver/codimension
 
 [project.urls]
