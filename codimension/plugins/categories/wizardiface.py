@@ -40,14 +40,14 @@ class WizardInterface(CDMPluginBase):
     # See docstrings for the detailed description.
 
     @staticmethod
-    def isIDEVersionCompatible(ideVersion):
+    def isIDEVersionCompatible(ideVersion: str) -> bool:
         """Codimension makes this call before activating a plugin.
 
         The passed ideVersion is a string representing
         the current IDE version.
         True should be returned if the plugin is compatible with the IDE.
         """
-        raise Exception("isIDEVersionCompatible() must be overridden")
+        raise NotImplementedError("isIDEVersionCompatible() must be overridden")
 
     def activate(self, ideSettings, ideGlobalData):
         """Can be may overriden to do specific plugin activation handling.
