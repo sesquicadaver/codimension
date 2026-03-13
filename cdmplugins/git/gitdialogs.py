@@ -15,9 +15,11 @@ from ui.qt import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QGridLayout,
     QLabel,
     QLineEdit,
+    QPushButton,
     QTextEdit,
     QVBoxLayout,
 )
@@ -125,11 +127,11 @@ class CreatePRDialog(QDialog):
 
 
 class RepoOverrideDialog(QDialog):
-    """Dialog to set GitHub repository override (owner/repo or URL)."""
+    """Dialog to set GitHub repository and clone to open project."""
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-        self.setWindowTitle("Git — Repository (override)")
+        self.setWindowTitle("Git — Repository")
 
         try:
             from .gitconfig import get_github_repo_override
@@ -145,13 +147,54 @@ class RepoOverrideDialog(QDialog):
         self.__repoEdit.setText(current)
         grid.addWidget(QLabel("Repository:", self), 0, 0)
         grid.addWidget(self.__repoEdit, 0, 1)
+
+        self.__cloneToEdit = QLineEdit(self)
+        self.__cloneToEdit.setPlaceholderText("Directory to clone into")
+        self.__cloneToEdit.setText(self._default_clone_dir(current))
+        grid.addWidget(QLabel("Clone to:", self), 1, 0)
+        grid.addWidget(self.__cloneToEdit, 1, 1)
+        browseBtn = QPushButton("Browse...", self)
+        browseBtn.clicked.connect(self._on_browse)
+        grid.addWidget(browseBtn, 1, 2)
+
+        self.__openAfterCb = QCheckBox("Open project after clone", self)
+        self.__openAfterCb.setChecked(True)
         layout.addLayout(grid)
+        layout.addWidget(self.__openAfterCb)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
+    def _default_clone_dir(self, repo_spec: str) -> str:
+        """Default clone directory: ~/Projects/repo_name."""
+        import os
+
+        try:
+            from .gitdriver import repo_spec_to_clone_url
+
+            url = repo_spec_to_clone_url(repo_spec)
+            repo_name = url.rstrip("/").rstrip(".git").split("/")[-1] if url else "repo"
+        except Exception:
+            repo_name = "repo"
+        base = os.path.expanduser("~/Projects")
+        return os.path.join(base, repo_name)
+
+    def _on_browse(self):
+        """Browse for clone directory."""
+        path = QFileDialog.getExistingDirectory(self, "Select directory to clone into")
+        if path:
+            self.__cloneToEdit.setText(path)
+
     def get_repo_override(self):
         """Return the repository override value."""
         return self.__repoEdit.text().strip()
+
+    def get_clone_to(self):
+        """Return the clone target directory."""
+        return self.__cloneToEdit.text().strip()
+
+    def get_open_after_clone(self):
+        """Return whether to open project after clone."""
+        return self.__openAfterCb.isChecked()
