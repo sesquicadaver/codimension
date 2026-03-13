@@ -48,7 +48,8 @@ class AboutDialog(QDialog):
         hboxLayout.addWidget(iconLabel)
         versionLabel = QLabel(
             "<b>Codimension IDE version " + str(GlobalData().version) + "<br>"
-            "CML version " + str(CMLVersion.VERSION) + "</b><p>Copyright (c) Sergey Satskiy 2010-2019</p>"
+            "CML version " + str(CMLVersion.VERSION) + "</b><p>Copyright (c) Sergey Satskiy 2010-2025</p>"
+            "<p>Modified version. See FORK.md.</p>"
         )
         versionLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         versionLabel.setFixedHeight(versionLabel.minimumSizeHint().height())
@@ -97,8 +98,8 @@ Many Python developers will find codimension useful as-is, even though not all
 of its features have been implemented yet.
 </p>
 <p align="justify">
-More information could be found on <a href='http://codimension.org'>
-Codimension home page</a>.<br> Happy coding with Codimension!
+More information: <a href='https://github.com/sesquicadaver/codimension'>GitHub (fork)</a>,
+<a href='http://codimension.org'>Codimension home page</a>.<br> Happy coding with Codimension!
 </p>""")
         browser.setOpenExternalLinks(True)
         return browser

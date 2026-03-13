@@ -676,7 +676,7 @@ class MainWindowMenuMixin:
                 f"requirements.txt already exists.\n"
                 f"Detected packages: {', '.join(sorted(packages))}"
             )
-            overwriteBtn = msg.addButton("Overwrite", QMessageBox.ActionRole)
+            msg.addButton("Overwrite", QMessageBox.ActionRole)
             appendBtn = msg.addButton("Append new only", QMessageBox.ActionRole)
             cancelBtn = msg.addButton("Cancel", QMessageBox.RejectRole)
             msg.setDefaultButton(appendBtn)

@@ -26,6 +26,7 @@
 
 """Splash screen implementation"""
 
+from utils.globals import GlobalData
 from utils.pixmapcache import getPixmap
 
 from .qt import QApplication, QColor, QSplashScreen, Qt
@@ -48,6 +49,10 @@ class SplashScreen(QSplashScreen):
 
         self.show()
         QApplication.flush()
+
+        # Show version at startup (replaced by status messages shortly after)
+        version = str(GlobalData().version)
+        self.showMessage("Codimension " + version, self.labelAlignment, QColor(Qt.black))
 
     def showMessage(self, msg):
         """Show the message in the bottom part of the splashscreen"""

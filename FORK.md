@@ -17,7 +17,8 @@
 - Автоматичне виключення venv з аналізу
 - Lazy load для Classes/Functions/Globals
 - Без автозавантаження останнього проєкту при старті
-- Плагіни: Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel
+- Плагіни: Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, Git
+- Tools → Project utilities → Generate requirements file
 
 ## Ліцензія
 

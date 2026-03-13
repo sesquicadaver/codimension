@@ -68,13 +68,11 @@ class SelectBranchDialog(QDialog):
         self.__gitRoot = git_root
 
         try:
-            from .gitdriver import get_current_branch, list_branches
+            from .gitdriver import list_branches
 
             branches = list_branches(git_root, include_remote=True)
-            current = get_current_branch(git_root)
         except ImportError:
             branches = []
-            current = None
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("Select branch:", self))

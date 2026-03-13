@@ -180,7 +180,7 @@ The `WizardInterface` class is a Codimension provided plugin category base
 class. The class is defined in `codimension/plugins/categories/wizardiface.py`. The class has a set of member functions
 some of which have to be implemented by the plugin of this category. The member
 function documentation strings describe in details what is expected by
-Codimension. At the time of writing (Codimension v.4.10+) the `WizardInterface`
+Codimension. At the time of writing (Codimension v.4.11+) the `WizardInterface`
 and the `VersionControlSystemInterface` are the only supported plugin categories.
 When a new plugin category is introduced its base class will appear in the
 `codimension/plugins/categories/` directory.
@@ -293,7 +293,7 @@ initializations.
 
 One of the first things Codimension does before a plugin is acivated, it asks
 the plugin if the current IDE version is supported by the plugin. Codimension
-passes the current version as a string, e.g. `"4.3.1"`. The method must be implemented
+passes the current version as a string, e.g. `"4.11.0"`. The method must be implemented
 by the plugin and for the GC plugin it is trivial, all the versions are supported:
 
 ~~~python

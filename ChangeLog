@@ -1,5 +1,15 @@
 2025 Mar 13
 
+* Version 4.11.0:
+  - cdmverspec.py: 4.10.0 → 4.11.0
+  - Splash screen: show version at startup
+  - About: copyright 2010-2025, Modified version, fork link
+  - Help: version note, Tools → Project utilities
+  - appdata.xml: release 4.11.0
+  - doc: plugins.md, cheatsheet.html
+
+2025 Mar 13
+
 * Tools → Project utilities → Generate requirements file:
   - utils/importutils.py: generateRequirementsFromProject(), writeRequirementsFile()
   - ui/mainmenu.py: підменю Project utilities, _onGenerateRequirementsFile
