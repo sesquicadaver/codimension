@@ -52,7 +52,7 @@ class SplashScreen(QSplashScreen):
 
         # Show version at startup (replaced by status messages shortly after)
         version = str(GlobalData().version)
-        self.showMessage("Codimension " + version, self.labelAlignment, QColor(Qt.black))
+        self.showMessage("Codimension " + version)
 
     def showMessage(self, msg):
         """Show the message in the bottom part of the splashscreen"""
