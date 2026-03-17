@@ -188,11 +188,29 @@ class NotUsedAnalysisProgress(QDialog):
         except OSError as exc:
             logging.warning("Cannot write dead code report to %s: %s", out_path, exc)
 
+    def _get_pyproject_config(self):
+        """Return path to pyproject.toml with [tool.vulture] if present."""
+        base = self._get_report_base_path()
+        config_path = os.path.join(base, "pyproject.toml")
+        if not os.path.isfile(config_path):
+            return None
+        try:
+            with open(config_path, encoding=DEFAULT_ENCODING) as f:
+                content = f.read()
+            if "[tool.vulture]" in content or '[tool.vulture]' in content:
+                return config_path
+        except OSError:
+            pass
+        return None
+
     def __run(self):
         """Runs vulture via current Python interpreter (same venv as IDE)."""
         errTmp = tempfile.mkstemp()
         errStream = os.fdopen(errTmp[0])
         cmd = [sys.executable, "-m", "vulture"]
+        config_path = self._get_pyproject_config()
+        if config_path:
+            cmd.extend(["--config", config_path])
         if os.path.isdir(self.__path):
             exclude_patterns = self._get_exclude_patterns()
             if exclude_patterns:
