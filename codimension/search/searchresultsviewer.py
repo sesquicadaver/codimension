@@ -53,6 +53,7 @@ from utils.project import CodimensionProject
 
 from .matchtooltip import MatchTooltip
 from .occurrencesprovider import OccurrencesSearchProvider
+from .vultureprovider import VultureSearchProvider
 
 MAX_RESULTS = 32
 
@@ -413,6 +414,10 @@ class ResultsViewerWidget(QWidget):
         """Performs the same search again"""
         GlobalData().searchProviders[self.__providerId].searchAgain(self.searchId, self.__parameters, resultsViewer)
 
+    def getProviderId(self):
+        """Returns the search provider id."""
+        return self.__providerId
+
     def canDoAgain(self):
         """Tells if the do again functionality is available"""
         if self.__providerId == OccurrencesSearchProvider.getName():
@@ -520,12 +525,17 @@ class SearchResultsViewer(QWidget):
             self.prevButton.setEnabled(index > 0)
             self.nextButton.setEnabled(index < self.__results.count() - 1)
             self.doAgainButton.setEnabled(widget.canDoAgain())
+            if widget.getProviderId() == VultureSearchProvider.getName():
+                self.doAgainButton.setToolTip("Переіндексувати (Reindex)")
+            else:
+                self.doAgainButton.setToolTip("Do again")
             self.removeItemButton.setEnabled(widget.selectedItem is not None)
             self.clearButton.setEnabled(True)
         else:
             self.prevButton.setEnabled(False)
             self.nextButton.setEnabled(False)
             self.doAgainButton.setEnabled(False)
+            self.doAgainButton.setToolTip("Do again")
             self.removeItemButton.setEnabled(False)
             self.clearButton.setEnabled(False)
 
