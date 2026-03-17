@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - graphics python two-way code editor and analyzer
-# Copyright (C) 2010-2016  Sergey Satskiy <sergey.satskiy@gmail.com>
+# codimension - graphics Python two-way code editor and analyzer
+# Copyright (C) 2010-2025  Sergey Satskiy <sergey.satskiy@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,10 +28,15 @@ from utils.project import CodimensionProject
 from .texttabwidget import TextTabWidget
 
 
+# Primary: active fork. Secondary: original (unmaintained).
+FORK_URL = "https://github.com/sesquicadaver/codimension"
+ORIGINAL_URL = "http://codimension.org"
+
+
 class WelcomeWidget(TextTabWidget):
     """Welcome screen"""
 
-    httpAddress = "http://codimension.org"
+    httpAddress = FORK_URL
 
     def __init__(self, parent=None):
         TextTabWidget.__init__(self, parent)
@@ -53,12 +58,12 @@ class WelcomeWidget(TextTabWidget):
             if os.path.exists(projectMDFile):
                 relativeMDFile = project.getRelativePath(projectMDFile)
                 projectPart = (
-                    """<p align="left">The currently lodaded project
+                    """<p align="left">The currently loaded project
 <b>"""
                     + GlobalData().project.getProjectName()
                     + """</b> provides documentation.
 <br>Open it by clicking
-<a href="action://project-cocumentation">"""
+<a href="action://project-documentation">"""
                     + relativeMDFile
                     + """</a>
 or clicking any time the main toolbar button with the markdown icon.</p>
@@ -70,7 +75,12 @@ or clicking any time the main toolbar button with the markdown icon.</p>
 
         pixmapPath = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep + "pixmaps" + os.path.sep
         logoPath = pixmapPath + "logo-48x48.png"
-        welcome = "  Codimension version " + str(GlobalData().version) + " <font size=-2>(GPL v3)</font>"
+        welcome = (
+            "  Codimension version "
+            + str(GlobalData().version)
+            + " <font size=-2>(GPL v3)</font>"
+            + " <font size=-2>— Modified version</font>"
+        )
 
         return (
             """
@@ -80,7 +90,9 @@ or clicking any time the main toolbar button with the markdown icon.</p>
        align="left" bgcolor="#EFF0F2" border="0" style="width: 100%">
 <tr>
   <td width="1%" valign="middle">
-      <a href="http://codimension.org">
+      <a href='"""
+            + FORK_URL
+            + """'>
       <img border="0" align="left" src='file:"""
             + logoPath
             + """'
@@ -112,10 +124,13 @@ or clicking any time the main toolbar button with the markdown icon.</p>
     <br>
 
     <p align="left">
-       Visit the project home page
-       <a href="http://codimension.org">
-          http://codimension.org</a>
-          for more information.
+       More information:
+       <a href='"""
+            + FORK_URL
+            + """'>GitHub (fork)</a>,
+       <a href='"""
+            + ORIGINAL_URL
+            + """'>Codimension home page (archive)</a>.
     </p>
   </td>
 </tr>

@@ -23,6 +23,7 @@
 import logging
 import os
 import os.path
+import sys
 import tempfile
 from subprocess import PIPE, Popen
 
@@ -31,6 +32,7 @@ from search.vultureprovider import VultureSearchProvider
 from ui.qt import QApplication, QCursor, QDialog, QDialogButtonBox, QLabel, Qt, QTimer, QVBoxLayout
 from utils.config import DEFAULT_ENCODING
 from utils.globals import GlobalData
+from utils.venvutils import getProjectVenvDir
 
 
 class NotUsedAnalysisProgress(QDialog):
@@ -125,11 +127,30 @@ class NotUsedAnalysisProgress(QDialog):
         if not self.__inProgress:
             self.close()
 
+    def _get_exclude_patterns(self):
+        """Build comma-separated exclude patterns for vulture."""
+        patterns = [".venv", "venv", "__pycache__"]
+        project = GlobalData().project
+        if project.isLoaded() and project.getProjectDir() == self.__path:
+            venv_dir = getProjectVenvDir(project)
+            if venv_dir:
+                patterns.append(venv_dir)
+            for excl in project.getExcludeFromAnalysisAsAbsolutePaths():
+                if excl:
+                    patterns.append(excl)
+        return ",".join(patterns)
+
     def __run(self):
-        """Runs vulture"""
+        """Runs vulture via current Python interpreter (same venv as IDE)."""
         errTmp = tempfile.mkstemp()
         errStream = os.fdopen(errTmp[0])
-        process = Popen(["vulture", self.__path], stdin=PIPE, stdout=PIPE, stderr=errStream)
+        cmd = [sys.executable, "-m", "vulture"]
+        if os.path.isdir(self.__path):
+            exclude_patterns = self._get_exclude_patterns()
+            if exclude_patterns:
+                cmd.extend(["--exclude", exclude_patterns])
+        cmd.append(self.__path)
+        process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=errStream)
         process.stdin.close()
         processStdout = process.stdout.read()
         process.stdout.close()
