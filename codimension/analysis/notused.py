@@ -140,6 +140,44 @@ class NotUsedAnalysisProgress(QDialog):
                     patterns.append(excl)
         return ",".join(patterns)
 
+    def _get_dead_code_dir(self):
+        """Return absolute path to deadCode directory in the analyzed project root."""
+        project = GlobalData().project
+        if project.isLoaded():
+            proj_dir = project.getProjectDir()
+            # Use project root when analyzing project or a file within it
+            if self.__path == proj_dir or project.isProjectDir(self.__path):
+                return os.path.join(proj_dir, "deadCode")
+            if os.path.isfile(self.__path) and project.isProjectFile(self.__path):
+                return os.path.join(proj_dir, "deadCode")
+        base = os.path.dirname(self.__path) if os.path.isfile(self.__path) else self.__path
+        return os.path.join(base, "deadCode")
+
+    def _save_dead_code_report(self):
+        """Save dead code candidates to deadCode/deadcode.txt."""
+        if not self.candidates:
+            return
+        dead_code_dir = self._get_dead_code_dir()
+        try:
+            os.makedirs(dead_code_dir, exist_ok=True)
+        except OSError as exc:
+            logging.warning("Cannot create deadCode dir %s: %s", dead_code_dir, exc)
+            return
+        out_path = os.path.join(dead_code_dir, "deadcode.txt")
+        lines = []
+        for item in self.candidates:
+            for match in item.matches:
+                # Format: file:line: message (vulture-style)
+                lines.append("%s:%d: %s" % (item.fileName, match.line, match.text or ""))
+        try:
+            with open(out_path, "w", encoding=DEFAULT_ENCODING) as f:
+                f.write("\n".join(lines))
+                if lines:
+                    f.write("\n")
+            logging.info("Dead code report saved to %s", out_path)
+        except OSError as exc:
+            logging.warning("Cannot write dead code report to %s: %s", out_path, exc)
+
     def __run(self):
         """Runs vulture via current Python interpreter (same venv as IDE)."""
         errTmp = tempfile.mkstemp()
@@ -228,6 +266,8 @@ class NotUsedAnalysisProgress(QDialog):
                     logging.info("No unused candidates found")
             else:
                 mainWindow.displayFindInFiles(VultureSearchProvider.getName(), self.candidates, {"path": self.__path})
+        if self.candidates:
+            self._save_dead_code_report()
 
         QApplication.restoreOverrideCursor()
         self.__infoLabel.setText("Done")
