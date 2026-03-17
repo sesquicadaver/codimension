@@ -21,6 +21,8 @@
 
 import logging
 
+from utils.globals import GlobalData
+
 from .resultprovideriface import SearchResultProviderIFace
 
 
@@ -37,11 +39,17 @@ class VultureSearchProvider(SearchResultProviderIFace):
 
     @staticmethod
     def searchAgain(searchId, parameters, resultsViewer):
-        """Repeats the search"""
+        """Repeats the search. Always analyzes the full project when loaded."""
         from analysis.notused import NotUsedAnalysisProgress
 
+        project = GlobalData().project
+        if project.isLoaded():
+            path = project.getProjectDir()
+            parameters = {"path": path}
+        else:
+            path = parameters["path"]
         try:
-            dlg = NotUsedAnalysisProgress(parameters["path"], newSearch=False)
+            dlg = NotUsedAnalysisProgress(path, newSearch=False)
             dlg.exec_()
             resultsViewer.showReport(VultureSearchProvider.getName(), dlg.candidates, parameters, searchId)
         except Exception as exc:
