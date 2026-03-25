@@ -1,232 +1,287 @@
-Codimension — Unified Roadmap
+# Codimension — Unified Roadmap
 
-Phase 0 — Baseline stabilization
+---
 
-Ціль: стабільний запуск на Python 3.10+
+## Phase 0 — Baseline Stabilization
+**Goal:** Stable execution on Python 3.10+
 
-Задачі
+### Tasks
+- Fix dependencies (`pyproject`)
+- Remove deprecated APIs
+- Stabilize Qt layer
+- Ensure basic workflows:
+  - open project
+  - open file
+  - build CFG
 
-фіксація залежностей (pyproject)
+### Artifacts
+- Reproducible environment
+- CI (lint + run)
 
-усунення deprecated API
+### Acceptance
+- No crashes in basic scenarios
+- Deterministic behavior
 
-стабілізація Qt
+---
 
-базові сценарії (open file / build CFG)
+## Phase 1 — Test Harness
+**Goal:** Lock current behavior
 
-Артефакти
+### Tasks
+- CFG snapshot tests
+- Parser tests
+- Regression suite
 
-reproducible env
+### Artifacts
+- `tests/core/*`
 
-CI (lint + run)
+### Acceptance
+- CFG changes are controlled and intentional
 
-Acceptance
+---
 
-0 crash у базових сценаріях
+## Phase 2 — Boundary Extraction
+**Goal:** Separate core from UI
 
-deterministic behavior
+### Contracts
+```python
+parse → AST
+build_cfg → Graph
+analyze → Metrics
 
-Phase 1 — Test harness
+Tasks
 
-Ціль: зафіксувати поведінку
+Extract parser / CFG / model
 
-Задачі
+Remove Qt dependency from core
 
-snapshot tests CFG
-
-parser tests
-
-regression suite
-
-Артефакти
-
-tests/core/*
-
-Acceptance
-
-будь-яка зміна CFG контрольована
-
-Phase 2 — Boundary extraction
-
-Ціль: відділити core від UI
-
-Контракти
-
-parse → AST build_cfg → Graph analyze → Metrics 
-
-Задачі
-
-винести parser / CFG / model
-
-прибрати залежність від Qt
 
 Acceptance
 
-core працює без UI
+Core runs independently (CLI/headless)
 
-Phase 3 — Modular monolith
 
-Ціль: керована архітектура
 
-Модулі
+---
 
-core.* app.* ui.* infra.* 
+Phase 3 — Modular Monolith
 
-Acceptance
+Goal: Controlled architecture
 
-відсутні цикли
+Modules
 
-UI не впливає на core
-
-=== КРИТИЧНИЙ БЛОК СЕРЕДОВИЩА ===
-
-Phase 4 — Analysis Environment model
-
-Ціль: достовірний аналіз
-
-Сутність
-
-AnalysisEnvironment 
-
-Задачі
-
-interpreter binding
-
-env registry
-
-project-level binding
+core.*
+app.*
+ui.*
+infra.*
 
 Acceptance
 
-кожен проект має активне env
+No cyclic dependencies
 
-Phase 5 — Environment introspection
+UI does not affect core
 
-Ціль: реальні дані середовища
 
-Задачі
 
-sys.path
+---
 
-site-packages
+=== ENVIRONMENT & EXECUTION ===
 
-python version
+Phase 4 — Analysis Environment Model
 
-platform
+Goal: Reliable analysis context
 
-Acceptance
+Entity
 
-import resolution базується на реальних даних
+AnalysisEnvironment
 
-Phase 6 — Analyzer binding
+Tasks
 
-Ціль: всі аналізатори використовують env
+Interpreter binding
 
-Задачі
+Environment registry
 
-lint/type/test/run через env
+Project-level binding
 
-dead code analysis через env
 
 Acceptance
 
-зміна env змінює результати аналізу
+Each project has active environment
 
-Phase 7 — Env cache + invalidation
 
-Ціль: консистентність
 
-Задачі
+---
 
-fingerprint env
+Phase 5 — Environment Introspection
 
-reindex
+Goal: Real runtime context
 
-cache invalidation
+Tasks
+
+Collect sys.path
+
+Detect site-packages
+
+Python version
+
+Platform info
+
 
 Acceptance
 
-немає stale analysis
+Import resolution uses real environment data
 
-=== DEPENDENCIES + EXECUTION ===
 
-Phase 8 — Dependency discovery
 
-Ціль: автогенерація requirements
+---
 
-Задачі
+Phase 6 — Analyzer Binding
 
-import scan
+Goal: Consistent analysis
 
-package resolution
+Tasks
 
-requirements synthesis
+Bind:
 
-Артефакти
+lint
+
+type checking
+
+test runners
+
+dead code analysis
+
+
+
+Acceptance
+
+Changing environment changes analysis results
+
+
+
+---
+
+Phase 7 — Environment Cache & Invalidation
+
+Goal: Consistency
+
+Tasks
+
+Environment fingerprint
+
+Cache invalidation
+
+Reindex on change
+
+
+Acceptance
+
+No stale analysis data
+
+
+
+---
+
+=== DEPENDENCIES & PROVISIONING ===
+
+Phase 8 — Dependency Discovery
+
+Goal: Auto-generate requirements
+
+Tasks
+
+Import scanning
+
+Package resolution
+
+Requirements synthesis
+
+
+Artifacts
 
 requirements.txt
 
 pyproject draft
 
-Acceptance
-
-коректний dependency set
-
-Phase 9 — Local venv backend
-
-Ціль: ізольований запуск
-
-Задачі
-
-create/reuse env
-
-install deps
-
-binding до проекту
 
 Acceptance
 
-env створюється і працює з IDE
+Correct dependency detection
 
-Phase 10 — Docker backend
 
-Ціль: ізоляція runtime
 
-Задачі
+---
 
-Dockerfile generation
+Phase 9 — Local venv Backend
 
-build/run
+Goal: Local isolation
 
-artifact collection
+Tasks
+
+Create/reuse venv
+
+Install dependencies
+
+Bind to project
+
 
 Acceptance
 
-аналіз виконується в контейнері
+Fully functional local environment
+
+
+
+---
+
+Phase 10 — Docker Backend
+
+Goal: Runtime isolation
+
+Tasks
+
+Generate Dockerfile
+
+Build/run container
+
+Collect artifacts
+
+
+Acceptance
+
+Analysis runs inside container
+
+
+
+---
 
 Phase 11 — Remote (SSH)
 
-Ціль: робота з віддаленим кодом
+Goal: Remote project support
 
-Задачі
+Tasks
 
-remote FS
+Remote filesystem
 
-remote exec
+Remote execution
 
-sync
+Synchronization
+
 
 Acceptance
 
-проект відкривається по SSH і аналіз працює
+Full analysis over SSH
+
+
+
+---
 
 Phase 12 — Unified Execution Target
 
-Ціль: один контракт виконання
+Goal: Single execution contract
 
-ExecutionTarget.run() 
+ExecutionTarget.run()
 
-Типи
+Types
 
 venv
 
@@ -236,264 +291,354 @@ ssh
 
 k8s
 
-Acceptance
-
-плагіни не знають про backend
-
-Phase 13 — Kubernetes backend (пізно)
-
-Ціль: масштаб
-
-Задачі
-
-job orchestration
-
-artifact retrieval
 
 Acceptance
 
-heavy analysis у cluster
+Plugins are backend-agnostic
 
-=== CODE UNDERSTANDING CORE ===
 
-Phase 14 — Symbol index + dependency graph
 
-Ціль: база аналізу
+---
 
-Задачі
+Phase 13 — Kubernetes Backend
 
-symbol table
+Goal: Scalability
 
-references
+Tasks
 
-import graph
+Job orchestration
 
-call graph
+Artifact retrieval
+
 
 Acceptance
 
-fast navigation
+Heavy analysis runs in cluster
 
-global analysis
 
-Phase 15 — Metric system
 
-Ціль: уніфікація метрик
+---
 
-MetricProvider 
+=== CORE ANALYSIS ===
 
-Метрики
+Phase 14 — Symbol Index & Dependency Graph
+
+Goal: Analysis foundation
+
+Tasks
+
+Symbol table
+
+References
+
+Import graph
+
+Call graph
+
+
+Acceptance
+
+Fast navigation and indexing
+
+
+
+---
+
+Phase 15 — Metric System
+
+Goal: Unified metrics
+
+MetricProvider
+
+Metrics
 
 LOC
 
-complexity
+Cyclomatic complexity
 
-nesting
+Nesting depth
 
-Acceptance
-
-метрики незалежні від UI
-
-Phase 16 — Overlay system
-
-Ціль: візуальна діагностика
-
-Overlay
-
-size
-
-complexity
-
-nesting
 
 Acceptance
 
-швидке перемикання
+Metrics independent from UI
 
-зрозуміла легенда
 
-Phase 17 — Advanced metrics
 
-Ціль: практична користь
+---
 
-Інтеграції
+Phase 16 — Overlay System
 
-coverage
+Goal: Visual diagnostics
 
-ruff
+Overlays
 
-mypy/pyright
+Size
 
-Acceptance
+Complexity
 
-overlay відображає реальні проблеми
+Nesting
 
-Phase 18 — Runtime profiling
-
-Ціль: performance
-
-Метрики
-
-self time
-
-total time
-
-calls
 
 Acceptance
 
-heatmap по CFG
+Fast switching
 
-Phase 19 — Git analytics
+Clear legend
 
-Ціль: ризик
 
-Метрики
 
-churn
+---
 
-frequency
+Phase 17 — Advanced Metrics
 
-Acceptance
+Goal: Practical insights
 
-overlay нестабільних зон
+Integrations
 
-Phase 20 — Composite risk
+Coverage
 
-Ціль: інтегральна оцінка
+Ruff
 
-risk = f(metrics) 
+Mypy / Pyright
 
-Acceptance
-
-explainable risk score
-
-=== ADVANCED GRAPH ===
-
-Phase 21 — Graph engine redesign
-
-Ціль: масштаб
-
-Задачі
-
-incremental CFG
-
-caching
-
-lazy render
 
 Acceptance
 
-великі файли без лагів
+Accurate issue visualization
 
-Phase 22 — Debugger graph mode
 
-Ціль: runtime path
 
-Acceptance
+---
 
-execution path visible
+Phase 18 — Runtime Profiling
 
-Phase 23 — Graph diff
+Goal: Performance analysis
 
-Ціль: аналіз змін
+Metrics
 
-Acceptance
+Self time
 
-CFG diff між ревізіями
+Total time
 
-Phase 24 — Data-flow / taint
+Call count
 
-Ціль: глибокий аналіз
 
 Acceptance
 
-source → sink tracking
+Heatmap on CFG
+
+
+
+---
+
+Phase 19 — Git Analytics
+
+Goal: Risk detection
+
+Metrics
+
+Churn
+
+Change frequency
+
+
+Acceptance
+
+Highlight unstable code zones
+
+
+
+---
+
+Phase 20 — Composite Risk Model
+
+Goal: Integrated risk scoring
+
+risk = f(metrics)
+
+Acceptance
+
+Explainable risk score
+
+
+
+---
+
+=== GRAPH ENGINE ===
+
+Phase 21 — Graph Engine Redesign
+
+Goal: Scalability
+
+Tasks
+
+Incremental CFG updates
+
+Caching
+
+Lazy rendering
+
+
+Acceptance
+
+Large files without lag
+
+
+
+---
+
+Phase 22 — Debugger Graph Mode
+
+Goal: Runtime visualization
+
+Acceptance
+
+Execution path highlighted
+
+
+
+---
+
+Phase 23 — Graph Diff
+
+Goal: Structural change analysis
+
+Acceptance
+
+CFG diff between revisions
+
+
+
+---
+
+Phase 24 — Data Flow / Taint Analysis
+
+Goal: Deep analysis
+
+Acceptance
+
+Source → sink tracking
+
+
+
+---
 
 === PLUGINS ===
 
-Phase 25 — Plugin system
+Phase 25 — Plugin System
 
-Ціль: розширюваність
+Goal: Extensibility
 
-API
-
-Plugin hooks 
+Plugin hooks
 
 Acceptance
 
-сторонній plugin без змін core
+External plugins without core changes
+
+
+
+---
 
 === AI ===
 
-Phase 26 — AI layer
+Phase 26 — AI Layer
 
-Ціль: підсилення
+Goal: Augmentation (not replacement)
 
-Фічі
+Features
 
-graph-aware explanation
+Graph-aware explanations
 
-refactor hints
+Refactoring suggestions
 
-risk explanation
+Risk analysis
 
-natural queries
+Natural language queries
+
 
 Acceptance
 
-AI працює через core API
+Uses core API only
 
-не ламає deterministic analysis
+Deterministic core preserved
 
-=== OVERLAY EXTENSIONS (від env) ===
 
-Phase 27 — Environment overlay
 
-Ціль: показ контексту виконання
+---
 
-Показує
+=== OVERLAY EXTENSIONS ===
 
-missing deps
+Phase 27 — Environment Overlay
 
-inactive branches
+Goal: Context awareness
 
-platform constraints
+Shows
 
-Phase 28 — Dependency overlay
+Missing dependencies
 
-Ціль: структура залежностей
+Inactive branches
 
-Phase 29 — Deployment overlay
+Platform constraints
 
-Ціль: де виконується код
 
-Фінальна архітектура
 
-Code → AST → CFG → Symbol Index → Metrics → Overlay → UI Execution Targets (venv/docker/ssh/k8s) → Tooling (lint/test/profile) Plugins AI (через core) 
+---
 
-Ключові правила
+Phase 28 — Dependency Overlay
 
-Core не залежить від UI
+Goal: Dependency structure visibility
 
-Execution через один контракт
 
-Environment — джерело істини
+---
 
-Overlay = окремий шар
+Phase 29 — Deployment Overlay
 
-AI тільки після детермінованого ядра
+Goal: Execution context visibility
 
-Підсумок
 
-Цей план:
+---
 
-зберігає працездатність на кожному кроці
+Final Architecture
 
-мінімізує регресії
+Code
+ → AST
+ → CFG
+ → Symbol Index
+ → Metrics
+ → Overlay
+ → UI
 
-будує систему від бази до складного
+Execution Targets (venv/docker/ssh/k8s)
+ → Tooling (lint/test/profile)
 
-Кінцевий результат:
+Plugins
+AI (via core)
 
-інструмент глибокого структурного аналізу Python-коду з реальним execution context
+
+---
+
+Key Rules
+
+1. Core must not depend on UI
+
+
+2. Execution via unified contract
+
+
+3. Environment is source of truth
+
+
+4. Overlay is independent layer
+
+
+5. AI only after deterministic core
+
+
+
+
+---
+
+Final Result
+
+> A modular platform for deep structural analysis of Python code with real execution context
