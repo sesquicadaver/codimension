@@ -75,5 +75,6 @@ GPL v3. Див. [LICENSE](LICENSE).
 Короткий список — повний опис у [doc/INSTALL.md](doc/INSTALL.md):
 
 - **Системні пакети:** `sudo apt-get install g++ python3-dev libpcre3-dev graphviz`
+- **Залежності для Qt5/Qt6** sudo apt update && sudo apt install -y libxcb-xinerama0 libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xkb1 libxcb-shape0 libxcb-randr0 libxcb-xfixes0 libxcb-sync1 libxcb-render0 libxcb-shm0 libxrender1 libxi6 libx11-xcb1 libsm6 libice6 libgl1 libegl1
 - **Ubuntu 22.04:** Підтримується (Python 3.10)
 - **`.venv` з іншого комп'ютера:** Видалити і створити новий локально (`rm -rf .venv` → `python3 -m venv .venv` → встановити залежності)
