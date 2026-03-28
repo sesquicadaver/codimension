@@ -153,8 +153,14 @@ class NotUsedAnalysisProgress(QDialog):
         base = os.path.dirname(self.__path) if os.path.isfile(self.__path) else self.__path
         return os.path.join(base, "deadCode")
 
+    def _get_report_base_path(self):
+        """Return base path for relative file paths in the report."""
+        dead_code_dir = self._get_dead_code_dir()
+        return os.path.dirname(dead_code_dir)
+
     def _save_dead_code_report(self):
-        """Save dead code candidates to deadCode/deadcode.txt."""
+        """Save dead code candidates to deadCode/deadcode.txt.
+        Uses paths relative to the analyzed project root."""
         if not self.candidates:
             return
         dead_code_dir = self._get_dead_code_dir()
@@ -164,11 +170,15 @@ class NotUsedAnalysisProgress(QDialog):
             logging.warning("Cannot create deadCode dir %s: %s", dead_code_dir, exc)
             return
         out_path = os.path.join(dead_code_dir, "deadcode.txt")
+        base_path = self._get_report_base_path()
         lines = []
         for item in self.candidates:
+            try:
+                rel_path = os.path.relpath(item.fileName, base_path)
+            except ValueError:
+                rel_path = item.fileName
             for match in item.matches:
-                # Format: file:line: message (vulture-style)
-                lines.append("%s:%d: %s" % (item.fileName, match.line, match.text or ""))
+                lines.append("%s:%d: %s" % (rel_path, match.line, match.text or ""))
         try:
             with open(out_path, "w", encoding=DEFAULT_ENCODING) as f:
                 f.write("\n".join(lines))
@@ -178,11 +188,29 @@ class NotUsedAnalysisProgress(QDialog):
         except OSError as exc:
             logging.warning("Cannot write dead code report to %s: %s", out_path, exc)
 
+    def _get_pyproject_config(self):
+        """Return path to pyproject.toml with [tool.vulture] if present."""
+        base = self._get_report_base_path()
+        config_path = os.path.join(base, "pyproject.toml")
+        if not os.path.isfile(config_path):
+            return None
+        try:
+            with open(config_path, encoding=DEFAULT_ENCODING) as f:
+                content = f.read()
+            if "[tool.vulture]" in content or '[tool.vulture]' in content:
+                return config_path
+        except OSError:
+            pass
+        return None
+
     def __run(self):
         """Runs vulture via current Python interpreter (same venv as IDE)."""
         errTmp = tempfile.mkstemp()
         errStream = os.fdopen(errTmp[0])
         cmd = [sys.executable, "-m", "vulture"]
+        config_path = self._get_pyproject_config()
+        if config_path:
+            cmd.extend(["--config", config_path])
         if os.path.isdir(self.__path):
             exclude_patterns = self._get_exclude_patterns()
             if exclude_patterns:
