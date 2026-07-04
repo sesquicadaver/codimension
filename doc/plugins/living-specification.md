@@ -24,6 +24,8 @@
 | **Референс: Pytest** | cdmplugins.pytest | pytest.cdmp, __init__.py, pytestdriver.py, pytestresultviewer.py | Smoke: Run pytest (Ctrl+Shift+T) |
 | **Базовий клас** | cdmplugins.lintdriverbase | lintdriverbase.py | Використовується ruff, bandit, mypy |
 | **Git VCS** | cdmplugins.git | git.cdmp, __init__.py, gitdriver.py, gitstatusparser.py, gitdialogs.py, gitconfig.py, githubapi.py | Smoke: status, Create PR, View PRs; unit: tests/test_gitstatusparser.py |
+| **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py |
+| **Binary hexdump** | codimension.utils.binfiles | binfiles.py | unit: tests/test_binfiles.py |
 
 ---
 

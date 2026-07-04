@@ -20,15 +20,35 @@
 """Utils to work with binary files"""
 
 import logging
+import os.path
+import subprocess
 
 from .globals import GlobalData
 
 
 def getHexdump(fileName):
-    """Provides the hex dumped file content or None"""
+    """Provides the hex dumped file content or None.
+
+    Uses the system ``hexdump -C`` utility when available.
+    """
     if not GlobalData().hexdumpAvailable:
         logging.error("hexdump is not available")
         return None
-
-    # TODO: implement hexdump via subprocess when hexdumpAvailable
-    return None
+    if not fileName or not os.path.isfile(fileName):
+        logging.error("Cannot hexdump: file does not exist: %s", fileName)
+        return None
+    try:
+        result = subprocess.run(
+            ["hexdump", "-C", fileName],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        logging.error("hexdump failed for %s: %s", fileName, exc)
+        return None
+    if result.returncode != 0:
+        logging.error("hexdump exited %s: %s", result.returncode, result.stderr.strip())
+        return None
+    return result.stdout

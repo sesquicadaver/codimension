@@ -488,6 +488,22 @@ class _FlowBuilder(ast.NodeVisitor):
         b, e, bln, eln, bpos, epos = self._pos(node)
         return _Body(b, e, bln, eln, bpos, epos)
 
+    def _body_from_abs_range(self, begin: int, end: int) -> _Body:
+        """Build _Body from inclusive 0-based absolute source positions."""
+        if begin < 0:
+            begin = 0
+        if end < begin:
+            end = begin
+        prefix = self.source[:begin]
+        bln = prefix.count("\n") + 1
+        last_nl = prefix.rfind("\n")
+        bpos = begin - last_nl
+        prefix_end = self.source[: end + 1]
+        eln = prefix_end.count("\n") + 1
+        last_nl_e = prefix_end.rfind("\n")
+        epos = end - last_nl_e if last_nl_e >= 0 else end + 1
+        return _Body(begin, end, bln, eln, bpos, epos)
+
     def _extract_module_docstring(self, node: ast.Module) -> None:
         """Extract module docstring from first Expr(Constant(str))."""
         doc = ast.get_docstring(node)
@@ -705,8 +721,13 @@ class _FlowBuilder(ast.NodeVisitor):
             what_str = ", ".join(names)
             display_value = f"from {module} import {what_str}" if module else f"import {what_str}"
             if node.module:
-                mod_b, mod_e, mod_bln, mod_eln, mod_bpos, mod_epos = self._pos(node.module)
-                from_part = _Body(mod_b, mod_e, mod_bln, mod_eln, mod_bpos, mod_epos)
+                chunk = self.source[b : e + 1]
+                needle = f"from {module}"
+                off = chunk.find(needle)
+                if off >= 0:
+                    mod_b = b + off + len("from ")
+                    mod_e = mod_b + len(module) - 1
+                    from_part = self._body_from_abs_range(mod_b, mod_e)
             what_part = _Body(b, e, bln, eln, bpos, epos)
 
         return _ImportFrag(

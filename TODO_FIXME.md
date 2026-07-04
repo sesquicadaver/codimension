@@ -1,14 +1,22 @@
 # TODO_FIXME — Список виявлених проблем для виправлення
 
-**Дата перевірки:** 2025-03-11  
+**Дата перевірки:** 2026-07-04  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
 ## Критичні (anti-stub перевірка)
 
-| Файл | Рядок | Опис |
-|------|-------|------|
-| `codimension/utils/binfiles.py` | 33 | **TODO:** Реалізувати hexdump через subprocess коли hexdumpAvailable — функція завжди повертає `None` |
-| `codimension/editor/flowuiwidget.py` | 89 | **TODO:** Till FS zoom is implemented — тимчасове перевизначення SMART_ZOOM_MAX |
+| Файл | Рядок | Опис | Статус |
+|------|-------|------|--------|
+| `codimension/utils/binfiles.py` | — | hexdump через subprocess | ✅ Виправлено 2026-07-04 |
+| `codimension/editor/flowuiwidget.py` | 89 | **TODO:** Till FS zoom is implemented — тимчасове перевизначення SMART_ZOOM_MAX | Відкрито |
+
+## Виправлено (2026-07-04)
+
+| Файл | Опис |
+|------|------|
+| `codimension/parsers/flow_ast.py` | `from X import` — `_pos(node.module)` замінено на span з source |
+| `codimension/ui/editorsmanager.py` | `onHighlightInFS` — інвертована умова |
+| `codimension/ui/mainwindow.py` | typo `tabxsStatus` → `tabsStatus` |
 
 ## TODO з явною позначкою
 
@@ -33,8 +41,8 @@
 
 | Проблема | Рекомендація |
 |----------|--------------|
-| **Відсутність тестів** | Немає pytest/unittest у проекті. Додати CI з тестами. |
-| **mypy** | Не знаходить .py файли (можлива конфігурація). Перевірити mypy. |
+| **Відсутність тестів** | Базові unit-тести: gitstatusparser, todoscanner, flow_ast, binfiles. Розширити покриття. |
+| **mypy** | cdmplugins проходить; codimension/core — не в CI |
 | **venv** | ruff/mypy не встановлені в .venv. Додати до dev-залежностей. |
 | **README vs pyproject** | Вирішено: README оновлено до Python 3.11+ |
 | **excludeFromAnalysis, venv exclusion** | Реалізовано: doc/project/project.md, README оновлено |
