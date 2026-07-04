@@ -25,6 +25,8 @@
 import os.path
 
 import mistune
+from mistune import HTMLRenderer, create_markdown
+from mistune.plugins.table import table as table_plugin
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, get_lexer_for_mimetype
@@ -118,24 +120,23 @@ def block_code(uuid, text, lang, inlinestyles=False, linenos=False):
     return "".join([PRE_WRAP_START, "<pre>", mistune.escape(text), "</pre>", PRE_WRAP_END, "\n"])
 
 
-class CDMMarkdownRenderer(mistune.Renderer):
-    """Codimension custom markdown renderer"""
+class CDMMarkdownRenderer(HTMLRenderer):
+    """Codimension custom markdown renderer (mistune 3.x HTMLRenderer)."""
 
     def __init__(self, uuid, fileName):
-        mistune.Renderer.__init__(self, inlinestyles=True, linenos=False)
+        super().__init__()
         self.__uuid = uuid
         self.__fileName = fileName
 
-    def block_code(self, code, lang=None):
-        """Custom block code renderer"""
-        # renderer has an options
-        inlinestyles = self.options.get("inlinestyles", False)
-        linenos = self.options.get("linenos", False)
-        return block_code(self.__uuid, code, lang, inlinestyles, linenos)
+    def block_code(self, code, info=None):
+        """Custom fenced code block renderer."""
+        lang = None
+        if info:
+            lang = info.split(None, 1)[0]
+        return block_code(self.__uuid, code, lang, inlinestyles=True, linenos=False)
 
     def block_quote(self, text):
-        """Custom block quote renderer"""
-        # The text comes as \n separated paragraphs
+        """Custom block quote renderer using table layout for QTextBrowser."""
         return "".join(
             [
                 "<p>",
@@ -148,22 +149,23 @@ class CDMMarkdownRenderer(mistune.Renderer):
             ]
         )
 
-    def image(self, src, title, text):
-        """Custom image handler"""
+    def image(self, text, url, title=None):
+        """Custom image handler with relative path resolution."""
+        src = url
         if src and self.__fileName:
             if not os.path.isabs(src):
-                newSrcPath = "".join([os.path.dirname(self.__fileName), os.path.sep, src])
-                src = os.path.normpath(newSrcPath)
-        return mistune.Renderer.image(self, src, title, text)
+                new_src_path = os.path.join(os.path.dirname(self.__fileName), src)
+                src = os.path.normpath(new_src_path)
+        return super().image(text, src, title)
 
     def codespan(self, text):
-        """Custom code span renderer"""
-        return "<u>" + mistune.Renderer.codespan(self, text) + "</u>"
+        """Custom inline code span with underline."""
+        return "<u>" + super().codespan(text) + "</u>"
 
-    def table(self, header, body):
-        """Custom table tag renderer"""
-        replacement = '<table cellspacing="0" cellpadding="4"' + CODE_BLOCK_STYLE + ">"
-        return mistune.Renderer.table(self, header, body).replace("<table>", replacement)
+    def table(self, text):
+        """Custom table tag renderer."""
+        opening = '<table cellspacing="0" cellpadding="4"' + CODE_BLOCK_STYLE + ">\n"
+        return opening + text + "</table>\n"
 
 
 def renderMarkdown(uuid, text, fileName):
@@ -173,10 +175,8 @@ def renderMarkdown(uuid, text, fileName):
     renderedText = None
     try:
         renderer = CDMMarkdownRenderer(uuid, fileName)
-        markdown = mistune.Markdown(renderer=renderer)
+        markdown = create_markdown(renderer=renderer, plugins=[table_plugin])
         renderedText = markdown(text)
     except Exception as exc:
         errors.append(str(exc))
-    except Exception:
-        errors.append("Unknown markdown rendering exception")
     return renderedText, errors, warnings

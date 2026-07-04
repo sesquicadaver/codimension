@@ -1,3 +1,11 @@
+2026 Jul 04
+
+* mistune 3.x migration:
+  - utils/md.py: HTMLRenderer + create_markdown (mistune 3 API)
+  - requirements.txt: mistune>=3.2.1 (removes CVE audit ignores)
+  - CI: pip-audit -r requirements.txt without mistune ignore flags
+  - tests/test_md.py: markdown renderer unit tests
+
 2025 Mar 13
 
 * Version 4.11.0:

@@ -9,6 +9,7 @@
 |------|-------|------|--------|
 | `codimension/utils/binfiles.py` | — | hexdump через subprocess | ✅ Виправлено 2026-07-04 |
 | `codimension/editor/flowuiwidget.py` | 89 | **TODO:** Till FS zoom is implemented — тимчасове перевизначення SMART_ZOOM_MAX | Відкрито |
+| `codimension/utils/md.py` | — | mistune 3.x migration | ✅ Виправлено 2026-07-04 |
 
 ## Виправлено (2026-07-04)
 
