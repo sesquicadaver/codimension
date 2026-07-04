@@ -197,7 +197,7 @@ class NotUsedAnalysisProgress(QDialog):
         try:
             with open(config_path, encoding=DEFAULT_ENCODING) as f:
                 content = f.read()
-            if "[tool.vulture]" in content or '[tool.vulture]' in content:
+            if "[tool.vulture]" in content or "[tool.vulture]" in content:
                 return config_path
         except OSError:
             pass

@@ -27,7 +27,6 @@ from utils.project import CodimensionProject
 
 from .texttabwidget import TextTabWidget
 
-
 # Primary: active fork. Secondary: original (unmaintained).
 FORK_URL = "https://github.com/sesquicadaver/codimension"
 ORIGINAL_URL = "http://codimension.org"

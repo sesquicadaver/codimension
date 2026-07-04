@@ -464,13 +464,54 @@ def resolveImports(fileName, imports):
 # Standard library modules (common). Unresolved third-party suggests missing deps.
 _STDLIB_MODULES = frozenset(
     {
-        "os", "io", "sys", "re", "json", "math", "datetime", "time", "logging",
-        "pathlib", "subprocess", "argparse", "collections", "itertools", "functools",
-        "typing", "abc", "copy", "hashlib", "uuid", "tempfile", "shutil", "glob",
-        "socket", "threading", "multiprocessing", "asyncio", "contextlib",
-        "unittest", "doctest", "pdb", "traceback", "warnings", "importlib",
-        "configparser", "csv", "xml", "html", "email", "urllib", "http",
-        "sqlite3", "pickle", "shelve", "getpass", "platform", "errno", "ctypes",
+        "os",
+        "io",
+        "sys",
+        "re",
+        "json",
+        "math",
+        "datetime",
+        "time",
+        "logging",
+        "pathlib",
+        "subprocess",
+        "argparse",
+        "collections",
+        "itertools",
+        "functools",
+        "typing",
+        "abc",
+        "copy",
+        "hashlib",
+        "uuid",
+        "tempfile",
+        "shutil",
+        "glob",
+        "socket",
+        "threading",
+        "multiprocessing",
+        "asyncio",
+        "contextlib",
+        "unittest",
+        "doctest",
+        "pdb",
+        "traceback",
+        "warnings",
+        "importlib",
+        "configparser",
+        "csv",
+        "xml",
+        "html",
+        "email",
+        "urllib",
+        "http",
+        "sqlite3",
+        "pickle",
+        "shelve",
+        "getpass",
+        "platform",
+        "errno",
+        "ctypes",
     }
 )
 
@@ -513,7 +554,8 @@ def getRequirementsHint(projectDir, unresolvedPackages):
     return (
         "Unresolved imports (possibly missing dependencies): "
         + ", ".join(sorted(unresolvedPackages))
-        + ". Consider: pip install " + " ".join(sorted(unresolvedPackages))
+        + ". Consider: pip install "
+        + " ".join(sorted(unresolvedPackages))
     )
 
 
@@ -555,6 +597,7 @@ def generateRequirementsFromProject(filesList, progressCallback=None):
 def _parseRequirementsPackageName(line):
     """Extract package name from a requirements line (e.g. 'numpy>=1.0' -> 'numpy')."""
     import re
+
     line = line.strip().split("#")[0].strip()
     if not line or line.startswith("-"):
         return None

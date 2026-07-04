@@ -229,9 +229,7 @@ class RepoOverrideDialog(QDialog):
         """Browse for parent directory. Repo will be cloned as subfolder parent/repo_name."""
         import os
 
-        path = QFileDialog.getExistingDirectory(
-            self, "Select parent directory (repo will be cloned as subfolder)"
-        )
+        path = QFileDialog.getExistingDirectory(self, "Select parent directory (repo will be cloned as subfolder)")
         if path:
             repo_spec = self.__repoEdit.text().strip()
             try:

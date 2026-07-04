@@ -55,21 +55,17 @@ def load_config():
         config = configparser.ConfigParser()
         config.read([CONFIG_FILE])
         if config.has_section(CONFIG_SECTION):
-            result[CONFIG_GIT_PATH] = config.get(
-                CONFIG_SECTION, CONFIG_GIT_PATH, fallback=DEFAULT_GIT
-            ).strip() or DEFAULT_GIT
-            result[CONFIG_GH_PATH] = config.get(
-                CONFIG_SECTION, CONFIG_GH_PATH, fallback=DEFAULT_GH
-            ).strip() or DEFAULT_GH
-            result[CONFIG_DEFAULT_REMOTE] = config.get(
-                CONFIG_SECTION, CONFIG_DEFAULT_REMOTE, fallback=DEFAULT_REMOTE
-            ).strip() or DEFAULT_REMOTE
-            result[CONFIG_GITHUB_TOKEN] = config.get(
-                CONFIG_SECTION, CONFIG_GITHUB_TOKEN, fallback=""
-            ).strip()
-            result[CONFIG_GITHUB_USERNAME] = config.get(
-                CONFIG_SECTION, CONFIG_GITHUB_USERNAME, fallback=""
-            ).strip()
+            result[CONFIG_GIT_PATH] = (
+                config.get(CONFIG_SECTION, CONFIG_GIT_PATH, fallback=DEFAULT_GIT).strip() or DEFAULT_GIT
+            )
+            result[CONFIG_GH_PATH] = (
+                config.get(CONFIG_SECTION, CONFIG_GH_PATH, fallback=DEFAULT_GH).strip() or DEFAULT_GH
+            )
+            result[CONFIG_DEFAULT_REMOTE] = (
+                config.get(CONFIG_SECTION, CONFIG_DEFAULT_REMOTE, fallback=DEFAULT_REMOTE).strip() or DEFAULT_REMOTE
+            )
+            result[CONFIG_GITHUB_TOKEN] = config.get(CONFIG_SECTION, CONFIG_GITHUB_TOKEN, fallback="").strip()
+            result[CONFIG_GITHUB_USERNAME] = config.get(CONFIG_SECTION, CONFIG_GITHUB_USERNAME, fallback="").strip()
             result[CONFIG_GITHUB_REPO_OVERRIDE] = config.get(
                 CONFIG_SECTION, CONFIG_GITHUB_REPO_OVERRIDE, fallback=""
             ).strip()

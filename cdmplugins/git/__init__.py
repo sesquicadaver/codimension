@@ -194,9 +194,7 @@ class GitPlugin(VersionControlSystemInterface):
             return
         base, title, body = dlg.get_values()
         if not title.strip():
-            QMessageBox.warning(
-                self.ide.mainWindow, "Git", "PR title is required."
-            )
+            QMessageBox.warning(self.ide.mainWindow, "Git", "PR title is required.")
             return
         from .githubapi import create_pull_request
 
@@ -271,13 +269,16 @@ class GitPlugin(VersionControlSystemInterface):
         path = self.__get_path_from_menu(self.__fileParentMenu)
         if not path:
             return
-        if QMessageBox.question(
-            self.ide.mainWindow,
-            "Git",
-            "Discard changes in " + os.path.basename(path) + "?",
-            QMessageBox.StandardButtons(QMessageBox.Yes | QMessageBox.No),
-            QMessageBox.No,
-        ) != QMessageBox.Yes:
+        if (
+            QMessageBox.question(
+                self.ide.mainWindow,
+                "Git",
+                "Discard changes in " + os.path.basename(path) + "?",
+                QMessageBox.StandardButtons(QMessageBox.Yes | QMessageBox.No),
+                QMessageBox.No,
+            )
+            != QMessageBox.Yes
+        ):
             return
         self.__run_git_op(path, ["checkout", "--", path], "Changes discarded")
 
@@ -296,9 +297,7 @@ class GitPlugin(VersionControlSystemInterface):
             QMessageBox.warning(self.ide.mainWindow, "Git", stderr or "Diff failed.")
             return
         content = stdout or "(no changes)"
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".diff", delete=False, prefix="gitdiff_"
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".diff", delete=False, prefix="gitdiff_") as f:
             f.write(content)
             tmp_path = f.name
         try:
