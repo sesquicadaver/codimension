@@ -16,7 +16,7 @@
 |------|------|
 | `codimension/parsers/flow_ast.py` | `from X import` — `_pos(node.module)` замінено на span з source |
 | `codimension/ui/editorsmanager.py` | `onHighlightInFS` — інвертована умова |
-| `codimension/ui/mainwindow.py` | typo `tabxsStatus` → `tabsStatus` |
+| `codimension/diagram/depsitems.py` | — | Connector на scene для deps-діаграми | ✅ Виправлено 2026-07-04 |
 
 ## TODO з явною позначкою
 

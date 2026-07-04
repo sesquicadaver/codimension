@@ -84,7 +84,7 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
                 baseX + self.width,
                 baseY + self.height / 2.0,
             )
-        # scene.addItem(self.connector)
+            scene.addItem(self.connector)
 
         # Draw comment badges
         self.aboveBadges.draw(scene, settings, baseX, baseY, self.minWidth)

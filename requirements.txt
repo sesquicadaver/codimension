@@ -16,7 +16,8 @@ yapsy>=1.12.0
 jedi>=0.17.2
 vulture>=1.6
 gprof2dot>=2017.9.19
-# mistune 2+/3+ have incompatible API; codimension uses mistune.Renderer, mistune.Markdown
+# mistune 2+/3+ have incompatible API; codimension uses mistune.Renderer, mistune.Markdown.
+# CVE ignores in CI: PYSEC-2026-168, CVE-2026-44708, CVE-2026-44897 (until mistune 3.x migration).
 mistune>=0.8.4,<2.0
 pygments>=2.20.0
 qdarkstyle>=2.8.1
