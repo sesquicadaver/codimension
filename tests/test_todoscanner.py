@@ -9,8 +9,6 @@ import importlib.util
 import os.path
 import tempfile
 
-import pytest
-
 # Load todoscanner without todopanel __init__ (which requires Qt)
 _spec = importlib.util.spec_from_file_location(
     "todoscanner",

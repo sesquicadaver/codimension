@@ -86,9 +86,6 @@ SMART_ZOOM_FS = 4  # File system dependencies view
 SMART_ZOOM_MIN = SMART_ZOOM_BIN
 SMART_ZOOM_MAX = SMART_ZOOM_FS
 
-# TODO: Till FS zoom is implemented
-SMART_ZOOM_MAX = SMART_ZOOM_CLASS_FUNC
-
 
 class SmartZoomStaticProps:
     """Zoom level properties"""
@@ -652,7 +649,6 @@ class FlowUIWidget(QWidget):
             fileName = self.__parentWidget.getShortName()
 
         deps = collectImportResolutions(self.__editor.text, fileName)
-        print(deps)
 
         self.scene().clear()
 

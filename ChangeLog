@@ -1,5 +1,13 @@
 2026 Jul 04
 
+* FS smart zoom + lint driver tests:
+  - editor/flowuiwidget.py: enable SMART_ZOOM_FS (level 4), remove debug print
+  - tests/test_flowuiwidget.py: zoom constant alignment with Settings
+  - tests/test_lint_drivers.py: ruff/bandit/mypy parseOutput unit tests
+  - tests/conftest.py: session QApplication fixture for widget tests
+
+2026 Jul 04
+
 * mistune 3.x migration:
   - utils/md.py: HTMLRenderer + create_markdown (mistune 3 API)
   - requirements.txt: mistune>=3.2.1 (removes CVE audit ignores)
