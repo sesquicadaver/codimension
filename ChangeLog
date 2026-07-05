@@ -1,5 +1,12 @@
 2026 Jul 05
 
+* Mypy codimension/core in CI:
+  - pyproject.toml: exclude flowui/everything.py demo from mypy
+  - flow_ast.py, application.py, env modules, base_cdm_dbg.py: typing fixes
+  - .github/workflows/ci.yml: mypy codimension cdmplugins
+
+2026 Jul 05
+
 * Greenlet debugger extension:
   - debugger/client/threadextension_cdm_dbg.py: greenlet.settrace hook registers contexts
   - debugger/client/threadutils_cdm_dbg.py: thread registry helper for greenlets

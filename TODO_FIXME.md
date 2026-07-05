@@ -42,7 +42,7 @@
 | Проблема | Рекомендація |
 |----------|--------------|
 | **Відсутність тестів** | Базові unit-тести: gitstatusparser, todoscanner, flow_ast, binfiles. Розширити покриття. |
-| **mypy** | cdmplugins проходить; codimension/core — не в CI |
+| **mypy** | codimension + cdmplugins у CI | ✅ Виправлено 2026-07-05 |
 | **venv** | ruff/mypy не встановлені в .venv. Додати до dev-залежностей. |
 | **README vs pyproject** | Вирішено: README оновлено до Python 3.11+ |
 | **excludeFromAnalysis, venv exclusion** | Реалізовано: doc/project/project.md, README оновлено |

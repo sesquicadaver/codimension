@@ -39,7 +39,7 @@
 | --------- | ------- | ------- |
 | Ruff lint | `ruff check codimension cdmplugins` | .github/workflows/ci.yml |
 | Ruff format | `ruff format --check codimension cdmplugins` | .github/workflows/ci.yml |
-| Mypy | `mypy $(find cdmplugins -name '*.py')` | .github/workflows/ci.yml |
+| Mypy | `mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')` | .github/workflows/ci.yml |
 | Smoke | `import codimension; import cdmplugins` | .github/workflows/ci.yml |
 | pip-audit | `pip-audit -r requirements.txt` | .github/workflows/ci.yml |
 | Pytest | `pytest tests/` | .github/workflows/ci.yml |

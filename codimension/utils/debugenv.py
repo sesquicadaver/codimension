@@ -21,10 +21,11 @@
 
 import os.path
 from copy import deepcopy
+from typing import Any
 
 from .fileutils import loadJSON, saveJSON
 
-_DEFAULT_DEBUGGER_PROPS = {
+_DEFAULT_DEBUGGER_PROPS: dict[str, list[Any]] = {
     "breakpoints": [],  # [{'file': <str>,
     #   'line': <int>,
     #   'condition': <str>,

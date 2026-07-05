@@ -43,10 +43,10 @@ jobs:
           . .venv/bin/activate
           ruff format --check codimension cdmplugins
 
-      - name: Mypy (cdmplugins)
+      - name: Mypy (codimension, cdmplugins)
         run: |
           . .venv/bin/activate
-          mypy $(find cdmplugins -name '*.py')
+          mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
 
   smoke:
     runs-on: ubuntu-latest

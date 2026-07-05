@@ -26,9 +26,9 @@ from utils.pixmapcache import getIcon
 from .garbagecollector import GarbageCollector
 from .qt import QApplication, QEvent, QMenuBar, Qt
 
-KEY_PRESS = QEvent.KeyPress
-APP_ACTIVATE = QEvent.ApplicationActivate
-APP_DEACTIVATE = QEvent.ApplicationDeactivate
+KEY_PRESS: int = QEvent.KeyPress  # type: ignore[attr-defined]
+APP_ACTIVATE: int = QEvent.ApplicationActivate  # type: ignore[attr-defined]
+APP_DEACTIVATE: int = QEvent.ApplicationDeactivate  # type: ignore[attr-defined]
 
 
 class CodimensionApplication(QApplication):

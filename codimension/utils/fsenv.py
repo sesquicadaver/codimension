@@ -21,13 +21,14 @@
 
 import os.path
 from copy import deepcopy
+from typing import Any
 
 from .fileutils import loadJSON, saveJSON
 
 # toplevel dirs: those which are added to the file system browser
 # filebrowserexpandeddirs: dirs in the project browser which were expanded when
 # the user closed the project
-_DEFAULT_FS_PROPS = {
+_DEFAULT_FS_PROPS: dict[str, list[Any]] = {
     "tabs": [],  # [bool: active,
     #  string: path, ...]
     "recent": [],  # [path, ...]

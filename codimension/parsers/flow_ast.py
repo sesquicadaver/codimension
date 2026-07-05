@@ -300,12 +300,13 @@ class _FunctionFrag(_FragmentBase):
 
     def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(FUNCTION_FRAGMENT, begin, end, bln, eln, bpos, epos)
+        self.name: _NameContent | None = None
         self.decorators: list[_FragmentBase] = []
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
 
     def getDisplayValue(self) -> str:
-        if hasattr(self, "name") and self.name is not None:
+        if self.name is not None:
             return self.name.getContent()
         return ""
 
@@ -315,12 +316,13 @@ class _ClassFrag(_FragmentBase):
 
     def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(CLASS_FRAGMENT, begin, end, bln, eln, bpos, epos)
+        self.name: _NameContent | None = None
         self.decorators: list[_FragmentBase] = []
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
 
     def getDisplayValue(self) -> str:
-        if hasattr(self, "name") and self.name is not None:
+        if self.name is not None:
             return self.name.getContent()
         return ""
 
