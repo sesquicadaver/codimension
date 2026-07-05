@@ -199,7 +199,7 @@ class ItemToSearchIn:
             return
 
         if isPythonFile(self.fileName):
-            info = getBriefModuleInfoFromMemory("\n".join(content))
+            info = getBriefModuleInfoFromMemory("\n".join(content), self.fileName)
             self.tooltip = ""
             if info.docstring is not None:
                 self.tooltip = info.docstring.text

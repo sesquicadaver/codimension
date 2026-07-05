@@ -777,6 +777,11 @@ class ImportsDiagramProgress(QDialog):
             if hint:
                 logging.warning(hint)
             else:
+                logging.warning(
+                    "Could not resolve %d import(s). This is often caused by relative imports "
+                    "or project path settings, not missing pip packages.",
+                    len(self.__allImportErrors),
+                )
                 for err in self.__allImportErrors[:10]:
                     logging.warning(err)
                 if len(self.__allImportErrors) > 10:

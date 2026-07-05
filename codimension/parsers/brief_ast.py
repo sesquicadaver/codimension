@@ -719,10 +719,10 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             visit_func(node, 0)
 
 
-def getBriefModuleInfoFromMemory(content: str) -> BriefModuleInfo:
+def getBriefModuleInfoFromMemory(content: str, filename: str = "<string>") -> BriefModuleInfo:
     """Build brief module info from string content."""
     mod_info = BriefModuleInfo()
-    _ast_to_brief(mod_info, content, "<string>")
+    _ast_to_brief(mod_info, content, filename)
     mod_info.flush()
     return mod_info
 

@@ -203,6 +203,19 @@ class NotUsedAnalysisProgress(QDialog):
             pass
         return None
 
+    def _log_vulture_stderr(self, stderr):
+        """Surface vulture diagnostics with the analyzed path for context."""
+        if not stderr:
+            return
+        for line in stderr.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if "SyntaxWarning" in line or "invalid escape" in line:
+                logging.warning("Dead code analysis (%s): %s", self.__path, line)
+            else:
+                logging.error("Dead code analysis (%s): %s", self.__path, line)
+
     def __run(self):
         """Runs vulture via current Python interpreter (same venv as IDE)."""
         errTmp = tempfile.mkstemp()
@@ -287,10 +300,10 @@ class NotUsedAnalysisProgress(QDialog):
         if self.__newSearch:
             # Do the action only for the new search.
             # Redo action will handle the results on its own
+            if stderr:
+                self._log_vulture_stderr(stderr)
             if self.__found == 0:
-                if stderr:
-                    logging.error("Error running vulture for " + self.__path + ":\n" + stderr)
-                else:
+                if not stderr:
                     logging.info("No unused candidates found")
             else:
                 mainWindow.displayFindInFiles(VultureSearchProvider.getName(), self.candidates, {"path": self.__path})
