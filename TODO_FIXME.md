@@ -1,6 +1,6 @@
 # TODO_FIXME — Список виявлених проблем для виправлення
 
-**Дата перевірки:** 2026-07-04  
+**Дата перевірки:** 2026-07-05  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
 ## Критичні (anti-stub перевірка)
@@ -10,6 +10,7 @@
 | `codimension/utils/binfiles.py` | — | hexdump через subprocess | ✅ Виправлено 2026-07-04 |
 | `codimension/editor/flowuiwidget.py` | — | FS smart zoom enabled (SMART_ZOOM_MAX) | ✅ Виправлено 2026-07-04 |
 | `codimension/utils/md.py` | — | mistune 3.x migration | ✅ Виправлено 2026-07-04 |
+| `codimension/search/occurrencesprovider.py` | — | searchAgain stub (`pass`) | ✅ Виправлено 2026-07-05 |
 
 ## Виправлено (2026-07-04)
 

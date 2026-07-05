@@ -421,17 +421,7 @@ class ResultsViewerWidget(QWidget):
     def canDoAgain(self):
         """Tells if the do again functionality is available"""
         if self.__providerId == OccurrencesSearchProvider.getName():
-            # There are too many cases when it is problematic to do again
-            # jedi needs to have a source code and a cursor position in it
-            # however, at least following may brake the search:
-            # - the buffer has been changed (could be tracked)
-            # - the file was closed so there is no more editor (could be
-            #   reloaded)
-            # - the file was changed outside of the ide (cannot be tracked)
-            # - the file is changed between the ide sessions when the feature
-            #   of saving/restoring results is implemented (cannot be tracked)
-            # So for now the redo is just disabled for this provider
-            return False
+            return OccurrencesSearchProvider.canRedo(self.__parameters)
         return True
 
 

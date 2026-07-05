@@ -1,5 +1,12 @@
 2026 Jul 05
 
+* Occurrences search redo:
+  - search/occurrencesprovider.py: build_occurrence_results helper, searchAgain via getOccurrences
+  - search/searchresultsviewer.py: canDoAgain delegates to OccurrencesSearchProvider.canRedo
+  - tests/test_occurrencesprovider.py: build results and canRedo unit tests
+
+2026 Jul 05
+
 * Mypy codimension/core in CI:
   - pyproject.toml: exclude flowui/everything.py demo from mypy
   - flow_ast.py, application.py, env modules, base_cdm_dbg.py: typing fixes
