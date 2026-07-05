@@ -1,5 +1,13 @@
 2026 Jul 05
 
+* Greenlet debugger extension:
+  - debugger/client/threadextension_cdm_dbg.py: greenlet.settrace hook registers contexts
+  - debugger/client/threadutils_cdm_dbg.py: thread registry helper for greenlets
+  - debugger/client/base_cdm_dbg.py: DebugBase.isGreenlet flag
+  - tests/test_greenlet_trace.py: filter_active_threads unit tests
+
+2026 Jul 05
+
 * Debugger watchpoints:
   - debugger/wputils.py: remote watch condition format/parse helpers
   - debugger/editwatchpoint.py: add/edit watch expression dialog

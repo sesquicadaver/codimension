@@ -74,6 +74,7 @@ class DebugBase(object):
 
         # Some informations about the thread
         self.isMainThread = False
+        self.isGreenlet = False
         self.quitting = False
         self.id = -1
         self.name = ""

@@ -25,11 +25,9 @@
 |------|-------|------|
 | `codimension/debugger/bpwp.py` | — | WatchPointViewer enabled in debugger panel | ✅ Виправлено 2026-07-05 |
 | `codimension/debugger/server.py` | — | `__sendWatchpoints` sync to debuggee | ✅ Виправлено 2026-07-05 |
-| `codimension/debugger/client/threadextension_cdm_dbg.py` | 249 | **TODO:** Implement the debugger extension for greenlets |
+| `codimension/debugger/client/threadextension_cdm_dbg.py` | — | greenlet.settrace debugger extension | ✅ Виправлено 2026-07-05 |
 
 ## Заглушки `pass` (потребують перевірки)
-
-- **wizardiface.py** — `pass` у абстрактних методах інтерфейсу (прийнятно)
 - **flowui/everything.py** — демо-файл для flow UI, ігнорується ruff
 - **runmanager.py, mainstatusbar.py** — `pass` у except/empty handlers
 - **variablesbrowser.py, notused.py, brief_ast.py** — `pass` у обробниках
