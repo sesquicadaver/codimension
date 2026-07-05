@@ -28,7 +28,7 @@ class Watchpoint:
         self.__special = special
         self.__temporary = temporary
         self.__enabled = enabled
-        self.__ignoreCount = 0
+        self.__ignoreCount = ignoreCount
 
     def isValid(self):
         """True if the watchpoint is valid"""

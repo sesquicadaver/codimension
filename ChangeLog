@@ -1,3 +1,12 @@
+2026 Jul 05
+
+* Debugger watchpoints:
+  - debugger/wputils.py: remote watch condition format/parse helpers
+  - debugger/editwatchpoint.py: add/edit watch expression dialog
+  - debugger/server.py: sync watchpoints on debug startup and model changes
+  - debugger/wpointviewer.py, bpwp.py: enable viewer and wire Add/Edit actions
+  - tests/test_watchpoints.py: wputils and WatchPointModel unit tests
+
 2026 Jul 04
 
 * FS smart zoom + lint driver tests:

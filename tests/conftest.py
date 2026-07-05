@@ -18,7 +18,10 @@ if CODMENSION_DIR not in sys.path:
 @pytest.fixture(scope="session")
 def qapp():
     """Single QApplication instance for widget/driver tests."""
-    from ui.qt import QApplication
+    try:
+        from ui.qt import QApplication
+    except ImportError:
+        from PyQt5.QtWidgets import QApplication
 
     app = QApplication.instance()
     if app is None:

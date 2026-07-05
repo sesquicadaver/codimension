@@ -28,6 +28,7 @@
 | **Binary hexdump** | codimension.utils.binfiles | binfiles.py | unit: tests/test_binfiles.py |
 | **Markdown (mistune 3)** | codimension.utils.md | md.py | unit: tests/test_md.py |
 | **FS smart zoom** | codimension.editor.flowuiwidget | flowuiwidget.py | unit: tests/test_flowuiwidget.py |
+| **Debugger watchpoints** | codimension.debugger | wputils.py, editwatchpoint.py, server.py, wpointviewer.py | unit: tests/test_watchpoints.py |
 
 ---
 

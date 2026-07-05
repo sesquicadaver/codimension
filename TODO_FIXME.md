@@ -23,7 +23,8 @@
 
 | Файл | Рядок | Опис |
 |------|-------|------|
-| `codimension/debugger/bpwp.py` | 48 | **TODO: temporary** — WatchPointViewer приховано |
+| `codimension/debugger/bpwp.py` | — | WatchPointViewer enabled in debugger panel | ✅ Виправлено 2026-07-05 |
+| `codimension/debugger/server.py` | — | `__sendWatchpoints` sync to debuggee | ✅ Виправлено 2026-07-05 |
 | `codimension/debugger/client/threadextension_cdm_dbg.py` | 249 | **TODO:** Implement the debugger extension for greenlets |
 
 ## Заглушки `pass` (потребують перевірки)

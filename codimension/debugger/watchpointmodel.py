@@ -25,11 +25,13 @@
 
 """Module implementing the Watch expression model"""
 
-from ui.qt import QAbstractItemModel, QModelIndex, Qt
+from ui.qt import QAbstractItemModel, QModelIndex, Qt, pyqtSignal
 
 
 class WatchPointModel(QAbstractItemModel):
     """Class implementing a custom model for watch expressions"""
+
+    sigDataAboutToBeChanged = pyqtSignal(QModelIndex, QModelIndex)
 
     def __init__(self, parent=None):
         QAbstractItemModel.__init__(self, parent)
@@ -113,7 +115,8 @@ class WatchPointModel(QAbstractItemModel):
         if index.isValid():
             row = index.row()
             index1 = self.createIndex(row, 0, self.watchpoints[row])
-            index2 = self.createIndex(row, len(self.watchpoints[row]), self.watchpoints[row])
+            index2 = self.createIndex(row, len(self.watchpoints[row]) - 1, self.watchpoints[row])
+            self.sigDataAboutToBeChanged.emit(index1, index2)
             self.dataAboutToBeChanged.emit(index1, index2)
             i = 0
             for value in [cond, special] + list(properties):
@@ -168,8 +171,13 @@ class WatchPointModel(QAbstractItemModel):
         """Provides the index of a watch expression given by expression"""
         for row in range(len(self.watchpoints)):
             wpoint = self.watchpoints[row]
-            if wpoint[0] == cond:
-                if special and wpoint[1] != special:
-                    continue
+            if wpoint[0] == cond and wpoint[1] == special:
                 return self.createIndex(row, 0, self.watchpoints[row])
         return QModelIndex()
+
+    def findWatchPointIndexByRemoteCondition(self, remote_condition):
+        """Finds a watch expression by the condition string used on the wire."""
+        from .wputils import parseRemoteWatchCondition
+
+        cond, special = parseRemoteWatchCondition(remote_condition)
+        return self.getWatchPointIndex(cond, special)
