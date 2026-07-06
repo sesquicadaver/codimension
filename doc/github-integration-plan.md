@@ -1,8 +1,8 @@
 # План інтеграції Codimension з GitHub
 
-**Версія:** 1.2  
-**Дата:** 2025-03  
-**Статус:** Виконано (Фази 1.3, 2–5)
+**Версія:** 1.3  
+**Дата:** 2026-07  
+**Статус:** Виконано (Фази 1.3, 2–5); CI оновлено 2026-07 (mypy core, pytest 46, pip-audit mistune 3)
 
 ---
 
@@ -15,10 +15,10 @@
 | CI (lint) | ✅ | `.github/workflows/ci.yml` |
 | Ruff check | ✅ | codimension, cdmplugins |
 | Ruff format | ✅ | codimension, cdmplugins |
-| Mypy | ✅ | cdmplugins |
-| Smoke test | ✅ | `python -c "import codimension; import cdmplugins"` (без display) |
-| Pytest | ✅ | tests/ у CI |
-| pip-audit | ✅ | smoke job у CI |
+| Mypy | ✅ | codimension, cdmplugins (flowui/everything.py excluded) |
+| Smoke test | ✅ | `import codimension; import cdmplugins`; smoke job: `pip install -r requirements.txt` |
+| Pytest | ✅ | 46 tests у `tests/` |
+| pip-audit | ✅ | `pip-audit -r requirements.txt` (mistune>=3.2.1) |
 | README | ✅ | Badges (CI, Python, License), посилання |
 | CONTRIBUTING | ✅ | PR template, issue templates, CI |
 | Issue templates | ✅ | bug_report, feature_request, config.yml |

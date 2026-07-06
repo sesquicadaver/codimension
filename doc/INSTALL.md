@@ -2,6 +2,9 @@
 
 Codimension — мультиплатформна IDE. Підтримка платформ: **Linux** (основна), **Windows**, **macOS**.
 
+**Активний форк:** https://github.com/sesquicadaver/codimension  
+**Встановлення:** лише з вихідного коду цього репозиторію. Пакет `pip install codimension` на PyPI — застаріла версія оригінального проєкту (2020), не цей форк.
+
 ## Системні вимоги
 
 - **Python:** 3.10.12 або новіший (3.10–3.13)
@@ -41,29 +44,7 @@ python --version
 
 ---
 
-## Варіант 1: Встановлення з PyPI (швидкий старт)
-
-**Linux / macOS:**
-
-```shell
-python3 -m venv .venv
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install codimension
-.venv/bin/codimension
-```
-
-**Windows (CMD):**
-
-```cmd
-py -3 -m venv .venv
-.venv\Scripts\pip install --upgrade pip
-.venv\Scripts\pip install codimension
-.venv\Scripts\codimension
-```
-
----
-
-## Варіант 2: Встановлення з вихідного коду (розробка)
+## Встановлення з вихідного коду
 
 ### Крок 1: Клонування репозиторію
 
@@ -218,6 +199,19 @@ git pull
 
 ---
 
+## Перевірка для розробників (CI локально)
+
+```shell
+. .venv/bin/activate
+ruff check codimension cdmplugins
+ruff format --check codimension cdmplugins
+mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
+pytest tests/ -v
+pip-audit -r requirements.txt
+```
+
+---
+
 ## Troubleshooting
 
 ### Помилка: Python version outside allowed range
@@ -226,7 +220,7 @@ git pull
 
 ### Ubuntu 22.04: cdmpyparser / cdmcfparser
 
-**Рішення:** На Python 3.10+ ці пакети не встановлюються — використовуються вбудовані fallbacks.
+**Рішення:** На Python 3.10+ ці пакети не встановлюються — використовуються вбудовані fallbacks (`brief_ast`, `flow_ast`).
 
 ### `.venv` звертається до шляху іншого комп'ютера
 
@@ -266,6 +260,10 @@ py -3 -m venv .venv
 **macOS:** `xcode-select --install`  
 **Windows:** Visual Studio Build Tools або встановлюйте лише wheel-пакети (без збірки).
 
+### `pip install codimension` встановлює стару IDE
+
+**Рішення:** Це пакет оригінального upstream (Python 2 era). Клонуйте форк і встановлюйте з джерела (див. вище).
+
 ---
 
 ## Структура після встановлення
@@ -274,10 +272,11 @@ py -3 -m venv .venv
 codimension/
 ├── .venv/           # Віртуальне середовище (не комітити в git)
 ├── codimension/     # Вихідний код IDE
-├── cdmplugins/      # Плагіни (ruff, mypy, pytest тощо)
+├── cdmplugins/      # Плагіни (ruff, mypy, pytest, git тощо)
+├── tests/           # Unit-тести (pytest)
 ├── requirements.txt
 ├── pyproject.toml
-└── setup.py
+└── setup.py         # Legacy setuptools entry (основна конфігурація — pyproject.toml)
 ```
 
 ---

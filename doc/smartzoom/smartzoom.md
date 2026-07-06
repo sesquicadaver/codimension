@@ -3,6 +3,8 @@ Traditional and Smart Zoom
 
 Codimension supports two types of zoom on the graphics pane for python code:
 
+**Форк (2026-07):** smart zoom рівень 4 (file-system dependencies view) увімкнено (`SMART_ZOOM_FS` у `flowuiwidget.py`). Діапазон рівнів: від -3 (pyc binary) до 4 (dependencies). Unit-тест: `tests/test_flowuiwidget.py`.
+
 - Traditional zoom or simply zoom
 - Smart zoom
 

@@ -1,8 +1,11 @@
 # Markdown Support
 
 Codimension uses markdown for its own documentation. It also offers
-features to use markdown for documenting user projects. To cover these items
-the following has been implemented:
+features to use markdown for documenting user projects.
+
+**Implementation (форк, 2026):** [mistune](https://github.com/lepture/mistune) **3.x** (`codimension/utils/md.py`, `mistune>=3.2.1` in requirements.txt). API: `create_markdown()` + custom `HTMLRenderer`.
+
+To cover these items the following has been implemented:
 
 * Recognition of the markdown file type
 * Markdown renderer to support editing and browsing markdown files

@@ -1,6 +1,6 @@
 # TODO_FIXME — Список виявлених проблем для виправлення
 
-**Дата перевірки:** 2026-07-05  
+**Дата перевірки:** 2026-07-06  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
 ## Критичні (anti-stub перевірка)
@@ -18,7 +18,7 @@
 |------|------|
 | `codimension/parsers/flow_ast.py` | `from X import` — `_pos(node.module)` замінено на span з source |
 | `codimension/ui/editorsmanager.py` | `onHighlightInFS` — інвертована умова |
-| `codimension/diagram/depsitems.py` | — | Connector на scene для deps-діаграми | ✅ Виправлено 2026-07-04 |
+| `codimension/diagram/depsitems.py` | Connector на scene для deps-діаграми |
 
 ## TODO з явною позначкою
 
@@ -29,6 +29,7 @@
 | `codimension/debugger/client/threadextension_cdm_dbg.py` | — | greenlet.settrace debugger extension | ✅ Виправлено 2026-07-05 |
 
 ## Заглушки `pass` (потребують перевірки)
+
 - **flowui/everything.py** — демо-файл для flow UI, ігнорується ruff
 - **runmanager.py, mainstatusbar.py** — `pass` у except/empty handlers
 - **variablesbrowser.py, notused.py, brief_ast.py** — `pass` у обробниках
@@ -40,18 +41,23 @@
 
 ## Інфраструктура
 
-| Проблема | Рекомендація |
-|----------|--------------|
-| **Відсутність тестів** | Базові unit-тести: gitstatusparser, todoscanner, flow_ast, binfiles. Розширити покриття. |
-| **mypy** | codimension + cdmplugins у CI | ✅ Виправлено 2026-07-05 |
-| **venv** | ruff/mypy не встановлені в .venv. Додати до dev-залежностей. |
-| **README vs pyproject** | Вирішено: README оновлено до Python 3.11+ |
-| **excludeFromAnalysis, venv exclusion** | Реалізовано: doc/project/project.md, README оновлено |
-| **Lazy load Classes/Functions/Globals** | Реалізовано: populateIfNeeded при першому показі вкладки |
+| Проблема | Статус |
+|----------|--------|
+| **Unit-тести** | 46 тестів у `tests/` (pytest). Розширити CFG snapshot coverage. |
+| **mypy** | `codimension` + `cdmplugins` у CI | ✅ 2026-07-05 |
+| **ruff/mypy у venv** | У `requirements.txt` | ✅ |
+| **README / INSTALL** | Лише встановлення з репозиторію, Python 3.10+ | ✅ 2026-07-06 |
+| **excludeFromAnalysis, venv exclusion** | doc/project/project.md | ✅ |
+| **Lazy load Classes/Functions/Globals** | populateIfNeeded | ✅ |
 
 ## Рекомендації щодо CI
 
-1. `ruff check codimension/` — проходить
-2. Додати pytest до dev-залежностей
-3. Встановити ruff, mypy в venv для CI
-4. Оновити README: Python 3.11+ (відповідно до pyproject.toml)
+Усі пункти виконано в `.github/workflows/ci.yml`:
+
+1. `ruff check` / `ruff format --check`
+2. `mypy` на codimension + cdmplugins
+3. `pytest tests/`
+4. `pip-audit -r requirements.txt`
+5. Smoke: `import codimension; import cdmplugins`
+
+Див. [doc/plugins/living-specification.md](doc/plugins/living-specification.md).

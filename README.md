@@ -16,6 +16,9 @@ Codimension — це інструмент для **структурного ан
 - [CAN-MCP (Codimension ANalizer MCP)](https://github.com/sesquicadaver/CAN-MCP) — Codimension based MCP-сервер
 - [Гарячі клавіші](http://codimension.org/documentation/cheatsheet.html)
 - **Детальна інструкція з встановлення:** [doc/INSTALL.md](doc/INSTALL.md)
+- **Документація проєкту:** [doc/README.md](doc/README.md)
+- **Статус форку:** [FORK.md](FORK.md)
+- **Roadmap:** [ROADMAP.md](ROADMAP.md)
 
 **Примітка:** Сайт codimension.org та оригінальні репозиторії (cdm-pythonparser, cdm-flowparser) більше не оновлюються. Клонувати або завантажувати з upstream немає сенсу — використовуйте цей форк.
 
@@ -142,14 +145,19 @@ tests/            — тести
 ## Запуск тестів
 
 ```bash
-pytest tests/
+pytest tests/ -v
 ```
 
-## Лінтинг
+## Лінтинг і типізація
 
 ```bash
 ruff check codimension cdmplugins
+ruff format --check codimension cdmplugins
+mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
+pip-audit -r requirements.txt
 ```
+
+Повний чекліст — [CONTRIBUTING.md](CONTRIBUTING.md). Матриця модулів і тестів — [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
 
 ---
 
@@ -170,6 +178,8 @@ ruff check codimension cdmplugins
 ---
 
 # Roadmap (скорочено)
+
+Повний план: [ROADMAP.md](ROADMAP.md).
 
 - Python 3.10+ стабілізація
 - Модульна архітектура
@@ -192,6 +202,9 @@ PR і issue вітаються.
 - переконайтесь, що не порушується існуюча поведінка (tests)
 - дотримуйтесь модульної архітектури
 - не змішуйте UI і core
+- оновлюйте `ChangeLog` і `doc/` при зміні функціоналу
+
+Деталі: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

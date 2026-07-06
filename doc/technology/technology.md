@@ -821,9 +821,9 @@ Codimension — відкритий проєкт під GPL v3. Оригінал�
 [cdm-flowparser](https://github.com/SergeySatskiy/cdm-flowparser) плюс
 [IDE](https://github.com/SergeySatskiy/codimension). Оригінальні репозиторії не підтримуються понад 4 роки.
 
-**Цей форк** використовує pure-Python fallback-парсери (`brief_ast`, `flow_ast`) коли C-розширення недоступні (наприклад, Python 3.11+ без збірки). UI — PyQt5.
+**Цей форк** використовує pure-Python fallback-парсери (`brief_ast`, `flow_ast`) коли C-розширення недоступні (Python 3.10+). UI — PyQt5.
 
-Розробка ведеться на Linux (Ubuntu). Підтримується Python 3.11+.
+Розробка ведеться на Linux (Ubuntu). Підтримується Python 3.10–3.13. Встановлення — лише з вихідного коду форку ([doc/INSTALL.md](../INSTALL.md)).
 
 ### Architecture
 

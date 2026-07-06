@@ -48,7 +48,7 @@ and installed there: **Ruff** (Ctrl+Shift+R), **Mypy** (Ctrl+Shift+M),
 
 Ruff, Bandit, and Mypy drivers share the base class `LintDriverBase` (cdmplugins/lintdriverbase.py).
 
-**Плани розробки:** [plugins-implementation-plan.md](plugins-implementation-plan.md) (фази 0–5 виконано), [git-github-plugin-plan.md](git-github-plugin-plan.md) (Git: фази 0–2 виконано).
+**Плани розробки:** [plugins-implementation-plan.md](plugins-implementation-plan.md) (фази 0–5 виконано), [git-github-plugin-plan.md](git-github-plugin-plan.md) (Git MVP, 2026-07).
 
 The next pieces which are important for Codimension are a plugin name and a
 plugin version. A name and a version are stored in a plugin description file

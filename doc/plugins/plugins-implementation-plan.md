@@ -245,7 +245,7 @@ pip-audit>=2.0.0
 
 - [x] `pip install -e .` у venv
 - [x] Перевірка завантаження: `python -c "import codimension; import cdmplugins"`
-- [x] ruff, mypy на коді плагінів
+- [x] ruff, mypy на codimension + cdmplugins
 - [x] pytest tests/ — unit-тести
 
 ---
@@ -294,11 +294,11 @@ pip-audit>=2.0.0
 
 ---
 
-## 10. Git/GitHub плагін (майбутній)
+## 10. Git/GitHub плагін
 
-План створення плагіна для повноцінної роботи з Git та GitHub: [git-github-plugin-plan.md](git-github-plugin-plan.md).
+План: [git-github-plugin-plan.md](git-github-plugin-plan.md).
 
-**Охоплення:** status, add, commit, push, pull, branch, checkout, stash, pull request (через gh CLI).
+**Статус (2026-07):** MVP реалізовано — `cdmplugins/git/` (status, commit, push, pull, branch, Create/View PR). Unit-тести: `tests/test_gitstatusparser.py`.
 
 ---
 

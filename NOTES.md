@@ -1,12 +1,27 @@
 # Project Notes
 
-**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінал не підтримується. Активний форк: https://github.com/sesquicadaver/codimension
+**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінал не підтримується.  
+**Активний форк:** https://github.com/sesquicadaver/codimension
 
-Розширені можливості: `excludeFromAnalysis`, venv auto-exclusion з аналізу.
+## Встановлення для користувачів
+
+Єдиний підтримуваний спосіб — клонування репозиторію та `pip install -e .` у venv.  
+Див. [doc/INSTALL.md](doc/INSTALL.md).
+
+`pip install codimension` з PyPI встановлює **застарілу upstream-версію (2020)**, не цей форк.
+
+## Розширення форку
+
+- `excludeFromAnalysis`, venv auto-exclusion з аналізу
+- Generate requirements file (Tools → Project utilities)
+- Плагіни: ruff, mypy, pytest, coverage, bandit, pip-audit, git
+- Debugger watchpoints, greenlet trace (2026-07)
 
 ---
 
-# How to prepare a release
+# How to prepare a release (maintainers)
+
+Реліз на PyPI **опційний** і не є основним способом доставки форку. Якщо потрібен тегований реліз:
 
 ## Prepare the pypi config file `~/.pypirc`
 
@@ -50,10 +65,10 @@ twine upload -r pypitest dist/*
 ```
 
 7. Test from pypitest (якщо використовували крок 6)
-8. **Автоматичний реліз (рекомендовано):** створіть тег — workflow `.github/workflows/release.yml` збудує та завантажить на PyPI:
+8. **Автоматичний реліз:** створіть тег — workflow `.github/workflows/release.yml` збудує та завантажить на PyPI:
 
 ```shell
-git tag -a v4.10.0 -m "Release 4.10.0"
+git tag -a v4.11.0 -m "Release 4.11.0"
 git push --tags
 ```
 
@@ -70,9 +85,8 @@ twine upload dist/*
 ## Development
 
 ```shell
+pip install -r requirements.txt
 pip install -e .
-# or
-python setup.py develop
 ```
 
 ## Links

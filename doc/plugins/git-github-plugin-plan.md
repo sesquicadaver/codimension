@@ -1,8 +1,8 @@
 # План створення плагіна Git/GitHub для Codimension IDE
 
-**Версія:** 1.0  
-**Дата:** 2025-03  
-**Статус:** План
+**Версія:** 1.1  
+**Дата:** 2026-07  
+**Статус:** MVP реалізовано (фази 0–2, частково 4–6)
 
 ---
 
@@ -270,13 +270,15 @@ def findGitRoot(path: str) -> str | None:
 
 ## 8. Критерії готовності (MVP)
 
-- [ ] Плагін завантажується, активується
-- [ ] Git status відображається в Project Browser
-- [ ] Commit, Push, Pull з контекстного меню
-- [ ] Create branch, Checkout
-- [ ] Create PR (за наявності gh)
-- [ ] Документація оновлена
-- [ ] Unit-тести для парсера
+- [x] Плагін завантажується, активується (`cdmplugins/git/`)
+- [x] Git status відображається в Project Browser (`gitstatusparser.py`, unit: `tests/test_gitstatusparser.py`)
+- [x] Commit, Push, Pull з контекстного меню
+- [x] Create branch, Checkout
+- [x] Create PR / View PRs (за наявності `gh` та GitHub token)
+- [x] Документація: plugins.md, living-specification.md
+- [x] Unit-тести для парсера status
+
+**Не реалізовано / частково:** stash, merge UI, повний diff/log viewer.
 
 ---
 

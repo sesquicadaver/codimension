@@ -1,3 +1,11 @@
+2026 Jul 06
+
+* Documentation audit:
+  - README, INSTALL: лише встановлення з репозиторію (без PyPI)
+  - doc/README.md: індекс актуальної документації
+  - FORK.md, CONTRIBUTING.md, NOTES.md, TODO_FIXME.md оновлено під Python 3.10+, CI, mistune 3, debugger
+  - living-specification, github-integration-plan, git-github-plugin-plan, mdsupport, technology.md
+
 2026 Jul 05
 
 * Occurrences search redo:

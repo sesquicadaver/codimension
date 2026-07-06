@@ -2,8 +2,8 @@
 
 <!-- markdownlint-disable MD060 -->
 
-**Версія:** 1.0  
-**Дата:** 2025-03  
+**Версія:** 1.1  
+**Дата:** 2026-07  
 **Джерело:** [plugins-implementation-plan.md](plugins-implementation-plan.md)
 
 Матриця відповідності «ТЗ → модуль → тести». Оновлюється при кожній зміні плагінів.
@@ -43,7 +43,7 @@
 | Mypy | `mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')` | .github/workflows/ci.yml |
 | Smoke | `import codimension; import cdmplugins` | .github/workflows/ci.yml |
 | pip-audit | `pip-audit -r requirements.txt` | .github/workflows/ci.yml |
-| Pytest | `pytest tests/` | .github/workflows/ci.yml |
+| Pytest | `pytest tests/` (46 tests) | .github/workflows/ci.yml |
 
 ---
 
@@ -53,8 +53,8 @@
 - [x] setup.py оновлено
 - [x] requirements.txt оновлено
 - [x] Документація оновлена (plugins.md, living-specification.md)
-- [x] CI проходить (ruff, mypy)
-- [x] Smoke-тест: codimension запускається
+- [x] CI проходить (ruff, mypy, pytest, pip-audit)
+- [x] Документація: [doc/README.md](../README.md)
 
 ---
 
