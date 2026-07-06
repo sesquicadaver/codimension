@@ -63,7 +63,7 @@ Codimension — це інструмент для **структурного ан
 
 # Встановлення
 
-## ВАРІАНТ 1 — з репозиторію (рекомендовано)
+З репозиторію (єдиний підтримуваний спосіб для цього форку):
 
 ```bash
 git clone https://github.com/sesquicadaver/codimension.git
@@ -73,23 +73,16 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 pip install -U pip
 pip install -r requirements.txt
+pip install -e .
 ```
 
 Запуск:
 
 ```bash
-python codimension/codimension.py
+codimension
 ```
 
-## ВАРІАНТ 2 — через pip
-
-❗ Не рекомендовано для цього форку
-
-```bash
-pip install codimension
-```
-
-Це встановить стару версію (2020), а не цей форк.
+Детальніше (Windows, системні залежності): [doc/INSTALL.md](doc/INSTALL.md).
 
 ---
 
