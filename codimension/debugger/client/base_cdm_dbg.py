@@ -37,6 +37,7 @@ import sys
 import time
 import types
 from inspect import CO_GENERATOR
+from typing import ClassVar
 
 from bp_wp_cdm_dbg import Breakpoint, Watch
 from cdm_dbg_utils import formatArgValues, getArgValues, printerr
@@ -61,10 +62,10 @@ class DebugBase(object):
 
     # Tuple required because it's accessed a lot of times by startswith method
     pathsToSkip = ("<", os.path.dirname(__file__), inspect.__file__[:-1])
-    filesToSkip = {}
+    filesToSkip: ClassVar[dict[str, object]] = {}
 
     # Cache for fixed file names
-    _fnCache = {}
+    _fnCache: ClassVar[dict[str, str]] = {}
 
     # Stop all timers, when greenlets are used
     pollTimerEnabled = True
@@ -74,6 +75,7 @@ class DebugBase(object):
 
         # Some informations about the thread
         self.isMainThread = False
+        self.isGreenlet = False
         self.quitting = False
         self.id = -1
         self.name = ""

@@ -27,16 +27,21 @@ class BanditDriver(LintDriverBase):
         """Build bandit command args. -q: quiet for JSON output."""
         try:
             from .banditconfig import load_extra_args
+
             extra = load_extra_args()
         except ImportError:
             extra = []
-        return [
-            "-m",
-            "bandit",
-            "-f",
-            "json",
-            "-q",
-        ] + extra + [os.path.basename(fileName)]
+        return (
+            [
+                "-m",
+                "bandit",
+                "-f",
+                "json",
+                "-q",
+            ]
+            + extra
+            + [os.path.basename(fileName)]
+        )
 
     def parseOutput(self, stdout, stderr, results):
         """Parse bandit JSON output into Diagnostics."""

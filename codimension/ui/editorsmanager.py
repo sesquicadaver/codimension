@@ -335,7 +335,7 @@ class EditorsManager(QTabWidget):
         """Triggered when the file is to be highlighted in the FS tree"""
         widget = self.currentWidget()
         widgetType = widget.getType()
-        if widgetType not in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]:
+        if widgetType in [MainWindowTabWidgetBase.PlainTextEditor, MainWindowTabWidgetBase.PictureViewer]:
             fName = widget.getFileName()
             if os.path.isabs(fName):
                 GlobalData().mainWindow.highlightInFS(fName)

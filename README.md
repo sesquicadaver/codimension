@@ -1,8 +1,23 @@
 # Codimension (Modern Fork)
 
+[![CI](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml/badge.svg)](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)](LICENSE)
+
 Codimension — це інструмент для **структурного аналізу Python-коду** з графічним представленням (CFG — control flow graph), який дозволяє бачити логіку виконання коду під час редагування.
 
-Цей репозиторій є **активним форком** оригінального проєкту Codimension (2020), модернізованим для сучасного Python та подальшого розвитку.
+**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінальний проєкт не підтримується понад 4 роки. Цей репозиторій є **активним форком**, модернізованим для сучасного Python (3.10+) та подальшого розвитку.
+
+## Посилання
+
+- **Цей репозиторій** — активний форк для розробки та встановлення
+- [Оригінальний проєкт (архів)](https://github.com/SergeySatskiy/codimension) — історичний, не підтримується
+- [Технологія та візуалізація](http://codimension.org/documentation/visualization-technology/python-code-visualization.html)
+- [CAN-MCP (Codimension ANalizer MCP)](https://github.com/sesquicadaver/CAN-MCP) — Codimension based MCP-сервер
+- [Гарячі клавіші](http://codimension.org/documentation/cheatsheet.html)
+- **Детальна інструкція з встановлення:** [doc/INSTALL.md](doc/INSTALL.md)
+
+**Примітка:** Сайт codimension.org та оригінальні репозиторії (cdm-pythonparser, cdm-flowparser) більше не оновлюються. Клонувати або завантажувати з upstream немає сенсу — використовуйте цей форк.
 
 ---
 
@@ -58,170 +73,136 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 pip install -U pip
 pip install -r requirements.txt
+```
 
 Запуск:
 
-python codimension.py
+```bash
+python codimension/codimension.py
+```
 
-
----
-
-ВАРІАНТ 2 — через pip
+## ВАРІАНТ 2 — через pip
 
 ❗ Не рекомендовано для цього форку
 
+```bash
 pip install codimension
+```
 
 Це встановить стару версію (2020), а не цей форк.
 
-
 ---
 
-Робота з середовищами (Environment)
+# Робота з середовищами (Environment)
 
 Проект підтримує прив’язку до Python-середовища (venv), яке використовується для:
 
-коректного import resolution
-
-уникнення false-positive (dead code, unresolved imports)
-
-запуску інструментів (lint, tests, typing)
-
+- коректного import resolution
+- уникнення false-positive (dead code, unresolved imports)
+- запуску інструментів (lint, tests, typing)
 
 ⚠️ Функціональність ще не завершена.
 
 Планується підтримка:
 
-local venv
-
-Docker
-
-SSH/remote
-
-Kubernetes (пізніше)
-
-
+- local venv
+- Docker
+- SSH/remote
+- Kubernetes (пізніше)
 
 ---
 
-Архітектура (спрощено)
+# Архітектура (спрощено)
 
+```text
 Code
  → AST
  → CFG
  → Metrics
  → Overlay
  → UI
+```
 
 Майбутній напрям:
 
+```text
 Core (analysis engine)
  + Execution targets (venv/docker/ssh)
  + Plugins
  + AI layer
-
+```
 
 ---
 
-Розробка
+# Розробка
 
-Структура
+## Структура
 
+```text
 codimension/      — основний код
 cdmplugins/       — плагіни
 doc/              — документація
 resources/        — UI ресурси
 tests/            — тести
+```
 
+## Запуск тестів
 
----
+```bash
+pytest tests/
+```
 
-Запуск тестів
+## Лінтинг
 
-pytest
-
-
----
-
-Лінтинг
-
-ruff check .
-
+```bash
+ruff check codimension cdmplugins
+```
 
 ---
 
-Ліцензія
+# Ліцензія
 
-Проект ліцензований під GPL v3 (успадковано від оригінального проекту).
+Проект ліцензований під GPL v3 (успадковано від оригінального проєкту).
 
 ⚠️ Робота з приведення форку до повної відповідності ліцензії ще триває.
 
+---
+
+# Важливі зауваження
+
+- Це не production-ready IDE
+- Це інструмент для аналізу коду, який активно розвивається
+- Основний фокус — графічне розуміння логіки, а не заміна VS Code / PyCharm
 
 ---
 
-Важливі зауваження
+# Roadmap (скорочено)
 
-Це не production-ready IDE
-
-Це інструмент для аналізу коду, який активно розвивається
-
-Основний фокус — графічне розуміння логіки, а не заміна VS Code / PyCharm
-
-
-
----
-
-Roadmap (скорочено)
-
-Python 3.10+ стабілізація
-
-Модульна архітектура
-
-Environment-aware аналіз
-
-Dependency discovery
-
-Overlay system (complexity / coverage / runtime)
-
-Graph engine оптимізація
-
-Remote execution
-
-Plugin ecosystem
-
-AI (graph-aware)
-
-
+- Python 3.10+ стабілізація
+- Модульна архітектура
+- Environment-aware аналіз
+- Dependency discovery
+- Overlay system (complexity / coverage / runtime)
+- Graph engine оптимізація
+- Remote execution
+- Plugin ecosystem
+- AI (graph-aware)
 
 ---
 
-Посилання
-
-Оригінальний проект: https://github.com/SergeySatskiy/codimension
-
-Цей форк: https://github.com/sesquicadaver/codimension
-
-
-
----
-
-Внесок
+# Внесок
 
 PR і issue вітаються.
 
 Перед внесенням змін:
 
-переконайтесь, що не порушується існуюча поведінка (tests)
-
-дотримуйтесь модульної архітектури
-
-не змішуйте UI і core
-
-
+- переконайтесь, що не порушується існуюча поведінка (tests)
+- дотримуйтесь модульної архітектури
+- не змішуйте UI і core
 
 ---
 
-Підсумок
+# Підсумок
 
 Це проект, що еволюціонує з IDE у:
 

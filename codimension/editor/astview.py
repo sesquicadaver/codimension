@@ -113,7 +113,12 @@ class ASTView(QTreeWidget):
                         self.addNodeRecursive(listItem, prefix)
                 self.__parentStack.pop(-1)
             else:
-                logging.error("AST node is not recognized. Skipping...")
+                logging.error(
+                    "AST field %s.%s has unrecognized value type %s. Skipping...",
+                    node.__class__.__name__,
+                    fieldName,
+                    type(fieldValue).__name__,
+                )
         self.expandItem(treeNode)
 
     @staticmethod
@@ -133,14 +138,21 @@ class ASTView(QTreeWidget):
     def __isScalar(val):
         if isinstance(val, str):
             return True
+        if isinstance(val, bool):
+            return True
         if isinstance(val, int):
             return True
         if isinstance(val, float):
+            return True
+        if isinstance(val, complex):
             return True
         if isinstance(val, bytes):
             return True
         if val is None:
             return True
+        if val is Ellipsis:
+            return True
+        return False
 
     def __selectionChanged(self):
         """Handles an AST item selection"""

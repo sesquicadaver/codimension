@@ -33,6 +33,7 @@ from .client.protocol_cdm_dbg import (
     METHOD_BP_IGNORE,
     METHOD_CALL_TRACE,
     METHOD_CLEAR_BP,
+    METHOD_CLEAR_WP,
     METHOD_CONTINUE,
     METHOD_DEBUG_STARTUP,
     METHOD_EXCEPTION,
@@ -42,6 +43,7 @@ from .client.protocol_cdm_dbg import (
     METHOD_FORK_TO,
     METHOD_LINE,
     METHOD_SET_BP,
+    METHOD_SET_WP,
     METHOD_SIGNAL,
     METHOD_STACK,
     METHOD_STEP,
@@ -53,9 +55,14 @@ from .client.protocol_cdm_dbg import (
     METHOD_THREAD_SET,
     METHOD_VARIABLE,
     METHOD_VARIABLES,
+    METHOD_WP_CONDITION_ERROR,
+    METHOD_WP_ENABLE,
+    METHOD_WP_IGNORE,
 )
 from .editbreakpoint import BreakpointEditDialog
+from .editwatchpoint import WatchpointEditDialog
 from .watchpointmodel import WatchPointModel
+from .wputils import formatRemoteWatchCondition
 
 
 class CodimensionDebugger(QObject):
@@ -103,6 +110,11 @@ class CodimensionDebugger(QObject):
         self.sigClientClearBreak.connect(self.__clientClearBreakPoint)
         self.sigClientBreakConditionError.connect(self.__clientBreakConditionError)
 
+        self.__watchpointModel.rowsAboutToBeRemoved.connect(self.__deleteWatchPoints)
+        self.__watchpointModel.sigDataAboutToBeChanged.connect(self.__watchPointDataAboutToBeChanged)
+        self.__watchpointModel.dataChanged.connect(self.__watchPointDataChanged)
+        self.__watchpointModel.rowsInserted.connect(self.__addWatchPoints)
+
         self.__handlers = {}
         self.__initHandlers()
 
@@ -116,9 +128,11 @@ class CodimensionDebugger(QObject):
             METHOD_DEBUG_STARTUP: self.__handleStartup,
             METHOD_FORK_TO: self.__handleForkTo,
             METHOD_CLEAR_BP: self.__handleClearBP,
+            METHOD_CLEAR_WP: self.__handleClearWP,
             METHOD_SYNTAX_ERROR: self.__handleSyntaxError,
             METHOD_VARIABLE: self.__handleVariable,
             METHOD_BP_CONDITION_ERROR: self.__handleBPConditionError,
+            METHOD_WP_CONDITION_ERROR: self.__handleWPConditionError,
             METHOD_EXCEPTION: self.__handleException,
             METHOD_CALL_TRACE: self.__handleCallTrace,
             METHOD_EXEC_STATEMENT_ERROR: self.__handleExecStatementError,
@@ -427,7 +441,109 @@ class CodimensionDebugger(QObject):
 
     def __sendWatchpoints(self):
         """Sends the watchpoints to the debugged program"""
-        pass
+        end = self.__watchpointModel.rowCount() - 1
+        if end >= 0:
+            self.__addWatchPoints(QModelIndex(), 0, end)
+
+    def __watchpointFromRow(self, row):
+        """Provides watch expression fields for a model row"""
+        index = self.__watchpointModel.index(row, 0)
+        wp = self.__watchpointModel.getWatchPointByIndex(index)
+        if not wp:
+            return None
+        return wp[:5]
+
+    def __addWatchPoints(self, parentIndex, start, end):
+        """Adds watch expressions to the debugged program"""
+        if self.__state == self.STATE_STOPPED or end < start:
+            return
+
+        for row in range(start, end + 1):
+            wp = self.__watchpointFromRow(row)
+            if not wp:
+                continue
+            cond, special, temp, enabled, ignoreCount = wp
+            self.remoteWatchpoint(cond, special, True, temp)
+            if not enabled:
+                self.__remoteWatchpointEnable(cond, special, False)
+            if ignoreCount > 0:
+                self.__remoteWatchpointIgnore(cond, special, ignoreCount)
+
+    def __deleteWatchPoints(self, parentIndex, start, end):
+        """Deletes watch expressions from the debugged program"""
+        if self.__state == self.STATE_STOPPED or end < start:
+            return
+
+        for row in range(start, end + 1):
+            wp = self.__watchpointFromRow(row)
+            if not wp:
+                continue
+            cond, special, _, _, _ = wp
+            self.remoteWatchpoint(cond, special, False)
+
+    def __watchPointDataAboutToBeChanged(self, startIndex, endIndex):
+        """Handles watch expression updates before model data changes"""
+        self.__deleteWatchPoints(QModelIndex(), startIndex.row(), endIndex.row())
+
+    def __watchPointDataChanged(self, startIndex, endIndex):
+        """Handles watch expression updates after model data changes"""
+        if startIndex.column() == 3 and endIndex.column() == 3:
+            for row in range(startIndex.row(), endIndex.row() + 1):
+                wp = self.__watchpointFromRow(row)
+                if not wp:
+                    continue
+                cond, special, _, enabled, _ = wp
+                self.__remoteWatchpointEnable(cond, special, enabled)
+            return
+        self.__addWatchPoints(QModelIndex(), startIndex.row(), endIndex.row())
+
+    def remoteWatchpoint(self, cond, special, isSetting, temporary=False):
+        """Sets or clears a watch expression"""
+        params = {
+            "condition": formatRemoteWatchCondition(cond, special),
+            "setWatch": isSetting,
+            "temporary": temporary,
+        }
+        self.__sendJSONCommand(METHOD_SET_WP, params)
+
+    def __remoteWatchpointEnable(self, cond, special, enable):
+        """Sends the watch expression enabled state"""
+        self.__sendJSONCommand(
+            METHOD_WP_ENABLE,
+            {"condition": formatRemoteWatchCondition(cond, special), "enable": enable},
+        )
+
+    def __remoteWatchpointIgnore(self, cond, special, ignoreCount):
+        """Sends the watch expression ignore count"""
+        self.__sendJSONCommand(
+            METHOD_WP_IGNORE,
+            {"condition": formatRemoteWatchCondition(cond, special), "count": ignoreCount},
+        )
+
+    def __handleClearWP(self, params):
+        """Handles METHOD_CLEAR_WP"""
+        index = self.__watchpointModel.findWatchPointIndexByRemoteCondition(params["condition"])
+        if index.isValid():
+            self.__watchpointModel.deleteWatchPointByIndex(index)
+
+    def __handleWPConditionError(self, params):
+        """Handles METHOD_WP_CONDITION_ERROR"""
+        remote_condition = params["condition"]
+        logging.error("The watch expression '%s' contains a syntax error.", remote_condition)
+        index = self.__watchpointModel.findWatchPointIndexByRemoteCondition(remote_condition)
+        if not index.isValid():
+            return
+        wp = self.__watchpointModel.getWatchPointByIndex(index)
+        if not wp:
+            return
+
+        cond, special, temp, enabled, ignoreCount = wp[:5]
+        dlg = WatchpointEditDialog((cond, temp, enabled, ignoreCount, special))
+        if dlg.exec_() == QDialog.Accepted:
+            newCond, newTemp, newEnabled, newIgnore, newSpecial = dlg.getData()
+            if wp[:5] == [newCond, newSpecial, newTemp, newEnabled, newIgnore]:
+                return
+            self.__watchpointModel.setWatchPointByIndex(index, newCond, newSpecial, (newTemp, newEnabled, newIgnore))
 
     def __remoteBreakpointEnable(self, fileName, line, enable):
         """Sends the breakpoint enability"""

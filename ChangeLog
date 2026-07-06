@@ -1,3 +1,50 @@
+2026 Jul 05
+
+* Occurrences search redo:
+  - search/occurrencesprovider.py: build_occurrence_results helper, searchAgain via getOccurrences
+  - search/searchresultsviewer.py: canDoAgain delegates to OccurrencesSearchProvider.canRedo
+  - tests/test_occurrencesprovider.py: build results and canRedo unit tests
+
+2026 Jul 05
+
+* Mypy codimension/core in CI:
+  - pyproject.toml: exclude flowui/everything.py demo from mypy
+  - flow_ast.py, application.py, env modules, base_cdm_dbg.py: typing fixes
+  - .github/workflows/ci.yml: mypy codimension cdmplugins
+
+2026 Jul 05
+
+* Greenlet debugger extension:
+  - debugger/client/threadextension_cdm_dbg.py: greenlet.settrace hook registers contexts
+  - debugger/client/threadutils_cdm_dbg.py: thread registry helper for greenlets
+  - debugger/client/base_cdm_dbg.py: DebugBase.isGreenlet flag
+  - tests/test_greenlet_trace.py: filter_active_threads unit tests
+
+2026 Jul 05
+
+* Debugger watchpoints:
+  - debugger/wputils.py: remote watch condition format/parse helpers
+  - debugger/editwatchpoint.py: add/edit watch expression dialog
+  - debugger/server.py: sync watchpoints on debug startup and model changes
+  - debugger/wpointviewer.py, bpwp.py: enable viewer and wire Add/Edit actions
+  - tests/test_watchpoints.py: wputils and WatchPointModel unit tests
+
+2026 Jul 04
+
+* FS smart zoom + lint driver tests:
+  - editor/flowuiwidget.py: enable SMART_ZOOM_FS (level 4), remove debug print
+  - tests/test_flowuiwidget.py: zoom constant alignment with Settings
+  - tests/test_lint_drivers.py: ruff/bandit/mypy parseOutput unit tests
+  - tests/conftest.py: session QApplication fixture for widget tests
+
+2026 Jul 04
+
+* mistune 3.x migration:
+  - utils/md.py: HTMLRenderer + create_markdown (mistune 3 API)
+  - requirements.txt: mistune>=3.2.1 (removes CVE audit ignores)
+  - CI: pip-audit -r requirements.txt without mistune ignore flags
+  - tests/test_md.py: markdown renderer unit tests
+
 2025 Mar 13
 
 * Version 4.11.0:

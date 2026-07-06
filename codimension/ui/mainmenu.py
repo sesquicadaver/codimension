@@ -672,10 +672,7 @@ class MainWindowMenuMixin:
         if os.path.isfile(reqPath):
             msg = QMessageBox(self)
             msg.setWindowTitle("Generate requirements")
-            msg.setText(
-                f"requirements.txt already exists.\n"
-                f"Detected packages: {', '.join(sorted(packages))}"
-            )
+            msg.setText(f"requirements.txt already exists.\nDetected packages: {', '.join(sorted(packages))}")
             msg.addButton("Overwrite", QMessageBox.ActionRole)
             appendBtn = msg.addButton("Append new only", QMessageBox.ActionRole)
             cancelBtn = msg.addButton("Cancel", QMessageBox.RejectRole)
@@ -702,9 +699,7 @@ class MainWindowMenuMixin:
                     "All detected packages are already in requirements.txt.",
                 )
         except OSError as exc:
-            QMessageBox.warning(
-                self, "Generate requirements", f"Cannot write file: {exc}"
-            )
+            QMessageBox.warning(self, "Generate requirements", f"Cannot write file: {exc}")
 
     def _onGitRepository(self):
         """Open Git repository dialog: clone and open project (Project → Git repository)."""

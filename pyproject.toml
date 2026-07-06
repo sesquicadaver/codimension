@@ -37,7 +37,7 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-exclude = ["doc/", ".*"]
+exclude = ["doc/", ".*", "codimension/flowui/everything.py"]
 
 [tool.setuptools.dynamic]
 version = {attr = "codimension.cdmverspec.version"}

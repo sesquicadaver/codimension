@@ -24,16 +24,21 @@ class MypyDriver(LintDriverBase):
         """Build mypy command args."""
         try:
             from .mypyconfig import load_extra_args
+
             extra = load_extra_args()
         except ImportError:
             extra = []
-        return [
-            "-m",
-            "mypy",
-            "--output",
-            "json",
-            "--no-error-summary",
-        ] + extra + [os.path.basename(fileName)]
+        return (
+            [
+                "-m",
+                "mypy",
+                "--output",
+                "json",
+                "--no-error-summary",
+            ]
+            + extra
+            + [os.path.basename(fileName)]
+        )
 
     def parseOutput(self, stdout, stderr, results):
         """Parse mypy JSON output into Diagnostics."""

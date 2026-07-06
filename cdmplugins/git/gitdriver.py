@@ -23,6 +23,7 @@ def _git_executable():
     """Return path to git executable (from config or default)."""
     try:
         from .gitconfig import get_git_path
+
         return get_git_path()
     except ImportError:
         return "git"

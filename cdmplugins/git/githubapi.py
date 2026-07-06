@@ -77,7 +77,7 @@ def _get_owner_repo(git_root: str | None = None) -> tuple[str, str] | None:
 def _api_request(
     method: str,
     path: str,
-    token: str,
+    token: str | None,
     data: dict | None = None,
 ) -> tuple[dict | list | None, str | None]:
     """Make GitHub API request. Returns (response_json, error_message)."""

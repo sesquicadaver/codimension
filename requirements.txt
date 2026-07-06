@@ -16,15 +16,14 @@ yapsy>=1.12.0
 jedi>=0.17.2
 vulture>=1.6
 gprof2dot>=2017.9.19
-# mistune 2+/3+ have incompatible API; codimension uses mistune.Renderer, mistune.Markdown
-mistune>=0.8.4,<2.0
-pygments>=2.7.4
+mistune>=3.2.1
+pygments>=2.20.0
 qdarkstyle>=2.8.1
 packaging>=21.0
 # Optional: ruff, mypy, pytest, coverage for cdmplugins
 ruff>=0.1.0
 mypy>=1.0.0
-pytest>=7.0.0
+pytest>=9.0.3
 pytest-cov>=4.0.0
 bandit>=1.7.0
 pip-audit>=2.0.0

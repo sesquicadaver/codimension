@@ -36,6 +36,7 @@ import threading
 from base_cdm_dbg import DebugBase
 from cdm_dbg_utils import sendJSONCommand
 from protocol_cdm_dbg import METHOD_THREAD_LIST
+from threadutils_cdm_dbg import filter_active_threads
 
 _qtThreadNumber = 1
 
@@ -55,6 +56,7 @@ class ThreadExtension(object):
         self.threadingAttached = False
         self.qtThreadAttached = False
         self.greenlet = False
+        self.__previousGreenletTrace = None
 
         self.clientLock = threading.RLock()
 
@@ -208,8 +210,40 @@ class ThreadExtension(object):
                 if currentFrame is not None and self.threads[threadId].isBroken is False:
                     self.threads[threadId].currentFrame = currentFrame
 
-        # Clean up obsolet because terminated threads
-        self.threads = {id_: thrd for id_, thrd in self.threads.items() if id_ in frames}
+        # Clean up obsolete because terminated threads
+        self.threads = filter_active_threads(self.threads, frames, self.greenlet)
+
+    def __registerGreenletThread(self, greenlet_obj):
+        """Registers a greenlet context as a debugger thread."""
+        ident = id(greenlet_obj)
+        self.lockClient()
+        try:
+            if ident not in self.threads:
+                newThread = DebugBase(self)
+                newThread.id = ident
+                newThread.isGreenlet = True
+                newThread.name = "Greenlet-{0}".format(self.threadNumber)
+                self.threadNumber += 1
+                self.threads[ident] = newThread
+            return self.threads[ident]
+        finally:
+            self.unlockClient()
+
+    def __greenletTrace(self, event, args):
+        """Trace callback installed via greenlet.settrace()."""
+        if event not in ("switch", "throw"):
+            return self.__greenletTrace
+
+        _origin, target = args
+        dbg_thread = self.__registerGreenletThread(target)
+        self.currentThreadExec = dbg_thread
+        sys.settrace(dbg_thread.trace_dispatch)
+
+        frame = sys._getframe()
+        executed = self.getExecutedFrame(frame)
+        if executed is not None:
+            dbg_thread.currentFrame = executed
+        return self.__greenletTrace
 
     # find_module(self, fullname, path=None)
     def find_module(self, fullname, _=None):
@@ -245,12 +279,10 @@ class ThreadExtension(object):
             module.start_new_thread = self.attachThread
 
         elif fullname == "greenlet" and self.greenlet is False:
-            # Check for greenlet.settrace
             if hasattr(module, "settrace"):
                 self.greenlet = True
                 DebugBase.pollTimerEnabled = False
-
-            # TODO: Implement the debugger extension for greenlets
+                self.__previousGreenletTrace = module.settrace(self.__greenletTrace)
 
         # Add hook for threading.run()
         elif fullname == "threading" and self.threadingAttached is False:
@@ -286,7 +318,7 @@ class ThreadExtension(object):
                 def __init__(self, *args, **kwargs):
                     # Overwrite the provided run method with our own, to
                     # intercept the thread creation by threading.Thread
-                    self.run = lambda s=self, run=self.run: _bootstrap(s, run)
+                    self.run = lambda s=self, run=self.run: _bootstrap(s, run)  # type: ignore[has-type]
 
                     super(ThreadWrapper, self).__init__(*args, **kwargs)
 
@@ -336,7 +368,7 @@ class ThreadExtension(object):
                 def __init__(self, *args, **kwargs):
                     # Overwrite the provided run method with our own, to
                     # intercept the thread creation by Qt
-                    self.run = lambda s=self, run=self.run: _bootstrapQThread(s, run)
+                    self.run = lambda s=self, run=self.run: _bootstrapQThread(s, run)  # type: ignore[has-type]
 
                     super(QThreadWrapper, self).__init__(*args, **kwargs)
 

@@ -43,10 +43,10 @@ jobs:
           . .venv/bin/activate
           ruff format --check codimension cdmplugins
 
-      - name: Mypy (cdmplugins)
+      - name: Mypy (codimension, cdmplugins)
         run: |
           . .venv/bin/activate
-          mypy $(find cdmplugins -name '*.py')
+          mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
 
   smoke:
     runs-on: ubuntu-latest
@@ -65,6 +65,7 @@ jobs:
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
+          pip install -r requirements.txt
           pip install -e .
           # Import check (no display required); codimension --help needs X11
           python -c "import codimension; import cdmplugins; print('OK')"
@@ -73,10 +74,9 @@ jobs:
         run: |
           . .venv/bin/activate
           pip install pip-audit
-          pip-audit
+          pip-audit -r requirements.txt
 
       - name: Pytest (plugin tests)
         run: |
           . .venv/bin/activate
-          pip install pytest
           pytest tests/ -v --tb=short

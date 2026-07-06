@@ -1906,7 +1906,7 @@ class CodimensionMainWindow(QMainWindow):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
 
         prj = GlobalData().project
-        prj.tabxsStatus = self.em.getTabsStatus()
+        prj.tabsStatus = self.em.getTabsStatus()
         self.em.closeAll()
 
         GlobalData().project.createNew(

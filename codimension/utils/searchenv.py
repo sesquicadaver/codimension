@@ -21,6 +21,7 @@
 
 import os.path
 from copy import deepcopy
+from typing import Any
 
 from .fileutils import loadJSON, saveJSON
 
@@ -40,7 +41,7 @@ from .fileutils import loadJSON, saveJSON
 #   'case': <bool>, 'word': <bool>, 'regexp': <bool>,
 #   'inproject': <bool>, 'inopened': <bool>, 'indir': <bool>, 'dir': <string>,
 #   'filter': <string> }
-_DEFAULT_SEARCH_HISTORY = {
+_DEFAULT_SEARCH_HISTORY: dict[str, list[Any]] = {
     "class": [],  # [term, ...]
     "function": [],  # [term, ...]
     "global": [],  # [term, ...]
