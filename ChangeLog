@@ -1,5 +1,9 @@
 2026 Jul 06
 
+* README: factual IDE description; removed aspirational architecture, environment and roadmap sections
+
+2026 Jul 06
+
 * Documentation audit:
   - README, INSTALL: лише встановлення з репозиторію (без PyPI)
   - doc/README.md: індекс актуальної документації

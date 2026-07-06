@@ -1,215 +1,79 @@
-# Codimension (Modern Fork)
+# Codimension
 
 [![CI](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml/badge.svg)](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)](LICENSE)
 
-Codimension — це інструмент для **структурного аналізу Python-коду** з графічним представленням (CFG — control flow graph), який дозволяє бачити логіку виконання коду під час редагування.
+**Експериментальна Python IDE** з текстовим редактором і **діаграмою потоку керування** (flow diagram), що оновлюється під час редагування коду. Версія форку: **4.11.0**.
 
-**Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінальний проєкт не підтримується понад 4 роки. Цей репозиторій є **активним форком**, модернізованим для сучасного Python (3.10+) та подальшого розвитку.
+Це **активний форк** [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Оригінал не підтримується понад 4 роки; `pip install codimension` з PyPI — застаріла upstream-версія, не цей репозиторій.
 
-## Посилання
+## Що є зараз
 
-- **Цей репозиторій** — активний форк для розробки та встановлення
-- [Оригінальний проєкт (архів)](https://github.com/SergeySatskiy/codimension) — історичний, не підтримується
-- [Технологія та візуалізація](http://codimension.org/documentation/visualization-technology/python-code-visualization.html)
-- [CAN-MCP (Codimension ANalizer MCP)](https://github.com/sesquicadaver/CAN-MCP) — Codimension based MCP-сервер
-- [Гарячі клавіші](http://codimension.org/documentation/cheatsheet.html)
-- **Детальна інструкція з встановлення:** [doc/INSTALL.md](doc/INSTALL.md)
-- **Документація проєкту:** [doc/README.md](doc/README.md)
-- **Статус форку:** [FORK.md](FORK.md)
-- **Roadmap:** [ROADMAP.md](ROADMAP.md)
+- Редагування Python-файлів і **синхронізована flow-діаграма** (control flow)
+- Діаграми імпортів, класів, залежностей; dead code (vulture), складність (radon), pyflakes у редакторі
+- **Проєкти** (`.cdm3`): venv-інтерпретатор, `excludeFromAnalysis`, без автозавантаження останнього проєкту при старті
+- **Парсери:** pure-Python `brief_ast` / `flow_ast` на Python 3.10+ (без cdmpyparser/cdmcfparser)
+- **Вбудовані плагіни** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
+- **Debugger:** breakpoints, watchpoints (UI + sync), greenlet-контексти
+- **CI:** ruff, mypy, pytest (46 тестів), pip-audit
 
-**Примітка:** Сайт codimension.org та оригінальні репозиторії (cdm-pythonparser, cdm-flowparser) більше не оновлюються. Клонувати або завантажувати з upstream немає сенсу — використовуйте цей форк.
+## Обмеження (чесно)
 
----
+- Не production-ready IDE; орієнтир — аналіз і візуалізація коду, не заміна VS Code / PyCharm
+- Git-плагін — MVP (без stash/merge UI); PR через `gh` CLI
+- Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**, лише local venv у властивостях проєкту
+- Довгострокові плани (overlay metrics, AI, modular core) — [ROADMAP.md](ROADMAP.md), не поточний стан
 
-# Основні можливості
+## Вимоги
 
-- Візуалізація control-flow (CFG) у реальному часі
-- Синхронізація коду та графа
-- Базовий статичний аналіз Python-коду
-- Інтеграція інструментів:
-  - Ruff (lint/format)
-  - Mypy / Pyright (typing)
-  - Pytest (тести)
-  - Coverage
-  - Bandit / pip-audit
-- Підтримка роботи з проектами
-- Плагінна архітектура (у розвитку)
+- Python **3.10–3.13** (CI: 3.10, 3.11, 3.12, 3.13)
+- **PyQt5**, Linux (основна платформа); Windows / macOS — експериментально
 
----
+## Встановлення
 
-# Статус проекту
-
-⚠️ Проект знаходиться в активній стадії рефакторингу:
-
-- перехід на Python 3.10+
-- виділення core-аналізатора
-- підготовка до модульної архітектури
-- побудова системи environment-aware аналізу
-
-Не всі функції завершені. Поведінка може змінюватися.
-
----
-
-# Вимоги
-
-- Python: **3.10 – 3.13**
-- ОС:
-  - Linux (основна підтримка)
-  - Windows (експериментально)
-  - macOS (експериментально)
-- Qt: **PyQt5**
-
----
-
-# Встановлення
-
-З репозиторію (єдиний підтримуваний спосіб для цього форку):
+Лише з вихідного коду:
 
 ```bash
 git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
 pip install -U pip
 pip install -r requirements.txt
 pip install -e .
-```
-
-Запуск:
-
-```bash
 codimension
 ```
 
-Детальніше (Windows, системні залежності): [doc/INSTALL.md](doc/INSTALL.md).
+Деталі: [doc/INSTALL.md](doc/INSTALL.md).
 
----
-
-# Робота з середовищами (Environment)
-
-Проект підтримує прив’язку до Python-середовища (venv), яке використовується для:
-
-- коректного import resolution
-- уникнення false-positive (dead code, unresolved imports)
-- запуску інструментів (lint, tests, typing)
-
-⚠️ Функціональність ще не завершена.
-
-Планується підтримка:
-
-- local venv
-- Docker
-- SSH/remote
-- Kubernetes (пізніше)
-
----
-
-# Архітектура (спрощено)
-
-```text
-Code
- → AST
- → CFG
- → Metrics
- → Overlay
- → UI
-```
-
-Майбутній напрям:
-
-```text
-Core (analysis engine)
- + Execution targets (venv/docker/ssh)
- + Plugins
- + AI layer
-```
-
----
-
-# Розробка
-
-## Структура
-
-```text
-codimension/      — основний код
-cdmplugins/       — плагіни
-doc/              — документація
-resources/        — UI ресурси
-tests/            — тести
-```
-
-## Запуск тестів
+## Розробка
 
 ```bash
 pytest tests/ -v
-```
-
-## Лінтинг і типізація
-
-```bash
 ruff check codimension cdmplugins
 ruff format --check codimension cdmplugins
 mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
 pip-audit -r requirements.txt
 ```
 
-Повний чекліст — [CONTRIBUTING.md](CONTRIBUTING.md). Матриця модулів і тестів — [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+Структура: `codimension/` (IDE), `cdmplugins/` (плагіни), `tests/`, `doc/`.
 
----
+Чекліст для PR — [CONTRIBUTING.md](CONTRIBUTING.md). Матриця модулів і тестів — [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
 
-# Ліцензія
+## Документація
 
-Проект ліцензований під GPL v3 (успадковано від оригінального проєкту).
+| | |
+| --- | --- |
+| [doc/README.md](doc/README.md) | Індекс документації |
+| [FORK.md](FORK.md) | Зміни форку відносно upstream |
+| [ROADMAP.md](ROADMAP.md) | Довгостроковий план (не опис поточної версії) |
+| [TODO_FIXME.md](TODO_FIXME.md) | Відомі проблеми |
+| [ChangeLog](ChangeLog) | Історія змін |
 
-⚠️ Робота з приведення форку до повної відповідності ліцензії ще триває.
+Зовнішні (архів): [codimension.org](http://codimension.org) — не оновлюється. Актуальний MCP-застосунок: [CAN-MCP](https://github.com/sesquicadaver/CAN-MCP).
 
----
+## Ліцензія
 
-# Важливі зауваження
-
-- Це не production-ready IDE
-- Це інструмент для аналізу коду, який активно розвивається
-- Основний фокус — графічне розуміння логіки, а не заміна VS Code / PyCharm
-
----
-
-# Roadmap (скорочено)
-
-Повний план: [ROADMAP.md](ROADMAP.md).
-
-- Python 3.10+ стабілізація
-- Модульна архітектура
-- Environment-aware аналіз
-- Dependency discovery
-- Overlay system (complexity / coverage / runtime)
-- Graph engine оптимізація
-- Remote execution
-- Plugin ecosystem
-- AI (graph-aware)
-
----
-
-# Внесок
-
-PR і issue вітаються.
-
-Перед внесенням змін:
-
-- переконайтесь, що не порушується існуюча поведінка (tests)
-- дотримуйтесь модульної архітектури
-- не змішуйте UI і core
-- оновлюйте `ChangeLog` і `doc/` при зміні функціоналу
-
-Деталі: [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
-
-# Підсумок
-
-Це проект, що еволюціонує з IDE у:
-
-> інструмент глибокого структурного аналізу Python-коду з графічною інтерпретацією
+GPL v3. Модифікована версія — див. [FORK.md](FORK.md), [doc/LICENSE_COMPLIANCE.md](doc/LICENSE_COMPLIANCE.md).
