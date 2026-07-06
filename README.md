@@ -31,10 +31,11 @@ Codimension — це інструмент для **структурного ан
 - Базовий статичний аналіз Python-коду
 - Інтеграція інструментів:
   - Ruff (lint/format)
-  - Mypy / Pyright (typing)
+  - Mypy (typing, плагін Ctrl+Shift+M)
   - Pytest (тести)
   - Coverage
   - Bandit / pip-audit
+  - Git (MVP: status, commit, push, pull, branch, Create/View PR; без stash/merge UI)
 - Підтримка роботи з проектами
 - Плагінна архітектура (у розвитку)
 
@@ -55,7 +56,7 @@ Codimension — це інструмент для **структурного ан
 
 # Вимоги
 
-- Python: **3.10 – 3.13**
+- Python: **3.10 – 3.13** (CI: 3.10, 3.11, 3.12, 3.13)
 - ОС:
   - Linux (основна підтримка)
   - Windows (експериментально)

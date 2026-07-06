@@ -111,7 +111,7 @@ designated directory. For example, directory content for a plugin may look as
 follows.
 
 ~~~
-~/.codimension/plugins/pdfexporter/pdfexporter.cdmp
+~/.codimension3/plugins/pdfexporter/pdfexporter.cdmp
                                             __init__.py
                                             util_functions.py
                                             config_dialog.py

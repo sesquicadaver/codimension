@@ -30,7 +30,7 @@
 
 ### Плагіни (cdmplugins/)
 
-Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git** (status, commit, push, pull, branch, Create/View PR через `gh`).
+Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git** (MVP: status, commit, push, pull, branch, Create/View PR через `gh`; stash/merge UI — не реалізовано).
 
 ### Debugger та пошук (2026-07)
 

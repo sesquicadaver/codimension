@@ -1,5 +1,27 @@
 2026 Jul 06
 
+* Documentation audit fixes:
+  - README/FORK: Mypy only (no Pyright plugin), Git MVP scope
+  - CI: Python 3.13 in lint matrix
+  - setup.py: fork repository URL
+  - LICENSE_COMPLIANCE.md: status synced with about.py
+  - smartzoom.md: levels -3…4; technology.md: archive banner
+  - living-specification: astview, brief_ast, importutils tests
+  - doc/index.md → canonical doc/README.md; doc/README core modules section
+
+2026 Jul 06
+
+* Documentation audit fixes:
+  - README/FORK: Mypy only (no Pyright plugin), Git MVP scope
+  - CI: Python 3.13 in lint matrix
+  - setup.py: fork repository URL
+  - LICENSE_COMPLIANCE.md: status synced with about.py
+  - smartzoom.md: levels -3…4; technology.md: archive banner
+  - living-specification: astview, brief_ast, importutils tests
+  - doc/index.md → canonical doc/README.md; doc/README core modules section
+
+2026 Jul 06
+
 * Documentation audit:
   - README, INSTALL: лише встановлення з репозиторію (без PyPI)
   - doc/README.md: індекс актуальної документації

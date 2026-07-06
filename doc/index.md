@@ -1,34 +1,12 @@
 # Codimension Documentation
 
-Документація IDE Codimension — форку [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Оригінальний проєкт не підтримується; активна розробка ведеться у форку.
+> **Canonical index:** [README.md](README.md) — повний індекс актуальної документації форку.
 
-## Встановлення
+Цей файл збережено для зворотної сумісності посилань. Усі розділи перенесено в [doc/README.md](README.md).
 
-- [Детальна інструкція з встановлення](INSTALL.md)
+## Швидкі посилання
 
-## Загальні теми
-
-- [Технологія](technology/technology.md)
-- [CML — Codimension Markup Language](cml/cml.md)
-
-## Графічна панель
-
-- [Smart zoom та інші опції відображення](smartzoom/smartzoom.md)
-- [Групування](grouping/grouping.md)
-
-## Аналіз коду
-
-- [Dead code](deadcode/deadcode.md)
-- [Складність](complexity/complexity.md)
-- [PyFlakes](pyflakes/pyflakes.md)
-- [Залежності](dependencies/dependencies.md)
-- [Дизасемблювання](disassembling/disassembling.md)
-- Профілювання (документація в розробці)
-
-## Інше
-
+- [Встановлення](INSTALL.md)
 - [Плагіни](plugins/plugins.md)
-- [Підтримка Markdown](md/mdsupport.md)
+- [Living Specification](plugins/living-specification.md)
 - [Проєкт](project/project.md)
-- [Налаштування IDE](editorsettings/editorsettings.md)
-- [Кольорові схеми](colorschemes/colorschemes.md)

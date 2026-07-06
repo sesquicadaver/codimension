@@ -1,7 +1,7 @@
 # Документація Codimension (форк)
 
 **Активний репозиторій:** https://github.com/sesquicadaver/codimension  
-**Версія:** 4.11.0 | **Python:** 3.10+ | **Встановлення:** лише з вихідного коду ([INSTALL.md](INSTALL.md))
+**Версія:** 4.11.0 | **Python:** 3.10–3.13 (CI: 3.10–3.13) | **Встановлення:** лише з вихідного коду ([INSTALL.md](INSTALL.md))
 
 Цей індекс описує **актуальну** документацію форку. Каталог `doc/www/` — архівне дзеркало сайту codimension.org (2017–2020), не оновлюється.
 
@@ -39,9 +39,9 @@
 | Документ | Зміст |
 | -------- | ----- |
 | [project/project.md](project/project.md) | Проєкти, властивості, venv, excludeFromAnalysis |
-| [technology/technology.md](technology/technology.md) | Архітектура, парсери, flow UI |
+| [technology/technology.md](technology/technology.md) | Архітектура (архів + fork note) |
 | [md/mdsupport.md](md/mdsupport.md) | Markdown (mistune 3.x) |
-| [smartzoom/smartzoom.md](smartzoom/smartzoom.md) | Smart zoom у flow diagram |
+| [smartzoom/smartzoom.md](smartzoom/smartzoom.md) | Smart zoom (-3…4) у flow diagram |
 | [dependencies/dependencies.md](dependencies/dependencies.md) | Діаграма залежностей |
 | [deadcode/deadcode.md](deadcode/deadcode.md) | Аналіз мертвого коду |
 | [complexity/complexity.md](complexity/complexity.md) | Метрики складності |
@@ -50,6 +50,18 @@
 | [grouping/grouping.md](grouping/grouping.md) | Групування у діаграмах |
 | [cml/cml.md](cml/cml.md) | CML doc comments |
 | [pyflakes/pyflakes.md](pyflakes/pyflakes.md) | Pyflakes інтеграція |
+
+### Core-модулі форку (без окремого user-guide)
+
+| Модуль | Код | Тести / docs |
+| ------ | --- | ------------ |
+| Pure-Python parsers | `codimension/parsers/brief_ast.py`, `flow_ast.py` | `tests/test_brief_ast.py`, `test_flow_ast.py`; [INSTALL.md](INSTALL.md) |
+| AST view | `codimension/editor/astview.py` | `tests/test_astview.py` |
+| Debugger watchpoints | `codimension/debugger/` (wputils, editwatchpoint, server) | `tests/test_watchpoints.py`; [FORK.md](../FORK.md) |
+| Greenlet debugger | `debugger/client/threadextension_cdm_dbg.py` | `tests/test_greenlet_trace.py` |
+| Occurrences redo | `codimension/search/occurrencesprovider.py` | `tests/test_occurrencesprovider.py` |
+| Generate requirements | `utils/importutils.py`, Tools → Project utilities | `tests/test_importutils.py`; [FORK.md](../FORK.md) |
+| Legacy PyPI plugins | `cdmgcplugin`, `cdmpylintplugin`, `cdmsysinfoplugin` у `requirements.txt` | Опційні upstream-плагіни GC/pylint/sysinfo; не потрібні для Python 3.10+ fallbacks |
 
 ---
 

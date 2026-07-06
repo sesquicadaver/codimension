@@ -19,6 +19,7 @@
 | Smoke test | ✅ | `import codimension; import cdmplugins`; smoke job: `pip install -r requirements.txt` |
 | Pytest | ✅ | 46 tests у `tests/` |
 | pip-audit | ✅ | `pip-audit -r requirements.txt` (mistune>=3.2.1) |
+| Python matrix | ✅ | lint: 3.10, 3.11, 3.12, 3.13 |
 | README | ✅ | Badges (CI, Python, License), посилання |
 | CONTRIBUTING | ✅ | PR template, issue templates, CI |
 | Issue templates | ✅ | bug_report, feature_request, config.yml |
@@ -95,11 +96,11 @@
 
 ### Фаза 6: Тести (пріоритет: за потреби)
 
-| Крок | Дія | Опис |
-| ---- | --- | ---- |
-| 6.1 | pytest у CI | Додати job `pytest` | Зараз тестів майже немає |
-| 6.2 | Coverage report | pytest-cov, upload to Codecov/Coveralls | Потребує тестів |
-| 6.3 | Living Specification | doc/plugins/living-specification.md | Матриця вже є |
+| Крок | Дія | Статус |
+| ---- | --- | ------ |
+| 6.1 | pytest у CI | ✅ Виконано: smoke job, 46 unit-тестів (`tests/`) |
+| 6.2 | Coverage report | ⏳ Опційно (pytest-cov у requirements, Codecov — ні) |
+| 6.3 | Living Specification | ✅ [living-specification.md](plugins/living-specification.md) |
 
 ---
 

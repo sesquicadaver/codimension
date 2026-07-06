@@ -1,3 +1,5 @@
+> **ARCHIVE NOTICE (форк sesquicadaver, 2026):** Більшість цього документа описує **оригінальний upstream** (Python 2, C-розширення cdmpyparser/cdmflowparser, Ubuntu 14.04). Для актуального форку див. [FORK.md](../../FORK.md), [INSTALL.md](../INSTALL.md), fork-абзац у розділі «Open Source» нижче. Не використовуйте `pip install codimension` з PyPI.
+
 Visualization Technology
 ========================
 

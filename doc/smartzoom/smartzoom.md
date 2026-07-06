@@ -25,16 +25,29 @@ is on the graphics pane:
 Smart Zoom
 ----------
 
-The Codimension smart zoom feature distinguishes a few smart zoom levels and
-they are numbered starting from 0.
+The Codimension smart zoom feature distinguishes smart zoom levels. In this fork
+the range is **-3 … 4** (see `codimension/editor/flowuiwidget.py`).
 
 The UI to control the smart zoom level is at the right bottom of the graphics
 pane. There are two buttons with arrows up and down, plus the current level
 number between them. Hovering the mouse cursor over the level number brings up
 a tooltip with a hint of what is shown on the current level.
 
-The number of levels may be extended in the future. So far there are four levels
-available.
+### Smart zoom levels (fork)
+
+| Level | Label | View |
+| ----- | ----- | ---- |
+| -3 | B | Compiled `.pyc` binary |
+| -2 | D | Disassembly |
+| -1 | A | AST tree |
+| 0 | 0 | Everything shown (default upstream doc) |
+| 1 | 1 | Everything without box content |
+| 2 | 2 | Scopes and control flow only |
+| 3 | 3 | Classes and functions only |
+| 4 | 4 | File-system dependencies diagram |
+
+Levels 0–3 below match the original upstream documentation (with screenshots).
+Levels -3…-1 and 4 were extended in the fork; level 4 (FS) is enabled since 2026-07.
 
 Smart Zoom Level 0
 ------------------

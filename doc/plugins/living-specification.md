@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable MD060 -->
 
-**Версія:** 1.1  
+**Версія:** 1.2  
 **Дата:** 2026-07  
 **Джерело:** [plugins-implementation-plan.md](plugins-implementation-plan.md)
 
@@ -31,6 +31,9 @@
 | **Debugger watchpoints** | codimension.debugger | wputils.py, editwatchpoint.py, server.py, wpointviewer.py | unit: tests/test_watchpoints.py |
 | **Greenlet debugger** | codimension.debugger.client | threadextension_cdm_dbg.py, threadutils_cdm_dbg.py | unit: tests/test_greenlet_trace.py |
 | **Occurrences search redo** | codimension.search | occurrencesprovider.py, searchresultsviewer.py | unit: tests/test_occurrencesprovider.py |
+| **AST view** | codimension.editor.astview | astview.py | unit: tests/test_astview.py |
+| **Brief AST parser** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py |
+| **Import utils / requirements** | codimension.utils.importutils | importutils.py | unit: tests/test_importutils.py |
 
 ---
 
@@ -44,6 +47,7 @@
 | Smoke | `import codimension; import cdmplugins` | .github/workflows/ci.yml |
 | pip-audit | `pip-audit -r requirements.txt` | .github/workflows/ci.yml |
 | Pytest | `pytest tests/` (46 tests) | .github/workflows/ci.yml |
+| Python versions | lint matrix 3.10–3.13 | .github/workflows/ci.yml |
 
 ---
 

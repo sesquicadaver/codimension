@@ -1,68 +1,34 @@
-# GPL v3 — Зміни коду для відповідності ліцензії
+# GPL v3 — Відповідність ліцензії у форку
 
-Цей документ описує **рекомендовані зміни коду** для повної відповідності GPL v3 у модифікованій версії. Поки що ці зміни **не внесені** — лише задокументовані.
+**Дата оновлення:** 2026-07-06  
+**Форк:** https://github.com/sesquicadaver/codimension  
+**Upstream:** https://github.com/SergeySatskiy/codimension (Sergey Satskiy)
 
-## Вимоги GPL v3 (Section 5)
+## Статус (виконано)
 
-- **5a:** Модифікована робота повинна містити помітні повідомлення про зміни та дату.
-- **5b:** Повідомлення про ліцензію та умови мають бути збережені.
+| Вимога GPL v3 (§5) | Реалізація |
+| ------------------ | ---------- |
+| Помітне повідомлення про модифікацію | `codimension/ui/about.py` — «Modified version. See FORK.md» |
+| Збереження ліцензії | `LICENSE`, GPL v3 |
+| Attribution оригіналу | Copyright Sergey Satskiy у заголовках файлів; [FORK.md](../FORK.md), [README.md](../README.md) |
+| Посилання на форк | `pyproject.toml` `[project.urls]`, `setup.py` `url` → sesquicadaver/codimension |
 
-## Рекомендовані зміни
+## Документація модифікацій
 
-### 1. About Dialog (`codimension/ui/about.py`)
+- [FORK.md](../FORK.md) — перелік змін форку
+- [README.md](../README.md) — активний репозиторій, не upstream
+- [ChangeLog](../ChangeLog) — історія змін
 
-**Поточний стан:** Copyright (c) Sergey Satskiy 2010-2019
+## Історичні посилання
 
-**Рекомендація:** Додати рядок про модифікацію, наприклад:
+Посилання на http://codimension.org у `about.py`, `helpwidget.py` тощо залишені як **архівні** (оригінальний проєкт). Актуальна розробка — лише у форку.
 
-```python
-"</b><p>Copyright (c) Sergey Satskiy 2010-2019</p>"
-"<p>Modified version. See FORK.md.</p>")
-```
+## Рекомендації для нових змін
 
-Або розширити copyright:
-
-```python
-"</b><p>Copyright (c) Sergey Satskiy 2010-2019. Modified 2025.</p>"
-```
-
-### 2. Посилання на codimension.org
-
-**Файли:** `about.py`, `welcomewidget.py`, `mainwindow.py`, `helpwidget.py`, `versions.py`
-
-**Поточний стан:** Посилання на http://codimension.org (сайт може бути недоступний або застарілим)
-
-**Рекомендація:** Залишити як є — це історичні посилання на оригінальний проєкт. Додати посилання на цей форк у About та Welcome (опційно).
-
-### 3. setup.py / pyproject.toml
-
-**Поточний стан:** `url='https://github.com/SergeySatskiy/codimension'`
-
-**Рекомендація:** Змінити на URL форку або додати `project_urls` з посиланням на форк. Автор залишається Sergey Satskiy (attribution).
-
-### 4. Заголовки файлів
-
-**Поточний стан:** Більшість файлів мають `# Copyright (C) 2010-20XX Sergey Satskiy`
-
-**Рекомендація:** Залишити без змін. GPL не вимагає змінювати copyright у кожному файлі — достатньо помітного повідомлення в About та README.
-
-### 5. Файл NOTICE або COPYRIGHT
-
-**Рекомендація:** Створити `NOTICE` або розширити README секцією:
-
-```
-This is a modified version of Codimension (https://github.com/SergeySatskiy/codimension).
-Original Copyright (c) Sergey Satskiy. Modified 2025.
-Licensed under GPL v3. See LICENSE.
-```
+1. Не видаляти copyright upstream у модифікованих файлах.
+2. При суттєвих змінах — запис у `ChangeLog` і за потреби `FORK.md`.
+3. Нові файли форку: `# Copyright (C) 2025–2026 Codimension fork contributors` або аналог.
 
 ## Підсумок
 
-| Зміна | Пріоритет | Складність |
-|-------|-----------|------------|
-| About dialog — додати "Modified" | Високий | Низька |
-| setup.py url → fork | Середній | Низька |
-| NOTICE / README секція | Середній | Низька |
-| Посилання codimension.org | Низький | — |
-
-Після внесення змін оновити цей документ.
+Форк відповідає мінімальним вимогам GPL v3 щодо помітної модифікації та attribution. Деталі ліцензії — [LICENSE](../LICENSE).
