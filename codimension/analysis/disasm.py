@@ -70,7 +70,7 @@ def getCodeDisassembly(code):
 
 
 # The objects which have already been disassembled
-DIS_OBJECTS = set()
+DIS_OBJECTS: set[str] = set()
 
 DIS_PATTERN = "Disassembly of <code object "
 DIS_PATTERN_LEN = len(DIS_PATTERN)

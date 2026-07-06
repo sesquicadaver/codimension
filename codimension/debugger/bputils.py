@@ -24,7 +24,7 @@
 
 from utils.fileutils import getFileContent
 
-validBreakPointLinesCache = {}
+validBreakPointLinesCache: dict[str, set[int]] = {}
 
 
 def getBreakpointLine(userLine, isEmptyLine, srcCode):

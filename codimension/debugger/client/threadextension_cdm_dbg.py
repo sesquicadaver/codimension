@@ -318,7 +318,7 @@ class ThreadExtension(object):
                 def __init__(self, *args, **kwargs):
                     # Overwrite the provided run method with our own, to
                     # intercept the thread creation by threading.Thread
-                    self.run = lambda s=self, run=self.run: _bootstrap(s, run)
+                    self.run = lambda s=self, run=self.run: _bootstrap(s, run)  # type: ignore[has-type]
 
                     super(ThreadWrapper, self).__init__(*args, **kwargs)
 
@@ -368,7 +368,7 @@ class ThreadExtension(object):
                 def __init__(self, *args, **kwargs):
                     # Overwrite the provided run method with our own, to
                     # intercept the thread creation by Qt
-                    self.run = lambda s=self, run=self.run: _bootstrapQThread(s, run)
+                    self.run = lambda s=self, run=self.run: _bootstrapQThread(s, run)  # type: ignore[has-type]
 
                     super(QThreadWrapper, self).__init__(*args, **kwargs)
 
