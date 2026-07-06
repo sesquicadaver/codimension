@@ -13,6 +13,7 @@
 - **Цей репозиторій** — активний форк для розробки та встановлення
 - [Оригінальний проєкт (архів)](https://github.com/SergeySatskiy/codimension) — історичний, не підтримується
 - [Технологія та візуалізація](http://codimension.org/documentation/visualization-technology/python-code-visualization.html)
+- [CAN-MCP (Codimension ANalizer MCP)](https://github.com/sesquicadaver/CAN-MCP) — Codimension based MCP-сервер
 - [Гарячі клавіші](http://codimension.org/documentation/cheatsheet.html)
 
 **Примітка:** Сайт codimension.org та оригінальні репозиторії (cdm-pythonparser, cdm-flowparser) більше не оновлюються. Клонувати або завантажувати з upstream немає сенсу — використовуйте цей форк.
