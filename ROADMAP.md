@@ -1,6 +1,8 @@
 # Codimension — Full Unified Roadmap (Phase 0–38)
 
-> **Стан форку (2026-07):** Phase 0 частково виконано (Python 3.10+, CI green, 46 pytest). Phase 1 в процесі (базові regression tests, без CFG snapshots). Деталі: [FORK.md](FORK.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+> **Language / Мова:** English | [Українська](ROADMAP.uk.md)
+
+> **Fork status (2026-07):** Phase 0 частково виконано (Python 3.10+, CI green, 46 pytest). Phase 1 в процесі (базові regression tests, без CFG snapshots). Деталі: [FORK.md](FORK.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
 
 ---
 

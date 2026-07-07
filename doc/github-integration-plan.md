@@ -1,5 +1,7 @@
 # План інтеграції Codimension з GitHub
 
+> **Мова / Language:** Українська | [English](en/github-integration-plan.md)
+
 **Версія:** 1.3  
 **Дата:** 2026-07  
 **Статус:** Виконано (Фази 1.3, 2–5); CI оновлено 2026-07 (mypy core, pytest 46, pip-audit mistune 3)

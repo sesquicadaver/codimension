@@ -1,5 +1,7 @@
 # Fork Status
 
+> **Мова / Language:** Українська | [English](FORK.en.md)
+
 Цей проєкт — **активний форк** [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).
 
 **Репозиторій:** https://github.com/sesquicadaver/codimension  

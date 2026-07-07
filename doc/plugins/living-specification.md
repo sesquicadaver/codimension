@@ -1,5 +1,7 @@
 # Living Specification: Плагіни Codimension
 
+> **Мова / Language:** Українська | [English](../en/plugins/living-specification.md)
+
 <!-- markdownlint-disable MD060 -->
 
 **Версія:** 1.1  

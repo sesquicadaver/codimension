@@ -1,5 +1,7 @@
 # TODO_FIXME — Список виявлених проблем для виправлення
 
+> **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
+
 **Дата перевірки:** 2026-07-06  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 

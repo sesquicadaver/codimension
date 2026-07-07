@@ -1,34 +1,44 @@
 # Codimension Documentation
 
-Документація IDE Codimension — форку [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Оригінальний проєкт не підтримується; активна розробка ведеться у форку.
+> **Мова / Language:** [English](en/README.md) | Українська
 
-## Встановлення
+Документація IDE Codimension — форку [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Повний індекс: [doc/README.md](README.md) | [BILINGUAL.md](BILINGUAL.md).
 
-- [Детальна інструкція з встановлення](INSTALL.md)
+## Встановлення / Installation
 
-## Загальні теми
+- [Українська: INSTALL.md](INSTALL.md)
+- [English: en/INSTALL.md](en/INSTALL.md)
 
-- [Технологія](technology/technology.md)
-- [CML — Codimension Markup Language](cml/cml.md)
+## Загальні теми / General
 
-## Графічна панель
+| English | Українська |
+| ------- | ---------- |
+| [technology/technology.md](technology/technology.md) | [uk/technology/technology.md](uk/technology/technology.md) |
+| [cml/cml.md](cml/cml.md) | [uk/cml/cml.md](uk/cml/cml.md) |
 
-- [Smart zoom та інші опції відображення](smartzoom/smartzoom.md)
-- [Групування](grouping/grouping.md)
+## Графічна панель / Graphics pane
 
-## Аналіз коду
+| English | Українська |
+| ------- | ---------- |
+| [smartzoom/smartzoom.md](smartzoom/smartzoom.md) | [uk/smartzoom/smartzoom.md](uk/smartzoom/smartzoom.md) |
+| [grouping/grouping.md](grouping/grouping.md) | [uk/grouping/grouping.md](uk/grouping/grouping.md) |
 
-- [Dead code](deadcode/deadcode.md)
-- [Складність](complexity/complexity.md)
-- [PyFlakes](pyflakes/pyflakes.md)
-- [Залежності](dependencies/dependencies.md)
-- [Дизасемблювання](disassembling/disassembling.md)
-- Профілювання (документація в розробці)
+## Аналіз коду / Code analysis
 
-## Інше
+| English | Українська |
+| ------- | ---------- |
+| [deadcode/deadcode.md](deadcode/deadcode.md) | [uk/deadcode/deadcode.md](uk/deadcode/deadcode.md) |
+| [complexity/complexity.md](complexity/complexity.md) | [uk/complexity/complexity.md](uk/complexity/complexity.md) |
+| [pyflakes/pyflakes.md](pyflakes/pyflakes.md) | [uk/pyflakes/pyflakes.md](uk/pyflakes/pyflakes.md) |
+| [dependencies/dependencies.md](dependencies/dependencies.md) | [uk/dependencies/dependencies.md](uk/dependencies/dependencies.md) |
+| [disassembling/disassembling.md](disassembling/disassembling.md) | [uk/disassembling/disassembling.md](uk/disassembling/disassembling.md) |
 
-- [Плагіни](plugins/plugins.md)
-- [Підтримка Markdown](md/mdsupport.md)
-- [Проєкт](project/project.md)
-- [Налаштування IDE](editorsettings/editorsettings.md)
-- [Кольорові схеми](colorschemes/colorschemes.md)
+## Інше / Other
+
+| English | Українська |
+| ------- | ---------- |
+| [plugins/plugins.md](plugins/plugins.md) | [uk/plugins/plugins.md](uk/plugins/plugins.md) |
+| [md/mdsupport.md](md/mdsupport.md) | [uk/md/mdsupport.md](uk/md/mdsupport.md) |
+| [project/project.md](project/project.md) | [uk/project/project.md](uk/project/project.md) |
+| [editorsettings/editorsettings.md](editorsettings/editorsettings.md) | [uk/editorsettings/editorsettings.md](uk/editorsettings/editorsettings.md) |
+| [colorschemes/colorschemes.md](colorschemes/colorschemes.md) | [uk/colorschemes/colorschemes.md](uk/colorschemes/colorschemes.md) |

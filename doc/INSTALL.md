@@ -1,5 +1,7 @@
 # Детальна інструкція з встановлення Codimension
 
+> **Мова / Language:** Українська | [English](en/INSTALL.md)
+
 Codimension — мультиплатформна IDE. Підтримка платформ: **Linux** (основна), **Windows**, **macOS**.
 
 **Активний форк:** https://github.com/sesquicadaver/codimension  

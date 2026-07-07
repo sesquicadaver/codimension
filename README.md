@@ -1,5 +1,7 @@
 # Codimension
 
+> **Мова / Language:** Українська | [English](README.en.md)
+
 [![CI](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml/badge.svg)](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)](LICENSE)
@@ -66,10 +68,11 @@ pip-audit -r requirements.txt
 
 | | |
 | --- | --- |
-| [doc/README.md](doc/README.md) | Індекс документації |
-| [FORK.md](FORK.md) | Зміни форку відносно upstream |
-| [ROADMAP.md](ROADMAP.md) | Довгостроковий план (не опис поточної версії) |
-| [TODO_FIXME.md](TODO_FIXME.md) | Відомі проблеми |
+| [doc/BILINGUAL.md](doc/BILINGUAL.md) | Двомовна документація (політика) |
+| [doc/README.md](doc/README.md) / [doc/en/README.md](doc/en/README.md) | Індекс документації (UK / EN) |
+| [FORK.md](FORK.md) / [FORK.en.md](FORK.en.md) | Зміни форку |
+| [ROADMAP.uk.md](ROADMAP.uk.md) / [ROADMAP.md](ROADMAP.md) | Довгостроковий план |
+| [TODO_FIXME.md](TODO_FIXME.md) / [TODO_FIXME.en.md](TODO_FIXME.en.md) | Відомі проблеми |
 | [ChangeLog](ChangeLog) | Історія змін |
 
 Зовнішні (архів): [codimension.org](http://codimension.org) — не оновлюється. Актуальний MCP-застосунок: [CAN-MCP](https://github.com/sesquicadaver/CAN-MCP).

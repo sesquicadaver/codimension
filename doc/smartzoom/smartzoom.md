@@ -1,3 +1,5 @@
+> **Language / Мова:** English | [Українська](uk/smartzoom/smartzoom.md)
+
 Traditional and Smart Zoom
 ==========================
 

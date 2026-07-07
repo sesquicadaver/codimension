@@ -1,5 +1,7 @@
 # Project Notes
 
+> **Мова / Language:** Українська | [English](NOTES.en.md)
+
 **Fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).** Оригінал не підтримується.  
 **Активний форк:** https://github.com/sesquicadaver/codimension
 
