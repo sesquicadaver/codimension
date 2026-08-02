@@ -1,5 +1,10 @@
 2026 Aug 02
 
+* Debugger GUI e2e D0/D1 (T103, T110–T111):
+  - CI: named offscreen `pytest tests/debugger/ -m debugger_session` step
+  - MixinDebuggerHost: MainWindowDebuggerMixin chrome stubs (single switchDebugMode path)
+  - tests/debugger/test_mixin_routing.py: switchDebugMode + _onDbgGo→remoteContinue
+
 * Debugger GUI e2e Phase 0 (T100–T102):
   - tests/debugger/: DebuggerHost + FakeIOConsole session harness (offscreen)
   - stop-at-first-line / continue / step-over+stop integration tests

@@ -48,18 +48,20 @@ def _install_fake_pick_widget(run_manager: "RunManager", host: "DebuggerHost") -
     run_manager._RunManager__pickWidget = types.MethodType(pick, run_manager)
 
 
-def build_session(qapp: "QApplication") -> tuple["DebuggerHost", "RunManager", "CodimensionDebugger"]:
-    """Wire host + RunManager + CodimensionDebugger like MainWindow does."""
+def build_session(qapp: "QApplication") -> tuple[object, "RunManager", "CodimensionDebugger"]:
+    """Wire mixin host + RunManager + CodimensionDebugger like MainWindow does."""
     del qapp  # ensure caller created QApplication first
     import parsers  # noqa: F401
     from debugger.server import CodimensionDebugger
     from utils.runmanager import RunManager
 
-    from .host import DebuggerHost
+    from .host import create_mixin_host
 
-    host = DebuggerHost()
+    host = create_mixin_host()
     debugger = CodimensionDebugger(host)
+    host._debugger = debugger
     run_manager = RunManager(host)
+    host._runManager = run_manager
     _install_fake_pick_widget(run_manager, host)
     run_manager.sigDebugSessionPrologueStarted.connect(debugger.onDebugSessionStarted)
     run_manager.sigIncomingMessage.connect(debugger.onIncomingMessage)

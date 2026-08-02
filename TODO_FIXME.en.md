@@ -23,7 +23,9 @@
 | T085 | `scripts/check_core_import_graph.py` | CI: no Qt/UI edges into core | ✅ DONE 2026-08-02 |
 | T083–T084 | MainWindow / GlobalData | MRO + DebuggerMixin extract; lazy GlobalData | ✅ DONE 2026-08-02 |
 | T100–T102 | Debugger GUI e2e (session-first) | fixtures + stop-at-first-line + continue/step/stop | ✅ DONE 2026-08-02 |
-| T103+ | Debugger GUI e2e (mixin/widgets/full-IDE) | pyramid A/C after Phase 0 | ⏳ PLANNED |
+| T103 | Debugger CI offscreen step | `ci.yml` debugger_session marker step | ✅ DONE 2026-08-02 |
+| T110–T111 | Debugger mixin routing host | MixinDebuggerHost + switchDebugMode / _onDbgGo | ✅ DONE 2026-08-02 |
+| T120–T130 | Debugger widgets / full-IDE | pyramid A/C after D1 | ⏳ PLANNED |
 
 ## Critical (anti-stub review) — earlier
 

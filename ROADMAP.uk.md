@@ -2,7 +2,7 @@
 
 > **Мова / Language:** Українська | [English](ROADMAP.md)
 
-> **Стан форку (2026-08):** Phase 0–1 + audit M1–M5 foundation зелені. M5: headless `core`/`infrastructure`, MainWindow MRO+DebuggerMixin (T083), lazy GlobalData (T084), T085 import-graph. Debugger GUI e2e Phase 0 (session-first T100–T102) зелений; mixin/widget/full-IDE — у плані. Деталі: [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+> **Стан форку (2026-08):** Phase 0–1 + audit M1–M5 foundation зелені. M5: headless `core`/`infrastructure`, MainWindow MRO+DebuggerMixin (T083), lazy GlobalData (T084), T085 import-graph. Debugger GUI e2e T100–T111 зелені (session + CI + mixin routing); T120/T130 відкладені. Деталі: [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
 
 Повний англомовний текст фаз — у [ROADMAP.md](ROADMAP.md). Нижче — стислий огляд українською.
 
