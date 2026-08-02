@@ -1,5 +1,11 @@
 2026 Aug 02
 
+* Debugger GUI e2e D3 (T130):
+  - Full-IDE offscreen smoke: FakeSplash + CodimensionMainWindow + debug/stop
+  - Env-gated (`CDM_FULL_IDE_SMOKE=1`, marker `full_ide`); not a PR blocker
+  - Nightly workflow: `.github/workflows/debugger-full-ide-nightly.yml`
+  - utils/skin.py: PACKAGE_SKIN_DIR from package tree (not sys.argv[0])
+
 * Debugger GUI e2e D2 (T120):
   - pytest-qt widget smoke: DebuggerBreakWatchPoints + DebuggerExceptions
   - skin_ready / widget_debugger fixtures; no MainWindow

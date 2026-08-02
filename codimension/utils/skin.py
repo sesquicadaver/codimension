@@ -37,7 +37,9 @@ from .config import DEFAULT_ENCODING
 from .fileutils import getFileContent, saveToFile
 from .settings import SETTINGS_DIR
 
-PACKAGE_SKIN_DIR = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep + "skins" + os.path.sep
+# Package tree (not sys.argv[0]) so skins resolve under pytest / alternate launchers.
+_PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PACKAGE_SKIN_DIR = os.path.join(_PKG_ROOT, "skins") + os.path.sep
 USER_SKIN_DIR = SETTINGS_DIR + "skins" + os.path.sep
 OVERRIDE_FILE = "override.json"
 SAMPLE_SKIN = "sample"
@@ -717,26 +719,28 @@ def getSkinsWithDirs():
         SKIN_LIST = {"default": None}
 
         # First, walk the installation skin dirs
-        for item in os.listdir(PACKAGE_SKIN_DIR):
-            dName = PACKAGE_SKIN_DIR + item + os.path.sep
-            if os.path.isdir(dName):
-                if isSkinDir(dName):
-                    name = getSkinName(dName)
-                    if name and name not in SKIN_LIST:
-                        SKIN_LIST[name] = dName
+        if os.path.isdir(PACKAGE_SKIN_DIR):
+            for item in os.listdir(PACKAGE_SKIN_DIR):
+                dName = PACKAGE_SKIN_DIR + item + os.path.sep
+                if os.path.isdir(dName):
+                    if isSkinDir(dName):
+                        name = getSkinName(dName)
+                        if name and name not in SKIN_LIST:
+                            SKIN_LIST[name] = dName
 
-        for item in os.listdir(USER_SKIN_DIR):
-            if item == SAMPLE_SKIN:
-                continue
-            if item in SKIN_LIST:
-                # this is overriding of the IDE supplied skins
-                continue
-            dName = USER_SKIN_DIR + item + os.path.sep
-            if os.path.isdir(dName):
-                if isSkinDir(dName):
-                    name = getSkinName(dName)
-                    if name and name not in SKIN_LIST:
-                        SKIN_LIST[name] = dName
+        if os.path.isdir(USER_SKIN_DIR):
+            for item in os.listdir(USER_SKIN_DIR):
+                if item == SAMPLE_SKIN:
+                    continue
+                if item in SKIN_LIST:
+                    # this is overriding of the IDE supplied skins
+                    continue
+                dName = USER_SKIN_DIR + item + os.path.sep
+                if os.path.isdir(dName):
+                    if isSkinDir(dName):
+                        name = getSkinName(dName)
+                        if name and name not in SKIN_LIST:
+                            SKIN_LIST[name] = dName
     return SKIN_LIST
 
 

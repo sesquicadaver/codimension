@@ -29,7 +29,7 @@
 | T103 | Debugger CI offscreen step | `ci.yml` debugger_session marker step | ✅ DONE 2026-08-02 |
 | T110–T111 | Debugger mixin routing host | MixinDebuggerHost + switchDebugMode / _onDbgGo | ✅ DONE 2026-08-02 |
 | T120 | Debugger widget smoke (pytest-qt) | BP/Exceptions panels offscreen | ✅ DONE 2026-08-02 |
-| T130 | Debugger full-IDE nightly | MainWindow smoke (не PR-blocker) | ⏳ PLANNED |
+| T130 | Debugger full-IDE nightly | MainWindow smoke + skin package path; `debugger-full-ide-nightly.yml` (не PR-blocker) | ✅ DONE 2026-08-02 |
 
 ## Критичні (anti-stub перевірка) — раніше
 

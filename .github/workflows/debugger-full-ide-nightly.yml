@@ -1,0 +1,33 @@
+# T130: optional full-IDE MainWindow debugger smoke (not a PR blocker)
+name: Debugger full-IDE nightly
+
+on:
+  schedule:
+    # Weekly Monday 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  full-ide-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+
+      - name: Install and run full-IDE smoke
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -e ".[test,tools,security]"
+          pip check
+          CDM_FULL_IDE_SMOKE=1 QT_QPA_PLATFORM=offscreen \
+            pytest tests/debugger/test_full_ide_smoke.py -m full_ide -v --tb=short

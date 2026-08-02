@@ -118,4 +118,5 @@ reportOptionalMemberAccess = "none"
 markers = [
   "integration: optional integration tests (tools, network, etc.)",
   "debugger_session: redirected debugger session e2e (offscreen Qt)",
+  "full_ide: CodimensionMainWindow offscreen smoke (requires CDM_FULL_IDE_SMOKE=1)",
 ]
