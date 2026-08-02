@@ -22,10 +22,11 @@
 | **Фаза 4: Ruff format** | cdmplugins.ruffformat | ruffformat.cdmp, __init__.py, ruffformatdriver.py, ruffformatconfig.py | Smoke: Format (Ctrl+Shift+F), format-on-save (config) |
 | **Фаза 5: TODO panel** | cdmplugins.todopanel | todopanel.cdmp, __init__.py, todopaneldriver.py, todopanelviewer.py, todoscanner.py | Smoke: Scan TODO (Ctrl+Shift+O), unit: tests/test_todoscanner.py |
 | **Референс: Ruff** | cdmplugins.ruff | ruff.cdmp, __init__.py, ruffdriver.py (LintDriverBase), ruffresultviewer.py | Smoke: Run ruff (Ctrl+Shift+R); unit: tests/test_lint_drivers.py |
-| **Референс: Mypy** | cdmplugins.mypy | mypy.cdmp, __init__.py, mypydriver.py (LintDriverBase), mypyresultviewer.py | Smoke: Run mypy (Ctrl+Shift+M); unit: tests/test_lint_drivers.py |
+| **Референс: Mypy** | cdmplugins.mypy | mypy.cdmp, mypydriver.py (JSONL) | Smoke: Ctrl+Shift+M; unit: tests/test_lint_drivers.py |
 | **Референс: Pytest** | cdmplugins.pytest | pytest.cdmp, __init__.py, pytestdriver.py, pytestresultviewer.py | Smoke: Run pytest (Ctrl+Shift+T) |
-| **Базовий клас** | cdmplugins.lintdriverbase | lintdriverbase.py | Використовується ruff, bandit, mypy |
-| **Git VCS** | cdmplugins.git | git.cdmp, __init__.py, gitdriver.py, gitstatusparser.py, gitdialogs.py, gitconfig.py, githubapi.py | Smoke: status, Create PR, View PRs; unit: tests/test_gitstatusparser.py |
+| **Базовий клас** | cdmplugins.lintdriverbase | lintdriverbase.py, process_env.py | systemEnvironment + non-blocking stop |
+| **Git VCS / PAT** | cdmplugins.git | gitconfig.py, credentials.py, githubapi.py | gh→keyring→0600; tests/test_credentials_and_atomic.py |
+| **Atomic `.cdm3`** | utils.atomic_io / project_schema | atomic_io.py, project_schema.py, project.py | atomic save; schema on load |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |

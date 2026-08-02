@@ -19,7 +19,7 @@ import json
 import os.path
 import sys
 
-from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
+from ui.qt import QByteArray, QProcess, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
 from utils.run import getProjectPythonPath
 
@@ -67,8 +67,9 @@ class PipAuditDriver(QWidget):
 
         self.__args = ["-m", "pip_audit", "--format", "json"]
 
-        processEnvironment = QProcessEnvironment()
-        processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
+        from cdmplugins.process_env import build_tool_process_environment
+
+        processEnvironment = build_tool_process_environment(self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
         self.__pythonPath = getProjectPythonPath(self.__ide.project)
         self.__process.start(self.__pythonPath, self.__args)
@@ -79,11 +80,13 @@ class PipAuditDriver(QWidget):
         return None
 
     def stop(self):
-        """Interrupts the run."""
+        """Interrupts the run (terminate, then kill after short wait)."""
         if self.__process is not None:
             if self.__process.state() == QProcess.Running:
-                self.__process.kill()
-                self.__process.waitForFinished()
+                self.__process.terminate()
+                if not self.__process.waitForFinished(1500):
+                    self.__process.kill()
+                    self.__process.waitForFinished(500)
             self.__process = None
             self.__args = None
 

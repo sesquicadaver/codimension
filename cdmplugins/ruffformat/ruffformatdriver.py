@@ -17,7 +17,7 @@ No separate result tab — success/error shown in status bar.
 
 import os.path
 
-from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
+from ui.qt import QByteArray, QProcess, QWidget, pyqtSignal
 from utils.run import getProjectPythonPath
 
 
@@ -65,8 +65,9 @@ class RuffFormatDriver(QWidget):
             os.path.basename(self.__fileName),
         ]
 
-        processEnvironment = QProcessEnvironment()
-        processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
+        from cdmplugins.process_env import build_tool_process_environment
+
+        processEnvironment = build_tool_process_environment(self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
         pythonPath = getProjectPythonPath(self.__ide.project)
         self.__process.start(pythonPath, self.__args)
@@ -77,11 +78,13 @@ class RuffFormatDriver(QWidget):
         return None
 
     def stop(self):
-        """Interrupts the format run."""
+        """Interrupts the run (terminate, then kill after short wait)."""
         if self.__process is not None:
             if self.__process.state() == QProcess.Running:
-                self.__process.kill()
-                self.__process.waitForFinished()
+                self.__process.terminate()
+                if not self.__process.waitForFinished(1500):
+                    self.__process.kill()
+                    self.__process.waitForFinished(500)
             self.__process = None
             self.__args = None
 

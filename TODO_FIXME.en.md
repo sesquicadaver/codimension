@@ -13,10 +13,9 @@
 | T010–T018 | `brief_ast.py` | brief M1 foundation | ✅ DONE 2026-08-02 |
 | T020–T028.C | `flow_ast` + `comment_binder` | M2 Flow Foundation | ✅ DONE 2026-08-02 |
 | T029 | differential report | C-ext absent → explicit skip | ✅ SKIPPED (documented) |
-| T034–T035 | `mypydriver.py` | Expects `{"files":...}`; mypy emits JSONL | 🔴 TODO |
-| T030–T033 | lint/tool drivers | Empty `QProcessEnvironment()`; blocking kill/wait | 🔴 TODO |
-| T040–T041 | `gitconfig.py` | Plaintext GitHub PAT | 🔴 TODO |
-| T042–T051 | `project.py` | Non-atomic `.cdm3`; basename exclusions; symlink cycles | 🔴 TODO |
+| T030–T035 | process_env + lint/mypy | systemEnvironment; JSONL; non-blocking stop | ✅ DONE 2026-08-02 |
+| T040–T044 | credentials + atomic_io + schema | gh→keyring→0600; scrub; atomic `.cdm3` | ✅ DONE 2026-08-02 |
+| T050–T051 | `project.py` | Basename exclusions; symlink cycles | 🔴 TODO |
 | T060–T067 | packaging/CI | Missing `[project.dependencies]`; CI ≠ claimed 3.10–3.13 matrix | 🔴 TODO |
 
 ## Critical (anti-stub review) — earlier

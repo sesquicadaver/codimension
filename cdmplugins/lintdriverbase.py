@@ -17,9 +17,13 @@ Subclasses implement buildArgs() and parseOutput().
 
 import os.path
 
-from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
+from cdmplugins.process_env import build_tool_process_environment
+from ui.qt import QByteArray, QProcess, QTimer, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
 from utils.run import getProjectPythonPath
+
+# Terminate grace period before kill (ms) — avoids sync waitForFinished in GUI.
+_STOP_KILL_TIMEOUT_MS = 2000
 
 
 class LintDriverBase(QWidget):
@@ -42,6 +46,8 @@ class LintDriverBase(QWidget):
         self._stderr = ""
         self._fileName = ""
         self._encoding = "utf-8"
+        self._stopTimer = None
+        self._processError = None
 
     def isInProcess(self):
         """True if the linter is still running."""
@@ -62,6 +68,7 @@ class LintDriverBase(QWidget):
 
         self._fileName = fileName
         self._encoding = "utf-8" if encoding is None else encoding
+        self._processError = None
 
         self._process = QProcess(self)
         self._process.setProcessChannelMode(QProcess.SeparateChannels)
@@ -69,13 +76,14 @@ class LintDriverBase(QWidget):
         self._process.readyReadStandardOutput.connect(self._readStdOutput)
         self._process.readyReadStandardError.connect(self._readStdError)
         self._process.finished.connect(self._finished)
+        if hasattr(self._process, "errorOccurred"):
+            self._process.errorOccurred.connect(self._onProcessError)
 
         self._stdout = ""
         self._stderr = ""
         self._args = self.buildArgs(fileName)
 
-        processEnvironment = QProcessEnvironment()
-        processEnvironment.insert("PYTHONIOENCODING", self._encoding)
+        processEnvironment = build_tool_process_environment(self._encoding)
         self._process.setProcessEnvironment(processEnvironment)
         self._pythonPath = getProjectPythonPath(self._ide.project)
         self._process.start(self._pythonPath, self._args)
@@ -86,13 +94,36 @@ class LintDriverBase(QWidget):
         return None
 
     def stop(self):
-        """Interrupts the analysis."""
-        if self._process is not None:
-            if self._process.state() == QProcess.Running:
-                self._process.kill()
-                self._process.waitForFinished()
-            self._process = None
-            self._args = None
+        """Request cancel: terminate, then kill after timeout (non-blocking)."""
+        if self._process is None:
+            return
+        if self._process.state() != QProcess.Running:
+            self._clearProcess()
+            return
+        self._process.terminate()
+        if self._stopTimer is not None:
+            self._stopTimer.stop()
+        self._stopTimer = QTimer(self)
+        self._stopTimer.setSingleShot(True)
+        self._stopTimer.timeout.connect(self._forceKillIfStillRunning)
+        self._stopTimer.start(_STOP_KILL_TIMEOUT_MS)
+
+    def _forceKillIfStillRunning(self):
+        """Kill the process if terminate did not finish in time."""
+        if self._process is not None and self._process.state() == QProcess.Running:
+            self._process.kill()
+
+    def _clearProcess(self):
+        """Drop process handle and stop timer."""
+        if self._stopTimer is not None:
+            self._stopTimer.stop()
+            self._stopTimer = None
+        self._process = None
+        self._args = None
+
+    def _onProcessError(self, error):
+        """Record QProcess error for the finished payload."""
+        self._processError = error
 
     def _readStdOutput(self):
         """Handles reading from stdout."""
@@ -114,6 +145,9 @@ class LintDriverBase(QWidget):
 
     def _finished(self, exitCode, exitStatus):
         """Handles the process finish."""
+        if self._stopTimer is not None:
+            self._stopTimer.stop()
+            self._stopTimer = None
         self._process = None
 
         results = {
@@ -121,11 +155,13 @@ class LintDriverBase(QWidget):
             "ExitStatus": exitStatus,
             "FileName": self._fileName,
             "Timestamp": getLocaleDateTime(),
-            "CommandLine": [self._pythonPath] + self._args,
+            "CommandLine": [self._pythonPath] + (self._args or []),
             "Diagnostics": [],
             "StdOut": self._stdout,
             "StdErr": self._stderr,
         }
+        if self._processError is not None:
+            results["QProcessError"] = self._processError
 
         if self._stderr and not self._stdout.strip():
             results["ProcessError"] = "Error:\n" + self._stderr

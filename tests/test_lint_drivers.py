@@ -8,6 +8,8 @@ import sys
 import types
 from datetime import datetime
 
+import pytest
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CDMPLUGINS_DIR = os.path.join(ROOT, "cdmplugins")
 CODMENSION_DIR = os.path.join(ROOT, "codimension")
@@ -56,14 +58,35 @@ def _setup_lint_driver_import_stubs():
         def data(self):
             return self._data
 
+    class _QTimer:
+        def __init__(self, *_args, **_kwargs):
+            self._cb = None
+
+        def setSingleShot(self, *_args, **_kwargs):
+            return None
+
+        def timeout(self):
+            return _Signal()
+
+        def start(self, *_args, **_kwargs):
+            return None
+
+        def stop(self):
+            return None
+
     class _QProcess:
         SeparateChannels = 0
         StandardOutput = 1
         StandardError = 2
         Running = 3
+        NotRunning = 0
 
         def __init__(self, *_args, **_kwargs):
-            pass
+            self._env = None
+            self.errorOccurred = _Signal()
+            self.readyReadStandardOutput = _Signal()
+            self.readyReadStandardError = _Signal()
+            self.finished = _Signal()
 
         def setProcessChannelMode(self, *_args, **_kwargs):
             return None
@@ -71,17 +94,8 @@ def _setup_lint_driver_import_stubs():
         def setWorkingDirectory(self, *_args, **_kwargs):
             return None
 
-        def readyReadStandardOutput(self):
-            return _Signal()
-
-        def readyReadStandardError(self):
-            return _Signal()
-
-        def finished(self):
-            return _Signal()
-
-        def setProcessEnvironment(self, *_args, **_kwargs):
-            return None
+        def setProcessEnvironment(self, env):
+            self._env = env
 
         def start(self, *_args, **_kwargs):
             return None
@@ -92,10 +106,13 @@ def _setup_lint_driver_import_stubs():
         def state(self):
             return self.Running
 
+        def terminate(self):
+            return None
+
         def kill(self):
             return None
 
-        def waitForFinished(self):
+        def waitForFinished(self, *_args, **_kwargs):
             return None
 
         def setReadChannel(self, *_args, **_kwargs):
@@ -111,15 +128,28 @@ def _setup_lint_driver_import_stubs():
             return _QByteArray()
 
     class _QProcessEnvironment:
-        @staticmethod
-        def insert(*_args, **_kwargs):
-            return None
+        def __init__(self):
+            self._values = dict(os.environ)
+
+        @classmethod
+        def systemEnvironment(cls):
+            return cls()
+
+        def insert(self, key, value):
+            self._values[key] = value
+
+        def value(self, key, default=""):
+            return self._values.get(key, default)
+
+        def contains(self, key):
+            return key in self._values
 
     qt_mod.QWidget = _QWidget
     qt_mod.pyqtSignal = _pyqtSignal
     qt_mod.QByteArray = _QByteArray
     qt_mod.QProcess = _QProcess
     qt_mod.QProcessEnvironment = _QProcessEnvironment
+    qt_mod.QTimer = _QTimer
     sys.modules["ui.qt"] = qt_mod
 
     utils_pkg = types.ModuleType("utils")
@@ -142,6 +172,13 @@ def _setup_lint_driver_import_stubs():
 def _load_driver(module_name, file_name):
     """Load a lint driver module without plugin package side effects."""
     _setup_lint_driver_import_stubs()
+    # process_env
+    pe_path = os.path.join(CDMPLUGINS_DIR, "process_env.py")
+    pe_spec = importlib.util.spec_from_file_location("cdmplugins.process_env", pe_path)
+    pe_mod = importlib.util.module_from_spec(pe_spec)
+    sys.modules["cdmplugins.process_env"] = pe_mod
+    pe_spec.loader.exec_module(pe_mod)
+
     base_path = os.path.join(CDMPLUGINS_DIR, "lintdriverbase.py")
     base_spec = importlib.util.spec_from_file_location("cdmplugins.lintdriverbase", base_path)
     base_mod = importlib.util.module_from_spec(base_spec)
@@ -208,8 +245,50 @@ def test_bandit_parse_output():
     assert diag["severity"] == "LOW"
 
 
-def test_mypy_parse_output():
-    """MypyDriver maps per-file JSON diagnostics into results."""
+def test_mypy_parse_jsonl_real_format():
+    """MypyDriver maps upstream JSONL (one object per line)."""
+    mod = _load_driver("cdmplugins.mypy.mypydriver", "mypy/mypydriver.py")
+    driver = mod.MypyDriver(None)
+    driver._fileName = "/tmp/sample.py"
+    results = {"Diagnostics": []}
+    stdout = (
+        json.dumps(
+            {
+                "file": "/tmp/sample.py",
+                "line": 7,
+                "column": 4,
+                "end_line": 7,
+                "end_column": 10,
+                "message": 'Module has no attribute "missing"',
+                "hint": None,
+                "code": "attr-defined",
+                "severity": "error",
+            }
+        )
+        + "\n"
+        + json.dumps(
+            {
+                "file": "/tmp/other.py",
+                "line": 1,
+                "column": 1,
+                "message": "unrelated",
+                "code": "name-defined",
+                "severity": "error",
+            }
+        )
+        + "\n"
+    )
+    driver.parseOutput(stdout, "", results)
+    assert len(results["Diagnostics"]) == 1
+    diag = results["Diagnostics"][0]
+    assert diag["code"] == "attr-defined"
+    assert diag["line"] == 7
+    assert diag["column"] == 4
+    assert diag["severity"] == "error"
+
+
+def test_mypy_parse_legacy_files_object_compat():
+    """Legacy fabricated {\"files\":...} still parses for backward compat."""
     mod = _load_driver("cdmplugins.mypy.mypydriver", "mypy/mypydriver.py")
     driver = mod.MypyDriver(None)
     driver._fileName = "/tmp/sample.py"
@@ -230,10 +309,7 @@ def test_mypy_parse_output():
     )
     driver.parseOutput(stdout, "", results)
     assert len(results["Diagnostics"]) == 1
-    diag = results["Diagnostics"][0]
-    assert diag["code"] == "attr-defined"
-    assert diag["line"] == 7
-    assert diag["column"] == 4
+    assert results["Diagnostics"][0]["code"] == "attr-defined"
 
 
 def test_ruff_parse_output_invalid_json():
@@ -244,3 +320,44 @@ def test_ruff_parse_output_invalid_json():
     driver.parseOutput("not-json", "", results)
     assert results["ProcessError"] == "Failed to parse ruff output"
     assert results["Diagnostics"] == []
+
+
+@pytest.mark.integration
+def test_mypy_jsonl_integration_subprocess(tmp_path):
+    """Pinned mypy --output json produces parseable JSONL (T034)."""
+    import subprocess
+
+    sample = tmp_path / "sample.py"
+    sample.write_text("x: int = 'a'\n", encoding="utf-8")
+    proc = subprocess.run(
+        [sys.executable, "-m", "mypy", "--output", "json", "--no-error-summary", str(sample)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.stdout.strip(), proc.stderr
+    mod = _load_driver("cdmplugins.mypy.mypydriver", "mypy/mypydriver.py")
+    driver = mod.MypyDriver(None)
+    driver._fileName = str(sample)
+    results = {"Diagnostics": []}
+    driver.parseOutput(proc.stdout, proc.stderr, results)
+    assert results["Diagnostics"]
+    assert results["Diagnostics"][0]["line"] >= 1
+
+
+def test_lint_driver_start_uses_system_environment():
+    """LintDriverBase inherits PATH/HOME via process_env builder."""
+    mod = _load_driver("cdmplugins.mypy.mypydriver", "mypy/mypydriver.py")
+
+    class Ide:
+        project = object()
+
+    driver = mod.MypyDriver(Ide())
+    err = driver.start("/tmp/sample.py", "utf-8")
+    assert err is None
+    assert driver._process is not None
+    assert driver._process._env is not None
+    assert driver._process._env.contains("PYTHONIOENCODING")
+    # Inherited from Fake systemEnvironment seeded with os.environ
+    if "PATH" in os.environ:
+        assert driver._process._env.contains("PATH")

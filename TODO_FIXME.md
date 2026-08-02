@@ -16,10 +16,8 @@
 | T001 | `doc/technology/parser-contract.md` | Parser contract normative | ✅ DONE 2026-08-02 |
 | T004–T006 | `tests/conformance/` | Conformance harness + CFG goldens | ✅ DONE 2026-08-02 |
 | T029 | `tests/conformance/differential-report.md` | C-ext відсутній → explicit skip | ✅ SKIPPED (documented) |
-| T034–T035 | `cdmplugins/mypy/mypydriver.py` | Очікує `{"files":...}`, mypy дає JSONL | 🔴 TODO |
-| T030–T033 | `cdmplugins/lintdriverbase.py` + drivers | Порожній `QProcessEnvironment()`; блокуючий `kill`/`waitForFinished` | 🔴 TODO |
-| T040–T041 | `cdmplugins/git/gitconfig.py` | GitHub PAT plaintext у `~/.codimension3/git.plugin.conf` | 🔴 TODO |
-| T042–T043 | `codimension/utils/project.py` | Неатомарний `.cdm3`; немає schema validation | 🔴 TODO |
+| T030–T035 | process_env + lint/mypy drivers | systemEnvironment; JSONL; non-blocking stop | ✅ DONE 2026-08-02 |
+| T040–T044 | git credentials + atomic_io + project schema | gh→keyring→0600; scrub; atomic `.cdm3` | ✅ DONE 2026-08-02 |
 | T050–T051 | `codimension/utils/project.py` | Basename-only exclusions; необмежений symlink traversal | 🔴 TODO |
 | T060–T067 | `pyproject.toml` / CI | Немає `[project.dependencies]`; CI ≠ заявлена матриця 3.10–3.13 | 🔴 TODO |
 | T070–T073 | bootstrap / imports | `sys.path` alias; dual-import singletons | 🟠 TODO |

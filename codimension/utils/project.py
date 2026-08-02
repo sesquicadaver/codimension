@@ -34,11 +34,13 @@ from os.path import basename, dirname, exists, isabs, isdir, isfile, islink, joi
 
 from ui.qt import QObject, pyqtSignal
 
+from .atomic_io import atomic_write_text
 from .config import DEFAULT_ENCODING
 from .debugenv import DebuggerEnvironment
 from .filepositions import FilePositions
 from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
+from .project_schema import ProjectSchemaError, validate_project_props
 from .runparamscache import RunParametersCache
 from .searchenv import SearchEnvironment
 from .settings import SETTINGS_DIR, Settings
@@ -233,8 +235,8 @@ class CodimensionProject(
                 skipProjectFile = True
 
         if not skipProjectFile:
-            with open(self.fileName, "w", encoding=DEFAULT_ENCODING) as diskfile:
-                json.dump(self.props, diskfile, indent=4)
+            payload = json.dumps(self.props, indent=4) + "\n"
+            atomic_write_text(self.fileName, payload, encoding=DEFAULT_ENCODING)
         else:
             logging.warning("Skipping updates in %s due to writing permissions", self.fileName)
 
@@ -249,9 +251,12 @@ class CodimensionProject(
         try:
             with open(path, "r", encoding=DEFAULT_ENCODING) as diskfile:
                 props = json.load(diskfile)
-        except Exception:
+            props = validate_project_props(props)
+        except ProjectSchemaError as exc:
+            raise Exception("Bad project file " + projectFile + ": " + str(exc)) from exc
+        except Exception as exc:
             # Bad error - cannot load project file at all
-            raise Exception("Bad project file " + projectFile)
+            raise Exception("Bad project file " + projectFile) from exc
 
         self.__resetValues()
         self.fileName = path
