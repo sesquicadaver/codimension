@@ -1,5 +1,11 @@
 2026 Aug 02
 
+* Debugger GUI e2e Phase 0 (T100–T102):
+  - tests/debugger/: DebuggerHost + FakeIOConsole session harness (offscreen)
+  - stop-at-first-line / continue / step-over+stop integration tests
+  - utils/run.py: resolve debugger client scripts from package tree (not sys.argv[0])
+  - plan: .omx/plans/debugger-gui-e2e-atomic-20260802.md
+
 * M5 MainWindow routing + lazy GlobalData (T083–T084):
   - CodimensionMainWindow: proper MRO mixins (no extendInstance)
   - ui/mainwindow_debug.py: debugger session extracted (~500 LOC)

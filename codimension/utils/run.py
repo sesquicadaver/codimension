@@ -34,6 +34,16 @@ from .runparams import DEBUG, PROFILE, RUN
 from .venvutils import resolveVenvToPython
 
 
+def _debuggerClientPath(scriptName):
+    """Absolute path to a client script under ``codimension/debugger/client/``.
+
+    Resolves relative to this package (not ``sys.argv[0]``) so run/debug/profile
+    work under pytest, alternate launchers, and wheel installs.
+    """
+    pkgRoot = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(pkgRoot, "debugger", "client", scriptName)
+
+
 def getProjectPythonPath(project):
     """Returns the Python executable path for project analysis.
 
@@ -124,7 +134,7 @@ def getTerminalCommandToRun(fileName, arguments, params, tcpServerPort=None, pro
     script = prepareScript(fileName)
 
     if params["redirected"]:
-        runClient = os.path.sep.join([os.path.dirname(sys.argv[0]), "debugger", "client", "client_cdm_run.py"])
+        runClient = quote(_debuggerClientPath("client_cdm_run.py"))
         parts = [
             interpreter,
             runClient,
@@ -158,7 +168,7 @@ def getTerminalCommandToProfile(fileName, arguments, params, tcpServerPort=None,
     outfile = GlobalData().getProfileOutputPath(procuuid)
 
     if params["redirected"]:
-        runClient = os.path.sep.join([os.path.dirname(sys.argv[0]), "debugger", "client", "client_cdm_profile.py"])
+        runClient = quote(_debuggerClientPath("client_cdm_profile.py"))
         parts = [
             interpreter,
             runClient,
@@ -190,7 +200,7 @@ def getTerminalCommandToDebug(fileName, arguments, params, tcpServerPort, procuu
     script = prepareScript(fileName)
     encoding = detectFileEncodingToRead(fileName)
 
-    debugClient = os.path.sep.join([os.path.dirname(sys.argv[0]), "debugger", "client", "client_cdm_dbg.py"])
+    debugClient = quote(_debuggerClientPath("client_cdm_dbg.py"))
     parts = [
         interpreter,
         debugClient,

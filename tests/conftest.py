@@ -14,6 +14,9 @@ if ROOT not in sys.path:
 if CODMENSION_DIR not in sys.path:
     sys.path.insert(0, CODMENSION_DIR)
 
+# Headless Qt for any test that constructs QApplication (T100 / offscreen CI).
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
 
 @pytest.fixture(scope="session")
 def qapp():

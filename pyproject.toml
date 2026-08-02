@@ -116,4 +116,5 @@ reportOptionalMemberAccess = "none"
 [tool.pytest.ini_options]
 markers = [
   "integration: optional integration tests (tools, network, etc.)",
+  "debugger_session: redirected debugger session e2e (offscreen Qt)",
 ]
