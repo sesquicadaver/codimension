@@ -63,3 +63,4 @@ target/
 # symbolic link
 src/thirdparty
 gitsync.sh
+/.omx
