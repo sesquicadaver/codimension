@@ -1,0 +1,18 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 55,
+      "beginLine": 3,
+      "beginPos": 1,
+      "display": "name = \"café\"",
+      "end": 68,
+      "endLine": 3,
+      "endPos": 14,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,68 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 19,
+          "beginLine": 2,
+          "beginPos": 5,
+          "children": [
+            {
+              "begin": 45,
+              "beginLine": 3,
+              "beginPos": 9,
+              "display": "temporary = 1",
+              "end": 58,
+              "endLine": 3,
+              "endPos": 22,
+              "kind": "CodeBlock",
+              "kind_id": 6
+            },
+            {
+              "begin": 67,
+              "beginLine": 4,
+              "beginPos": 9,
+              "display": "self.state = 2",
+              "end": 81,
+              "endLine": 4,
+              "endPos": 23,
+              "kind": "CodeBlock",
+              "kind_id": 6
+            },
+            {
+              "begin": 90,
+              "beginLine": 5,
+              "beginPos": 9,
+              "display": "",
+              "end": 106,
+              "endLine": 5,
+              "endPos": 25,
+              "kind": "Return",
+              "kind_id": 11
+            }
+          ],
+          "display": "update",
+          "end": 106,
+          "endLine": 5,
+          "endPos": 25,
+          "kind": "Function",
+          "kind_id": 7,
+          "name": "update"
+        }
+      ],
+      "display": "Service",
+      "end": 106,
+      "endLine": 5,
+      "endPos": 25,
+      "kind": "Class",
+      "kind_id": 8,
+      "name": "Service"
+    }
+  ],
+  "version": 1
+}

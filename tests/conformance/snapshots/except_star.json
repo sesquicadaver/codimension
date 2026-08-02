@@ -1,0 +1,32 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 21,
+          "beginLine": 2,
+          "beginPos": 5,
+          "display": "try:\n        await something()\n    except* ValueError as err:\n        return err",
+          "end": 101,
+          "endLine": 5,
+          "endPos": 19,
+          "kind": "CodeBlock",
+          "kind_id": 6
+        }
+      ],
+      "display": "run",
+      "end": 101,
+      "endLine": 5,
+      "endPos": 19,
+      "kind": "Function",
+      "kind_id": 7,
+      "name": "run"
+    }
+  ],
+  "version": 1
+}

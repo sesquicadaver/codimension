@@ -1,0 +1,134 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 17,
+          "beginLine": 2,
+          "beginPos": 5,
+          "children": [
+            {
+              "begin": 43,
+              "beginLine": 3,
+              "beginPos": 9,
+              "children": [
+                {
+                  "begin": 64,
+                  "beginLine": 4,
+                  "beginPos": 13,
+                  "children": [
+                    {
+                      "begin": 64,
+                      "beginLine": 4,
+                      "beginPos": 13,
+                      "display": "self.flag = 1",
+                      "end": 77,
+                      "endLine": 4,
+                      "endPos": 26,
+                      "kind": "CodeBlock",
+                      "kind_id": 6
+                    },
+                    {
+                      "begin": 91,
+                      "beginLine": 6,
+                      "beginPos": 13,
+                      "children": [
+                        {
+                          "begin": 121,
+                          "beginLine": 7,
+                          "beginPos": 17,
+                          "display": "",
+                          "end": 129,
+                          "endLine": 7,
+                          "endPos": 25,
+                          "kind": "Return",
+                          "kind_id": 11
+                        }
+                      ],
+                      "display": "nested",
+                      "end": 129,
+                      "endLine": 7,
+                      "endPos": 25,
+                      "kind": "Function",
+                      "kind_id": 7,
+                      "name": "nested"
+                    },
+                    {
+                      "begin": 143,
+                      "beginLine": 9,
+                      "beginPos": 13,
+                      "children": [
+                        {
+                          "begin": 180,
+                          "beginLine": 10,
+                          "beginPos": 17,
+                          "display": "",
+                          "end": 188,
+                          "endLine": 10,
+                          "endPos": 25,
+                          "kind": "Return",
+                          "kind_id": 11
+                        }
+                      ],
+                      "display": "anested",
+                      "end": 188,
+                      "endLine": 10,
+                      "endPos": 25,
+                      "kind": "Function",
+                      "kind_id": 7,
+                      "name": "anested"
+                    },
+                    {
+                      "begin": 202,
+                      "beginLine": 12,
+                      "beginPos": 13,
+                      "display": "",
+                      "end": 217,
+                      "endLine": 12,
+                      "endPos": 28,
+                      "kind": "Return",
+                      "kind_id": 11
+                    }
+                  ],
+                  "display": "True",
+                  "end": 217,
+                  "endLine": 12,
+                  "endPos": 28,
+                  "kind": "kind:18",
+                  "kind_id": 18,
+                  "role": "part"
+                }
+              ],
+              "display": "",
+              "end": 217,
+              "endLine": 12,
+              "endPos": 28,
+              "kind": "If",
+              "kind_id": 19
+            }
+          ],
+          "display": "method",
+          "end": 217,
+          "endLine": 12,
+          "endPos": 28,
+          "kind": "Function",
+          "kind_id": 7,
+          "name": "method"
+        }
+      ],
+      "display": "Outer",
+      "end": 217,
+      "endLine": 12,
+      "endPos": 28,
+      "kind": "Class",
+      "kind_id": 8,
+      "name": "Outer"
+    }
+  ],
+  "version": 1
+}

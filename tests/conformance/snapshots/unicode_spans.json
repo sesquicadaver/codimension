@@ -1,0 +1,51 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 18,
+      "beginLine": 2,
+      "beginPos": 1,
+      "display": "привіт = 1",
+      "end": 28,
+      "endLine": 2,
+      "endPos": 11,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 29,
+      "beginLine": 3,
+      "beginPos": 1,
+      "display": "s = \"😀\"",
+      "end": 36,
+      "endLine": 3,
+      "endPos": 8,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 37,
+      "beginLine": 4,
+      "beginPos": 1,
+      "display": "a = 1",
+      "end": 42,
+      "endLine": 4,
+      "endPos": 6,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 44,
+      "beginLine": 4,
+      "beginPos": 8,
+      "display": "b = 2",
+      "end": 49,
+      "endLine": 4,
+      "endPos": 13,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    }
+  ],
+  "version": 1
+}

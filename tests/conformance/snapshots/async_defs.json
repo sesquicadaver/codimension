@@ -1,0 +1,96 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 27,
+          "beginLine": 2,
+          "beginPos": 5,
+          "display": "",
+          "end": 35,
+          "endLine": 2,
+          "endPos": 13,
+          "kind": "Return",
+          "kind_id": 11
+        }
+      ],
+      "display": "top_level",
+      "end": 35,
+      "endLine": 2,
+      "endPos": 13,
+      "kind": "Function",
+      "kind_id": 7,
+      "name": "top_level"
+    },
+    {
+      "begin": 38,
+      "beginLine": 5,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 57,
+          "beginLine": 6,
+          "beginPos": 5,
+          "children": [
+            {
+              "begin": 89,
+              "beginLine": 7,
+              "beginPos": 9,
+              "children": [
+                {
+                  "begin": 121,
+                  "beginLine": 8,
+                  "beginPos": 13,
+                  "display": "",
+                  "end": 129,
+                  "endLine": 8,
+                  "endPos": 21,
+                  "kind": "Return",
+                  "kind_id": 11
+                }
+              ],
+              "display": "nested",
+              "end": 129,
+              "endLine": 8,
+              "endPos": 21,
+              "kind": "Function",
+              "kind_id": 7,
+              "name": "nested"
+            },
+            {
+              "begin": 139,
+              "beginLine": 10,
+              "beginPos": 9,
+              "display": "",
+              "end": 160,
+              "endLine": 10,
+              "endPos": 30,
+              "kind": "Return",
+              "kind_id": 11
+            }
+          ],
+          "display": "method",
+          "end": 160,
+          "endLine": 10,
+          "endPos": 30,
+          "kind": "Function",
+          "kind_id": 7,
+          "name": "method"
+        }
+      ],
+      "display": "Service",
+      "end": 160,
+      "endLine": 10,
+      "endPos": 30,
+      "kind": "Class",
+      "kind_id": 8,
+      "name": "Service"
+    }
+  ],
+  "version": 1
+}

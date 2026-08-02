@@ -14,8 +14,13 @@
 
 """Pure-Python cdmpyparser replacement using ast module."""
 
+from __future__ import annotations
+
 import ast
+import tokenize
 from sys import maxsize
+
+from parsers.source_spans import SourceIndex
 
 VERSION = "3.4.0-ast"
 
@@ -42,11 +47,8 @@ def trim_docstring(docstring):
 
 
 def _abs_pos(source: str, lineno: int, col_offset: int) -> int:
-    """Compute 0-based absolute position from line/col."""
-    lines = source.split("\n")
-    if lineno < 1:
-        return 0
-    return sum(len(line) + 1 for line in lines[: lineno - 1]) + col_offset
+    """Compute 0-based absolute character position (UTF-8-aware via SourceIndex)."""
+    return SourceIndex.build(source).abs_char_pos(lineno, col_offset)
 
 
 # Re-export all classes for cdmpyparser API compatibility
@@ -494,10 +496,15 @@ class BriefModuleInfo:
         else:
             self.docstring = Docstring(trim_docstring(docstr), startLine, endLine)
 
-    def _onArgument(self, name, annotation):
-        self.objectsStack[-1].arguments.append(Argument(name, annotation))
+    def _onArgument(self, name, annotation, value=None):
+        """Append an argument; optional default ``value`` set immediately."""
+        arg = Argument(name, annotation)
+        if value is not None:
+            arg.value = value
+        self.objectsStack[-1].arguments.append(arg)
 
     def _onArgumentValue(self, value):
+        """Set default on the most recently appended argument (compat)."""
         self.objectsStack[-1].arguments[-1].value = value
 
     def _onBaseClass(self, name):
@@ -543,6 +550,175 @@ def _annotation_str(node):
         return None
 
 
+def _expr_str(node):
+    """Convert an AST expression to a short source-like string."""
+    if node is None:
+        return None
+    try:
+        if hasattr(ast, "unparse"):
+            return ast.unparse(node)
+    except Exception:
+        pass
+    if isinstance(node, ast.Constant):
+        return repr(node.value)
+    return None
+
+
+def _is_staticmethod_node(node: ast.AST) -> bool:
+    """True if ``node`` has a ``@staticmethod`` decorator."""
+    for dec in getattr(node, "decorator_list", []) or []:
+        if isinstance(dec, ast.Name) and dec.id == "staticmethod":
+            return True
+        if isinstance(dec, ast.Attribute) and dec.attr == "staticmethod":
+            return True
+        if isinstance(dec, ast.Call):
+            func = dec.func
+            if isinstance(func, ast.Name) and func.id == "staticmethod":
+                return True
+            if isinstance(func, ast.Attribute) and func.attr == "staticmethod":
+                return True
+    return False
+
+
+def _method_self_name(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str | None:
+    """Return first parameter name for instance methods; None for staticmethods."""
+    if _is_staticmethod_node(node):
+        return None
+    args = list(node.args.posonlyargs or []) + list(node.args.args or [])
+    if not args:
+        return None
+    return args[0].arg
+
+
+def _attr_name_for_instance(target: ast.AST, self_name: str) -> str | None:
+    """If ``target`` is ``self_name.attr``, return ``attr``; else None."""
+    if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name):
+        if target.value.id == self_name:
+            return target.attr
+    return None
+
+
+def _iter_bound_names(target: ast.AST):
+    """Yield simple ``Name`` ids bound by an assignment target (incl. unpacking)."""
+    if isinstance(target, ast.Name):
+        yield target.id
+    elif isinstance(target, (ast.Tuple, ast.List)):
+        for elt in target.elts:
+            yield from _iter_bound_names(elt)
+    elif isinstance(target, ast.Starred):
+        yield from _iter_bound_names(target.value)
+
+
+def _iter_instance_attr_names(target: ast.AST, self_name: str):
+    """Yield instance attribute names from a target (incl. unpacking of attrs)."""
+    attr = _attr_name_for_instance(target, self_name)
+    if attr is not None:
+        yield attr
+        return
+    if isinstance(target, (ast.Tuple, ast.List)):
+        for elt in target.elts:
+            yield from _iter_instance_attr_names(elt, self_name)
+    elif isinstance(target, ast.Starred):
+        yield from _iter_instance_attr_names(target.value, self_name)
+
+
+def _assignment_targets(stmt: ast.AST) -> list[ast.AST]:
+    """Return assignable targets from Assign / AnnAssign / AugAssign."""
+    if isinstance(stmt, ast.Assign):
+        return list(stmt.targets)
+    if isinstance(stmt, ast.AnnAssign) and stmt.target is not None:
+        return [stmt.target]
+    if isinstance(stmt, ast.AugAssign):
+        return [stmt.target]
+    return []
+
+
+def _iter_suite_statements(stmts: list[ast.stmt]):
+    """Yield statements in a suite, recursively into control-flow bodies (T015).
+
+    Does **not** descend into nested function/class bodies — those are visited
+    via ``visit_func`` / ``visit_class`` so attributes stay in the right scope.
+    """
+    for stmt in stmts:
+        yield stmt
+        if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if isinstance(stmt, ast.If):
+            yield from _iter_suite_statements(stmt.body)
+            yield from _iter_suite_statements(stmt.orelse)
+        elif isinstance(stmt, (ast.For, ast.AsyncFor, ast.While)):
+            yield from _iter_suite_statements(stmt.body)
+            yield from _iter_suite_statements(stmt.orelse)
+        elif isinstance(stmt, (ast.With, ast.AsyncWith)):
+            yield from _iter_suite_statements(stmt.body)
+        elif isinstance(stmt, ast.Try):
+            yield from _iter_suite_statements(stmt.body)
+            for handler in stmt.handlers:
+                yield from _iter_suite_statements(handler.body)
+            yield from _iter_suite_statements(stmt.orelse)
+            yield from _iter_suite_statements(stmt.finalbody)
+        else:
+            # ast.TryStar (3.11+) and match/case (3.10+)
+            try_star = getattr(ast, "TryStar", None)
+            if try_star is not None and isinstance(stmt, try_star):
+                yield from _iter_suite_statements(stmt.body)
+                for handler in stmt.handlers:
+                    yield from _iter_suite_statements(handler.body)
+                yield from _iter_suite_statements(stmt.orelse)
+                yield from _iter_suite_statements(stmt.finalbody)
+                continue
+            if isinstance(stmt, ast.Match):
+                for case in stmt.cases:
+                    yield from _iter_suite_statements(case.body)
+
+
+def _emit_function_arguments(mod_info: BriefModuleInfo, arguments: ast.arguments) -> None:
+    """Emit positional-only, positional, vararg, kw-only, and kwarg with correct defaults.
+
+    Defaults on ``arguments.defaults`` map to the trailing subset of
+    ``posonlyargs + args``. ``kw_defaults`` maps 1:1 to ``kwonlyargs``
+    (``None`` means no default). Inserts ``/`` and bare ``*`` markers when needed
+    for signature fidelity (T011/T012).
+    """
+    posonly = list(arguments.posonlyargs or [])
+    regular = list(arguments.args or [])
+    all_pos = posonly + regular
+    defaults = list(arguments.defaults or [])
+    default_start = len(all_pos) - len(defaults)
+
+    def _emit_pos_arg(arg: ast.arg, index: int) -> None:
+        value = None
+        if index >= default_start:
+            value = _expr_str(defaults[index - default_start])
+        mod_info._onArgument(arg.arg, _annotation_str(arg.annotation), value)
+
+    for i, arg in enumerate(posonly):
+        _emit_pos_arg(arg, i)
+    if posonly:
+        mod_info._onArgument("/", None)
+
+    for i, arg in enumerate(regular):
+        _emit_pos_arg(arg, len(posonly) + i)
+
+    if arguments.vararg is not None:
+        mod_info._onArgument(
+            "*" + arguments.vararg.arg,
+            _annotation_str(arguments.vararg.annotation),
+        )
+    elif arguments.kwonlyargs:
+        mod_info._onArgument("*", None)
+
+    for arg, default in zip(arguments.kwonlyargs or [], arguments.kw_defaults or []):
+        value = _expr_str(default) if default is not None else None
+        mod_info._onArgument(arg.arg, _annotation_str(arg.annotation), value)
+
+    if arguments.kwarg is not None:
+        mod_info._onArgument(
+            "**" + arguments.kwarg.arg,
+            _annotation_str(arguments.kwarg.annotation),
+        )
+
+
 def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None:
     """Populate BriefModuleInfo from AST."""
     try:
@@ -553,13 +729,14 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
         return
 
     mod_info.isOK = True
+    index = SourceIndex.build(source)
 
     def pos(node):
+        """Return (lineno, 1-based char column, 0-based abs char position)."""
         if node is None:
             return 1, 1, 0
-        ln = getattr(node, "lineno", 1) or 1
-        co = getattr(node, "col_offset", 0) or 0
-        return ln, co + 1, _abs_pos(source, ln, co)
+        begin, _end, ln, _eln, bpos, _epos = index.node_span(node)
+        return ln, bpos, begin
 
     def docstring_from_node(node):
         doc = ast.get_docstring(node)
@@ -588,7 +765,7 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             m = re.search(r"coding[:=]\s*([-\w.]+)", line)
             if m:
                 ln = i + 1
-                mod_info._onEncoding(m.group(1).strip(), ln, 1, _abs_pos(source, ln, 0))
+                mod_info._onEncoding(m.group(1).strip(), ln, 1, index.line_start(ln))
             break
 
     # Module-level: imports and globals
@@ -608,12 +785,11 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                 mod_info._onWhat(alias.name, ln, p, ap)
                 if alias.asname:
                     mod_info._onAs(alias.asname)
-        elif isinstance(node, ast.Assign):
-            for t in node.targets:
-                if isinstance(t, ast.Name):
-                    ln, p, ap = pos(node)
-                    mod_info._onGlobal(t.id, ln, p, ap, 0)
-                    break
+        else:
+            for t in _assignment_targets(node):
+                ln, p, ap = pos(node)
+                for name in _iter_bound_names(t):
+                    mod_info._onGlobal(name, ln, p, ap, 0)
 
     def visit_class(node, level):
         # Decorators first
@@ -647,16 +823,20 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
         ds = docstring_from_node(node)
         if ds:
             mod_info._onDocstring(ds[0], ds[1], ds[2])
-        for stmt in node.body:
-            if isinstance(stmt, ast.FunctionDef):
+
+        def _handle_class_stmt(stmt: ast.AST) -> None:
+            if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 visit_func(stmt, level + 1)
             elif isinstance(stmt, ast.ClassDef):
                 visit_class(stmt, level + 1)
-            elif isinstance(stmt, ast.Assign):
-                for t in stmt.targets:
-                    if isinstance(t, ast.Name):
-                        ln2, p2, ap2 = pos(stmt)
-                        mod_info._onClassAttribute(t.id, ln2, p2, ap2, level)
+            else:
+                for t in _assignment_targets(stmt):
+                    ln2, p2, ap2 = pos(stmt)
+                    for name in _iter_bound_names(t):
+                        mod_info._onClassAttribute(name, ln2, p2, ap2, level)
+
+        for stmt in _iter_suite_statements(node.body):
+            _handle_class_stmt(stmt)
         mod_info._flush_level(level)
 
     def visit_func(node, level):
@@ -682,40 +862,34 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
         ret_ann = _annotation_str(node.returns)
         is_async = isinstance(node, ast.AsyncFunctionDef)
         mod_info._onFunction(node.name, ln, p, ap, kw_ln, kw_p, colon_ln, colon_p, level, is_async, ret_ann)
-        args = node.args.args
-        defaults = node.args.defaults or []
-        for arg in args:
-            ann = _annotation_str(arg.annotation)
-            mod_info._onArgument(arg.arg if arg.arg != "*" else "*", ann)
-        for default in reversed(defaults):
-            try:
-                val = ast.unparse(default) if hasattr(ast, "unparse") else str(default)
-                mod_info._onArgumentValue(val)
-            except Exception:
-                pass
-        if node.args.vararg:
-            mod_info._onArgument("*" + node.args.vararg.arg, _annotation_str(node.args.vararg.annotation))
-        if node.args.kwarg:
-            mod_info._onArgument("**" + node.args.kwarg.arg, _annotation_str(node.args.kwarg.annotation))
+        _emit_function_arguments(mod_info, node.args)
+        self_name = _method_self_name(node)
         ds = docstring_from_node(node)
         if ds:
             mod_info._onDocstring(ds[0], ds[1], ds[2])
-        for stmt in node.body:
-            if isinstance(stmt, ast.FunctionDef):
+
+        def _collect_instance_attrs(stmt: ast.AST) -> None:
+            """Record ``self.attr`` / ``cls.attr``; ignore local Name binds."""
+            if self_name is None:
+                return
+            for t in _assignment_targets(stmt):
+                for attr in _iter_instance_attr_names(t, self_name):
+                    ln2, p2, ap2 = pos(stmt)
+                    mod_info._onInstanceAttribute(attr, ln2, p2, ap2, level)
+
+        for stmt in _iter_suite_statements(node.body):
+            if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 visit_func(stmt, level + 1)
             elif isinstance(stmt, ast.ClassDef):
                 visit_class(stmt, level + 1)
-            elif isinstance(stmt, ast.Assign):
-                for t in stmt.targets:
-                    if isinstance(t, ast.Name):
-                        ln2, p2, ap2 = pos(stmt)
-                        mod_info._onInstanceAttribute(t.id, ln2, p2, ap2, level)
+            else:
+                _collect_instance_attrs(stmt)
         mod_info._flush_level(level)
 
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
             visit_class(node, 0)
-        elif isinstance(node, ast.FunctionDef):
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             visit_func(node, 0)
 
 
@@ -728,8 +902,8 @@ def getBriefModuleInfoFromMemory(content: str, filename: str = "<string>") -> Br
 
 
 def getBriefModuleInfoFromFile(fileName: str) -> BriefModuleInfo:
-    """Build brief module info from file."""
-    with open(fileName, encoding="utf-8", errors="replace") as f:
+    """Build brief module info from file using PEP 263 encoding detection."""
+    with tokenize.open(fileName) as f:
         content = f.read()
     mod_info = BriefModuleInfo()
     _ast_to_brief(mod_info, content, fileName)

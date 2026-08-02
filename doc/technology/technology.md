@@ -825,6 +825,8 @@ Codimension — відкритий проєкт під GPL v3. Оригінал�
 
 **Цей форк** використовує pure-Python fallback-парсери (`brief_ast`, `flow_ast`) коли C-розширення недоступні (Python 3.10+). UI — PyQt5.
 
+Нормативний контракт позицій і семантики: [parser-contract.md](parser-contract.md).
+
 Розробка ведеться на Linux (Ubuntu). Підтримується Python 3.10–3.13. Встановлення — лише з вихідного коду форку ([doc/INSTALL.md](../INSTALL.md)).
 
 ### Architecture

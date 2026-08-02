@@ -49,6 +49,7 @@
 | --------------- | ---------- |
 | [project/project.md](project/project.md) | [uk/project/project.md](uk/project/project.md) |
 | [technology/technology.md](technology/technology.md) | [uk/technology/technology.md](uk/technology/technology.md) |
+| [technology/parser-contract.md](technology/parser-contract.md) | [uk/technology/parser-contract.md](uk/technology/parser-contract.md) |
 | [md/mdsupport.md](md/mdsupport.md) | [uk/md/mdsupport.md](uk/md/mdsupport.md) |
 | [smartzoom/smartzoom.md](smartzoom/smartzoom.md) | [uk/smartzoom/smartzoom.md](uk/smartzoom/smartzoom.md) |
 | [dependencies/dependencies.md](dependencies/dependencies.md) | [uk/dependencies/dependencies.md](uk/dependencies/dependencies.md) |

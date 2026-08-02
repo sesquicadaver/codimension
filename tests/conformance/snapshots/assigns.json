@@ -1,0 +1,178 @@
+{
+  "docstring": "Assignment forms for brief_ast T014.",
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "display": "\"\"\"Assignment forms for brief_ast T014.\"\"\"",
+      "end": 42,
+      "endLine": 1,
+      "endPos": 43,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 106,
+      "beginLine": 4,
+      "beginPos": 1,
+      "display": "count: int = 0",
+      "end": 120,
+      "endLine": 4,
+      "endPos": 15,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 121,
+      "beginLine": 5,
+      "beginPos": 1,
+      "display": "total = 0",
+      "end": 130,
+      "endLine": 5,
+      "endPos": 10,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 131,
+      "beginLine": 6,
+      "beginPos": 1,
+      "display": "total += 1",
+      "end": 141,
+      "endLine": 6,
+      "endPos": 11,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 142,
+      "beginLine": 7,
+      "beginPos": 1,
+      "display": "x, y = 1, 2",
+      "end": 153,
+      "endLine": 7,
+      "endPos": 12,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 154,
+      "beginLine": 8,
+      "beginPos": 1,
+      "display": "a = b = 3",
+      "end": 163,
+      "endLine": 8,
+      "endPos": 10,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 164,
+      "beginLine": 9,
+      "beginPos": 1,
+      "display": "first, *rest = [1, 2, 3]",
+      "end": 188,
+      "endLine": 9,
+      "endPos": 25,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 191,
+      "beginLine": 12,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 206,
+          "beginLine": 13,
+          "beginPos": 5,
+          "display": "size: int = 1",
+          "end": 219,
+          "endLine": 13,
+          "endPos": 18,
+          "kind": "CodeBlock",
+          "kind_id": 6
+        },
+        {
+          "begin": 224,
+          "beginLine": 14,
+          "beginPos": 5,
+          "display": "width = height = 2",
+          "end": 242,
+          "endLine": 14,
+          "endPos": 23,
+          "kind": "CodeBlock",
+          "kind_id": 6
+        },
+        {
+          "begin": 247,
+          "beginLine": 15,
+          "beginPos": 5,
+          "display": "left, right = 0, 1",
+          "end": 265,
+          "endLine": 15,
+          "endPos": 23,
+          "kind": "CodeBlock",
+          "kind_id": 6
+        },
+        {
+          "begin": 271,
+          "beginLine": 17,
+          "beginPos": 5,
+          "children": [
+            {
+              "begin": 296,
+              "beginLine": 18,
+              "beginPos": 9,
+              "display": "self.color = \"red\"",
+              "end": 314,
+              "endLine": 18,
+              "endPos": 27,
+              "kind": "CodeBlock",
+              "kind_id": 6
+            },
+            {
+              "begin": 323,
+              "beginLine": 19,
+              "beginPos": 9,
+              "display": "self.x, self.y = 0, 1",
+              "end": 344,
+              "endLine": 19,
+              "endPos": 30,
+              "kind": "CodeBlock",
+              "kind_id": 6
+            },
+            {
+              "begin": 353,
+              "beginLine": 20,
+              "beginPos": 9,
+              "display": "self.hits += 1",
+              "end": 367,
+              "endLine": 20,
+              "endPos": 23,
+              "kind": "CodeBlock",
+              "kind_id": 6
+            }
+          ],
+          "display": "paint",
+          "end": 367,
+          "endLine": 20,
+          "endPos": 23,
+          "kind": "Function",
+          "kind_id": 7,
+          "name": "paint"
+        }
+      ],
+      "display": "Box",
+      "end": 367,
+      "endLine": 20,
+      "endPos": 23,
+      "kind": "Class",
+      "kind_id": 8,
+      "name": "Box"
+    }
+  ],
+  "version": 1
+}

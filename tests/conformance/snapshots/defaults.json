@@ -1,0 +1,57 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 21,
+          "beginLine": 2,
+          "beginPos": 5,
+          "display": "",
+          "end": 33,
+          "endLine": 2,
+          "endPos": 17,
+          "kind": "Return",
+          "kind_id": 11
+        }
+      ],
+      "display": "f",
+      "end": 33,
+      "endLine": 2,
+      "endPos": 17,
+      "kind": "Function",
+      "kind_id": 7,
+      "name": "f"
+    },
+    {
+      "begin": 36,
+      "beginLine": 5,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 76,
+          "beginLine": 6,
+          "beginPos": 5,
+          "display": "",
+          "end": 96,
+          "endLine": 6,
+          "endPos": 25,
+          "kind": "Return",
+          "kind_id": 11
+        }
+      ],
+      "display": "g",
+      "end": 96,
+      "endLine": 6,
+      "endPos": 25,
+      "kind": "Function",
+      "kind_id": 7,
+      "name": "g"
+    }
+  ],
+  "version": 1
+}

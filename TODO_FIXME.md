@@ -2,10 +2,29 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-07-06  
-**Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
+**Дата перевірки:** 2026-08-02  
+**Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension  
+**Лінійний план:** [.omx/plans/linear-remediation-atomic-20260802.md](.omx/plans/linear-remediation-atomic-20260802.md)
 
-## Критичні (anti-stub перевірка)
+## Критичні (anti-stub / коректність ядра) — аудит 2026-08-02
+
+| ID плану | Файл / зона | Опис | Статус |
+|----------|-------------|------|--------|
+| T010–T018 | `codimension/parsers/brief_ast.py` | brief M1 foundation | ✅ DONE 2026-08-02 |
+| T020–T028 | `codimension/parsers/flow_ast.py` | T020–T021 spans+tokenize ✅; лишаються docstring/match/except*/comments | 🟠 T022+ |
+| T020–T028 | `codimension/parsers/flow_ast.py` | spans як char замість UTF-8 bytes + `end+1`; O(n²) `_abs_pos`; comments/CML порожні; match/except*/docstrings | 🔴 TODO |
+| T003 | `codimension/parsers/source_spans.py` | Спільна byte→char таблиця позицій | ✅ T003 DONE 2026-08-02 |
+| T001 | `doc/technology/parser-contract.md` | Parser contract normative | ✅ DONE 2026-08-02 |
+| T004–T006 | `tests/` | Немає parser conformance / CFG golden snapshots | 🔴 TODO |
+| T034–T035 | `cdmplugins/mypy/mypydriver.py` | Очікує `{"files":...}`, mypy дає JSONL | 🔴 TODO |
+| T030–T033 | `cdmplugins/lintdriverbase.py` + drivers | Порожній `QProcessEnvironment()`; блокуючий `kill`/`waitForFinished` | 🔴 TODO |
+| T040–T041 | `cdmplugins/git/gitconfig.py` | GitHub PAT plaintext у `~/.codimension3/git.plugin.conf` | 🔴 TODO |
+| T042–T043 | `codimension/utils/project.py` | Неатомарний `.cdm3`; немає schema validation | 🔴 TODO |
+| T050–T051 | `codimension/utils/project.py` | Basename-only exclusions; необмежений symlink traversal | 🔴 TODO |
+| T060–T067 | `pyproject.toml` / CI | Немає `[project.dependencies]`; CI ≠ заявлена матриця 3.10–3.13 | 🔴 TODO |
+| T070–T073 | bootstrap / imports | `sys.path` alias; dual-import singletons | 🟠 TODO |
+
+## Критичні (anti-stub перевірка) — раніше
 
 | Файл | Рядок | Опис | Статус |
 |------|-------|------|--------|
@@ -45,21 +64,19 @@
 
 | Проблема | Статус |
 |----------|--------|
-| **Unit-тести** | 46 тестів у `tests/` (pytest). Розширити CFG snapshot coverage. |
-| **mypy** | `codimension` + `cdmplugins` у CI | ✅ 2026-07-05 |
+| **Unit-тести** | 46 тестів у `tests/`. CFG snapshot / parser conformance — у плані T004–T028. |
+| **mypy** | `codimension` + `cdmplugins` у CI | ✅ 2026-07-05 (парсер виводу mypy — T034) |
 | **ruff/mypy у venv** | У `requirements.txt` | ✅ |
-| **README / INSTALL** | Лише встановлення з репозиторію, Python 3.10+ | ✅ 2026-07-06 |
-| **excludeFromAnalysis, venv exclusion** | doc/project/project.md | ✅ |
+| **README / INSTALL** | Заявлена CI-матриця розходиться з workflow — T067 |
+| **excludeFromAnalysis** | Path-aware exclusions — T050 |
 | **Lazy load Classes/Functions/Globals** | populateIfNeeded | ✅ |
 
 ## Рекомендації щодо CI
 
-Усі пункти виконано в `.github/workflows/ci.yml`:
+Поточний `.github/workflows/ci.yml` (факт 2026-08-02):
 
-1. `ruff check` / `ruff format --check`
-2. `mypy` на codimension + cdmplugins
-3. `pytest tests/`
-4. `pip-audit -r requirements.txt`
-5. Smoke: `import codimension; import cdmplugins`
+1. Lint: Python 3.10–3.12 (не 3.13)
+2. Pytest/smoke: лише 3.11
+3. Немає wheel build / clean install / offscreen GUI
 
-Див. [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+Цільовий стан — задачі **T063–T066**. Жива матриця модулів: [doc/plugins/living-specification.md](doc/plugins/living-specification.md).

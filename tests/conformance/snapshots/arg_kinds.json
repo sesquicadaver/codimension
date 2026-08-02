@@ -1,0 +1,32 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 42,
+          "beginLine": 2,
+          "beginPos": 5,
+          "display": "",
+          "end": 70,
+          "endLine": 2,
+          "endPos": 33,
+          "kind": "Return",
+          "kind_id": 11
+        }
+      ],
+      "display": "f",
+      "end": 70,
+      "endLine": 2,
+      "endPos": 33,
+      "kind": "Function",
+      "kind_id": 7,
+      "name": "f"
+    }
+  ],
+  "version": 1
+}

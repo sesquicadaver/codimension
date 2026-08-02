@@ -1,0 +1,32 @@
+{
+  "docstring": null,
+  "errors": [],
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 21,
+          "beginLine": 2,
+          "beginPos": 5,
+          "display": "match x:\n        case 0:\n            return \"zero\"\n        case _:\n            return \"other\"",
+          "end": 114,
+          "endLine": 6,
+          "endPos": 27,
+          "kind": "CodeBlock",
+          "kind_id": 6
+        }
+      ],
+      "display": "classify",
+      "end": 114,
+      "endLine": 6,
+      "endPos": 27,
+      "kind": "Function",
+      "kind_id": 7,
+      "name": "classify"
+    }
+  ],
+  "version": 1
+}

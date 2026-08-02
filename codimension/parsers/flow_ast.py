@@ -17,7 +17,10 @@
 from __future__ import annotations
 
 import ast
+import tokenize
 from typing import Any
+
+from parsers.source_spans import SourceIndex
 
 # Fragment type constants (from cflowfragmenttypes.hpp)
 UNDEFINED_FRAGMENT = -1
@@ -54,22 +57,14 @@ CML_VERSION = "1.0"
 
 
 def _abs_pos(source: str, lineno: int, col_offset: int) -> int:
-    """Compute 0-based absolute position from line/col."""
-    lines = source.split("\n")
-    if lineno < 1:
-        return 0
-    return sum(len(line) + 1 for line in lines[: lineno - 1]) + col_offset
+    """Compute 0-based absolute character position (UTF-8-aware)."""
+    return SourceIndex.build(source).abs_char_pos(lineno, col_offset)
 
 
-def _pos(node: ast.AST, source: str) -> tuple[int, int, int, int, int, int]:
-    """Return (begin, end, beginLine, endLine, beginPos, endPos) for node."""
-    ln = getattr(node, "lineno", 1) or 1
-    co = getattr(node, "col_offset", 0) or 0
-    eln = getattr(node, "end_lineno", ln) or ln
-    eco = getattr(node, "end_col_offset", co) or co
-    begin = _abs_pos(source, ln, co)
-    end = _abs_pos(source, eln, eco)
-    return begin, end, ln, eln, co + 1, eco + 1
+def _pos(node: ast.AST, source: str, index: SourceIndex | None = None) -> tuple[int, int, int, int, int, int]:
+    """Return (begin, end, beginLine, endLine, beginPos, endPos) — exclusive end."""
+    idx = index if index is not None else SourceIndex.build(source)
+    return idx.node_span(node)
 
 
 class _Body:
@@ -481,10 +476,11 @@ class _FlowBuilder(ast.NodeVisitor):
 
     def __init__(self, source: str):
         self.source = source
+        self.index = SourceIndex.build(source)
         self.control_flow = _ControlFlow(source)
 
     def _pos(self, node: ast.AST) -> tuple[int, int, int, int, int, int]:
-        return _pos(node, self.source)
+        return _pos(node, self.source, self.index)
 
     def _make_body(self, node: ast.AST) -> _Body:
         b, e, bln, eln, bpos, epos = self._pos(node)
@@ -625,7 +621,7 @@ class _FlowBuilder(ast.NodeVisitor):
         if condition_node is None:
             display_value = "else"
         elif self.source and cond:
-            display_value = self.source[cond.begin : cond.end + 1].strip().rstrip(":")
+            display_value = self.source[cond.begin : cond.end].strip().rstrip(":")
         else:
             display_value = ""
         part = _ElifPart(b, e, bln, eln, bpos, epos, condition=cond, display_value=display_value)
@@ -723,7 +719,7 @@ class _FlowBuilder(ast.NodeVisitor):
             what_str = ", ".join(names)
             display_value = f"from {module} import {what_str}" if module else f"import {what_str}"
             if node.module:
-                chunk = self.source[b : e + 1]
+                chunk = self.source[b:e]
                 needle = f"from {module}"
                 off = chunk.find(needle)
                 if off >= 0:
@@ -751,7 +747,7 @@ class _FlowBuilder(ast.NodeVisitor):
     def _visit_code_block(self, node: ast.AST) -> _CodeBlock:
         """Build CodeBlock fragment for generic statement."""
         b, e, bln, eln, bpos, epos = self._pos(node)
-        display_value = self.source[b : e + 1] if self.source and e >= b else ""
+        display_value = self.source[b:e] if self.source and e >= b else ""
         return _CodeBlock(b, e, bln, eln, bpos, epos, display_value=display_value)
 
     def visit(self, node: ast.AST | None) -> None:
@@ -790,6 +786,6 @@ def getControlFlowFromMemory(content: str) -> _ControlFlow:
 
 
 def getControlFlowFromFile(fileName: str) -> _ControlFlow:
-    """Build control flow from file."""
-    with open(fileName, encoding="utf-8", errors="replace") as f:
+    """Build control flow from file using PEP 263 encoding detection."""
+    with tokenize.open(fileName) as f:
         return _build_control_flow(f.read(), fileName)
