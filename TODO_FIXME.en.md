@@ -2,7 +2,7 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-08-02  
+**Last review:** 2026-08-03  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension  
 **Linear plan:** [.omx/plans/linear-remediation-atomic-20260802.md](.omx/plans/linear-remediation-atomic-20260802.md)
 
@@ -28,6 +28,7 @@
 | T120 | Debugger widget smoke (pytest-qt) | BP/Exceptions panels offscreen | ✅ DONE 2026-08-02 |
 | T130 | Debugger full-IDE nightly | MainWindow smoke + skin package path; `debugger-full-ide-nightly.yml` (not PR-blocker) | ✅ DONE 2026-08-02 |
 | T140 | Project venv bootstrap | Tools→VENV… / Update VENV…; create/attach + pip upgrade/sync/recreate | ✅ DONE 2026-08-02 |
+| T141 | Analysis env refresh + visibility | re-analyze after VENV/Update; status-bar Env:; unresolved opt-in multi-select | ✅ DONE 2026-08-03 |
 
 ## Critical (anti-stub review) — earlier
 

@@ -19,6 +19,19 @@ MODE_UPGRADE = "upgrade"
 MODE_SYNC = "sync"
 MODE_RECREATE = "recreate"
 
+# Analysis Python source kinds (T141) — used by status bar / tooling.
+SOURCE_CONFIGURED = "configured"
+SOURCE_SESSION = "session"
+SOURCE_AUTO = "auto"
+SOURCE_IDE = "ide"
+
+_SOURCE_STATUS_LABELS = {
+    SOURCE_CONFIGURED: "Env: project",
+    SOURCE_SESSION: "Env: session",
+    SOURCE_AUTO: "Env: auto",
+    SOURCE_IDE: "Env: IDE",
+}
+
 # Session overlay lives here so helpers work without constructing GlobalData.
 _SESSION_PYTHON = ""
 
@@ -62,20 +75,29 @@ def _resolveConfigured(project, interp: str) -> str:
 
 def getEffectiveProjectPython(project) -> str:
     """Resolve project Python: props → session overlay → auto-detect → IDE."""
+    return describeAnalysisPythonSource(project)[1]
+
+
+def describeAnalysisPythonSource(project) -> tuple[str, str]:
+    """Return ``(kind, absolute_python_path)`` for import/analysis resolution.
+
+    Kinds: ``configured`` (``.cdm3``), ``session`` (overlay), ``auto`` (root
+    ``.venv``/``venv``/``env``), ``ide`` (``sys.executable`` fallback).
+    """
     if project is None or not project.isLoaded():
-        return sys.executable
+        return SOURCE_IDE, sys.executable
 
     interp = project.props.get("pythoninterpreter", "").strip()
     if interp:
-        return _resolveConfigured(project, interp)
+        return SOURCE_CONFIGURED, _resolveConfigured(project, interp)
 
     session = getSessionPythonInterpreter()
     if session:
         if os.path.isfile(session) and os.access(session, os.X_OK):
-            return os.path.abspath(session)
+            return SOURCE_SESSION, os.path.abspath(session)
         venv_python = resolveVenvToPython(session)
         if venv_python:
-            return venv_python
+            return SOURCE_SESSION, venv_python
 
     project_dir = project.getProjectDir()
     if project_dir:
@@ -83,8 +105,49 @@ def getEffectiveProjectPython(project) -> str:
             venv_path = os.path.join(project_dir, venv_name)
             venv_python = resolveVenvToPython(venv_path)
             if venv_python:
-                return venv_python
-    return sys.executable
+                return SOURCE_AUTO, venv_python
+    return SOURCE_IDE, sys.executable
+
+
+def formatAnalysisEnvStatus(project) -> tuple[str, str]:
+    """Return ``(status_bar_text, tooltip_path)`` for the analysis environment."""
+    kind, path = describeAnalysisPythonSource(project)
+    return _SOURCE_STATUS_LABELS.get(kind, "Env: IDE"), path
+
+
+def selectedUnresolvedPackages(enabled: bool, items: list[tuple[str, bool]]) -> list[str]:
+    """Return packages selected for install when unresolved source is enabled.
+
+    ``items`` is a list of ``(package_name, checked)``. When ``enabled`` is
+    False, returns an empty list (opt-in; T141).
+    """
+    if not enabled:
+        return []
+    return [name for name, checked in items if name and checked]
+
+
+def requestAnalysisEnvironmentRefresh(project) -> None:
+    """Invalidate import caches and force project analysis rescan (T141)."""
+    import importlib
+
+    importlib.invalidate_caches()
+    try:
+        from .run import getVenvSitePackages
+
+        if project is not None and project.isLoaded():
+            site = getVenvSitePackages(getEffectiveProjectPython(project))
+            if site:
+                site_real = os.path.realpath(site)
+                for key in list(sys.path_importer_cache):
+                    if isinstance(key, str) and os.path.realpath(key).startswith(site_real):
+                        del sys.path_importer_cache[key]
+    except Exception:
+        _LOG.debug("site-packages importer cache cleanup skipped", exc_info=True)
+
+    if project is not None and project.isLoaded():
+        refresh = getattr(project, "refreshAnalysisEnvironment", None)
+        if callable(refresh):
+            refresh()
 
 
 def isPythonInterpreterConfigured(project) -> bool:

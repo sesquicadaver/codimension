@@ -1,3 +1,11 @@
+2026 Aug 03
+
+* Analysis env refresh + visibility (T141):
+  - Force import-analysis rescan after VENV… / Update VENV… (incl. session / pip-only)
+  - Status bar Env: project | session | auto | IDE (tooltip = python path)
+  - Unresolved packages install source: opt-in + multi-select review list
+  - tests/test_venv_bootstrap.py extended
+
 2026 Aug 02
 
 * Project VENV bootstrap (T140):

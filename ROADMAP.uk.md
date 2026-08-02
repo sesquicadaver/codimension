@@ -55,7 +55,8 @@ analyze → Metrics
 
 Dependency discovery, backends: local venv, Docker, SSH, Kubernetes. Уніфікований `ExecutionTarget.run()`.
 
-**T140 (локальний UI):** Tools → VENV… / Update VENV… (явне create/attach + pip sync|upgrade|recreate). Auto-on-open і Docker/SSH/K8s/MCP — далі в roadmap.
+**T140 (локальний UI):** Tools → VENV… / Update VENV… (явне create/attach + pip sync|upgrade|recreate).  
+**T141:** re-analyze після VENV/Update; status-bar **Env:**; unresolved pip — opt-in + multi-select. Auto-on-open і Docker/SSH/K8s/MCP — далі в roadmap.
 
 ---
 

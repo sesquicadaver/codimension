@@ -671,6 +671,7 @@ class CodimensionMainWindow(
                 QTimer.singleShot(1, self.__delayedEditorsTabRestore)
                 # Lazy-load: if Classes/Functions/Globals tab is visible, populate it
                 QTimer.singleShot(0, self.__triggerLazyLoadForCurrentTab)
+        self.updateAnalysisEnvStatus()
         self.updateRunDebugButtons()
 
         # Updating of the jedi library project should happen regardless

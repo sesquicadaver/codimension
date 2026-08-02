@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Dialogs for project VENV setup / update (T140)."""
+"""Dialogs for project VENV setup / update (T140 / T141)."""
 
 from __future__ import annotations
 
@@ -21,7 +21,9 @@ from utils.venvbootstrap import (
     getEffectiveProjectPython,
     isPathInsideProject,
     recreateVenv,
+    requestAnalysisEnvironmentRefresh,
     runPipInstall,
+    selectedUnresolvedPackages,
     venvDirFromPython,
 )
 from utils.venvutils import resolveVenvToPython
@@ -41,6 +43,7 @@ from .qt import (
     QMessageBox,
     QPushButton,
     QRadioButton,
+    Qt,
     QVBoxLayout,
 )
 
@@ -48,7 +51,12 @@ _LOG = logging.getLogger(__name__)
 
 
 def _add_sources_widgets(parent, layout, project):
-    """Add install-source checkboxes; return (req_checks, pyproject_cb, unresolved_cb, packages)."""
+    """Add install-source widgets.
+
+    Returns ``(req_checks, pyproject_cb, unresolved_cb, pkg_list)``.
+    Unresolved packages are opt-in (unchecked by default) with a multi-select
+    review list (T141).
+    """
     sources = collectInstallSources(project)
     layout.addWidget(QLabel("Select sources, then confirm pip install.", parent))
     req_checks = []
@@ -62,19 +70,45 @@ def _add_sources_widgets(parent, layout, project):
     pyproject_cb.setEnabled(sources["has_pyproject"])
     pyproject_cb.setChecked(sources["has_pyproject"])
     layout.addWidget(pyproject_cb)
+
     packages = list(sources["unresolved_packages"])
-    label = ", ".join(packages[:8]) if packages else "none"
-    unresolved_cb = QCheckBox(f"Unresolved packages ({label})", parent)
+    summary = ", ".join(packages[:8]) if packages else "none"
+    unresolved_cb = QCheckBox(f"Unresolved packages ({summary})", parent)
     unresolved_cb.setEnabled(bool(packages))
-    unresolved_cb.setChecked(bool(packages))
+    unresolved_cb.setChecked(False)
     layout.addWidget(unresolved_cb)
-    return req_checks, pyproject_cb, unresolved_cb, packages
+
+    pkg_list = QListWidget(parent)
+    pkg_list.setMaximumHeight(120)
+    for pkg in packages:
+        item = QListWidgetItem(pkg)
+        item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+        item.setCheckState(Qt.Checked)
+        pkg_list.addItem(item)
+    pkg_list.setEnabled(False)
+    pkg_list.setVisible(bool(packages))
+    unresolved_cb.toggled.connect(pkg_list.setEnabled)
+    layout.addWidget(pkg_list)
+    if packages:
+        layout.addWidget(
+            QLabel("Enable unresolved, then review the checked packages above.", parent)
+        )
+    return req_checks, pyproject_cb, unresolved_cb, pkg_list
 
 
-def _selected_sources(req_checks, pyproject_cb, unresolved_cb, packages):
+def _packages_from_list(pkg_list):
+    """Return ``[(name, checked), …]`` from a QListWidget of checkable items."""
+    items = []
+    for index in range(pkg_list.count()):
+        item = pkg_list.item(index)
+        items.append((item.text(), item.checkState() == Qt.Checked))
+    return items
+
+
+def _selected_sources(req_checks, pyproject_cb, unresolved_cb, pkg_list):
     """Return (requirement_files, packages, install_project)."""
     reqs = [cb.property("req_path") for cb in req_checks if cb.isChecked()]
-    pkgs = packages if unresolved_cb.isChecked() else []
+    pkgs = selectedUnresolvedPackages(unresolved_cb.isChecked(), _packages_from_list(pkg_list))
     return reqs, pkgs, pyproject_cb.isChecked()
 
 
@@ -131,7 +165,7 @@ class VenvSetupDialog(QDialog):
             self._req_checks,
             self._pyproject_check,
             self._unresolved_check,
-            self._unresolved_packages,
+            self._pkg_list,
         ) = _add_sources_widgets(self, sources_layout, self._project)
         layout.addWidget(sources_box)
 
@@ -139,7 +173,7 @@ class VenvSetupDialog(QDialog):
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
-        self.resize(560, 420)
+        self.resize(560, 480)
 
     def _browse_location(self):
         path = QFileDialog.getExistingDirectory(self, "Venv parent directory", self._project_dir)
@@ -172,7 +206,7 @@ class VenvSetupDialog(QDialog):
                 self._req_checks,
                 self._pyproject_check,
                 self._unresolved_check,
-                self._unresolved_packages,
+                self._pkg_list,
             )
             if reqs or packages or install_proj:
                 cmd = buildPipInstallCommand(
@@ -204,6 +238,7 @@ class VenvSetupDialog(QDialog):
                 == QMessageBox.Yes
             )
             bindInterpreter(self._project, python, persist=persist)
+            requestAnalysisEnvironmentRefresh(self._project)
             self.accept()
         except Exception as exc:
             _LOG.exception("VENV setup failed")
@@ -243,7 +278,7 @@ class VenvUpdateDialog(QDialog):
             self._req_checks,
             self._pyproject_check,
             self._unresolved_check,
-            self._unresolved_packages,
+            self._pkg_list,
         ) = _add_sources_widgets(self, sources_layout, self._project)
         layout.addWidget(sources_box)
 
@@ -251,7 +286,7 @@ class VenvUpdateDialog(QDialog):
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
-        self.resize(560, 400)
+        self.resize(560, 460)
 
     def _mode(self):
         if self._upgrade_radio.isChecked():
@@ -266,7 +301,7 @@ class VenvUpdateDialog(QDialog):
             self._req_checks,
             self._pyproject_check,
             self._unresolved_check,
-            self._unresolved_packages,
+            self._pkg_list,
         )
         try:
             if mode == MODE_RECREATE:
@@ -318,6 +353,7 @@ class VenvUpdateDialog(QDialog):
                 if reply != QMessageBox.Yes:
                     return
                 runPipInstall(cmd, cwd=self._project_dir)
+            requestAnalysisEnvironmentRefresh(self._project)
             self.accept()
         except Exception as exc:
             _LOG.exception("Update VENV failed")

@@ -133,7 +133,9 @@ Phase 9 — Local venv Backend
 Goal: Local isolation
 
 T140 (local UI): Tools → VENV… / Update VENV… (explicit create/attach + pip
-sync|upgrade|recreate). Auto-on-open and Docker/SSH/K8s/MCP backends remain later.
+sync|upgrade|recreate).
+T141: re-analyze after VENV/Update; status-bar Env:; unresolved pip opt-in +
+multi-select. Auto-on-open and Docker/SSH/K8s/MCP backends remain later.
 
 
 ---

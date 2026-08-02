@@ -41,6 +41,7 @@ class MainWindowStatusBarMixin:
         self.sbLine = None
         self.sbWritable = None
         self.sbEncoding = None
+        self.sbAnalysisEnv = None
         self.sbPyflakes = None
         self.sbCC = None
         self.sbVCSStatus = None
@@ -64,6 +65,11 @@ class MainWindowStatusBarMixin:
         self.sbDebugState.setPalette(dbgPalette)
         self.__statusBar.addPermanentWidget(self.sbDebugState)
         self.sbDebugState.setVisible(False)
+
+        self.sbAnalysisEnv = StatusBarFramedLabel(text="Env: IDE", callback=None, parent=self.__statusBar)
+        self.sbAnalysisEnv.setToolTip("Python used for import analysis")
+        self.__statusBar.addPermanentWidget(self.sbAnalysisEnv)
+        self.sbAnalysisEnv.setVisible(False)
 
         self.sbLanguage = StatusBarFramedLabel(parent=self.__statusBar)
         self.__statusBar.addPermanentWidget(self.sbLanguage)
@@ -127,6 +133,22 @@ class MainWindowStatusBarMixin:
     def getCurrentStatusBarMessage(self):
         """Provides the current status bar message"""
         return self.__statusBar.currentMessage()
+
+    def updateAnalysisEnvStatus(self):
+        """Refresh status-bar analysis environment indicator (T141)."""
+        from utils.globals import GlobalData
+        from utils.venvbootstrap import formatAnalysisEnvStatus
+
+        project = GlobalData().project
+        if not project.isLoaded():
+            self.sbAnalysisEnv.setVisible(False)
+            self.sbAnalysisEnv.setText("Env: IDE")
+            self.sbAnalysisEnv.setToolTip("Python used for import analysis")
+            return
+        text, path = formatAnalysisEnvStatus(project)
+        self.sbAnalysisEnv.setText(text)
+        self.sbAnalysisEnv.setToolTip(path)
+        self.sbAnalysisEnv.setVisible(True)
 
     def _showVCSLabelContextMenu(self, pos):
         """Triggered when a context menu is requested for a VCS label"""

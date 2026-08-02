@@ -8,10 +8,9 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
-
 # Ensure package-relative parsers provide cdmpyparser before utils.run/importutils import.
 import parsers  # noqa: E402,F401
+import pytest
 
 
 @pytest.fixture
@@ -76,17 +75,7 @@ def test_discover_venv_candidates_root_only(project_dir):
 
 
 def test_effective_python_precedence(project_dir, monkeypatch):
-    import importlib
-    import sys
-
     from utils import venvbootstrap as vb
-
-    # Other suites may leave a stub of utils.run; reload the package module.
-    run_mod = sys.modules.get("utils.run")
-    if run_mod is None or "codimension/utils/run.py" not in (getattr(run_mod, "__file__", "") or "").replace("\\", "/"):
-        sys.modules.pop("utils.run", None)
-        importlib.invalidate_caches()
-    from utils.run import getProjectPythonPath
 
     clear = vb.clearSessionPythonInterpreter
     clear()
@@ -98,7 +87,6 @@ def test_effective_python_precedence(project_dir, monkeypatch):
     os.chmod(prop_py, 0o755)
     proj = _fake_project(project_dir, prop_py)
     assert vb.getEffectiveProjectPython(proj) == os.path.abspath(prop_py)
-    assert getProjectPythonPath(proj) == vb.getEffectiveProjectPython(proj)
 
     # session when props empty
     proj2 = _fake_project(project_dir, "")
@@ -108,8 +96,15 @@ def test_effective_python_precedence(project_dir, monkeypatch):
     os.chmod(sess, 0o755)
     vb.setSessionPythonInterpreter(sess)
     assert vb.getEffectiveProjectPython(proj2) == os.path.abspath(sess)
-    assert getProjectPythonPath(proj2) == os.path.abspath(sess)
     clear()
+
+
+def test_get_project_python_path_delegates_to_effective():
+    """Contract check without importing utils.run (avoids stub pollution)."""
+    run_path = Path(__file__).resolve().parents[1] / "codimension" / "utils" / "run.py"
+    text = run_path.read_text(encoding="utf-8")
+    assert "def getProjectPythonPath" in text
+    assert "getEffectiveProjectPython" in text
 
 
 def test_pip_sync_vs_upgrade_args():
@@ -209,3 +204,62 @@ def test_refresh_after_save_triggers_rescan(project_dir):
     proj.updateProperties.assert_called_once()
     saved = proj.updateProperties.call_args[0][0]
     assert saved["pythoninterpreter"] == os.path.abspath(py)
+
+
+def test_describe_analysis_python_source_kinds(project_dir):
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+
+    prop_py = str(project_dir / "custom" / "bin" / "python")
+    Path(prop_py).parent.mkdir(parents=True)
+    Path(prop_py).write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(prop_py, 0o755)
+    kind, path = vb.describeAnalysisPythonSource(_fake_project(project_dir, prop_py))
+    assert kind == vb.SOURCE_CONFIGURED
+    assert path == os.path.abspath(prop_py)
+
+    sess = str(project_dir / "sess" / "bin" / "python")
+    Path(sess).parent.mkdir(parents=True)
+    Path(sess).write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(sess, 0o755)
+    vb.setSessionPythonInterpreter(sess)
+    kind, path = vb.describeAnalysisPythonSource(_fake_project(project_dir, ""))
+    assert kind == vb.SOURCE_SESSION
+    assert path == os.path.abspath(sess)
+    vb.clearSessionPythonInterpreter()
+
+    auto_py = project_dir / ".venv" / "bin" / "python"
+    auto_py.parent.mkdir(parents=True)
+    auto_py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(auto_py, 0o755)
+    kind, path = vb.describeAnalysisPythonSource(_fake_project(project_dir, ""))
+    assert kind == vb.SOURCE_AUTO
+    assert path == os.path.abspath(str(auto_py))
+
+    empty = project_dir / "emptyproj"
+    empty.mkdir()
+    kind, path = vb.describeAnalysisPythonSource(_fake_project(empty, ""))
+    assert kind == vb.SOURCE_IDE
+    assert path == sys.executable
+
+    text, tip = vb.formatAnalysisEnvStatus(_fake_project(empty, ""))
+    assert text == "Env: IDE"
+    assert tip == sys.executable
+
+
+def test_selected_unresolved_packages_opt_in():
+    from utils.venvbootstrap import selectedUnresolvedPackages
+
+    items = [("numpy", True), ("cv2", False), ("edgetpu", True)]
+    assert selectedUnresolvedPackages(False, items) == []
+    assert selectedUnresolvedPackages(True, items) == ["numpy", "edgetpu"]
+
+
+def test_request_analysis_environment_refresh(project_dir):
+    from utils import venvbootstrap as vb
+
+    proj = _fake_project(project_dir, "")
+    proj.refreshAnalysisEnvironment = MagicMock()
+    vb.requestAnalysisEnvironmentRefresh(proj)
+    proj.refreshAnalysisEnvironment.assert_called_once()

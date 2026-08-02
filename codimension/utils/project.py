@@ -549,6 +549,16 @@ class CodimensionProject(
             else:
                 self.sigProjectChanged.emit(self.Properties)
 
+    def refreshAnalysisEnvironment(self):
+        """Rescan after interpreter / site-packages change (T141).
+
+        Used when props did not change (session overlay, pip sync into the same
+        interpreter) but import resolution must pick up a new environment.
+        """
+        if not self.isLoaded():
+            return
+        self.__generateFilesList(on_complete=self.__finishAnalysisRescan)
+
     def onProjectFileUpdated(self):
         """Called when a project file is updated via direct editing"""
         self.props = getProjectProperties(self.fileName)
