@@ -64,3 +64,4 @@ target/
 src/thirdparty
 gitsync.sh
 /.omx
+/.venv-review
