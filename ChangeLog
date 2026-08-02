@@ -1,5 +1,10 @@
 2026 Aug 02
 
+* M5 MainWindow routing + lazy GlobalData (T083–T084):
+  - CodimensionMainWindow: proper MRO mixins (no extendInstance)
+  - ui/mainwindow_debug.py: debugger session extracted (~500 LOC)
+  - utils/globals.py: GlobalDataWrapper created on first GlobalData() call
+
 * M5 headless core foundation (T080–T082, T085):
   - codimension.core.syntax / flow: parse APIs without Qt
   - codimension.infrastructure: filesystem/io/process facades

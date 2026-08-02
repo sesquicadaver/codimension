@@ -2,7 +2,7 @@
 
 > **Мова / Language:** Українська | [English](ROADMAP.md)
 
-> **Стан форку (2026-08):** Phase 0–1 + audit M1–M4 зелені (parsers/conformance, tooling/PAT, project scan, packaging CI 3.10–3.13). M5: `codimension.core` / `infrastructure` headless foundation (T080–T082, T085); T083–T084 MainWindow/GlobalData — відкриті. Деталі: [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+> **Стан форку (2026-08):** Phase 0–1 + audit M1–M5 foundation зелені. M5: headless `core`/`infrastructure`, MainWindow MRO+DebuggerMixin (T083), lazy GlobalData (T084), T085 import-graph. Деталі: [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
 
 Повний англомовний текст фаз — у [ROADMAP.md](ROADMAP.md). Нижче — стислий огляд українською.
 

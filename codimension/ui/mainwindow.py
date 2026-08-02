@@ -31,13 +31,10 @@ import sys
 from analysis.disasm import getBufferDisassembled, getCompiledfileDisassembled, getFileDisassembled
 from analysis.notused import NotUsedAnalysisProgress
 from autocomplete.completelists import getJediProject, getOccurrences
-from debugger.bputils import clearValidBreakpointLinesCache
 from debugger.bpwp import DebuggerBreakWatchPoints
 from debugger.calltraceviewer import CallTraceViewer
-from debugger.client.protocol_cdm_dbg import UNHANDLED_EXCEPTION
 from debugger.context import DebuggerContext
 from debugger.excpt import DebuggerExceptions
-from debugger.modifiedunsaved import ModifiedUnsavedDialog
 from debugger.server import CodimensionDebugger
 from diagram.importsdgm import ImportDiagramOptions, ImportsDiagramDialog, ImportsDiagramProgress
 from plugins.manager.pluginmanagerdlg import PluginsDialog
@@ -62,11 +59,10 @@ from utils.fileutils import (
 # cml 1 ge id=0
 # cml 1 gb id=1 title="Project imports"
 from utils.globals import GlobalData
-from utils.misc import extendInstance, getDefaultTemplate, getIDETemplateFile, getProjectTemplateFile
+from utils.misc import getDefaultTemplate, getIDETemplateFile, getProjectTemplateFile
 from utils.pixmapcache import getIcon
 from utils.project import CodimensionProject
-from utils.run import getNoArgsEnvironment, parseCommandLineArguments
-from utils.runmanager import RunManager, getWorkingDir
+from utils.runmanager import RunManager
 
 from .about import AboutDialog
 from .classesviewer import ClassesViewer
@@ -82,6 +78,7 @@ from .logviewer import LogViewer
 from .mainmenu import MainWindowMenuMixin
 from .mainredirectedio import MainWindowRedirectedIOMixin
 from .mainstatusbar import MainWindowStatusBarMixin
+from .mainwindow_debug import MainWindowDebuggerMixin
 from .mainwindowtabwidgetbase import MainWindowTabWidgetBase
 from .outline import FileOutlineViewer
 from .projectproperties import ProjectPropertiesDialog
@@ -142,14 +139,14 @@ class EditorsManagerWidget(QWidget):
         self.setLayout(self.layout)
 
 
-class CodimensionMainWindow(QMainWindow):
+class CodimensionMainWindow(
+    QMainWindow,
+    MainWindowStatusBarMixin,
+    MainWindowMenuMixin,
+    MainWindowRedirectedIOMixin,
+    MainWindowDebuggerMixin,
+):
     """Main application window"""
-
-    DEBUG_ACTION_GO = 1
-    DEBUG_ACTION_NEXT = 2
-    DEBUG_ACTION_STEP_INTO = 3
-    DEBUG_ACTION_RUN_TO_LINE = 4
-    DEBUG_ACTION_STEP_OUT = 5
 
     debugModeChanged = pyqtSignal(bool)
 
@@ -158,33 +155,19 @@ class CodimensionMainWindow(QMainWindow):
 
         self.settings = settings
 
-        extendInstance(self, MainWindowStatusBarMixin)
         MainWindowStatusBarMixin.__init__(self)
-
-        extendInstance(self, MainWindowMenuMixin)
         MainWindowMenuMixin.__init__(self)
-
-        extendInstance(self, MainWindowRedirectedIOMixin)
         MainWindowRedirectedIOMixin.__init__(self)
-
-        self.debugMode = False
-        # Last position the IDE received control from the debugger
-        self.__lastDebugFileName = None
-        self.__lastDebugLineNumber = None
-        self.__lastDebugAsException = None
-        self.__lastDebugAction = None
-
-        # Restart debugging support
-        self.__previousDebugging = None
+        MainWindowDebuggerMixin.__init__(self)
 
         self.vcsManager = VCSManager()
 
-        self.__debugger = CodimensionDebugger(self)
-        self.__debugger.sigDebuggerStateChanged.connect(self.__onDebuggerStateChanged)
-        self.__debugger.sigClientLine.connect(self.__onDebuggerCurrentLine)
-        self.__debugger.sigClientException.connect(self.__onDebuggerClientException)
-        self.__debugger.sigClientSyntaxError.connect(self.__onDebuggerClientSyntaxError)
-        self.__debugger.getBreakPointModel().sigBreakpoinsChanged.connect(self.__onBreakpointsModelChanged)
+        self._debugger = CodimensionDebugger(self)
+        self._debugger.sigDebuggerStateChanged.connect(self._onDebuggerStateChanged)
+        self._debugger.sigClientLine.connect(self._onDebuggerCurrentLine)
+        self._debugger.sigClientException.connect(self._onDebuggerClientException)
+        self._debugger.sigClientSyntaxError.connect(self._onDebuggerClientSyntaxError)
+        self._debugger.getBreakPointModel().sigBreakpoinsChanged.connect(self._onBreakpointsModelChanged)
 
         self.__initialisation = True
 
@@ -236,9 +219,9 @@ class CodimensionMainWindow(QMainWindow):
 
         self._runManager = RunManager(self)
         self._runManager.sigProfilingResults.connect(self.onProfileResults)
-        self._runManager.sigDebugSessionPrologueStarted.connect(self.__debugger.onDebugSessionStarted)
-        self._runManager.sigIncomingMessage.connect(self.__debugger.onIncomingMessage)
-        self._runManager.sigProcessFinished.connect(self.__debugger.onProcessFinished)
+        self._runManager.sigDebugSessionPrologueStarted.connect(self._debugger.onDebugSessionStarted)
+        self._runManager.sigIncomingMessage.connect(self._debugger.onIncomingMessage)
+        self._runManager.sigProcessFinished.connect(self._debugger.onProcessFinished)
 
         settings.sigTextZoomChanged.connect(self.onTextZoomChanged)
 
@@ -278,7 +261,7 @@ class CodimensionMainWindow(QMainWindow):
 
     def __createLayout(self):
         """Creates the UI layout"""
-        self.editorsManagerWidget = EditorsManagerWidget(self, self.__debugger)
+        self.editorsManagerWidget = EditorsManagerWidget(self, self._debugger)
         self.em = self.editorsManagerWidget.editorsManager
         self.em.sigTabRunChanged.connect(self.setDebugTabAvailable)
 
@@ -339,18 +322,18 @@ class CodimensionMainWindow(QMainWindow):
         # Create the pyflakes viewer
         self.__pyflakesViewer = PyflakesViewer(self.em, self.sbPyflakes, self.sbCC, self)
 
-        self.debuggerContext = DebuggerContext(self.__debugger)
+        self.debuggerContext = DebuggerContext(self._debugger)
         self._rightSideBar.addTab(self.debuggerContext, getIcon(""), "Debugger", "debugger", 1)
         self._rightSideBar.setTabEnabled("debugger", False)
 
         self.debuggerExceptions = DebuggerExceptions()
         self._rightSideBar.addTab(self.debuggerExceptions, getIcon(""), "Exceptions", "exceptions", 2)
-        self.debuggerExceptions.sigClientExceptionsCleared.connect(self.__onClientExceptionsCleared)
+        self.debuggerExceptions.sigClientExceptionsCleared.connect(self._onClientExceptionsCleared)
 
-        self.debuggerBreakWatchPoints = DebuggerBreakWatchPoints(self, self.__debugger)
+        self.debuggerBreakWatchPoints = DebuggerBreakWatchPoints(self, self._debugger)
         self._rightSideBar.addTab(self.debuggerBreakWatchPoints, getIcon(""), "Breakpoints", "breakpoints", 3)
 
-        self.debuggerCallTrace = CallTraceViewer(self.__debugger, self)
+        self.debuggerCallTrace = CallTraceViewer(self._debugger, self)
         self._rightSideBar.addTab(self.debuggerCallTrace, getIcon(""), "Call Trace", "calltrace", 4)
 
         # Create splitters
@@ -527,43 +510,43 @@ class CodimensionMainWindow(QMainWindow):
         self.__projectDocButton.triggered.connect(self.projectDocClicked)
 
         # Debugger buttons
-        self.__dbgStop = QAction(getIcon("dbgstop.png"), "Stop debugging session (F10)", self)
-        self.__dbgStop.triggered.connect(self._onStopDbgSession)
-        self.__dbgStop.setVisible(False)
-        self.__dbgRestart = QAction(getIcon("dbgrestart.png"), "Restart debugging section (F4)", self)
-        self.__dbgRestart.triggered.connect(self._onRestartDbgSession)
-        self.__dbgRestart.setVisible(False)
-        self.__dbgGo = QAction(getIcon("dbggo.png"), "Continue (F6)", self)
-        self.__dbgGo.triggered.connect(self._onDbgGo)
-        self.__dbgGo.setVisible(False)
-        self.__dbgNext = QAction(getIcon("dbgnext.png"), "Step over (F8)", self)
-        self.__dbgNext.triggered.connect(self._onDbgNext)
-        self.__dbgNext.setVisible(False)
-        self.__dbgStepInto = QAction(getIcon("dbgstepinto.png"), "Step into (F7)", self)
-        self.__dbgStepInto.triggered.connect(self._onDbgStepInto)
-        self.__dbgStepInto.setVisible(False)
-        self.__dbgRunToLine = QAction(getIcon("dbgruntoline.png"), "Run to cursor (Shift+F6)", self)
-        self.__dbgRunToLine.triggered.connect(self._onDbgRunToLine)
-        self.__dbgRunToLine.setVisible(False)
-        self.__dbgReturn = QAction(getIcon("dbgreturn.png"), "Step out (F9)", self)
-        self.__dbgReturn.triggered.connect(self._onDbgReturn)
-        self.__dbgReturn.setVisible(False)
-        self.__dbgJumpToCurrent = QAction(getIcon("dbgtocurrent.png"), "Show current debugger line (Ctrl+W)", self)
-        self.__dbgJumpToCurrent.triggered.connect(self._onDbgJumpToCurrent)
-        self.__dbgJumpToCurrent.setVisible(False)
+        self._dbgStop = QAction(getIcon("dbgstop.png"), "Stop debugging session (F10)", self)
+        self._dbgStop.triggered.connect(self._onStopDbgSession)
+        self._dbgStop.setVisible(False)
+        self._dbgRestart = QAction(getIcon("dbgrestart.png"), "Restart debugging section (F4)", self)
+        self._dbgRestart.triggered.connect(self._onRestartDbgSession)
+        self._dbgRestart.setVisible(False)
+        self._dbgGo = QAction(getIcon("dbggo.png"), "Continue (F6)", self)
+        self._dbgGo.triggered.connect(self._onDbgGo)
+        self._dbgGo.setVisible(False)
+        self._dbgNext = QAction(getIcon("dbgnext.png"), "Step over (F8)", self)
+        self._dbgNext.triggered.connect(self._onDbgNext)
+        self._dbgNext.setVisible(False)
+        self._dbgStepInto = QAction(getIcon("dbgstepinto.png"), "Step into (F7)", self)
+        self._dbgStepInto.triggered.connect(self._onDbgStepInto)
+        self._dbgStepInto.setVisible(False)
+        self._dbgRunToLine = QAction(getIcon("dbgruntoline.png"), "Run to cursor (Shift+F6)", self)
+        self._dbgRunToLine.triggered.connect(self._onDbgRunToLine)
+        self._dbgRunToLine.setVisible(False)
+        self._dbgReturn = QAction(getIcon("dbgreturn.png"), "Step out (F9)", self)
+        self._dbgReturn.triggered.connect(self._onDbgReturn)
+        self._dbgReturn.setVisible(False)
+        self._dbgJumpToCurrent = QAction(getIcon("dbgtocurrent.png"), "Show current debugger line (Ctrl+W)", self)
+        self._dbgJumpToCurrent.triggered.connect(self._onDbgJumpToCurrent)
+        self._dbgJumpToCurrent.setVisible(False)
 
         dumpDebugSettingsMenu = QMenu(self)
         dumpDebugSettingsAct = dumpDebugSettingsMenu.addAction(
             getIcon("detailsdlg.png"), "Dump settings with complete environment"
         )
         dumpDebugSettingsAct.triggered.connect(self._onDumpFullDebugSettings)
-        self.__dbgDumpSettingsButton = QToolButton(self)
-        self.__dbgDumpSettingsButton.setIcon(getIcon("dbgsettings.png"))
-        self.__dbgDumpSettingsButton.setToolTip("Dump debug session settings")
-        self.__dbgDumpSettingsButton.setPopupMode(QToolButton.DelayedPopup)
-        self.__dbgDumpSettingsButton.setMenu(dumpDebugSettingsMenu)
-        self.__dbgDumpSettingsButton.setFocusPolicy(Qt.NoFocus)
-        self.__dbgDumpSettingsButton.clicked.connect(self._onDumpDebugSettings)
+        self._dbgDumpSettingsButton = QToolButton(self)
+        self._dbgDumpSettingsButton.setIcon(getIcon("dbgsettings.png"))
+        self._dbgDumpSettingsButton.setToolTip("Dump debug session settings")
+        self._dbgDumpSettingsButton.setPopupMode(QToolButton.DelayedPopup)
+        self._dbgDumpSettingsButton.setMenu(dumpDebugSettingsMenu)
+        self._dbgDumpSettingsButton.setFocusPolicy(Qt.NoFocus)
+        self._dbgDumpSettingsButton.clicked.connect(self._onDumpDebugSettings)
 
         self.floatingRendererButton = QToolButton(self)
         self.floatingRendererButton.setObjectName("floatingRendererButton")
@@ -596,21 +579,21 @@ class CodimensionMainWindow(QMainWindow):
 
         # Debugger part begin
         self.__toolbar.addWidget(ToolBarHSpacer(self.__toolbar, 40)).setObjectName("debugSpacer")
-        self.__toolbar.addAction(self.__dbgStop)
-        self.__toolbar.addAction(self.__dbgRestart)
-        self.__toolbar.addAction(self.__dbgGo)
-        self.__toolbar.addAction(self.__dbgStepInto)
-        self.__toolbar.addAction(self.__dbgNext)
-        self.__toolbar.addAction(self.__dbgRunToLine)
-        self.__toolbar.addAction(self.__dbgReturn)
-        self.__toolbar.addAction(self.__dbgJumpToCurrent)
-        self.__dbgDumpSettingsAct = self.__toolbar.addWidget(self.__dbgDumpSettingsButton)
+        self.__toolbar.addAction(self._dbgStop)
+        self.__toolbar.addAction(self._dbgRestart)
+        self.__toolbar.addAction(self._dbgGo)
+        self.__toolbar.addAction(self._dbgStepInto)
+        self.__toolbar.addAction(self._dbgNext)
+        self.__toolbar.addAction(self._dbgRunToLine)
+        self.__toolbar.addAction(self._dbgReturn)
+        self.__toolbar.addAction(self._dbgJumpToCurrent)
+        self._dbgDumpSettingsAct = self.__toolbar.addWidget(self._dbgDumpSettingsButton)
 
         self.__toolbar.addWidget(ToolBarExpandingSpacer(self.__toolbar)).setObjectName("expandingSpacer")
         self.__toolbar.addWidget(self.floatingRendererButton)
 
         # Heck! The only QAction can be hidden
-        self.__dbgDumpSettingsAct.setVisible(False)
+        self._dbgDumpSettingsAct.setVisible(False)
         # Debugger part end
 
         self.__toolbar.setVisible(False)
@@ -1087,13 +1070,13 @@ class CodimensionMainWindow(QMainWindow):
 
     def onRunProject(self, _=None):
         """Runs the project with saved sattings"""
-        if self.__checkProjectScriptValidity():
+        if self._checkProjectScriptValidity():
             fileName = GlobalData().project.getProjectScript()
             self._runManager.run(fileName, False)
 
     def onRunProjectDlg(self):
         """Brings up the dialog with run script settings"""
-        if self.__checkProjectScriptValidity():
+        if self._checkProjectScriptValidity():
             fileName = GlobalData().project.getProjectScript()
             self._runManager.run(fileName, True)
 
@@ -1109,60 +1092,17 @@ class CodimensionMainWindow(QMainWindow):
 
     def onProfileProject(self, _=None):
         """Profiles the project with saved settings"""
-        if self.__checkProjectScriptValidity():
+        if self._checkProjectScriptValidity():
             fileName = GlobalData().project.getProjectScript()
             self._runManager.profile(fileName, False)
 
     def onProfileProjectDlg(self):
         """Brings up the dialog with profile script settings"""
-        if self.__checkProjectScriptValidity():
+        if self._checkProjectScriptValidity():
             fileName = GlobalData().project.getProjectScript()
             self._runManager.profile(fileName, True)
 
-    def onDebugTab(self):
-        """Triggered when debug tab is requested"""
-        if not self.debugMode:
-            currentWidget = self.em.currentWidget()
-            self._runManager.debug(currentWidget.getFileName(), False)
-
-    def onDebugTabDlg(self):
-        """Triggered when debug tab script dialog is requested"""
-        if not self.debugMode:
-            currentWidget = self.em.currentWidget()
-            self._runManager.debug(currentWidget.getFileName(), True)
-
-    def onDebugProject(self, _=None):
-        """Debugging is requested"""
-        if not self.debugMode:
-            if self.__checkDebugProjectPrerequisites():
-                fileName = GlobalData().project.getProjectScript()
-                self._runManager.debug(fileName, False)
-
-    def onDebugProjectDlg(self):
-        """Brings up the dialog with debug script settings"""
-        if not self.debugMode:
-            if self.__checkDebugProjectPrerequisites():
-                fileName = GlobalData().project.getProjectScript()
-                self._runManager.debug(fileName, True)
-
-    def __checkDebugProjectPrerequisites(self):
-        """Returns True if should continue"""
-        if not self.__checkProjectScriptValidity():
-            return False
-
-        modifiedFiles = self.em.getModifiedList(True)
-        if len(modifiedFiles) == 0:
-            return True
-
-        dlg = ModifiedUnsavedDialog(modifiedFiles, "Save and debug")
-        if dlg.exec_() != QDialog.Accepted:
-            # Selected to cancel
-            return False
-
-        # Need to save the modified project files
-        return self.em.saveModified(True)
-
-    def __checkProjectScriptValidity(self):
+    def _checkProjectScriptValidity(self):
         """Checks and logs error message if so. Returns True if all is OK"""
         if not GlobalData().isProjectScriptValid():
             self.updateRunDebugButtons()
@@ -1305,317 +1245,6 @@ class CodimensionMainWindow(QMainWindow):
     def checkOutsideFileChanges(self):
         """Checks if there are changes in the currently opened files"""
         self.em.checkOutsideFileChanges()
-
-    def switchDebugMode(self, newState):
-        """Switches the debug mode to the desired"""
-        if self.debugMode == newState:
-            return
-
-        self.debugMode = newState
-        self.__removeCurrenDebugLineHighlight()
-        clearValidBreakpointLinesCache()
-
-        # Satatus bar
-        self.sbDebugState.setVisible(newState)
-        self.sbLanguage.setVisible(not newState)
-        self.sbEncoding.setVisible(not newState)
-        self.sbEol.setVisible(not newState)
-
-        # Toolbar buttons
-        self.__dbgStop.setVisible(newState)
-        self.__dbgRestart.setVisible(newState)
-        self.__dbgGo.setVisible(newState)
-        self.__dbgNext.setVisible(newState)
-        self.__dbgStepInto.setVisible(newState)
-        self.__dbgRunToLine.setVisible(newState)
-        self.__dbgReturn.setVisible(newState)
-        self.__dbgJumpToCurrent.setVisible(newState)
-        self.__dbgDumpSettingsAct.setVisible(newState)
-
-        if not newState:
-            self._debugStopAct.setEnabled(False)
-            self._debugRestartAct.setEnabled(False)
-            self._debugContinueAct.setEnabled(False)
-            self._debugStepOverAct.setEnabled(False)
-            self._debugStepInAct.setEnabled(False)
-            self._debugStepOutAct.setEnabled(False)
-            self._debugRunToCursorAct.setEnabled(False)
-            self._debugJumpToCurrentAct.setEnabled(False)
-            self._debugDumpSettingsAct.setEnabled(False)
-            self._debugDumpSettingsEnvAct.setEnabled(False)
-
-        self.updateRunDebugButtons()
-
-        # Tabs at the right
-        if newState:
-            self._rightSideBar.setTabEnabled("debugger", True)  # vars etc.
-            self.debuggerContext.clear()
-            self.debuggerExceptions.clear()
-            self.debuggerCallTrace.clear()
-            self._rightSideBar.setTabText("exceptions", "Exceptions")
-            self._rightSideBar.show()
-            self._rightSideBar.setCurrentTab("debugger")
-            self._rightSideBar.raise_()
-            self.__lastDebugAction = None
-            self._debugDumpSettingsAct.setEnabled(True)
-            self._debugDumpSettingsEnvAct.setEnabled(True)
-        else:
-            if not self._rightSideBar.isMinimized():
-                if self._rightSideBar.currentTabName() == "debugger":
-                    self._rightSideBar.setCurrentTab("fileoutline")
-            self._rightSideBar.setTabEnabled("debugger", False)  # vars etc.
-
-        self.debugModeChanged.emit(newState)
-
-    def __onDebuggerStateChanged(self, newState):
-        """Triggered when the debugger reported its state changed"""
-        if newState != CodimensionDebugger.STATE_IN_IDE:
-            self.__removeCurrenDebugLineHighlight()
-            self.debuggerContext.switchControl(False)
-        else:
-            self.debuggerContext.switchControl(True)
-
-        if newState == CodimensionDebugger.STATE_STOPPED:
-            self.__dbgStop.setEnabled(False)
-            self._debugStopAct.setEnabled(False)
-            self.__dbgRestart.setEnabled(False)
-            self._debugRestartAct.setEnabled(False)
-            self.__setDebugControlFlowButtonsState(False)
-            self.sbDebugState.setText("Debugger: stopped")
-        elif newState == CodimensionDebugger.STATE_IN_IDE:
-            self.__dbgStop.setEnabled(True)
-            self._debugStopAct.setEnabled(True)
-            self.__dbgRestart.setEnabled(True)
-            self._debugRestartAct.setEnabled(True)
-            self.__setDebugControlFlowButtonsState(True)
-            self.sbDebugState.setText("Debugger: idle")
-        elif newState == CodimensionDebugger.STATE_IN_CLIENT:
-            self.__dbgStop.setEnabled(True)
-            self._debugStopAct.setEnabled(True)
-            self.__dbgRestart.setEnabled(True)
-            self._debugRestartAct.setEnabled(True)
-            self.__setDebugControlFlowButtonsState(False)
-            self.sbDebugState.setText("Debugger: running")
-        QApplication.processEvents()
-
-    def __onDebuggerCurrentLine(self, fileName, lineNumber, isStack, asException=False):
-        """Triggered when the client reported a new line"""
-        del isStack  # unused argument
-        self.__removeCurrenDebugLineHighlight()
-
-        self.__lastDebugFileName = fileName
-        self.__lastDebugLineNumber = lineNumber
-        self.__lastDebugAsException = asException
-        self._onDbgJumpToCurrent()
-
-    def __onDebuggerClientException(self, excType, excMessage, excStackTrace, isUnhandled):
-        """Debugged program exception handler"""
-        self.debuggerExceptions.addException(excType, excMessage, excStackTrace)
-        count = self.debuggerExceptions.getTotalClientExceptionCount()
-        self._rightSideBar.setTabText("exceptions", "Exceptions (" + str(count) + ")")
-        self.debuggerExceptions.setFocus()
-
-        # The information about the exception is stored in the exception window
-        # regardless whether there is a stack trace or not. So, there is no
-        # need to show the exception info in the closing dialog (if this dialog
-        # is required).
-
-        if isUnhandled:
-            self._rightSideBar.show()
-            self._rightSideBar.setCurrentTab("exceptions")
-            self._rightSideBar.raise_()
-
-            message = "Unhandled exception"
-            if not excStackTrace:
-                message += ": no stack trace reported"
-            message += ". The debugging session is closed"
-
-            logging.error(message)
-            QTimer.singleShot(0, self.__stopOnUnhandledException)
-            return
-
-        if self.debuggerExceptions.isIgnored(str(excType)):
-            # Continue the last action
-            if self.__lastDebugAction is None:
-                self.__debugger.remoteContinue()
-            elif self.__lastDebugAction == self.DEBUG_ACTION_GO:
-                self.__debugger.remoteContinue()
-            elif self.__lastDebugAction == self.DEBUG_ACTION_NEXT:
-                self.__debugger.remoteStepOver()
-            elif self.__lastDebugAction == self.DEBUG_ACTION_STEP_INTO:
-                self.__debugger.remoteStep()
-            elif self.__lastDebugAction == self.DEBUG_ACTION_RUN_TO_LINE:
-                self.__debugger.remoteContinue()
-            elif self.__lastDebugAction == self.DEBUG_ACTION_STEP_OUT:
-                self.__debugger.remoteStepOut()
-            return
-
-        # Should stop at the exception
-        self._rightSideBar.show()
-        self._rightSideBar.setCurrentTab("exceptions")
-        self._rightSideBar.raise_()
-
-        fileName = excStackTrace[0][0]
-        lineNumber = excStackTrace[0][1]
-        self.__onDebuggerCurrentLine(fileName, lineNumber, False, True)
-        self.__debugger.remoteThreadList()
-
-        # If a stack is explicitly requested then the only deepest frame
-        # is reported. It is better to stick with the exception stack
-        # for the time beeing.
-        self.debuggerContext.onClientStack(excStackTrace)
-
-        self.__debugger.remoteClientVariables(1, 0)  # globals
-        self.__debugger.remoteClientVariables(0, 0)  # locals
-        self.debuggerExceptions.setFocus()
-
-    def __onDebuggerClientSyntaxError(self, procuuid, errMessage, fileName, lineNo, charNo):
-        """Triggered when the client reported a syntax error"""
-        if errMessage is None:
-            message = "The program being debugged contains an unspecified syntax error."
-        else:
-            # Jump to the source code
-            self.em.openFile(fileName, lineNo)
-            editor = self.em.currentWidget().getEditor()
-            editor.gotoLine(lineNo, charNo)
-
-            message = "Syntax error: '" + errMessage + "' at line " + str(lineNo) + ", position " + str(charNo) + "."
-
-        runParameters, _ = self.__debugger.getRunDebugParameters()
-        if runParameters["redirected"]:
-            self._runManager.appendIDEMessage(procuuid, message)
-        else:
-            logging.error(message)
-
-    def __removeCurrenDebugLineHighlight(self):
-        """Removes the current debug line highlight"""
-        if self.__lastDebugFileName is not None:
-            widget = self.em.getWidgetForFileName(self.__lastDebugFileName)
-            if widget is not None:
-                widget.getEditor().clearCurrentDebuggerLine()
-            self.__lastDebugFileName = None
-            self.__lastDebugLineNumber = None
-            self.__lastDebugAsException = None
-
-    def __setDebugControlFlowButtonsState(self, enabled):
-        """Sets the control flow debug buttons state"""
-        self.__dbgGo.setEnabled(enabled)
-        self._debugContinueAct.setEnabled(enabled)
-        self.__dbgNext.setEnabled(enabled)
-        self._debugStepOverAct.setEnabled(enabled)
-        self.__dbgStepInto.setEnabled(enabled)
-        self._debugStepInAct.setEnabled(enabled)
-        self.__dbgReturn.setEnabled(enabled)
-        self._debugStepOutAct.setEnabled(enabled)
-        self.__dbgJumpToCurrent.setEnabled(enabled)
-        self._debugJumpToCurrentAct.setEnabled(enabled)
-
-        if enabled:
-            self.setRunToLineButtonState()
-        else:
-            self.__dbgRunToLine.setEnabled(False)
-            self._debugRunToCursorAct.setEnabled(False)
-
-    def setRunToLineButtonState(self):
-        """Sets the Run To Line button state"""
-        # Separate story:
-        # - no run to unbreakable line
-        # - no run for non-python file
-        if not self.debugMode:
-            self.__dbgRunToLine.setEnabled(False)
-            self._debugRunToCursorAct.setEnabled(False)
-            return
-        if not self._isPythonBuffer():
-            self.__dbgRunToLine.setEnabled(False)
-            self._debugRunToCursorAct.setEnabled(False)
-            return
-
-        # That's for sure a python buffer, so the widget exists
-        currentWidget = self.em.currentWidget()
-        allowedWidgets = [MainWindowTabWidgetBase.VCSAnnotateViewer]
-        if currentWidget.getType() in allowedWidgets:
-            self.__dbgRunToLine.setEnabled(False)
-            self._debugRunToCursorAct.setEnabled(False)
-            return
-
-        enabled = currentWidget.isLineBreakable()
-        self.__dbgRunToLine.setEnabled(enabled)
-        self._debugRunToCursorAct.setEnabled(enabled)
-
-    def _onStopDbgSession(self):
-        """Debugger stop debugging clicked"""
-        self.__debugger.stopDebugging()
-
-    def __stopOnUnhandledException(self):
-        """Stop debuging due to an unhandled exception"""
-        self.__debugger.stopDebugging(UNHANDLED_EXCEPTION)
-
-    def _onRestartDbgSession(self):
-        """Debugger restart session clicked"""
-        self.__previousDebugging = self.__debugger.getScriptPath()
-        self._onStopDbgSession()
-
-        # The debugging session is stopped in an asynchronous way
-        # and the previous session must be stopped before a new one starts
-        QTimer.singleShot(100, self.__onRestartSessionTimer)
-
-    def __onRestartSessionTimer(self):
-        """Timer triggered debugging session restart"""
-        if self.__previousDebugging is not None:
-            if self.__debugger.getState() == self.__debugger.STATE_STOPPED:
-                fileName = self.__previousDebugging
-                self.__previousDebugging = None
-                self._runManager.debug(fileName, False)
-            else:
-                QTimer.singleShot(100, self.__onRestartSessionTimer)
-
-    def _onDbgGo(self):
-        """Debugger continue clicked"""
-        self.__lastDebugAction = self.DEBUG_ACTION_GO
-        self.__debugger.remoteContinue()
-
-    def _onDbgNext(self):
-        """Debugger step over clicked"""
-        self.__lastDebugAction = self.DEBUG_ACTION_NEXT
-        self.__debugger.remoteStepOver()
-
-    def _onDbgStepInto(self):
-        """Debugger step into clicked"""
-        self.__lastDebugAction = self.DEBUG_ACTION_STEP_INTO
-        self.__debugger.remoteStep()
-
-    def _onDbgRunToLine(self):
-        """Debugger run to cursor clicked"""
-        # The run-to-line button state is set approprietly
-        if not self.__dbgRunToLine.isEnabled():
-            return
-
-        self.__lastDebugAction = self.DEBUG_ACTION_RUN_TO_LINE
-        currentWidget = self.em.currentWidget()
-
-        self.__debugger.remoteBreakpoint(currentWidget.getFileName(), currentWidget.getLine() + 1, True, None, True)
-        self.__debugger.remoteContinue()
-
-    def _onDbgReturn(self):
-        """Debugger step out clicked"""
-        self.__lastDebugAction = self.DEBUG_ACTION_STEP_OUT
-        self.__debugger.remoteStepOut()
-
-    def _onDbgJumpToCurrent(self):
-        """Jump to the current debug line"""
-        if (
-            self.__lastDebugFileName is None
-            or self.__lastDebugLineNumber is None
-            or self.__lastDebugAsException is None
-        ):
-            return
-
-        self.em.openFile(self.__lastDebugFileName, self.__lastDebugLineNumber)
-
-        editor = self.em.currentWidget().getEditor()
-        editor.gotoLine(self.__lastDebugLineNumber)
-        editor.highlightCurrentDebuggerLine(self.__lastDebugLineNumber, self.__lastDebugAsException)
-        self.em.currentWidget().setFocus()
 
     def _loadProject(self, projectFile):
         """Loads the given project (public for mixins)."""
@@ -2048,40 +1677,6 @@ class CodimensionMainWindow(QMainWindow):
         """Provides the log viewer window content as a plain text"""
         return self.logViewer.getText()
 
-    def getCurrentFrameNumber(self):
-        """Provides the current stack frame number"""
-        return self.debuggerContext.getCurrentFrameNumber()
-
-    def __onClientExceptionsCleared(self):
-        """Triggered when the user cleared the client exceptions"""
-        self._rightSideBar.setTabText("exceptions", "Exceptions")
-
-    def __onBreakpointsModelChanged(self):
-        """Triggered when something is changed in the breakpoints list"""
-        enabledCount, disabledCount = self.__debugger.getBreakPointModel().getCounts()
-        total = enabledCount + disabledCount
-        title = "Breakpoints"
-        if total > 0:
-            title += " (" + str(total) + ")"
-        self._rightSideBar.setTabText("breakpoints", title)
-
-    def setDebugTabAvailable(self, enabled):
-        """Sets a new status of the corresponding actions.
-
-        It needs when a tab is changed or a content has been changed.
-        """
-        self._tabDebugAct.setEnabled(enabled)
-        self._tabDebugDlgAct.setEnabled(enabled)
-
-        self._tabRunAct.setEnabled(enabled)
-        self._tabRunDlgAct.setEnabled(enabled)
-
-        self._tabProfileAct.setEnabled(enabled)
-        self._tabProfileDlgAct.setEnabled(enabled)
-
-        # The dead code has the same dependency as debugging
-        self._tabDeadCodeAct.setEnabled(enabled)
-
     def __initPluginSupport(self):
         """Initializes the main window plugin support"""
         self._pluginMenus = {}
@@ -2130,138 +1725,6 @@ class CodimensionMainWindow(QMainWindow):
         self._rightSideBar.show()
         self._rightSideBar.setCurrentTab("fileoutline")
         self._rightSideBar.raise_()
-
-    def __dumpDebugSettings(self, fileName, fullEnvironment):
-        """Provides common settings except the environment"""
-        runParameters = getRunParameters(fileName)
-        debugSettings = self.settings.getDebuggerSettings()
-        workingDir = getWorkingDir(fileName, runParameters)
-        arguments = parseCommandLineArguments(runParameters["arguments"])
-        environment = getNoArgsEnvironment(runParameters)
-
-        env = "Environment: "
-        if runParameters["envType"] == runParameters.InheritParentEnv:
-            env += "inherit parent"
-        elif runParameters["envType"] == runParameters.InheritParentEnvPlus:
-            env += "inherit parent and add/modify"
-        else:
-            env += "specific"
-
-        pathVariables = []
-        container = None
-        if fullEnvironment:
-            container = environment
-            keys = list(environment.keys())
-            keys.sort()
-            for key in keys:
-                env += "\n    " + key + " = " + environment[key]
-                if "PATH" in key:
-                    pathVariables.append(key)
-        else:
-            if runParameters["envType"] == runParameters.InheritParentEnvPlus:
-                container = runParameters["additionToParentEnv"]
-                keys = list(runParameters["additionToParentEnv"].keys())
-                keys.sort()
-                for key in keys:
-                    env += "\n    " + key + " = " + runParameters["additionToParentEnv"][key]
-                    if "PATH" in key:
-                        pathVariables.append(key)
-            elif runParameters["envType"] == runParameters.SpecificEnvironment:
-                container = runParameters["specificEnv"]
-                keys = list(runParameters["specificEnv"].keys())
-                keys.sort()
-                for key in keys:
-                    env += "\n    " + key + " = " + runParameters["specificEnv"][key]
-                    if "PATH" in key:
-                        pathVariables.append(key)
-
-        if pathVariables:
-            env += "\nDetected PATH-containing variables:"
-            for key in pathVariables:
-                env += "\n    " + key
-                for item in container[key].split(":"):
-                    env += "\n        " + item
-
-        if runParameters["redirected"]:
-            terminal = "IO: redirected to IDE"
-        else:
-            terminal = "IO: custom terminal"
-
-        logging.info(
-            "\n".join(
-                [
-                    "Current debug session settings",
-                    "Script: " + fileName,
-                    "Arguments: " + " ".join(arguments),
-                    "Working directory: " + workingDir,
-                    env,
-                    terminal,
-                    "Report exceptions: " + str(debugSettings.reportExceptions),
-                    "Trace interpreter libs: " + str(debugSettings.traceInterpreter),
-                    "Stop at first line: " + str(debugSettings.stopAtFirstLine),
-                    "Fork without asking: " + str(debugSettings.autofork),
-                    "Debug child process: " + str(debugSettings.followChild),
-                ]
-            )
-        )
-
-    def _onDumpDebugSettings(self, action=None):
-        """Triggered when dumping visible settings was requested"""
-        del action  # unused argument
-        self.__dumpDebugSettings(self.__debugger.getScriptPath(), False)
-
-    def _onDumpFullDebugSettings(self):
-        """Triggered when dumping complete settings is requested"""
-        self.__dumpDebugSettings(self.__debugger.getScriptPath(), True)
-
-    def _onDumpScriptDebugSettings(self):
-        """Triggered when dumping current script settings is requested"""
-        if self._dumpScriptDbgSettingsAvailable():
-            currentWidget = self.em.currentWidget()
-            self.__dumpDebugSettings(currentWidget.getFileName(), False)
-
-    def _onDumpScriptFullDebugSettings(self):
-        """Dumps current script complete settings is requested"""
-        if self._dumpScriptDbgSettingsAvailable():
-            currentWidget = self.em.currentWidget()
-            self.__dumpDebugSettings(currentWidget.getFileName(), True)
-
-    def _onDumpProjectDebugSettings(self):
-        """Dumps project script settings is requested"""
-        if self._dumpProjectDbgSettingsAvailable():
-            project = GlobalData().project
-            self.__dumpDebugSettings(project.getProjectScript(), False)
-
-    def _onDumpProjectFullDebugSettings(self):
-        """Dumps project script complete settings is requested"""
-        if self._dumpProjectDbgSettingsAvailable():
-            project = GlobalData().project
-            self.__dumpDebugSettings(project.getProjectScript(), True)
-
-    def _dumpScriptDbgSettingsAvailable(self):
-        """True if dumping dbg session settings for the script is available"""
-        if not self._isPythonBuffer():
-            return False
-        currentWidget = self.em.currentWidget()
-        if currentWidget is None:
-            return False
-        fileName = currentWidget.getFileName()
-        if os.path.isabs(fileName) and os.path.exists(fileName):
-            return True
-        return False
-
-    @staticmethod
-    def _dumpProjectDbgSettingsAvailable():
-        """True if dumping dbg session settings for the project is available"""
-        project = GlobalData().project
-        if not project.isLoaded():
-            return False
-        fileName = project.getProjectScript()
-        if fileName is None:
-            return False
-        if os.path.exists(fileName) and os.path.isabs(fileName):
-            return True
-        return False
 
     def passFocusToEditor(self):
         """Passes the focus to the text editor if it is there"""

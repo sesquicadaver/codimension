@@ -2,7 +2,7 @@
 
 > **Language / Мова:** English | [Українська](ROADMAP.uk.md)
 
-> **Fork status (2026-08):** Phase 0–1 + audit M1–M4 green. M5 headless `codimension.core` / `infrastructure` foundation landed (T080–T082, T085); T083–T084 MainWindow/GlobalData still open. See [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+> **Fork status (2026-08):** Phase 0–1 + audit M1–M5 foundation green (parsers, tooling, project scan, packaging, headless core, MainWindow MRO+DebuggerMixin, lazy GlobalData). See [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
 
 ---
 

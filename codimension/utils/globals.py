@@ -17,25 +17,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Global data singleton"""
+"""Global data singleton (lazy construction — T084)."""
 
 # pylint: disable=W0702
 # pylint: disable=W0703
 
+from __future__ import annotations
+
 import os
 import shutil
 from os.path import exists, isdir, isfile, realpath, sep
-
-from plugins.manager.pluginmanager import CDMPluginManager
-
-from .briefmodinfocache import BriefModuleInfoCache
-from .project import CodimensionProject
-from .settings import SETTINGS_DIR
+from typing import Optional
 
 
 # This function needs to have a rope project built smart
 def getSubdirs(path, baseNamesOnly=True, excludePythonModulesDirs=True):
-    """Provides a list of sub directories for the given path"""
+    """Provides a list of subdirectories for the given path"""
     subdirs = []
     try:
         path = realpath(path) + sep
@@ -59,6 +56,12 @@ class GlobalDataWrapper:
     """Global data singleton"""
 
     def __init__(self):
+        # Heavy / Qt-touching imports deferred until first GlobalData() call (T084)
+        from plugins.manager.pluginmanager import CDMPluginManager
+
+        from .briefmodinfocache import BriefModuleInfoCache
+        from .project import CodimensionProject
+
         self.application = None
         self.mainWindow = None
         self.skin = None
@@ -83,6 +86,8 @@ class GlobalDataWrapper:
 
     def getProfileOutputPath(self, procuuid):
         """Provides the path to the profile output file"""
+        from .settings import SETTINGS_DIR
+
         if self.project.isLoaded():
             return self.project.userProjectDir + procuuid + ".profile.out"
 
@@ -168,9 +173,18 @@ class GlobalDataWrapper:
         return shutil.which("hexdump") is not None
 
 
-globalsSingleton = GlobalDataWrapper()
+_globals_singleton: Optional[GlobalDataWrapper] = None
 
 
-def GlobalData():
-    """Global singleton access"""
-    return globalsSingleton
+def GlobalData() -> GlobalDataWrapper:
+    """Global singleton access (created on first call — T084)."""
+    global _globals_singleton
+    if _globals_singleton is None:
+        _globals_singleton = GlobalDataWrapper()
+    return _globals_singleton
+
+
+def resetGlobalDataForTests() -> None:
+    """Test helper: drop the lazy singleton so the next GlobalData() rebuilds it."""
+    global _globals_singleton
+    _globals_singleton = None
