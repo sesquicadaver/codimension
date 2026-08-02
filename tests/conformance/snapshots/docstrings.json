@@ -1,34 +1,15 @@
 {
+  "bangLine": null,
   "docstring": "Module docstring.",
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
-    {
-      "begin": 0,
-      "beginLine": 1,
-      "beginPos": 1,
-      "display": "\"\"\"Module docstring.\"\"\"",
-      "end": 23,
-      "endLine": 1,
-      "endPos": 24,
-      "kind": "CodeBlock",
-      "kind_id": 6
-    },
     {
       "begin": 26,
       "beginLine": 4,
       "beginPos": 1,
       "children": [
-        {
-          "begin": 39,
-          "beginLine": 5,
-          "beginPos": 5,
-          "display": "\"\"\"Function docstring.\"\"\"",
-          "end": 64,
-          "endLine": 5,
-          "endPos": 30,
-          "kind": "CodeBlock",
-          "kind_id": 6
-        },
         {
           "begin": 69,
           "beginLine": 6,
@@ -42,6 +23,7 @@
         }
       ],
       "display": "f",
+      "docstring": "Function docstring.",
       "end": 77,
       "endLine": 6,
       "endPos": 13,
@@ -55,17 +37,6 @@
       "beginPos": 1,
       "children": [
         {
-          "begin": 93,
-          "beginLine": 10,
-          "beginPos": 5,
-          "display": "\"\"\"Class docstring.\"\"\"",
-          "end": 115,
-          "endLine": 10,
-          "endPos": 27,
-          "kind": "CodeBlock",
-          "kind_id": 6
-        },
-        {
           "begin": 121,
           "beginLine": 12,
           "beginPos": 5,
@@ -78,6 +49,7 @@
         }
       ],
       "display": "C",
+      "docstring": "Class docstring.",
       "end": 125,
       "endLine": 12,
       "endPos": 9,

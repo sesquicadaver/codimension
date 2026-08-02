@@ -1,6 +1,9 @@
 {
+  "bangLine": null,
   "docstring": null,
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
     {
       "begin": 0,
@@ -18,9 +21,9 @@
               "beginPos": 9,
               "children": [
                 {
-                  "begin": 64,
-                  "beginLine": 4,
-                  "beginPos": 13,
+                  "begin": 46,
+                  "beginLine": 3,
+                  "beginPos": 12,
                   "children": [
                     {
                       "begin": 64,
@@ -79,6 +82,7 @@
                       "end": 188,
                       "endLine": 10,
                       "endPos": 25,
+                      "isAsync": true,
                       "kind": "Function",
                       "kind_id": 7,
                       "name": "anested"

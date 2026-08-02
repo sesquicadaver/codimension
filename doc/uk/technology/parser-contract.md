@@ -94,11 +94,13 @@
 
 | Конструкція | Вимога |
 |-------------|--------|
-| `match`/`case` | Не лише silent `CODEBLOCK` |
-| `except*` | Відмінно від звичайного `TRY` |
+| `match`/`case` | Не лише silent `CODEBLOCK` — окремі kinds |
+| `except*` | Відмінно від звичайного `TRY` (`TRY_STAR`) |
+| `async for` / `async with` | Той самий kind + `isAsync=True`; `withItems` |
+| comprehensions | `CodeBlock` з `isComprehension=True` і повним span |
 | Module docstring | Один раз; без дубля як code block |
 | Func/class docstring | Поля docstring заповнені |
-| Comments / CML / shebang / encoding | Через `tokenize`; поля коментарів не порожні при наявності в джерелі |
+| Comments / CML / shebang / encoding | Через `tokenize` (`comment_binder`); поля не порожні |
 
 ---
 

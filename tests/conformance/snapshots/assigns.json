@@ -1,18 +1,10 @@
 {
+  "bangLine": null,
   "docstring": "Assignment forms for brief_ast T014.",
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
-    {
-      "begin": 0,
-      "beginLine": 1,
-      "beginPos": 1,
-      "display": "\"\"\"Assignment forms for brief_ast T014.\"\"\"",
-      "end": 42,
-      "endLine": 1,
-      "endPos": 43,
-      "kind": "CodeBlock",
-      "kind_id": 6
-    },
     {
       "begin": 106,
       "beginLine": 4,
@@ -22,7 +14,8 @@
       "endLine": 4,
       "endPos": 15,
       "kind": "CodeBlock",
-      "kind_id": 6
+      "kind_id": 6,
+      "leadingComment": "# AnnAssign / AugAssign / unpacking / chained at module level"
     },
     {
       "begin": 121,

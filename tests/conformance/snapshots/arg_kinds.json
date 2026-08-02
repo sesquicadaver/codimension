@@ -1,6 +1,9 @@
 {
+  "bangLine": null,
   "docstring": null,
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
     {
       "begin": 0,

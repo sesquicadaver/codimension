@@ -20,6 +20,7 @@ import ast
 import tokenize
 from typing import Any
 
+from parsers.comment_binder import bind_comments
 from parsers.source_spans import SourceIndex
 
 # Fragment type constants (from cflowfragmenttypes.hpp)
@@ -49,6 +50,9 @@ EXCEPT_PART_FRAGMENT = 21
 TRY_FRAGMENT = 22
 ANNOTATION_FRAGMENT = 23
 ARGUMENT_FRAGMENT = 24
+MATCH_FRAGMENT = 25
+CASE_PART_FRAGMENT = 26
+TRY_STAR_FRAGMENT = 27
 CML_COMMENT_FRAGMENT = 63
 CONTROL_FLOW_FRAGMENT = 64
 
@@ -162,7 +166,7 @@ class _ElifPart(_FragmentBase):
 
 
 class _CodeBlock(_FragmentBase):
-    """Simple statement block."""
+    """Simple statement block (may flag comprehensions — T027)."""
 
     def __init__(
         self,
@@ -175,6 +179,7 @@ class _CodeBlock(_FragmentBase):
         display_value: str = "",
     ) -> None:
         super().__init__(CODEBLOCK_FRAGMENT, begin, end, bln, eln, bpos, epos)
+        self.isComprehension: bool = False
         self._display_value = display_value
 
     def getDisplayValue(self) -> str:
@@ -299,6 +304,7 @@ class _FunctionFrag(_FragmentBase):
         self.decorators: list[_FragmentBase] = []
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
+        self.isAsync: bool = False
 
     def getDisplayValue(self) -> str:
         if self.name is not None:
@@ -323,13 +329,14 @@ class _ClassFrag(_FragmentBase):
 
 
 class _ForFrag(_FragmentBase):
-    """For loop."""
+    """For / async for loop."""
 
     def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(FOR_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.condition: _Body | None = None
         self.nsuite: list[_FragmentBase] = []
         self.elsePart: _ElifPart | None = None
+        self.isAsync: bool = False
 
 
 class _WhileFrag(_FragmentBase):
@@ -343,11 +350,13 @@ class _WhileFrag(_FragmentBase):
 
 
 class _WithFrag(_FragmentBase):
-    """With statement."""
+    """With / async with statement."""
 
     def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
         super().__init__(WITH_FRAGMENT, begin, end, bln, eln, bpos, epos)
         self.nsuite: list[_FragmentBase] = []
+        self.isAsync: bool = False
+        self.withItems: list[str] = []
 
 
 class _ExceptPart(_FragmentBase):
@@ -369,14 +378,56 @@ class _ExceptPart(_FragmentBase):
 
 
 class _TryFrag(_FragmentBase):
-    """Try statement."""
+    """Try / try-star statement."""
 
-    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
-        super().__init__(TRY_FRAGMENT, begin, end, bln, eln, bpos, epos)
+    def __init__(
+        self,
+        begin: int,
+        end: int,
+        bln: int,
+        eln: int,
+        bpos: int,
+        epos: int,
+        kind: int = TRY_FRAGMENT,
+    ) -> None:
+        super().__init__(kind, begin, end, bln, eln, bpos, epos)
         self.nsuite: list[_FragmentBase] = []
         self.exceptParts: list[_ExceptPart] = []
         self.elsePart: _ElifPart | None = None
         self.finallyPart: _ElifPart | None = None
+
+
+class _CasePart(_FragmentBase):
+    """One ``case`` arm inside ``match``."""
+
+    def __init__(
+        self,
+        begin: int,
+        end: int,
+        bln: int,
+        eln: int,
+        bpos: int,
+        epos: int,
+        display_value: str = "",
+    ) -> None:
+        super().__init__(CASE_PART_FRAGMENT, begin, end, bln, eln, bpos, epos)
+        self.nsuite: list[_FragmentBase] = []
+        self._display_value = display_value
+
+    def getDisplayValue(self) -> str:
+        return self._display_value
+
+
+class _MatchFrag(_FragmentBase):
+    """``match`` statement; ``parts`` holds case arms."""
+
+    def __init__(self, begin: int, end: int, bln: int, eln: int, bpos: int, epos: int) -> None:
+        super().__init__(MATCH_FRAGMENT, begin, end, bln, eln, bpos, epos)
+        self.parts: list[_CasePart] = []
+        self._display_value = ""
+
+    def getDisplayValue(self) -> str:
+        return self._display_value or "match"
 
 
 class _IfFrag(_FragmentBase):
@@ -397,6 +448,7 @@ class _ControlFlow(_FragmentBase):
         super().__init__(CONTROL_FLOW_FRAGMENT, 0, max(0, len(source) - 1), 1, end_ln, 1, end_pos)
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
+        self.leadingComment: Any = None
         self.leadingCMLComments: list = []
         # C++ cdmcfparser API: scopeitems.getLineDistance/getDistance expect these
         self.encodingLine: _Body | None = None
@@ -442,6 +494,7 @@ class _ControlFlow(_FragmentBase):
 
 
 _KIND_NAMES = {
+    COMMENT_FRAGMENT: "Comment",
     CODEBLOCK_FRAGMENT: "CodeBlock",
     FUNCTION_FRAGMENT: "Function",
     CLASS_FRAGMENT: "Class",
@@ -452,6 +505,14 @@ _KIND_NAMES = {
     WITH_FRAGMENT: "With",
     RETURN_FRAGMENT: "Return",
     IMPORT_FRAGMENT: "Import",
+    MATCH_FRAGMENT: "Match",
+    CASE_PART_FRAGMENT: "Case",
+    TRY_STAR_FRAGMENT: "TryStar",
+    CML_COMMENT_FRAGMENT: "CML",
+    DOCSTRING_FRAGMENT: "Docstring",
+    DECORATOR_FRAGMENT: "Decorator",
+    BANG_LINE_FRAGMENT: "BangLine",
+    ENCODING_LINE_FRAGMENT: "EncodingLine",
 }
 
 
@@ -508,6 +569,24 @@ class _FlowBuilder(ast.NodeVisitor):
         if doc:
             self.control_flow.docstring = _DocstringFrag(doc)
 
+    @staticmethod
+    def _is_docstring_stmt(stmt: ast.AST) -> bool:
+        """True if ``stmt`` is a standalone string expression used as a docstring."""
+        return (
+            isinstance(stmt, ast.Expr)
+            and isinstance(stmt.value, ast.Constant)
+            and isinstance(stmt.value.value, str)
+        )
+
+    def _attach_docstring(self, node: ast.AST, frag: Any) -> list[ast.stmt]:
+        """Set ``frag.docstring`` from ``node`` and return body without docstring stmt."""
+        doc = ast.get_docstring(node)  # type: ignore[arg-type]
+        body = list(getattr(node, "body", []) or [])
+        if doc and body and self._is_docstring_stmt(body[0]):
+            frag.docstring = _DocstringFrag(doc)
+            return body[1:]
+        return body
+
     def _visit_suite(
         self,
         node: list[ast.stmt],
@@ -541,6 +620,11 @@ class _FlowBuilder(ast.NodeVisitor):
             return self._visit_with(node)
         if isinstance(node, ast.Try):
             return self._visit_try(node)
+        try_star = getattr(ast, "TryStar", None)
+        if try_star is not None and isinstance(node, try_star):
+            return self._visit_try(node, kind=TRY_STAR_FRAGMENT)
+        if isinstance(node, ast.Match):
+            return self._visit_match(node)
         if isinstance(node, ast.Return):
             return self._visit_return(node)
         if isinstance(node, ast.Raise):
@@ -564,11 +648,12 @@ class _FlowBuilder(ast.NodeVisitor):
         b, e, bln, eln, bpos, epos = self._pos(node)
         frag = _FunctionFrag(b, e, bln, eln, bpos, epos)
         frag.name = _NameContent(node.name)
+        frag.isAsync = isinstance(node, ast.AsyncFunctionDef)
         for dec in node.decorator_list:
             db, de, dbln, deln, dbpos, depos = self._pos(dec)
             dec_frag = _FragmentBase(DECORATOR_FRAGMENT, db, de, dbln, deln, dbpos, depos)
             frag.decorators.append(dec_frag)
-        self._visit_suite(node.body, frag.nsuite)
+        self._visit_suite(self._attach_docstring(node, frag), frag.nsuite)
         return frag
 
     def _visit_class(self, node: ast.ClassDef) -> _ClassFrag:
@@ -580,13 +665,14 @@ class _FlowBuilder(ast.NodeVisitor):
             db, de, dbln, deln, dbpos, depos = self._pos(dec)
             dec_frag = _FragmentBase(DECORATOR_FRAGMENT, db, de, dbln, deln, dbpos, depos)
             frag.decorators.append(dec_frag)
-        self._visit_suite(node.body, frag.nsuite)
+        self._visit_suite(self._attach_docstring(node, frag), frag.nsuite)
         return frag
 
     def _visit_for(self, node: ast.For | ast.AsyncFor) -> _ForFrag:
-        """Build For fragment."""
+        """Build For / async for fragment (T025)."""
         b, e, bln, eln, bpos, epos = self._pos(node)
         frag = _ForFrag(b, e, bln, eln, bpos, epos)
+        frag.isAsync = isinstance(node, ast.AsyncFor)
         frag.condition = self._make_body(node.iter)
         self._visit_suite(node.body, frag.nsuite)
         if node.orelse:
@@ -605,21 +691,47 @@ class _FlowBuilder(ast.NodeVisitor):
             frag.elsePart = else_part
         return frag
 
+    def _header_line_above(self, body_lineno: int, keywords: tuple[str, ...]) -> tuple[int, int, int] | None:
+        """Find ``else``/``finally`` header line just above a suite."""
+        for ln in range(body_lineno - 1, 0, -1):
+            text = self.index.line_text(ln).strip()
+            if not text:
+                continue
+            if text.startswith("#"):
+                continue
+            for kw in keywords:
+                if text == f"{kw}:" or text.startswith(f"{kw}:") or text.startswith(f"{kw} "):
+                    return self.index.abs_char_pos(ln, 0), ln, 1
+            break
+        return None
+
     def _make_elif_part(
         self,
         condition_node: ast.expr | None,
         body: list[ast.stmt],
+        *,
+        else_keywords: tuple[str, ...] = ("else",),
     ) -> _ElifPart:
-        """Build ElifPart from condition and body."""
-        if body:
-            first, last = body[0], body[-1]
-            b, _, bln, _, bpos, _ = self._pos(first)
-            _, e, _, eln, _, epos = self._pos(last)
+        """Build ElifPart from condition and body (span includes header line)."""
+        if condition_node is not None:
+            b, _, bln, _, bpos, _ = self._pos(condition_node)
+        elif body:
+            hdr = self._header_line_above(body[0].lineno, else_keywords)
+            if hdr is not None:
+                b, bln, bpos = hdr
+            else:
+                b, _, bln, _, bpos, _ = self._pos(body[0])
         else:
-            b, e, bln, eln, bpos, epos = 0, 0, 1, 1, 1, 1
+            b, bln, bpos = 0, 1, 1
+        if body:
+            _, e, _, eln, _, epos = self._pos(body[-1])
+        elif condition_node is not None:
+            _, e, _, eln, _, epos = self._pos(condition_node)
+        else:
+            e, eln, epos = b, bln, bpos
         cond = self._make_body(condition_node) if condition_node else None
         if condition_node is None:
-            display_value = "else"
+            display_value = else_keywords[0] if else_keywords else "else"
         elif self.source and cond:
             display_value = self.source[cond.begin : cond.end].strip().rstrip(":")
         else:
@@ -645,16 +757,30 @@ class _FlowBuilder(ast.NodeVisitor):
         return frag
 
     def _visit_with(self, node: ast.With | ast.AsyncWith) -> _WithFrag:
-        """Build With fragment."""
+        """Build With / async with fragment with context items (T025)."""
         b, e, bln, eln, bpos, epos = self._pos(node)
         frag = _WithFrag(b, e, bln, eln, bpos, epos)
+        frag.isAsync = isinstance(node, ast.AsyncWith)
+        for item in node.items:
+            try:
+                ctx = ast.unparse(item.context_expr) if hasattr(ast, "unparse") else ""
+            except Exception:
+                ctx = ""
+            if item.optional_vars is not None:
+                try:
+                    target = ast.unparse(item.optional_vars) if hasattr(ast, "unparse") else ""
+                except Exception:
+                    target = ""
+                frag.withItems.append(f"{ctx} as {target}" if target else ctx)
+            else:
+                frag.withItems.append(ctx)
         self._visit_suite(node.body, frag.nsuite)
         return frag
 
-    def _visit_try(self, node: ast.Try) -> _TryFrag:
-        """Build Try fragment."""
+    def _visit_try(self, node: ast.Try, kind: int = TRY_FRAGMENT) -> _TryFrag:
+        """Build Try or TryStar fragment."""
         b, e, bln, eln, bpos, epos = self._pos(node)
-        frag = _TryFrag(b, e, bln, eln, bpos, epos)
+        frag = _TryFrag(b, e, bln, eln, bpos, epos, kind=kind)
         self._visit_suite(node.body, frag.nsuite)
         for handler in node.handlers:
             hb, he, hbln, heln, hbpos, hepos = self._pos(handler)
@@ -663,9 +789,35 @@ class _FlowBuilder(ast.NodeVisitor):
             self._visit_suite(handler.body, exc_part.nsuite)
             frag.exceptParts.append(exc_part)
         if node.orelse:
-            frag.elsePart = self._make_elif_part(None, node.orelse)
+            frag.elsePart = self._make_elif_part(None, node.orelse, else_keywords=("else",))
         if node.finalbody:
-            frag.finallyPart = self._make_elif_part(None, node.finalbody)
+            frag.finallyPart = self._make_elif_part(None, node.finalbody, else_keywords=("finally",))
+        return frag
+
+    def _visit_match(self, node: ast.Match) -> _MatchFrag:
+        """Build Match fragment with Case parts (T023)."""
+        b, e, bln, eln, bpos, epos = self._pos(node)
+        frag = _MatchFrag(b, e, bln, eln, bpos, epos)
+        try:
+            subj = ast.unparse(node.subject) if hasattr(ast, "unparse") else ""
+        except Exception:
+            subj = ""
+        frag._display_value = f"match {subj}:" if subj else "match"
+        for case in node.cases:
+            # Span from pattern (case header) through last body stmt
+            cb, _, cbln, _, cbpos, _ = self._pos(case.pattern)
+            if case.body:
+                _, ce, _, celn, _, cepos = self._pos(case.body[-1])
+            else:
+                _, ce, _, celn, _, cepos = self._pos(case.pattern)
+            try:
+                pattern_src = ast.unparse(case.pattern) if hasattr(ast, "unparse") else "_"
+            except (TypeError, ValueError, RecursionError):
+                pattern_src = "_"
+            display = f"case {pattern_src}:"
+            part = _CasePart(cb, ce, cbln, celn, cbpos, cepos, display_value=display)
+            self._visit_suite(case.body, part.nsuite)
+            frag.parts.append(part)
         return frag
 
     def _visit_return(self, node: ast.Return) -> _ReturnFrag:
@@ -745,10 +897,24 @@ class _FlowBuilder(ast.NodeVisitor):
         return self._visit_code_block(node)
 
     def _visit_code_block(self, node: ast.AST) -> _CodeBlock:
-        """Build CodeBlock fragment for generic statement."""
+        """Build CodeBlock fragment for generic statement (T027 comprehensions flagged)."""
         b, e, bln, eln, bpos, epos = self._pos(node)
         display_value = self.source[b:e] if self.source and e >= b else ""
-        return _CodeBlock(b, e, bln, eln, bpos, epos, display_value=display_value)
+        frag = _CodeBlock(b, e, bln, eln, bpos, epos, display_value=display_value)
+        frag.isComprehension = self._contains_comprehension(node)
+        return frag
+
+    @staticmethod
+    def _contains_comprehension(node: ast.AST) -> bool:
+        """True if ``node`` is or wraps a list/set/dict/generator comprehension."""
+        comp_types = (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+        if isinstance(node, ast.Expr) and isinstance(node.value, comp_types):
+            return True
+        if isinstance(node, ast.Assign):
+            return any(isinstance(getattr(node, "value", None), t) for t in comp_types)
+        if isinstance(node, ast.AnnAssign) and isinstance(getattr(node, "value", None), comp_types):
+            return True
+        return isinstance(node, comp_types)
 
     def visit(self, node: ast.AST | None) -> None:
         """Override to collect into control_flow.nsuite."""
@@ -756,7 +922,10 @@ class _FlowBuilder(ast.NodeVisitor):
             return
         if isinstance(node, ast.Module):
             self._extract_module_docstring(node)
-            for stmt in node.body:
+            body = list(node.body)
+            if self.control_flow.docstring is not None and body and self._is_docstring_stmt(body[0]):
+                body = body[1:]
+            for stmt in body:
                 self.visit(stmt)
             return
         frag = self._stmt_to_fragment(node)
@@ -777,6 +946,7 @@ def _build_control_flow(source: str, filename: str) -> _ControlFlow:
         return cf
     builder = _FlowBuilder(source)
     builder.visit(tree)
+    bind_comments(builder.control_flow, source, builder.index)
     return builder.control_flow
 
 

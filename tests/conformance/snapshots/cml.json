@@ -1,0 +1,28 @@
+{
+  "bangLine": null,
+  "docstring": null,
+  "encodingLine": null,
+  "errors": [],
+  "leadingComment": null,
+  "nsuite": [
+    {
+      "begin": 24,
+      "beginLine": 2,
+      "beginPos": 1,
+      "display": "x = 1",
+      "end": 29,
+      "endLine": 2,
+      "endPos": 6,
+      "kind": "CodeBlock",
+      "kind_id": 6,
+      "leadingCML": [
+        {
+          "display": "# cml 1 rt text=\"shown\"",
+          "recordType": "rt",
+          "version": 1
+        }
+      ]
+    }
+  ],
+  "version": 1
+}

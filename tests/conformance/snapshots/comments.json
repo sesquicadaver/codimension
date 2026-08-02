@@ -1,6 +1,9 @@
 {
+  "bangLine": null,
   "docstring": null,
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
     {
       "begin": 18,
@@ -11,7 +14,20 @@
       "endLine": 2,
       "endPos": 6,
       "kind": "CodeBlock",
-      "kind_id": 6
+      "kind_id": 6,
+      "leadingComment": "# leading comment",
+      "sideComment": "# side comment"
+    },
+    {
+      "begin": 41,
+      "beginLine": 4,
+      "beginPos": 1,
+      "display": "# independent comment",
+      "end": 62,
+      "endLine": 4,
+      "endPos": 22,
+      "kind": "Comment",
+      "kind_id": 3
     },
     {
       "begin": 64,

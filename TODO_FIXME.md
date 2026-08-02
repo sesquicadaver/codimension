@@ -11,11 +11,11 @@
 | ID плану | Файл / зона | Опис | Статус |
 |----------|-------------|------|--------|
 | T010–T018 | `codimension/parsers/brief_ast.py` | brief M1 foundation | ✅ DONE 2026-08-02 |
-| T020–T028 | `codimension/parsers/flow_ast.py` | T020–T021 spans+tokenize ✅; лишаються docstring/match/except*/comments | 🟠 T022+ |
-| T020–T028 | `codimension/parsers/flow_ast.py` | spans як char замість UTF-8 bytes + `end+1`; O(n²) `_abs_pos`; comments/CML порожні; match/except*/docstrings | 🔴 TODO |
+| T020–T028.C | `flow_ast` + `comment_binder` + Flow UI coupling | M2 Flow Foundation | ✅ DONE 2026-08-02 |
 | T003 | `codimension/parsers/source_spans.py` | Спільна byte→char таблиця позицій | ✅ T003 DONE 2026-08-02 |
 | T001 | `doc/technology/parser-contract.md` | Parser contract normative | ✅ DONE 2026-08-02 |
-| T004–T006 | `tests/` | Немає parser conformance / CFG golden snapshots | 🔴 TODO |
+| T004–T006 | `tests/conformance/` | Conformance harness + CFG goldens | ✅ DONE 2026-08-02 |
+| T029 | `tests/conformance/differential-report.md` | C-ext відсутній → explicit skip | ✅ SKIPPED (documented) |
 | T034–T035 | `cdmplugins/mypy/mypydriver.py` | Очікує `{"files":...}`, mypy дає JSONL | 🔴 TODO |
 | T030–T033 | `cdmplugins/lintdriverbase.py` + drivers | Порожній `QProcessEnvironment()`; блокуючий `kill`/`waitForFinished` | 🔴 TODO |
 | T040–T041 | `cdmplugins/git/gitconfig.py` | GitHub PAT plaintext у `~/.codimension3/git.plugin.conf` | 🔴 TODO |

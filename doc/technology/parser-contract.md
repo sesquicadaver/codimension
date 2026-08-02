@@ -93,7 +93,7 @@ Current `flow_ast._pos` / `brief_ast._abs_pos` treat `col_offset` as character i
 | Construct | Brief | Flow |
 |-----------|-------|------|
 | `async def` | required | required |
-| `async for` / `async with` | n/a / nested collect | distinct or flagged kinds |
+| `async for` / `async with` | n/a / nested collect | same numeric kind + `isAsync=True`; `withItems` for structured with |
 | pos-only / kw-only | required | via function header |
 | `match` / `case` | nested collect | dedicated kinds (T023) |
 | `try` / `except*` | nested collect | `TRY` / try-star kind (T024) |

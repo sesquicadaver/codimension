@@ -1,0 +1,58 @@
+{
+  "bangLine": null,
+  "docstring": null,
+  "encodingLine": null,
+  "errors": [],
+  "leadingComment": null,
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "display": "nums = [x * 2 for x in range(3)]",
+      "end": 32,
+      "endLine": 1,
+      "endPos": 33,
+      "isComprehension": true,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 33,
+      "beginLine": 2,
+      "beginPos": 1,
+      "display": "unique = {x for x in nums}",
+      "end": 59,
+      "endLine": 2,
+      "endPos": 27,
+      "isComprehension": true,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 60,
+      "beginLine": 3,
+      "beginPos": 1,
+      "display": "mapping = {x: x * x for x in nums}",
+      "end": 94,
+      "endLine": 3,
+      "endPos": 35,
+      "isComprehension": true,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    },
+    {
+      "begin": 95,
+      "beginLine": 4,
+      "beginPos": 1,
+      "display": "gen = (x for x in nums if x)",
+      "end": 123,
+      "endLine": 4,
+      "endPos": 29,
+      "isComprehension": true,
+      "kind": "CodeBlock",
+      "kind_id": 6
+    }
+  ],
+  "version": 1
+}

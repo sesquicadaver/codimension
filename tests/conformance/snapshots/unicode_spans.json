@@ -1,6 +1,9 @@
 {
+  "bangLine": null,
   "docstring": null,
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
     {
       "begin": 18,
@@ -11,7 +14,8 @@
       "endLine": 2,
       "endPos": 11,
       "kind": "CodeBlock",
-      "kind_id": 6
+      "kind_id": 6,
+      "leadingComment": "# prefix кирилиця"
     },
     {
       "begin": 29,

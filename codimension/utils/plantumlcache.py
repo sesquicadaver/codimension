@@ -44,6 +44,8 @@ def getPlantUMLJarPath():
         return None
     exeDir = os.path.dirname(os.path.realpath(sys.argv[0]))
     plantUMLPath = os.path.sep.join([os.path.dirname(exeDir), "plantuml"])
+    if not os.path.isdir(plantUMLPath):
+        return None
     for item in os.listdir(plantUMLPath):
         if item.startswith("plantuml.") and item.endswith(".jar"):
             return plantUMLPath + os.path.sep + item

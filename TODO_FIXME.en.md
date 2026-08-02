@@ -10,8 +10,9 @@
 
 | Plan ID | Area | Description | Status |
 |---------|------|-------------|--------|
-| T010–T018 | `brief_ast.py` | Missing `async def`; inverted instance attrs; defaults overwrite last arg; incomplete 3.10+ grammar | 🔴 TODO |
-| T020–T028 | `flow_ast.py` | UTF-8 byte spans mishandled; O(n²) `_abs_pos`; empty comments/CML; match/except*/docstrings | 🔴 TODO |
+| T010–T018 | `brief_ast.py` | brief M1 foundation | ✅ DONE 2026-08-02 |
+| T020–T028.C | `flow_ast` + `comment_binder` | M2 Flow Foundation | ✅ DONE 2026-08-02 |
+| T029 | differential report | C-ext absent → explicit skip | ✅ SKIPPED (documented) |
 | T034–T035 | `mypydriver.py` | Expects `{"files":...}`; mypy emits JSONL | 🔴 TODO |
 | T030–T033 | lint/tool drivers | Empty `QProcessEnvironment()`; blocking kill/wait | 🔴 TODO |
 | T040–T041 | `gitconfig.py` | Plaintext GitHub PAT | 🔴 TODO |

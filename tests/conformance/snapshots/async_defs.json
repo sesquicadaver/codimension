@@ -1,6 +1,9 @@
 {
+  "bangLine": null,
   "docstring": null,
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
     {
       "begin": 0,
@@ -23,6 +26,7 @@
       "end": 35,
       "endLine": 2,
       "endPos": 13,
+      "isAsync": true,
       "kind": "Function",
       "kind_id": 7,
       "name": "top_level"
@@ -58,6 +62,7 @@
               "end": 129,
               "endLine": 8,
               "endPos": 21,
+              "isAsync": true,
               "kind": "Function",
               "kind_id": 7,
               "name": "nested"
@@ -78,6 +83,7 @@
           "end": 160,
           "endLine": 10,
           "endPos": 30,
+          "isAsync": true,
           "kind": "Function",
           "kind_id": 7,
           "name": "method"

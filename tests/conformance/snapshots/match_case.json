@@ -1,6 +1,9 @@
 {
+  "bangLine": null,
   "docstring": null,
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
     {
       "begin": 0,
@@ -11,12 +14,64 @@
           "begin": 21,
           "beginLine": 2,
           "beginPos": 5,
-          "display": "match x:\n        case 0:\n            return \"zero\"\n        case _:\n            return \"other\"",
+          "children": [
+            {
+              "begin": 43,
+              "beginLine": 3,
+              "beginPos": 14,
+              "children": [
+                {
+                  "begin": 58,
+                  "beginLine": 4,
+                  "beginPos": 13,
+                  "display": "",
+                  "end": 71,
+                  "endLine": 4,
+                  "endPos": 26,
+                  "kind": "Return",
+                  "kind_id": 11
+                }
+              ],
+              "display": "case 0:",
+              "end": 71,
+              "endLine": 4,
+              "endPos": 26,
+              "kind": "Case",
+              "kind_id": 26,
+              "role": "part"
+            },
+            {
+              "begin": 85,
+              "beginLine": 5,
+              "beginPos": 14,
+              "children": [
+                {
+                  "begin": 100,
+                  "beginLine": 6,
+                  "beginPos": 13,
+                  "display": "",
+                  "end": 114,
+                  "endLine": 6,
+                  "endPos": 27,
+                  "kind": "Return",
+                  "kind_id": 11
+                }
+              ],
+              "display": "case _:",
+              "end": 114,
+              "endLine": 6,
+              "endPos": 27,
+              "kind": "Case",
+              "kind_id": 26,
+              "role": "part"
+            }
+          ],
+          "display": "match x:",
           "end": 114,
           "endLine": 6,
           "endPos": 27,
-          "kind": "CodeBlock",
-          "kind_id": 6
+          "kind": "Match",
+          "kind_id": 25
         }
       ],
       "display": "classify",

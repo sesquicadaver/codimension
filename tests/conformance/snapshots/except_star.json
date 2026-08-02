@@ -1,6 +1,9 @@
 {
+  "bangLine": null,
   "docstring": null,
+  "encodingLine": null,
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
     {
       "begin": 0,
@@ -11,18 +14,57 @@
           "begin": 21,
           "beginLine": 2,
           "beginPos": 5,
-          "display": "try:\n        await something()\n    except* ValueError as err:\n        return err",
+          "children": [
+            {
+              "begin": 34,
+              "beginLine": 3,
+              "beginPos": 9,
+              "display": "await something()",
+              "end": 51,
+              "endLine": 3,
+              "endPos": 26,
+              "kind": "CodeBlock",
+              "kind_id": 6
+            },
+            {
+              "begin": 56,
+              "beginLine": 4,
+              "beginPos": 5,
+              "children": [
+                {
+                  "begin": 91,
+                  "beginLine": 5,
+                  "beginPos": 9,
+                  "display": "",
+                  "end": 101,
+                  "endLine": 5,
+                  "endPos": 19,
+                  "kind": "Return",
+                  "kind_id": 11
+                }
+              ],
+              "display": "",
+              "end": 101,
+              "endLine": 5,
+              "endPos": 19,
+              "kind": "kind:21",
+              "kind_id": 21,
+              "role": "except"
+            }
+          ],
+          "display": "",
           "end": 101,
           "endLine": 5,
           "endPos": 19,
-          "kind": "CodeBlock",
-          "kind_id": 6
+          "kind": "TryStar",
+          "kind_id": 27
         }
       ],
       "display": "run",
       "end": 101,
       "endLine": 5,
       "endPos": 19,
+      "isAsync": true,
       "kind": "Function",
       "kind_id": 7,
       "name": "run"

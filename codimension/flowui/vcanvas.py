@@ -42,10 +42,12 @@ from cdmcfparser import (
     FUNCTION_FRAGMENT,
     IF_FRAGMENT,
     IMPORT_FRAGMENT,
+    MATCH_FRAGMENT,
     RAISE_FRAGMENT,
     RETURN_FRAGMENT,
     SYSEXIT_FRAGMENT,
     TRY_FRAGMENT,
+    TRY_STAR_FRAGMENT,
     WHILE_FRAGMENT,
     WITH_FRAGMENT,
 )
@@ -893,6 +895,24 @@ class VirtualCanvas:
                 self.__allocateAndSet(vacantRow, column + 1, comment)
         return vacantRow + 1
 
+    def __layoutMatch(self, item, vacantRow, column):
+        """Lays out a match/case statement without redesigning Flow chrome (T028.1)."""
+        vacantRow = self.__allocateLeadingComment(item, vacantRow, column)
+        self.__allocateAndSet(vacantRow, column, CodeBlockCell(item, self, column, vacantRow))
+        if self.__needSideComment(item):
+            comment = self.__createSideComment(item, self, column + 1, vacantRow)
+            self.__allocateAndSet(vacantRow, column + 1, comment)
+        vacantRow += 1
+        for part in getattr(item, "parts", []) or []:
+            vacantRow = self.__allocateLeadingComment(part, vacantRow, column)
+            self.__allocateAndSet(vacantRow, column, CodeBlockCell(part, self, column, vacantRow))
+            if self.__needSideComment(part):
+                comment = self.__createSideComment(part, self, column + 1, vacantRow)
+                self.__allocateAndSet(vacantRow, column + 1, comment)
+            vacantRow += 1
+            vacantRow = self.layoutSuite(vacantRow, getattr(part, "nsuite", []) or [], column=column)
+        return vacantRow
+
     def __layoutIf(self, item, vacantRow, column):
         """Lays out an if statement"""
         lastNonElseIndex = len(item.parts) - 1
@@ -1004,9 +1024,15 @@ class VirtualCanvas:
                 vacantRow = self.__layoutLoop(item, vacantRow, column)
                 continue
 
-            if item.kind == TRY_FRAGMENT:
+            if item.kind in (TRY_FRAGMENT, TRY_STAR_FRAGMENT):
                 if not self.settings.noTry:
                     vacantRow = self.__layoutTry(item, vacantRow, column)
+                continue
+
+            if item.kind == MATCH_FRAGMENT:
+                # Match uses If-like branch layout of case parts (T028.1 coupling)
+                if not self.settings.noIf:
+                    vacantRow = self.__layoutMatch(item, vacantRow, column)
                 continue
 
             if item.kind == IF_FRAGMENT:

@@ -1,0 +1,121 @@
+{
+  "bangLine": null,
+  "docstring": null,
+  "encodingLine": null,
+  "errors": [],
+  "leadingComment": null,
+  "nsuite": [
+    {
+      "begin": 0,
+      "beginLine": 1,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 27,
+          "beginLine": 2,
+          "beginPos": 5,
+          "children": [
+            {
+              "begin": 57,
+              "beginLine": 3,
+              "beginPos": 9,
+              "children": [
+                {
+                  "begin": 86,
+                  "beginLine": 4,
+                  "beginPos": 13,
+                  "display": "yield x",
+                  "end": 93,
+                  "endLine": 4,
+                  "endPos": 20,
+                  "kind": "CodeBlock",
+                  "kind_id": 6
+                }
+              ],
+              "display": "",
+              "end": 93,
+              "endLine": 4,
+              "endPos": 20,
+              "isAsync": true,
+              "kind": "With",
+              "kind_id": 20,
+              "withItems": [
+                "lock"
+              ]
+            }
+          ],
+          "display": "",
+          "end": 93,
+          "endLine": 4,
+          "endPos": 20,
+          "isAsync": true,
+          "kind": "For",
+          "kind_id": 16
+        }
+      ],
+      "display": "walk",
+      "end": 93,
+      "endLine": 4,
+      "endPos": 20,
+      "isAsync": true,
+      "kind": "Function",
+      "kind_id": 7,
+      "name": "walk"
+    },
+    {
+      "begin": 96,
+      "beginLine": 7,
+      "beginPos": 1,
+      "children": [
+        {
+          "begin": 122,
+          "beginLine": 8,
+          "beginPos": 5,
+          "children": [
+            {
+              "begin": 146,
+              "beginLine": 9,
+              "beginPos": 9,
+              "children": [
+                {
+                  "begin": 180,
+                  "beginLine": 10,
+                  "beginPos": 13,
+                  "display": "fh.write(str(x))",
+                  "end": 196,
+                  "endLine": 10,
+                  "endPos": 29,
+                  "kind": "CodeBlock",
+                  "kind_id": 6
+                }
+              ],
+              "display": "",
+              "end": 196,
+              "endLine": 10,
+              "endPos": 29,
+              "kind": "With",
+              "kind_id": 20,
+              "withItems": [
+                "open('f') as fh"
+              ]
+            }
+          ],
+          "display": "",
+          "end": 196,
+          "endLine": 10,
+          "endPos": 29,
+          "kind": "For",
+          "kind_id": 16
+        }
+      ],
+      "display": "sync_walk",
+      "end": 196,
+      "endLine": 10,
+      "endPos": 29,
+      "kind": "Function",
+      "kind_id": 7,
+      "name": "sync_walk"
+    }
+  ],
+  "version": 1
+}

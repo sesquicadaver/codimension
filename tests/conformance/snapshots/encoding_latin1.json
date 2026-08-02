@@ -1,6 +1,13 @@
 {
+  "bangLine": null,
   "docstring": null,
+  "encodingLine": {
+    "begin": 0,
+    "beginLine": 1,
+    "end": 25
+  },
   "errors": [],
+  "leadingComment": null,
   "nsuite": [
     {
       "begin": 55,
@@ -11,7 +18,8 @@
       "endLine": 3,
       "endPos": 14,
       "kind": "CodeBlock",
-      "kind_id": 6
+      "kind_id": 6,
+      "leadingComment": "# café is latin-1 (é = 0xE9)"
     }
   ],
   "version": 1

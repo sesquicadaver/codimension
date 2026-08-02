@@ -47,12 +47,47 @@ def _serialize_fragment(frag: Any) -> dict[str, Any]:
     name = getattr(frag, "name", None)
     if name is not None and hasattr(name, "getContent"):
         node["name"] = name.getContent()
+    doc = getattr(frag, "docstring", None)
+    if doc is not None and hasattr(doc, "getDisplayValue"):
+        node["docstring"] = doc.getDisplayValue()
+    if getattr(frag, "isAsync", False):
+        node["isAsync"] = True
+    if getattr(frag, "isComprehension", False):
+        node["isComprehension"] = True
+    with_items = getattr(frag, "withItems", None)
+    if with_items:
+        node["withItems"] = list(with_items)
+    leading = getattr(frag, "leadingComment", None)
+    if leading is not None and hasattr(leading, "getDisplayValue"):
+        node["leadingComment"] = leading.getDisplayValue()
+    side = getattr(frag, "sideComment", None)
+    if side is not None and hasattr(side, "getDisplayValue"):
+        node["sideComment"] = side.getDisplayValue()
+    def _cml_list(items: list[Any]) -> list[dict[str, Any]]:
+        return [
+            {
+                "recordType": getattr(c, "recordType", ""),
+                "version": getattr(c, "version", 0),
+                "display": c.getDisplayValue() if hasattr(c, "getDisplayValue") else "",
+            }
+            for c in items
+        ]
+
+    leading_cml = getattr(frag, "leadingCMLComments", None) or []
+    if leading_cml:
+        node["leadingCML"] = _cml_list(leading_cml)
+    side_cml = getattr(frag, "sideCMLComments", None) or []
+    if side_cml:
+        node["sideCML"] = _cml_list(side_cml)
 
     children: list[dict[str, Any]] = []
     for child in getattr(frag, "nsuite", []) or []:
         children.append(_serialize_fragment(child))
-    for part in getattr(frag, "parts", []) or []:
-        children.append({"role": "part", **_serialize_fragment(part)})
+    # Only control-flow branch parts (If/Match), not comment .parts lists
+    kind_name = _kind_name(getattr(frag, "kind", -1))
+    if kind_name in ("If", "Match"):
+        for part in getattr(frag, "parts", []) or []:
+            children.append({"role": "part", **_serialize_fragment(part)})
     else_part = getattr(frag, "elsePart", None)
     if else_part is not None:
         children.append({"role": "else", **_serialize_fragment(else_part)})
@@ -75,9 +110,25 @@ def serialize_control_flow(source: str) -> dict[str, Any]:
     doc = None
     if cf.docstring is not None:
         doc = cf.docstring.getDisplayValue()
+    bang = None
+    if cf.bangLine is not None:
+        bang = {"begin": cf.bangLine.begin, "end": cf.bangLine.end, "beginLine": cf.bangLine.beginLine}
+    enc = None
+    if cf.encodingLine is not None:
+        enc = {
+            "begin": cf.encodingLine.begin,
+            "end": cf.encodingLine.end,
+            "beginLine": cf.encodingLine.beginLine,
+        }
+    leading = None
+    if cf.leadingComment is not None and hasattr(cf.leadingComment, "getDisplayValue"):
+        leading = cf.leadingComment.getDisplayValue()
     return {
         "version": 1,
         "errors": [[e[0], e[1], e[2]] for e in cf.errors],
         "docstring": doc,
+        "bangLine": bang,
+        "encodingLine": enc,
+        "leadingComment": leading,
         "nsuite": [_serialize_fragment(f) for f in cf.nsuite],
     }
