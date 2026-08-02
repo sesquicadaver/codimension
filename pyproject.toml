@@ -62,6 +62,7 @@ lint = [
 test = [
   "pytest>=9.0.3",
   "pytest-cov>=4.0.0",
+  "pytest-qt>=4.4.0",
 ]
 security = [
   "bandit>=1.7.0",

@@ -144,3 +144,32 @@ def force_stop_at_first_line(reset_globals):
     dbg.traceInterpreter = False
     settings.setDebuggerSettings(dbg)
     return settings
+
+
+@pytest.fixture
+def skin_ready(reset_globals):
+    """Bootstrap Skin for icon/font paths (T120 widget tests only — not autouse)."""
+    from utils.globals import GlobalData
+    from utils.settings import Settings
+    from utils.skin import Skin, populateSampleSkin
+
+    Settings()
+    populateSampleSkin()
+    skin = Skin()
+    skin.loadByName(Settings()["skin"])
+    GlobalData().skin = skin
+    return GlobalData()
+
+
+@pytest.fixture
+def widget_debugger(skin_ready, qapp):
+    """CodimensionDebugger on MixinDebuggerHost without RunManager (T120 R2)."""
+    del qapp
+    from debugger.server import CodimensionDebugger
+
+    from .host import create_mixin_host
+
+    host = create_mixin_host()
+    debugger = CodimensionDebugger(host)
+    host._debugger = debugger
+    return host, debugger

@@ -86,7 +86,7 @@ jobs:
           pip install -e ".[test,tools,security]"
           pip check
           # T103: named gate first for clear CI logs. Full suite below re-runs the
-          # same ~5 debugger_session tests (accepted duplicate; isolation > micro-opt).
+          # same debugger_session tests (~8 after T120; accepted duplicate).
           echo "::group::Debugger session e2e (offscreen)"
           QT_QPA_PLATFORM=offscreen pytest tests/debugger/ -m debugger_session -v --tb=short
           echo "::endgroup::"

@@ -1,5 +1,10 @@
 2026 Aug 02
 
+* Debugger GUI e2e D2 (T120):
+  - pytest-qt widget smoke: DebuggerBreakWatchPoints + DebuggerExceptions
+  - skin_ready / widget_debugger fixtures; no MainWindow
+  - pytest-qt added to [project.optional-dependencies].test
+
 * Debugger GUI e2e D0/D1 (T103, T110–T111):
   - CI: named offscreen `pytest tests/debugger/ -m debugger_session` step
   - MixinDebuggerHost: MainWindowDebuggerMixin chrome stubs (single switchDebugMode path)

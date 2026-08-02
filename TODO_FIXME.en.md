@@ -25,7 +25,8 @@
 | T100–T102 | Debugger GUI e2e (session-first) | fixtures + stop-at-first-line + continue/step/stop | ✅ DONE 2026-08-02 |
 | T103 | Debugger CI offscreen step | `ci.yml` debugger_session marker step | ✅ DONE 2026-08-02 |
 | T110–T111 | Debugger mixin routing host | MixinDebuggerHost + switchDebugMode / _onDbgGo | ✅ DONE 2026-08-02 |
-| T120–T130 | Debugger widgets / full-IDE | pyramid A/C after D1 | ⏳ PLANNED |
+| T120 | Debugger widget smoke (pytest-qt) | BP/Exceptions panels offscreen | ✅ DONE 2026-08-02 |
+| T130 | Debugger full-IDE nightly | MainWindow smoke (not PR-blocker) | ⏳ PLANNED |
 
 ## Critical (anti-stub review) — earlier
 
