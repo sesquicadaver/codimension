@@ -3,57 +3,19 @@
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
 **Last review:** 2026-08-03  
-**Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension  
-**Linear plan:** [.omx/plans/linear-remediation-atomic-20260802.md](.omx/plans/linear-remediation-atomic-20260802.md)
+**Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Critical (core correctness) — audit 2026-08-02
+## Completed audit 2026-08 (T001–T141)
 
-| Plan ID | Area | Description | Status |
-|---------|------|-------------|--------|
-| T010–T018 | `brief_ast.py` | brief M1 foundation | ✅ DONE 2026-08-02 |
-| T020–T028.C | `flow_ast` + `comment_binder` | M2 Flow Foundation | ✅ DONE 2026-08-02 |
-| T029 | differential report | C-ext absent → explicit skip | ✅ SKIPPED (documented) |
-| T030–T035 | process_env + lint/mypy | systemEnvironment; JSONL; non-blocking stop | ✅ DONE 2026-08-02 |
-| T040–T044 | credentials + atomic_io + schema | gh→keyring→0600; scrub; atomic `.cdm3` | ✅ DONE 2026-08-02 |
-| T050–T052 | `project_scan` / `project` / `watcher` | Path-aware exclude; symlink bounds; async scan | ✅ DONE 2026-08-02 |
-| T060–T067 | packaging/CI | deps groups; matrix 3.10–3.13; wheel; offscreen | ✅ DONE 2026-08-02 |
-| T070 | `codimension.py` | `originalSysPath = list(sys.path)` | ✅ DONE 2026-08-02 |
-| T071–T073 | bootstrap / imports | inventory + T072 CI gate + shim `_unify_aliases` | ✅ DONE 2026-08-02 |
-| T080–T082 | `core` / `infrastructure` | headless syntax/flow + fs/io/process facades | ✅ DONE 2026-08-02 |
-| T085 | `scripts/check_core_import_graph.py` | CI: no Qt/UI edges into core | ✅ DONE 2026-08-02 |
-| T083–T084 | MainWindow / GlobalData | MRO + DebuggerMixin extract; lazy GlobalData | ✅ DONE 2026-08-02 |
-| T100–T102 | Debugger GUI e2e (session-first) | fixtures + stop-at-first-line + continue/step/stop | ✅ DONE 2026-08-02 |
-| T103 | Debugger CI offscreen step | `ci.yml` debugger_session marker step | ✅ DONE 2026-08-02 |
-| T110–T111 | Debugger mixin routing host | MixinDebuggerHost + switchDebugMode / _onDbgGo | ✅ DONE 2026-08-02 |
-| T120 | Debugger widget smoke (pytest-qt) | BP/Exceptions panels offscreen | ✅ DONE 2026-08-02 |
-| T130 | Debugger full-IDE nightly | MainWindow smoke + skin package path; `debugger-full-ide-nightly.yml` (not PR-blocker) | ✅ DONE 2026-08-02 |
-| T140 | Project venv bootstrap | Tools→VENV… / Update VENV…; create/attach + pip upgrade/sync/recreate | ✅ DONE 2026-08-02 |
-| T141 | Analysis env refresh + visibility | re-analyze after VENV/Update; status-bar Env:; unresolved opt-in multi-select | ✅ DONE 2026-08-03 |
+All linear remediation items and VENV/env follow-ups are **DONE**. Details: [ChangeLog](ChangeLog), matrix: [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md).
 
-## Critical (anti-stub review) — earlier
-
-| File | Line | Description | Status |
-|------|------|-------------|--------|
-| `codimension/utils/binfiles.py` | — | hexdump via subprocess | ✅ Fixed 2026-07-04 |
-| `codimension/editor/flowuiwidget.py` | — | FS smart zoom enabled (SMART_ZOOM_MAX) | ✅ Fixed 2026-07-04 |
-| `codimension/utils/md.py` | — | mistune 3.x migration | ✅ Fixed 2026-07-04 |
-| `codimension/search/occurrencesprovider.py` | — | searchAgain stub (`pass`) | ✅ Fixed 2026-07-05 |
-
-## Fixed (2026-07-04)
-
-| File | Description |
-|------|-------------|
-| `codimension/parsers/flow_ast.py` | `from X import` — `_pos(node.module)` replaced with span from source |
-| `codimension/ui/editorsmanager.py` | `onHighlightInFS` — inverted condition |
-| `codimension/diagram/depsitems.py` | Connector on scene for deps diagram |
-
-## Explicit TODO markers
-
-| File | Line | Description |
-|------|------|-------------|
-| `codimension/debugger/bpwp.py` | — | WatchPointViewer enabled in debugger panel | ✅ Fixed 2026-07-05 |
-| `codimension/debugger/server.py` | — | `__sendWatchpoints` sync to debuggee | ✅ Fixed 2026-07-05 |
-| `codimension/debugger/client/threadextension_cdm_dbg.py` | — | greenlet.settrace debugger extension | ✅ Fixed 2026-07-05 |
+| Block | Status |
+|-------|--------|
+| Parsers / conformance (T001–T029) | ✅ DONE (T029 SKIPPED — no C-ext) |
+| Tooling / credentials / project scan (T030–T052) | ✅ DONE |
+| Packaging / CI / bootstrap / core (T060–T085) | ✅ DONE |
+| Debugger GUI e2e (T100–T130) | ✅ DONE (T130 — nightly, not a PR blocker) |
+| Project VENV + analysis env (T140–T141) | ✅ DONE |
 
 ## `pass` stubs (need review)
 
@@ -66,12 +28,13 @@
 - **resultprovideriface.py** — abstract interface
 - **profiletest.py** — profiling test file
 
-## Infrastructure
+## Infrastructure (fact)
 
-| Issue | Status |
-|-------|--------|
-| **Unit tests** | 46 tests. Parser conformance / CFG snapshots → plan T004–T028. |
-| **mypy** | Packages in CI | ✅ 2026-07-05 (output parser → T034) |
-| **CI truth** | Lint+pytest 3.10–3.13; wheel+pip check; offscreen GUI smoke (T063–T066 done) |
+| Topic | State |
+|-------|-------|
+| **Unit tests** | `pytest tests/` — **173** tests (CI matrix 3.10–3.13) |
+| **mypy / ruff** | `codimension` + `cdmplugins` in CI; tools in `requirements.txt` |
+| **CI** | lint + pytest; wheel+`pip check`; offscreen GUI smoke; pip-audit; T072/T085 gates; debugger_session step |
+| **Lazy load Classes/Functions/Globals** | `populateIfNeeded` ✅ |
 
-See [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md).
+Living matrix: [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md).

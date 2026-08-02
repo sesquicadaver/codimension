@@ -14,18 +14,19 @@
 
 - Редагування Python-файлів і **синхронізована flow-діаграма** (control flow)
 - Діаграми імпортів, класів, залежностей; dead code (vulture), складність (radon), pyflakes у редакторі
-- **Проєкти** (`.cdm3`): venv-інтерпретатор, `excludeFromAnalysis`, без автозавантаження останнього проєкту при старті
+- **Проєкти** (`.cdm3`): `excludeFromAnalysis`, без автозавантаження останнього проєкту при старті
+- **Project VENV (T140/T141):** Tools → Project utilities → **VENV…** / **Update VENV…**; status bar **Env:** (`project` / `session` / `auto` / `IDE`); re-analyze після зміни env
 - **Парсери:** pure-Python `brief_ast` / `flow_ast` на Python 3.10+ (без cdmpyparser/cdmcfparser)
 - **Вбудовані плагіни** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
-- **Debugger:** breakpoints, watchpoints (UI + sync), greenlet-контексти
-- **CI:** ruff/mypy/pytest matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
+- **Debugger:** breakpoints, watchpoints (UI + sync), greenlet-контексти; nightly full-IDE smoke (T130)
+- **CI:** ruff/mypy/pytest (**173** тестів) matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
 
 ## Обмеження (чесно)
 
 - Не production-ready IDE; орієнтир — аналіз і візуалізація коду, не заміна VS Code / PyCharm
 - Git-плагін — MVP (без stash/merge UI); PR через `gh` CLI
-- Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**, лише local venv у властивостях проєкту
-- Авто-setup venv на open проєкту — **немає** (лише явний Tools → Project utilities → **VENV…** / **Update VENV…**); після setup/update — re-analyze + індикатор **Env:** у status bar (`project` / `session` / `auto` / `IDE`); unresolved packages для pip — opt-in з multi-select; Docker/SSH/K8s/MCP env binding — у roadmap
+- Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**; локальний venv — через Project Properties або Tools → **VENV…**
+- Авто-setup venv на open проєкту — **немає**; unresolved packages для pip — opt-in з multi-select; MCP env binding — окремий застосунок [CAN-MCP](https://github.com/sesquicadaver/CAN-MCP)
 - Довгострокові плани (overlay metrics, AI, modular core) — [ROADMAP.md](ROADMAP.md), не поточний стан
 
 ## Вимоги

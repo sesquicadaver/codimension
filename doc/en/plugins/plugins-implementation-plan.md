@@ -150,7 +150,7 @@ Phase 5 (TODO panel)
 
 ## 4. Project Virtual Environment
 
-Optionally in Project Properties you can specify a **Python interpreter (venv)** — path to the venv directory or Python executable. When set, plugins (ruff, mypy, pytest, coverage, bandit, pip-audit, ruff format) use that interpreter for analysis instead of the system one.
+Optionally in Project Properties you can specify a **Python interpreter (venv)** — path to the venv directory or Python executable. Preferred path: Tools → Project utilities → **VENV…** / **Update VENV…** (T140): create/attach, pip sync|upgrade|recreate, session overlay or persist to `.cdm3`. After env changes — re-analyze plus status-bar **Env:** indicator (T141). When set, plugins (ruff, mypy, pytest, coverage, bandit, pip-audit, ruff format) use that interpreter for analysis instead of the system one.
 
 - Empty field = IDE Python is used (sys.executable).
 - Supported: venv/bin/python, venv/Scripts/python.exe, or path to Python.

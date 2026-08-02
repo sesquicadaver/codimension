@@ -2,9 +2,9 @@
 
 # Codimension GitHub Integration Plan
 
-**Version:** 1.3  
-**Date:** 2026-07  
-**Status:** Completed (Phases 1.3, 2–5); CI updated 2026-07 (mypy core, pytest 46, pip-audit mistune 3)
+**Version:** 1.4  
+**Date:** 2026-08-03  
+**Status:** Completed (Phases 1–5); CI current as of 2026-08 (matrix 3.10–3.13, 173 pytest, wheel, offscreen GUI, debugger_session, T072/T085)
 
 ---
 
@@ -18,9 +18,14 @@
 | Ruff check | ✅ | codimension, cdmplugins |
 | Ruff format | ✅ | codimension, cdmplugins |
 | Mypy | ✅ | codimension, cdmplugins (flowui/everything.py excluded) |
-| Smoke test | ✅ | `import codimension; import cdmplugins`; smoke job: `pip install -r requirements.txt` |
-| Pytest | ✅ | 46 tests in `tests/` |
-| pip-audit | ✅ | `pip-audit -r requirements.txt` (mistune>=3.2.1) |
+| Smoke test | ✅ | `import codimension; import cdmplugins` |
+| Offscreen GUI smoke | ✅ | `scripts/offscreen_gui_smoke.py` (`QT_QPA_PLATFORM=offscreen`) |
+| Pytest | ✅ | **173** tests in `tests/`; matrix Python **3.10–3.13** |
+| Debugger session gate | ✅ | `pytest tests/debugger/ -m debugger_session` |
+| T072 / T085 gates | ✅ | package-relative imports; core import graph |
+| Wheel + pip check | ✅ | clean venv install job |
+| pip-audit | ✅ | `pip-audit -r requirements.txt` |
+| Nightly full-IDE smoke | ✅ | `debugger-full-ide-nightly.yml` (not a PR blocker) |
 | README | ✅ | Badges (CI, Python, License), links |
 | CONTRIBUTING | ✅ | PR template, issue templates, CI |
 | Issue templates | ✅ | bug_report, feature_request, config.yml |
@@ -29,13 +34,12 @@
 | CI cache | ✅ | pip cache (setup-python) |
 | Release workflow | ✅ | `.github/workflows/release.yml` |
 | pyproject.toml | ✅ | Repository, Homepage, build-system |
-| .gitignore | ✅ | venv, build, dist |
+| .gitignore | ✅ | venv, build, dist, `.omx`, caches |
 
 ### 1.2 What Is Missing (Optional)
 
 - Branch protection rules (configured in GitHub UI)
 - CodeQL / security scanning
-- GUI smoke test (xvfb)
 
 ---
 

@@ -29,22 +29,24 @@ The upstream repository has been unmaintained for over 4 years. The codimension.
 - Automatic venv exclusion from analysis
 - Lazy load for Classes/Functions/Globals
 - Tools → Project utilities → Generate requirements file
+- **Project VENV (T140/T141):** VENV… / Update VENV…; status-bar **Env:**; re-analyze; unresolved pip opt-in
 
 ### Plugins (`cdmplugins/`)
 
 Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git** (status, commit, push, pull, branch, Create/View PR via `gh`).
 
-### Debugger & search (2026-07)
+### Debugger & search
 
 - Watchpoints: UI, edit dialog, remote sync with debuggee
 - Greenlet `settrace` — greenlet context tracking in debugger
 - Occurrences search redo (`searchAgain` / `canRedo`)
+- Offscreen debugger e2e + nightly full-IDE smoke (T100–T130)
 
-### Other (2026-07)
+### Other
 
 - FS smart zoom (level 4) in flow UI
 - mistune 3.x (`utils/md.py`), pip-audit without CVE ignore
-- CI: ruff + mypy on `codimension` and `cdmplugins`, pytest (46 tests), pip-audit
+- CI: ruff + mypy on `codimension` and `cdmplugins`, pytest (**173** tests), wheel, offscreen GUI smoke, pip-audit
 
 ### UX
 

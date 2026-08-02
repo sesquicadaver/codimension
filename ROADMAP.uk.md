@@ -2,7 +2,7 @@
 
 > **Мова / Language:** Українська | [English](ROADMAP.md)
 
-> **Стан форку (2026-08):** Phase 0–1 + audit M1–M5 foundation зелені. M5: headless `core`/`infrastructure`, MainWindow MRO+DebuggerMixin (T083), lazy GlobalData (T084), T085 import-graph. Debugger GUI e2e T100–T120 зелені (session + CI + mixin + widget smoke); T130 відкладений. Деталі: [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+> **Стан форку (2026-08):** Phase 0–1 + audit M1–M5 foundation зелені. Debugger GUI e2e **T100–T130 DONE** (T130 = nightly full-IDE smoke, не PR-blocker). Локальний project VENV **T140–T141 DONE** (явний VENV/Update UI, Env: у status bar, re-analyze, unresolved opt-in). Далі в фазах: auto-on-open venv, Docker/SSH/K8s. Деталі: [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
 
 Повний англомовний текст фаз — у [ROADMAP.md](ROADMAP.md). Нижче — стислий огляд українською.
 

@@ -14,18 +14,19 @@ This is an **active fork** of [SergeySatskiy/codimension](https://github.com/Ser
 
 - Python file editing with a **synchronized flow diagram** (control flow)
 - Import, class, and dependency diagrams; dead code (vulture), complexity (radon), pyflakes in the editor
-- **Projects** (`.cdm3`): venv interpreter, `excludeFromAnalysis`, no auto-load of last project on startup
+- **Projects** (`.cdm3`): `excludeFromAnalysis`, no auto-load of last project on startup
+- **Project VENV (T140/T141):** Tools → Project utilities → **VENV…** / **Update VENV…**; status-bar **Env:** (`project` / `session` / `auto` / `IDE`); re-analyze after env changes
 - **Parsers:** pure-Python `brief_ast` / `flow_ast` on Python 3.10+ (no cdmpyparser/cdmcfparser)
 - **Bundled plugins** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
-- **Debugger:** breakpoints, watchpoints (UI + sync), greenlet contexts
-- **CI:** ruff/mypy/pytest matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
+- **Debugger:** breakpoints, watchpoints (UI + sync), greenlet contexts; nightly full-IDE smoke (T130)
+- **CI:** ruff/mypy/pytest (**173** tests) matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
 
 ## Limitations (honest)
 
 - Not a production-ready IDE; focus is code analysis and visualization, not a VS Code / PyCharm replacement
 - Git plugin is MVP (no stash/merge UI); PRs via `gh` CLI
-- Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; only local venv in project properties
-- No auto venv setup on project open — only explicit Tools → Project utilities → **VENV…** / **Update VENV…**; after setup/update — re-analyze plus status-bar **Env:** indicator (`project` / `session` / `auto` / `IDE`); unresolved packages for pip are opt-in with multi-select; Docker/SSH/K8s/MCP env binding remains roadmap
+- Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; local venv via Project Properties or Tools → **VENV…**
+- No auto venv setup on project open; unresolved packages for pip are opt-in with multi-select; MCP env binding lives in the separate [CAN-MCP](https://github.com/sesquicadaver/CAN-MCP) app
 - Long-term plans (overlay metrics, AI, modular core) — [ROADMAP.md](ROADMAP.md), not current state
 
 ## Requirements

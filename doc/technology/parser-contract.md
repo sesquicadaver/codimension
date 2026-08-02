@@ -4,8 +4,8 @@
 
 **Status:** normative for `brief_ast` / `flow_ast` (shim modules `cdmpyparser` / `cdmcfparser`)  
 **Python:** 3.10–3.13  
-**Plan refs:** T001+, `.omx/plans/linear-remediation-atomic-20260802.md`  
-**Date:** 2026-08-02
+**Plan refs:** T001–T029 (completed 2026-08; see ChangeLog / Living Spec)  
+**Date:** 2026-08-03
 
 This document is the single source of truth for parser correctness. Implementation must match tests in `tests/conformance/` and `tests/test_source_spans.py`. Where legacy C-extension behaviour disagrees with this contract, **this contract wins**; module **names** of the shims are preserved.
 

@@ -29,22 +29,24 @@
 - Автоматичне виключення venv з аналізу
 - Lazy load для Classes/Functions/Globals
 - Tools → Project utilities → Generate requirements file
+- **Project VENV (T140/T141):** VENV… / Update VENV…; status bar **Env:**; re-analyze; unresolved pip opt-in
 
 ### Плагіни (cdmplugins/)
 
 Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git** (status, commit, push, pull, branch, Create/View PR через `gh`).
 
-### Debugger та пошук (2026-07)
+### Debugger та пошук
 
 - Watchpoints: UI, edit dialog, remote sync з debuggee
 - Greenlet `settrace` — відстеження greenlet-контекстів у debugger
 - Occurrences search redo (`searchAgain` / `canRedo`)
+- Offscreen debugger e2e + nightly full-IDE smoke (T100–T130)
 
-### Інше (2026-07)
+### Інше
 
 - FS smart zoom (рівень 4) у flow UI
 - mistune 3.x (`utils/md.py`), pip-audit без CVE-ignore
-- CI: ruff + mypy на `codimension` і `cdmplugins`, pytest (46 тестів), pip-audit
+- CI: ruff + mypy на `codimension` і `cdmplugins`, pytest (**173** тести), wheel, offscreen GUI smoke, pip-audit
 
 ### UX
 

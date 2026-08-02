@@ -50,7 +50,7 @@ Basically it is a set of input fields to provide the project properties.
 | Project directory    | Mandatory. The project directory |
 | Main script          | Optional. If provided it must be a python script. It will be used when project debugging or profiling is invoked. |
 | Markdown doc file    | Optional. If provided it must be a markdown file. It will be shown when a project documentation is requested. |
-| Python interpreter   | Optional. Path to venv directory or python executable for project analysis (ruff, mypy, pytest, etc.). Leave empty to use IDE Python. Auto-detects `.venv`, `venv`, `env` in project root if not set. The venv is excluded from analysis automatically. |
+| Python interpreter   | Optional. Path to venv directory or python executable for project analysis (ruff, mypy, pytest, import resolution, etc.). Leave empty to use IDE Python. Auto-detects `.venv`, `venv`, `env` in project root if not set. Prefer Tools → Project utilities → **VENV…** to create/attach and optionally install deps. The venv is excluded from analysis automatically. |
 | Import directories   | Optional. A list of directories where the python files are located and available for non-relative importing from the other project files. It is used when Codimension resolves imports to files (e.g. for dependencies diagram). |
 | Exclude from analysis | Optional. Directories or files to exclude from analysis (imports diagram, outline, Classes/Functions/Globals tabs). Paths may be relative to project or absolute. The venv is excluded automatically. |
 | Version              | Optional. The project version. |
@@ -90,6 +90,21 @@ project. Codimension watches the project directories for changes and updates
 the project tabs accordingly. The new files can be created in the IDE or
 copied/created using the other ways outside of the IDE. The same is applied to
 the file or directory removal.
+
+### Analysis environment (T140 / T141)
+
+Resolution order for the Python used in import analysis and plugin runs:
+
+1. **configured** — `pythoninterpreter` in `.cdm3` (Project Properties or saved from **VENV…**)
+2. **session** — temporary overlay after **VENV…** if you decline saving to the project
+3. **auto** — root `.venv` / `venv` / `env` if present
+4. **IDE** — `sys.executable` of the Codimension process
+
+The status bar shows **Env: project | session | auto | IDE** (tooltip = full path).
+
+**Tools → Project utilities → VENV…** (only when `pythoninterpreter` is empty): create or attach a root venv, optionally pip-install from `requirements*.txt` / `pyproject.toml` / reviewed unresolved packages. **Update VENV…** supports sync / upgrade / recreate. There is **no** auto-create on project open. After setup/update the IDE re-analyzes imports so unresolved counts refresh.
+
+Unresolved packages for pip are **opt-in** (unchecked by default) with a multi-select review list.
 
 ### Excluding paths from analysis
 

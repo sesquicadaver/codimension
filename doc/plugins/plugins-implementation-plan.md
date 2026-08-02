@@ -172,7 +172,7 @@ cdmplugins/todopanel/
 
 ## 4. Віртуальне середовище проекту
 
-Опціонально в Project Properties можна вказати **Python interpreter (venv)** — шлях до venv-директорії або виконуваного Python. Якщо вказано, плагіни (ruff, mypy, pytest, coverage, bandit, pip-audit, ruff format) використовують цей інтерпретатор для аналізу замість системного.
+Опціонально в Project Properties можна вказати **Python interpreter (venv)** — шлях до venv-директорії або виконуваного Python. Рекомендований шлях: Tools → Project utilities → **VENV…** / **Update VENV…** (T140): create/attach, pip sync|upgrade|recreate, session overlay або збереження в `.cdm3`. Після зміни env — re-analyze + індикатор **Env:** у status bar (T141). Якщо інтерпретатор налаштовано, плагіни (ruff, mypy, pytest, coverage, bandit, pip-audit, ruff format) використовують його замість системного.
 
 - Порожнє поле = використовується Python IDE (sys.executable).
 - Підтримуються: venv/bin/python, venv/Scripts/python.exe, або шлях до Python.

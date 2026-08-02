@@ -15,9 +15,9 @@ See [doc/en/INSTALL.md](doc/en/INSTALL.md) (Ukrainian: [doc/INSTALL.md](doc/INST
 ## Fork Extensions
 
 - `excludeFromAnalysis`, venv auto-exclusion from analysis
-- Generate requirements file (Tools → Project utilities)
+- Generate requirements file; **VENV… / Update VENV…** (T140); status-bar **Env:** (T141)
 - Plugins: ruff, mypy, pytest, coverage, bandit, pip-audit, git
-- Debugger watchpoints, greenlet trace (2026-07)
+- Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
 
 ---
 

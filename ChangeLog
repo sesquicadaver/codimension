@@ -1,5 +1,9 @@
 2026 Aug 03
 
+* Docs hygiene: compact TODO_FIXME (T001–T141 DONE), sync ROADMAP/Living Spec/EN,
+  update project docs for T140/T141, drop stale «46 tests» / T130-deferred claims;
+  remove local OMX/.venv-review work artifacts
+
 * Analysis env refresh + visibility (T141):
   - Force import-analysis rescan after VENV… / Update VENV… (incl. session / pip-only)
   - Status bar Env: project | session | auto | IDE (tooltip = python path)
@@ -13,9 +17,6 @@
   - create/attach local venv; pip sync|upgrade|recreate from requirements/pyproject/unresolved
   - getProjectPythonPath → getEffectiveProjectPython (props + session overlay)
   - tests/test_venv_bootstrap.py
-
-* Docs: documented gap — no project venv bootstrap / dependency install
-  (requirements/pyproject or auto-detected unresolved); tracked as T140
 
 * Debugger GUI e2e D3 (T130):
   - Full-IDE offscreen smoke: FakeSplash + CodimensionMainWindow + debug/stop
