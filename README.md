@@ -25,6 +25,7 @@
 - Не production-ready IDE; орієнтир — аналіз і візуалізація коду, не заміна VS Code / PyCharm
 - Git-плагін — MVP (без stash/merge UI); PR через `gh` CLI
 - Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**, лише local venv у властивостях проєкту
+- Авто-setup venv на open проєкту — **немає** (лише явний Tools → Project utilities → **VENV…** / **Update VENV…**); Docker/SSH/K8s/MCP env binding — у roadmap; без налаштованого project venv аналіз може йти в env IDE/MCP
 - Довгострокові плани (overlay metrics, AI, modular core) — [ROADMAP.md](ROADMAP.md), не поточний стан
 
 ## Вимоги

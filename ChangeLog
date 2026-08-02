@@ -1,5 +1,14 @@
 2026 Aug 02
 
+* Project VENV bootstrap (T140):
+  - Tools → Project utilities → VENV… / Update VENV…
+  - create/attach local venv; pip sync|upgrade|recreate from requirements/pyproject/unresolved
+  - getProjectPythonPath → getEffectiveProjectPython (props + session overlay)
+  - tests/test_venv_bootstrap.py
+
+* Docs: documented gap — no project venv bootstrap / dependency install
+  (requirements/pyproject or auto-detected unresolved); tracked as T140
+
 * Debugger GUI e2e D3 (T130):
   - Full-IDE offscreen smoke: FakeSplash + CodimensionMainWindow + debug/stop
   - Env-gated (`CDM_FULL_IDE_SMOKE=1`, marker `full_ide`); not a PR blocker

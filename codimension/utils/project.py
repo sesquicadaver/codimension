@@ -159,6 +159,11 @@ class CodimensionProject(
 
     def __resetValues(self):
         """Initializes or resets all the project members"""
+        # T140: drop session-only interpreter when switching/unloading projects
+        from .venvbootstrap import clearSessionPythonInterpreter
+
+        clearSessionPythonInterpreter()
+
         # Empty file name means that the project has not been loaded or
         # created. This must be an absolute path.
         self.fileName = ""

@@ -25,6 +25,7 @@ This is an **active fork** of [SergeySatskiy/codimension](https://github.com/Ser
 - Not a production-ready IDE; focus is code analysis and visualization, not a VS Code / PyCharm replacement
 - Git plugin is MVP (no stash/merge UI); PRs via `gh` CLI
 - Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; only local venv in project properties
+- No auto venv setup on project open — only explicit Tools → Project utilities → **VENV…** / **Update VENV…**; Docker/SSH/K8s/MCP env binding remains roadmap; without a configured project venv, analysis may use the IDE/MCP environment
 - Long-term plans (overlay metrics, AI, modular core) — [ROADMAP.md](ROADMAP.md), not current state
 
 ## Requirements

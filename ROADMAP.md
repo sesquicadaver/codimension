@@ -132,6 +132,9 @@ Phase 9 — Local venv Backend
 
 Goal: Local isolation
 
+T140 (local UI): Tools → VENV… / Update VENV… (explicit create/attach + pip
+sync|upgrade|recreate). Auto-on-open and Docker/SSH/K8s/MCP backends remain later.
+
 
 ---
 

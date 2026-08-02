@@ -31,7 +31,17 @@ from subprocess import STDOUT, check_output
 from .config import DEFAULT_ENCODING
 from .encoding import detectFileEncodingToRead
 from .runparams import DEBUG, PROFILE, RUN
-from .venvutils import resolveVenvToPython
+
+
+def getProjectPythonPath(project):
+    """Returns the Python executable path for project analysis (T140).
+
+    Delegates to ``getEffectiveProjectPython`` so props, session overlay,
+    and auto-detect share one resolution chain (lint/pytest/coverage).
+    """
+    from .venvbootstrap import getEffectiveProjectPython
+
+    return getEffectiveProjectPython(project)
 
 
 def _debuggerClientPath(scriptName):
@@ -42,49 +52,6 @@ def _debuggerClientPath(scriptName):
     """
     pkgRoot = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(pkgRoot, "debugger", "client", scriptName)
-
-
-def getProjectPythonPath(project):
-    """Returns the Python executable path for project analysis.
-
-    When project has a configured interpreter (venv/bin/python or custom),
-    returns that path. Otherwise tries to auto-detect .venv or venv in project
-    root. Falls back to sys.executable.
-
-    Args:
-        project: CodimensionProject instance or None.
-
-    Returns:
-        str: Absolute path to Python executable.
-    """
-    if project is None or not project.isLoaded():
-        return sys.executable
-
-    interp = project.props.get("pythoninterpreter", "").strip()
-    if not interp:
-        # Auto-detect venv in project root
-        project_dir = project.getProjectDir()
-        if project_dir:
-            for venv_name in (".venv", "venv", "env"):
-                venv_path = os.path.join(project_dir, venv_name)
-                venv_python = resolveVenvToPython(venv_path)
-                if venv_python:
-                    return venv_python
-        return sys.executable
-
-    if not os.path.isabs(interp):
-        project_dir = project.getProjectDir()
-        if project_dir:
-            interp = os.path.normpath(project_dir + interp)
-
-    if os.path.isfile(interp) and os.access(interp, os.X_OK):
-        return os.path.abspath(interp)
-
-    venv_python = resolveVenvToPython(interp)
-    if venv_python:
-        return venv_python
-
-    return sys.executable
 
 
 def getVenvSitePackages(python_path):

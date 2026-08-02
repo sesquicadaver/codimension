@@ -40,6 +40,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Debugger mixin routing T110–T111** | ui.mainwindow_debug + tests/debugger | host.py `create_mixin_host`; test_mixin_routing.py | switchDebugMode chrome + `_onDbgGo`→remoteContinue |
 | **Debugger widget smoke T120** | debugger.bpwp / excpt | test_widgets_bpwp.py, test_widgets_exceptions.py; pytest-qt | offscreen panel add/clear/ignore; Skin bootstrap fixture |
 | **Debugger full-IDE T130** | ui.mainwindow + utils.skin | `ide_bootstrap.py`, `test_full_ide_smoke.py`; `PACKAGE_SKIN_DIR` package-relative; `.github/workflows/debugger-full-ide-nightly.yml` | env `CDM_FULL_IDE_SMOKE=1`; not PR-blocker; red nightly → escalate via TODO_FIXME T130 |
+| **Project venv bootstrap T140** | utils.venvbootstrap + ui.venvsetupdlg | venvbootstrap.py, venvsetupdlg.py, mainmenu; tests/test_venv_bootstrap.py | explicit VENV/Update; sync/upgrade/recreate; session overlay; no auto-on-open |
 | **Greenlet debugger** | codimension.debugger.client | threadextension_cdm_dbg.py, threadutils_cdm_dbg.py | unit: tests/test_greenlet_trace.py |
 | **Occurrences search redo** | codimension.search | occurrencesprovider.py, searchresultsviewer.py | unit: tests/test_occurrencesprovider.py |
 

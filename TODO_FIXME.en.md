@@ -27,6 +27,7 @@
 | T110–T111 | Debugger mixin routing host | MixinDebuggerHost + switchDebugMode / _onDbgGo | ✅ DONE 2026-08-02 |
 | T120 | Debugger widget smoke (pytest-qt) | BP/Exceptions panels offscreen | ✅ DONE 2026-08-02 |
 | T130 | Debugger full-IDE nightly | MainWindow smoke + skin package path; `debugger-full-ide-nightly.yml` (not PR-blocker) | ✅ DONE 2026-08-02 |
+| T140 | Project venv bootstrap | Tools→VENV… / Update VENV…; create/attach + pip upgrade/sync/recreate | ✅ DONE 2026-08-02 |
 
 ## Critical (anti-stub review) — earlier
 

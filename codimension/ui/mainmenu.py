@@ -357,6 +357,13 @@ class MainWindowMenuMixin:
         toolsMenu.addSeparator()
         self.__projectUtilitiesMenu = QMenu("Project utilities", self)
         self.__projectUtilitiesMenu.setIcon(getIcon("project.png"))
+        self._venvSetupAct = self.__projectUtilitiesMenu.addAction(
+            getIcon("project.png"), "VENV…", self._onVenvSetup
+        )
+        self._venvUpdateAct = self.__projectUtilitiesMenu.addAction(
+            getIcon("project.png"), "Update VENV…", self._onVenvUpdate
+        )
+        self.__projectUtilitiesMenu.addSeparator()
         self._generateRequirementsAct = self.__projectUtilitiesMenu.addAction(
             getIcon("generate.png"), "Generate requirements file", self._onGenerateRequirementsFile
         )
@@ -639,6 +646,38 @@ class MainWindowMenuMixin:
         """Triggered when project menu is about to hide"""
         self.__newProjectAct.setEnabled(True)
         self.__openProjectAct.setEnabled(True)
+
+    def _onVenvSetup(self):
+        """Create/attach project venv when pythoninterpreter is unset (T140)."""
+        from utils.venvbootstrap import venvSetupActionEnabled
+
+        from .venvsetupdlg import VenvSetupDialog
+
+        project = GlobalData().project
+        if not venvSetupActionEnabled(project):
+            QMessageBox.information(
+                self,
+                "VENV",
+                "Project already has a configured pythoninterpreter.\nUse Update VENV… instead.",
+            )
+            return
+        VenvSetupDialog(self).exec_()
+
+    def _onVenvUpdate(self):
+        """Upgrade/sync/recreate packages in the effective project venv (T140)."""
+        from utils.venvbootstrap import venvUpdateActionEnabled
+
+        from .venvsetupdlg import VenvUpdateDialog
+
+        project = GlobalData().project
+        if not venvUpdateActionEnabled(project):
+            QMessageBox.information(
+                self,
+                "Update VENV",
+                "No project venv configured yet.\nUse VENV… to create or attach one first.",
+            )
+            return
+        VenvUpdateDialog(self).exec_()
 
     def _onGenerateRequirementsFile(self):
         """Generate requirements.txt from unresolved imports (Tools → Project utilities)."""
@@ -923,6 +962,15 @@ class MainWindowMenuMixin:
         self._tabDeadCodeAct.setEnabled(isPythonBuffer)
         self.__projectUtilitiesMenu.setEnabled(projectLoaded)
         self._generateRequirementsAct.setEnabled(projectLoaded)
+        if projectLoaded:
+            from utils.venvbootstrap import venvSetupActionEnabled, venvUpdateActionEnabled
+
+            project = GlobalData().project
+            self._venvSetupAct.setEnabled(venvSetupActionEnabled(project))
+            self._venvUpdateAct.setEnabled(venvUpdateActionEnabled(project))
+        else:
+            self._venvSetupAct.setEnabled(False)
+            self._venvUpdateAct.setEnabled(False)
         self.disasmMenu.setEnabled(isPythonBuffer)
 
     def __viewAboutToShow(self):

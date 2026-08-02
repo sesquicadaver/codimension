@@ -70,8 +70,11 @@ class GlobalDataWrapper:
         self.version = "unknown"
         self.originalSysPath = None
         self.searchProviders = {}
+        # T140: session-only interpreter when user declines saving to .cdm3
+        self.sessionPythonInterpreter = ""
 
         self.project = CodimensionProject()
+        self.project.sigProjectAboutToUnload.connect(self.__clearSessionPythonInterpreter)
 
         self.pluginManager = CDMPluginManager()
 
@@ -83,6 +86,13 @@ class GlobalDataWrapper:
         self.graphvizAvailable = self.__checkGraphviz()
         self.javaAvailable = self.__checkJava()
         self.hexdumpAvailable = self.__checkHexdump()
+
+    def __clearSessionPythonInterpreter(self):
+        """Drop session venv overlay when the project is unloaded."""
+        from .venvbootstrap import clearSessionPythonInterpreter
+
+        clearSessionPythonInterpreter()
+        self.sessionPythonInterpreter = ""
 
     def getProfileOutputPath(self, procuuid):
         """Provides the path to the profile output file"""
