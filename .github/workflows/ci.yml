@@ -39,6 +39,11 @@ jobs:
           . .venv/bin/activate
           python scripts/check_package_relative_imports.py
 
+      - name: T085 core import-graph gate
+        run: |
+          . .venv/bin/activate
+          python scripts/check_core_import_graph.py
+
       - name: Ruff check (codimension, cdmplugins)
         run: |
           . .venv/bin/activate

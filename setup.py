@@ -171,6 +171,8 @@ def getPackageData():
 def getPackages():
     """Provides packages"""
     return ['codimension',
+            'codimension.core',
+            'codimension.infrastructure',
             'codimension.parsers',
             'codimension.analysis',
             'codimension.autocomplete',

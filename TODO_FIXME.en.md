@@ -19,6 +19,9 @@
 | T060–T067 | packaging/CI | deps groups; matrix 3.10–3.13; wheel; offscreen | ✅ DONE 2026-08-02 |
 | T070 | `codimension.py` | `originalSysPath = list(sys.path)` | ✅ DONE 2026-08-02 |
 | T071–T073 | bootstrap / imports | inventory + T072 CI gate + shim `_unify_aliases` | ✅ DONE 2026-08-02 |
+| T080–T082 | `core` / `infrastructure` | headless syntax/flow + fs/io/process facades | ✅ DONE 2026-08-02 |
+| T085 | `scripts/check_core_import_graph.py` | CI: no Qt/UI edges into core | ✅ DONE 2026-08-02 |
+| T083–T084 | MainWindow / GlobalData | composition routing; remove extendInstance side effects | 🟠 TODO (after T080–T082) |
 
 ## Critical (anti-stub review) — earlier
 

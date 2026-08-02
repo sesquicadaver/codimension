@@ -1,5 +1,11 @@
 2026 Aug 02
 
+* M5 headless core foundation (T080–T082, T085):
+  - codimension.core.syntax / flow: parse APIs without Qt
+  - codimension.infrastructure: filesystem/io/process facades
+  - scripts/check_core_import_graph.py + CI gate
+  - T083–T084 (MainWindow/GlobalData) deferred
+
 * Bootstrap hygiene (T070–T073):
   - parsers/__init__.py: unify cdmpyparser/cdmcfparser aliases to one module object
   - scripts/check_package_relative_imports.py + CI gate (T072)
