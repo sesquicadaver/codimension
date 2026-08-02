@@ -1,5 +1,10 @@
 2026 Aug 02
 
+* Bootstrap hygiene (T070–T073):
+  - parsers/__init__.py: unify cdmpyparser/cdmcfparser aliases to one module object
+  - scripts/check_package_relative_imports.py + CI gate (T072)
+  - brief_ast/flow_ast/comment_binder: package-relative imports with harness fallback
+
 * M3C/M4 project scan + packaging:
   - utils/project_scan.py: path-aware excludes (T050), symlink visited/out-of-tree bound (T051)
   - project.py: async background scan via QThread when QApplication present (T052)

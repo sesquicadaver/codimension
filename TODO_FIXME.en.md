@@ -15,8 +15,10 @@
 | T029 | differential report | C-ext absent → explicit skip | ✅ SKIPPED (documented) |
 | T030–T035 | process_env + lint/mypy | systemEnvironment; JSONL; non-blocking stop | ✅ DONE 2026-08-02 |
 | T040–T044 | credentials + atomic_io + schema | gh→keyring→0600; scrub; atomic `.cdm3` | ✅ DONE 2026-08-02 |
-| T050–T051 | `project.py` | Basename exclusions; symlink cycles | 🔴 TODO |
-| T060–T067 | packaging/CI | Missing `[project.dependencies]`; CI ≠ claimed 3.10–3.13 matrix | 🔴 TODO |
+| T050–T052 | `project_scan` / `project` / `watcher` | Path-aware exclude; symlink bounds; async scan | ✅ DONE 2026-08-02 |
+| T060–T067 | packaging/CI | deps groups; matrix 3.10–3.13; wheel; offscreen | ✅ DONE 2026-08-02 |
+| T070 | `codimension.py` | `originalSysPath = list(sys.path)` | ✅ DONE 2026-08-02 |
+| T071–T073 | bootstrap / imports | inventory + T072 CI gate + shim `_unify_aliases` | ✅ DONE 2026-08-02 |
 
 ## Critical (anti-stub review) — earlier
 
@@ -60,6 +62,6 @@
 |-------|--------|
 | **Unit tests** | 46 tests. Parser conformance / CFG snapshots → plan T004–T028. |
 | **mypy** | Packages in CI | ✅ 2026-07-05 (output parser → T034) |
-| **CI truth** | Lint 3.10–3.12; pytest only 3.11; no 3.13 / wheel / offscreen GUI → T063–T066 |
+| **CI truth** | Lint+pytest 3.10–3.13; wheel+pip check; offscreen GUI smoke (T063–T066 done) |
 
 See [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md).

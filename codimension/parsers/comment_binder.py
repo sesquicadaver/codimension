@@ -19,7 +19,7 @@ import tokenize
 from dataclasses import dataclass, field
 from typing import Any
 
-from parsers.source_spans import SourceIndex
+from .source_spans import SourceIndex
 
 COMMENT_FRAGMENT = 3
 CML_COMMENT_FRAGMENT = 63

@@ -20,7 +20,10 @@ import ast
 import tokenize
 from sys import maxsize
 
-from parsers.source_spans import SourceIndex
+try:
+    from .source_spans import SourceIndex
+except ImportError:  # loaded as standalone module (conformance harness)
+    from parsers.source_spans import SourceIndex
 
 VERSION = "3.4.0-ast"
 

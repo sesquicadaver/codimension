@@ -21,7 +21,7 @@
 | T050–T052 | `project_scan` / `project` / `watcher` | Path-aware exclude; symlink visited; async scan | ✅ DONE 2026-08-02 |
 | T060–T067 | `pyproject.toml` / CI | `[project.dependencies]` + optional groups; matrix 3.10–3.13; wheel; offscreen | ✅ DONE 2026-08-02 |
 | T070 | `codimension/codimension.py` | `originalSysPath = list(sys.path)` | ✅ DONE 2026-08-02 |
-| T071–T073 | bootstrap / imports | dual-import inventory + shim identity | 🟠 TODO (після T073 gate для M5) |
+| T071–T073 | bootstrap / imports | inventory + T072 CI gate + shim `_unify_aliases` | ✅ DONE 2026-08-02 |
 
 ## Критичні (anti-stub перевірка) — раніше
 

@@ -20,8 +20,12 @@ import ast
 import tokenize
 from typing import Any
 
-from parsers.comment_binder import bind_comments
-from parsers.source_spans import SourceIndex
+try:
+    from .comment_binder import bind_comments
+    from .source_spans import SourceIndex
+except ImportError:  # loaded as standalone module (conformance harness)
+    from parsers.comment_binder import bind_comments
+    from parsers.source_spans import SourceIndex
 
 # Fragment type constants (from cflowfragmenttypes.hpp)
 UNDEFINED_FRAGMENT = -1

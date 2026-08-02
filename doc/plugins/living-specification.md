@@ -29,6 +29,7 @@
 | **Atomic `.cdm3`** | utils.atomic_io / project_schema | atomic_io.py, project_schema.py, project.py | atomic save; schema on load |
 | **Project scan T050–T052** | utils.project_scan / project / watcher | project_scan.py, project.py, watcher.py | path-aware exclude; symlink visited; async scan; tests/test_project_scan.py |
 | **Packaging / CI T060–T067** | pyproject / CI | pyproject.toml, requirements.txt, ci.yml, scripts/offscreen_gui_smoke.py | deps groups; matrix 3.10–3.13; wheel; offscreen smoke |
+| **Shim identity T071–T073** | parsers / bootstrap | parsers/__init__.py, check_package_relative_imports.py | unified cdmpyparser/cdmcfparser aliases; T072 CI gate |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -46,6 +47,7 @@
 
 | Перевірка | Команда | Джерело |
 | --------- | ------- | ------- |
+| T072 import gate | `python scripts/check_package_relative_imports.py` | .github/workflows/ci.yml |
 | Ruff lint | `ruff check codimension cdmplugins` | .github/workflows/ci.yml |
 | Ruff format | `ruff format --check codimension cdmplugins` | .github/workflows/ci.yml |
 | Mypy | `mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')` | .github/workflows/ci.yml |

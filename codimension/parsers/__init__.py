@@ -21,30 +21,60 @@
 
 When cdmpyparser/cdmcfparser C extensions are unavailable (node.h removed
 in Python 3.10+), provides pure-Python ast-based implementations.
+
+Module names ``cdmpyparser`` / ``cdmcfparser`` are preserved (product API).
+T073: all aliases point at the same module object (no dual isinstance breaks).
 """
 
+from __future__ import annotations
+
+import importlib
+import sys
+from types import ModuleType
+
+
+def _unify_aliases(module: ModuleType, *names: str) -> ModuleType:
+    """Register ``module`` under every name; return the shared object."""
+    for name in names:
+        existing = sys.modules.get(name)
+        if existing is not None and existing is not module:
+            # Prefer the already-registered object so late imports converge
+            module = existing
+            break
+    for name in names:
+        sys.modules[name] = module
+    return module
+
+
+def _install_shim(shim_name: str, relative_name: str) -> bool:
+    """Install pure-Python shim if C extension missing.
+
+    Returns True if the real C extension was already importable.
+    """
+    try:
+        importlib.import_module(shim_name)
+        return True
+    except ImportError:
+        pass
+
+    aliases = (
+        shim_name,
+        f"codimension.parsers.{relative_name}",
+        f"parsers.{relative_name}",
+    )
+    module = None
+    for name in aliases[1:]:
+        if name in sys.modules:
+            module = sys.modules[name]
+            break
+    if module is None:
+        module = importlib.import_module(f".{relative_name}", __name__)
+    _unify_aliases(module, *aliases)
+    return False
+
+
 # Install cdmpyparser fallback if C extension not available
-try:
-    import cdmpyparser  # noqa: F401
-
-    _CDMPYPARSER_AVAILABLE = True
-except ImportError:
-    _CDMPYPARSER_AVAILABLE = False
-    import sys as _sys
-
-    from . import brief_ast as _brief_fallback
-
-    _sys.modules["cdmpyparser"] = _brief_fallback
+_CDMPYPARSER_AVAILABLE = _install_shim("cdmpyparser", "brief_ast")
 
 # Install cdmcfparser fallback if C extension not available
-try:
-    import cdmcfparser  # noqa: F401
-
-    _CDMCFPARSER_AVAILABLE = True
-except ImportError:
-    _CDMCFPARSER_AVAILABLE = False
-    import sys as _sys
-
-    from . import flow_ast as _flow_fallback
-
-    _sys.modules["cdmcfparser"] = _flow_fallback
+_CDMCFPARSER_AVAILABLE = _install_shim("cdmcfparser", "flow_ast")

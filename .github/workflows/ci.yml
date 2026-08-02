@@ -34,6 +34,11 @@ jobs:
           pip install --upgrade pip
           pip install -e ".[lint]"
 
+      - name: T072 package-relative import gate
+        run: |
+          . .venv/bin/activate
+          python scripts/check_package_relative_imports.py
+
       - name: Ruff check (codimension, cdmplugins)
         run: |
           . .venv/bin/activate
