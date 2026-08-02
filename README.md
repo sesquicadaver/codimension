@@ -18,7 +18,7 @@
 - **Парсери:** pure-Python `brief_ast` / `flow_ast` на Python 3.10+ (без cdmpyparser/cdmcfparser)
 - **Вбудовані плагіни** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
 - **Debugger:** breakpoints, watchpoints (UI + sync), greenlet-контексти
-- **CI:** ruff, mypy, pytest (46 тестів), pip-audit
+- **CI:** ruff/mypy/pytest matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
 
 ## Обмеження (чесно)
 

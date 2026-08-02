@@ -8,17 +8,79 @@ dynamic = ["version"]
 description = "Experimental Python 3 IDE with graphics-based code analysis (fork, Python 3.10+)"
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+authors = [
+  { name = "Sergey Satskiy", email = "sergey.satskiy@gmail.com" },
+]
 # Fork of https://github.com/SergeySatskiy/codimension (unmaintained). Active: https://github.com/sesquicadaver/codimension
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Integrated Development Environments (IDE)",
+]
+dependencies = [
+  "setuptools>=65.0; python_version >= '3.12'",
+  "cdmgcplugin>=1.0.4",
+  "cdmpylintplugin>=1.0.4",
+  "cdmsysinfoplugin>=1.0.0",
+  "pyflakes>=2.1.1",
+  "flake8>=3.7.7",
+  "radon>=4.1.0",
+  "PyQt5>=5.15.9",
+  "python-magic>=0.4.15",
+  "qutepart>=3.3.0",
+  "yapsy>=1.12.0",
+  "jedi>=0.17.2",
+  "vulture>=1.6",
+  "gprof2dot>=2017.9.19",
+  "mistune>=3.2.1",
+  "pygments>=2.20.0",
+  "qdarkstyle>=2.8.1",
+  "packaging>=21.0",
+]
+
+[project.optional-dependencies]
+# IDE tool plugins (optional at install; CI installs explicitly)
+tools = [
+  "ruff>=0.1.0",
+  "mypy>=1.0.0",
+  "pytest>=9.0.3",
+  "pytest-cov>=4.0.0",
+  "coverage>=7.0.0",
+]
+lint = [
+  "ruff>=0.1.0",
+  "mypy>=1.0.0",
+]
+test = [
+  "pytest>=9.0.3",
+  "pytest-cov>=4.0.0",
+]
+security = [
+  "bandit>=1.7.0",
+  "pip-audit>=2.0.0",
+]
+dev = [
+  "codimension[tools,lint,test,security]",
+]
 
 [project.urls]
 Repository = "https://github.com/sesquicadaver/codimension"
 Homepage = "https://github.com/sesquicadaver/codimension"
+Issues = "https://github.com/sesquicadaver/codimension/issues"
 
 [project.gui-scripts]
 codimension = "codimension.codimension:main"
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py310"
 line-length = 120
 exclude = ["doc/", "*.egg-info/", ".mypy_cache/"]
 
@@ -33,7 +95,7 @@ ignore = []
 "codimension/ui/helpwidget.py" = ["E501"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
@@ -50,3 +112,8 @@ reportMissingImports = "warning"
 reportAttributeAccessIssue = "none"
 reportIncompatibleMethodOverride = "none"
 reportOptionalMemberAccess = "none"
+
+[tool.pytest.ini_options]
+markers = [
+  "integration: optional integration tests (tools, network, etc.)",
+]

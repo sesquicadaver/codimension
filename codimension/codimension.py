@@ -45,7 +45,8 @@ warnings.filterwarnings("ignore", message=".*pkg_resources.*deprecated.*", categ
 sys.argv[0] = os.path.realpath(__file__)
 
 # Make it possible to import from the subdirectories
-originalSysPath = sys.path
+# Copy the list so later inserts do not mutate the saved baseline (T070)
+originalSysPath = list(sys.path)
 srcDir = os.path.dirname(sys.argv[0])
 if srcDir not in sys.path:
     sys.path.insert(0, srcDir)

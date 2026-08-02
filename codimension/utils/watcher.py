@@ -30,8 +30,11 @@ The watcher will ignore the directories which do not exist.
 import os
 import os.path
 import re
+from os.path import realpath
 
-from ui.qt import QFileSystemWatcher, QObject, pyqtSignal
+from PyQt5.QtCore import QFileSystemWatcher, QObject, pyqtSignal
+
+from .project_scan import path_is_under_or_equal
 
 
 class Watcher(QObject):
@@ -39,12 +42,17 @@ class Watcher(QObject):
 
     sigFSChanged = pyqtSignal(list)
 
-    def __init__(self, excludeFilters, dirToWatch):
+    def __init__(self, excludeFilters, dirToWatch, excludeAbsolutePaths=None):
         QObject.__init__(self)
         self.__dirWatcher = QFileSystemWatcher(self)
 
         # data members
-        self.__excludeFilter = []  # Files exclude filter
+        self.__excludeFilter = []  # Basename regex filters (Settings)
+        # Path-aware absolute excludes (T050): exact path or descendants only
+        self.__excludeAbsolutePaths = [
+            realpath(p) for p in (excludeAbsolutePaths or []) if p
+        ]
+        self.__projectRoot = realpath(dirToWatch)
         self.__srcDirsToWatch = set()  # Came from the user
 
         self.__fsTopLevelSnapshot = {}  # Current snapshot
@@ -116,22 +124,55 @@ class Watcher(QObject):
             self.__addSnapshotPath(path, snapshotDirs)
         return snapshotDirs
 
-    def __addSnapshotPath(self, path, snapshotDirs, itemsToReport=None):
+    def __canEnter(self, parent_path, item, visited):
+        """True if dir entry may be entered (T051: visited + project-root bound)."""
+        candidate = parent_path + item
+        try:
+            cand_real = realpath(candidate)
+        except OSError:
+            return False
+        if cand_real in visited:
+            return False
+        if not path_is_under_or_equal(cand_real, self.__projectRoot):
+            return False
+        visited.add(cand_real)
+        return True
+
+    def __addSnapshotPath(self, path, snapshotDirs, itemsToReport=None, visited=None):
         """Adds one path to the FS snapshot"""
         if not os.path.exists(path):
             return
+        if visited is None:
+            visited = set()
+            try:
+                visited.add(realpath(path))
+            except OSError:
+                pass
 
         snapshotDirs.add(path)
         dirItems = set()
-        for item in os.listdir(path):
-            if self.__shouldExclude(item):
+        try:
+            entries = os.listdir(path)
+        except OSError:
+            self.__fsSnapshot[path] = dirItems
+            return
+        for item in entries:
+            if self.__shouldExclude(item, path):
                 continue
-            if os.path.isdir(path + item):
-                dirName = path + item + os.path.sep
+            candidate = path + item
+            if os.path.isdir(candidate):
+                if not self.__canEnter(path, item, visited):
+                    continue
+                dirName = candidate + os.path.sep
                 dirItems.add(item + os.path.sep)
                 if itemsToReport is not None:
                     itemsToReport.append("+" + dirName)
-                self.__addSnapshotPath(dirName, snapshotDirs, itemsToReport)
+                self.__addSnapshotPath(dirName, snapshotDirs, itemsToReport, visited)
+                continue
+            try:
+                if not path_is_under_or_equal(realpath(candidate), self.__projectRoot):
+                    continue
+            except OSError:
                 continue
             dirItems.add(item)
             if itemsToReport is not None:
@@ -214,9 +255,15 @@ class Watcher(QObject):
             # Build a new set of what is in that top level dir
             newSet = set()
             for item in os.listdir(path):
-                if self.__shouldExclude(item):
+                if self.__shouldExclude(item, path):
                     continue
-                if os.path.isdir(path + item):
+                candidate = path + item
+                try:
+                    if not path_is_under_or_equal(realpath(candidate), self.__projectRoot):
+                        continue
+                except OSError:
+                    continue
+                if os.path.isdir(candidate):
                     newSet.add(item + os.path.sep)
                 else:
                     newSet.add(item)
@@ -272,28 +319,63 @@ class Watcher(QObject):
         # self.debug()
         return
 
-    def __shouldExclude(self, name):
-        """Tests if a file must be excluded"""
+    def __shouldExclude(self, name, parent_path=None):
+        """Exclude by basename regex and/or absolute path prefix (T050)."""
         for excl in self.__excludeFilter:
             if excl.match(name):
                 return True
+        if parent_path and self.__excludeAbsolutePaths:
+            try:
+                cand_real = realpath(parent_path + name)
+            except OSError:
+                return False
+            for excl_real in self.__excludeAbsolutePaths:
+                if cand_real == excl_real:
+                    return True
+                excl_prefix = excl_real.rstrip(os.path.sep) + os.path.sep
+                if cand_real.startswith(excl_prefix):
+                    return True
         return False
 
-    def __processAddedDir(self, path, dirsToBeAdded, itemsToReport):
+    def __processAddedDir(self, path, dirsToBeAdded, itemsToReport, visited=None):
         """called for an appeared dir in the project tree"""
+        try:
+            if not path_is_under_or_equal(realpath(path), self.__projectRoot):
+                return
+        except OSError:
+            return
+        if visited is None:
+            visited = set()
+            try:
+                visited.add(realpath(path))
+            except OSError:
+                pass
         dirsToBeAdded.append(path)
         itemsToReport.append("+" + path)
 
         # it should add dirs recursively into the snapshot and care
         # of the items to report
         dirItems = set()
-        for item in os.listdir(path):
-            if self.__shouldExclude(item):
+        try:
+            entries = os.listdir(path)
+        except OSError:
+            self.__fsSnapshot[path] = dirItems
+            return
+        for item in entries:
+            if self.__shouldExclude(item, path):
                 continue
-            if os.path.isdir(path + item):
-                dirName = path + item + os.path.sep
+            candidate = path + item
+            if os.path.isdir(candidate):
+                if not self.__canEnter(path, item, visited):
+                    continue
+                dirName = candidate + os.path.sep
                 dirItems.add(item + os.path.sep)
-                self.__processAddedDir(dirName, dirsToBeAdded, itemsToReport)
+                self.__processAddedDir(dirName, dirsToBeAdded, itemsToReport, visited)
+                continue
+            try:
+                if not path_is_under_or_equal(realpath(candidate), self.__projectRoot):
+                    continue
+            except OSError:
                 continue
             itemsToReport.append("+" + path + item)
             dirItems.add(item)
@@ -408,16 +490,34 @@ class Watcher(QObject):
 
         dirsToWatch.add(path)
         itemsToReport.append("+" + path)
+        visited = set()
+        try:
+            visited.add(realpath(path))
+        except OSError:
+            pass
 
         dirItems = set()
-        for item in os.listdir(path):
-            if self.__shouldExclude(item):
+        try:
+            entries = os.listdir(path)
+        except OSError:
+            self.__fsSnapshot[path] = dirItems
+            return
+        for item in entries:
+            if self.__shouldExclude(item, path):
                 continue
-            if os.path.isdir(path + item):
-                dirName = path + item + os.path.sep
+            candidate = path + item
+            if os.path.isdir(candidate):
+                if not self.__canEnter(path, item, visited):
+                    continue
+                dirName = candidate + os.path.sep
                 dirItems.add(item + os.path.sep)
                 itemsToReport.append("+" + path + item + os.path.sep)
-                self.__addSnapshotPath(dirName, dirsToWatch, itemsToReport)
+                self.__addSnapshotPath(dirName, dirsToWatch, itemsToReport, visited)
+                continue
+            try:
+                if not path_is_under_or_equal(realpath(candidate), self.__projectRoot):
+                    continue
+            except OSError:
                 continue
             dirItems.add(item)
             itemsToReport.append("+" + path + item)

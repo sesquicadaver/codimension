@@ -1,0 +1,237 @@
+# -*- coding: utf-8 -*-
+"""T050–T052: path-aware excludes, symlink bounds, async scan start latency."""
+
+from __future__ import annotations
+
+import os
+import time
+from os.path import realpath, sep
+from pathlib import Path
+
+import pytest
+
+from codimension.utils.project_scan import (
+    is_excluded_by_absolute_paths,
+    scan_project_files,
+    should_exclude_basename,
+    compile_basename_filters,
+)
+
+
+def _mk_tree(root: Path) -> None:
+    (root / "package" / "cache").mkdir(parents=True)
+    (root / "package" / "cache" / "x.py").write_text("x = 1\n", encoding="utf-8")
+    (root / "other" / "cache").mkdir(parents=True)
+    (root / "other" / "cache" / "y.py").write_text("y = 1\n", encoding="utf-8")
+    (root / "keep.py").write_text("k = 1\n", encoding="utf-8")
+
+
+def test_t050_path_aware_exclude_does_not_kill_sibling_basename(tmp_path: Path) -> None:
+    """exclude package/cache must not exclude other/cache (T050)."""
+    _mk_tree(tmp_path)
+    excl = [realpath(tmp_path / "package" / "cache")]
+    files = scan_project_files(str(tmp_path) + sep, exclude_absolute_paths=excl)
+    paths = {p.rstrip(sep) for p in files}
+    assert realpath(tmp_path / "package" / "cache" / "x.py") not in paths
+    assert realpath(tmp_path / "other" / "cache" / "y.py") in paths
+    assert realpath(tmp_path / "keep.py") in paths
+
+
+def test_t050_is_excluded_by_absolute_paths_prefix() -> None:
+    assert is_excluded_by_absolute_paths("/a/b/c", ["/a/b"])
+    assert not is_excluded_by_absolute_paths("/a/bx", ["/a/b"])
+
+
+def test_t051_symlink_cycle_does_not_hang(tmp_path: Path) -> None:
+    """Cycle via symlink must terminate (T051)."""
+    a = tmp_path / "a"
+    b = tmp_path / "b"
+    a.mkdir()
+    b.mkdir()
+    (a / "f.py").write_text("f=1\n", encoding="utf-8")
+    (a / "to_b").symlink_to(b)
+    (b / "to_a").symlink_to(a)
+    files = scan_project_files(str(tmp_path) + sep)
+    assert any(p.endswith("f.py") for p in files)
+    # Finite result
+    assert len(files) < 100
+
+
+def test_t051_out_of_tree_symlink_not_followed(tmp_path: Path) -> None:
+    """Symlink pointing outside project must not pull external files (T051)."""
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "secret.py").write_text("s=1\n", encoding="utf-8")
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    (proj / "ok.py").write_text("o=1\n", encoding="utf-8")
+    (proj / "escape").symlink_to(external)
+    files = scan_project_files(str(proj) + sep)
+    assert not any("secret.py" in p for p in files)
+    assert any(p.endswith("ok.py") for p in files)
+
+
+def test_basename_filter_still_applies(tmp_path: Path) -> None:
+    (tmp_path / "__pycache__").mkdir()
+    (tmp_path / "__pycache__" / "c.pyc").write_text("", encoding="utf-8")
+    (tmp_path / "m.py").write_text("m=1\n", encoding="utf-8")
+    filters = compile_basename_filters([r"^__pycache__$"])
+    files = scan_project_files(str(tmp_path) + sep, basename_filters=filters)
+    assert not any("__pycache__" in p for p in files)
+    assert any(p.endswith("m.py") for p in files)
+
+
+def test_t052_async_scan_start_returns_quickly(tmp_path: Path) -> None:
+    """Starting a background scan worker must not block GUI thread (T052)."""
+    pytest.importorskip("PyQt5")
+    from PyQt5.QtCore import QThread, pyqtSignal
+    from PyQt5.QtWidgets import QApplication
+
+    from codimension.utils.project_scan import scan_project_files
+
+    class _ScanThread(QThread):
+        sigDone = pyqtSignal(object)
+
+        def __init__(self, root: str):
+            QThread.__init__(self)
+            self._root = root
+
+        def run(self):
+            self.sigDone.emit(scan_project_files(self._root))
+
+    # Build ~5k files
+    for i in range(50):
+        d = tmp_path / f"d{i:03d}"
+        d.mkdir()
+        for j in range(100):
+            (d / f"f{j:03d}.py").write_text("x=1\n", encoding="utf-8")
+
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+
+    samples = []
+    for _ in range(5):
+        t0 = time.perf_counter()
+        thread = _ScanThread(str(tmp_path) + sep)
+        done = {"ok": False}
+
+        def _on_done(_result, _done=done):
+            _done["ok"] = True
+
+        thread.sigDone.connect(_on_done)
+        thread.start()
+        samples.append((time.perf_counter() - t0) * 1000.0)
+        deadline = time.time() + 30
+        while not done["ok"] and time.time() < deadline:
+            app.processEvents()
+            time.sleep(0.01)
+        assert done["ok"], "scan did not finish"
+        thread.wait(5000)
+
+    samples.sort()
+    p95 = samples[int(len(samples) * 0.95) - 1] if len(samples) >= 2 else samples[-1]
+    assert p95 <= 200.0, f"GUI-thread start latency p95={p95:.1f}ms samples={samples}"
+
+
+def test_should_exclude_basename_pylintrc_exception() -> None:
+    filters = compile_basename_filters([r"^\..*$"])
+    assert should_exclude_basename(".git", filters)
+    assert not should_exclude_basename(".pylintrc", filters)
+
+
+def test_t051_watcher_symlink_cycle_bounded(tmp_path: Path) -> None:
+    """Live Watcher must not explode on symlink cycles (T051)."""
+    pytest.importorskip("PyQt5")
+    from PyQt5.QtWidgets import QApplication
+
+    from codimension.utils.watcher import Watcher
+
+    if QApplication.instance() is None:
+        QApplication([])
+
+    a = tmp_path / "a"
+    b = tmp_path / "b"
+    a.mkdir()
+    b.mkdir()
+    (a / "f.py").write_text("f=1\n", encoding="utf-8")
+    (a / "to_b").symlink_to(b)
+    (b / "to_a").symlink_to(a)
+
+    watcher = Watcher([], str(tmp_path) + sep)
+    # Internal snapshot must stay small (no unbounded chain)
+    snap = watcher._Watcher__fsSnapshot  # noqa: SLF001
+    joined = " ".join(sorted(snap.keys()))
+    assert "to_b/to_a/to_b" not in joined
+    assert len(snap) < 20
+
+
+def test_t051_watcher_out_of_tree_symlink_ignored(tmp_path: Path) -> None:
+    """Watcher must not follow out-of-tree symlink targets (T051)."""
+    pytest.importorskip("PyQt5")
+    from PyQt5.QtWidgets import QApplication
+
+    from codimension.utils.watcher import Watcher
+
+    if QApplication.instance() is None:
+        QApplication([])
+
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "secret.py").write_text("s=1\n", encoding="utf-8")
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    (proj / "ok.py").write_text("o=1\n", encoding="utf-8")
+    (proj / "escape").symlink_to(external)
+
+    watcher = Watcher([], str(proj) + sep)
+    snap = watcher._Watcher__fsSnapshot  # noqa: SLF001
+    blob = repr(snap)
+    assert "secret.py" not in blob
+    assert "ok.py" in blob
+
+
+def test_t051_watcher_live_out_of_tree_symlink_ignored(tmp_path: Path) -> None:
+    """Live FS event adding out-of-tree symlink must not enter snapshot (T051)."""
+    pytest.importorskip("PyQt5")
+    from PyQt5.QtWidgets import QApplication
+
+    from codimension.utils.watcher import Watcher
+
+    if QApplication.instance() is None:
+        QApplication([])
+
+    external = tmp_path / "external"
+    external.mkdir()
+    (external / "secret.py").write_text("s=1\n", encoding="utf-8")
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    (proj / "ok.py").write_text("o=1\n", encoding="utf-8")
+
+    watcher = Watcher([], str(proj) + sep)
+    # Simulate live add: out-of-tree symlink dir
+    (proj / "escape").symlink_to(external)
+    watcher._Watcher__onDirChanged(str(proj) + sep)  # noqa: SLF001
+    snap = watcher._Watcher__fsSnapshot  # noqa: SLF001
+    blob = repr(snap)
+    assert "escape" not in blob
+    assert "secret.py" not in blob
+
+
+def test_t050_watcher_path_aware_exclude(tmp_path: Path) -> None:
+    """Watcher excludeAbsolutePaths must not kill sibling basename dirs (T050)."""
+    pytest.importorskip("PyQt5")
+    from PyQt5.QtWidgets import QApplication
+
+    from codimension.utils.watcher import Watcher
+
+    if QApplication.instance() is None:
+        QApplication([])
+
+    _mk_tree(tmp_path)
+    excl = [realpath(tmp_path / "package" / "cache")]
+    watcher = Watcher([], str(tmp_path) + sep, excludeAbsolutePaths=excl)
+    snap = watcher._Watcher__fsSnapshot  # noqa: SLF001
+    blob = repr(snap)
+    assert "x.py" not in blob
+    assert "y.py" in blob

@@ -211,6 +211,9 @@ def getPackages():
 # install_requires=['pypandoc'] could be added but really it needs to only
 # at the time of submitting a package to Pypi so it is excluded from the
 # dependencies
+# Runtime dependencies live in pyproject.toml [project.dependencies] (T060–T061).
+# setup.py remains for package discovery / data files; install_requires kept in sync
+# with requirements.txt for older tooling that still invokes setup.py directly.
 setup(name='codimension',
       description=getDescription(),
       python_requires='>=3.10',
@@ -220,11 +223,11 @@ setup(name='codimension',
       version=getVersion(),
       author='Sergey Satskiy',
       author_email='sergey.satskiy@gmail.com',
-      url='https://github.com/SergeySatskiy/codimension',
+      url='https://github.com/sesquicadaver/codimension',
       license='GPLv3',
-      classifiers=['Development Status :: 5 - Production/Stable',
+      classifiers=['Development Status :: 3 - Alpha',
                    'Intended Audience :: Developers',
-                   'License :: OSI Approved :: GNU General Public License (GPL)',
+                   'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
                    'Operating System :: POSIX :: Linux',
                    'Programming Language :: Python :: 3',
                    'Programming Language :: Python :: 3.10',
@@ -237,4 +240,4 @@ setup(name='codimension',
       install_requires=getRequirements(),
       data_files=getDataFiles(),
       entry_points={'gui_scripts':
-                    ['codimension = codimension.codimension:main']})
+                   ['codimension = codimension.codimension:main']})

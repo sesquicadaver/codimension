@@ -18,7 +18,7 @@ This is an **active fork** of [SergeySatskiy/codimension](https://github.com/Ser
 - **Parsers:** pure-Python `brief_ast` / `flow_ast` on Python 3.10+ (no cdmpyparser/cdmcfparser)
 - **Bundled plugins** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
 - **Debugger:** breakpoints, watchpoints (UI + sync), greenlet contexts
-- **CI:** ruff, mypy, pytest (46 tests), pip-audit
+- **CI:** ruff/mypy/pytest matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
 
 ## Limitations (honest)
 

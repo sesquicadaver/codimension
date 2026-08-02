@@ -27,6 +27,8 @@
 | **Базовий клас** | cdmplugins.lintdriverbase | lintdriverbase.py, process_env.py | systemEnvironment + non-blocking stop |
 | **Git VCS / PAT** | cdmplugins.git | gitconfig.py, credentials.py, githubapi.py | gh→keyring→0600; tests/test_credentials_and_atomic.py |
 | **Atomic `.cdm3`** | utils.atomic_io / project_schema | atomic_io.py, project_schema.py, project.py | atomic save; schema on load |
+| **Project scan T050–T052** | utils.project_scan / project / watcher | project_scan.py, project.py, watcher.py | path-aware exclude; symlink visited; async scan; tests/test_project_scan.py |
+| **Packaging / CI T060–T067** | pyproject / CI | pyproject.toml, requirements.txt, ci.yml, scripts/offscreen_gui_smoke.py | deps groups; matrix 3.10–3.13; wheel; offscreen smoke |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -48,8 +50,10 @@
 | Ruff format | `ruff format --check codimension cdmplugins` | .github/workflows/ci.yml |
 | Mypy | `mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')` | .github/workflows/ci.yml |
 | Smoke | `import codimension; import cdmplugins` | .github/workflows/ci.yml |
+| Offscreen GUI | `QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py` | .github/workflows/ci.yml |
+| Wheel | `python -m build` + clean venv `pip install` + `pip check` | .github/workflows/ci.yml |
 | pip-audit | `pip-audit -r requirements.txt` | .github/workflows/ci.yml |
-| Pytest | `pytest tests/` (46 tests) | .github/workflows/ci.yml |
+| Pytest | `pytest tests/` (matrix 3.10–3.13) | .github/workflows/ci.yml |
 
 ---
 

@@ -30,8 +30,10 @@ import os
 import re
 import shutil
 import uuid
-from os.path import basename, dirname, exists, isabs, isdir, isfile, islink, join, realpath, relpath, sep
+from os.path import basename, dirname, exists, isabs, isfile, join, realpath, relpath, sep
 
+from PyQt5.QtCore import QThread
+from PyQt5.QtWidgets import QApplication
 from ui.qt import QObject, pyqtSignal
 
 from .atomic_io import atomic_write_text
@@ -40,6 +42,7 @@ from .debugenv import DebuggerEnvironment
 from .filepositions import FilePositions
 from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
+from .project_scan import is_excluded_by_absolute_paths, scan_project_files
 from .project_schema import ProjectSchemaError, validate_project_props
 from .runparamscache import RunParametersCache
 from .searchenv import SearchEnvironment
@@ -47,6 +50,33 @@ from .settings import SETTINGS_DIR, Settings
 from .userencodings import FileEncodings
 from .venvutils import getProjectVenvDir
 from .watcher import Watcher
+
+
+class _ProjectScanThread(QThread):
+    """Background project tree scan (T052) — keeps GUI responsive."""
+
+    sigDone = pyqtSignal(object)
+    sigFailed = pyqtSignal(str)
+
+    def __init__(self, project_dir, basename_filters, exclude_paths, venv_dir, parent=None):
+        QThread.__init__(self, parent)
+        self._project_dir = project_dir
+        self._basename_filters = basename_filters
+        self._exclude_paths = exclude_paths
+        self._venv_dir = venv_dir
+
+    def run(self):
+        """Scan project tree off the GUI thread."""
+        try:
+            result = scan_project_files(
+                self._project_dir,
+                basename_filters=self._basename_filters,
+                exclude_absolute_paths=self._exclude_paths,
+                venv_dir=self._venv_dir,
+            )
+            self.sigDone.emit(result)
+        except Exception as exc:
+            self.sigFailed.emit(str(exc))
 
 # Saved in .cdm3 file
 _DEFAULT_PROJECT_PROPS = {
@@ -88,6 +118,7 @@ class CodimensionProject(
     sigRestoreProjectExpandedDirs = pyqtSignal()
     sigProjectAboutToUnload = pyqtSignal()
     sigRecentFilesChanged = pyqtSignal()
+    sigFilesListReady = pyqtSignal()
 
     def __init__(self):
         QObject.__init__(self)
@@ -100,6 +131,10 @@ class CodimensionProject(
         FlowUICollapsedGroups.__init__(self)
 
         self.__dirWatcher = None
+        self.__scanThread = None
+        self.__scanGeneration = 0
+        self.__scanOnComplete = None
+        self.__pendingRestoreExpanded = False
 
         # Avoid pylint complains
         self.fileName = ""
@@ -145,6 +180,8 @@ class CodimensionProject(
         FlowUICollapsedGroups.reset(self)
 
         # Reset the dir watchers if so
+        self.__cancelScan()
+        self.__pendingRestoreExpanded = False
         if self.__dirWatcher is not None:
             del self.__dirWatcher
             self.__dirWatcher = None
@@ -187,15 +224,9 @@ class CodimensionProject(
         FileEncodings.setup(self, self.userProjectDir)
         FlowUICollapsedGroups.setup(self, self.userProjectDir)
 
-        self.__generateFilesList()
-
         self.saveProject()
-
-        # Update the watcher (exclude venv and excludeFromAnalysis from watch)
-        self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(), self.getProjectDir())
-        self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
-
-        self.sigProjectChanged.emit(self.CompleteProject)
+        # CompleteProject only after filesList is ready (T052 contract)
+        self.__generateFilesList(on_complete=self.__finishProjectOpen)
 
     @staticmethod
     def __removeProjectFiles(userProjectDir):
@@ -285,35 +316,60 @@ class CodimensionProject(
 
         # The project might have been moved...
         self.__createProjectFile()  # ~/.codimension3/uuidNN/project
-        self.__generateFilesList()
 
         # Update the recent list
         Settings().addRecentProject(self.fileName)
 
-        # Setup the new watcher (exclude venv and excludeFromAnalysis from watch)
-        self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(), self.getProjectDir())
-        self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
+        # CompleteProject only after filesList is ready (T052 contract)
+        self.__pendingRestoreExpanded = True
+        self.__generateFilesList(on_complete=self.__finishProjectOpen)
 
+    def __finishProjectOpen(self):
+        """Watcher + CompleteProject after filesList is consistent."""
+        if self.__dirWatcher is not None:
+            try:
+                self.__dirWatcher.deleteLater()
+            except Exception:
+                pass
+            self.__dirWatcher = None
+        self.__dirWatcher = self.__createWatcher()
+        self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
         self.sigProjectChanged.emit(self.CompleteProject)
-        self.sigRestoreProjectExpandedDirs.emit()
+        if self.__pendingRestoreExpanded:
+            self.__pendingRestoreExpanded = False
+            self.sigRestoreProjectExpandedDirs.emit()
+
+    def __finishAnalysisRescan(self):
+        """Recreate watcher and emit CompleteProject after rescan."""
+        if self.__dirWatcher is not None:
+            try:
+                self.__dirWatcher.deleteLater()
+            except Exception:
+                pass
+            self.__dirWatcher = None
+        self.__dirWatcher = self.__createWatcher()
+        self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
+        self.sigProjectChanged.emit(self.CompleteProject)
 
     def __getWatcherExcludeFilters(self):
-        """Build exclude filters for Watcher (venv + excludeFromAnalysis)."""
-        exclude_filters = list(Settings()["projectFilesFilters"])
-        proj_real = realpath(self.getProjectDir()).rstrip(sep)
+        """Basename regex filters only (Settings). Path excludes are absolute (T050)."""
+        return list(Settings()["projectFilesFilters"])
+
+    def __getWatcherExcludeAbsolutePaths(self):
+        """Absolute paths excluded from watch/scan (venv + excludeFromAnalysis)."""
+        paths = list(self.getExcludeFromAnalysisAsAbsolutePaths())
         venv_dir = getProjectVenvDir(self)
-        if venv_dir and (venv_dir == proj_real or venv_dir.startswith(proj_real + sep)):
-            venv_basename = basename(venv_dir.rstrip(sep))
-            if venv_basename:
-                exclude_filters.append("^" + re.escape(venv_basename) + "$")
-        added_basenames = set()
-        for excl_path in self.getExcludeFromAnalysisAsAbsolutePaths():
-            if excl_path.startswith(proj_real + sep) or excl_path == proj_real:
-                excl_basename = basename(excl_path.rstrip(sep))
-                if excl_basename and excl_basename not in added_basenames:
-                    added_basenames.add(excl_basename)
-                    exclude_filters.append("^" + re.escape(excl_basename) + "$")
-        return exclude_filters
+        if venv_dir:
+            paths.append(realpath(venv_dir))
+        return paths
+
+    def __createWatcher(self):
+        """Create filesystem watcher with path-aware excludes."""
+        return Watcher(
+            self.__getWatcherExcludeFilters(),
+            self.getProjectDir(),
+            excludeAbsolutePaths=self.__getWatcherExcludeAbsolutePaths(),
+        )
 
     def getImportDirsAsAbsolutePaths(self):
         """Provides a list of import dirs as absolute paths"""
@@ -341,18 +397,9 @@ class CodimensionProject(
 
     def __isExcludedFromAnalysis(self, candidate_path):
         """True if candidate_path should be excluded from analysis."""
-        exclude_paths = self.getExcludeFromAnalysisAsAbsolutePaths()
-        if not exclude_paths:
-            return False
-        cand_real = realpath(candidate_path)
-        for excl in exclude_paths:
-            excl_real = realpath(excl)
-            if cand_real == excl_real:
-                return True
-            excl_prefix = excl_real.rstrip(sep) + sep
-            if cand_real.startswith(excl_prefix):
-                return True
-        return False
+        return is_excluded_by_absolute_paths(
+            candidate_path, self.getExcludeFromAnalysisAsAbsolutePaths()
+        )
 
     def onFSChanged(self, items):
         """Triggered when the watcher detects changes"""
@@ -381,63 +428,87 @@ class CodimensionProject(
             self.saveProject()
             self.sigProjectChanged.emit(self.Properties)
 
-    def __generateFilesList(self):
-        """Generates the files list having the list of dirs"""
-        self.filesList = set()
+    def __cancelScan(self):
+        """Invalidate any in-flight background scan."""
+        self.__scanGeneration += 1
+        self.__scanOnComplete = None
+        if self.__scanThread is not None:
+            try:
+                self.__scanThread.sigDone.disconnect(self.__onScanDone)
+                self.__scanThread.sigFailed.disconnect(self.__onScanFailed)
+            except Exception:
+                pass
+            self.__scanThread = None
+
+    def __invokeScanComplete(self):
+        """Run and clear the pending post-scan callback."""
+        callback = self.__scanOnComplete
+        self.__scanOnComplete = None
+        if callback is not None:
+            callback()
+
+    def __scanSync(self):
+        """Synchronous project tree scan (tests / no QApplication)."""
         path = self.getProjectDir()
-        self.filesList.add(path)
-        venv_dir = getProjectVenvDir(self)
-        exclude_paths = self.getExcludeFromAnalysisAsAbsolutePaths()
-        self.__scanDir(path, venv_dir, exclude_paths)
+        self.filesList = scan_project_files(
+            path,
+            basename_filters=self.__excludeFilter,
+            exclude_absolute_paths=self.getExcludeFromAnalysisAsAbsolutePaths(),
+            venv_dir=getProjectVenvDir(self),
+            should_exclude=self.shouldExclude,
+        )
+        self.sigFilesListReady.emit()
 
-    def __scanDir(self, path, venv_dir=None, exclude_paths=None):
-        """Recursive function to scan one dir.
+    def __generateFilesList(self, *, sync=None, on_complete=None):
+        """Generate filesList; async when QApplication exists (T052).
 
-        venv_dir and exclude_paths are cached at top level to avoid repeated
-        computation for every file/dir during scan.
+        ``on_complete`` runs only after ``filesList`` is populated so callers can
+        emit ``CompleteProject`` with a consistent project tree.
         """
-        for item in os.listdir(path):
-            if self.shouldExclude(item):
-                continue
+        if sync is None:
+            sync = QApplication.instance() is None
+        # Preserve callback across cancel only after we set the new one
+        self.__cancelScan()
+        self.__scanOnComplete = on_complete
+        if sync:
+            self.__scanSync()
+            self.__invokeScanComplete()
+            return
 
-            candidate = path + item
-            if venv_dir and isdir(candidate):
-                cand_real = realpath(candidate)
-                venv_real = realpath(venv_dir)
-                if not cand_real.endswith(sep):
-                    cand_real += sep
-                if not venv_real.endswith(sep):
-                    venv_real += sep
-                if cand_real == venv_real or cand_real.startswith(venv_real):
-                    continue
-            if exclude_paths:
-                cand_real = realpath(candidate)
-                excluded = False
-                for excl in exclude_paths:
-                    excl_real = realpath(excl)
-                    if cand_real == excl_real:
-                        excluded = True
-                        break
-                    excl_prefix = excl_real.rstrip(sep) + sep
-                    if cand_real.startswith(excl_prefix):
-                        excluded = True
-                        break
-                if excluded:
-                    continue
-            if islink(candidate):
-                realItem = realpath(candidate)
-                if isdir(realItem):
-                    if self.isProjectDir(realItem):
-                        continue
-                else:
-                    if self.isProjectDir(dirname(realItem)):
-                        continue
+        generation = self.__scanGeneration
+        # Keep last known list until scan finishes; empty only on first load
+        if not self.filesList:
+            self.filesList = {self.getProjectDir()}
 
-            if isdir(candidate):
-                self.filesList.add(candidate + sep)
-                self.__scanDir(candidate + sep, venv_dir, exclude_paths)
-                continue
-            self.filesList.add(candidate)
+        thread = _ProjectScanThread(
+            self.getProjectDir(),
+            list(self.__excludeFilter),
+            self.getExcludeFromAnalysisAsAbsolutePaths(),
+            getProjectVenvDir(self),
+            parent=self,
+        )
+        self.__scanThread = thread
+        thread.sigDone.connect(lambda result, gen=generation: self.__onScanDone(result, gen))
+        thread.sigFailed.connect(lambda msg, gen=generation: self.__onScanFailed(msg, gen))
+        thread.start()
+
+    def __onScanDone(self, result, generation):
+        """Apply background scan results if still current."""
+        if generation != self.__scanGeneration:
+            return
+        self.filesList = result if isinstance(result, set) else set(result)
+        self.__scanThread = None
+        self.sigFilesListReady.emit()
+        self.__invokeScanComplete()
+
+    def __onScanFailed(self, message, generation):
+        """Log scan failure; fall back to sync scan for consistency."""
+        if generation != self.__scanGeneration:
+            return
+        logging.error("Project scan failed: %s", message)
+        self.__scanThread = None
+        self.__scanSync()
+        self.__invokeScanComplete()
 
     def isProjectDir(self, path):
         """Returns True if the path belongs to the project"""
@@ -468,13 +539,10 @@ class CodimensionProject(
             self.props = props
             self.saveProject()
             if need_rescan:
-                self.__generateFilesList()
-                if self.__dirWatcher is not None:
-                    self.__dirWatcher.deleteLater()
-                    self.__dirWatcher = Watcher(self.__getWatcherExcludeFilters(), self.getProjectDir())
-                    self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
-            # Emit CompleteProject when analysis scope changed so all consumers refresh
-            self.sigProjectChanged.emit(self.CompleteProject if need_rescan else self.Properties)
+                # CompleteProject after filesList is ready
+                self.__generateFilesList(on_complete=self.__finishAnalysisRescan)
+            else:
+                self.sigProjectChanged.emit(self.Properties)
 
     def onProjectFileUpdated(self):
         """Called when a project file is updated via direct editing"""

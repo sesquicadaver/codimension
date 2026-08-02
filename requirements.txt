@@ -1,7 +1,9 @@
-# Python version-specific dependencies
+# Convenience full install for local/CI (runtime + tools + security).
+# Canonical runtime deps: pyproject.toml [project.dependencies]
+# Groups: pip install -e ".[dev]"  (tools, lint, test, security)
+#
 # cdmpyparser/cdmcfparser: C extensions have python_requires='>=3.5,<3.10' on PyPI.
 # Excluded — codimension uses built-in pure-Python fallbacks (brief_ast, flow_ast) for 3.10+.
-# setuptools: provides distutils for Python 3.12+ (distutils removed in stdlib).
 setuptools>=65.0; python_version >= "3.12"
 cdmgcplugin>=1.0.4
 cdmpylintplugin>=1.0.4
@@ -20,7 +22,7 @@ mistune>=3.2.1
 pygments>=2.20.0
 qdarkstyle>=2.8.1
 packaging>=21.0
-# Optional: ruff, mypy, pytest, coverage for cdmplugins
+# Optional tool / test / security groups (also in pyproject optional-dependencies)
 ruff>=0.1.0
 mypy>=1.0.0
 pytest>=9.0.3

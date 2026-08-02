@@ -1,4 +1,4 @@
-# CI: ruff, mypy у venv. Відповідно до doc/plugins/plugins-implementation-plan.md
+# CI: ruff, mypy, pytest matrix, wheel install, offscreen GUI smoke
 name: CI
 
 on:
@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -23,15 +23,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-          cache-dependency-path: "requirements.txt"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
 
       - name: Create venv and install
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
-          pip install -e .
-          pip install ruff mypy
+          pip install -e ".[lint]"
 
       - name: Ruff check (codimension, cdmplugins)
         run: |
@@ -48,6 +49,62 @@ jobs:
           . .venv/bin/activate
           mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
 
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+
+      - name: Install and pytest
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -e ".[test,tools,security]"
+          pip check
+          pytest tests/ -v --tb=short
+
+  wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+
+      - name: Build wheel and clean-venv install
+        run: |
+          python -m venv .venv-build
+          . .venv-build/bin/activate
+          pip install --upgrade pip build
+          python -m build --wheel
+          deactivate
+          python -m venv .venv-wheel
+          . .venv-wheel/bin/activate
+          pip install --upgrade pip
+          pip install dist/codimension-*.whl
+          pip check
+          python -c "import codimension; print(codimension.__file__)"
+
   smoke:
     runs-on: ubuntu-latest
     steps:
@@ -56,27 +113,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: "pip"
-          cache-dependency-path: "requirements.txt"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
 
-      - name: Install and smoke test
+      - name: Install, import, pip-audit, offscreen GUI smoke
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
-          # Import check (no display required); codimension --help needs X11
           python -c "import codimension; import cdmplugins; print('OK')"
-
-      - name: pip-audit (vulnerabilities)
-        run: |
-          . .venv/bin/activate
           pip install pip-audit
           pip-audit -r requirements.txt
-
-      - name: Pytest (plugin tests)
-        run: |
-          . .venv/bin/activate
-          pytest tests/ -v --tb=short
+          QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py

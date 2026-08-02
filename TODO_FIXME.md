@@ -18,9 +18,10 @@
 | T029 | `tests/conformance/differential-report.md` | C-ext відсутній → explicit skip | ✅ SKIPPED (documented) |
 | T030–T035 | process_env + lint/mypy drivers | systemEnvironment; JSONL; non-blocking stop | ✅ DONE 2026-08-02 |
 | T040–T044 | git credentials + atomic_io + project schema | gh→keyring→0600; scrub; atomic `.cdm3` | ✅ DONE 2026-08-02 |
-| T050–T051 | `codimension/utils/project.py` | Basename-only exclusions; необмежений symlink traversal | 🔴 TODO |
-| T060–T067 | `pyproject.toml` / CI | Немає `[project.dependencies]`; CI ≠ заявлена матриця 3.10–3.13 | 🔴 TODO |
-| T070–T073 | bootstrap / imports | `sys.path` alias; dual-import singletons | 🟠 TODO |
+| T050–T052 | `project_scan` / `project` / `watcher` | Path-aware exclude; symlink visited; async scan | ✅ DONE 2026-08-02 |
+| T060–T067 | `pyproject.toml` / CI | `[project.dependencies]` + optional groups; matrix 3.10–3.13; wheel; offscreen | ✅ DONE 2026-08-02 |
+| T070 | `codimension/codimension.py` | `originalSysPath = list(sys.path)` | ✅ DONE 2026-08-02 |
+| T071–T073 | bootstrap / imports | dual-import inventory + shim identity | 🟠 TODO (після T073 gate для M5) |
 
 ## Критичні (anti-stub перевірка) — раніше
 
@@ -71,10 +72,11 @@
 
 ## Рекомендації щодо CI
 
-Поточний `.github/workflows/ci.yml` (факт 2026-08-02):
+Поточний `.github/workflows/ci.yml` (факт 2026-08-02, після T063–T066):
 
-1. Lint: Python 3.10–3.12 (не 3.13)
-2. Pytest/smoke: лише 3.11
-3. Немає wheel build / clean install / offscreen GUI
+1. Lint + pytest: матриця Python **3.10–3.13**
+2. Wheel build + clean venv install + `pip check`
+3. Offscreen GUI smoke (`scripts/offscreen_gui_smoke.py`)
+4. pip-audit на `requirements.txt`
 
-Цільовий стан — задачі **T063–T066**. Жива матриця модулів: [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+Жива матриця модулів: [doc/plugins/living-specification.md](doc/plugins/living-specification.md).

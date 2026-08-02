@@ -1,3 +1,13 @@
+2026 Aug 02
+
+* M3C/M4 project scan + packaging:
+  - utils/project_scan.py: path-aware excludes (T050), symlink visited/out-of-tree bound (T051)
+  - project.py: async background scan via QThread when QApplication present (T052)
+  - watcher.py: absolute path excludes (no basename collapse for excludeFromAnalysis)
+  - pyproject.toml: [project.dependencies] + optional tools/lint/test/security (T060–T062)
+  - CI: pytest/lint matrix 3.10–3.13, wheel+pip check, offscreen GUI smoke (T063–T066)
+  - codimension.py: originalSysPath = list(sys.path) (T070)
+
 2026 Jul 06
 
 * README: factual IDE description; removed aspirational architecture, environment and roadmap sections
