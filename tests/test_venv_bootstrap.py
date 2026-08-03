@@ -144,9 +144,11 @@ def test_recreate_order_and_refuse_outside(project_dir):
         runner_pip=pip,
         runner_rmtree=rm,
     )
-    assert calls[0][0] == "create" or calls[0][0] == "rm" or True
-    assert any(c[0] == "create" for c in calls)
-    assert any(c[0] == "pip" for c in calls)
+    kinds = [c[0] for c in calls]
+    assert "rm" in kinds or not os.path.exists(inside)
+    assert kinds.index("create") < kinds.index("pip")
+    if "rm" in kinds:
+        assert kinds.index("rm") < kinds.index("create")
 
     outside = "/tmp/not-in-project-venv-t140"
     with pytest.raises(RuntimeError, match="outside"):
@@ -254,6 +256,35 @@ def test_selected_unresolved_packages_opt_in():
     items = [("numpy", True), ("cv2", False), ("edgetpu", True)]
     assert selectedUnresolvedPackages(False, items) == []
     assert selectedUnresolvedPackages(True, items) == ["numpy", "edgetpu"]
+
+
+def test_stale_configured_interpreter_is_invalid(project_dir):
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    missing = str(project_dir / "gone" / "bin" / "python")
+    proj = _fake_project(project_dir, missing)
+    kind, path = vb.describeAnalysisPythonSource(proj)
+    assert kind == vb.SOURCE_INVALID
+    assert "gone" in path
+    text, tip = vb.formatAnalysisEnvStatus(proj)
+    assert text == "Env: broken"
+    assert "configured missing" in tip
+    # Analysis may fall back, but mutate must refuse
+    effective = vb.getEffectiveProjectPython(proj)
+    assert effective  # auto or IDE
+    with pytest.raises(RuntimeError, match="missing|not executable|configured"):
+        vb.requireMutableProjectPython(proj)
+
+
+def test_refuse_mutate_ide_python(project_dir):
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    with pytest.raises(RuntimeError, match="IDE"):
+        vb.assertSafeMutableProjectPython(sys.executable)
+    with pytest.raises(RuntimeError, match="IDE|no project venv"):
+        vb.requireMutableProjectPython(_fake_project(project_dir, ""))
 
 
 def test_request_analysis_environment_refresh(project_dir):

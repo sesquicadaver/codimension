@@ -22,6 +22,7 @@ from utils.venvbootstrap import (
     isPathInsideProject,
     recreateVenv,
     requestAnalysisEnvironmentRefresh,
+    requireMutableProjectPython,
     runPipInstall,
     selectedUnresolvedPackages,
     venvDirFromPython,
@@ -90,9 +91,7 @@ def _add_sources_widgets(parent, layout, project):
     unresolved_cb.toggled.connect(pkg_list.setEnabled)
     layout.addWidget(pkg_list)
     if packages:
-        layout.addWidget(
-            QLabel("Enable unresolved, then review the checked packages above.", parent)
-        )
+        layout.addWidget(QLabel("Enable unresolved, then review the checked packages above.", parent))
     return req_checks, pyproject_cb, unresolved_cb, pkg_list
 
 
@@ -209,6 +208,9 @@ class VenvSetupDialog(QDialog):
                 self._pkg_list,
             )
             if reqs or packages or install_proj:
+                from utils.venvbootstrap import assertSafeMutableProjectPython
+
+                assertSafeMutableProjectPython(python)
                 cmd = buildPipInstallCommand(
                     python,
                     mode=MODE_SYNC,
@@ -254,7 +256,15 @@ class VenvUpdateDialog(QDialog):
         self.setWindowIcon(getIcon("project.png"))
         self._project = GlobalData().project
         self._project_dir = self._project.getProjectDir()
-        self._python = getEffectiveProjectPython(self._project)
+        try:
+            self._python = requireMutableProjectPython(self._project)
+        except RuntimeError as exc:
+            QMessageBox.warning(self, "Update VENV", str(exc))
+            # Still build UI with effective path for display; accept will re-check.
+            self._python = getEffectiveProjectPython(self._project)
+            self._mutable_blocked = str(exc)
+        else:
+            self._mutable_blocked = ""
         self.__build()
 
     def __build(self):
@@ -296,6 +306,14 @@ class VenvUpdateDialog(QDialog):
         return MODE_SYNC
 
     def _on_accept(self):
+        if self._mutable_blocked:
+            QMessageBox.warning(self, "Update VENV", self._mutable_blocked)
+            return
+        try:
+            self._python = requireMutableProjectPython(self._project)
+        except RuntimeError as exc:
+            QMessageBox.warning(self, "Update VENV", str(exc))
+            return
         mode = self._mode()
         reqs, packages, install_proj = _selected_sources(
             self._req_checks,

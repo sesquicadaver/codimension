@@ -25,9 +25,10 @@ This is an **active fork** of [SergeySatskiy/codimension](https://github.com/Ser
 
 - Not a production-ready IDE; focus is code analysis and visualization, not a VS Code / PyCharm replacement
 - Git plugin is MVP (no stash/merge UI); PRs via `gh` CLI
-- Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; local venv via Project Properties or Tools → **VENV…**
-- No auto venv setup on project open; unresolved packages for pip are opt-in with multi-select; MCP env binding lives in the separate [CAN-MCP](https://github.com/sesquicadaver/CAN-MCP) app
-- Long-term plans (overlay metrics, AI, modular core) — [ROADMAP.md](ROADMAP.md), not current state
+- Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; local venv via Project Properties or Tools → **VENV…** (mutate guards; async pip still OPEN)
+- No auto venv setup on project open; unresolved packages for pip are opt-in; see open audit items in [TODO_FIXME.en.md](TODO_FIXME.en.md)
+- Not a production-ready analyzer: remaining parser/scan/VENV lifecycle gaps — [TODO_FIXME.en.md](TODO_FIXME.en.md) A03–A12
+- Long-term plans — [ROADMAP.md](ROADMAP.md), not current state
 
 ## Requirements
 

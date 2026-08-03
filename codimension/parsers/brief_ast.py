@@ -771,8 +771,10 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                 mod_info._onEncoding(m.group(1).strip(), ln, 1, index.line_start(ln))
             break
 
-    # Module-level: imports and globals
-    for node in tree.body:
+    # Module-level: imports and globals (including inside control-flow; T015/audit P0)
+    for node in _iter_suite_statements(tree.body):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
         if isinstance(node, ast.Import):
             for alias in node.names:
                 ln, p, ap = pos(node)
@@ -889,7 +891,8 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                 _collect_instance_attrs(stmt)
         mod_info._flush_level(level)
 
-    for node in tree.body:
+    # Nested / control-flow-wrapped defs at module level (audit P0)
+    for node in _iter_suite_statements(tree.body):
         if isinstance(node, ast.ClassDef):
             visit_class(node, 0)
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

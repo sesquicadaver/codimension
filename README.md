@@ -25,9 +25,10 @@
 
 - Не production-ready IDE; орієнтир — аналіз і візуалізація коду, не заміна VS Code / PyCharm
 - Git-плагін — MVP (без stash/merge UI); PR через `gh` CLI
-- Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**; локальний venv — через Project Properties або Tools → **VENV…**
-- Авто-setup venv на open проєкту — **немає**; unresolved packages для pip — opt-in з multi-select; MCP env binding — окремий застосунок [CAN-MCP](https://github.com/sesquicadaver/CAN-MCP)
-- Довгострокові плани (overlay metrics, AI, modular core) — [ROADMAP.md](ROADMAP.md), не поточний стан
+- Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**; локальний venv — через Project Properties або Tools → **VENV…** (mutate guards; async pip — ще OPEN)
+- Авто-setup venv на open — **немає**; unresolved packages для pip — opt-in; див. відкриті пункти аудиту в [TODO_FIXME.md](TODO_FIXME.md)
+- Не production-ready analyzer: залишкові parser/scan/VENV lifecycle gaps — [TODO_FIXME.md](TODO_FIXME.md) A03–A12
+- Довгострокові плани — [ROADMAP.md](ROADMAP.md), не поточний стан
 
 ## Вимоги
 

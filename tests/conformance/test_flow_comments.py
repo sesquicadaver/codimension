@@ -140,6 +140,6 @@ def test_case_span_includes_header() -> None:
     case = next(c for c in match["children"] if c.get("kind") == "Case" or c.get("role") == "part")
     assert case["display"].startswith("case ")
     slice_txt = source[case["begin"] : case["end"]]
-    assert "case" in slice_txt or slice_txt.startswith("0")  # pattern start
+    assert slice_txt.lstrip().startswith("case"), slice_txt
     # Must not be body-only
     assert 'return "zero"' != slice_txt

@@ -2,7 +2,7 @@
 
 > **Language / Мова:** English | [Українська](ROADMAP.uk.md)
 
-> **Fork status (2026-08):** Phase 0–1 + audit M1–M5 foundation green. Debugger GUI e2e **T100–T130 DONE** (T130 = nightly full-IDE smoke, not a PR blocker). Local project VENV **T140–T141 DONE** (explicit VENV/Update UI, Env: status bar, re-analyze, unresolved opt-in). Still open in later phases: auto-on-open venv, Docker/SSH/K8s. See [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+> **Fork status (2026-08):** Strong experimental / modernized fork. T001–T141 code landed; **re-audit P0 open items** tracked in [TODO_FIXME.md](TODO_FIXME.md) (VENV async, parser span/comment ownership, scan lifecycle, T130 nightly verify). Do not treat as production-ready analyzer until A02–A08 close. See Living Spec.
 
 ---
 

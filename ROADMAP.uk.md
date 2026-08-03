@@ -2,7 +2,7 @@
 
 > **Мова / Language:** Українська | [English](ROADMAP.md)
 
-> **Стан форку (2026-08):** Phase 0–1 + audit M1–M5 foundation зелені. Debugger GUI e2e **T100–T130 DONE** (T130 = nightly full-IDE smoke, не PR-blocker). Локальний project VENV **T140–T141 DONE** (явний VENV/Update UI, Env: у status bar, re-analyze, unresolved opt-in). Далі в фазах: auto-on-open venv, Docker/SSH/K8s. Деталі: [TODO_FIXME.md](TODO_FIXME.md), [doc/plugins/living-specification.md](doc/plugins/living-specification.md).
+> **Стан форку (2026-08):** Сильний experimental / модернізований форк. Код T001–T141 є; **відкриті P0 з повторного аудиту** — [TODO_FIXME.md](TODO_FIXME.md) (async VENV, spans/comments, scan lifecycle, T130 nightly verify). Не позиціонувати як production-ready analyzer до закриття A02–A08.
 
 Повний англомовний текст фаз — у [ROADMAP.md](ROADMAP.md). Нижче — стислий огляд українською.
 

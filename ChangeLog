@@ -1,5 +1,13 @@
 2026 Aug 03
 
+* Re-audit P0 hotfix (post-179cb0a4):
+  - CI: independent ruff / format / mypy / import-gates jobs; `permissions: contents: read`
+  - Fix Ruff I001 in cdmplugins/lintdriverbase.py
+  - VENV: no silent configured→IDE fallback (`Env: broken`); refuse pip/recreate on IDE env
+  - brief_ast: module-level defs inside control-flow; flow_ast: ImportFrom.level + case header
+  - Honest TODO_FIXME / Living Spec (OPEN blockers A01–A13)
+  - Remaining OPEN: async VENV, half-open spans, comment binder, scan cancel, T130 nightly verify
+
 * Docs hygiene: compact TODO_FIXME (T001–T141 DONE), sync ROADMAP/Living Spec/EN,
   update project docs for T140/T141, drop stale «46 tests» / T130-deferred claims;
   remove local OMX/.venv-review work artifacts

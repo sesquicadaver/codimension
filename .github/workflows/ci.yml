@@ -1,4 +1,4 @@
-# CI: ruff, mypy, pytest matrix, wheel install, offscreen GUI smoke
+# CI: independent static gates, pytest matrix, wheel install, offscreen GUI smoke
 name: CI
 
 on:
@@ -7,17 +7,19 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+
 jobs:
-  lint:
+  # Independent static jobs so one failure does not hide the others (audit P0).
+  ruff:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -26,38 +28,91 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             pyproject.toml
-
-      - name: Create venv and install
+      - name: Install lint extras
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
           pip install -e ".[lint]"
-
-      - name: T072 package-relative import gate
-        run: |
-          . .venv/bin/activate
-          python scripts/check_package_relative_imports.py
-
-      - name: T085 core import-graph gate
-        run: |
-          . .venv/bin/activate
-          python scripts/check_core_import_graph.py
-
-      - name: Ruff check (codimension, cdmplugins)
+      - name: Ruff check
         run: |
           . .venv/bin/activate
           ruff check codimension cdmplugins
 
-      - name: Ruff format (check only)
+  ruff-format:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+      - name: Install lint extras
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -e ".[lint]"
+      - name: Ruff format check
         run: |
           . .venv/bin/activate
           ruff format --check codimension cdmplugins
 
-      - name: Mypy (codimension, cdmplugins)
+  mypy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+      - name: Install lint extras
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -e ".[lint]"
+      - name: Mypy
         run: |
           . .venv/bin/activate
           mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
+
+  import-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+      - name: Install and run T072/T085 gates
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -e ".[lint]"
+          python scripts/check_package_relative_imports.py
+          python scripts/check_core_import_graph.py
 
   test:
     runs-on: ubuntu-latest
@@ -85,8 +140,6 @@ jobs:
           pip install --upgrade pip
           pip install -e ".[test,tools,security]"
           pip check
-          # T103: named gate first for clear CI logs. Full suite below re-runs the
-          # same debugger_session tests (~8 after T120; accepted duplicate).
           echo "::group::Debugger session e2e (offscreen)"
           QT_QPA_PLATFORM=offscreen pytest tests/debugger/ -m debugger_session -v --tb=short
           echo "::endgroup::"

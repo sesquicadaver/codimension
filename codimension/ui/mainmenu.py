@@ -357,9 +357,7 @@ class MainWindowMenuMixin:
         toolsMenu.addSeparator()
         self.__projectUtilitiesMenu = QMenu("Project utilities", self)
         self.__projectUtilitiesMenu.setIcon(getIcon("project.png"))
-        self._venvSetupAct = self.__projectUtilitiesMenu.addAction(
-            getIcon("project.png"), "VENV…", self._onVenvSetup
-        )
+        self._venvSetupAct = self.__projectUtilitiesMenu.addAction(getIcon("project.png"), "VENV…", self._onVenvSetup)
         self._venvUpdateAct = self.__projectUtilitiesMenu.addAction(
             getIcon("project.png"), "Update VENV…", self._onVenvUpdate
         )

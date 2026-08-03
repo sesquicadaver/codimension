@@ -16,9 +16,9 @@
           "beginPos": 5,
           "children": [
             {
-              "begin": 43,
+              "begin": 38,
               "beginLine": 3,
-              "beginPos": 14,
+              "beginPos": 9,
               "children": [
                 {
                   "begin": 58,
@@ -41,9 +41,9 @@
               "role": "part"
             },
             {
-              "begin": 85,
+              "begin": 80,
               "beginLine": 5,
-              "beginPos": 14,
+              "beginPos": 9,
               "children": [
                 {
                   "begin": 100,

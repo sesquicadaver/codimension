@@ -576,11 +576,7 @@ class _FlowBuilder(ast.NodeVisitor):
     @staticmethod
     def _is_docstring_stmt(stmt: ast.AST) -> bool:
         """True if ``stmt`` is a standalone string expression used as a docstring."""
-        return (
-            isinstance(stmt, ast.Expr)
-            and isinstance(stmt.value, ast.Constant)
-            and isinstance(stmt.value.value, str)
-        )
+        return isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant) and isinstance(stmt.value.value, str)
 
     def _attach_docstring(self, node: ast.AST, frag: Any) -> list[ast.stmt]:
         """Set ``frag.docstring`` from ``node`` and return body without docstring stmt."""
@@ -808,8 +804,19 @@ class _FlowBuilder(ast.NodeVisitor):
             subj = ""
         frag._display_value = f"match {subj}:" if subj else "match"
         for case in node.cases:
-            # Span from pattern (case header) through last body stmt
-            cb, _, cbln, _, cbpos, _ = self._pos(case.pattern)
+            # Span from ``case`` keyword through last body stmt (audit P0)
+            pb, _, _pbln, _, _pbpos, _ = self._pos(case.pattern)
+            cb, cbln, cbpos = pb, _pbln, _pbpos
+            search_lo = max(b, pb - 80)
+            region = self.source[search_lo:pb]
+            rel = region.rfind("case")
+            if rel >= 0:
+                cb = search_lo + rel
+                # Recompute line/pos from absolute begin via SourceIndex
+                if self.index is not None:
+                    cbln, cbpos = self.index.line_col_from_abs(cb)
+                else:
+                    cbln, cbpos = _pbln, _pbpos
             if case.body:
                 _, ce, _, celn, _, cepos = self._pos(case.body[-1])
             else:
@@ -818,7 +825,13 @@ class _FlowBuilder(ast.NodeVisitor):
                 pattern_src = ast.unparse(case.pattern) if hasattr(ast, "unparse") else "_"
             except (TypeError, ValueError, RecursionError):
                 pattern_src = "_"
-            display = f"case {pattern_src}:"
+            guard_src = ""
+            if case.guard is not None:
+                try:
+                    guard_src = " if " + (ast.unparse(case.guard) if hasattr(ast, "unparse") else "")
+                except (TypeError, ValueError, RecursionError):
+                    guard_src = " if …"
+            display = f"case {pattern_src}{guard_src}:"
             part = _CasePart(cb, ce, cbln, celn, cbpos, cepos, display_value=display)
             self._visit_suite(case.body, part.nsuite)
             frag.parts.append(part)
@@ -865,7 +878,10 @@ class _FlowBuilder(ast.NodeVisitor):
             display_value = "import " + ", ".join(names)
             what_part = _Body(b, e, bln, eln, bpos, epos)
         else:
+            level = getattr(node, "level", 0) or 0
+            dots = "." * level
             module = node.module or ""
+            mod_display = dots + module
             names = []
             for alias in node.names:
                 if alias.asname is None:
@@ -873,15 +889,21 @@ class _FlowBuilder(ast.NodeVisitor):
                 else:
                     names.append(f"{alias.name} as {alias.asname}")
             what_str = ", ".join(names)
-            display_value = f"from {module} import {what_str}" if module else f"import {what_str}"
-            if node.module:
+            if mod_display:
+                display_value = f"from {mod_display} import {what_str}"
+            else:
+                display_value = f"import {what_str}"
+            if mod_display:
                 chunk = self.source[b:e]
-                needle = f"from {module}"
+                needle = f"from {mod_display}"
                 off = chunk.find(needle)
+                if off < 0 and module:
+                    # Fallback: source may write `from . import` with spaces
+                    off = chunk.find("from " + dots)
                 if off >= 0:
                     mod_b = b + off + len("from ")
-                    mod_e = mod_b + len(module) - 1
-                    from_part = self._body_from_abs_range(mod_b, mod_e)
+                    mod_e = mod_b + len(mod_display)  # half-open exclusive end
+                    from_part = self._body_from_abs_range(mod_b, mod_e - 1 if mod_e > mod_b else mod_b)
             what_part = _Body(b, e, bln, eln, bpos, epos)
 
         return _ImportFrag(

@@ -24,12 +24,14 @@ SOURCE_CONFIGURED = "configured"
 SOURCE_SESSION = "session"
 SOURCE_AUTO = "auto"
 SOURCE_IDE = "ide"
+SOURCE_INVALID = "invalid"  # configured path set but not resolvable (audit P0)
 
 _SOURCE_STATUS_LABELS = {
     SOURCE_CONFIGURED: "Env: project",
     SOURCE_SESSION: "Env: session",
     SOURCE_AUTO: "Env: auto",
     SOURCE_IDE: "Env: IDE",
+    SOURCE_INVALID: "Env: broken",
 }
 
 # Session overlay lives here so helpers work without constructing GlobalData.
@@ -59,38 +61,33 @@ def clearSessionPythonInterpreter() -> None:
     setSessionPythonInterpreter("")
 
 
-def _resolveConfigured(project, interp: str) -> str:
-    """Resolve configured interpreter path to an executable."""
+def _configuredDisplayPath(project, interp: str) -> str:
+    """Absolute display path for a configured interpreter (may be missing)."""
     if not os.path.isabs(interp):
-        project_dir = project.getProjectDir()
+        project_dir = project.getProjectDir() if project is not None else None
         if project_dir:
-            interp = os.path.normpath(os.path.join(project_dir, interp))
-    if os.path.isfile(interp) and os.access(interp, os.X_OK):
-        return os.path.abspath(interp)
-    venv_python = resolveVenvToPython(interp)
+            return os.path.normpath(os.path.join(project_dir, interp))
+    return os.path.abspath(interp) if interp else interp
+
+
+def _tryResolveConfigured(project, interp: str) -> str | None:
+    """Resolve configured interpreter to an executable, or ``None`` if invalid.
+
+    Never falls back to ``sys.executable`` (audit P0 — no silent IDE swap).
+    """
+    if not interp:
+        return None
+    candidate = _configuredDisplayPath(project, interp)
+    if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+        return os.path.abspath(candidate)
+    venv_python = resolveVenvToPython(candidate)
     if venv_python:
         return venv_python
-    return sys.executable
+    return None
 
 
-def getEffectiveProjectPython(project) -> str:
-    """Resolve project Python: props → session overlay → auto-detect → IDE."""
-    return describeAnalysisPythonSource(project)[1]
-
-
-def describeAnalysisPythonSource(project) -> tuple[str, str]:
-    """Return ``(kind, absolute_python_path)`` for import/analysis resolution.
-
-    Kinds: ``configured`` (``.cdm3``), ``session`` (overlay), ``auto`` (root
-    ``.venv``/``venv``/``env``), ``ide`` (``sys.executable`` fallback).
-    """
-    if project is None or not project.isLoaded():
-        return SOURCE_IDE, sys.executable
-
-    interp = project.props.get("pythoninterpreter", "").strip()
-    if interp:
-        return SOURCE_CONFIGURED, _resolveConfigured(project, interp)
-
+def _resolveWithoutConfigured(project) -> tuple[str, str]:
+    """Resolve session → auto → IDE (ignores ``pythoninterpreter`` prop)."""
     session = getSessionPythonInterpreter()
     if session:
         if os.path.isfile(session) and os.access(session, os.X_OK):
@@ -99,7 +96,7 @@ def describeAnalysisPythonSource(project) -> tuple[str, str]:
         if venv_python:
             return SOURCE_SESSION, venv_python
 
-    project_dir = project.getProjectDir()
+    project_dir = project.getProjectDir() if project is not None else None
     if project_dir:
         for venv_name in ROOT_VENV_NAMES:
             venv_path = os.path.join(project_dir, venv_name)
@@ -109,10 +106,95 @@ def describeAnalysisPythonSource(project) -> tuple[str, str]:
     return SOURCE_IDE, sys.executable
 
 
+def isIdePythonEnvironment(python_path: str) -> bool:
+    """True if ``python_path`` is the running IDE interpreter or its venv prefix."""
+    if not python_path:
+        return True
+    try:
+        py_real = os.path.realpath(python_path)
+        if py_real == os.path.realpath(sys.executable):
+            return True
+        venv_dir = venvDirFromPython(py_real)
+        if venv_dir and os.path.realpath(venv_dir) == os.path.realpath(sys.prefix):
+            return True
+        if os.path.realpath(sys.prefix) and py_real.startswith(os.path.realpath(sys.prefix) + os.sep):
+            # Scripts inside active IDE prefix (pip, etc.)
+            return True
+    except Exception:
+        return True
+    return False
+
+
+def assertSafeMutableProjectPython(python_path: str) -> str:
+    """Return absolute python path or raise if mutating it would touch the IDE."""
+    if not python_path:
+        raise RuntimeError("refusing pip/venv mutate: empty interpreter")
+    path = os.path.abspath(python_path)
+    if isIdePythonEnvironment(path):
+        raise RuntimeError("refusing pip/venv mutate: target is the Codimension IDE interpreter/venv")
+    if not os.path.isfile(path) or not os.access(path, os.X_OK):
+        raise RuntimeError(f"refusing pip/venv mutate: not an executable: {path}")
+    return path
+
+
+def requireMutableProjectPython(project) -> str:
+    """Python allowed for pip install / recreate (raises on broken or IDE target)."""
+    kind, path = describeAnalysisPythonSource(project)
+    if kind == SOURCE_INVALID:
+        raise RuntimeError(
+            "configured pythoninterpreter is missing or not executable; "
+            "fix Project Properties / VENV… before Update VENV"
+        )
+    if kind == SOURCE_IDE:
+        raise RuntimeError(
+            "no project venv configured; use VENV… to create/attach one (refusing to mutate the IDE Python)"
+        )
+    return assertSafeMutableProjectPython(path)
+
+
+def getEffectiveProjectPython(project) -> str:
+    """Resolve project Python for analysis: props → session → auto → IDE.
+
+    When ``pythoninterpreter`` is set but invalid, falls back for *read-only*
+    analysis only; status bar reports ``Env: broken`` via
+    ``describeAnalysisPythonSource``. Mutating ops must use
+    ``requireMutableProjectPython``.
+    """
+    kind, path = describeAnalysisPythonSource(project)
+    if kind == SOURCE_INVALID:
+        return _resolveWithoutConfigured(project)[1]
+    return path
+
+
+def describeAnalysisPythonSource(project) -> tuple[str, str]:
+    """Return ``(kind, path)`` for import/analysis / status bar.
+
+    Kinds: ``configured``, ``session``, ``auto``, ``ide``, ``invalid``
+    (configured path set but not resolvable — path is the configured display
+    path, not a silent IDE fallback).
+    """
+    if project is None or not project.isLoaded():
+        return SOURCE_IDE, sys.executable
+
+    interp = project.props.get("pythoninterpreter", "").strip()
+    if interp:
+        resolved = _tryResolveConfigured(project, interp)
+        if resolved:
+            return SOURCE_CONFIGURED, resolved
+        return SOURCE_INVALID, _configuredDisplayPath(project, interp)
+
+    return _resolveWithoutConfigured(project)
+
+
 def formatAnalysisEnvStatus(project) -> tuple[str, str]:
     """Return ``(status_bar_text, tooltip_path)`` for the analysis environment."""
     kind, path = describeAnalysisPythonSource(project)
-    return _SOURCE_STATUS_LABELS.get(kind, "Env: IDE"), path
+    label = _SOURCE_STATUS_LABELS.get(kind, "Env: IDE")
+    if kind == SOURCE_INVALID:
+        fallback = _resolveWithoutConfigured(project)[1]
+        tip = f"configured missing: {path}\nanalysis fallback: {fallback}"
+        return label, tip
+    return label, path
 
 
 def selectedUnresolvedPackages(enabled: bool, items: list[tuple[str, bool]]) -> list[str]:
@@ -248,7 +330,12 @@ def buildPipInstallCommand(
 
 
 def runPipInstall(cmd: list[str], *, cwd: str | None = None) -> None:
-    """Execute pip install command; raise RuntimeError on failure."""
+    """Execute pip install command; raise RuntimeError on failure.
+
+    Refuses when the target interpreter is the Codimension IDE environment.
+    """
+    if cmd:
+        assertSafeMutableProjectPython(cmd[0])
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True, cwd=cwd)
     except subprocess.CalledProcessError as exc:
@@ -269,11 +356,19 @@ def recreateVenv(
 ) -> str:
     """Delete (if exists), create venv, sync-install selected sources.
 
-    Refuses paths outside ``project_dir``. Returns new python path.
+    Refuses paths outside ``project_dir`` and refuses to destroy the active
+    Codimension IDE venv (audit P0). Returns new python path.
     """
     venv_dir = os.path.abspath(venv_dir)
     if not isPathInsideProject(venv_dir, project_dir):
         raise RuntimeError(f"recreate refused: {venv_dir} is outside project {project_dir}")
+    try:
+        if os.path.realpath(venv_dir) == os.path.realpath(sys.prefix):
+            raise RuntimeError(f"recreate refused: {venv_dir} is the active Codimension IDE venv")
+    except RuntimeError:
+        raise
+    except Exception:
+        pass
     rm = runner_rmtree or shutil.rmtree
     create = runner_create or createVenv
     pip = runner_pip or runPipInstall

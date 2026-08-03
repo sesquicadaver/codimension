@@ -2,20 +2,38 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-08-03  
+**Last review:** 2026-08-03 (re-audit master@179cb0a4 + in-tree P0 hotfix)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Completed audit 2026-08 (T001–T141)
+## Open blockers (re-audit 2026-08-03)
 
-All linear remediation items and VENV/env follow-ups are **DONE**. Details: [ChangeLog](ChangeLog), matrix: [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md).
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| A01 | Red master CI (Ruff I001) + sequential lint gates | P0 | 🔧 hotfix: I001 + independent jobs |
+| A02 | VENV silent configured→`sys.executable`; pip/recreate IDE env | P0 | 🔧 hotfix: `SOURCE_INVALID` + mutate guards |
+| A03 | VENV sync `subprocess.run` blocks GUI | P0 | 🔓 OPEN (async runner) |
+| A04 | brief_ast: module-level defs inside control-flow | P0 | 🔧 hotfix: module `_iter_suite_statements` |
+| A05 | flow_ast: `ImportFrom.level`; half-open spans; case header | P0 | 🔧 partial: relative + case header; spans OPEN |
+| A06 | Docs overstated DONE/CI-green | P0 | 🔧 this file / Living Spec |
+| A07 | Comment binder: tokenize char vs AST byte columns; nested trailing | P1 | 🔓 OPEN |
+| A08 | brief_ast: name/colon positions | P1 | 🔓 OPEN |
+| A09 | Project scan thread cancel/join lifecycle | P1 | 🔓 OPEN |
+| A10 | `updateProperties` / `onProjectFileUpdated` without schema validate | P2 | 🔓 OPEN |
+| A11 | `Settings.flush` not atomic | P2 | 🔓 OPEN |
+| A12 | T130 nightly: IMPLEMENTED / NOT YET VERIFIED (0 runs) | P2 | 🔓 OPEN |
+| A13 | setup.py metadata duplication | P2 | 🔓 OPEN |
 
-| Block | Status |
-|-------|--------|
-| Parsers / conformance (T001–T029) | ✅ DONE (T029 SKIPPED — no C-ext) |
-| Tooling / credentials / project scan (T030–T052) | ✅ DONE |
-| Packaging / CI / bootstrap / core (T060–T085) | ✅ DONE |
-| Debugger GUI e2e (T100–T130) | ✅ DONE (T130 — nightly, not a PR blocker) |
-| Project VENV + analysis env (T140–T141) | ✅ DONE |
+## Completed 2026-08 basis (T001–T141)
+
+Remediation infrastructure is **present in code**, but that does **not** mean production-ready or that all gates are green without CI verification.
+
+| Block | Code | Verification |
+|-------|------|--------------|
+| Parsers / conformance (T001–T029) | ✅ | partial; see A04–A08 |
+| Tooling / credentials / scan (T030–T052) | ✅ | scan lifecycle A09 |
+| Packaging / CI / core (T060–T085) | ✅ | CI layout A01 |
+| Debugger e2e (T100–T130) | ✅ code | T130 nightly A12 |
+| Project VENV + Env: (T140–T141) | ✅ UI | safety A02–A03 |
 
 ## `pass` stubs (need review)
 
@@ -32,9 +50,8 @@ All linear remediation items and VENV/env follow-ups are **DONE**. Details: [Cha
 
 | Topic | State |
 |-------|-------|
-| **Unit tests** | `pytest tests/` — **173** tests (CI matrix 3.10–3.13) |
-| **mypy / ruff** | `codimension` + `cdmplugins` in CI; tools in `requirements.txt` |
-| **CI** | lint + pytest; wheel+`pip check`; offscreen GUI smoke; pip-audit; T072/T085 gates; debugger_session step |
-| **Lazy load Classes/Functions/Globals** | `populateIfNeeded` ✅ |
+| **Unit tests** | `pytest tests/` — **175** passed / 2 skipped (local after P0 hotfix) |
+| **CI** | independent jobs: ruff / ruff-format / mypy / import-gates / test / wheel / smoke; `permissions: contents: read` |
+| **Living Spec** | must list OPEN audit items, not only `[x] CI passes` |
 
 Living matrix: [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md).

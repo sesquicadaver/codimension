@@ -77,8 +77,18 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 - [x] setup.py updated
 - [x] requirements.txt updated
 - [x] Documentation updated (plugins.md, living-specification.md)
-- [x] CI passes (ruff, mypy, pytest, pip-audit)
+- [ ] CI green on `master` — verify Actions; see [TODO_FIXME.en.md](../../../TODO_FIXME.en.md) A01–A06 (do not claim green without a run)
 - [x] Documentation: [doc/README.md](../../README.md)
+
+### Open re-audit items (2026-08-03)
+
+| ID | Topic | Status |
+|----|-------|--------|
+| A02–A03 | VENV mutate safety / async pip | partial / OPEN |
+| A05 | flow half-open span contract | OPEN |
+| A07–A08 | comment binder / name-colon positions | OPEN |
+| A09 | project scan thread lifecycle | OPEN |
+| A12 | T130 nightly verified | OPEN (IMPLEMENTED, not verified) |
 
 ---
 

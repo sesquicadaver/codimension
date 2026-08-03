@@ -55,6 +55,22 @@ class SourceIndex:
             return len(self.source)
         return starts[lineno - 1]
 
+    def line_col_from_abs(self, abs_pos: int) -> tuple[int, int]:
+        """Return ``(lineno, 1-based char column)`` for an absolute character offset."""
+        abs_pos = max(0, min(abs_pos, len(self.source)))
+        starts = self._line_starts
+        # Last start with start <= abs_pos
+        lo, hi = 0, len(starts) - 1
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if starts[mid] <= abs_pos:
+                lo = mid
+            else:
+                hi = mid - 1
+        lineno = lo + 1
+        col = abs_pos - starts[lo] + 1
+        return lineno, col
+
     def line_text(self, lineno: int) -> str:
         """Return the text of ``lineno`` without the terminating newline."""
         start = self.line_start(lineno)

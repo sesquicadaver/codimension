@@ -49,9 +49,7 @@ class Watcher(QObject):
         # data members
         self.__excludeFilter = []  # Basename regex filters (Settings)
         # Path-aware absolute excludes (T050): exact path or descendants only
-        self.__excludeAbsolutePaths = [
-            realpath(p) for p in (excludeAbsolutePaths or []) if p
-        ]
+        self.__excludeAbsolutePaths = [realpath(p) for p in (excludeAbsolutePaths or []) if p]
         self.__projectRoot = realpath(dirToWatch)
         self.__srcDirsToWatch = set()  # Came from the user
 

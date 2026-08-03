@@ -17,10 +17,11 @@ Subclasses implement buildArgs() and parseOutput().
 
 import os.path
 
-from cdmplugins.process_env import build_tool_process_environment
 from ui.qt import QByteArray, QProcess, QTimer, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
 from utils.run import getProjectPythonPath
+
+from cdmplugins.process_env import build_tool_process_environment
 
 # Terminate grace period before kill (ms) — avoids sync waitForFinished in GUI.
 _STOP_KILL_TIMEOUT_MS = 2000

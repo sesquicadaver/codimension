@@ -78,6 +78,7 @@ class _ProjectScanThread(QThread):
         except Exception as exc:
             self.sigFailed.emit(str(exc))
 
+
 # Saved in .cdm3 file
 _DEFAULT_PROJECT_PROPS = {
     "scriptname": "",  # Script to run the project
@@ -402,9 +403,7 @@ class CodimensionProject(
 
     def __isExcludedFromAnalysis(self, candidate_path):
         """True if candidate_path should be excluded from analysis."""
-        return is_excluded_by_absolute_paths(
-            candidate_path, self.getExcludeFromAnalysisAsAbsolutePaths()
-        )
+        return is_excluded_by_absolute_paths(candidate_path, self.getExcludeFromAnalysisAsAbsolutePaths())
 
     def onFSChanged(self, items):
         """Triggered when the watcher detects changes"""

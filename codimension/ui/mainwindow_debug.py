@@ -385,11 +385,7 @@ class MainWindowDebuggerMixin:
 
     def _onDbgJumpToCurrent(self):
         """Jump to the current debug line"""
-        if (
-            self._lastDebugFileName is None
-            or self._lastDebugLineNumber is None
-            or self._lastDebugAsException is None
-        ):
+        if self._lastDebugFileName is None or self._lastDebugLineNumber is None or self._lastDebugAsException is None:
             return
 
         self.em.openFile(self._lastDebugFileName, self._lastDebugLineNumber)
@@ -564,4 +560,3 @@ class MainWindowDebuggerMixin:
         if os.path.exists(fileName) and os.path.isabs(fileName):
             return True
         return False
-
