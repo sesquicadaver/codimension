@@ -84,7 +84,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 
 | ID | Topic | Status |
 |----|-------|--------|
-| B01–B02 | VENV root identity / `.cdm3` UUID containment | 🔧 PR branch |
+| B01–B02 | VENV root identity / `.cdm3` UUID containment | ✅ |
 | B03–B08 | scan cancel, name/colon, comment indent, case tokenize, transactional recreate, full-IDE smoke | OPEN |
 | B09–B11 | schema on all paths, atomic settings, docs drift | OPEN |
 
