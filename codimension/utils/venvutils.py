@@ -22,7 +22,7 @@
 import os
 
 
-def resolveVenvToPython(venv_dir):
+def resolveVenvToPython(venv_dir: str) -> str | None:
     """Resolves venv directory to python executable.
 
     Supports: venv/bin/python (Linux), venv/Scripts/python.exe (Windows).

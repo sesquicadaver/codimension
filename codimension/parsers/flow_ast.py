@@ -24,8 +24,8 @@ try:
     from .comment_binder import bind_comments
     from .source_spans import SourceIndex
 except ImportError:  # loaded as standalone module (conformance harness)
-    from parsers.comment_binder import bind_comments
-    from parsers.source_spans import SourceIndex
+    from parsers.comment_binder import bind_comments  # type: ignore[no-redef]
+    from parsers.source_spans import SourceIndex  # type: ignore[no-redef]
 
 # Fragment type constants (from cflowfragmenttypes.hpp)
 UNDEFINED_FRAGMENT = -1

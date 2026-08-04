@@ -23,8 +23,7 @@ from sys import maxsize
 try:
     from .source_spans import SourceIndex
 except ImportError:  # loaded as standalone module (conformance harness)
-    from parsers.source_spans import SourceIndex
-
+    from parsers.source_spans import SourceIndex  # type: ignore[no-redef]
 VERSION = "3.4.0-ast"
 
 

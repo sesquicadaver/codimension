@@ -41,7 +41,7 @@ def run_argv_with_progress(
         raise RuntimeError("empty command")
 
     process = QProcess(parent)
-    process.setProcessChannelMode(QProcess.SeparateChannels)
+    process.setProcessChannelMode(QProcess.SeparateChannels)  # type: ignore[attr-defined]
     if cwd:
         process.setWorkingDirectory(cwd)
 
@@ -62,12 +62,12 @@ def run_argv_with_progress(
             stderr_chunks.append(data.decode("utf-8", errors="replace"))
 
     def _force_kill() -> None:
-        if process.state() == QProcess.Running:
+        if process.state() == QProcess.Running:  # type: ignore[attr-defined]
             process.kill()
 
     def _on_cancel() -> None:
         cancelled["flag"] = True
-        if process.state() != QProcess.Running:
+        if process.state() != QProcess.Running:  # type: ignore[attr-defined]
             loop.quit()
             return
         process.terminate()
@@ -85,7 +85,7 @@ def run_argv_with_progress(
 
     progress = QProgressDialog(label or " ".join(argv[:8]), "Cancel", 0, 0, parent)
     progress.setWindowTitle(title)
-    progress.setWindowModality(Qt.WindowModal)
+    progress.setWindowModality(Qt.WindowModal)  # type: ignore[attr-defined]
     progress.setMinimumDuration(0)
     progress.setAutoClose(False)
     progress.setAutoReset(False)
@@ -119,7 +119,7 @@ def run_argv_with_progress(
     if cancelled["flag"]:
         raise ProcessCancelled("cancelled by user")
 
-    if process.exitStatus() != QProcess.NormalExit or process.exitCode() != 0:
+    if process.exitStatus() != QProcess.NormalExit or process.exitCode() != 0:  # type: ignore[attr-defined]
         detail = (stderr or stdout or f"exit {process.exitCode()}").strip()
         raise RuntimeError(f"command failed ({process.exitCode()}): {detail}")
 
@@ -140,7 +140,7 @@ def create_venv_with_progress(parent, base_python: str, venv_dir: str) -> str:
     python = resolveVenvToPython(venv_dir)
     if not python:
         raise RuntimeError(f"venv created but python not found under {venv_dir}")
-    return python
+    return str(python)
 
 
 def run_pip_with_progress(parent, cmd: list[str], *, cwd: str | None = None) -> None:
