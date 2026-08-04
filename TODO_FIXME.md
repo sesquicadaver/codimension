@@ -11,9 +11,9 @@
 |----|----------|-----------|--------|
 | A01 | Master CI червоний (Ruff I001) + послідовні lint gates | P0 | 🔧 hotfix: I001 + незалежні jobs |
 | A02 | VENV: silent configured→`sys.executable`; pip/recreate IDE env | P0 | 🔧 hotfix: `SOURCE_INVALID` + mutate guards |
-| A03 | VENV sync `subprocess.run` блокує GUI | P0 | 🔓 OPEN (async runner) |
+| A03 | VENV sync `subprocess.run` блокує GUI | P0 | ✅ `ui/venvprocess.py` (QProcess + progress/cancel) |
 | A04 | brief_ast: module-level defs у control-flow | P0 | 🔧 hotfix: `_iter_suite_statements` на module |
-| A05 | flow_ast: `ImportFrom.level`; half-open spans; case header | P0 | 🔧 partial: relative + case header; spans OPEN |
+| A05 | flow_ast: `ImportFrom.level`; half-open spans; case header | P0 | ✅ half-open `_body_from_abs_range` + root `end=len` |
 | A06 | Документація завищувала DONE/CI-green | P0 | 🔧 цей файл / Living Spec |
 | A07 | Comment binder: tokenize char vs AST byte columns; nested trailing | P1 | 🔓 OPEN |
 | A08 | brief_ast: name/colon positions | P1 | 🔓 OPEN |
@@ -33,7 +33,7 @@
 | Tooling / credentials / scan (T030–T052) | ✅ | scan lifecycle A09 |
 | Packaging / CI / core (T060–T085) | ✅ | CI layout A01 |
 | Debugger e2e (T100–T130) | ✅ код | T130 nightly A12 |
-| Project VENV + Env: (T140–T141) | ✅ UI | safety A02–A03 |
+| Project VENV + Env: (T140–T141) | ✅ UI | safety A02 ✅; async A03 ✅ |
 
 ## Заглушки `pass` (потребують перевірки)
 
@@ -50,7 +50,7 @@
 
 | Тема | Стан |
 |------|------|
-| **Unit-тести** | `pytest tests/` — **175** passed / 2 skipped (локально після P0 hotfix) |
+| **Unit-тести** | `pytest tests/` — **181** passed / 2 skipped (локально після A03/A05) |
 | **CI** | незалежні jobs: ruff / ruff-format / mypy / import-gates / test / wheel / smoke; `permissions: contents: read` |
 | **Living Spec** | має відображати OPEN пункти аудиту, не лише `[x] CI проходить` |
 

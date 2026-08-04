@@ -1,3 +1,10 @@
+2026 Aug 04
+
+* A03: VENV create/pip/recreate via QProcess + cancelable progress
+  (`ui/venvprocess.py`); dialogs no longer block GUI with subprocess.run
+* A05: flow_ast half-open spans — `_body_from_abs_range` exclusive end,
+  ControlFlow root `end=len(source)`; fromPart slice matches module text
+
 2026 Aug 03
 
 * Fix profiler graph crash: `Function.paint` used invalid PyQt5

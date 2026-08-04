@@ -39,7 +39,7 @@
 | **Debugger mixin routing T110–T111** | ui.mainwindow_debug + tests/debugger | host.py `create_mixin_host`; test_mixin_routing.py | switchDebugMode chrome + `_onDbgGo`→remoteContinue |
 | **Debugger widget smoke T120** | debugger.bpwp / excpt | test_widgets_bpwp.py, test_widgets_exceptions.py; pytest-qt | offscreen panel add/clear/ignore; Skin bootstrap fixture |
 | **Debugger full-IDE T130** | ui.mainwindow + utils.skin | `ide_bootstrap.py`, `test_full_ide_smoke.py`; `PACKAGE_SKIN_DIR` package-relative; `.github/workflows/debugger-full-ide-nightly.yml` | env `CDM_FULL_IDE_SMOKE=1`; nightly (не PR-blocker); моніторити workflow |
-| **Project venv bootstrap T140** | utils.venvbootstrap + ui.venvsetupdlg | venvbootstrap.py, venvsetupdlg.py, mainmenu; tests/test_venv_bootstrap.py | explicit VENV/Update; sync/upgrade/recreate; session overlay; no auto-on-open |
+| **Project venv bootstrap T140** | utils.venvbootstrap + ui.venvsetupdlg / venvprocess | venvbootstrap.py, venvsetupdlg.py, venvprocess.py; tests/test_venv_bootstrap.py, test_venv_process.py | explicit VENV/Update; async QProcess create/pip (A03); session overlay |
 | **Analysis env refresh T141** | utils.venvbootstrap + project + status bar | `describeAnalysisPythonSource`, `requestAnalysisEnvironmentRefresh`, `Project.refreshAnalysisEnvironment`, `sbAnalysisEnv`; tests/test_venv_bootstrap.py | re-analyze after VENV/Update; Env: project/session/auto/IDE; unresolved opt-in multi-select |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
@@ -67,7 +67,7 @@
 | Offscreen GUI | `QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py` | .github/workflows/ci.yml |
 | Wheel | `python -m build` + clean venv `pip install` + `pip check` | .github/workflows/ci.yml |
 | pip-audit | `pip-audit -r requirements.txt` | .github/workflows/ci.yml |
-| Pytest | `pytest tests/` (173 tests; matrix 3.10–3.13) | .github/workflows/ci.yml |
+| Pytest | `pytest tests/` (181 tests; matrix 3.10–3.13) | .github/workflows/ci.yml |
 
 ---
 
@@ -84,8 +84,8 @@
 
 | ID | Тема | Статус |
 |----|------|--------|
-| A02–A03 | VENV mutate safety / async pip | partial / OPEN |
-| A05 | flow half-open span contract | OPEN |
+| A02–A03 | VENV mutate safety / async pip | A02 ✅; A03 ✅ (`ui/venvprocess.py`) |
+| A05 | flow half-open span contract | ✅ `_body_from_abs_range` + CF root exclusive end |
 | A07–A08 | comment binder / name-colon positions | OPEN |
 | A09 | project scan thread lifecycle | OPEN |
 | A12 | T130 nightly verified | OPEN (IMPLEMENTED, not verified) |

@@ -59,7 +59,9 @@ Shared helper: `codimension.parsers.source_spans` (T003).
 
 ### 3.3 Legacy bug (must fix)
 
-Current `flow_ast._pos` / `brief_ast._abs_pos` treat `col_offset` as character index and use inclusive `end` with `end+1` overshoot. That behaviour is **non-compliant** with this contract.
+Current `flow_ast` and `brief_ast` use `SourceIndex` for UTF-8 byte→char conversion
+with exclusive-end absolute offsets (`source[begin:end]`). Remaining OPEN gaps
+(comment binder column mixing, name/colon positions) are tracked in TODO_FIXME A07–A08.
 
 ---
 

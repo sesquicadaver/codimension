@@ -449,7 +449,8 @@ class _ControlFlow(_FragmentBase):
         lines = source.split("\n")
         end_ln = len(lines) if lines else 1
         end_pos = len(lines[-1]) + 1 if lines else 1
-        super().__init__(CONTROL_FLOW_FRAGMENT, 0, max(0, len(source) - 1), 1, end_ln, 1, end_pos)
+        # Half-open exclusive end: source[0:end] == source (parser contract A05).
+        super().__init__(CONTROL_FLOW_FRAGMENT, 0, len(source), 1, end_ln, 1, end_pos)
         self.nsuite: list[_FragmentBase] = []
         self.docstring: _DocstringFrag | None = None
         self.leadingComment: Any = None
@@ -552,19 +553,12 @@ class _FlowBuilder(ast.NodeVisitor):
         return _Body(b, e, bln, eln, bpos, epos)
 
     def _body_from_abs_range(self, begin: int, end: int) -> _Body:
-        """Build _Body from inclusive 0-based absolute source positions."""
+        """Build ``_Body`` from half-open ``[begin, end)`` absolute character offsets."""
         if begin < 0:
             begin = 0
-        if end < begin:
-            end = begin
-        prefix = self.source[:begin]
-        bln = prefix.count("\n") + 1
-        last_nl = prefix.rfind("\n")
-        bpos = begin - last_nl
-        prefix_end = self.source[: end + 1]
-        eln = prefix_end.count("\n") + 1
-        last_nl_e = prefix_end.rfind("\n")
-        epos = end - last_nl_e if last_nl_e >= 0 else end + 1
+        end = max(begin, min(end, len(self.source)))
+        bln, bpos = self.index.line_col_from_abs(begin)
+        eln, epos = self.index.line_col_from_abs(end)
         return _Body(begin, end, bln, eln, bpos, epos)
 
     def _extract_module_docstring(self, node: ast.Module) -> None:
@@ -903,7 +897,7 @@ class _FlowBuilder(ast.NodeVisitor):
                 if off >= 0:
                     mod_b = b + off + len("from ")
                     mod_e = mod_b + len(mod_display)  # half-open exclusive end
-                    from_part = self._body_from_abs_range(mod_b, mod_e - 1 if mod_e > mod_b else mod_b)
+                    from_part = self._body_from_abs_range(mod_b, mod_e)
             what_part = _Body(b, e, bln, eln, bpos, epos)
 
         return _ImportFrag(

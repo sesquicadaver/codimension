@@ -16,14 +16,12 @@ from utils.venvbootstrap import (
     bindInterpreter,
     buildPipInstallCommand,
     collectInstallSources,
-    createVenv,
     discoverRootVenvCandidates,
     getEffectiveProjectPython,
     isPathInsideProject,
     recreateVenv,
     requestAnalysisEnvironmentRefresh,
     requireMutableProjectPython,
-    runPipInstall,
     selectedUnresolvedPackages,
     venvDirFromPython,
 )
@@ -46,6 +44,11 @@ from .qt import (
     QRadioButton,
     Qt,
     QVBoxLayout,
+)
+from .venvprocess import (
+    ProcessCancelled,
+    create_venv_with_progress,
+    run_pip_with_progress,
 )
 
 _LOG = logging.getLogger(__name__)
@@ -199,7 +202,7 @@ class VenvSetupDialog(QDialog):
                     QMessageBox.warning(self, "VENV", "Choose a venv location.")
                     return
                 base = self._base_combo.currentData() or self._base_combo.currentText().strip() or sys.executable
-                python = createVenv(base, location)
+                python = create_venv_with_progress(self, base, location)
 
             reqs, packages, install_proj = _selected_sources(
                 self._req_checks,
@@ -227,7 +230,7 @@ class VenvSetupDialog(QDialog):
                     QMessageBox.No,
                 )
                 if reply == QMessageBox.Yes:
-                    runPipInstall(cmd, cwd=self._project_dir)
+                    run_pip_with_progress(self, cmd, cwd=self._project_dir)
 
             persist = (
                 QMessageBox.question(
@@ -242,6 +245,8 @@ class VenvSetupDialog(QDialog):
             bindInterpreter(self._project, python, persist=persist)
             requestAnalysisEnvironmentRefresh(self._project)
             self.accept()
+        except ProcessCancelled:
+            return
         except Exception as exc:
             _LOG.exception("VENV setup failed")
             QMessageBox.critical(self, "VENV", str(exc))
@@ -346,6 +351,8 @@ class VenvUpdateDialog(QDialog):
                     requirement_files=reqs,
                     packages=packages,
                     install_project=install_proj,
+                    runner_create=lambda base, path: create_venv_with_progress(self, base, path),
+                    runner_pip=lambda cmd, cwd=None: run_pip_with_progress(self, cmd, cwd=cwd),
                 )
                 persist = bool(self._project.props.get("pythoninterpreter", "").strip())
                 bindInterpreter(self._project, python, persist=persist)
@@ -370,9 +377,11 @@ class VenvUpdateDialog(QDialog):
                 )
                 if reply != QMessageBox.Yes:
                     return
-                runPipInstall(cmd, cwd=self._project_dir)
+                run_pip_with_progress(self, cmd, cwd=self._project_dir)
             requestAnalysisEnvironmentRefresh(self._project)
             self.accept()
+        except ProcessCancelled:
+            return
         except Exception as exc:
             _LOG.exception("Update VENV failed")
             QMessageBox.critical(self, "Update VENV", str(exc))

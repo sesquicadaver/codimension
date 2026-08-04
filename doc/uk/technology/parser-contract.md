@@ -59,7 +59,9 @@
 
 ### 3.3 Legacy-дефект (виправити)
 
-Поточні `_abs_pos` / `_pos` трактують `col_offset` як символи і роблять inclusive overshoot — **не відповідає** контракту.
+Поточні `flow_ast` / `brief_ast` використовують `SourceIndex` (UTF-8 byte→char) і
+exclusive-end offsets (`source[begin:end]`). Залишкові OPEN: comment binder /
+name-colon — TODO_FIXME A07–A08.
 
 ---
 
