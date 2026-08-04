@@ -1,5 +1,8 @@
 2026 Aug 04
 
+* Audit P0 (post-f5196a67): VENV identity by venv root (`pyvenv.cfg` /
+  ``sys.prefix``), not ``realpath(python)``; `.cdm3` uuid via ``uuid.UUID`` +
+  ``safe_user_project_dir`` containment; real dual-venv integration test
 * A07: comment binder — tokenize character columns via
   `SourceIndex.abs_from_character_column`; nested trailing comments stay in
   owning suite (indent + next-sibling boundary); tests/test_comment_binder_a07.py

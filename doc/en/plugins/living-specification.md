@@ -80,15 +80,13 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 - [ ] CI green on `master` — verify Actions; see [TODO_FIXME.en.md](../../../TODO_FIXME.en.md) A01–A06 (do not claim green without a run)
 - [x] Documentation: [doc/README.md](../../README.md)
 
-### Open re-audit items (2026-08-03)
+### Open re-audit items (2026-08-04 @ f5196a67)
 
 | ID | Topic | Status |
 |----|-------|--------|
-| A02–A03 | VENV mutate safety / async pip | A02 ✅; A03 ✅ (`ui/venvprocess.py`) |
-| A05 | flow half-open span contract | ✅ `_body_from_abs_range` + CF root exclusive end |
-| A07–A08 | comment binder / name-colon positions | A07 ✅; A08 OPEN |
-| A09 | project scan thread lifecycle | OPEN |
-| A12 | T130 nightly verified | OPEN (IMPLEMENTED, not verified) |
+| B01–B02 | VENV root identity / `.cdm3` UUID containment | 🔧 PR branch |
+| B03–B08 | scan cancel, name/colon, comment indent, case tokenize, transactional recreate, full-IDE smoke | OPEN |
+| B09–B11 | schema on all paths, atomic settings, docs drift | OPEN |
 
 ---
 

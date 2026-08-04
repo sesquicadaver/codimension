@@ -15,19 +15,19 @@
 - Редагування Python-файлів і **синхронізована flow-діаграма** (control flow)
 - Діаграми імпортів, класів, залежностей; dead code (vulture), складність (radon), pyflakes у редакторі
 - **Проєкти** (`.cdm3`): `excludeFromAnalysis`, без автозавантаження останнього проєкту при старті
-- **Project VENV (T140/T141):** Tools → Project utilities → **VENV…** / **Update VENV…**; status bar **Env:** (`project` / `session` / `auto` / `IDE`); re-analyze після зміни env
+- **Project VENV (T140/T141):** Tools → Project utilities → **VENV…** / **Update VENV…**; status bar **Env:** (`project` / `session` / `auto` / `IDE` / `broken`); re-analyze після зміни env
 - **Парсери:** pure-Python `brief_ast` / `flow_ast` на Python 3.10+ (без cdmpyparser/cdmcfparser)
 - **Вбудовані плагіни** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
 - **Debugger:** breakpoints, watchpoints (UI + sync), greenlet-контексти; nightly full-IDE smoke (T130)
-- **CI:** ruff/mypy/pytest (**173** тестів) matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
+- **CI:** незалежні ruff / format / mypy / pytest (~**189** тестів) matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
 
 ## Обмеження (чесно)
 
 - Не production-ready IDE; орієнтир — аналіз і візуалізація коду, не заміна VS Code / PyCharm
 - Git-плагін — MVP (без stash/merge UI); PR через `gh` CLI
-- Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**; локальний venv — через Project Properties або Tools → **VENV…** (mutate guards; async pip — ще OPEN)
+- Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**; локальний venv — через Project Properties або Tools → **VENV…** (async QProcess + mutate guards)
 - Авто-setup venv на open — **немає**; unresolved packages для pip — opt-in; див. відкриті пункти аудиту в [TODO_FIXME.md](TODO_FIXME.md)
-- Не production-ready analyzer: залишкові parser/scan/VENV lifecycle gaps — [TODO_FIXME.md](TODO_FIXME.md) A03–A12
+- Не production-ready analyzer: залишкові gaps — [TODO_FIXME.md](TODO_FIXME.md) B03–B11
 - Довгострокові плани — [ROADMAP.md](ROADMAP.md), не поточний стан
 
 ## Вимоги

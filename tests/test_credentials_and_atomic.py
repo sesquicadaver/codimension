@@ -162,8 +162,10 @@ def test_project_schema_rejects_bad_types():
         validate_project_props({"uuid": 123})
     with pytest.raises(ProjectSchemaError):
         validate_project_props({"importdirs": "oops"})
-    ok = validate_project_props({"uuid": "abc", "importdirs": ["src"]})
-    assert ok["uuid"] == "abc"
+    with pytest.raises(ProjectSchemaError):
+        validate_project_props({"uuid": "abc"})
+    ok = validate_project_props({"uuid": "11111111-1111-1111-1111-111111111111", "importdirs": ["src"]})
+    assert ok["uuid"] == "11111111-1111-1111-1111-111111111111"
 
 
 def test_atomic_project_save_roundtrip(tmp_path):

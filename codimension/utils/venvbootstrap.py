@@ -107,18 +107,28 @@ def _resolveWithoutConfigured(project) -> tuple[str, str]:
 
 
 def isIdePythonEnvironment(python_path: str) -> bool:
-    """True if ``python_path`` is the running IDE interpreter or its venv prefix."""
+    """True if ``python_path`` belongs to the running Codimension IDE environment.
+
+    Identity is by **venv root** (``pyvenv.cfg`` parent vs ``sys.prefix``), not by
+    ``realpath(python)``. On POSIX, distinct venvs often symlink ``bin/python`` to
+    the same base interpreter; comparing executable realpaths falsely rejects
+    project venvs (audit P0 @ f5196a67).
+    """
     if not python_path:
         return True
     try:
-        py_real = os.path.realpath(python_path)
-        if py_real == os.path.realpath(sys.executable):
+        path = os.path.abspath(python_path)
+        ide_root = os.path.realpath(sys.prefix)
+        candidate_root = venvDirFromPython(path)
+        if candidate_root is not None:
+            return os.path.realpath(candidate_root) == ide_root
+
+        # Bare / non-venv interpreter: only the IDE's own executable (or a file
+        # physically under sys.prefix) is treated as IDE.
+        if os.path.realpath(path) == os.path.realpath(sys.executable):
             return True
-        venv_dir = venvDirFromPython(py_real)
-        if venv_dir and os.path.realpath(venv_dir) == os.path.realpath(sys.prefix):
-            return True
-        if os.path.realpath(sys.prefix) and py_real.startswith(os.path.realpath(sys.prefix) + os.sep):
-            # Scripts inside active IDE prefix (pip, etc.)
+        path_real = os.path.realpath(path)
+        if ide_root and (path_real == ide_root or path_real.startswith(ide_root + os.sep)):
             return True
     except Exception:
         return True
@@ -266,12 +276,20 @@ def discoverRootVenvCandidates(project_dir: str) -> list[str]:
 
 
 def venvDirFromPython(python_path: str) -> str | None:
-    """Best-effort venv root from ``.../bin/python`` or ``.../Scripts/python.exe``."""
+    """Best-effort venv root from ``.../bin/python`` or ``.../Scripts/python.exe``.
+
+    Requires ``pyvenv.cfg`` so system ``/usr/bin/python`` is not treated as a venv.
+    Uses the path as given (not ``realpath``) so symlink-based venvs keep their
+    own root even when the executable resolves to a shared base interpreter.
+    """
     if not python_path:
         return None
     bin_dir = os.path.dirname(os.path.abspath(python_path))
-    if os.path.basename(bin_dir) in ("bin", "Scripts"):
-        return os.path.dirname(bin_dir)
+    if os.path.basename(bin_dir) not in ("bin", "Scripts"):
+        return None
+    root = os.path.dirname(bin_dir)
+    if os.path.isfile(os.path.join(root, "pyvenv.cfg")):
+        return root
     return None
 
 
