@@ -60,8 +60,8 @@
 ### 3.3 Legacy-дефект (виправити)
 
 Поточні `flow_ast` / `brief_ast` використовують `SourceIndex` (UTF-8 byte→char) і
-exclusive-end offsets (`source[begin:end]`). Залишкові OPEN: comment binder /
-name-colon — TODO_FIXME A07–A08.
+exclusive-end offsets (`source[begin:end]`). Comment binder: `abs_from_character_column`
+для tokenize (A07). Залишковий OPEN: name/colon — TODO_FIXME A08.
 
 ---
 

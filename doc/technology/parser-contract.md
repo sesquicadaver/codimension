@@ -60,8 +60,9 @@ Shared helper: `codimension.parsers.source_spans` (T003).
 ### 3.3 Legacy bug (must fix)
 
 Current `flow_ast` and `brief_ast` use `SourceIndex` for UTF-8 byte→char conversion
-with exclusive-end absolute offsets (`source[begin:end]`). Remaining OPEN gaps
-(comment binder column mixing, name/colon positions) are tracked in TODO_FIXME A07–A08.
+with exclusive-end absolute offsets (`source[begin:end]`). Comment binder uses
+`abs_from_character_column` for tokenize (A07). Remaining OPEN: brief name/colon
+positions — TODO_FIXME A08.
 
 ---
 

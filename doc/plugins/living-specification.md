@@ -86,7 +86,7 @@
 |----|------|--------|
 | A02–A03 | VENV mutate safety / async pip | A02 ✅; A03 ✅ (`ui/venvprocess.py`) |
 | A05 | flow half-open span contract | ✅ `_body_from_abs_range` + CF root exclusive end |
-| A07–A08 | comment binder / name-colon positions | OPEN |
+| A07–A08 | comment binder / name-colon positions | A07 ✅; A08 OPEN |
 | A09 | project scan thread lifecycle | OPEN |
 | A12 | T130 nightly verified | OPEN (IMPLEMENTED, not verified) |
 

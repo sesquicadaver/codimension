@@ -1,9 +1,13 @@
 2026 Aug 04
 
+* A07: comment binder — tokenize character columns via
+  `SourceIndex.abs_from_character_column`; nested trailing comments stay in
+  owning suite (indent + next-sibling boundary); tests/test_comment_binder_a07.py
 * A03: VENV create/pip/recreate via QProcess + cancelable progress
   (`ui/venvprocess.py`); dialogs no longer block GUI with subprocess.run
 * A05: flow_ast half-open spans — `_body_from_abs_range` exclusive end,
   ControlFlow root `end=len(source)`; fromPart slice matches module text
+* Fix mypy for VENV process runner and parser import fallbacks
 
 2026 Aug 03
 

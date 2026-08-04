@@ -92,8 +92,27 @@ class SourceIndex:
         return len(encoded[:byte_col].decode("utf-8", errors="replace"))
 
     def abs_char_pos(self, lineno: int, byte_col: int) -> int:
-        """Absolute 0-based character index for AST line + UTF-8 byte column."""
+        """Absolute 0-based character index for AST line + UTF-8 byte column.
+
+        Prefer the explicit alias :meth:`abs_from_utf8_byte_column` at call sites
+        that convert Python ``ast`` offsets.
+        """
+        return self.abs_from_utf8_byte_column(lineno, byte_col)
+
+    def abs_from_utf8_byte_column(self, lineno: int, byte_col: int) -> int:
+        """Absolute 0-based character index from a UTF-8 byte column (AST)."""
         return self.line_start(lineno) + self.byte_col_to_char_col(lineno, byte_col)
+
+    def abs_from_character_column(self, lineno: int, char_col: int) -> int:
+        """Absolute 0-based character index from a character column (tokenize).
+
+        ``tokenize`` reports columns in Unicode code-point / ``str`` indices, not
+        UTF-8 bytes. Do not pass these through :meth:`abs_from_utf8_byte_column`.
+        """
+        if char_col <= 0:
+            return self.line_start(lineno)
+        line = self.line_text(lineno)
+        return self.line_start(lineno) + min(char_col, len(line))
 
     def node_span(self, node: ast.AST) -> tuple[int, int, int, int, int, int]:
         """Return (begin, end, beginLine, endLine, beginPos, endPos).

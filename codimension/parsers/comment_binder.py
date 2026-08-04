@@ -275,8 +275,9 @@ def collect_token_comments(source: str, index: SourceIndex) -> tuple[list[_TokCo
                 continue
             start_ln, start_col = tok.start
             end_ln, end_col = tok.end
-            begin = index.abs_char_pos(start_ln, start_col)
-            end = index.abs_char_pos(end_ln, end_col)
+            # tokenize columns are character offsets, not UTF-8 byte columns (A07).
+            begin = index.abs_from_character_column(start_ln, start_col)
+            end = index.abs_from_character_column(end_ln, end_col)
             line_src = lines[start_ln - 1] if 0 < start_ln <= len(lines) else ""
             before = line_src[:start_col]
             full_line = before.strip() == ""
@@ -430,26 +431,86 @@ def _structural_targets(frag: Any) -> list[Any]:
     return targets
 
 
-def _recurse_nested(index: SourceIndex, frag: Any, clusters: list[_CommentCluster]) -> None:
+def _suite_min_indent(suite: list[Any]) -> int | None:
+    """Smallest 1-based beginPos among suite fragments (body indent heuristic)."""
+    indents: list[int] = []
+    for frag in suite:
+        body = getattr(frag, "body", None)
+        if body is not None and hasattr(body, "beginPos"):
+            indents.append(int(body.beginPos))
+        elif hasattr(frag, "beginPos"):
+            indents.append(int(frag.beginPos))
+    return min(indents) if indents else None
+
+
+def _next_code_begin_line(suite: list[Any], start_index: int) -> int | None:
+    """Begin line of the next non-comment suite item after ``start_index``."""
+    for j in range(start_index + 1, len(suite)):
+        frag = suite[j]
+        if getattr(frag, "kind", None) in (COMMENT_FRAGMENT, CML_COMMENT_FRAGMENT):
+            continue
+        bln = _frag_begin_line(frag)
+        if bln is not None:
+            return bln
+    return None
+
+
+def _recurse_nested(
+    index: SourceIndex,
+    frag: Any,
+    clusters: list[_CommentCluster],
+    *,
+    boundary_line: int | None = None,
+) -> None:
     # Side/leading on nested structural headers (decorators, cases, except, …)
     for target in _structural_targets(frag)[1:]:  # skip self (already handled)
         _attach_side_to_frag(target, clusters)
         _attach_leading_block(index, target, clusters)
 
     if getattr(frag, "nsuite", None):
-        _attach_to_suite(index, frag.nsuite, clusters, promote_trailing=False)
+        _attach_to_suite(
+            index,
+            frag.nsuite,
+            clusters,
+            promote_trailing=True,
+            boundary_line=boundary_line,
+        )
     for part in getattr(frag, "parts", []) or []:
         if getattr(part, "nsuite", None):
-            _attach_to_suite(index, part.nsuite, clusters, promote_trailing=False)
+            _attach_to_suite(
+                index,
+                part.nsuite,
+                clusters,
+                promote_trailing=True,
+                boundary_line=boundary_line,
+            )
     else_part = getattr(frag, "elsePart", None)
     if else_part is not None and getattr(else_part, "nsuite", None):
-        _attach_to_suite(index, else_part.nsuite, clusters, promote_trailing=False)
+        _attach_to_suite(
+            index,
+            else_part.nsuite,
+            clusters,
+            promote_trailing=True,
+            boundary_line=boundary_line,
+        )
     for ep in getattr(frag, "exceptParts", []) or []:
         if getattr(ep, "nsuite", None):
-            _attach_to_suite(index, ep.nsuite, clusters, promote_trailing=False)
+            _attach_to_suite(
+                index,
+                ep.nsuite,
+                clusters,
+                promote_trailing=True,
+                boundary_line=boundary_line,
+            )
     finally_part = getattr(frag, "finallyPart", None)
     if finally_part is not None and getattr(finally_part, "nsuite", None):
-        _attach_to_suite(index, finally_part.nsuite, clusters, promote_trailing=False)
+        _attach_to_suite(
+            index,
+            finally_part.nsuite,
+            clusters,
+            promote_trailing=True,
+            boundary_line=boundary_line,
+        )
 
 
 def _attach_leading_block(index: SourceIndex, frag: Any, clusters: list[_CommentCluster]) -> None:
@@ -474,23 +535,43 @@ def _attach_leading_block(index: SourceIndex, frag: Any, clusters: list[_Comment
         cluster.consumed = True
 
 
+def _cluster_in_suite_scope(
+    cluster: _CommentCluster,
+    *,
+    min_indent: int | None,
+    boundary_line: int | None,
+) -> bool:
+    """True if a full-line cluster belongs to this suite (A07 nested trailing)."""
+    if boundary_line is not None and cluster.begin_line >= boundary_line:
+        return False
+    if min_indent is not None and cluster.parts[0].begin_pos < min_indent:
+        return False
+    return True
+
+
 def _attach_to_suite(
     index: SourceIndex,
     suite: list[Any],
     clusters: list[_CommentCluster],
     *,
     promote_trailing: bool = True,
+    boundary_line: int | None = None,
 ) -> None:
-    """Attach leading/side comments to suite items; insert independent ones."""
+    """Attach leading/side comments to suite items; insert independent ones.
+
+    Nested suites pass ``boundary_line`` (next outer sibling begin) and promote
+    trailing comments only when indent matches the suite body (audit A07).
+    """
     for frag in suite:
         _attach_side_to_frag(frag, clusters)
 
+    min_indent = _suite_min_indent(suite)
     new_suite: list[Any] = []
-    for frag in suite:
+    for i, frag in enumerate(suite):
         bln = _frag_begin_line(frag)
         if bln is None:
             new_suite.append(frag)
-            _recurse_nested(index, frag, clusters)
+            _recurse_nested(index, frag, clusters, boundary_line=boundary_line)
             continue
 
         # Independent full-line clusters strictly before this frag with a blank gap
@@ -498,6 +579,8 @@ def _attach_to_suite(
             if cluster.consumed or not cluster.parts[0].full_line:
                 continue
             if cluster.end_line >= bln:
+                continue
+            if not _cluster_in_suite_scope(cluster, min_indent=min_indent, boundary_line=boundary_line):
                 continue
             if _blank_between(index, cluster.end_line, bln):
                 new_suite.append(_make_suite_item(cluster))
@@ -509,13 +592,19 @@ def _attach_to_suite(
             _attach_leading_block(index, decorators[0], clusters)
         _attach_leading_block(index, frag, clusters)
         new_suite.append(frag)
-        _recurse_nested(index, frag, clusters)
+        child_boundary = _next_code_begin_line(suite, i)
+        if child_boundary is None:
+            child_boundary = boundary_line
+        _recurse_nested(index, frag, clusters, boundary_line=child_boundary)
 
     if promote_trailing:
         for cluster in clusters:
-            if not cluster.consumed and cluster.parts[0].full_line:
-                new_suite.append(_make_suite_item(cluster))
-                cluster.consumed = True
+            if cluster.consumed or not cluster.parts[0].full_line:
+                continue
+            if not _cluster_in_suite_scope(cluster, min_indent=min_indent, boundary_line=boundary_line):
+                continue
+            new_suite.append(_make_suite_item(cluster))
+            cluster.consumed = True
 
     suite[:] = new_suite
 

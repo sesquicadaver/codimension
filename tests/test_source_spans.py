@@ -78,6 +78,20 @@ def test_node_source_segment_matches_slice() -> None:
     assert segment == source[begin:end]
 
 
+def test_character_vs_byte_column_apis() -> None:
+    """tokenize uses character columns; AST uses UTF-8 byte columns (A07)."""
+    source = 'значення = "тест"  # коментар\n'
+    index = SourceIndex.build(source)
+    hash_char = source.index("#")
+    # Character column of '#' on line 1 (0-based)
+    char_col = hash_char - index.line_start(1)
+    assert index.abs_from_character_column(1, char_col) == hash_char
+    # Same numeric value treated as UTF-8 bytes would land earlier on Cyrillic line
+    wrong = index.abs_from_utf8_byte_column(1, char_col)
+    assert wrong != hash_char
+    assert source[wrong:hash_char]
+
+
 def test_line_count_and_empty() -> None:
     assert build_source_index("").line_count == 1
     idx = build_source_index("a\nb")
