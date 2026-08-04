@@ -15,7 +15,7 @@
 | A04 | brief_ast: module-level defs у control-flow | P0 | 🔧 hotfix: `_iter_suite_statements` на module |
 | A05 | flow_ast: `ImportFrom.level`; half-open spans; case header | P0 | ✅ half-open `_body_from_abs_range` + root `end=len` |
 | A06 | Документація завищувала DONE/CI-green | P0 | 🔧 цей файл / Living Spec |
-| A07 | Comment binder: tokenize char vs AST byte columns; nested trailing | P1 | 🔓 OPEN |
+| A07 | Comment binder: tokenize char vs AST byte columns; nested trailing | P1 | ✅ char API + nested trailing ownership |
 | A08 | brief_ast: name/colon positions | P1 | 🔓 OPEN |
 | A09 | Project scan thread cancel/join lifecycle | P1 | 🔓 OPEN |
 | A10 | `updateProperties` / `onProjectFileUpdated` без schema validate | P2 | 🔓 OPEN |
