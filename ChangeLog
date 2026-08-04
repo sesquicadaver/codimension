@@ -1,5 +1,8 @@
 2026 Aug 03
 
+* Fix profiler graph crash: `Function.paint` used invalid PyQt5
+  `drawPixmap(QRectF, QPixmap)`; use 3-arg form with sourceRect (A14)
+
 * Re-audit P0 hotfix (post-179cb0a4):
   - CI: independent ruff / format / mypy / import-gates jobs; `permissions: contents: read`
   - Fix Ruff I001 in cdmplugins/lintdriverbase.py

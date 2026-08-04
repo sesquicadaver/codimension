@@ -21,7 +21,7 @@
 | A10 | `updateProperties` / `onProjectFileUpdated` without schema validate | P2 | 🔓 OPEN |
 | A11 | `Settings.flush` not atomic | P2 | 🔓 OPEN |
 | A12 | T130 nightly: IMPLEMENTED / NOT YET VERIFIED (0 runs) | P2 | 🔓 OPEN |
-| A13 | setup.py metadata duplication | P2 | 🔓 OPEN |
+| A14 | `profgraph.Function.paint`: `drawPixmap(QRectF, pixmap)` invalid on PyQt5 | P0 | 🔧 fixed: 3-arg with sourceRect |
 
 ## Completed 2026-08 basis (T001–T141)
 

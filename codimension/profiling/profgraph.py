@@ -232,8 +232,10 @@ class Function(QGraphicsRectItem):
             pixmapPosX = self.__node.posX - self.__node.width / 2.0 + 2
             pixmapPosY = self.__node.posY + self.__node.height / 2.0 - pixmap.height() - 2
             painter.setRenderHint(QPainter.SmoothPixmapTransform)
+            # PyQt5 has no drawPixmap(QRectF, QPixmap); require sourceRect (same as flakesmargin).
             targetRect = QRectF(pixmapPosX, pixmapPosY, pixmap.width(), pixmap.height())
-            painter.drawPixmap(targetRect, pixmap)
+            sourceRect = QRectF(pixmap.rect())
+            painter.drawPixmap(targetRect, pixmap, sourceRect)
 
     def mouseDoubleClickEvent(self, _):
         """Open the clicked file if it could be opened"""

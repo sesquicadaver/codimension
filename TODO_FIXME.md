@@ -21,7 +21,7 @@
 | A10 | `updateProperties` / `onProjectFileUpdated` без schema validate | P2 | 🔓 OPEN |
 | A11 | `Settings.flush` не atomic | P2 | 🔓 OPEN |
 | A12 | T130 nightly: IMPLEMENTED / NOT YET VERIFIED (0 runs) | P2 | 🔓 OPEN |
-| A13 | setup.py metadata duplication | P2 | 🔓 OPEN |
+| A14 | `profgraph.Function.paint`: `drawPixmap(QRectF, pixmap)` invalid on PyQt5 | P0 | 🔧 fixed: 3-arg with sourceRect |
 
 ## Завершений базис 2026-08 (T001–T141)
 
