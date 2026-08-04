@@ -43,7 +43,7 @@ from .filepositions import FilePositions
 from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
 from .project_scan import is_excluded_by_absolute_paths, scan_project_files
-from .project_schema import ProjectSchemaError, validate_project_props
+from .project_schema import ProjectSchemaError, safe_user_project_dir, validate_project_props
 from .runparamscache import RunParametersCache
 from .searchenv import SearchEnvironment
 from .settings import SETTINGS_DIR, Settings
@@ -194,9 +194,13 @@ class CodimensionProject(
 
     def createNew(self, fileName, props):
         """Creates a new project"""
-        # Try to create the user project directory
+        # Try to create the user project directory (canonical UUID under SETTINGS_DIR)
         projectUuid = str(uuid.uuid1())
-        userProjectDir = SETTINGS_DIR + projectUuid + sep
+        try:
+            userProjectDir = safe_user_project_dir(SETTINGS_DIR, projectUuid)
+        except ProjectSchemaError as exc:
+            logging.error("Cannot create user project directory: %s", exc)
+            raise
         if not exists(userProjectDir):
             try:
                 os.makedirs(userProjectDir)
@@ -205,7 +209,7 @@ class CodimensionProject(
                     "Cannot create user project directory: %s. "
                     "Please check the available disk space, "
                     "permissions and re-create the project.",
-                    self.userProjectDir,
+                    userProjectDir,
                 )
                 raise
         else:
@@ -307,7 +311,10 @@ class CodimensionProject(
         if self.props["uuid"] == "":
             logging.warning("Project file does not have UUID. Re-generate it...")
             self.props["uuid"] = str(uuid.uuid1())
-        self.userProjectDir = SETTINGS_DIR + self.props["uuid"] + sep
+        try:
+            self.userProjectDir = safe_user_project_dir(SETTINGS_DIR, self.props["uuid"])
+        except ProjectSchemaError as exc:
+            raise Exception("Bad project file " + projectFile + ": " + str(exc)) from exc
         if not exists(self.userProjectDir):
             os.makedirs(self.userProjectDir)
 

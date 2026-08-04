@@ -15,19 +15,19 @@ This is an **active fork** of [SergeySatskiy/codimension](https://github.com/Ser
 - Python file editing with a **synchronized flow diagram** (control flow)
 - Import, class, and dependency diagrams; dead code (vulture), complexity (radon), pyflakes in the editor
 - **Projects** (`.cdm3`): `excludeFromAnalysis`, no auto-load of last project on startup
-- **Project VENV (T140/T141):** Tools → Project utilities → **VENV…** / **Update VENV…**; status-bar **Env:** (`project` / `session` / `auto` / `IDE`); re-analyze after env changes
+- **Project VENV (T140/T141):** Tools → Project utilities → **VENV…** / **Update VENV…**; status-bar **Env:** (`project` / `session` / `auto` / `IDE` / `broken`); re-analyze after env changes
 - **Parsers:** pure-Python `brief_ast` / `flow_ast` on Python 3.10+ (no cdmpyparser/cdmcfparser)
 - **Bundled plugins** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
 - **Debugger:** breakpoints, watchpoints (UI + sync), greenlet contexts; nightly full-IDE smoke (T130)
-- **CI:** ruff/mypy/pytest (**173** tests) matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
+- **CI:** independent ruff / format / mypy / pytest (~**189** tests) matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
 
 ## Limitations (honest)
 
 - Not a production-ready IDE; focus is code analysis and visualization, not a VS Code / PyCharm replacement
 - Git plugin is MVP (no stash/merge UI); PRs via `gh` CLI
-- Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; local venv via Project Properties or Tools → **VENV…** (mutate guards; async pip still OPEN)
+- Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; local venv via Project Properties or Tools → **VENV…** (async QProcess + mutate guards)
 - No auto venv setup on project open; unresolved packages for pip are opt-in; see open audit items in [TODO_FIXME.en.md](TODO_FIXME.en.md)
-- Not a production-ready analyzer: remaining parser/scan/VENV lifecycle gaps — [TODO_FIXME.en.md](TODO_FIXME.en.md) A03–A12
+- Not a production-ready analyzer: remaining gaps — [TODO_FIXME.en.md](TODO_FIXME.en.md) B03–B11
 - Long-term plans — [ROADMAP.md](ROADMAP.md), not current state
 
 ## Requirements

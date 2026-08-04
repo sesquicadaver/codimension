@@ -80,15 +80,13 @@
 - [ ] CI проходить на `master` — перевіряти Actions; див. [TODO_FIXME.md](../../TODO_FIXME.md) A01–A06 (не стверджувати green без прогону)
 - [x] Документація: [doc/README.md](../README.md)
 
-### Відкриті пункти повторного аудиту (2026-08-03)
+### Відкриті пункти повторного аудиту (2026-08-04 @ f5196a67)
 
 | ID | Тема | Статус |
 |----|------|--------|
-| A02–A03 | VENV mutate safety / async pip | A02 ✅; A03 ✅ (`ui/venvprocess.py`) |
-| A05 | flow half-open span contract | ✅ `_body_from_abs_range` + CF root exclusive end |
-| A07–A08 | comment binder / name-colon positions | A07 ✅; A08 OPEN |
-| A09 | project scan thread lifecycle | OPEN |
-| A12 | T130 nightly verified | OPEN (IMPLEMENTED, not verified) |
+| B01–B02 | VENV root identity / `.cdm3` UUID containment | ✅ |
+| B03–B08 | scan cancel, name/colon, comment indent, case tokenize, transactional recreate, full-IDE smoke | OPEN |
+| B09–B11 | schema on all paths, atomic settings, docs drift | OPEN |
 
 ---
 

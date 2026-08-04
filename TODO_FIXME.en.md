@@ -2,56 +2,40 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-08-03 (re-audit master@179cb0a4 + in-tree P0 hotfix)  
+**Last review:** 2026-08-04 (re-audit master@f5196a67 + PR #19)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Open blockers (re-audit 2026-08-03)
+## Open blockers (audit 2026-08-04 @ f5196a67)
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
-| A01 | Red master CI (Ruff I001) + sequential lint gates | P0 | 🔧 hotfix: I001 + independent jobs |
-| A02 | VENV silent configured→`sys.executable`; pip/recreate IDE env | P0 | 🔧 hotfix: `SOURCE_INVALID` + mutate guards |
-| A03 | VENV sync `subprocess.run` blocks GUI | P0 | ✅ `ui/venvprocess.py` (QProcess + progress/cancel) |
-| A04 | brief_ast: module-level defs inside control-flow | P0 | 🔧 hotfix: module `_iter_suite_statements` |
-| A05 | flow_ast: `ImportFrom.level`; half-open spans; case header | P0 | ✅ half-open `_body_from_abs_range` + root `end=len` |
-| A06 | Docs overstated DONE/CI-green | P0 | 🔧 this file / Living Spec |
-| A07 | Comment binder: tokenize char vs AST byte columns; nested trailing | P1 | ✅ char API + nested trailing ownership |
-| A08 | brief_ast: name/colon positions | P1 | 🔓 OPEN |
-| A09 | Project scan thread cancel/join lifecycle | P1 | 🔓 OPEN |
-| A10 | `updateProperties` / `onProjectFileUpdated` without schema validate | P2 | 🔓 OPEN |
-| A11 | `Settings.flush` not atomic | P2 | 🔓 OPEN |
-| A12 | T130 nightly: IMPLEMENTED / NOT YET VERIFIED (0 runs) | P2 | 🔓 OPEN |
-| A14 | `profgraph.Function.paint`: `drawPixmap(QRectF, pixmap)` invalid on PyQt5 | P0 | 🔧 fixed: 3-arg with sourceRect |
+| B01 | VENV identity: `realpath(python)` confuses project venv with IDE | P0 | ✅ venv root vs `sys.prefix` |
+| B02 | `.cdm3` uuid path traversal / no `uuid.UUID` | P0 | ✅ canonical UUID + `safe_user_project_dir` |
+| B03 | Project scan thread cancel/join lifecycle | P1 | 🔓 OPEN (was A09) |
+| B04 | brief_ast name/colon positions | P1 | 🔓 OPEN (was A08) |
+| B05 | Comment clusters merge across indent scopes | P1 | 🔓 OPEN |
+| B06 | `case` keyword via `rfind` heuristic | P1 | 🔓 OPEN |
+| B07 | VENV recreate not transactional; rmtree on GUI thread | P1 | 🔓 OPEN |
+| B08 | Full-IDE smoke nightly-only (0 runs) / formal offscreen | P1 | 🔓 OPEN |
+| B09 | Schema not on all update paths | P2 | 🔓 OPEN (was A10) |
+| B10 | `Settings.flush` not atomic; atomic mode drift | P2 | 🔓 OPEN (was A11) |
+| B11 | Docs drift (README/TODO vs commit) | P2 | 🔓 OPEN |
 
-## Completed 2026-08 basis (T001–T141)
+## Closed from prior audits (confirmed @ f5196a67)
 
-Remediation infrastructure is **present in code**, but that does **not** mean production-ready or that all gates are green without CI verification.
-
-| Block | Code | Verification |
-|-------|------|--------------|
-| Parsers / conformance (T001–T029) | ✅ | partial; see A04–A08 |
-| Tooling / credentials / scan (T030–T052) | ✅ | scan lifecycle A09 |
-| Packaging / CI / core (T060–T085) | ✅ | CI layout A01 |
-| Debugger e2e (T100–T130) | ✅ code | T130 nightly A12 |
-| Project VENV + Env: (T140–T141) | ✅ UI | safety A02 ✅; async A03 ✅ |
-
-## `pass` stubs (need review)
-
-- **flowui/everything.py** — flow UI demo file, ignored by ruff
-- **runmanager.py, mainstatusbar.py** — `pass` in except/empty handlers
-- **variablesbrowser.py, notused.py, brief_ast.py** — `pass` in handlers
-- **vcsannotateviewer.py, classesviewer.py** — `pass` in methods
-- **profgraph.py, importsdgm.py, asyncfile_cdm_dbg.py** — `pass` in handlers
-- **wpointviewer.py, editorsmanager.py** — `pass` in handlers
-- **resultprovideriface.py** — abstract interface
-- **profiletest.py** — profiling test file
+| ID | Topic | Status |
+|----|-------|--------|
+| A01 | Independent CI jobs + green | ✅ |
+| A02–A03 | VENV mutate guards + async QProcess | ✅ (B01 extra identity fix) |
+| A04–A05 | brief CF defs; half-open spans / relative imports | ✅ |
+| A07 | tokenize char columns + nested trailing | ✅ PR #19 |
+| A14 | profgraph drawPixmap | ✅ |
 
 ## Infrastructure (fact)
 
 | Topic | State |
 |-------|-------|
-| **Unit tests** | `pytest tests/` — **181** passed / 2 skipped (local after A03/A05) |
-| **CI** | independent jobs: ruff / ruff-format / mypy / import-gates / test / wheel / smoke; `permissions: contents: read` |
-| **Living Spec** | must list OPEN audit items, not only `[x] CI passes` |
+| **CI** | green on `f5196a67` |
+| **Living Spec** | keep in sync with B01–B11 |
 
 Living matrix: [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md).
