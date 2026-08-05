@@ -1,5 +1,8 @@
 2026 Aug 05
 
+* Audit P1 E05: custom-terminal Profile completion uses atomic marker +
+  non-empty outfile gate; RunManager polls independently of terminal
+  lifetime; PROFILE launcher PID is the wrapper (subprocess), not cProfile
 * Audit P1 E04: custom-terminal launcher unlinks ``argv.json`` / ``launch.py``
   and removes the work dir before ``execvp``; opportunistic stale
   ``cdm-run-*`` cleanup under system temp

@@ -239,7 +239,8 @@ class RunDialog(QDialog):
             "Use ${prog} for a single launcher path (argv stays outside the shell).\n"
             "Otherwise the launcher path is appended.\n"
             'E.g.: xterm -e /bin/bash -c "${prog}; /bin/bash"\n'
-            "Do not background Profile with trailing '&' — use redirected IO instead."
+            "Profile results appear when profiling finishes (completion marker),\n"
+            "even if this shell stays open. Trailing '&' is not required."
         )
 
     def __populateProfile(self):
