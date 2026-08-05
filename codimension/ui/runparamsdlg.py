@@ -236,9 +236,10 @@ class RunDialog(QDialog):
             self.__termEdit.setEnabled(True)
         self.__termEdit.setText(self.runParams["customTerminal"])
         self.__termEdit.setToolTip(
-            "Use ${prog} substitution if needed.\n"
-            "Otherwise the command line is attached at the end.\n"
-            'E.g.: xterm -e /bin/bash -c "${prog}; /bin/bash" &'
+            "Use ${prog} for a single launcher path (argv stays outside the shell).\n"
+            "Otherwise the launcher path is appended.\n"
+            'E.g.: xterm -e /bin/bash -c "${prog}; /bin/bash"\n'
+            "Do not background Profile with trailing '&' — use redirected IO instead."
         )
 
     def __populateProfile(self):

@@ -80,17 +80,18 @@
 - [ ] CI проходить на `master` — перевіряти Actions; див. [TODO_FIXME.md](../../TODO_FIXME.md) A01–A06 (не стверджувати green без прогону)
 - [x] Документація: [doc/README.md](../README.md)
 
-### Відкриті пункти аудиту (2026-08-05 @ 628c78d7)
+### Відкриті пункти аудиту (2026-08-05 @ 1dfb3a1d)
 
 | ID | Тема | Статус |
 |----|------|--------|
-| B01–B02 / C01 / D01 | VENV identity, UUID, destination guard, base interpreter | ✅ |
-| D03 | Redirected run/debug/profile argv + `shell=False` | ✅ |
+| B01–B02 / C01 / D01 | VENV identity, UUID, destination, base interpreter | ✅ |
+| D03 | Redirected run/debug/profile argv + `shell=False` | ✅ (redirected) |
+| E01 / E02 | Custom-terminal launcher `${prog}`; Profile via cProfile | ✅ |
 | D02 / B07 / C02 / C03 | Transactional create/recreate, probe, base version | OPEN |
 | D04 / B05 / B04 / B06 / D05 / D06 | CML/comments, brief positions, case, encoding, side comments | OPEN |
 | B03 | Cooperative scan cancel + coalescing | OPEN |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |
-| B09–B11 / C05 / D08 | schema, atomic settings, docs, UUID, dependency lock | OPEN |
+| B09–B11 / C05 / D08 / E03 | schema, atomic settings, docs, UUID, deps lock, release | OPEN |
 
 ---
 
