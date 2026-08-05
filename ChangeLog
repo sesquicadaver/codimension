@@ -1,5 +1,8 @@
 2026 Aug 05
 
+* Audit P1 E04: custom-terminal launcher unlinks ``argv.json`` / ``launch.py``
+  and removes the work dir before ``execvp``; opportunistic stale
+  ``cdm-run-*`` cleanup under system temp
 * Docs truth (post-550ddb4b): rewrite README/INSTALL for CI-tested Linux and
   Python 3.10–3.13; fix language-switch links; add ``scripts/check_docs.py``
   CI gate; sync TODO/Living Spec without static test counts

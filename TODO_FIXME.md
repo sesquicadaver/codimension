@@ -12,7 +12,7 @@
 | B01 / B02 / C01 / D01 | VENV identity/UUID/destination/base combo | P0–P1 | ✅ |
 | D03 | Redirected argv + `shell=False` | P1 | ✅ (redirected) |
 | E01 / E02 | Custom-terminal launcher `${prog}` + Profile cProfile | P1 | ✅ |
-| E04 | Launcher temp dirs / argv.json не очищуються | P1 | 🔓 OPEN |
+| E04 | Launcher temp dirs / argv.json не очищуються | P1 | ✅ unlink до execvp + stale cleanup |
 | E05 | Profile completion прив’язаний до terminal / `&` евристика | P1 | 🔓 OPEN |
 | E06 | Launcher POSIX-only (`env python3`, path regex) | P1 | 🔓 OPEN |
 | D02 / B07 | VENV create/recreate без transaction/rollback | P1 | 🔓 OPEN |
