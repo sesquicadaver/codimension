@@ -80,15 +80,18 @@
 - [ ] CI проходить на `master` — перевіряти Actions; див. [TODO_FIXME.md](../../TODO_FIXME.md) A01–A06 (не стверджувати green без прогону)
 - [x] Документація: [doc/README.md](../README.md)
 
-### Відкриті пункти аудиту (2026-08-05 @ 9df7eca7)
+### Відкриті пункти аудиту (2026-08-05 @ 8c60ad5c)
 
 | ID | Тема | Статус |
 |----|------|--------|
-| B01–B02 | VENV root identity / `.cdm3` UUID containment | ✅ |
-| C01 | Create VENV destination guard (`validateVenvDestination`) + broken→VENV… | ✅ |
-| B03–B08 | scan cancel, name/colon, comment indent, case tokenize, transactional recreate, full-IDE smoke | OPEN |
+| B01–B02 / C01 | VENV identity, UUID containment, create destination guard | ✅ |
+| D01 | Base interpreter combo ignores Browse/`setEditText` | ✅ |
+| D02 / B07 | Transactional create/recreate + GUI rmtree | OPEN |
+| D03 | Run/debug/profile `shell=True` argv integrity | OPEN |
+| D04 / B05 | CML + comment cluster indent / CML heads | OPEN |
+| B03–B04 / B06 / B08 | scan cancel, brief positions, case tokenize, full-IDE smoke | OPEN |
 | C02–C04 | interpreter probe, recreate base version, Flow UI coupling gate | OPEN |
-| B09–B11 / C05 | schema on all paths, atomic settings, docs drift, empty UUID persist | OPEN |
+| B09–B11 / C05 | schema paths, atomic settings, docs drift, empty UUID | OPEN |
 
 ---
 

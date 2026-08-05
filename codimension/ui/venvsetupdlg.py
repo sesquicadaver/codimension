@@ -114,6 +114,25 @@ def _selected_sources(req_checks, pyproject_cb, unresolved_cb, pkg_list):
     return reqs, pkgs, pyproject_cb.isChecked()
 
 
+def selectedBaseInterpreter(combo: QComboBox, *, fallback: str | None = None) -> str:
+    """Resolve base Python from an editable combo (audit D01 @ 8c60ad5c).
+
+    ``QComboBox.setEditText`` does not clear ``currentIndex``, so
+    ``currentData()`` alone keeps returning the default item's path after Browse
+    or manual edits. Prefer ``currentText`` when it differs from the selected
+    item label; use item data only when the visible text still matches that item.
+    """
+    fallback = fallback or sys.executable
+    text = (combo.currentText() or "").strip()
+    data = combo.currentData()
+    if not text:
+        return str(data) if data else fallback
+    idx = combo.currentIndex()
+    if idx >= 0 and text == combo.itemText(idx):
+        return str(data) if data else fallback
+    return text
+
+
 class VenvSetupDialog(QDialog):
     """Create or attach a project venv, then optionally install dependencies."""
 
@@ -187,6 +206,8 @@ class VenvSetupDialog(QDialog):
     def _browse_base_python(self):
         path, _ = QFileDialog.getOpenFileName(self, "Base Python interpreter", "/usr/bin", "All (*)")
         if path:
+            # Clear item selection so currentData() cannot shadow the browsed path.
+            self._base_combo.setCurrentIndex(-1)
             self._base_combo.setEditText(path)
 
     def _on_accept(self):
@@ -203,7 +224,7 @@ class VenvSetupDialog(QDialog):
                 if not location:
                     QMessageBox.warning(self, "VENV", "Choose a venv location.")
                     return
-                base = self._base_combo.currentData() or self._base_combo.currentText().strip() or sys.executable
+                base = selectedBaseInterpreter(self._base_combo)
                 python = create_venv_with_progress(self, base, location, project_dir=self._project_dir)
 
             reqs, packages, install_proj = _selected_sources(

@@ -77,5 +77,68 @@ def test_venv_dialogs_use_async_runner():
     src = text.read_text(encoding="utf-8")
     assert "create_venv_with_progress" in src
     assert "run_pip_with_progress" in src
+    assert "selectedBaseInterpreter" in src
     assert "runPipInstall(" not in src
     assert "createVenv(base" not in src and "createVenv(self" not in src
+
+
+def test_selected_base_interpreter_ignores_stale_item_data(qapp_ready):
+    """D01: Browse/setEditText must not leave currentData() as the create base."""
+    from ui.qt import QComboBox
+    from ui.venvsetupdlg import selectedBaseInterpreter
+
+    combo = QComboBox()
+    combo.setEditable(True)
+    combo.addItem(f"System default ({sys.executable})", sys.executable)
+    combo.setCurrentIndex(0)
+    assert selectedBaseInterpreter(combo) == sys.executable
+
+    alt = "/opt/custom/bin/python3.10"
+    # Reproduce the historical bug path: edit text without clearing index.
+    combo.setEditText(alt)
+    assert combo.currentData() == sys.executable
+    assert selectedBaseInterpreter(combo) == alt
+
+    combo.setCurrentIndex(0)
+    combo.setCurrentIndex(-1)
+    combo.setEditText(alt)
+    assert selectedBaseInterpreter(combo) == alt
+
+
+def test_create_venv_with_progress_uses_base_in_argv(qapp_ready, tmp_path, monkeypatch):
+    """D01: QProcess argv must start with the selected base interpreter."""
+    from ui import venvprocess as vp
+
+    captured: list[list[str]] = []
+
+    def fake_run(parent, argv, **kwargs):
+        captured.append(list(argv))
+        dest = Path(argv[-1])
+        bin_dir = dest / "bin"
+        bin_dir.mkdir(parents=True)
+        (dest / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+        py = bin_dir / "python"
+        py.write_text("#!/bin/sh\n", encoding="utf-8")
+        py.chmod(0o755)
+        return "", ""
+
+    monkeypatch.setattr(vp, "run_argv_with_progress", fake_run)
+    base = "/usr/bin/python3.10-not-ide"
+    dest = tmp_path / "proj" / ".venv"
+    dest.parent.mkdir()
+    out = vp.create_venv_with_progress(None, base, str(dest), project_dir=str(dest.parent))
+    assert captured and captured[0][0] == base
+    assert captured[0][1:3] == ["-m", "venv"]
+    assert Path(out).name.startswith("python")
+
+
+def test_create_venv_with_progress_refuses_unsafe_destination(qapp_ready, tmp_path, monkeypatch):
+    """C01 gap: destination guard must run before QProcess, not only in sync create."""
+    from ui import venvprocess as vp
+
+    def boom(*_a, **_k):
+        raise AssertionError("QProcess must not start for unsafe destination")
+
+    monkeypatch.setattr(vp, "run_argv_with_progress", boom)
+    with pytest.raises(RuntimeError, match="IDE environment|outside|project root|empty"):
+        vp.create_venv_with_progress(None, sys.executable, sys.prefix, project_dir=str(tmp_path))
