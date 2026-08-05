@@ -277,9 +277,7 @@ def customTerminalBackgrounds(custom_terminal: str) -> bool:
     return bool(custom_terminal) and custom_terminal.rstrip().endswith("&")
 
 
-def _wrap_custom_terminal(
-    argv: list[str], custom_terminal: str, *, completion_marker: str | None = None
-) -> str:
+def _wrap_custom_terminal(argv: list[str], custom_terminal: str, *, completion_marker: str | None = None) -> str:
     """Embed a single launcher path into the user custom-terminal template.
 
     Never joins the full argv into the template (E01): that breaks inside
@@ -445,8 +443,7 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
             import logging
 
             logging.info(
-                "Custom-terminal Profile template ends with '&'; "
-                "waiting for profile completion marker, not shell exit."
+                "Custom-terminal Profile template ends with '&'; waiting for profile completion marker, not shell exit."
             )
 
     return _wrap_custom_terminal(argv, custom, completion_marker=marker), environment, True
