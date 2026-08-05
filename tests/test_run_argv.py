@@ -3,13 +3,67 @@
 
 from __future__ import annotations
 
+import importlib
 import os
 import sys
+from pathlib import Path
 from unittest.mock import MagicMock
 
 # Ensure package-relative parsers provide cdmpyparser before utils.run import.
 import parsers  # noqa: E402,F401
 import pytest
+
+_CODIM = Path(__file__).resolve().parents[1] / "codimension"
+
+
+def _under_codimension(mod: object) -> bool:
+    """True if module resolves under the repo ``codimension/`` tree."""
+    path = getattr(mod, "__file__", None)
+    if path:
+        return "/codimension/" in os.path.abspath(path).replace("\\", "/")
+    pkg_path = getattr(mod, "__path__", None)
+    if pkg_path is None:
+        return False
+    try:
+        first = os.path.abspath(list(pkg_path)[0]).replace("\\", "/")
+    except Exception:
+        return False
+    return "/codimension/" in first
+
+
+def _purge_collection_stubs() -> None:
+    """Drop incomplete ``ui`` / ``utils`` stubs left by other suites (CI order).
+
+    ``utils.run`` imports ``encoding`` → ``settings`` → ``ui.qt``, so stubs for
+    any of those break a real import (audit D03 CI).
+    """
+    dirty = False
+    for name in list(sys.modules):
+        if name not in ("ui", "utils") and not name.startswith(("ui.", "utils.")):
+            continue
+        mod = sys.modules[name]
+        if _under_codimension(mod):
+            if name == "utils.run" and not hasattr(mod, "getCwdCmdEnv"):
+                del sys.modules[name]
+                dirty = True
+            elif name == "ui.qt" and not hasattr(mod, "QDir"):
+                del sys.modules[name]
+                dirty = True
+            continue
+        del sys.modules[name]
+        dirty = True
+    if dirty:
+        importlib.invalidate_caches()
+        if str(_CODIM) not in sys.path:
+            sys.path.insert(0, str(_CODIM))
+        import parsers as _parsers  # noqa: F401
+
+
+@pytest.fixture(autouse=True)
+def _real_utils_run():
+    """Restore real run/settings/qt modules before each test in this module."""
+    _purge_collection_stubs()
+    yield
 
 
 def _params(**overrides):
@@ -29,7 +83,7 @@ def test_parse_preserves_argument_boundaries():
     assert parseCommandLineArguments("*.py") == ["*.py"]
     assert parseCommandLineArguments("$HOME") == ["$HOME"]
     assert parseCommandLineArguments('"тест"') == ["тест"]
-    assert parseCommandLineArguments("\"quote'\\\"value\"") == ["quote'\"value"]
+    assert parseCommandLineArguments('"quote\'\\"value"') == ["quote'\"value"]
     # Adjacent quoted/unquoted tokens concatenate under POSIX shlex
     assert parseCommandLineArguments('"a"b') == ["ab"]
     assert parseCommandLineArguments("") == []
@@ -87,9 +141,7 @@ def test_redirected_profile_outfile_is_argv_element(tmp_path, monkeypatch):
 
     script = str(tmp_path / "app.py")
     params = _params(arguments='"a b"', redirected=True)
-    cmd, env, use_shell = run_mod.getCwdCmdEnv(
-        PROFILE, script, params, tcpServerPort=9, procuuid="p1"
-    )
+    cmd, env, use_shell = run_mod.getCwdCmdEnv(PROFILE, script, params, tcpServerPort=9, procuuid="p1")
     assert use_shell is False
     assert isinstance(cmd, list)
     assert "--outfile" in cmd

@@ -81,7 +81,8 @@ def resolveInterpreter(params) -> str:
     """Return the interpreter path for a run session (unquoted)."""
     if params["useInherited"]:
         return sys.executable
-    return params["customInterpreter"]
+    custom = params["customInterpreter"]
+    return sys.executable if not custom else str(custom)
 
 
 def parseCommandLineArguments(cmdLine: str) -> list[str]:
