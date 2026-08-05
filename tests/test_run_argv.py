@@ -278,9 +278,14 @@ def test_custom_terminal_profile_uses_cprofile(tmp_path, monkeypatch):
     assert argv[4] == outfile
     assert argv[5] == script
     assert argv[6] == "a b"
+    # E05: profile launcher embeds completion marker (subprocess path, not execvp)
+    launch_src = Path(launch_path).read_text(encoding="utf-8")
+    assert "subprocess.call" in launch_src
+    assert outfile + ".done" in launch_src or run_mod.getProfileCompletionMarkerPath(outfile) in launch_src
 
 
-def test_custom_terminal_profile_refuses_background_template(tmp_path, monkeypatch):
+def test_custom_terminal_profile_allows_background_template(tmp_path, monkeypatch):
+    """E05: trailing '&' is not a hard refuse; completion is marker-gated."""
     from utils import run as run_mod
     from utils.runparams import PROFILE
 
@@ -294,8 +299,200 @@ def test_custom_terminal_profile_refuses_background_template(tmp_path, monkeypat
         redirected=False,
         customTerminal='xterm -e /bin/bash -c "${prog}" &',
     )
-    with pytest.raises(RuntimeError, match="backgrounding|redirected"):
-        run_mod.getCwdCmdEnv(PROFILE, str(tmp_path / "a.py"), params, procuuid="p3")
+    cmd, _env, use_shell = run_mod.getCwdCmdEnv(PROFILE, str(tmp_path / "a.py"), params, procuuid="p3")
+    assert use_shell is True
+    assert "launch.py" in cmd
+
+
+def test_profile_launcher_writes_marker_after_child(tmp_path):
+    """E05: completion marker appears only after the profiled argv exits."""
+    import subprocess
+
+    from utils.run import getProfileCompletionMarkerPath, writeArgvLauncher
+
+    outfile = tmp_path / "out.profile"
+    marker = Path(getProfileCompletionMarkerPath(str(outfile)))
+    # Simulate cProfile -o by writing a non-empty outfile then exiting.
+    target = tmp_path / "write_profile.py"
+    target.write_text(
+        f"from pathlib import Path\nPath({str(outfile)!r}).write_bytes(b'prof')\n",
+        encoding="utf-8",
+    )
+    launch = writeArgvLauncher([sys.executable, str(target)], completion_marker=str(marker))
+    work = Path(launch).parent
+    assert not marker.exists()
+    completed = subprocess.run([launch], check=False)
+    assert completed.returncode == 0
+    assert marker.is_file()
+    assert outfile.read_bytes() == b"prof"
+    assert not work.exists()
+
+
+def test_profile_results_ready_requires_nonempty_outfile(tmp_path):
+    from utils.run import getProfileCompletionMarkerPath, profileResultsReady
+
+    outfile = tmp_path / "o.prof"
+    marker = Path(getProfileCompletionMarkerPath(str(outfile)))
+    marker.write_text("done\n", encoding="utf-8")
+    assert profileResultsReady(str(outfile), str(marker)) is False
+    outfile.write_bytes(b"x")
+    assert profileResultsReady(str(outfile), str(marker)) is True
+
+
+def test_wait_timer_emits_profile_once_while_shell_alive(monkeypatch, tmp_path):
+    """E05: results emit on marker readiness even if Popen has not exited."""
+    import utils.runmanager as rm
+    from utils.run import profileResultsReady as _ready
+
+    outfile = tmp_path / "sess.profile.out"
+    marker = Path(str(outfile) + ".done")
+    outfile.write_bytes(b"stats")
+    marker.write_text("done\n", encoding="utf-8")
+
+    gd = MagicMock()
+    gd.getProfileOutputPath.return_value = str(outfile)
+    monkeypatch.setattr(rm, "GlobalData", lambda: gd)
+
+    class FakeProc:
+        def poll(self):
+            return None
+
+        def wait(self):
+            return 0
+
+    manager = rm.RunManager.__new__(rm.RunManager)
+    manager._RunManager__waitTimer = MagicMock()
+    manager.sigProfilingResults = MagicMock()
+
+    wrapper = rm.RemoteProcessWrapper.__new__(rm.RemoteProcessWrapper)
+    wrapper.redirected = False
+    wrapper.kind = rm.PROFILE
+    wrapper.path = str(tmp_path / "s.py")
+    wrapper.procuuid = "u-e05"
+    wrapper.startTime = __import__("datetime").datetime.now()
+    wrapper.finishTime = None
+    wrapper.profileOutfile = str(outfile)
+    wrapper.profileCompletionMarker = str(marker)
+    wrapper.profileResultsSent = False
+    wrapper.profileWaitDeadline = None
+    wrapper._RemoteProcessWrapper__proc = FakeProc()
+    wrapper.profileResultsReady = lambda: _ready(wrapper.profileOutfile, wrapper.profileCompletionMarker)
+
+    class Item:
+        kind = rm.PROFILE
+
+        def __init__(self):
+            self.procWrapper = wrapper
+
+    manager._RunManager__processes = [Item()]
+    rm.RunManager._RunManager__onWaitTimer(manager)
+    assert manager.sigProfilingResults.emit.call_count == 1
+    assert wrapper.profileResultsSent is True
+    rm.RunManager._RunManager__onWaitTimer(manager)
+    assert manager.sigProfilingResults.emit.call_count == 1
+    assert len(manager._RunManager__processes) == 1
+
+
+def test_wait_timer_timeout_after_shell_death_no_emit(monkeypatch, tmp_path):
+    """E05 test-spec #7: after shell exit, timeout drops without success emit."""
+    import utils.runmanager as rm
+    from utils.run import PROFILE_COMPLETION_TIMEOUT_SEC, profileResultsReady as _ready
+
+    outfile = tmp_path / "late.profile.out"
+    marker = Path(str(outfile) + ".done")
+    # No marker / no outfile → never ready
+    assert _ready(str(outfile), str(marker)) is False
+
+    monkeypatch.setattr(rm, "GlobalData", lambda: MagicMock())
+
+    class DeadProc:
+        def poll(self):
+            return 0
+
+        def wait(self):
+            return 0
+
+    manager = rm.RunManager.__new__(rm.RunManager)
+    manager._RunManager__waitTimer = MagicMock()
+    manager.sigProfilingResults = MagicMock()
+
+    wrapper = rm.RemoteProcessWrapper.__new__(rm.RemoteProcessWrapper)
+    wrapper.redirected = False
+    wrapper.kind = rm.PROFILE
+    wrapper.path = str(tmp_path / "s.py")
+    wrapper.procuuid = "u-timeout"
+    wrapper.startTime = __import__("datetime").datetime.now()
+    wrapper.finishTime = None
+    wrapper.profileOutfile = str(outfile)
+    wrapper.profileCompletionMarker = str(marker)
+    wrapper.profileResultsSent = False
+    wrapper.profileWaitDeadline = None
+    wrapper.profileShellBackgrounded = False
+    wrapper._RemoteProcessWrapper__proc = DeadProc()
+    wrapper.profileResultsReady = lambda: _ready(wrapper.profileOutfile, wrapper.profileCompletionMarker)
+
+    class Item:
+        kind = rm.PROFILE
+
+        def __init__(self):
+            self.procWrapper = wrapper
+
+    manager._RunManager__processes = [Item()]
+    # First tick after shell death: set deadline, keep process, no emit
+    rm.RunManager._RunManager__onWaitTimer(manager)
+    assert manager.sigProfilingResults.emit.call_count == 0
+    assert len(manager._RunManager__processes) == 1
+    assert wrapper.profileWaitDeadline is not None
+
+    # Force timeout
+    wrapper.profileWaitDeadline = __import__("time").time() - 1
+    assert PROFILE_COMPLETION_TIMEOUT_SEC == 60
+    rm.RunManager._RunManager__onWaitTimer(manager)
+    assert manager.sigProfilingResults.emit.call_count == 0
+    assert manager._RunManager__processes == []
+
+
+def test_wait_timer_no_emit_on_empty_outfile(monkeypatch, tmp_path):
+    """E05: marker alone with empty outfile must not emit."""
+    import utils.runmanager as rm
+    from utils.run import profileResultsReady as _ready
+
+    outfile = tmp_path / "empty.profile.out"
+    marker = Path(str(outfile) + ".done")
+    outfile.write_bytes(b"")
+    marker.write_text("done\n", encoding="utf-8")
+    assert _ready(str(outfile), str(marker)) is False
+
+    monkeypatch.setattr(rm, "GlobalData", lambda: MagicMock())
+
+    manager = rm.RunManager.__new__(rm.RunManager)
+    manager._RunManager__waitTimer = MagicMock()
+    manager.sigProfilingResults = MagicMock()
+
+    wrapper = rm.RemoteProcessWrapper.__new__(rm.RemoteProcessWrapper)
+    wrapper.redirected = False
+    wrapper.kind = rm.PROFILE
+    wrapper.path = str(tmp_path / "s.py")
+    wrapper.procuuid = "u-empty"
+    wrapper.startTime = __import__("datetime").datetime.now()
+    wrapper.finishTime = None
+    wrapper.profileOutfile = str(outfile)
+    wrapper.profileCompletionMarker = str(marker)
+    wrapper.profileResultsSent = False
+    wrapper.profileWaitDeadline = None
+    wrapper._RemoteProcessWrapper__proc = MagicMock(poll=lambda: None, wait=lambda: 0)
+    wrapper.profileResultsReady = lambda: _ready(wrapper.profileOutfile, wrapper.profileCompletionMarker)
+
+    class Item:
+        kind = rm.PROFILE
+
+        def __init__(self):
+            self.procWrapper = wrapper
+
+    manager._RunManager__processes = [Item()]
+    rm.RunManager._RunManager__onWaitTimer(manager)
+    assert manager.sigProfilingResults.emit.call_count == 0
+    assert wrapper.profileResultsSent is False
 
 
 def test_runmanager_popen_uses_shell_flag_from_spec(monkeypatch, tmp_path):

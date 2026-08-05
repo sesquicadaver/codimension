@@ -156,16 +156,39 @@ def cleanupStaleArgvLaunchers(max_age_seconds: float = 86400.0) -> int:
     return removed
 
 
-def writeArgvLauncher(argv: list[str]) -> str:
-    """Write a temp executable that runs ``argv`` via ``os.execvp`` (no shell).
+# After custom-terminal Profile shell exits, wait this long for marker+outfile (E05).
+PROFILE_COMPLETION_TIMEOUT_SEC = 60
+
+
+def getProfileCompletionMarkerPath(outfile: str) -> str:
+    """Sibling completion marker path for a profile outfile (audit E05)."""
+    return str(outfile) + ".done"
+
+
+def profileResultsReady(outfile: str | None, marker: str | None) -> bool:
+    """True when marker exists and profile outfile is non-empty (E05 fail-closed)."""
+    if not outfile or not marker:
+        return False
+    try:
+        return os.path.isfile(marker) and os.path.isfile(outfile) and os.path.getsize(outfile) > 0
+    except OSError:
+        return False
+
+
+def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) -> str:
+    """Write a temp executable that runs ``argv`` without shell expansion.
 
     Returns a shell-safe absolute path intended as the sole ``${prog}``
     substitution (audit E01 @ 1dfb3a1d). Caller argv is stored in JSON beside
     the launcher so user arguments never enter the terminal template text.
 
     The generated launcher deletes ``argv.json``, itself, and the temp
-    directory after loading argv into memory and before ``execvp`` (E04), so
-    secrets in the command line are not left on disk after the process starts.
+    directory after loading argv into memory (E04).
+
+    Without ``completion_marker``, the launcher ``os.execvp``s the target
+    (RUN/DEBUG). With a marker (non-redirected PROFILE, E05), it runs the
+    target via ``subprocess.call``, then atomically writes the marker. In that
+    mode ``${prog}`` is the wrapper PID, not the cProfile process image.
     """
     if not argv:
         raise RuntimeError("empty argv for launcher")
@@ -175,34 +198,74 @@ def writeArgvLauncher(argv: list[str]) -> str:
     launch_path = os.path.join(work, "launch.py")
     with open(argv_path, "w", encoding="utf-8") as handle:
         json.dump([str(part) for part in argv], handle, ensure_ascii=False)
-    script = textwrap.dedent(
-        """\
-        #!/usr/bin/env python3
-        # Codimension argv launcher — do not edit; generated for one run.
-        import json
-        import os
-        import sys
-        from pathlib import Path
+    if completion_marker:
+        marker_literal = json.dumps(str(completion_marker), ensure_ascii=False)
+        script = textwrap.dedent(
+            f"""\
+            #!/usr/bin/env python3
+            # Codimension profile launcher — marker after child (E05); do not edit.
+            import json
+            import os
+            import subprocess
+            import sys
+            from pathlib import Path
 
-        here = Path(__file__).resolve()
-        argv_path = here.with_name("argv.json")
-        argv = json.loads(argv_path.read_text(encoding="utf-8"))
-        if not argv:
-            sys.stderr.write("empty argv\\n")
-            raise SystemExit(1)
-        # E04: drop argv from disk before replacing the process image.
-        for path in (argv_path, here):
+            here = Path(__file__).resolve()
+            argv_path = here.with_name("argv.json")
+            argv = json.loads(argv_path.read_text(encoding="utf-8"))
+            if not argv:
+                sys.stderr.write("empty argv\\n")
+                raise SystemExit(1)
+            # E04: drop argv from disk before starting the profiled process.
+            for path in (argv_path, here):
+                try:
+                    path.unlink()
+                except OSError:
+                    pass
             try:
-                path.unlink()
+                here.parent.rmdir()
             except OSError:
                 pass
-        try:
-            here.parent.rmdir()
-        except OSError:
-            pass
-        os.execvp(argv[0], argv)
-        """
-    )
+            rc = subprocess.call(argv)
+            marker = {marker_literal}
+            tmp = marker + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as handle:
+                handle.write("done\\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp, marker)
+            raise SystemExit(rc)
+            """
+        )
+    else:
+        script = textwrap.dedent(
+            """\
+            #!/usr/bin/env python3
+            # Codimension argv launcher — do not edit; generated for one run.
+            import json
+            import os
+            import sys
+            from pathlib import Path
+
+            here = Path(__file__).resolve()
+            argv_path = here.with_name("argv.json")
+            argv = json.loads(argv_path.read_text(encoding="utf-8"))
+            if not argv:
+                sys.stderr.write("empty argv\\n")
+                raise SystemExit(1)
+            # E04: drop argv from disk before replacing the process image.
+            for path in (argv_path, here):
+                try:
+                    path.unlink()
+                except OSError:
+                    pass
+            try:
+                here.parent.rmdir()
+            except OSError:
+                pass
+            os.execvp(argv[0], argv)
+            """
+        )
     with open(launch_path, "w", encoding="utf-8") as handle:
         handle.write(script)
     os.chmod(launch_path, 0o755)
@@ -214,13 +277,13 @@ def customTerminalBackgrounds(custom_terminal: str) -> bool:
     return bool(custom_terminal) and custom_terminal.rstrip().endswith("&")
 
 
-def _wrap_custom_terminal(argv: list[str], custom_terminal: str) -> str:
+def _wrap_custom_terminal(argv: list[str], custom_terminal: str, *, completion_marker: str | None = None) -> str:
     """Embed a single launcher path into the user custom-terminal template.
 
     Never joins the full argv into the template (E01): that breaks inside
     recommended ``bash -c "${prog}; …"`` double-quote contexts.
     """
-    launcher = writeArgvLauncher(argv)
+    launcher = writeArgvLauncher(argv, completion_marker=completion_marker)
     custom = (custom_terminal or "").strip()
     if "${prog}" in custom:
         return custom.replace("${prog}", launcher)
@@ -326,7 +389,11 @@ def getTerminalCommandToProfile(fileName, arguments, params, tcpServerPort=None,
     argv = buildArgvToProfile(fileName, arguments, params, tcpServerPort, procuuid)
     if params["redirected"]:
         return " ".join(shlex.quote(part) for part in argv)
-    return _wrap_custom_terminal(argv, params["customTerminal"])
+    from .globals import GlobalData
+
+    outfile = GlobalData().getProfileOutputPath(procuuid)
+    marker = getProfileCompletionMarkerPath(outfile)
+    return _wrap_custom_terminal(argv, params["customTerminal"], completion_marker=marker)
 
 
 def getTerminalCommandToDebug(fileName, arguments, params, tcpServerPort, procuuid):
@@ -344,9 +411,9 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
     ``Popen(..., shell=False)`` preserves argument boundaries (audit D03).
 
     Custom-terminal sessions return ``(cmd: str, env, True)`` where ``${prog}``
-    is replaced by a single launcher path that ``execvp``s the real argv
-    (audit E01). Profile without redirect uses ``python -m cProfile`` (E02)
-    and refuses backgrounding templates that would race the profile output.
+    is replaced by a single launcher path (audit E01). Profile without redirect
+    uses ``python -m cProfile`` (E02) and a completion marker so results are
+    not tied to terminal lifetime (E05).
     """
     if kind not in [RUN, PROFILE, DEBUG]:
         raise Exception("Unknown command requested. Supported command types are: run, profile, debug.")
@@ -365,14 +432,21 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
         return argv, environment, False
 
     custom = (params["customTerminal"] or "").strip()
-    if kind == PROFILE and customTerminalBackgrounds(custom):
-        raise RuntimeError(
-            "Custom-terminal Profile cannot use a backgrounding template "
-            "(trailing '&'). Remove '&' or enable redirected IO so profiling "
-            "can finish before results are collected."
-        )
+    marker = None
+    if kind == PROFILE:
+        from .globals import GlobalData
 
-    return _wrap_custom_terminal(argv, custom), environment, True
+        outfile = GlobalData().getProfileOutputPath(procuuid)
+        marker = getProfileCompletionMarkerPath(outfile)
+        if customTerminalBackgrounds(custom):
+            # Soft notice only — completion is marker/outfile gated (E05).
+            import logging
+
+            logging.info(
+                "Custom-terminal Profile template ends with '&'; waiting for profile completion marker, not shell exit."
+            )
+
+    return _wrap_custom_terminal(argv, custom, completion_marker=marker), environment, True
 
 
 def getNoArgsEnvironment(params):
