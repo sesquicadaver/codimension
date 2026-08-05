@@ -327,8 +327,9 @@ def cleanupStaleArgvLaunchers(max_age_seconds: float = 86400.0) -> int:
     return removed
 
 
-# After custom-terminal Profile shell exits, wait this long for marker+outfile (E05).
-PROFILE_COMPLETION_TIMEOUT_SEC = 60
+# Bounded wait for non-redirected Profile marker ∧ outfile (E05).
+# Independent of custom-terminal template text (no trailing-& heuristic).
+PROFILE_COMPLETION_TIMEOUT_SEC = 3600
 
 
 def getProfileCompletionMarkerPath(outfile: str) -> str:
@@ -344,6 +345,17 @@ def profileResultsReady(outfile: str | None, marker: str | None) -> bool:
         return os.path.isfile(marker) and os.path.isfile(outfile) and os.path.getsize(outfile) > 0
     except OSError:
         return False
+
+
+def cleanupProfileCompletionMarker(marker: str | None) -> None:
+    """Remove a profile ``.done`` marker (and leftover ``.tmp``) after use (E05)."""
+    if not marker:
+        return
+    for path in (marker, str(marker) + ".tmp"):
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
 
 
 def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) -> str:
@@ -451,11 +463,6 @@ def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) 
         handle.write(script)
     os.chmod(launch_path, 0o755)
     return assertShellSafePath(launch_path)
-
-
-def customTerminalBackgrounds(custom_terminal: str) -> bool:
-    """True when the template likely backgrounds the program (trailing ``&``)."""
-    return bool(custom_terminal) and custom_terminal.rstrip().endswith("&")
 
 
 def _wrap_custom_terminal(argv: list[str], custom_terminal: str, *, completion_marker: str | None = None) -> str:
@@ -619,13 +626,6 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
 
         outfile = GlobalData().getProfileOutputPath(procuuid)
         marker = getProfileCompletionMarkerPath(outfile)
-        if customTerminalBackgrounds(custom):
-            # Soft notice only — completion is marker/outfile gated (E05).
-            import logging
-
-            logging.info(
-                "Custom-terminal Profile template ends with '&'; waiting for profile completion marker, not shell exit."
-            )
 
     return _wrap_custom_terminal(argv, custom, completion_marker=marker), environment, True
 

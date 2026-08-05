@@ -14,7 +14,7 @@
 | E01 / E02 | Custom-terminal launcher `${prog}` + Profile cProfile | P1 | ✅ |
 | E04 / F07 | Stale cleanup symlink traversal у `/tmp` | P1 | ✅ lstat/O_NOFOLLOW + one-shot legacy `/tmp` |
 | E04 (штатний unlink) | Launcher cleanup до execvp | P1 | ✅ |
-| E05 | Profile timeout від shell `&` евристики; orphan `.done` | P1 | 🔓 PARTIAL (marker є) |
+| E05 | Profile timeout від shell `&` евристики; orphan `.done` | P1 | ✅ start deadline + marker cleanup |
 | E06 | noexec execute-probe; обмеження shell-safe paths | P1 | 🔓 PARTIAL (abs shebang + roots) |
 | D02 / B07 | VENV create/recreate без transaction/rollback | P1 | 🔓 OPEN |
 | C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | 🔓 OPEN |

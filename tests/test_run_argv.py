@@ -485,7 +485,7 @@ def test_wait_timer_emits_profile_once_while_shell_alive(monkeypatch, tmp_path):
     wrapper.profileOutfile = str(outfile)
     wrapper.profileCompletionMarker = str(marker)
     wrapper.profileResultsSent = False
-    wrapper.profileWaitDeadline = None
+    wrapper.profileWaitDeadline = __import__("time").time() + 3600
     wrapper._RemoteProcessWrapper__proc = FakeProc()
     wrapper.profileResultsReady = lambda: _ready(wrapper.profileOutfile, wrapper.profileCompletionMarker)
 
@@ -499,27 +499,28 @@ def test_wait_timer_emits_profile_once_while_shell_alive(monkeypatch, tmp_path):
     rm.RunManager._RunManager__onWaitTimer(manager)
     assert manager.sigProfilingResults.emit.call_count == 1
     assert wrapper.profileResultsSent is True
+    assert not marker.exists()
     rm.RunManager._RunManager__onWaitTimer(manager)
     assert manager.sigProfilingResults.emit.call_count == 1
     assert len(manager._RunManager__processes) == 1
 
 
-def test_wait_timer_timeout_after_shell_death_no_emit(monkeypatch, tmp_path):
-    """E05 test-spec #7: after shell exit, timeout drops without success emit."""
+def test_wait_timer_timeout_uses_start_deadline_not_shell_heuristic(monkeypatch, tmp_path):
+    """E05: single start-based deadline; template '&' is irrelevant."""
     import utils.runmanager as rm
     from utils.run import PROFILE_COMPLETION_TIMEOUT_SEC
     from utils.run import profileResultsReady as _ready
 
     outfile = tmp_path / "late.profile.out"
     marker = Path(str(outfile) + ".done")
-    # No marker / no outfile → never ready
     assert _ready(str(outfile), str(marker)) is False
+    assert PROFILE_COMPLETION_TIMEOUT_SEC == 3600
 
     monkeypatch.setattr(rm, "GlobalData", lambda: MagicMock())
 
-    class DeadProc:
+    class AliveProc:
         def poll(self):
-            return 0
+            return None
 
         def wait(self):
             return 0
@@ -538,9 +539,8 @@ def test_wait_timer_timeout_after_shell_death_no_emit(monkeypatch, tmp_path):
     wrapper.profileOutfile = str(outfile)
     wrapper.profileCompletionMarker = str(marker)
     wrapper.profileResultsSent = False
-    wrapper.profileWaitDeadline = None
-    wrapper.profileShellBackgrounded = False
-    wrapper._RemoteProcessWrapper__proc = DeadProc()
+    wrapper.profileWaitDeadline = __import__("time").time() - 1
+    wrapper._RemoteProcessWrapper__proc = AliveProc()
     wrapper.profileResultsReady = lambda: _ready(wrapper.profileOutfile, wrapper.profileCompletionMarker)
 
     class Item:
@@ -550,18 +550,10 @@ def test_wait_timer_timeout_after_shell_death_no_emit(monkeypatch, tmp_path):
             self.procWrapper = wrapper
 
     manager._RunManager__processes = [Item()]
-    # First tick after shell death: set deadline, keep process, no emit
-    rm.RunManager._RunManager__onWaitTimer(manager)
-    assert manager.sigProfilingResults.emit.call_count == 0
-    assert len(manager._RunManager__processes) == 1
-    assert wrapper.profileWaitDeadline is not None
-
-    # Force timeout
-    wrapper.profileWaitDeadline = __import__("time").time() - 1
-    assert PROFILE_COMPLETION_TIMEOUT_SEC == 60
     rm.RunManager._RunManager__onWaitTimer(manager)
     assert manager.sigProfilingResults.emit.call_count == 0
     assert manager._RunManager__processes == []
+    assert not marker.exists()
 
 
 def test_wait_timer_no_emit_on_empty_outfile(monkeypatch, tmp_path):
