@@ -29,6 +29,7 @@ import json
 import os
 import re
 import shlex
+import stat
 import sys
 import tempfile
 import textwrap
@@ -140,12 +141,15 @@ def _launcherWorkRoots() -> list[str]:
 
 
 def _isTrustedLauncherWorkRoot(path: str) -> bool:
-    """True if ``path`` is a directory owned by us with no group/other access."""
+    """True if ``path`` is a real directory owned by us with mode ``0700``.
+
+    Uses ``lstat`` so a symlink cannot masquerade as a trusted root (F07).
+    """
     try:
-        st = os.stat(path)
+        st = os.lstat(path)
     except OSError:
         return False
-    if not os.path.isdir(path):
+    if not stat.S_ISDIR(st.st_mode):
         return False
     if st.st_uid != os.getuid():
         return False
@@ -164,10 +168,10 @@ def _ensureLauncherWorkRoot() -> str | None:
 
     for root in _launcherWorkRoots():
         try:
-            if os.path.isdir(root):
-                if not _isTrustedLauncherWorkRoot(root):
-                    continue
-            else:
+            if os.path.lexists(root) and not _isTrustedLauncherWorkRoot(root):
+                # Symlink or untrusted real dir — never heal or use.
+                continue
+            if not os.path.isdir(root):
                 parent = os.path.dirname(root)
                 if parent:
                     os.makedirs(parent, exist_ok=True)
@@ -199,20 +203,89 @@ def _ensureLauncherWorkRoot() -> str | None:
     return None
 
 
+def _legacyTmpCleanupMarkerPath() -> str:
+    """Marker that one-shot legacy ``/tmp`` ``cdm-run-*`` cleanup already ran."""
+    try:
+        from .settings import SETTINGS_DIR
+
+        return os.path.join(SETTINGS_DIR, ".cdm-legacy-tmp-cleanup-done")
+    except ImportError:
+        return os.path.join(tempfile.gettempdir(), ".cdm-legacy-tmp-cleanup-done")
+
+
+def _removeStaleCdmRunDir(path: str, deadline: float) -> bool:
+    """Delete one aged ``cdm-run-*`` directory without following symlinks (F07).
+
+    Requires: real directory, owned by current uid, no group/other bits, mtime
+    older than ``deadline``. Children are removed via ``dir_fd`` + ``O_NOFOLLOW``.
+    """
+    try:
+        st = os.lstat(path)
+    except OSError:
+        return False
+    if stat.S_ISLNK(st.st_mode):
+        return False
+    if not stat.S_ISDIR(st.st_mode):
+        return False
+    if st.st_uid != os.getuid():
+        return False
+    if st.st_mode & 0o077:
+        return False
+    if st.st_mtime > deadline:
+        return False
+
+    flags = os.O_RDONLY
+    if hasattr(os, "O_DIRECTORY"):
+        flags |= os.O_DIRECTORY
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    try:
+        dir_fd = os.open(path, flags)
+    except OSError:
+        return False
+    try:
+        try:
+            for name in os.listdir(dir_fd):
+                try:
+                    os.unlink(name, dir_fd=dir_fd)
+                except IsADirectoryError:
+                    try:
+                        os.rmdir(name, dir_fd=dir_fd)
+                    except OSError:
+                        pass
+                except OSError:
+                    pass
+            cur = os.fstat(dir_fd)
+            if cur.st_ino != st.st_ino or cur.st_dev != st.st_dev:
+                return False
+        finally:
+            os.close(dir_fd)
+        os.rmdir(path)
+        return True
+    except OSError:
+        return False
+
+
 def cleanupStaleArgvLaunchers(max_age_seconds: float = 86400.0) -> int:
-    """Remove leftover ``cdm-run-*`` dirs under known launcher roots (E04/E06).
+    """Remove leftover ``cdm-run-*`` dirs under trusted launcher roots (E04/F07).
 
     Best-effort only: races and permission errors are ignored. Returns the
-    number of directories successfully removed. Called opportunistically when
-    creating a new launcher so crashed/killed runs do not retain argv forever.
+    number of directories successfully removed.
+
+    Never follows symlinks (``lstat`` / ``O_NOFOLLOW`` / ``dir_fd``). System
+    ``tempfile.gettempdir()`` is scanned at most once (legacy migration), then
+    a marker under ``SETTINGS_DIR`` disables further global ``/tmp`` sweeps.
     """
     import time as _time
 
     removed = 0
     deadline = _time.time() - max_age_seconds
     parents = list(_launcherWorkRoots())
-    # Legacy flat layout under system temp (pre-E06).
-    parents.append(tempfile.gettempdir())
+    legacy_marker = _legacyTmpCleanupMarkerPath()
+    scan_legacy_tmp = not os.path.exists(legacy_marker)
+    if scan_legacy_tmp:
+        parents.append(tempfile.gettempdir())
+
     seen: set[str] = set()
     for parent in parents:
         parent = os.path.abspath(parent)
@@ -220,27 +293,37 @@ def cleanupStaleArgvLaunchers(max_age_seconds: float = 86400.0) -> int:
             continue
         seen.add(parent)
         try:
-            names = os.listdir(parent)
+            with os.scandir(parent) as entries:
+                for entry in entries:
+                    if not entry.name.startswith("cdm-run-"):
+                        continue
+                    try:
+                        if not entry.is_dir(follow_symlinks=False):
+                            continue
+                    except OSError:
+                        continue
+                    if _removeStaleCdmRunDir(entry.path, deadline):
+                        removed += 1
         except OSError:
             continue
-        for name in names:
-            if not name.startswith("cdm-run-"):
-                continue
-            path = os.path.join(parent, name)
+
+    if scan_legacy_tmp:
+        try:
+            marker_parent = os.path.dirname(legacy_marker)
+            if marker_parent:
+                os.makedirs(marker_parent, exist_ok=True)
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            fd = os.open(legacy_marker, flags, 0o600)
             try:
-                if not os.path.isdir(path):
-                    continue
-                if os.path.getmtime(path) > deadline:
-                    continue
-                for child in os.listdir(path):
-                    try:
-                        os.unlink(os.path.join(path, child))
-                    except OSError:
-                        pass
-                os.rmdir(path)
-                removed += 1
-            except OSError:
-                continue
+                os.write(fd, b"done\n")
+            finally:
+                os.close(fd)
+        except FileExistsError:
+            pass
+        except OSError:
+            pass
     return removed
 
 

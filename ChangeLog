@@ -1,5 +1,8 @@
 2026 Aug 05
 
+* Audit P1 F07: stale ``cdm-run-*`` cleanup uses ``lstat``/``O_NOFOLLOW``/
+  ``dir_fd``; refuse symlink trees; scan system temp at most once via
+  settings marker; reopen E05/E06/B11 as partial/open in TODO
 * Audit P1 E06: custom-terminal launcher shebang uses absolute
   ``sys.executable``; work dirs prefer ``~/.codimension3/cdm-run`` / XDG
   over system ``/tmp`` (``noexec``); Windows still unverified
