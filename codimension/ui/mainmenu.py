@@ -656,7 +656,8 @@ class MainWindowMenuMixin:
             QMessageBox.information(
                 self,
                 "VENV",
-                "Project already has a configured pythoninterpreter.\nUse Update VENV… instead.",
+                "Project already has a working pythoninterpreter.\n"
+                "Use Update VENV… to sync/upgrade/recreate, or clear the path in Project Properties.",
             )
             return
         VenvSetupDialog(self).exec_()

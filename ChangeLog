@@ -1,3 +1,10 @@
+2026 Aug 05
+
+* Audit P0 C01 (post-9df7eca7): ``validateVenvDestination()`` fail-closed
+  for create (sync + QProcess); refuse IDE ``sys.prefix``, project root,
+  outside project, symlinks, existing venv / non-empty dirs; VENV… enabled
+  when configured interpreter is broken; setup dialog prefers attach
+
 2026 Aug 04
 
 * Audit P0 (post-f5196a67): VENV identity by venv root (`pyvenv.cfg` /

@@ -132,9 +132,11 @@ class VenvSetupDialog(QDialog):
         attach_layout = QVBoxLayout(attach_box)
         self._candidate_list = QListWidget(self)
         self._candidate_list.addItem(QListWidgetItem("(ignore — create new)"))
-        for path in discoverRootVenvCandidates(self._project_dir):
+        candidates = discoverRootVenvCandidates(self._project_dir)
+        for path in candidates:
             self._candidate_list.addItem(QListWidgetItem(path))
-        self._candidate_list.setCurrentRow(0)
+        # Prefer attach when a root venv already exists (audit P0 @ 9df7eca7)
+        self._candidate_list.setCurrentRow(1 if candidates else 0)
         attach_layout.addWidget(self._candidate_list)
         layout.addWidget(attach_box)
 
@@ -202,7 +204,7 @@ class VenvSetupDialog(QDialog):
                     QMessageBox.warning(self, "VENV", "Choose a venv location.")
                     return
                 base = self._base_combo.currentData() or self._base_combo.currentText().strip() or sys.executable
-                python = create_venv_with_progress(self, base, location)
+                python = create_venv_with_progress(self, base, location, project_dir=self._project_dir)
 
             reqs, packages, install_proj = _selected_sources(
                 self._req_checks,
@@ -351,7 +353,9 @@ class VenvUpdateDialog(QDialog):
                     requirement_files=reqs,
                     packages=packages,
                     install_project=install_proj,
-                    runner_create=lambda base, path: create_venv_with_progress(self, base, path),
+                    runner_create=lambda base, path: create_venv_with_progress(
+                        self, base, path, project_dir=self._project_dir
+                    ),
                     runner_pip=lambda cmd, cwd=None: run_pip_with_progress(self, cmd, cwd=cwd),
                 )
                 persist = bool(self._project.props.get("pythoninterpreter", "").strip())

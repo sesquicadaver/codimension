@@ -80,13 +80,15 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 - [ ] CI green on `master` — verify Actions; see [TODO_FIXME.en.md](../../../TODO_FIXME.en.md) A01–A06 (do not claim green without a run)
 - [x] Documentation: [doc/README.md](../../README.md)
 
-### Open re-audit items (2026-08-04 @ f5196a67)
+### Open audit items (2026-08-05 @ 9df7eca7)
 
 | ID | Topic | Status |
 |----|-------|--------|
 | B01–B02 | VENV root identity / `.cdm3` UUID containment | ✅ |
+| C01 | Create VENV destination guard (`validateVenvDestination`) + broken→VENV… | ✅ |
 | B03–B08 | scan cancel, name/colon, comment indent, case tokenize, transactional recreate, full-IDE smoke | OPEN |
-| B09–B11 | schema on all paths, atomic settings, docs drift | OPEN |
+| C02–C04 | interpreter probe, recreate base version, Flow UI coupling gate | OPEN |
+| B09–B11 / C05 | schema on all paths, atomic settings, docs drift, empty UUID persist | OPEN |
 
 ---
 

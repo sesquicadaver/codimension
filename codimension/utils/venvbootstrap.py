@@ -250,8 +250,13 @@ def isPythonInterpreterConfigured(project) -> bool:
 
 
 def venvSetupActionEnabled(project) -> bool:
-    """VENV… menu: project loaded and interpreter prop empty."""
-    return bool(project and project.isLoaded() and not isPythonInterpreterConfigured(project))
+    """VENV… menu: create/attach when unset, or reattach when configured path is broken."""
+    if project is None or not project.isLoaded():
+        return False
+    if not isPythonInterpreterConfigured(project):
+        return True
+    kind, _ = describeAnalysisPythonSource(project)
+    return kind == SOURCE_INVALID
 
 
 def venvUpdateActionEnabled(project) -> bool:
@@ -303,13 +308,69 @@ def isPathInsideProject(venv_path: str, project_dir: str) -> bool:
         return False
 
 
-def createVenv(base_python: str, venv_dir: str) -> str:
+def validateVenvDestination(
+    venv_dir: str,
+    project_dir: str | None = None,
+    *,
+    for_recreate: bool = False,
+) -> str:
+    """Fail-closed destination checks for create/recreate (audit P0 @ 9df7eca7).
+
+    Returns absolute ``venv_dir``. Raises ``RuntimeError`` when unsafe:
+
+    - empty path
+    - outside ``project_dir`` or equal to project root
+    - destination is a symlink
+    - destination is the active Codimension IDE env (``sys.prefix``)
+    - create onto an existing valid venv (must attach / recreate instead)
+    - create onto a non-empty non-venv directory
+    """
+    if not venv_dir or not str(venv_dir).strip():
+        raise RuntimeError("venv destination is empty")
+    venv_dir = os.path.abspath(str(venv_dir).strip())
+
+    if project_dir:
+        proj_abs = os.path.abspath(project_dir)
+        if os.path.normpath(venv_dir) == os.path.normpath(proj_abs):
+            raise RuntimeError("venv destination must not be the project root")
+        if not isPathInsideProject(venv_dir, project_dir):
+            raise RuntimeError(f"venv destination outside project: {venv_dir}")
+
+    if os.path.islink(venv_dir):
+        raise RuntimeError(f"venv destination is a symlink (refusing): {venv_dir}")
+
+    ide_root = os.path.realpath(sys.prefix)
+    dest_real = os.path.realpath(venv_dir) if os.path.lexists(venv_dir) else venv_dir
+    if dest_real == ide_root:
+        raise RuntimeError("venv destination is the active Codimension IDE environment")
+
+    if os.path.exists(venv_dir):
+        if not os.path.isdir(venv_dir):
+            raise RuntimeError(f"venv destination exists and is not a directory: {venv_dir}")
+        if resolveVenvToPython(venv_dir):
+            if for_recreate:
+                return venv_dir
+            raise RuntimeError(
+                f"venv already exists at {venv_dir}; select it to attach, or use Update VENV… → Recreate"
+            )
+        try:
+            if any(os.scandir(venv_dir)):
+                raise RuntimeError(f"venv destination is not empty: {venv_dir}")
+        except RuntimeError:
+            raise
+        except OSError as exc:
+            raise RuntimeError(f"cannot inspect venv destination: {venv_dir}: {exc}") from exc
+
+    return venv_dir
+
+
+def createVenv(base_python: str, venv_dir: str, project_dir: str | None = None) -> str:
     """Create a venv; return path to the new python executable.
 
-    Raises ``RuntimeError`` on failure.
+    Raises ``RuntimeError`` on failure or unsafe destination.
     """
     base_python = base_python or sys.executable
-    venv_dir = os.path.abspath(venv_dir)
+    venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=False)
     os.makedirs(os.path.dirname(venv_dir) or ".", exist_ok=True)
     cmd = [base_python, "-m", "venv", venv_dir]
     try:
@@ -374,21 +435,12 @@ def recreateVenv(
 ) -> str:
     """Delete (if exists), create venv, sync-install selected sources.
 
-    Refuses paths outside ``project_dir`` and refuses to destroy the active
-    Codimension IDE venv (audit P0). Returns new python path.
+    Refuses unsafe destinations via :func:`validateVenvDestination` (audit P0).
+    Returns new python path.
     """
-    venv_dir = os.path.abspath(venv_dir)
-    if not isPathInsideProject(venv_dir, project_dir):
-        raise RuntimeError(f"recreate refused: {venv_dir} is outside project {project_dir}")
-    try:
-        if os.path.realpath(venv_dir) == os.path.realpath(sys.prefix):
-            raise RuntimeError(f"recreate refused: {venv_dir} is the active Codimension IDE venv")
-    except RuntimeError:
-        raise
-    except Exception:
-        pass
+    venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=True)
     rm = runner_rmtree or shutil.rmtree
-    create = runner_create or createVenv
+    create = runner_create or (lambda base, path: createVenv(base, path, project_dir=project_dir))
     pip = runner_pip or runPipInstall
     if os.path.exists(venv_dir):
         rm(venv_dir)

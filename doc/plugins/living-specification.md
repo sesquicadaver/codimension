@@ -80,13 +80,15 @@
 - [ ] CI проходить на `master` — перевіряти Actions; див. [TODO_FIXME.md](../../TODO_FIXME.md) A01–A06 (не стверджувати green без прогону)
 - [x] Документація: [doc/README.md](../README.md)
 
-### Відкриті пункти повторного аудиту (2026-08-04 @ f5196a67)
+### Відкриті пункти аудиту (2026-08-05 @ 9df7eca7)
 
 | ID | Тема | Статус |
 |----|------|--------|
 | B01–B02 | VENV root identity / `.cdm3` UUID containment | ✅ |
+| C01 | Create VENV destination guard (`validateVenvDestination`) + broken→VENV… | ✅ |
 | B03–B08 | scan cancel, name/colon, comment indent, case tokenize, transactional recreate, full-IDE smoke | OPEN |
-| B09–B11 | schema on all paths, atomic settings, docs drift | OPEN |
+| C02–C04 | interpreter probe, recreate base version, Flow UI coupling gate | OPEN |
+| B09–B11 / C05 | schema on all paths, atomic settings, docs drift, empty UUID persist | OPEN |
 
 ---
 
