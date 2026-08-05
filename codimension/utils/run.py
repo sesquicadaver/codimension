@@ -25,14 +25,21 @@
 from __future__ import annotations
 
 import glob
+import json
 import os
+import re
 import shlex
 import sys
+import tempfile
+import textwrap
 from subprocess import STDOUT, check_output
 
 from .config import DEFAULT_ENCODING
 from .encoding import detectFileEncodingToRead
 from .runparams import DEBUG, PROFILE, RUN
+
+# Paths embedded into ``"${prog}"`` templates must not trigger shell expansion.
+_SHELL_SAFE_PATH = re.compile(r"^[A-Za-z0-9._/=+-]+$")
 
 
 def getProjectPythonPath(project):
@@ -104,20 +111,68 @@ def parseCommandLineArguments(cmdLine: str) -> list[str]:
         raise Exception(str(exc)) from exc
 
 
-def _quote_shell_prog(argv: list[str]) -> str:
-    """Join argv for embedding into a custom terminal shell string."""
-    return " ".join(shlex.quote(part) for part in argv)
+def assertShellSafePath(path: str) -> str:
+    """Return absolute path or raise if unsafe inside ``"${prog}"`` templates."""
+    abs_path = os.path.abspath(path)
+    if not _SHELL_SAFE_PATH.match(abs_path):
+        raise RuntimeError(f"path is not safe for ${{prog}} shell embedding: {abs_path}")
+    return abs_path
+
+
+def writeArgvLauncher(argv: list[str]) -> str:
+    """Write a temp executable that runs ``argv`` via ``os.execvp`` (no shell).
+
+    Returns a shell-safe absolute path intended as the sole ``${prog}``
+    substitution (audit E01 @ 1dfb3a1d). Caller argv is stored in JSON beside
+    the launcher so user arguments never enter the terminal template text.
+    """
+    if not argv:
+        raise RuntimeError("empty argv for launcher")
+    work = tempfile.mkdtemp(prefix="cdm-run-")
+    argv_path = os.path.join(work, "argv.json")
+    launch_path = os.path.join(work, "launch.py")
+    with open(argv_path, "w", encoding="utf-8") as handle:
+        json.dump([str(part) for part in argv], handle, ensure_ascii=False)
+    script = textwrap.dedent(
+        """\
+        #!/usr/bin/env python3
+        # Codimension argv launcher — do not edit; generated for one run.
+        import json
+        import os
+        import sys
+        from pathlib import Path
+
+        argv = json.loads(Path(__file__).with_name("argv.json").read_text(encoding="utf-8"))
+        if not argv:
+            sys.stderr.write("empty argv\\n")
+            raise SystemExit(1)
+        os.execvp(argv[0], argv)
+        """
+    )
+    with open(launch_path, "w", encoding="utf-8") as handle:
+        handle.write(script)
+    os.chmod(launch_path, 0o755)
+    return assertShellSafePath(launch_path)
+
+
+def customTerminalBackgrounds(custom_terminal: str) -> bool:
+    """True when the template likely backgrounds the program (trailing ``&``)."""
+    return bool(custom_terminal) and custom_terminal.rstrip().endswith("&")
 
 
 def _wrap_custom_terminal(argv: list[str], custom_terminal: str) -> str:
-    """Embed quoted ``argv`` into the user custom-terminal template."""
-    quoted_prog = _quote_shell_prog(argv)
+    """Embed a single launcher path into the user custom-terminal template.
+
+    Never joins the full argv into the template (E01): that breaks inside
+    recommended ``bash -c "${prog}; …"`` double-quote contexts.
+    """
+    launcher = writeArgvLauncher(argv)
     custom = (custom_terminal or "").strip()
     if "${prog}" in custom:
-        return custom.replace("${prog}", quoted_prog)
+        return custom.replace("${prog}", launcher)
     if custom:
-        return custom + " " + quoted_prog
-    return quoted_prog
+        return custom + " " + launcher
+    return launcher
 
 
 def buildArgvToRun(fileName, arguments, params, tcpServerPort=None, procuuid=None) -> list[str]:
@@ -141,7 +196,7 @@ def buildArgvToRun(fileName, arguments, params, tcpServerPort=None, procuuid=Non
 
 
 def buildArgvToProfile(fileName, arguments, params, tcpServerPort=None, procuuid=None) -> list[str]:
-    """Build argv for profile (redirected client or bare interpreter+script)."""
+    """Build argv for profile (redirected client or ``python -m cProfile``)."""
     interpreter = resolveInterpreter(params)
     from .globals import GlobalData
 
@@ -162,7 +217,8 @@ def buildArgvToProfile(fileName, arguments, params, tcpServerPort=None, procuuid
             fileName,
             *arguments,
         ]
-    return [interpreter, fileName, *arguments]
+    # Custom terminal: still profile (E02) — never fall back to a bare Run.
+    return [interpreter, "-m", "cProfile", "-o", outfile, fileName, *arguments]
 
 
 def buildArgvToDebug(fileName, arguments, params, tcpServerPort, procuuid) -> list[str]:
@@ -207,7 +263,7 @@ def getTerminalCommandToRun(fileName, arguments, params, tcpServerPort=None, pro
     """Shell string for custom-terminal run (legacy callers / non-redirected)."""
     argv = buildArgvToRun(fileName, arguments, params, tcpServerPort, procuuid)
     if params["redirected"]:
-        return _quote_shell_prog(argv)
+        return " ".join(shlex.quote(part) for part in argv)
     return _wrap_custom_terminal(argv, params["customTerminal"])
 
 
@@ -215,7 +271,7 @@ def getTerminalCommandToProfile(fileName, arguments, params, tcpServerPort=None,
     """Shell string for custom-terminal profile (legacy callers / non-redirected)."""
     argv = buildArgvToProfile(fileName, arguments, params, tcpServerPort, procuuid)
     if params["redirected"]:
-        return _quote_shell_prog(argv)
+        return " ".join(shlex.quote(part) for part in argv)
     return _wrap_custom_terminal(argv, params["customTerminal"])
 
 
@@ -223,7 +279,7 @@ def getTerminalCommandToDebug(fileName, arguments, params, tcpServerPort, procuu
     """Shell string for custom-terminal debug (legacy callers / non-redirected)."""
     argv = buildArgvToDebug(fileName, arguments, params, tcpServerPort, procuuid)
     if params["redirected"]:
-        return _quote_shell_prog(argv)
+        return " ".join(shlex.quote(part) for part in argv)
     return _wrap_custom_terminal(argv, params["customTerminal"])
 
 
@@ -233,9 +289,10 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
     Redirected sessions return ``(argv: list[str], env, False)`` so
     ``Popen(..., shell=False)`` preserves argument boundaries (audit D03).
 
-    Custom-terminal sessions return ``(cmd: str, env, True)`` with each argv
-    element passed through :func:`shlex.quote` before embedding into the
-    terminal template (explicit shell contract; not shared with redirected).
+    Custom-terminal sessions return ``(cmd: str, env, True)`` where ``${prog}``
+    is replaced by a single launcher path that ``execvp``s the real argv
+    (audit E01). Profile without redirect uses ``python -m cProfile`` (E02)
+    and refuses backgrounding templates that would race the profile output.
     """
     if kind not in [RUN, PROFILE, DEBUG]:
         raise Exception("Unknown command requested. Supported command types are: run, profile, debug.")
@@ -253,7 +310,15 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
     if params["redirected"]:
         return argv, environment, False
 
-    return _wrap_custom_terminal(argv, params["customTerminal"]), environment, True
+    custom = (params["customTerminal"] or "").strip()
+    if kind == PROFILE and customTerminalBackgrounds(custom):
+        raise RuntimeError(
+            "Custom-terminal Profile cannot use a backgrounding template "
+            "(trailing '&'). Remove '&' or enable redirected IO so profiling "
+            "can finish before results are collected."
+        )
+
+    return _wrap_custom_terminal(argv, custom), environment, True
 
 
 def getNoArgsEnvironment(params):

@@ -1,5 +1,8 @@
 2026 Aug 05
 
+* Audit P1 E01/E02 (post-1dfb3a1d): custom-terminal ``${prog}`` embeds a
+  single argv launcher path (JSON + ``execvp``), not quoted argv text; Profile
+  without redirect uses ``python -m cProfile -o`` and refuses trailing ``&``
 * Audit P1 D03 (post-628c78d7): redirected run/debug/profile use argv list +
   ``shell=False``; drop ``CDM_ARG`` env placeholders; parse args via
   ``shlex.split``; custom terminal keeps shell=True with ``shlex.quote``

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""D03: redirected run/debug/profile must use argv + shell=False."""
+"""D03/E01/E02: redirected argv + custom-terminal launcher / profile."""
 
 from __future__ import annotations
 
 import importlib
+import json
 import os
+import re
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -150,22 +152,104 @@ def test_redirected_profile_outfile_is_argv_element(tmp_path, monkeypatch):
     assert not any(k.startswith("CDM_ARG") for k in env)
 
 
-def test_custom_terminal_uses_shell_string_with_quoted_args(tmp_path):
+def test_custom_terminal_embeds_launcher_not_argv(tmp_path):
+    """E01: ${prog} is one launcher path; user argv must not enter the template."""
     from utils.run import getCwdCmdEnv
     from utils.runparams import RUN
 
     script = str(tmp_path / "app.py")
     params = _params(
-        arguments='"hello world"',
+        arguments='"hello world" $HOME "$(printf injected)"',
         redirected=False,
-        customTerminal="xterm -e ${prog}",
+        customTerminal='/bin/bash -c "${prog}"',
     )
     cmd, env, use_shell = getCwdCmdEnv(RUN, script, params)
     assert use_shell is True
     assert isinstance(cmd, str)
-    assert "hello world" in cmd or "hello\\ world" in cmd or "'hello world'" in cmd
-    assert "${CDM_ARG" not in cmd
+    assert "${prog}" not in cmd
+    assert "hello world" not in cmd
+    assert "$HOME" not in cmd
+    assert "printf injected" not in cmd
+    assert "launch.py" in cmd
     assert not any(k.startswith("CDM_ARG") for k in env)
+
+
+def test_custom_terminal_recommended_template_preserves_argv(tmp_path):
+    """E01: execute recommended bash -c \"${prog}\" and compare sys.argv."""
+    import json
+    import subprocess
+
+    from utils.run import getCwdCmdEnv
+    from utils.runparams import RUN
+
+    out_file = tmp_path / "argv.json"
+    script = tmp_path / "dump_argv.py"
+    script.write_text(
+        f"import json, sys\njson.dump(sys.argv[1:], open({str(out_file)!r}, 'w', encoding='utf-8'))\n",
+        encoding="utf-8",
+    )
+    args = '"a b" "" "$HOME" "$(printf injected)" "quote\'\\"value" "тест"'
+    params = _params(
+        arguments=args,
+        redirected=False,
+        customTerminal='/bin/bash -c "${prog}"',
+        useInherited=True,
+    )
+    cmd, env, use_shell = getCwdCmdEnv(RUN, str(script), params)
+    assert use_shell is True
+    completed = subprocess.run(cmd, shell=True, env=env, cwd=str(tmp_path), check=False)
+    assert completed.returncode == 0
+    got = json.loads(out_file.read_text(encoding="utf-8"))
+    assert got == ["a b", "", "$HOME", "$(printf injected)", "quote'\"value", "тест"]
+
+
+def test_custom_terminal_profile_uses_cprofile(tmp_path, monkeypatch):
+    """E02: non-redirected Profile must not fall back to bare Run argv."""
+    from utils import run as run_mod
+    from utils.runparams import PROFILE
+
+    outfile = str(tmp_path / "out.profile")
+    gd = MagicMock()
+    gd.getProfileOutputPath.return_value = outfile
+    import utils.globals as globals_mod
+
+    monkeypatch.setattr(globals_mod, "GlobalData", lambda: gd)
+
+    script = str(tmp_path / "app.py")
+    Path(script).write_text("x = 1\n", encoding="utf-8")
+    params = _params(
+        arguments='"a b"',
+        redirected=False,
+        customTerminal='/bin/bash -c "${prog}"',
+    )
+    cmd, _env, use_shell = run_mod.getCwdCmdEnv(PROFILE, script, params, procuuid="p2")
+    assert use_shell is True
+    match = re.search(r"(/tmp/cdm-run-[A-Za-z0-9_./+-]+/launch\.py)", cmd)
+    assert match, cmd
+    launch_path = match.group(1)
+    argv = json.loads(Path(launch_path).with_name("argv.json").read_text(encoding="utf-8"))
+    assert argv[1:4] == ["-m", "cProfile", "-o"]
+    assert argv[4] == outfile
+    assert argv[5] == script
+    assert argv[6] == "a b"
+
+
+def test_custom_terminal_profile_refuses_background_template(tmp_path, monkeypatch):
+    from utils import run as run_mod
+    from utils.runparams import PROFILE
+
+    gd = MagicMock()
+    gd.getProfileOutputPath.return_value = str(tmp_path / "o.prof")
+    import utils.globals as globals_mod
+
+    monkeypatch.setattr(globals_mod, "GlobalData", lambda: gd)
+
+    params = _params(
+        redirected=False,
+        customTerminal='xterm -e /bin/bash -c "${prog}" &',
+    )
+    with pytest.raises(RuntimeError, match="backgrounding|redirected"):
+        run_mod.getCwdCmdEnv(PROFILE, str(tmp_path / "a.py"), params, procuuid="p3")
 
 
 def test_runmanager_popen_uses_shell_flag_from_spec(monkeypatch, tmp_path):
