@@ -341,6 +341,64 @@ def test_launcher_uses_absolute_interpreter_shebang_and_settings_root(tmp_path, 
     launch_path.parent.rmdir()
 
 
+def test_shell_safe_path_allows_spaces_and_unicode(tmp_path):
+    """E06: ${prog} embedding allows spaces/Unicode; rejects shell metacharacters."""
+    from utils.run import assertShellSafePath, assertShebangInterpreter
+
+    spaced = tmp_path / "my dir" / "launch.py"
+    spaced.parent.mkdir()
+    spaced.write_text("x", encoding="utf-8")
+    assert assertShellSafePath(str(spaced)).endswith("launch.py")
+
+    unicode_dir = tmp_path / "проєкт" / "launch.py"
+    unicode_dir.parent.mkdir()
+    unicode_dir.write_text("x", encoding="utf-8")
+    assert "проєкт" in assertShellSafePath(str(unicode_dir))
+
+    with pytest.raises(RuntimeError, match="not safe"):
+        assertShellSafePath(str(tmp_path / 'a$PWD' / "x"))
+    with pytest.raises(RuntimeError, match="not safe"):
+        assertShellSafePath(str(tmp_path / "a;b" / "x"))
+    with pytest.raises(RuntimeError, match="shebang"):
+        assertShebangInterpreter(str(tmp_path / "has space" / "python"))
+
+
+def test_ensure_work_root_skips_noexec(tmp_path, monkeypatch):
+    """E06: write-ok root that fails execute probe must be skipped."""
+    from utils import run as run_mod
+
+    noexec = tmp_path / "noexec-cdm-run"
+    noexec.mkdir(mode=0o700)
+    os.chmod(noexec, 0o700)
+    good = tmp_path / "exec-cdm-run"
+    good.mkdir(mode=0o700)
+    os.chmod(good, 0o700)
+
+    def fake_probe(root, _interpreter):
+        return os.path.abspath(root) == os.path.abspath(str(good))
+
+    monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(noexec), str(good)])
+    monkeypatch.setattr(run_mod, "_probeDirectoryAllowsExec", fake_probe)
+    assert run_mod._ensureLauncherWorkRoot() == str(good)
+
+
+def test_ensure_work_root_raises_when_nothing_executable(tmp_path, monkeypatch):
+    """E06: if settings/XDG and system temp are noexec, raise clearly."""
+    from utils import run as run_mod
+
+    bad = tmp_path / "cdm-run"
+    bad.mkdir(mode=0o700)
+    os.chmod(bad, 0o700)
+    systmp = tmp_path / "systmp"
+    systmp.mkdir(mode=0o700)
+    os.chmod(systmp, 0o700)
+    monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(bad)])
+    monkeypatch.setattr(run_mod, "_probeDirectoryAllowsExec", lambda *_a, **_k: False)
+    monkeypatch.setattr(run_mod.tempfile, "gettempdir", lambda: str(systmp))
+    with pytest.raises(RuntimeError, match="no executable work directory"):
+        run_mod._ensureLauncherWorkRoot()
+
+
 def test_launcher_rejects_untrusted_work_root(tmp_path, monkeypatch):
     """E06: world-accessible parent must not be used; fall back to sticky temp."""
     from utils import run as run_mod

@@ -10,4 +10,4 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed; merge per project autopilot standing orders unless the user attached a babysit-only skill that forbids merge.
 5. Update TODO_FIXME + Living Spec + ChangeLog for the closed item.
 
-Current pointer after E05 close: **E06** (noexec execute-probe / shell-safe path limits).
+Current pointer after E06 close: **D02 / B07** (VENV create/recreate transaction/rollback).

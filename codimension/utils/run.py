@@ -30,6 +30,7 @@ import os
 import re
 import shlex
 import stat
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -39,8 +40,9 @@ from .config import DEFAULT_ENCODING
 from .encoding import detectFileEncodingToRead
 from .runparams import DEBUG, PROFILE, RUN
 
-# Paths embedded into ``"${prog}"`` templates must not trigger shell expansion.
-_SHELL_SAFE_PATH = re.compile(r"^[A-Za-z0-9._/=+-]+$")
+# Characters that break embedding inside recommended ``"${prog}"`` templates.
+# Spaces and Unicode are allowed; shell metacharacters are not (audit E06).
+_SHELL_UNSAFE_IN_DQ = re.compile(r'[\x00-\x1f$"\'\\`;&|<>(){}\[\]]')
 
 
 def getProjectPythonPath(project):
@@ -113,10 +115,27 @@ def parseCommandLineArguments(cmdLine: str) -> list[str]:
 
 
 def assertShellSafePath(path: str) -> str:
-    """Return absolute path or raise if unsafe inside ``"${prog}"`` templates."""
+    """Return absolute path safe inside ``"${prog}"`` double-quoted templates.
+
+    Allows spaces and Unicode path components (Linux home dirs). Rejects shell
+    metacharacters and control chars that break double-quote embedding (E06).
+    Windows paths with ``\\`` / drive ``:`` remain unsupported.
+    """
     abs_path = os.path.abspath(path)
-    if not _SHELL_SAFE_PATH.match(abs_path):
+    if _SHELL_UNSAFE_IN_DQ.search(abs_path):
         raise RuntimeError(f"path is not safe for ${{prog}} shell embedding: {abs_path}")
+    return abs_path
+
+
+def assertShebangInterpreter(path: str) -> str:
+    """Return absolute interpreter path safe for a ``#!`` line (E06).
+
+    Kernel shebang parsing does not support whitespace in the interpreter path.
+    Shell-metacharacter rules match :func:`assertShellSafePath`.
+    """
+    abs_path = assertShellSafePath(path)
+    if any(ch.isspace() for ch in abs_path):
+        raise RuntimeError(f"interpreter path is not safe for shebang: {abs_path}")
     return abs_path
 
 
@@ -158,18 +177,44 @@ def _isTrustedLauncherWorkRoot(path: str) -> bool:
     return True
 
 
-def _ensureLauncherWorkRoot() -> str | None:
-    """Return a trusted parent for ``mkdtemp``, or ``None`` for sticky system temp.
+def _probeDirectoryAllowsExec(root: str, interpreter: str) -> bool:
+    """True if ``root`` can execute a shebang script (detects ``noexec``, E06)."""
+    import time as _time
 
-    Existing parents that are world/group-accessible are skipped (not chmod-healed).
-    Write probes use ``O_EXCL`` (+ ``O_NOFOLLOW`` when available).
+    probe = os.path.join(root, f".cdm-exec-probe-{os.getpid()}-{_time.time_ns()}")
+    try:
+        with open(probe, "w", encoding="utf-8") as handle:
+            handle.write(f"#!{interpreter}\nimport sys\nsys.exit(0)\n")
+        os.chmod(probe, 0o700)
+        completed = subprocess.run(
+            [probe],
+            check=False,
+            capture_output=True,
+            timeout=10,
+        )
+        return completed.returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    finally:
+        try:
+            os.unlink(probe)
+        except OSError:
+            pass
+
+
+def _ensureLauncherWorkRoot() -> str | None:
+    """Return a trusted+executable parent for ``mkdtemp``, or ``None`` for sticky temp.
+
+    Write and execute probes are required (E06). Existing parents that are
+    world/group-accessible are skipped (not chmod-healed). Returns ``None`` only
+    when system temp itself passes an execute probe; otherwise raises.
     """
     import time as _time
 
+    interpreter = assertShebangInterpreter(sys.executable)
     for root in _launcherWorkRoots():
         try:
             if os.path.lexists(root) and not _isTrustedLauncherWorkRoot(root):
-                # Symlink or untrusted real dir — never heal or use.
                 continue
             if not os.path.isdir(root):
                 parent = os.path.dirname(root)
@@ -197,10 +242,31 @@ def _ensureLauncherWorkRoot() -> str | None:
             finally:
                 os.close(fd)
             os.unlink(probe)
+            if not _probeDirectoryAllowsExec(root, interpreter):
+                continue
             return root
         except OSError:
             continue
-    return None
+
+    # Sticky system temp fallback — only if it can execute shebang scripts.
+    tmp = tempfile.gettempdir()
+    try:
+        probe_dir = tempfile.mkdtemp(prefix="cdm-exec-check-", dir=tmp)
+        try:
+            os.chmod(probe_dir, 0o700)
+            if _isTrustedLauncherWorkRoot(probe_dir) and _probeDirectoryAllowsExec(probe_dir, interpreter):
+                return None
+        finally:
+            try:
+                os.rmdir(probe_dir)
+            except OSError:
+                pass
+    except OSError:
+        pass
+    raise RuntimeError(
+        "no executable work directory for custom-terminal launchers "
+        "(settings/XDG/system temp appear noexec or unusable)"
+    )
 
 
 def _legacyTmpCleanupMarkerPath() -> str:
@@ -379,7 +445,7 @@ def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) 
     if not argv:
         raise RuntimeError("empty argv for launcher")
     cleanupStaleArgvLaunchers()
-    interpreter = assertShellSafePath(sys.executable)
+    interpreter = assertShebangInterpreter(sys.executable)
     work_root = _ensureLauncherWorkRoot()
     if work_root is None:
         import logging
