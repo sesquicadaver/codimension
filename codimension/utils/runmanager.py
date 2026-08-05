@@ -111,12 +111,14 @@ class RemoteProcessWrapper(QObject):
     def start(self):
         """Starts the remote process"""
         params = getRunParameters(self.path)
-        if self.redirected:
-            cmd, environment = getCwdCmdEnv(self.kind, self.path, params, self.__serverPort, self.procuuid)
-        else:
-            cmd, environment = getCwdCmdEnv(self.kind, self.path, params, self.__serverPort, self.procuuid)
+        cmd, environment, use_shell = getCwdCmdEnv(self.kind, self.path, params, self.__serverPort, self.procuuid)
 
-        self.__proc = Popen(cmd, shell=True, cwd=getWorkingDir(self.path, params), env=environment)
+        self.__proc = Popen(
+            cmd,
+            shell=use_shell,
+            cwd=getWorkingDir(self.path, params),
+            env=environment,
+        )
         if self.kind == DEBUG:
             time.sleep(0.1)
             procPoll = self.__proc.poll()

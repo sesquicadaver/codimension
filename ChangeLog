@@ -1,5 +1,8 @@
 2026 Aug 05
 
+* Audit P1 D03 (post-628c78d7): redirected run/debug/profile use argv list +
+  ``shell=False``; drop ``CDM_ARG`` env placeholders; parse args via
+  ``shlex.split``; custom terminal keeps shell=True with ``shlex.quote``
 * Audit P1 D01 (post-8c60ad5c): editable base-interpreter combo must not
   prefer stale ``currentData()`` after Browse/setEditText; add
   ``selectedBaseInterpreter`` + QProcess argv regression; QProcess destination
