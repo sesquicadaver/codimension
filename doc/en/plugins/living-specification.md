@@ -86,7 +86,8 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | ID | Topic | Status |
 |----|-------|--------|
 | B01–B02 / C01 / D01 / E01 / E02 | VENV guards, base interpreter, custom-terminal argv/profile | ✅ |
-| E04 / E05 / E06 | launcher cleanup, profile completion, POSIX-only launcher | OPEN |
+| E04 | launcher cleanup before execvp + stale ``cdm-run-*`` | ✅ |
+| E05 / E06 | profile completion, POSIX-only launcher | OPEN |
 | D02 / B07 / C02 / C03 | Transactional VENV + probe + base version | OPEN |
 | D04 / B05 / B04 / B06 / D05 / D06 | CML/comments, brief positions, case, encoding, side comments | OPEN |
 | B03 | Cooperative scan cancel + coalescing | OPEN |

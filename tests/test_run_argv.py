@@ -197,10 +197,56 @@ def test_custom_terminal_recommended_template_preserves_argv(tmp_path):
     )
     cmd, env, use_shell = getCwdCmdEnv(RUN, str(script), params)
     assert use_shell is True
+    match = re.search(r"(/tmp/cdm-run-[A-Za-z0-9_./+-]+/launch\.py)", cmd)
+    assert match, cmd
+    launch_dir = Path(match.group(1)).parent
     completed = subprocess.run(cmd, shell=True, env=env, cwd=str(tmp_path), check=False)
     assert completed.returncode == 0
     got = json.loads(out_file.read_text(encoding="utf-8"))
     assert got == ["a b", "", "$HOME", "$(printf injected)", "quote'\"value", "тест"]
+    # E04: launcher must remove argv.json / launch.py / work dir before execvp
+    assert not launch_dir.exists()
+
+
+def test_launcher_cleans_temp_dir_before_execvp(tmp_path):
+    """E04: after a successful launch, the cdm-run work directory is gone."""
+    import subprocess
+
+    from utils.run import writeArgvLauncher
+
+    marker = tmp_path / "ran.txt"
+    target = tmp_path / "target.py"
+    target.write_text(
+        f"from pathlib import Path\nPath({str(marker)!r}).write_text('ok', encoding='utf-8')\n",
+        encoding="utf-8",
+    )
+    launch = writeArgvLauncher([sys.executable, str(target)])
+    work = Path(launch).parent
+    assert (work / "argv.json").is_file()
+    completed = subprocess.run([launch], check=False)
+    assert completed.returncode == 0
+    assert marker.read_text(encoding="utf-8") == "ok"
+    assert not work.exists()
+
+
+def test_cleanup_stale_argv_launchers(tmp_path, monkeypatch):
+    """E04: opportunistic cleanup removes aged cdm-run-* directories."""
+    import time
+
+    from utils import run as run_mod
+
+    monkeypatch.setattr(run_mod.tempfile, "gettempdir", lambda: str(tmp_path))
+    stale = tmp_path / "cdm-run-stale"
+    stale.mkdir()
+    (stale / "argv.json").write_text('["x"]', encoding="utf-8")
+    old = time.time() - 90000
+    os.utime(stale, (old, old))
+    fresh = tmp_path / "cdm-run-fresh"
+    fresh.mkdir()
+    (fresh / "argv.json").write_text('["y"]', encoding="utf-8")
+    assert run_mod.cleanupStaleArgvLaunchers(max_age_seconds=86400) == 1
+    assert not stale.exists()
+    assert fresh.exists()
 
 
 def test_custom_terminal_profile_uses_cprofile(tmp_path, monkeypatch):

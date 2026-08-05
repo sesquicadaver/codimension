@@ -119,15 +119,57 @@ def assertShellSafePath(path: str) -> str:
     return abs_path
 
 
+def cleanupStaleArgvLaunchers(max_age_seconds: float = 86400.0) -> int:
+    """Remove leftover ``cdm-run-*`` dirs under the system temp (audit E04).
+
+    Best-effort only: races and permission errors are ignored. Returns the
+    number of directories successfully removed. Called opportunistically when
+    creating a new launcher so crashed/killed runs do not retain argv forever.
+    """
+    import time as _time
+
+    removed = 0
+    try:
+        root = tempfile.gettempdir()
+        names = os.listdir(root)
+    except OSError:
+        return 0
+    deadline = _time.time() - max_age_seconds
+    for name in names:
+        if not name.startswith("cdm-run-"):
+            continue
+        path = os.path.join(root, name)
+        try:
+            if not os.path.isdir(path):
+                continue
+            if os.path.getmtime(path) > deadline:
+                continue
+            for child in os.listdir(path):
+                try:
+                    os.unlink(os.path.join(path, child))
+                except OSError:
+                    pass
+            os.rmdir(path)
+            removed += 1
+        except OSError:
+            continue
+    return removed
+
+
 def writeArgvLauncher(argv: list[str]) -> str:
     """Write a temp executable that runs ``argv`` via ``os.execvp`` (no shell).
 
     Returns a shell-safe absolute path intended as the sole ``${prog}``
     substitution (audit E01 @ 1dfb3a1d). Caller argv is stored in JSON beside
     the launcher so user arguments never enter the terminal template text.
+
+    The generated launcher deletes ``argv.json``, itself, and the temp
+    directory after loading argv into memory and before ``execvp`` (E04), so
+    secrets in the command line are not left on disk after the process starts.
     """
     if not argv:
         raise RuntimeError("empty argv for launcher")
+    cleanupStaleArgvLaunchers()
     work = tempfile.mkdtemp(prefix="cdm-run-")
     argv_path = os.path.join(work, "argv.json")
     launch_path = os.path.join(work, "launch.py")
@@ -142,10 +184,22 @@ def writeArgvLauncher(argv: list[str]) -> str:
         import sys
         from pathlib import Path
 
-        argv = json.loads(Path(__file__).with_name("argv.json").read_text(encoding="utf-8"))
+        here = Path(__file__).resolve()
+        argv_path = here.with_name("argv.json")
+        argv = json.loads(argv_path.read_text(encoding="utf-8"))
         if not argv:
             sys.stderr.write("empty argv\\n")
             raise SystemExit(1)
+        # E04: drop argv from disk before replacing the process image.
+        for path in (argv_path, here):
+            try:
+                path.unlink()
+            except OSError:
+                pass
+        try:
+            here.parent.rmdir()
+        except OSError:
+            pass
         os.execvp(argv[0], argv)
         """
     )
