@@ -12,7 +12,14 @@ from __future__ import annotations
 import os
 import sys
 
-from utils.venvbootstrap import assertSafeMutableProjectPython, resolveVenvToPython, validateVenvDestination
+from utils.venvbootstrap import (
+    assertSafeMutableProjectPython,
+    commitStagedVenv,
+    discardStagedVenv,
+    makeStagingVenvDir,
+    resolveVenvToPython,
+    validateVenvDestination,
+)
 
 from .qt import QEventLoop, QProcess, QProgressDialog, Qt, QTimer
 
@@ -126,18 +133,20 @@ def run_argv_with_progress(
     return stdout, stderr
 
 
-def create_venv_with_progress(
+def create_venv_in_place_with_progress(
     parent,
     base_python: str,
     venv_dir: str,
-    project_dir: str | None = None,
 ) -> str:
-    """Create a venv via QProcess; return the new python path.
+    """Create a venv at ``venv_dir`` via QProcess (no staging/commit).
 
-    Applies :func:`validateVenvDestination` before starting the process.
+    Used by transactional :func:`utils.venvbootstrap.recreateVenv` which already
+    supplies a staging path. Returns the new python path.
     """
     base_python = base_python or sys.executable
-    venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=False)
+    venv_dir = os.path.abspath(venv_dir)
+    if resolveVenvToPython(venv_dir):
+        raise RuntimeError(f"venv already exists at {venv_dir}")
     os.makedirs(os.path.dirname(venv_dir) or ".", exist_ok=True)
     run_argv_with_progress(
         parent,
@@ -145,6 +154,33 @@ def create_venv_with_progress(
         title="Creating venv",
         label=venv_dir,
     )
+    python = resolveVenvToPython(venv_dir)
+    if not python:
+        raise RuntimeError(f"venv created but python not found under {venv_dir}")
+    return str(python)
+
+
+def create_venv_with_progress(
+    parent,
+    base_python: str,
+    venv_dir: str,
+    project_dir: str | None = None,
+) -> str:
+    """Create a venv via QProcess with staging commit; return the new python path.
+
+    Applies :func:`validateVenvDestination` before starting the process. Builds
+    under a sibling staging directory so a cancelled/failed create does not
+    leave a half-written destination (audit D02/B07).
+    """
+    base_python = base_python or sys.executable
+    venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=False)
+    staged = makeStagingVenvDir(venv_dir)
+    try:
+        create_venv_in_place_with_progress(parent, base_python, staged)
+        commitStagedVenv(venv_dir, staged)
+    except Exception:
+        discardStagedVenv(staged)
+        raise
     python = resolveVenvToPython(venv_dir)
     if not python:
         raise RuntimeError(f"venv created but python not found under {venv_dir}")
