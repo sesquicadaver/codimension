@@ -1,5 +1,8 @@
 2026 Aug 05
 
+* Audit P1 E06 close: execute-probe for launcher work roots (detect
+  ``noexec``); ``${prog}`` paths allow spaces/Unicode but reject shell
+  metacharacters; shebang interpreter still forbids whitespace
 * Audit P1 E05 close: Profile wait uses a single start-based timeout
   (not shell ``&`` heuristic); remove ``.done`` after emit/timeout
 * Autopilot queue: ``.autopilot`` + Cursor rule — pick first OPEN/PARTIAL
