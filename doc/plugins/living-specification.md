@@ -80,18 +80,17 @@
 - [ ] CI проходить на `master` — перевіряти Actions; див. [TODO_FIXME.md](../../TODO_FIXME.md) A01–A06 (не стверджувати green без прогону)
 - [x] Документація: [doc/README.md](../README.md)
 
-### Відкриті пункти аудиту (2026-08-05 @ 8c60ad5c)
+### Відкриті пункти аудиту (2026-08-05 @ 628c78d7)
 
 | ID | Тема | Статус |
 |----|------|--------|
-| B01–B02 / C01 | VENV identity, UUID containment, create destination guard | ✅ |
-| D01 | Base interpreter combo ignores Browse/`setEditText` | ✅ |
-| D02 / B07 | Transactional create/recreate + GUI rmtree | OPEN |
-| D03 | Run/debug/profile `shell=True` argv integrity | OPEN |
-| D04 / B05 | CML + comment cluster indent / CML heads | OPEN |
-| B03–B04 / B06 / B08 | scan cancel, brief positions, case tokenize, full-IDE smoke | OPEN |
-| C02–C04 | interpreter probe, recreate base version, Flow UI coupling gate | OPEN |
-| B09–B11 / C05 | schema paths, atomic settings, docs drift, empty UUID | OPEN |
+| B01–B02 / C01 / D01 | VENV identity, UUID, destination guard, base interpreter | ✅ |
+| D03 | Redirected run/debug/profile argv + `shell=False` | ✅ |
+| D02 / B07 / C02 / C03 | Transactional create/recreate, probe, base version | OPEN |
+| D04 / B05 / B04 / B06 / D05 / D06 | CML/comments, brief positions, case, encoding, side comments | OPEN |
+| B03 | Cooperative scan cancel + coalescing | OPEN |
+| D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |
+| B09–B11 / C05 / D08 | schema, atomic settings, docs, UUID, dependency lock | OPEN |
 
 ---
 

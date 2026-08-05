@@ -22,10 +22,12 @@
 
 """Utility functions to support running scripts"""
 
+from __future__ import annotations
+
 import glob
-import os.path
+import os
+import shlex
 import sys
-from shlex import quote
 from subprocess import STDOUT, check_output
 
 from .config import DEFAULT_ENCODING
@@ -75,36 +77,55 @@ def getVenvSitePackages(python_path):
     return None
 
 
-def prepareArguments(arguments):
-    """Prepares arguments for the command line"""
-    args = []
-    for index, _ in enumerate(arguments):
-        args.append("${CDM_ARG" + str(index) + "}")
-    return args
-
-
-def prepareInterpreter(params):
-    """Provides the intrpreter path, quoted if needed"""
+def resolveInterpreter(params) -> str:
+    """Return the interpreter path for a run session (unquoted)."""
     if params["useInherited"]:
-        return quote(sys.executable)
-    return quote(params["customInterpreter"])
+        return sys.executable
+    return params["customInterpreter"]
 
 
-def prepareScript(path):
-    """Provides the scropt path quoted if needed"""
-    return quote(path)
+def parseCommandLineArguments(cmdLine: str) -> list[str]:
+    """Parse user-supplied run arguments with a platform-appropriate lexer.
+
+    Uses :func:`shlex.split` (POSIX or non-POSIX) so quoted strings, empty
+    arguments, and literals like ``*.py`` / ``$HOME`` keep correct boundaries
+    (audit D03 @ 628c78d7).
+    """
+    if cmdLine is None:
+        return []
+    text = str(cmdLine).strip()
+    if not text:
+        return []
+    posix = os.name != "nt"
+    try:
+        return shlex.split(text, posix=posix)
+    except ValueError as exc:
+        raise Exception(str(exc)) from exc
 
 
-def getTerminalCommandToRun(fileName, arguments, params, tcpServerPort=None, procuuid=None):
-    """Provides a command to run a separate shell terminal"""
-    interpreter = prepareInterpreter(params)
-    script = prepareScript(fileName)
+def _quote_shell_prog(argv: list[str]) -> str:
+    """Join argv for embedding into a custom terminal shell string."""
+    return " ".join(shlex.quote(part) for part in argv)
 
+
+def _wrap_custom_terminal(argv: list[str], custom_terminal: str) -> str:
+    """Embed quoted ``argv`` into the user custom-terminal template."""
+    quoted_prog = _quote_shell_prog(argv)
+    custom = (custom_terminal or "").strip()
+    if "${prog}" in custom:
+        return custom.replace("${prog}", quoted_prog)
+    if custom:
+        return custom + " " + quoted_prog
+    return quoted_prog
+
+
+def buildArgvToRun(fileName, arguments, params, tcpServerPort=None, procuuid=None) -> list[str]:
+    """Build argv for run (redirected client or bare interpreter+script)."""
+    interpreter = resolveInterpreter(params)
     if params["redirected"]:
-        runClient = quote(_debuggerClientPath("client_cdm_run.py"))
-        parts = [
+        return [
             interpreter,
-            runClient,
+            _debuggerClientPath("client_cdm_run.py"),
             "--host",
             "localhost",
             "--port",
@@ -112,33 +133,22 @@ def getTerminalCommandToRun(fileName, arguments, params, tcpServerPort=None, pro
             "--procuuid",
             str(procuuid),
             "--",
-            script,
-        ] + prepareArguments(arguments)
-        return " ".join(parts)
-
-    # Non-redirected case, i.e. the user provided the a custom terminal string
-    parts = [interpreter, script] + prepareArguments(arguments)
-    customTerminal = params["customTerminal"].strip()
-    if "${prog}" in customTerminal:
-        return customTerminal.replace("${prog}", " ".join(parts))
-
-    return customTerminal + " " + " ".join(parts)
+            fileName,
+            *arguments,
+        ]
+    return [interpreter, fileName, *arguments]
 
 
-def getTerminalCommandToProfile(fileName, arguments, params, tcpServerPort=None, procuuid=None):
-    """Provides a command to run a separate shell terminal"""
-    interpreter = prepareInterpreter(params)
-    script = prepareScript(fileName)
-
+def buildArgvToProfile(fileName, arguments, params, tcpServerPort=None, procuuid=None) -> list[str]:
+    """Build argv for profile (redirected client or bare interpreter+script)."""
+    interpreter = resolveInterpreter(params)
     from .globals import GlobalData
 
     outfile = GlobalData().getProfileOutputPath(procuuid)
-
     if params["redirected"]:
-        runClient = quote(_debuggerClientPath("client_cdm_profile.py"))
-        parts = [
+        return [
             interpreter,
-            runClient,
+            _debuggerClientPath("client_cdm_profile.py"),
             "--host",
             "localhost",
             "--port",
@@ -148,29 +158,19 @@ def getTerminalCommandToProfile(fileName, arguments, params, tcpServerPort=None,
             "--outfile",
             outfile,
             "--",
-            script,
-        ] + prepareArguments(arguments)
-        return " ".join(parts)
-
-    # Non-redirected case, i.e. the user provided the a custom terminal string
-    parts = [interpreter, script] + prepareArguments(arguments)
-    customTerminal = params["customTerminal"].strip()
-    if "${prog}" in customTerminal:
-        return customTerminal.replace("${prog}", " ".join(parts))
-
-    return customTerminal + " " + " ".join(parts)
+            fileName,
+            *arguments,
+        ]
+    return [interpreter, fileName, *arguments]
 
 
-def getTerminalCommandToDebug(fileName, arguments, params, tcpServerPort, procuuid):
-    """Provides a command line to debug in a separate shell terminal"""
-    interpreter = prepareInterpreter(params)
-    script = prepareScript(fileName)
+def buildArgvToDebug(fileName, arguments, params, tcpServerPort, procuuid) -> list[str]:
+    """Build argv for debug client (redirected or ``--no-redirect``)."""
+    interpreter = resolveInterpreter(params)
     encoding = detectFileEncodingToRead(fileName)
-
-    debugClient = quote(_debuggerClientPath("client_cdm_dbg.py"))
     parts = [
         interpreter,
-        debugClient,
+        _debuggerClientPath("client_cdm_dbg.py"),
         "--host",
         "localhost",
         "--port",
@@ -181,12 +181,9 @@ def getTerminalCommandToDebug(fileName, arguments, params, tcpServerPort, procuu
         encoding,
     ]
 
-    # Get the debugging specific parameters
     from .settings import Settings
 
     debugSettings = Settings().getDebuggerSettings()
-
-    # Form the debug client options
     if not debugSettings.reportExceptions:
         parts.append("--no-exc-report")
     if debugSettings.traceInterpreter:
@@ -196,123 +193,66 @@ def getTerminalCommandToDebug(fileName, arguments, params, tcpServerPort, procuu
             parts.append("--fork-child")
         else:
             parts.append("--fork-parent")
-
     if not Settings()["calltrace"]:
         parts.append("--no-call-trace")
 
+    if not params["redirected"]:
+        parts.append("--no-redirect")
+    parts.extend(["--", fileName, *arguments])
+    return parts
+
+
+def getTerminalCommandToRun(fileName, arguments, params, tcpServerPort=None, procuuid=None):
+    """Shell string for custom-terminal run (legacy callers / non-redirected)."""
+    argv = buildArgvToRun(fileName, arguments, params, tcpServerPort, procuuid)
     if params["redirected"]:
-        parts += ["--", script] + prepareArguments(arguments)
-        return " ".join(parts)
-
-    # Append the option of a non redirected I/O
-    parts.append("--no-redirect")
-    parts += ["--", script] + prepareArguments(arguments)
-
-    customTerminal = params["customTerminal"].strip()
-    if "${prog}" in customTerminal:
-        return customTerminal.replace("${prog}", " ".join(parts))
-
-    return customTerminal + " " + " ".join(parts)
+        return _quote_shell_prog(argv)
+    return _wrap_custom_terminal(argv, params["customTerminal"])
 
 
-def parseCommandLineArguments(cmdLine):
-    """Parses command line arguments provided by the user in the UI"""
-    result = []
+def getTerminalCommandToProfile(fileName, arguments, params, tcpServerPort=None, procuuid=None):
+    """Shell string for custom-terminal profile (legacy callers / non-redirected)."""
+    argv = buildArgvToProfile(fileName, arguments, params, tcpServerPort, procuuid)
+    if params["redirected"]:
+        return _quote_shell_prog(argv)
+    return _wrap_custom_terminal(argv, params["customTerminal"])
 
-    cmdLine = cmdLine.strip()
-    expectQuote = False
-    expectDblQuote = False
-    lastIndex = len(cmdLine) - 1
-    argument = ""
-    index = 0
-    while index <= lastIndex:
-        if expectQuote:
-            if cmdLine[index] == "'":
-                if cmdLine[index - 1] != "\\":
-                    if argument != "":
-                        result.append(argument)
-                        argument = ""
-                    expectQuote = False
-                else:
-                    argument = argument[:-1] + "'"
-            else:
-                argument += cmdLine[index]
-            index += 1
-            continue
-        if expectDblQuote:
-            if cmdLine[index] == '"':
-                if cmdLine[index - 1] != "\\":
-                    if argument != "":
-                        result.append(argument)
-                        argument = ""
-                    expectDblQuote = False
-                else:
-                    argument = argument[:-1] + '"'
-            else:
-                argument += cmdLine[index]
-            index += 1
-            continue
-        # Not in a string literal
-        if cmdLine[index] == "'":
-            if index == 0 or cmdLine[index - 1] != "\\":
-                expectQuote = True
-                if argument != "":
-                    result.append(argument)
-                    argument = ""
-            else:
-                argument = argument[:-1] + "'"
-            index += 1
-            continue
-        if cmdLine[index] == '"':
-            if index == 0 or cmdLine[index - 1] != "\\":
-                expectDblQuote = True
-                if argument != "":
-                    result.append(argument)
-                    argument = ""
-            else:
-                argument = argument[:-1] + '"'
-            index += 1
-            continue
-        if cmdLine[index] in (" ", "\t"):
-            if argument != "":
-                result.append(argument)
-                argument = ""
-            index += 1
-            continue
-        argument += cmdLine[index]
-        index += 1
 
-    if argument != "":
-        result.append(argument)
-
-    if expectQuote or expectDblQuote:
-        raise Exception("No closing quotation")
-    return result
+def getTerminalCommandToDebug(fileName, arguments, params, tcpServerPort, procuuid):
+    """Shell string for custom-terminal debug (legacy callers / non-redirected)."""
+    argv = buildArgvToDebug(fileName, arguments, params, tcpServerPort, procuuid)
+    if params["redirected"]:
+        return _quote_shell_prog(argv)
+    return _wrap_custom_terminal(argv, params["customTerminal"])
 
 
 def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
-    """Provides the working directory, command line and environment.
+    """Provide command, environment, and shell flag for run/profile/debug.
 
-    It covers all: running/debugging/profiling a script
+    Redirected sessions return ``(argv: list[str], env, False)`` so
+    ``Popen(..., shell=False)`` preserves argument boundaries (audit D03).
+
+    Custom-terminal sessions return ``(cmd: str, env, True)`` with each argv
+    element passed through :func:`shlex.quote` before embedding into the
+    terminal template (explicit shell contract; not shared with redirected).
     """
-    # The arguments parsing is going to pass OK because it
-    # was checked in the run parameters dialogue
     if kind not in [RUN, PROFILE, DEBUG]:
         raise Exception("Unknown command requested. Supported command types are: run, profile, debug.")
 
     arguments = parseCommandLineArguments(params["arguments"])
     if kind == RUN:
-        cmd = getTerminalCommandToRun(path, arguments, params, tcpServerPort, procuuid)
+        argv = buildArgvToRun(path, arguments, params, tcpServerPort, procuuid)
     elif kind == PROFILE:
-        cmd = getTerminalCommandToProfile(path, arguments, params, tcpServerPort, procuuid)
-    elif kind == DEBUG:
-        cmd = getTerminalCommandToDebug(path, arguments, params, tcpServerPort, procuuid)
+        argv = buildArgvToProfile(path, arguments, params, tcpServerPort, procuuid)
+    else:
+        argv = buildArgvToDebug(path, arguments, params, tcpServerPort, procuuid)
 
     environment = getNoArgsEnvironment(params)
-    for index, value in enumerate(arguments):
-        environment["CDM_ARG" + str(index)] = value
 
-    return cmd, environment
+    if params["redirected"]:
+        return argv, environment, False
+
+    return _wrap_custom_terminal(argv, params["customTerminal"]), environment, True
 
 
 def getNoArgsEnvironment(params):
