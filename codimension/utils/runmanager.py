@@ -113,7 +113,6 @@ class RemoteProcessWrapper(QObject):
         self.profileCompletionMarker = None
         self.profileResultsSent = False
         self.profileWaitDeadline = None
-        self.profileShellBackgrounded = False
 
     def profileResultsReady(self):
         """True when Profile marker and non-empty outfile are present (E05)."""
@@ -125,11 +124,12 @@ class RemoteProcessWrapper(QObject):
         """Starts the remote process"""
         params = getRunParameters(self.path)
         if self.kind == PROFILE and not self.redirected:
-            from .run import customTerminalBackgrounds, getProfileCompletionMarkerPath
+            from .run import PROFILE_COMPLETION_TIMEOUT_SEC, getProfileCompletionMarkerPath
 
             self.profileOutfile = GlobalData().getProfileOutputPath(self.procuuid)
             self.profileCompletionMarker = getProfileCompletionMarkerPath(self.profileOutfile)
-            self.profileShellBackgrounded = customTerminalBackgrounds(params["customTerminal"] or "")
+            # Single bounded deadline from profile start — not from shell template.
+            self.profileWaitDeadline = time.time() + PROFILE_COMPLETION_TIMEOUT_SEC
         cmd, environment, use_shell = getCwdCmdEnv(self.kind, self.path, params, self.__serverPort, self.procuuid)
 
         self.__proc = Popen(
@@ -699,11 +699,11 @@ class RunManager(QObject):
     def __onWaitTimer(self):
         """Triggered when the timer fired.
 
-        Non-redirected Profile (E05): emit results when marker ∧ non-empty
-        outfile are ready, even if the terminal emulator is still open. After
-        the shell exits, keep polling until ready or PROFILE_COMPLETION_TIMEOUT_SEC.
+        Non-redirected Profile (E05): emit when marker ∧ non-empty outfile are
+        ready (even if the terminal is still open). Timeout is a single budget
+        from profile start — shell template text does not change the deadline.
         """
-        from .run import PROFILE_COMPLETION_TIMEOUT_SEC
+        from .run import cleanupProfileCompletionMarker
 
         needNewTimer = False
         index = len(self.__processes) - 1
@@ -711,11 +711,22 @@ class RunManager(QObject):
             item = self.__processes[index]
             if not item.procWrapper.redirected:
                 wrapper = item.procWrapper
-                if item.kind == PROFILE and not wrapper.profileResultsSent and wrapper.profileResultsReady():
-                    if wrapper.finishTime is None:
-                        wrapper.finishTime = datetime.now()
-                    self.__sendProfileResultsSignal(wrapper)
-                    wrapper.profileResultsSent = True
+                if item.kind == PROFILE and not wrapper.profileResultsSent:
+                    if wrapper.profileResultsReady():
+                        if wrapper.finishTime is None:
+                            wrapper.finishTime = datetime.now()
+                        self.__sendProfileResultsSignal(wrapper)
+                        wrapper.profileResultsSent = True
+                        cleanupProfileCompletionMarker(wrapper.profileCompletionMarker)
+                    elif wrapper.profileWaitDeadline is not None and time.time() >= wrapper.profileWaitDeadline:
+                        logging.error(
+                            "Profile completion timed out waiting for marker/outfile (%s)",
+                            wrapper.profileCompletionMarker,
+                        )
+                        cleanupProfileCompletionMarker(wrapper.profileCompletionMarker)
+                        del self.__processes[index]
+                        index -= 1
+                        continue
 
                 if wrapper.waitDetached():
                     if item.kind == PROFILE:
@@ -725,25 +736,11 @@ class RunManager(QObject):
                             wrapper.finishTime = datetime.now()
                             self.__sendProfileResultsSignal(wrapper)
                             wrapper.profileResultsSent = True
+                            cleanupProfileCompletionMarker(wrapper.profileCompletionMarker)
                             del self.__processes[index]
                         else:
-                            if wrapper.profileWaitDeadline is None:
-                                # Trailing-& templates often exit the shell immediately;
-                                # use a long budget so long profiles can still finish.
-                                budget = (
-                                    86400
-                                    if getattr(wrapper, "profileShellBackgrounded", False)
-                                    else PROFILE_COMPLETION_TIMEOUT_SEC
-                                )
-                                wrapper.profileWaitDeadline = time.time() + budget
-                            if time.time() >= wrapper.profileWaitDeadline:
-                                logging.error(
-                                    "Profile completion timed out waiting for marker/outfile (%s)",
-                                    wrapper.profileCompletionMarker,
-                                )
-                                del self.__processes[index]
-                            else:
-                                needNewTimer = True
+                            # Still waiting for marker within the start-based deadline.
+                            needNewTimer = True
                     else:
                         wrapper.finishTime = datetime.now()
                         del self.__processes[index]

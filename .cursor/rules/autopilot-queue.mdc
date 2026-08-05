@@ -1,0 +1,17 @@
+---
+description: Autopilot picks first open TODO/ROADMAP item without asking
+alwaysApply: true
+---
+
+# Autopilot queue
+
+When the user says `autopilot`, `/autopilot`, or `.autopilot`:
+
+1. **Do not ask** which PR or task to work on.
+2. Queue source (in order):
+   - First 🔓 OPEN or PARTIAL item in `TODO_FIXME.md` (P0 → P1 → P2)
+   - Else first incomplete acceptance in `ROADMAP.uk.md` / `ROADMAP.md`
+3. Also see project file `.autopilot` for the current pointer.
+4. Implement on a feature branch, open PR to `sesquicadaver/codimension`, green CI.
+5. Update `TODO_FIXME.md`, Living Spec, and `ChangeLog`.
+6. Merge when CI is green unless a babysit-only skill forbids merge for that turn.

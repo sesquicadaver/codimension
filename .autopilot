@@ -1,0 +1,13 @@
+# Autopilot queue policy (Codimension)
+
+When the user says `autopilot` / `/autopilot` / `.autopilot`:
+
+1. Do **not** ask which PR or task to pick.
+2. Resolve the work queue in this order:
+   - [TODO_FIXME.md](TODO_FIXME.md) — first 🔓 OPEN or PARTIAL row (P0 before P1 before P2)
+   - If TODO has no open rows, [ROADMAP.uk.md](ROADMAP.uk.md) / [ROADMAP.md](ROADMAP.md) — first incomplete phase acceptance
+3. Implement that item on a feature branch, open a PR to `sesquicadaver/codimension`, drive CI green.
+4. After green CI + clean review of this cycle’s changes: commit/push as needed; merge per project autopilot standing orders unless the user attached a babysit-only skill that forbids merge.
+5. Update TODO_FIXME + Living Spec + ChangeLog for the closed item.
+
+Current pointer after E05 close: **E06** (noexec execute-probe / shell-safe path limits).

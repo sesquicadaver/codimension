@@ -1,5 +1,9 @@
 2026 Aug 05
 
+* Audit P1 E05 close: Profile wait uses a single start-based timeout
+  (not shell ``&`` heuristic); remove ``.done`` after emit/timeout
+* Autopilot queue: ``.autopilot`` + Cursor rule — pick first OPEN/PARTIAL
+  from TODO_FIXME / ROADMAP without asking
 * Audit P1 F07: stale ``cdm-run-*`` cleanup uses ``lstat``/``O_NOFOLLOW``/
   ``dir_fd``; refuse symlink trees; scan system temp at most once via
   settings marker; reopen E05/E06/B11 as partial/open in TODO
