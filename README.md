@@ -19,7 +19,7 @@
 - **Парсери:** pure-Python `brief_ast` / `flow_ast` на Python 3.10+ (без cdmpyparser/cdmcfparser)
 - **Вбудовані плагіни** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
 - **Debugger:** breakpoints, watchpoints (UI + sync), greenlet-контексти; nightly full-IDE smoke (T130)
-- **CI:** незалежні ruff / format / mypy / pytest (~**189** тестів) matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
+- **CI:** незалежні ruff / format / mypy / pytest (matrix **3.10–3.13**; кількість — з останнього green Actions run на HEAD), wheel+`pip check`, offscreen GUI smoke, pip-audit
 
 ## Обмеження (чесно)
 
@@ -27,7 +27,7 @@
 - Git-плагін — MVP (без stash/merge UI); PR через `gh` CLI
 - Environment-aware аналіз (Docker / SSH / K8s) — **не реалізовано**; локальний venv — через Project Properties або Tools → **VENV…** (async QProcess + mutate guards)
 - Авто-setup venv на open — **немає**; unresolved packages для pip — opt-in; див. відкриті пункти аудиту в [TODO_FIXME.md](TODO_FIXME.md)
-- Не production-ready analyzer: залишкові gaps — [TODO_FIXME.md](TODO_FIXME.md) B03–B11
+- Не production-ready analyzer: залишкові gaps — [TODO_FIXME.md](TODO_FIXME.md) (B\*/C\*/D\*)
 - Довгострокові плани — [ROADMAP.md](ROADMAP.md), не поточний стан
 
 ## Вимоги

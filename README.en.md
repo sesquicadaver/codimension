@@ -19,7 +19,7 @@ This is an **active fork** of [SergeySatskiy/codimension](https://github.com/Ser
 - **Parsers:** pure-Python `brief_ast` / `flow_ast` on Python 3.10+ (no cdmpyparser/cdmcfparser)
 - **Bundled plugins** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
 - **Debugger:** breakpoints, watchpoints (UI + sync), greenlet contexts; nightly full-IDE smoke (T130)
-- **CI:** independent ruff / format / mypy / pytest (~**189** tests) matrix **3.10–3.13**, wheel+`pip check`, offscreen GUI smoke, pip-audit
+- **CI:** independent ruff / format / mypy / pytest (matrix **3.10–3.13**; count from the latest green Actions run on HEAD), wheel+`pip check`, offscreen GUI smoke, pip-audit
 
 ## Limitations (honest)
 
@@ -27,7 +27,7 @@ This is an **active fork** of [SergeySatskiy/codimension](https://github.com/Ser
 - Git plugin is MVP (no stash/merge UI); PRs via `gh` CLI
 - Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; local venv via Project Properties or Tools → **VENV…** (async QProcess + mutate guards)
 - No auto venv setup on project open; unresolved packages for pip are opt-in; see open audit items in [TODO_FIXME.en.md](TODO_FIXME.en.md)
-- Not a production-ready analyzer: remaining gaps — [TODO_FIXME.en.md](TODO_FIXME.en.md) B03–B11
+- Not a production-ready analyzer: remaining gaps — [TODO_FIXME.en.md](TODO_FIXME.en.md) (B\*/C\*/D\*)
 - Long-term plans — [ROADMAP.md](ROADMAP.md), not current state
 
 ## Requirements

@@ -80,15 +80,18 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 - [ ] CI green on `master` — verify Actions; see [TODO_FIXME.en.md](../../../TODO_FIXME.en.md) A01–A06 (do not claim green without a run)
 - [x] Documentation: [doc/README.md](../../README.md)
 
-### Open audit items (2026-08-05 @ 9df7eca7)
+### Open audit items (2026-08-05 @ 8c60ad5c)
 
 | ID | Topic | Status |
 |----|-------|--------|
-| B01–B02 | VENV root identity / `.cdm3` UUID containment | ✅ |
-| C01 | Create VENV destination guard (`validateVenvDestination`) + broken→VENV… | ✅ |
-| B03–B08 | scan cancel, name/colon, comment indent, case tokenize, transactional recreate, full-IDE smoke | OPEN |
+| B01–B02 / C01 | VENV identity, UUID containment, create destination guard | ✅ |
+| D01 | Base interpreter combo ignores Browse/`setEditText` | ✅ |
+| D02 / B07 | Transactional create/recreate + GUI rmtree | OPEN |
+| D03 | Run/debug/profile `shell=True` argv integrity | OPEN |
+| D04 / B05 | CML + comment cluster indent / CML heads | OPEN |
+| B03–B04 / B06 / B08 | scan cancel, brief positions, case tokenize, full-IDE smoke | OPEN |
 | C02–C04 | interpreter probe, recreate base version, Flow UI coupling gate | OPEN |
-| B09–B11 / C05 | schema on all paths, atomic settings, docs drift, empty UUID persist | OPEN |
+| B09–B11 / C05 | schema paths, atomic settings, docs drift, empty UUID | OPEN |
 
 ---
 

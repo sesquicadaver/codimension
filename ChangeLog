@@ -1,5 +1,9 @@
 2026 Aug 05
 
+* Audit P1 D01 (post-8c60ad5c): editable base-interpreter combo must not
+  prefer stale ``currentData()`` after Browse/setEditText; add
+  ``selectedBaseInterpreter`` + QProcess argv regression; QProcess destination
+  guard test gap closed
 * Audit P0 C01 (post-9df7eca7): ``validateVenvDestination()`` fail-closed
   for create (sync + QProcess); refuse IDE ``sys.prefix``, project root,
   outside project, symlinks, existing venv / non-empty dirs; VENV… enabled
