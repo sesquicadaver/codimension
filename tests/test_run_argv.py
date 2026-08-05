@@ -393,6 +393,64 @@ def test_wait_timer_emits_profile_once_while_shell_alive(monkeypatch, tmp_path):
     assert len(manager._RunManager__processes) == 1
 
 
+def test_wait_timer_timeout_after_shell_death_no_emit(monkeypatch, tmp_path):
+    """E05 test-spec #7: after shell exit, timeout drops without success emit."""
+    import utils.runmanager as rm
+    from utils.run import PROFILE_COMPLETION_TIMEOUT_SEC, profileResultsReady as _ready
+
+    outfile = tmp_path / "late.profile.out"
+    marker = Path(str(outfile) + ".done")
+    # No marker / no outfile → never ready
+    assert _ready(str(outfile), str(marker)) is False
+
+    monkeypatch.setattr(rm, "GlobalData", lambda: MagicMock())
+
+    class DeadProc:
+        def poll(self):
+            return 0
+
+        def wait(self):
+            return 0
+
+    manager = rm.RunManager.__new__(rm.RunManager)
+    manager._RunManager__waitTimer = MagicMock()
+    manager.sigProfilingResults = MagicMock()
+
+    wrapper = rm.RemoteProcessWrapper.__new__(rm.RemoteProcessWrapper)
+    wrapper.redirected = False
+    wrapper.kind = rm.PROFILE
+    wrapper.path = str(tmp_path / "s.py")
+    wrapper.procuuid = "u-timeout"
+    wrapper.startTime = __import__("datetime").datetime.now()
+    wrapper.finishTime = None
+    wrapper.profileOutfile = str(outfile)
+    wrapper.profileCompletionMarker = str(marker)
+    wrapper.profileResultsSent = False
+    wrapper.profileWaitDeadline = None
+    wrapper._RemoteProcessWrapper__proc = DeadProc()
+    wrapper.profileResultsReady = lambda: _ready(wrapper.profileOutfile, wrapper.profileCompletionMarker)
+
+    class Item:
+        kind = rm.PROFILE
+
+        def __init__(self):
+            self.procWrapper = wrapper
+
+    manager._RunManager__processes = [Item()]
+    # First tick after shell death: set deadline, keep process, no emit
+    rm.RunManager._RunManager__onWaitTimer(manager)
+    assert manager.sigProfilingResults.emit.call_count == 0
+    assert len(manager._RunManager__processes) == 1
+    assert wrapper.profileWaitDeadline is not None
+
+    # Force timeout
+    wrapper.profileWaitDeadline = __import__("time").time() - 1
+    assert PROFILE_COMPLETION_TIMEOUT_SEC == 60
+    rm.RunManager._RunManager__onWaitTimer(manager)
+    assert manager.sigProfilingResults.emit.call_count == 0
+    assert manager._RunManager__processes == []
+
+
 def test_wait_timer_no_emit_on_empty_outfile(monkeypatch, tmp_path):
     """E05: marker alone with empty outfile must not emit."""
     import utils.runmanager as rm
