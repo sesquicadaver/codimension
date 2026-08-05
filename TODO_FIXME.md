@@ -2,24 +2,29 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-08-04 (повторний аудит master@f5196a67 + PR #19)  
+**Дата перевірки:** 2026-08-05 (аудит master@9df7eca7 / PR #20)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
-## Відкриті блокери (аудит 2026-08-04 @ f5196a67)
+## Відкриті блокери (аудит 2026-08-05 @ 9df7eca7)
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
 | B01 | VENV identity: `realpath(python)` плутає project venv з IDE | P0 | ✅ venv root vs `sys.prefix` |
 | B02 | `.cdm3` uuid path traversal / без `uuid.UUID` | P0 | ✅ canonical UUID + `safe_user_project_dir` |
+| C01 | Create VENV без destination guard (може покрити IDE `.venv`) | P0 | ✅ `validateVenvDestination` sync+QProcess; broken→VENV… |
 | B03 | Project scan thread cancel/join lifecycle | P1 | 🔓 OPEN (was A09) |
 | B04 | brief_ast name/colon positions | P1 | 🔓 OPEN (was A08) |
 | B05 | Comment clusters merge across indent scopes | P1 | 🔓 OPEN |
 | B06 | `case` keyword via `rfind` heuristic | P1 | 🔓 OPEN |
 | B07 | VENV recreate не транзакційний; rmtree у GUI | P1 | 🔓 OPEN |
 | B08 | Full-IDE smoke лише nightly (0 runs) / offscreen formal | P1 | 🔓 OPEN |
+| C02 | Interpreter authenticity (probe) / mutable vs read-only | P1 | 🔓 OPEN |
+| C03 | Recreate base=`sys.executable` змінює версію Python | P1 | 🔓 OPEN |
+| C04 | Flow UI coupling test з `pytest.skip` на Exception | P1 | 🔓 OPEN |
 | B09 | Schema не на всіх update paths | P2 | 🔓 OPEN (was A10) |
 | B10 | `Settings.flush` не atomic; atomic mode drift | P2 | 🔓 OPEN (was A11) |
 | B11 | Docs drift (README/TODO vs commit) | P2 | 🔓 OPEN |
+| C05 | Порожній UUID не персиститься; `uuid1`→`uuid4` | P2 | 🔓 OPEN |
 
 ## Закриті з попередніх аудитів (підтверджено @ f5196a67)
 
@@ -36,6 +41,6 @@
 | Тема | Стан |
 |------|------|
 | **CI** | green на `f5196a67` (ruff / format / mypy / tests / wheel / smoke) |
-| **Living Spec** | оновлювати разом із B01–B11 |
+| **Living Spec** | оновлювати разом із B01–B11 / C01–C05 |
 
 Жива матриця: [doc/plugins/living-specification.md](doc/plugins/living-specification.md).

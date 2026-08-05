@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 import sys
 
-from utils.venvbootstrap import assertSafeMutableProjectPython, resolveVenvToPython
+from utils.venvbootstrap import assertSafeMutableProjectPython, resolveVenvToPython, validateVenvDestination
 
 from .qt import QEventLoop, QProcess, QProgressDialog, Qt, QTimer
 
@@ -126,10 +126,18 @@ def run_argv_with_progress(
     return stdout, stderr
 
 
-def create_venv_with_progress(parent, base_python: str, venv_dir: str) -> str:
-    """Create a venv via QProcess; return the new python path."""
+def create_venv_with_progress(
+    parent,
+    base_python: str,
+    venv_dir: str,
+    project_dir: str | None = None,
+) -> str:
+    """Create a venv via QProcess; return the new python path.
+
+    Applies :func:`validateVenvDestination` before starting the process.
+    """
     base_python = base_python or sys.executable
-    venv_dir = os.path.abspath(venv_dir)
+    venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=False)
     os.makedirs(os.path.dirname(venv_dir) or ".", exist_ok=True)
     run_argv_with_progress(
         parent,

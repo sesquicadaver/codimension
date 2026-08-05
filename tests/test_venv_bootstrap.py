@@ -52,6 +52,11 @@ def test_venv_menu_gate(project_dir):
     assert venvSetupActionEnabled(configured) is False
     assert venvUpdateActionEnabled(configured) is True
 
+    # Broken configured path: allow VENV… reattach (audit @ 9df7eca7)
+    broken = _fake_project(project_dir, str(project_dir / "gone" / "bin" / "python"))
+    assert venvSetupActionEnabled(broken) is True
+    assert venvUpdateActionEnabled(broken) is True
+
     setSessionPythonInterpreter("/tmp/session-python")
     assert venvUpdateActionEnabled(empty) is True
     clearSessionPythonInterpreter()
@@ -294,3 +299,67 @@ def test_request_analysis_environment_refresh(project_dir):
     proj.refreshAnalysisEnvironment = MagicMock()
     vb.requestAnalysisEnvironmentRefresh(proj)
     proj.refreshAnalysisEnvironment.assert_called_once()
+
+
+def test_validate_venv_destination_guards(project_dir, tmp_path):
+    """C01 / audit P0 @ 9df7eca7: fail-closed create destination checks."""
+    from utils import venvbootstrap as vb
+
+    with pytest.raises(RuntimeError, match="empty"):
+        vb.validateVenvDestination("", str(project_dir))
+
+    with pytest.raises(RuntimeError, match="project root"):
+        vb.validateVenvDestination(str(project_dir), str(project_dir))
+
+    with pytest.raises(RuntimeError, match="outside"):
+        vb.validateVenvDestination(str(tmp_path / "elsewhere" / ".venv"), str(project_dir))
+
+    with pytest.raises(RuntimeError, match="IDE environment"):
+        vb.validateVenvDestination(sys.prefix, project_dir=None)
+
+    # Same refusal when IDE prefix happens to sit under the project root
+    ide = os.path.realpath(sys.prefix)
+    ide_parent = os.path.dirname(ide)
+    if ide_parent and os.path.normpath(ide) != os.path.normpath(ide_parent):
+        if vb.isPathInsideProject(ide, ide_parent):
+            with pytest.raises(RuntimeError, match="IDE environment"):
+                vb.validateVenvDestination(ide, ide_parent)
+
+    existing = project_dir / ".venv"
+    existing.mkdir()
+    (existing / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+    bin_dir = existing / "bin"
+    bin_dir.mkdir()
+    py = bin_dir / "python"
+    py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(py, 0o755)
+    with pytest.raises(RuntimeError, match="already exists"):
+        vb.validateVenvDestination(str(existing), str(project_dir), for_recreate=False)
+    assert vb.validateVenvDestination(str(existing), str(project_dir), for_recreate=True) == os.path.abspath(
+        str(existing)
+    )
+
+    nonempty = project_dir / "stuff"
+    nonempty.mkdir()
+    (nonempty / "file.txt").write_text("x", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="not empty"):
+        vb.validateVenvDestination(str(nonempty), str(project_dir))
+
+    link = project_dir / "link-venv"
+    link.symlink_to(existing)
+    with pytest.raises(RuntimeError, match="symlink"):
+        vb.validateVenvDestination(str(link), str(project_dir))
+
+    fresh = project_dir / ".venv-new"
+    assert vb.validateVenvDestination(str(fresh), str(project_dir)) == os.path.abspath(str(fresh))
+
+
+def test_create_venv_refuses_ide_prefix(project_dir, monkeypatch):
+    from utils import venvbootstrap as vb
+
+    def boom(*_a, **_k):
+        raise AssertionError("subprocess must not run for unsafe destination")
+
+    monkeypatch.setattr(vb.subprocess, "run", boom)
+    with pytest.raises(RuntimeError, match="IDE environment"):
+        vb.createVenv(sys.executable, sys.prefix, project_dir=None)
