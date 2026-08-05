@@ -286,6 +286,13 @@ def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) 
     cleanupStaleArgvLaunchers()
     interpreter = assertShellSafePath(sys.executable)
     work_root = _ensureLauncherWorkRoot()
+    if work_root is None:
+        import logging
+
+        logging.info(
+            "Custom-terminal launcher using sticky system temp "
+            "(no trusted settings/XDG work root available)."
+        )
     work = tempfile.mkdtemp(prefix="cdm-run-", dir=work_root)
     argv_path = os.path.join(work, "argv.json")
     launch_path = os.path.join(work, "launch.py")
