@@ -1,5 +1,8 @@
 2026 Aug 05
 
+* Audit P1 E06: custom-terminal launcher shebang uses absolute
+  ``sys.executable``; work dirs prefer ``~/.codimension3/cdm-run`` / XDG
+  over system ``/tmp`` (``noexec``); Windows still unverified
 * Audit P1 E05: custom-terminal Profile completion uses atomic marker +
   non-empty outfile gate; RunManager polls independently of terminal
   lifetime; PROFILE launcher PID is the wrapper (subprocess), not cProfile

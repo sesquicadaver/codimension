@@ -119,8 +119,88 @@ def assertShellSafePath(path: str) -> str:
     return abs_path
 
 
+def _launcherWorkRoots() -> list[str]:
+    """Trusted candidate parents for ``cdm-run-*`` work dirs (audit E06).
+
+    Prefer Codimension settings / XDG runtime over system ``/tmp`` so launchers
+    still run when ``/tmp`` is mounted ``noexec``. Do not use a reusable
+    ``/tmp/cdm-run`` parent (multi-user race). Windows is still unverified.
+    """
+    roots: list[str] = []
+    try:
+        from .settings import SETTINGS_DIR
+
+        roots.append(os.path.join(SETTINGS_DIR, "cdm-run"))
+    except ImportError:
+        pass
+    xdg = os.environ.get("XDG_RUNTIME_DIR")
+    if xdg:
+        roots.append(os.path.join(xdg, "cdm-run"))
+    return roots
+
+
+def _isTrustedLauncherWorkRoot(path: str) -> bool:
+    """True if ``path`` is a directory owned by us with no group/other access."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return False
+    if not os.path.isdir(path):
+        return False
+    if st.st_uid != os.getuid():
+        return False
+    if st.st_mode & 0o077:
+        return False
+    return True
+
+
+def _ensureLauncherWorkRoot() -> str | None:
+    """Return a trusted parent for ``mkdtemp``, or ``None`` for sticky system temp.
+
+    Existing parents that are world/group-accessible are skipped (not chmod-healed).
+    Write probes use ``O_EXCL`` (+ ``O_NOFOLLOW`` when available).
+    """
+    import time as _time
+
+    for root in _launcherWorkRoots():
+        try:
+            if os.path.isdir(root):
+                if not _isTrustedLauncherWorkRoot(root):
+                    continue
+            else:
+                parent = os.path.dirname(root)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
+                try:
+                    os.mkdir(root, 0o700)
+                except FileExistsError:
+                    if not _isTrustedLauncherWorkRoot(root):
+                        continue
+                else:
+                    try:
+                        os.chmod(root, 0o700)
+                    except OSError:
+                        pass
+                    if not _isTrustedLauncherWorkRoot(root):
+                        continue
+            probe = os.path.join(root, f".cdm-write-probe-{os.getpid()}-{_time.time_ns()}")
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            fd = os.open(probe, flags, 0o600)
+            try:
+                os.write(fd, b"ok")
+            finally:
+                os.close(fd)
+            os.unlink(probe)
+            return root
+        except OSError:
+            continue
+    return None
+
+
 def cleanupStaleArgvLaunchers(max_age_seconds: float = 86400.0) -> int:
-    """Remove leftover ``cdm-run-*`` dirs under the system temp (audit E04).
+    """Remove leftover ``cdm-run-*`` dirs under known launcher roots (E04/E06).
 
     Best-effort only: races and permission errors are ignored. Returns the
     number of directories successfully removed. Called opportunistically when
@@ -129,30 +209,38 @@ def cleanupStaleArgvLaunchers(max_age_seconds: float = 86400.0) -> int:
     import time as _time
 
     removed = 0
-    try:
-        root = tempfile.gettempdir()
-        names = os.listdir(root)
-    except OSError:
-        return 0
     deadline = _time.time() - max_age_seconds
-    for name in names:
-        if not name.startswith("cdm-run-"):
+    parents = list(_launcherWorkRoots())
+    # Legacy flat layout under system temp (pre-E06).
+    parents.append(tempfile.gettempdir())
+    seen: set[str] = set()
+    for parent in parents:
+        parent = os.path.abspath(parent)
+        if parent in seen:
             continue
-        path = os.path.join(root, name)
+        seen.add(parent)
         try:
-            if not os.path.isdir(path):
-                continue
-            if os.path.getmtime(path) > deadline:
-                continue
-            for child in os.listdir(path):
-                try:
-                    os.unlink(os.path.join(path, child))
-                except OSError:
-                    pass
-            os.rmdir(path)
-            removed += 1
+            names = os.listdir(parent)
         except OSError:
             continue
+        for name in names:
+            if not name.startswith("cdm-run-"):
+                continue
+            path = os.path.join(parent, name)
+            try:
+                if not os.path.isdir(path):
+                    continue
+                if os.path.getmtime(path) > deadline:
+                    continue
+                for child in os.listdir(path):
+                    try:
+                        os.unlink(os.path.join(path, child))
+                    except OSError:
+                        pass
+                os.rmdir(path)
+                removed += 1
+            except OSError:
+                continue
     return removed
 
 
@@ -189,20 +277,29 @@ def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) 
     (RUN/DEBUG). With a marker (non-redirected PROFILE, E05), it runs the
     target via ``subprocess.call``, then atomically writes the marker. In that
     mode ``${prog}`` is the wrapper PID, not the cProfile process image.
+
+    E06: shebang uses absolute ``sys.executable`` (not ``/usr/bin/env python3``)
+    and the work directory prefers settings/XDG over system ``/tmp``.
     """
     if not argv:
         raise RuntimeError("empty argv for launcher")
     cleanupStaleArgvLaunchers()
-    work = tempfile.mkdtemp(prefix="cdm-run-")
+    interpreter = assertShellSafePath(sys.executable)
+    work_root = _ensureLauncherWorkRoot()
+    if work_root is None:
+        import logging
+
+        logging.info("Custom-terminal launcher using sticky system temp (no trusted settings/XDG work root available).")
+    work = tempfile.mkdtemp(prefix="cdm-run-", dir=work_root)
     argv_path = os.path.join(work, "argv.json")
     launch_path = os.path.join(work, "launch.py")
     with open(argv_path, "w", encoding="utf-8") as handle:
         json.dump([str(part) for part in argv], handle, ensure_ascii=False)
+    shebang = f"#!{interpreter}\n"
     if completion_marker:
         marker_literal = json.dumps(str(completion_marker), ensure_ascii=False)
-        script = textwrap.dedent(
+        body = textwrap.dedent(
             f"""\
-            #!/usr/bin/env python3
             # Codimension profile launcher — marker after child (E05); do not edit.
             import json
             import os
@@ -237,10 +334,10 @@ def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) 
             raise SystemExit(rc)
             """
         )
+        script = shebang + body
     else:
-        script = textwrap.dedent(
+        body = textwrap.dedent(
             """\
-            #!/usr/bin/env python3
             # Codimension argv launcher — do not edit; generated for one run.
             import json
             import os
@@ -266,6 +363,7 @@ def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) 
             os.execvp(argv[0], argv)
             """
         )
+        script = shebang + body
     with open(launch_path, "w", encoding="utf-8") as handle:
         handle.write(script)
     os.chmod(launch_path, 0o755)
