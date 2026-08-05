@@ -1,4 +1,4 @@
-> **Мова / Language:** Українська | [English](../md/mdsupport.md)
+> **Мова / Language:** Українська | [English](../../md/mdsupport.md)
 
 # Підтримка Markdown
 

@@ -1,4 +1,4 @@
-> **Мова / Language:** Українська | [English](../colorschemes/colorschemes.md)
+> **Мова / Language:** Українська | [English](../../colorschemes/colorschemes.md)
 
 Кольорові схеми Codimension
 =============================

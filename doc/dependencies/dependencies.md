@@ -1,4 +1,4 @@
-> **Language / Мова:** English | [Українська](uk/dependencies/dependencies.md)
+> **Language / Мова:** English | [Українська](../uk/dependencies/dependencies.md)
 
 Analysis: Dependencies
 ======================

@@ -1,4 +1,4 @@
-> **Language / Мова:** English | [Українська](uk/pyflakes/pyflakes.md)
+> **Language / Мова:** English | [Українська](../uk/pyflakes/pyflakes.md)
 
 Analysis: Pyflakes
 ====================

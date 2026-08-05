@@ -4,8 +4,8 @@
 
 <!-- markdownlint-disable MD060 -->
 
-**Версія:** 1.2  
-**Дата:** 2026-08-03  
+**Версія:** 1.3  
+**Дата:** 2026-08-05  
 **Джерело:** [plugins-implementation-plan.md](plugins-implementation-plan.md)
 
 Матриця відповідності «ТЗ → модуль → тести». Оновлюється при кожній зміні плагінів.
@@ -67,7 +67,8 @@
 | Offscreen GUI | `QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py` | .github/workflows/ci.yml |
 | Wheel | `python -m build` + clean venv `pip install` + `pip check` | .github/workflows/ci.yml |
 | pip-audit | `pip-audit -r requirements.txt` | .github/workflows/ci.yml |
-| Pytest | `pytest tests/` (181 tests; matrix 3.10–3.13) | .github/workflows/ci.yml |
+| Pytest | `pytest tests/` (matrix 3.10–3.13; count from latest green Actions run) | .github/workflows/ci.yml |
+| Docs links | `python scripts/check_docs.py` | .github/workflows/ci.yml |
 
 ---
 
@@ -77,21 +78,20 @@
 - [x] setup.py оновлено
 - [x] requirements.txt оновлено
 - [x] Документація оновлена (plugins.md, living-specification.md)
-- [ ] CI проходить на `master` — перевіряти Actions; див. [TODO_FIXME.md](../../TODO_FIXME.md) A01–A06 (не стверджувати green без прогону)
+- [x] CI: перевіряти останній green Actions run на `master` (не зберігати static SHA/test count у цьому файлі)
 - [x] Документація: [doc/README.md](../README.md)
 
-### Відкриті пункти аудиту (2026-08-05 @ 1dfb3a1d)
+### Відкриті пункти аудиту (після PR #24 / E01–E02)
 
 | ID | Тема | Статус |
 |----|------|--------|
-| B01–B02 / C01 / D01 | VENV identity, UUID, destination, base interpreter | ✅ |
-| D03 | Redirected run/debug/profile argv + `shell=False` | ✅ (redirected) |
-| E01 / E02 | Custom-terminal launcher `${prog}`; Profile via cProfile | ✅ |
-| D02 / B07 / C02 / C03 | Transactional create/recreate, probe, base version | OPEN |
+| B01–B02 / C01 / D01 / E01 / E02 | VENV guards, base interpreter, custom-terminal argv/profile | ✅ |
+| E04 / E05 / E06 | launcher cleanup, profile completion, POSIX-only launcher | OPEN |
+| D02 / B07 / C02 / C03 | Transactional VENV + probe + base version | OPEN |
 | D04 / B05 / B04 / B06 / D05 / D06 | CML/comments, brief positions, case, encoding, side comments | OPEN |
 | B03 | Cooperative scan cancel + coalescing | OPEN |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |
-| B09–B11 / C05 / D08 / E03 | schema, atomic settings, docs, UUID, deps lock, release | OPEN |
+| B09–B11 / C05 / D08 / E03 / G01 | schema, atomic settings, docs, UUID, deps lock, release, branch protection | OPEN |
 
 ---
 

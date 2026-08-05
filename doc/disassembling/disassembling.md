@@ -1,4 +1,4 @@
-> **Language / Мова:** English | [Українська](uk/disassembling/disassembling.md)
+> **Language / Мова:** English | [Українська](../uk/disassembling/disassembling.md)
 
 Analysis: Disassembling
 =======================

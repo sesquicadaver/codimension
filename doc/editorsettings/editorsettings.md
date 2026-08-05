@@ -1,4 +1,4 @@
-> **Language / Мова:** English | [Українська](uk/editorsettings/editorsettings.md)
+> **Language / Мова:** English | [Українська](../uk/editorsettings/editorsettings.md)
 
 IDE Customization
 =================

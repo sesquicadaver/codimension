@@ -1,86 +1,89 @@
 # Codimension
 
-[![CI](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml/badge.svg)](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)](LICENSE)
-
 > **Language / Мова:** English | [Українська](README.md)
 
-**Experimental Python IDE** with a text editor and a **control-flow diagram** that updates while you edit code. Fork version: **4.11.0**.
+[![CI](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml/badge.svg)](https://github.com/sesquicadaver/codimension/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)](LICENSE)
 
-This is an **active fork** of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). The upstream project has been unmaintained for over 4 years; `pip install codimension` on PyPI is an outdated upstream release, not this repository.
+**Experimental Python IDE** with a text editor and a **control-flow diagram** that updates while you edit. Fork version: **4.11.0**.
 
-## Current features
+Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Last upstream `master` commit: **19 August 2022**. `pip install codimension` on PyPI is upstream **4.9.1** (2020), not this repository. This fork is **not** published to the PyPI project named `codimension`.
 
-- Python file editing with a **synchronized flow diagram** (control flow)
-- Import, class, and dependency diagrams; dead code (vulture), complexity (radon), pyflakes in the editor
-- **Projects** (`.cdm3`): `excludeFromAnalysis`, no auto-load of last project on startup
-- **Project VENV (T140/T141):** Tools → Project utilities → **VENV…** / **Update VENV…**; status-bar **Env:** (`project` / `session` / `auto` / `IDE` / `broken`); re-analyze after env changes
-- **Parsers:** pure-Python `brief_ast` / `flow_ast` on Python 3.10+ (no cdmpyparser/cdmcfparser)
-- **Bundled plugins** (`cdmplugins/`): Ruff, Ruff format, Mypy, Pytest, Coverage, Bandit, pip-audit, TODO panel, Git (MVP)
-- **Debugger:** breakpoints, watchpoints (UI + sync), greenlet contexts; nightly full-IDE smoke (T130)
-- **CI:** independent ruff / format / mypy / pytest (matrix **3.10–3.13**; count from the latest green Actions run on HEAD), wheel+`pip check`, offscreen GUI smoke, pip-audit
+## What is verified today
 
-## Limitations (honest)
+- Python editing with a synchronized control-flow diagram
+- Import / class / dependency diagrams; dead code, complexity, pyflakes in the editor
+- `.cdm3` projects (no auto-load of the last project on startup)
+- Local Project VENV (Tools → **VENV…** / **Update VENV…**; **Env:** status)
+- Pure-Python AST parsers exposed under the compatibility names `cdmpyparser` / `cdmcfparser` (no C extension required)
+- Plugin UI in `cdmplugins/` (Ruff, Mypy, Pytest, … need optional extras)
+- Debugger (breakpoints, watchpoints); debugger session tests in CI
+- CI on **Ubuntu**: Ruff, format, Mypy, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen bootstrap smoke, `pip-audit`
 
-- Not a production-ready IDE; focus is code analysis and visualization, not a VS Code / PyCharm replacement
-- Git plugin is MVP (no stash/merge UI); PRs via `gh` CLI
-- Environment-aware analysis (Docker / SSH / K8s) — **not implemented**; local venv via Project Properties or Tools → **VENV…** (async QProcess + mutate guards)
-- No auto venv setup on project open; unresolved packages for pip are opt-in; see open audit items in [TODO_FIXME.en.md](TODO_FIXME.en.md)
-- Not a production-ready analyzer: remaining gaps — [TODO_FIXME.en.md](TODO_FIXME.en.md) (B\*/C\*/D\*)
-- Long-term plans — [ROADMAP.md](ROADMAP.md), not current state
+## Limitations
+
+- Not a production-ready IDE
+- **Linux** is the only CI-verified platform; Windows / macOS are **unverified** (no compatibility guarantee)
+- Git plugin is MVP; PRs are created via the **GitHub REST API** (token: `gh auth` → OS keyring → `0600` file)
+- Qt offscreen smoke in PR CI only constructs a bare `QApplication` (not MainWindow / plugins)
+- Full MainWindow smoke is a weekly workflow, not a PR blocker
+- Open technical gaps: [TODO_FIXME.en.md](TODO_FIXME.en.md); long-term plan: [ROADMAP.md](ROADMAP.md)
 
 ## Requirements
 
-- Python **3.10–3.13** (CI: 3.10, 3.11, 3.12, 3.13)
-- **PyQt5**, Linux (primary platform); Windows / macOS — experimental
+- Python **3.10–3.13** (this is the CI matrix; versions beyond 3.13 are not verified here)
+- PyQt5
+- Linux (primary)
 
-## Installation
-
-Source only:
+## Installation (end user)
 
 ```bash
 git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-
-pip install -U pip
-pip install -r requirements.txt
-pip install -e .
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install .
 codimension
 ```
 
-Details: [doc/en/INSTALL.md](doc/en/INSTALL.md) (English) | [doc/INSTALL.md](doc/INSTALL.md) (Ukrainian).
+Analyzer plugins (Ruff, Mypy, Pytest, …):
+
+```bash
+python -m pip install ".[tools,lint,test,security]"
+```
+
+Details: [doc/en/README.md](doc/en/README.md) → install ([doc/en/INSTALL.md](doc/en/INSTALL.md)).
 
 ## Development
 
 ```bash
+python -m pip install -e ".[tools,lint,test,security]"
+# or the convenience CI snapshot:
+# python -m pip install -r requirements.txt && python -m pip install -e .
 pytest tests/ -v
 ruff check codimension cdmplugins
-ruff format --check codimension cdmplugins
-mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
-pip-audit -r requirements.txt
 ```
 
-Layout: `codimension/` (IDE), `cdmplugins/` (plugins), `tests/`, `doc/`.
-
-PR checklist — [CONTRIBUTING.en.md](CONTRIBUTING.en.md). Module/test matrix — [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md).
+PR checklist: [CONTRIBUTING.en.md](CONTRIBUTING.en.md).
 
 ## Documentation
 
 | | |
 | --- | --- |
+| [doc/en/README.md](doc/en/README.md) | English documentation index |
+| [doc/uk/README.md](doc/uk/README.md) | Ukrainian documentation index |
 | [doc/BILINGUAL.md](doc/BILINGUAL.md) | Bilingual documentation policy |
-| [doc/en/README.md](doc/en/README.md) | Documentation index (English) |
-| [doc/uk/README.md](doc/uk/README.md) | Індекс документації (укр.) |
-| [FORK.en.md](FORK.en.md) | Fork changes vs upstream |
-| [ROADMAP.md](ROADMAP.md) | Long-term plan (not current version) |
-| [TODO_FIXME.en.md](TODO_FIXME.en.md) | Known issues |
+| [FORK.en.md](FORK.en.md) | Fork changes |
+| [TODO_FIXME.en.md](TODO_FIXME.en.md) | Known issues (internal audit) |
 | [ChangeLog](ChangeLog) | Change history |
+| [doc/www/](doc/www/) | Local archive mirror of the old site |
 
-External (archive): [codimension.org](http://codimension.org) — not updated. Active MCP app: [CAN-MCP](https://github.com/sesquicadaver/CAN-MCP).
+## Related projects
+
+- [CAN-MCP](https://github.com/sesquicadaver/CAN-MCP) — separate headless static-analysis MCP; **not** integrated into Codimension.
 
 ## License
 
-GPL v3. Modified version — see [FORK.en.md](FORK.en.md), [doc/en/LICENSE_COMPLIANCE.md](doc/en/LICENSE_COMPLIANCE.md).
+GPL v3. See [FORK.en.md](FORK.en.md), [doc/en/LICENSE_COMPLIANCE.md](doc/en/LICENSE_COMPLIANCE.md).

@@ -3,16 +3,16 @@
 > **Мова / Language:** [English](en/README.md) | Українська
 
 **Активний репозиторій:** https://github.com/sesquicadaver/codimension  
-**Версія:** 4.11.0 | **Python:** 3.10+ | **Встановлення:** лише з вихідного коду ([INSTALL.md](INSTALL.md))
+**Версія:** 4.11.0 | **Python (CI):** 3.10–3.13 | **Встановлення:** з цього репозиторію ([INSTALL.md](INSTALL.md))
 
 Документація доступна **двома мовами**. Політика та структура: [BILINGUAL.md](BILINGUAL.md).
 
 | Мова | Індекс |
 | ---- | ------ |
-| Українська | [doc/uk/README.md](uk/README.md) |
-| English | [doc/en/README.md](en/README.md) |
+| Українська | [uk/README.md](uk/README.md) |
+| English | [en/README.md](en/README.md) |
 
-Каталог `doc/www/` — архівне дзеркало codimension.org (2017–2020), не оновлюється.
+Каталог `doc/www/` — архівне дзеркало старого сайту (не оновлюється).
 
 ---
 
@@ -32,14 +32,14 @@
 
 ## Плагіни та CI
 
-| Українська | English |
-| ---------- | ------- |
+| English | Українська |
+| ------- | ---------- |
 | [plugins/plugins.md](plugins/plugins.md) | [uk/plugins/plugins.md](uk/plugins/plugins.md) |
 | [plugins/plugins-implementation-plan.md](plugins/plugins-implementation-plan.md) | [en/plugins/plugins-implementation-plan.md](en/plugins/plugins-implementation-plan.md) |
 | [plugins/git-github-plugin-plan.md](plugins/git-github-plugin-plan.md) | — |
 | [plugins/living-specification.md](plugins/living-specification.md) | [en/plugins/living-specification.md](en/plugins/living-specification.md) |
 | [github-integration-plan.md](github-integration-plan.md) | [en/github-integration-plan.md](en/github-integration-plan.md) |
-| [../NOTES.md](../NOTES.md) | [../NOTES.en.md](../NOTES.en.md) |
+| [../NOTES.en.md](../NOTES.en.md) | [../NOTES.md](../NOTES.md) |
 
 ---
 

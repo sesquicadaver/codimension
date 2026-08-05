@@ -3,11 +3,11 @@
 > **Language / Мова:** English | [Українська](../uk/README.md)
 
 **Active repository:** https://github.com/sesquicadaver/codimension  
-**Version:** 4.11.0 | **Python:** 3.10+ | **Install:** from source only ([INSTALL.md](INSTALL.md))
+**Version:** 4.11.0 | **Python (CI):** 3.10–3.13 | **Install:** from this repository ([INSTALL.md](INSTALL.md))
 
 This index lists **English** documentation. Ukrainian translations live under [doc/uk/](../uk/README.md). Legacy paths under `doc/<topic>/` remain for backward compatibility.
 
-The `doc/www/` directory is an archived mirror of codimension.org (2017–2020) and is not maintained.
+The `doc/www/` directory is a local archive mirror of the old site and is not maintained.
 
 ---
 
@@ -16,7 +16,7 @@ The `doc/www/` directory is an archived mirror of codimension.org (2017–2020) 
 | Document | Contents |
 | -------- | -------- |
 | [../../README.en.md](../../README.en.md) | Project overview, install, development |
-| [INSTALL.md](INSTALL.md) | Detailed install (Linux / Windows / macOS) |
+| [INSTALL.md](INSTALL.md) | Install (Linux CI-tested; other OS unverified) |
 | [../../FORK.en.md](../../FORK.en.md) | Changes vs upstream |
 | [../../CONTRIBUTING.en.md](../../CONTRIBUTING.en.md) | How to contribute, CI |
 | [../../ROADMAP.md](../../ROADMAP.md) | Long-term plan (Phase 0–38) |
@@ -32,10 +32,10 @@ The `doc/www/` directory is an archived mirror of codimension.org (2017–2020) 
 | -------- | -------- |
 | [../plugins/plugins.md](../plugins/plugins.md) | Plugin tutorial |
 | [plugins/plugins-implementation-plan.md](plugins/plugins-implementation-plan.md) | Phases 0–5 (completed) |
-| [plugins/git-github-plugin-plan.md](plugins/git-github-plugin-plan.md) | Git/GitHub plugin (MVP done) |
+| [../plugins/git-github-plugin-plan.md](../plugins/git-github-plugin-plan.md) | Git/GitHub plugin (MVP) |
 | [plugins/living-specification.md](plugins/living-specification.md) | Spec → module → tests matrix |
 | [github-integration-plan.md](github-integration-plan.md) | CI, release, GitHub templates |
-| [../../NOTES.en.md](../../NOTES.en.md) | PyPI release (maintainers) |
+| [../../NOTES.en.md](../../NOTES.en.md) | PyPI / release notes (maintainers) |
 
 ---
 
