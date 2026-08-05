@@ -236,7 +236,8 @@ def test_cleanup_stale_argv_launchers(tmp_path, monkeypatch):
     from utils import run as run_mod
 
     root = tmp_path / "cdm-run"
-    root.mkdir()
+    root.mkdir(mode=0o700)
+    os.chmod(root, 0o700)
     monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(root)])
     monkeypatch.setattr(run_mod.tempfile, "gettempdir", lambda: str(tmp_path))
     stale = root / "cdm-run-stale"
@@ -257,8 +258,11 @@ def test_launcher_uses_absolute_interpreter_shebang_and_settings_root(tmp_path, 
     from utils import run as run_mod
 
     root = tmp_path / "cdm-run"
-    root.mkdir()
+    root.mkdir(mode=0o700)
+    os.chmod(root, 0o700)
     monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(root)])
+    assert run_mod._isTrustedLauncherWorkRoot(str(root)) is True
+    assert run_mod._ensureLauncherWorkRoot() == str(root)
     launch = run_mod.writeArgvLauncher([sys.executable, "-c", "pass"])
     launch_path = Path(launch)
     assert str(root) in str(launch_path)
@@ -273,22 +277,21 @@ def test_launcher_uses_absolute_interpreter_shebang_and_settings_root(tmp_path, 
 
 def test_launcher_rejects_untrusted_work_root(tmp_path, monkeypatch):
     """E06: world-accessible parent must not be used; fall back to sticky temp."""
-    import stat as statmod
-
     from utils import run as run_mod
 
     bad = tmp_path / "open-cdm-run"
     bad.mkdir()
     os.chmod(bad, 0o777)
-    assert bad.stat().st_mode & 0o077
+    mode = bad.stat().st_mode & 0o777
+    assert mode & 0o077, f"expected world/group bits, got {oct(mode)}"
+    assert run_mod._isTrustedLauncherWorkRoot(str(bad)) is False
     monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(bad)])
-    launch = run_mod.writeArgvLauncher([sys.executable, "-c", "pass"])
-    assert str(bad) not in launch
-    # sticky system temp path
-    assert "cdm-run-" in launch
-    for child in Path(launch).parent.iterdir():
+    assert run_mod._ensureLauncherWorkRoot() is None
+    launch = Path(run_mod.writeArgvLauncher([sys.executable, "-c", "pass"]))
+    assert bad.resolve() not in launch.resolve().parents
+    for child in launch.parent.iterdir():
         child.unlink()
-    Path(launch).parent.rmdir()
+    launch.parent.rmdir()
 
 
 def test_custom_terminal_profile_uses_cprofile(tmp_path, monkeypatch):

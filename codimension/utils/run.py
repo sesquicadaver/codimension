@@ -155,20 +155,43 @@ def _isTrustedLauncherWorkRoot(path: str) -> bool:
 
 
 def _ensureLauncherWorkRoot() -> str | None:
-    """Return a trusted parent for ``mkdtemp``, or ``None`` for sticky system temp."""
+    """Return a trusted parent for ``mkdtemp``, or ``None`` for sticky system temp.
+
+    Existing parents that are world/group-accessible are skipped (not chmod-healed).
+    Write probes use ``O_EXCL`` (+ ``O_NOFOLLOW`` when available).
+    """
+    import time as _time
+
     for root in _launcherWorkRoots():
         try:
-            if not os.path.isdir(root):
-                os.makedirs(root, mode=0o700, exist_ok=True)
+            if os.path.isdir(root):
+                if not _isTrustedLauncherWorkRoot(root):
+                    continue
+            else:
+                parent = os.path.dirname(root)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
+                try:
+                    os.mkdir(root, 0o700)
+                except FileExistsError:
+                    if not _isTrustedLauncherWorkRoot(root):
+                        continue
+                else:
+                    try:
+                        os.chmod(root, 0o700)
+                    except OSError:
+                        pass
+                    if not _isTrustedLauncherWorkRoot(root):
+                        continue
+            probe = os.path.join(root, f".cdm-write-probe-{os.getpid()}-{_time.time_ns()}")
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            fd = os.open(probe, flags, 0o600)
             try:
-                os.chmod(root, 0o700)
-            except OSError:
-                pass
-            if not _isTrustedLauncherWorkRoot(root):
-                continue
-            probe = os.path.join(root, ".cdm-write-probe")
-            with open(probe, "w", encoding="utf-8") as handle:
-                handle.write("ok")
+                os.write(fd, b"ok")
+            finally:
+                os.close(fd)
             os.unlink(probe)
             return root
         except OSError:
