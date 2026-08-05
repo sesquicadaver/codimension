@@ -1,4 +1,4 @@
-> **Language / Мова:** English | [Українська](uk/plugins/plugins.md)
+> **Language / Мова:** English | [Українська](../uk/plugins/plugins.md)
 
 Codimension Plugins Tutorial
 ============================

@@ -1,4 +1,4 @@
-> **Language / Мова:** English | [Українська](uk/deadcode/deadcode.md)
+> **Language / Мова:** English | [Українська](../uk/deadcode/deadcode.md)
 
 Analysis: Dead Code
 ===================

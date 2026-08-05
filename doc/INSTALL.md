@@ -1,291 +1,59 @@
-# Детальна інструкція з встановлення Codimension
+# Встановлення Codimension (форк)
 
 > **Мова / Language:** Українська | [English](en/INSTALL.md)
 
-Codimension — мультиплатформна IDE. Підтримка платформ: **Linux** (основна), **Windows**, **macOS**.
+**Активний репозиторій:** https://github.com/sesquicadaver/codimension  
+**Версія:** 4.11.0  
 
-**Активний форк:** https://github.com/sesquicadaver/codimension  
-**Встановлення:** лише з вихідного коду цього репозиторію. Пакет `pip install codimension` на PyPI — застаріла версія оригінального проєкту (2020), не цей форк.
+Цей форк **не** опублікований у PyPI-проєкті `codimension`. Встановлюйте з GitHub checkout або з wheel, зібраного з цього репозиторію. `pip install codimension` на PyPI — upstream 4.9.1 (2020).
 
-## Системні вимоги
+## Підтримувані платформи
 
-- **Python:** 3.10.12 або новіший (3.10–3.13)
-- **ОС:** Linux, Windows 10/11, macOS 10.15+
-- **Графіка:** Qt5 (PyQt5)
+| Платформа | Статус |
+| --------- | ------ |
+| Linux | CI-tested (Ubuntu) |
+| Windows | Unverified — немає гарантій |
+| macOS | Unverified — немає гарантій |
 
-## Перевірка версії Python
+## Python
 
-**Linux / macOS:**
+- Перевірено в CI: **3.10, 3.11, 3.12, 3.13**
+- `requires-python`: `>=3.10` у metadata (версії після 3.13 не верифіковані)
 
-```shell
-python3 --version
-```
+## Користувацьке встановлення (мінімум)
 
-**Windows (CMD):**
-
-```cmd
-py -3 --version
-```
-
-або
-
-```cmd
-python --version
-```
-
-Потрібно: `Python 3.10.12` або вище.
-
----
-
-## Шлях до pip та codimension
-
-- **Linux, macOS:** `.venv/bin/pip`, `.venv/bin/codimension`
-- **Windows:** `.venv\Scripts\pip.exe`, `.venv\Scripts\codimension.exe`
-
-Далі в інструкції для Linux/macOS використовується `python3` та `.venv/bin/`. На Windows замініть на `py -3` (або `python`) та `.venv\Scripts\`.
-
----
-
-## Встановлення з вихідного коду
-
-### Крок 1: Клонування репозиторію
-
-```shell
+```bash
 git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
-```
-
-### Крок 2: Системні залежності
-
-#### Linux (Ubuntu / Debian / Fedora / Arch)
-
-**Ubuntu / Debian:**
-
-```shell
-sudo apt-get update
-sudo apt-get install -y python3 python3-venv python3-pip python3-dev
-sudo apt-get install -y g++ libpcre3-dev
-sudo apt-get install -y graphviz
-```
-
-**Fedora / RHEL:**
-
-```shell
-sudo dnf install python3 python3-pip python3-devel gcc-c++ graphviz
-```
-
-**Arch:**
-
-```shell
-sudo pacman -S python python-pip base-devel graphviz
-```
-
-- **graphviz** — для діаграм залежностей
-- **g++/gcc, python3-dev** — для збірки (якщо потрібні)
-
-PlantUML (опційно): `sudo apt-get install default-jre` (Ubuntu) або еквівалент.
-
-#### Windows (системні пакети)
-
-1. Встановіть [Python 3.10+](https://www.python.org/downloads/) (включіть "Add to PATH")
-2. Встановіть [Graphviz](https://graphviz.org/download/) — додайте до PATH
-3. Для збірки C-розширень: [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (опційно)
-
-#### macOS (Homebrew)
-
-```shell
-brew install python graphviz
-```
-
-Для збірки: Xcode Command Line Tools (`xcode-select --install`).
-
-### Крок 3: Створення віртуального середовища
-
-**Важливо:** `.venv` створюйте **локально на кожному комп'ютері**. Не копіюйте й не синхронізуйте `.venv` між машинами — у ньому зашиті абсолютні шляхи.
-
-**Linux / macOS:**
-
-```shell
 python3 -m venv .venv
-.venv/bin/pip install --upgrade pip
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install .
+codimension
 ```
 
-**Windows:**
+Залежності: PyQt5 та runtime-пакети з `pyproject.toml`. Компілятори `g++` / `libpcre` для native parser extensions **не потрібні** — використовуються pure-Python AST parsers.
 
-```cmd
-py -3 -m venv .venv
-.venv\Scripts\pip install --upgrade pip
+## Плагіни аналізаторів (optional)
+
+UI плагінів bundled, але інструменти (Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit) — optional extras:
+
+```bash
+python -m pip install ".[tools,lint,test,security]"
 ```
 
-### Крок 4–6: Залежності, встановлення, запуск
+## Development / CI
 
-**Linux / macOS:**
-
-```shell
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e .
-.venv/bin/codimension
+```bash
+python -m pip install -e ".[tools,lint,test,security]"
+# або повний convenience snapshot (runtime + lint/test/security):
+python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
-**Windows:**
+`requirements.txt` — **не** мінімальний користувацький install; це full local/CI environment.
 
-```cmd
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\pip install -e .
-.venv\Scripts\codimension
-```
+## Далі
 
----
-
-## Повний скрипт встановлення
-
-### Скрипт: Linux (Ubuntu/Debian)
-
-```shell
-git clone https://github.com/sesquicadaver/codimension.git
-cd codimension
-sudo apt-get install -y python3 python3-venv python3-pip g++ python3-dev libpcre3-dev graphviz
-python3 -m venv .venv
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e .
-.venv/bin/codimension
-```
-
-### Скрипт: Windows
-
-```cmd
-git clone https://github.com/sesquicadaver/codimension.git
-cd codimension
-py -3 -m venv .venv
-.venv\Scripts\pip install --upgrade pip
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\pip install -e .
-.venv\Scripts\codimension
-```
-
-### Скрипт: macOS
-
-```shell
-git clone https://github.com/sesquicadaver/codimension.git
-cd codimension
-brew install python graphviz
-python3 -m venv .venv
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e .
-.venv/bin/codimension
-```
-
----
-
-## Оновлення з репозиторію
-
-**Linux / macOS:**
-
-```shell
-cd codimension
-git pull
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e .
-```
-
-**Windows:**
-
-```cmd
-cd codimension
-git pull
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\pip install -e .
-```
-
----
-
-## Перевірка для розробників (CI локально)
-
-```shell
-. .venv/bin/activate
-ruff check codimension cdmplugins
-ruff format --check codimension cdmplugins
-mypy $(find codimension cdmplugins -name '*.py' ! -path '*/flowui/everything.py')
-pytest tests/ -v
-pip-audit -r requirements.txt
-```
-
----
-
-## Troubleshooting
-
-### Помилка: Python version outside allowed range
-
-**Рішення:** Потрібен Python 3.10+. Перевірте версію (`python3 --version` / `py -3 --version`).
-
-### Ubuntu 22.04: cdmpyparser / cdmcfparser
-
-**Рішення:** На Python 3.10+ ці пакети не встановлюються — використовуються вбудовані fallbacks (`brief_ast`, `flow_ast`).
-
-### `.venv` звертається до шляху іншого комп'ютера
-
-**Рішення:** Видалити `.venv` і створити новий локально:
-
-**Linux / macOS:**
-
-```shell
-rm -rf .venv
-python3 -m venv .venv
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e .
-```
-
-**Windows:**
-
-```cmd
-rmdir /s /q .venv
-py -3 -m venv .venv
-.venv\Scripts\pip install --upgrade pip
-.venv\Scripts\pip install -r requirements.txt
-.venv\Scripts\pip install -e .
-```
-
-### externally-managed-environment
-
-**Рішення:** Використовуйте venv. Не встановлюйте пакети в системний Python.
-
-### Не відкриваються діаграми залежностей
-
-**Рішення:** Встановіть graphviz і додайте до PATH (Linux: `apt install graphviz`, Windows: завантажте з graphviz.org, macOS: `brew install graphviz`).
-
-### Помилка збірки (g++, python3-dev)
-
-**Linux:** `sudo apt-get install g++ python3-dev libpcre3-dev`  
-**macOS:** `xcode-select --install`  
-**Windows:** Visual Studio Build Tools або встановлюйте лише wheel-пакети (без збірки).
-
-### `pip install codimension` встановлює стару IDE
-
-**Рішення:** Це пакет оригінального upstream (Python 2 era). Клонуйте форк і встановлюйте з джерела (див. вище).
-
----
-
-## Структура після встановлення
-
-```text
-codimension/
-├── .venv/           # Віртуальне середовище (не комітити в git)
-├── codimension/     # Вихідний код IDE
-├── cdmplugins/      # Плагіни (ruff, mypy, pytest, git тощо)
-├── tests/           # Unit-тести (pytest)
-├── requirements.txt
-├── pyproject.toml
-└── setup.py         # Legacy setuptools entry (основна конфігурація — pyproject.toml)
-```
-
----
-
-## Перевірка встановлення
-
-**Linux / macOS:** `.venv/bin/codimension --help`  
-**Windows:** `.venv\Scripts\codimension --help`
-
-Або запустіть IDE і відкрийте `.py` файл — має з'явитися flow-діаграма справа.
+- Індекс документації: [uk/README.md](uk/README.md)
+- Огляд змін форку: [../FORK.md](../FORK.md)

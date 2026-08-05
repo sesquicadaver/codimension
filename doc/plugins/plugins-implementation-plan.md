@@ -1,6 +1,6 @@
 # План імплементації плагінів Codimension IDE
 
-> **Мова / Language:** Українська | [English](en/plugins/plugins-implementation-plan.md)
+> **Мова / Language:** Українська | [English](../en/plugins/plugins-implementation-plan.md)
 
 <!-- markdownlint-disable MD060 -->
 

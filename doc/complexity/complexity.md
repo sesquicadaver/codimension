@@ -1,4 +1,4 @@
-> **Language / Мова:** English | [Українська](uk/complexity/complexity.md)
+> **Language / Мова:** English | [Українська](../uk/complexity/complexity.md)
 
 Analysis: Complexity
 ====================

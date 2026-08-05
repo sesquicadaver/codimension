@@ -1,4 +1,4 @@
-> **Language / Мова:** English | [Українська](uk/technology/technology.md)
+> **Language / Мова:** English | [Українська](../uk/technology/technology.md)
 
 Visualization Technology
 ========================

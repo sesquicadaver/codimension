@@ -1,4 +1,4 @@
-> **Мова / Language:** Українська | [English](../project/project.md)
+> **Мова / Language:** Українська | [English](../../project/project.md)
 
 Проєкт
 =======

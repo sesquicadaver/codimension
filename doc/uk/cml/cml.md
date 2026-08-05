@@ -1,4 +1,4 @@
-> **Мова / Language:** Українська | [English](../cml/cml.md)
+> **Мова / Language:** Українська | [English](../../cml/cml.md)
 
 # CML — Codimension Markup Language
 
