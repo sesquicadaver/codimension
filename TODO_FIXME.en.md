@@ -14,7 +14,7 @@
 | E01 / E02 | Custom-terminal launcher `${prog}` + Profile cProfile | P1 | ✅ |
 | E04 | Launcher temp dirs / argv.json never cleaned | P1 | ✅ unlink before execvp + stale cleanup |
 | E05 | Profile completion tied to terminal / `&` heuristic | P1 | ✅ marker ∧ outfile + poll |
-| E06 | Launcher POSIX-only (`env python3`, path regex) | P1 | 🔓 OPEN |
+| E06 | Launcher POSIX-only (`env python3`, path regex) | P1 | ✅ abs shebang + non-/tmp work root (Linux) |
 | D02 / B07 | VENV create/recreate without transaction/rollback | P1 | 🔓 OPEN |
 | C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | 🔓 OPEN |
 | B03 | Project scan cancel/join/coalescing | P1 | 🔓 OPEN |

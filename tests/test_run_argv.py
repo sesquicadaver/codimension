@@ -197,7 +197,7 @@ def test_custom_terminal_recommended_template_preserves_argv(tmp_path):
     )
     cmd, env, use_shell = getCwdCmdEnv(RUN, str(script), params)
     assert use_shell is True
-    match = re.search(r"(/tmp/cdm-run-[A-Za-z0-9_./+-]+/launch\.py)", cmd)
+    match = re.search(r"(/[A-Za-z0-9._/=+-]+/cdm-run-[A-Za-z0-9_./+-]+/launch\.py)", cmd)
     assert match, cmd
     launch_dir = Path(match.group(1)).parent
     completed = subprocess.run(cmd, shell=True, env=env, cwd=str(tmp_path), check=False)
@@ -235,18 +235,40 @@ def test_cleanup_stale_argv_launchers(tmp_path, monkeypatch):
 
     from utils import run as run_mod
 
+    root = tmp_path / "cdm-run"
+    root.mkdir()
+    monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(root)])
     monkeypatch.setattr(run_mod.tempfile, "gettempdir", lambda: str(tmp_path))
-    stale = tmp_path / "cdm-run-stale"
+    stale = root / "cdm-run-stale"
     stale.mkdir()
     (stale / "argv.json").write_text('["x"]', encoding="utf-8")
     old = time.time() - 90000
     os.utime(stale, (old, old))
-    fresh = tmp_path / "cdm-run-fresh"
+    fresh = root / "cdm-run-fresh"
     fresh.mkdir()
     (fresh / "argv.json").write_text('["y"]', encoding="utf-8")
     assert run_mod.cleanupStaleArgvLaunchers(max_age_seconds=86400) == 1
     assert not stale.exists()
     assert fresh.exists()
+
+
+def test_launcher_uses_absolute_interpreter_shebang_and_settings_root(tmp_path, monkeypatch):
+    """E06: shebang is sys.executable; work dir prefers settings-like root."""
+    from utils import run as run_mod
+
+    root = tmp_path / "cdm-run"
+    root.mkdir()
+    monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(root)])
+    launch = run_mod.writeArgvLauncher([sys.executable, "-c", "pass"])
+    launch_path = Path(launch)
+    assert str(root) in str(launch_path)
+    first = launch_path.read_text(encoding="utf-8").splitlines()[0]
+    assert first == f"#!{sys.executable}"
+    assert "/usr/bin/env" not in first
+    # cleanup leftover for this test process
+    for child in launch_path.parent.iterdir():
+        child.unlink()
+    launch_path.parent.rmdir()
 
 
 def test_custom_terminal_profile_uses_cprofile(tmp_path, monkeypatch):
@@ -270,7 +292,7 @@ def test_custom_terminal_profile_uses_cprofile(tmp_path, monkeypatch):
     )
     cmd, _env, use_shell = run_mod.getCwdCmdEnv(PROFILE, script, params, procuuid="p2")
     assert use_shell is True
-    match = re.search(r"(/tmp/cdm-run-[A-Za-z0-9_./+-]+/launch\.py)", cmd)
+    match = re.search(r"(/[A-Za-z0-9._/=+-]+/cdm-run-[A-Za-z0-9_./+-]+/launch\.py)", cmd)
     assert match, cmd
     launch_path = match.group(1)
     argv = json.loads(Path(launch_path).with_name("argv.json").read_text(encoding="utf-8"))
@@ -396,7 +418,8 @@ def test_wait_timer_emits_profile_once_while_shell_alive(monkeypatch, tmp_path):
 def test_wait_timer_timeout_after_shell_death_no_emit(monkeypatch, tmp_path):
     """E05 test-spec #7: after shell exit, timeout drops without success emit."""
     import utils.runmanager as rm
-    from utils.run import PROFILE_COMPLETION_TIMEOUT_SEC, profileResultsReady as _ready
+    from utils.run import PROFILE_COMPLETION_TIMEOUT_SEC
+    from utils.run import profileResultsReady as _ready
 
     outfile = tmp_path / "late.profile.out"
     marker = Path(str(outfile) + ".done")
