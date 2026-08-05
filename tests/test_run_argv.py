@@ -239,18 +239,84 @@ def test_cleanup_stale_argv_launchers(tmp_path, monkeypatch):
     root.mkdir(mode=0o700)
     os.chmod(root, 0o700)
     monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(root)])
-    monkeypatch.setattr(run_mod.tempfile, "gettempdir", lambda: str(tmp_path))
+    monkeypatch.setattr(run_mod, "_legacyTmpCleanupMarkerPath", lambda: str(tmp_path / "legacy.done"))
+    monkeypatch.setattr(run_mod.tempfile, "gettempdir", lambda: str(tmp_path / "noscan"))
+    (tmp_path / "noscan").mkdir()
     stale = root / "cdm-run-stale"
-    stale.mkdir()
+    stale.mkdir(mode=0o700)
+    os.chmod(stale, 0o700)
     (stale / "argv.json").write_text('["x"]', encoding="utf-8")
     old = time.time() - 90000
     os.utime(stale, (old, old))
     fresh = root / "cdm-run-fresh"
-    fresh.mkdir()
+    fresh.mkdir(mode=0o700)
+    os.chmod(fresh, 0o700)
     (fresh / "argv.json").write_text('["y"]', encoding="utf-8")
     assert run_mod.cleanupStaleArgvLaunchers(max_age_seconds=86400) == 1
     assert not stale.exists()
     assert fresh.exists()
+
+
+def test_cleanup_refuses_symlink_cdm_run_dir(tmp_path, monkeypatch):
+    """F07: symlink named cdm-run-* must not delete the target's files."""
+    import time
+
+    from utils import run as run_mod
+
+    root = tmp_path / "scan-root"
+    root.mkdir(mode=0o700)
+    os.chmod(root, 0o700)
+    victim = tmp_path / "victim"
+    victim.mkdir(mode=0o700)
+    os.chmod(victim, 0o700)
+    secret = victim / "secret.txt"
+    secret.write_text("keep-me", encoding="utf-8")
+    link = root / "cdm-run-evil"
+    link.symlink_to(victim, target_is_directory=True)
+    old = time.time() - 90000
+    os.utime(victim, (old, old), follow_symlinks=False)
+    monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(root)])
+    monkeypatch.setattr(run_mod, "_legacyTmpCleanupMarkerPath", lambda: str(tmp_path / "legacy.done"))
+    assert run_mod.cleanupStaleArgvLaunchers(max_age_seconds=86400) == 0
+    assert secret.read_text(encoding="utf-8") == "keep-me"
+    assert link.is_symlink()
+
+
+def test_cleanup_legacy_tmp_runs_only_once(tmp_path, monkeypatch):
+    """F07: global tempdir is scanned at most once (legacy migration marker)."""
+    import time
+
+    from utils import run as run_mod
+
+    trusted = tmp_path / "trusted"
+    trusted.mkdir(mode=0o700)
+    os.chmod(trusted, 0o700)
+    tmp = tmp_path / "systmp"
+    tmp.mkdir(mode=0o700)
+    os.chmod(tmp, 0o700)
+    marker = tmp_path / "legacy.done"
+    legacy = tmp / "cdm-run-legacy"
+    legacy.mkdir(mode=0o700)
+    os.chmod(legacy, 0o700)
+    (legacy / "argv.json").write_text('["z"]', encoding="utf-8")
+    old = time.time() - 90000
+    os.utime(legacy, (old, old))
+
+    monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(trusted)])
+    monkeypatch.setattr(run_mod, "_legacyTmpCleanupMarkerPath", lambda: str(marker))
+    monkeypatch.setattr(run_mod.tempfile, "gettempdir", lambda: str(tmp))
+
+    assert run_mod.cleanupStaleArgvLaunchers(max_age_seconds=86400) == 1
+    assert not legacy.exists()
+    assert marker.is_file()
+
+    # Recreate aged leftover; second call must not scan system temp again.
+    legacy.mkdir(mode=0o700)
+    os.chmod(legacy, 0o700)
+    (legacy / "argv.json").write_text('["z2"]', encoding="utf-8")
+    os.utime(legacy, (old, old))
+    assert run_mod.cleanupStaleArgvLaunchers(max_age_seconds=86400) == 0
+    assert legacy.exists()
 
 
 def test_launcher_uses_absolute_interpreter_shebang_and_settings_root(tmp_path, monkeypatch):

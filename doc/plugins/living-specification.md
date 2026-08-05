@@ -81,19 +81,20 @@
 - [x] CI: перевіряти останній green Actions run на `master` (не зберігати static SHA/test count у цьому файлі)
 - [x] Документація: [doc/README.md](../README.md)
 
-### Відкриті пункти аудиту (після PR #24 / E01–E02)
+### Відкриті пункти аудиту (після PR #28 / a2c88921)
 
 | ID | Тема | Статус |
 |----|------|--------|
 | B01–B02 / C01 / D01 / E01 / E02 | VENV guards, base interpreter, custom-terminal argv/profile | ✅ |
-| E04 | launcher cleanup before execvp + stale ``cdm-run-*`` | ✅ |
-| E05 | profile completion marker ∧ non-empty outfile + RunManager poll | ✅ |
-| E06 | absolute ``sys.executable`` shebang + settings/XDG work root (Linux) | ✅ |
+| E04 / F07 | launcher unlink + symlink-safe stale cleanup (one-shot legacy `/tmp`) | ✅ |
+| E05 | profile marker (timeout/`&` heuristic + `.done` cleanup) | PARTIAL |
+| E06 | abs shebang + roots (noexec execute-probe / path limits) | PARTIAL |
 | D02 / B07 / C02 / C03 | Transactional VENV + probe + base version | OPEN |
 | D04 / B05 / B04 / B06 / D05 / D06 | CML/comments, brief positions, case, encoding, side comments | OPEN |
 | B03 | Cooperative scan cancel + coalescing | OPEN |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |
-| B09–B11 / C05 / D08 / E03 / G01 | schema, atomic settings, docs, UUID, deps lock, release, branch protection | OPEN |
+| B11 | Docs drift / docs gate coverage / `doc/uk` parity | OPEN |
+| B09 / B10 / C05 / D08 / E03 / G01 | schema, atomic settings, UUID, deps lock, release, branch protection | OPEN |
 
 ---
 
