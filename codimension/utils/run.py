@@ -120,30 +120,52 @@ def assertShellSafePath(path: str) -> str:
 
 
 def _launcherWorkRoots() -> list[str]:
-    """Candidate parents for ``cdm-run-*`` work dirs (audit E06).
+    """Trusted candidate parents for ``cdm-run-*`` work dirs (audit E06).
 
     Prefer Codimension settings / XDG runtime over system ``/tmp`` so launchers
-    still run when ``/tmp`` is mounted ``noexec``. Windows is still unverified.
+    still run when ``/tmp`` is mounted ``noexec``. Do not use a reusable
+    ``/tmp/cdm-run`` parent (multi-user race). Windows is still unverified.
     """
     roots: list[str] = []
     try:
         from .settings import SETTINGS_DIR
 
         roots.append(os.path.join(SETTINGS_DIR, "cdm-run"))
-    except Exception:
+    except ImportError:
         pass
     xdg = os.environ.get("XDG_RUNTIME_DIR")
     if xdg:
         roots.append(os.path.join(xdg, "cdm-run"))
-    roots.append(os.path.join(tempfile.gettempdir(), "cdm-run"))
     return roots
 
 
-def _ensureLauncherWorkRoot() -> str:
-    """Return a writable parent directory for a new ``cdm-run-*`` work tree."""
+def _isTrustedLauncherWorkRoot(path: str) -> bool:
+    """True if ``path`` is a directory owned by us with no group/other access."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return False
+    if not os.path.isdir(path):
+        return False
+    if st.st_uid != os.getuid():
+        return False
+    if st.st_mode & 0o077:
+        return False
+    return True
+
+
+def _ensureLauncherWorkRoot() -> str | None:
+    """Return a trusted parent for ``mkdtemp``, or ``None`` for sticky system temp."""
     for root in _launcherWorkRoots():
         try:
-            os.makedirs(root, mode=0o700, exist_ok=True)
+            if not os.path.isdir(root):
+                os.makedirs(root, mode=0o700, exist_ok=True)
+            try:
+                os.chmod(root, 0o700)
+            except OSError:
+                pass
+            if not _isTrustedLauncherWorkRoot(root):
+                continue
             probe = os.path.join(root, ".cdm-write-probe")
             with open(probe, "w", encoding="utf-8") as handle:
                 handle.write("ok")
@@ -151,7 +173,7 @@ def _ensureLauncherWorkRoot() -> str:
             return root
         except OSError:
             continue
-    return tempfile.gettempdir()
+    return None
 
 
 def cleanupStaleArgvLaunchers(max_age_seconds: float = 86400.0) -> int:
@@ -240,7 +262,8 @@ def writeArgvLauncher(argv: list[str], *, completion_marker: str | None = None) 
         raise RuntimeError("empty argv for launcher")
     cleanupStaleArgvLaunchers()
     interpreter = assertShellSafePath(sys.executable)
-    work = tempfile.mkdtemp(prefix="cdm-run-", dir=_ensureLauncherWorkRoot())
+    work_root = _ensureLauncherWorkRoot()
+    work = tempfile.mkdtemp(prefix="cdm-run-", dir=work_root)
     argv_path = os.path.join(work, "argv.json")
     launch_path = os.path.join(work, "launch.py")
     with open(argv_path, "w", encoding="utf-8") as handle:

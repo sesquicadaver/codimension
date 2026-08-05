@@ -271,6 +271,26 @@ def test_launcher_uses_absolute_interpreter_shebang_and_settings_root(tmp_path, 
     launch_path.parent.rmdir()
 
 
+def test_launcher_rejects_untrusted_work_root(tmp_path, monkeypatch):
+    """E06: world-accessible parent must not be used; fall back to sticky temp."""
+    import stat as statmod
+
+    from utils import run as run_mod
+
+    bad = tmp_path / "open-cdm-run"
+    bad.mkdir()
+    os.chmod(bad, 0o777)
+    assert bad.stat().st_mode & 0o077
+    monkeypatch.setattr(run_mod, "_launcherWorkRoots", lambda: [str(bad)])
+    launch = run_mod.writeArgvLauncher([sys.executable, "-c", "pass"])
+    assert str(bad) not in launch
+    # sticky system temp path
+    assert "cdm-run-" in launch
+    for child in Path(launch).parent.iterdir():
+        child.unlink()
+    Path(launch).parent.rmdir()
+
+
 def test_custom_terminal_profile_uses_cprofile(tmp_path, monkeypatch):
     """E02: non-redirected Profile must not fall back to bare Run argv."""
     from utils import run as run_mod
