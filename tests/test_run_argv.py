@@ -427,6 +427,7 @@ def test_wait_timer_timeout_after_shell_death_no_emit(monkeypatch, tmp_path):
     wrapper.profileCompletionMarker = str(marker)
     wrapper.profileResultsSent = False
     wrapper.profileWaitDeadline = None
+    wrapper.profileShellBackgrounded = False
     wrapper._RemoteProcessWrapper__proc = DeadProc()
     wrapper.profileResultsReady = lambda: _ready(wrapper.profileOutfile, wrapper.profileCompletionMarker)
 

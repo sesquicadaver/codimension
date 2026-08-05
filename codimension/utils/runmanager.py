@@ -113,6 +113,7 @@ class RemoteProcessWrapper(QObject):
         self.profileCompletionMarker = None
         self.profileResultsSent = False
         self.profileWaitDeadline = None
+        self.profileShellBackgrounded = False
 
     def profileResultsReady(self):
         """True when Profile marker and non-empty outfile are present (E05)."""
@@ -124,10 +125,11 @@ class RemoteProcessWrapper(QObject):
         """Starts the remote process"""
         params = getRunParameters(self.path)
         if self.kind == PROFILE and not self.redirected:
-            from .run import getProfileCompletionMarkerPath
+            from .run import customTerminalBackgrounds, getProfileCompletionMarkerPath
 
             self.profileOutfile = GlobalData().getProfileOutputPath(self.procuuid)
             self.profileCompletionMarker = getProfileCompletionMarkerPath(self.profileOutfile)
+            self.profileShellBackgrounded = customTerminalBackgrounds(params["customTerminal"] or "")
         cmd, environment, use_shell = getCwdCmdEnv(self.kind, self.path, params, self.__serverPort, self.procuuid)
 
         self.__proc = Popen(
@@ -726,7 +728,14 @@ class RunManager(QObject):
                             del self.__processes[index]
                         else:
                             if wrapper.profileWaitDeadline is None:
-                                wrapper.profileWaitDeadline = time.time() + PROFILE_COMPLETION_TIMEOUT_SEC
+                                # Trailing-& templates often exit the shell immediately;
+                                # use a long budget so long profiles can still finish.
+                                budget = (
+                                    86400
+                                    if getattr(wrapper, "profileShellBackgrounded", False)
+                                    else PROFILE_COMPLETION_TIMEOUT_SEC
+                                )
+                                wrapper.profileWaitDeadline = time.time() + budget
                             if time.time() >= wrapper.profileWaitDeadline:
                                 logging.error(
                                     "Profile completion timed out waiting for marker/outfile (%s)",
