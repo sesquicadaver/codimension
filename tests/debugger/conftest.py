@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Fixtures for debugger session integration (T100).
 
-Other suites (e.g. ``test_importutils``) stub ``ui.qt`` / ``utils.run`` at
-collection time. This package restores real modules before each test.
+Other suites may stub IDE modules at collection time. This package
+restores real modules before each debugger test.
 """
 
 from __future__ import annotations

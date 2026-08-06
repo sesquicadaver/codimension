@@ -28,7 +28,6 @@ import os.path
 import sys
 
 from cdmpyparser import getBriefModuleInfoFromMemory
-from ui.qt import QApplication
 
 from .fileutils import isPythonFile
 from .globals import GlobalData
@@ -56,18 +55,21 @@ def getImportsInLine(fileContent, lineNumber):
     return imports, importsWhat
 
 
-def __scanDir(prefix, path, infoLabel=None):
-    """Recursive scan for modules"""
-    if infoLabel is not None:
-        infoLabel.setText("Scanning " + path + "...")
-        QApplication.processEvents()
+def __scanDir(prefix, path, progress_callback=None):
+    """Recursive scan for modules.
+
+    progress_callback: optional ``callable(message: str)`` for UI/CLI progress.
+    Qt event pumping belongs in the caller (UI layer), not here.
+    """
+    if progress_callback is not None:
+        progress_callback("Scanning " + path + "...")
 
     result = []
     for item in os.listdir(path):
         if item in [".svn", ".cvs", ".git", ".hg"]:
             continue
         if os.path.isdir(path + item):
-            result += __scanDir(prefix + item + ".", path + item + os.path.sep, infoLabel)
+            result += __scanDir(prefix + item + ".", path + item + os.path.sep, progress_callback)
             continue
 
         if not isPythonFile(path + item):
@@ -82,8 +84,12 @@ def __scanDir(prefix, path, infoLabel=None):
     return result
 
 
-def buildDirModules(path, infoLabel=None):
-    """Builds a list of modules how they may appear in the import statements"""
+def buildDirModules(path, progress_callback=None):
+    """Builds a list of modules how they may appear in the import statements.
+
+    progress_callback: optional ``callable(message: str)``. Callers that need
+    a responsive Qt UI should pump events inside their own callback.
+    """
     abspath = os.path.abspath(path)
     if not os.path.exists(abspath):
         raise Exception("Cannot build list of modules for not existed dir (" + path + ")")
@@ -91,7 +97,7 @@ def buildDirModules(path, infoLabel=None):
         raise Exception("Cannot build list of modules. The path " + path + " is not a directory.")
     if not abspath.endswith(os.path.sep):
         abspath += os.path.sep
-    return __scanDir("", abspath, infoLabel)
+    return __scanDir("", abspath, progress_callback)
 
 
 def isImportModule(info, name):

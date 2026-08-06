@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""T085: fail if codimension.core / infrastructure import Qt or UI packages.
+"""T085/R100: fail if Qt-free packages import Qt or UI packages.
+
+Covers ``codimension.core``, ``codimension.infrastructure``, and selected
+utils modules (R100: ``utils.importutils``).
 
 Static AST gate: Import/ImportFrom (incl. relative) and literal
 ``importlib.import_module`` / ``__import__`` string arguments.
@@ -16,6 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE_ROOTS = [
     ROOT / "codimension" / "core",
     ROOT / "codimension" / "infrastructure",
+]
+# R100+: individual utils modules that must stay headless/Qt-free.
+QTFREE_UTILS_FILES = [
+    ROOT / "codimension" / "utils" / "importutils.py",
 ]
 
 FORBIDDEN_ROOTS = frozenset(
@@ -173,7 +180,7 @@ def check_file(path: Path) -> list[str]:
 
 
 def main() -> int:
-    """Scan core/infrastructure for forbidden imports."""
+    """Scan Qt-free roots and R100 utils files for forbidden imports."""
     failures: list[str] = []
     for base in CORE_ROOTS:
         if not base.is_dir():
@@ -181,12 +188,17 @@ def main() -> int:
             continue
         for path in sorted(base.rglob("*.py")):
             failures.extend(check_file(path))
+    for path in QTFREE_UTILS_FILES:
+        if not path.is_file():
+            failures.append(f"missing: {path.relative_to(ROOT)}")
+            continue
+        failures.extend(check_file(path))
     if failures:
-        print("T085 core import-graph gate FAILED:")
+        print("T085/R100 import-graph gate FAILED:")
         for item in failures:
             print(f"  {item}")
         return 1
-    print("T085 OK: core/infrastructure have no Qt/UI import edges")
+    print("T085/R100 OK: core/infrastructure/importutils have no Qt/UI import edges")
     return 0
 
 

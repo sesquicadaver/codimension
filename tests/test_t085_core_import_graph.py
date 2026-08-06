@@ -73,3 +73,13 @@ def test_t085_flags_importlib_dynamic() -> None:
     finally:
         if evil.exists():
             evil.unlink()
+
+
+def test_r100_importutils_is_scanned_and_qt_free() -> None:
+    """R100: utils.importutils is in the Qt-free gate and has no ui.qt edge."""
+    gate = _load()
+    target = _ROOT / "codimension" / "utils" / "importutils.py"
+    assert target in gate.QTFREE_UTILS_FILES
+    assert gate.check_file(target) == []
+    rc = gate.main()
+    assert rc == 0
