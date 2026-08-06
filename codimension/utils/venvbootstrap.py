@@ -436,10 +436,17 @@ def selectedUnresolvedPackages(enabled: bool, items: list[tuple[str, bool]]) -> 
 
 
 def requestAnalysisEnvironmentRefresh(project) -> None:
-    """Invalidate import caches and force project analysis rescan (T141)."""
+    """Invalidate import caches and force project analysis rescan (T141/R113)."""
     import importlib
 
     importlib.invalidate_caches()
+    try:
+        from .analysis_cache import invalidate_analysis_caches
+
+        # Env change can leave brief/flow entries stale even when mtimes match.
+        invalidate_analysis_caches("env")
+    except Exception:
+        _LOG.debug("analysis cache env invalidate skipped", exc_info=True)
     try:
         from .run import getVenvSitePackages
 

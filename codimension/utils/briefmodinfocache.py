@@ -68,3 +68,11 @@ class BriefModuleInfoCache:
     def clear(self):
         """Clears the cache"""
         self.__cache = {}
+
+    def __contains__(self, path):
+        """True when ``path`` has a cached entry (no mtime check)."""
+        return realpath(path) in self.__cache
+
+    def size(self):
+        """Number of cached paths."""
+        return len(self.__cache)
