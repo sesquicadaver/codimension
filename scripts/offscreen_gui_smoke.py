@@ -78,14 +78,14 @@ def main() -> int:
             )
             return 1
         print(f"offscreen_gui_smoke: OK plugins_active={active} discovered={discovered}")
-        try:
-            main_window.close()
-        except Exception:
-            pass
-        app.processEvents()
-        return 0
+        sys.stdout.flush()
+        sys.stderr.flush()
+        # Avoid Qt teardown segfaults on some Python/PyQt builds (seen as rc=-11
+        # on CI 3.10 after a successful smoke). Process exit is the gate.
+        os._exit(0)
     finally:
         sys.stdout, sys.stderr = saved_out, saved_err
+        # Only reached on failure paths before os._exit.
         resetGlobalDataForTests()
 
 
