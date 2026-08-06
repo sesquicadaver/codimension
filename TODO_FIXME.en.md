@@ -19,7 +19,9 @@
 | D02 / B07 | VENV create/recreate without transaction/rollback | P1 | ✅ staging + commit |
 | C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | ✅ probe + version-matched base |
 | B03 | Project scan cancel/join/coalescing | P1 | ✅ interrupt + coalesce + no GUI sync fallback |
-| B04 / B05 / B06 / D04 / D05 / D06 | Parser positions / CML / case / encoding / side comments | P1 | 🔓 OPEN |
+| B04 | brief keyword/name/colon + target/alias positions | P1 | ✅ `TokenIndex` + identifier spans |
+| D05 | Encoding cookie on line 2 after false “coding” word | P1 | ✅ scan both lines until real cookie |
+| B05 / B06 / D04 / D06 | CML clustering / case token / side comments | P1 | 🔓 OPEN |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI skip | P1 | 🔓 OPEN |
 | B11 | Docs drift (TODO/Living Spec/`doc/uk`, docs gate coverage) | P2 | 🔓 OPEN |
 | B09 / B10 / C05 | Schema paths / atomic settings / UUID persist | P2 | 🔓 OPEN |

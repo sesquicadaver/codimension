@@ -10,4 +10,4 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME + Living Spec + ChangeLog for the closed item.
 
-Current pointer after B03 close: **B04 / B05 / B06 / D04 / D05 / D06** (parser positions / CML / case / encoding / side comments).
+Current pointer after B04/D05 close: **B05 / B06 / D04 / D06** (CML clustering / case token / side comments).

@@ -1,5 +1,8 @@
 2026 Aug 06
 
+* Audit P1 B04/D05: brief ``TokenIndex`` separates class/function keyword,
+  identifier and header colon; assignment/import/attribute positions bind to
+  identifiers; encoding cookie scans both first lines until a real match
 * Audit P1 B03: project scan cooperative ``requestInterruption``, bounded
   join, ``deleteLater``, request coalescing, no sync fallback on GUI thread
 * Audit P1 C02/C03: mutable VENV requires Python probe + ``pyvenv.cfg``;
