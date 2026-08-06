@@ -116,6 +116,23 @@ def _ensure_imp_shim() -> None:
     ensure_imp_compat()
 
 
+def _purge_stub_ui_modules() -> None:
+    """Drop collection-time stubs so Flow UI imports real packages (C04)."""
+    prefixes = ("ui", "utils", "flowui", "parsers")
+    for name in list(sys.modules):
+        if name not in prefixes and not any(name.startswith(p + ".") for p in prefixes):
+            continue
+        mod = sys.modules.get(name)
+        path = getattr(mod, "__file__", None) or ""
+        if not path or "/codimension/" not in path.replace("\\", "/"):
+            del sys.modules[name]
+            continue
+        if name == "ui.qt" and not hasattr(mod, "QBrush"):
+            del sys.modules[name]
+        if name == "utils" and not hasattr(mod, "limits") and not getattr(mod, "__path__", None):
+            del sys.modules[name]
+
+
 def test_match_and_try_star_layout_dispatch() -> None:
     """Match/TryStar must not KeyError in VirtualCanvas.layoutSuite (T028.1 / C04).
 
@@ -131,7 +148,14 @@ def test_match_and_try_star_layout_dispatch() -> None:
     root = str(Path(__file__).resolve().parents[2] / "codimension")
     if root not in sys.path:
         sys.path.insert(0, root)
+    _purge_stub_ui_modules()
+    import importlib
+
+    importlib.invalidate_caches()
     import parsers  # noqa: F401
+    import ui.qt as qt
+
+    assert hasattr(qt, "QBrush"), "ui.qt stub still active"
     from flowui.vcanvas import VirtualCanvas
 
     settings = _PermissiveCFlowSettings()
