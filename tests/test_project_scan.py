@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import importlib
+import sys
 import time
 from os.path import realpath, sep
 from pathlib import Path
@@ -15,6 +17,25 @@ from codimension.utils.project_scan import (
     scan_project_files,
     should_exclude_basename,
 )
+
+_CODIM = Path(__file__).resolve().parents[1] / "codimension"
+
+
+def _purge_stub_ui_for_project() -> None:
+    """Drop incomplete ``ui`` stubs so ``utils.project`` can import real ``ui.qt``."""
+    dirty = False
+    for name in list(sys.modules):
+        if name != "ui" and not name.startswith("ui."):
+            continue
+        mod = sys.modules.get(name)
+        path = getattr(mod, "__file__", None) or ""
+        if not path or "codimension/ui" not in path.replace("\\", "/"):
+            del sys.modules[name]
+            dirty = True
+    if dirty:
+        importlib.invalidate_caches()
+    if str(_CODIM) not in sys.path:
+        sys.path.insert(0, str(_CODIM))
 
 
 def _mk_tree(root: Path) -> None:
@@ -160,6 +181,10 @@ def test_b03_project_scan_coalesce_and_interrupt(tmp_path: Path, monkeypatch) ->
 
     from PyQt5.QtWidgets import QApplication
 
+    _purge_stub_ui_for_project()
+    sys.modules.pop("utils.project", None)
+    sys.modules.pop("codimension.utils.project", None)
+
     from codimension.utils import project as project_mod
     from codimension.utils.project import CodimensionProject
     from codimension.utils.project_scan import ScanCancelled
@@ -230,6 +255,10 @@ def test_b03_scan_failed_does_not_sync_on_gui(tmp_path: Path, monkeypatch) -> No
     """B03: failure path must not call synchronous scan when QApplication exists."""
     pytest.importorskip("PyQt5")
     from PyQt5.QtWidgets import QApplication
+
+    _purge_stub_ui_for_project()
+    sys.modules.pop("utils.project", None)
+    sys.modules.pop("codimension.utils.project", None)
 
     from codimension.utils.project import CodimensionProject
 
