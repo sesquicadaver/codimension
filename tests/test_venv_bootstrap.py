@@ -126,20 +126,36 @@ def test_pip_sync_vs_upgrade_args():
 
 def test_recreate_order_and_refuse_outside(project_dir):
     from utils.venvbootstrap import recreateVenv
+    from utils.venvutils import resolveVenvToPython
 
     calls = []
-
-    def rm(path):
-        calls.append(("rm", path))
+    inside = str(project_dir / ".venv")
+    Path(inside).mkdir()
+    (Path(inside) / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+    bin_dir = Path(inside) / "bin"
+    bin_dir.mkdir()
+    old_py = bin_dir / "python"
+    old_py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(old_py, 0o755)
+    (Path(inside) / "old.txt").write_text("keep-until-commit", encoding="utf-8")
 
     def create(base, path):
         calls.append(("create", base, path))
-        return os.path.join(path, "bin", "python")
+        assert path != inside, "create must target staging, not live venv"
+        assert (Path(inside) / "old.txt").is_file(), "old venv must survive until commit"
+        Path(path).mkdir(parents=True)
+        (Path(path) / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+        bin_dir = Path(path) / "bin"
+        bin_dir.mkdir()
+        py = bin_dir / "python"
+        py.write_text("#!/bin/sh\n", encoding="utf-8")
+        os.chmod(py, 0o755)
+        return str(py)
 
     def pip(cmd, cwd=None):
         calls.append(("pip", cmd, cwd))
+        assert (Path(inside) / "old.txt").is_file(), "old venv must survive pip failure window"
 
-    inside = str(project_dir / ".venv")
     recreateVenv(
         sys.executable,
         inside,
@@ -147,13 +163,11 @@ def test_recreate_order_and_refuse_outside(project_dir):
         packages=["x"],
         runner_create=create,
         runner_pip=pip,
-        runner_rmtree=rm,
     )
     kinds = [c[0] for c in calls]
-    assert "rm" in kinds or not os.path.exists(inside)
-    assert kinds.index("create") < kinds.index("pip")
-    if "rm" in kinds:
-        assert kinds.index("rm") < kinds.index("create")
+    assert kinds == ["create", "pip"]
+    assert not (Path(inside) / "old.txt").exists()
+    assert resolveVenvToPython(inside)
 
     outside = "/tmp/not-in-project-venv-t140"
     with pytest.raises(RuntimeError, match="outside"):
@@ -163,8 +177,78 @@ def test_recreate_order_and_refuse_outside(project_dir):
             str(project_dir),
             runner_create=create,
             runner_pip=pip,
-            runner_rmtree=rm,
         )
+
+
+def test_recreate_rolls_back_on_create_failure(project_dir):
+    """D02/B07: failed create must leave the previous venv intact."""
+    from utils.venvbootstrap import recreateVenv
+
+    inside = project_dir / ".venv"
+    inside.mkdir()
+    marker = inside / "marker.txt"
+    marker.write_text("original", encoding="utf-8")
+    (inside / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+    bin_dir = inside / "bin"
+    bin_dir.mkdir()
+    py = bin_dir / "python"
+    py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(py, 0o755)
+
+    def boom(_base, _path):
+        raise RuntimeError("simulated create failure")
+
+    with pytest.raises(RuntimeError, match="simulated create failure"):
+        recreateVenv(
+            sys.executable,
+            str(inside),
+            str(project_dir),
+            runner_create=boom,
+            runner_pip=lambda *_a, **_k: None,
+        )
+    assert marker.read_text(encoding="utf-8") == "original"
+    assert not any(project_dir.glob(".cdm-venv-stage-*"))
+
+
+def test_recreate_rolls_back_on_pip_failure(project_dir):
+    """D02/B07: failed pip must discard staging and keep the previous venv."""
+    from utils.venvbootstrap import recreateVenv
+
+    inside = project_dir / ".venv"
+    inside.mkdir()
+    marker = inside / "marker.txt"
+    marker.write_text("original", encoding="utf-8")
+    (inside / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+    bin_dir = inside / "bin"
+    bin_dir.mkdir()
+    py = bin_dir / "python"
+    py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(py, 0o755)
+
+    def create(_base, path):
+        Path(path).mkdir(parents=True)
+        (Path(path) / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+        b = Path(path) / "bin"
+        b.mkdir()
+        p = b / "python"
+        p.write_text("#!/bin/sh\n", encoding="utf-8")
+        os.chmod(p, 0o755)
+        return str(p)
+
+    def pip_fail(_cmd, cwd=None):
+        raise RuntimeError("simulated pip failure")
+
+    with pytest.raises(RuntimeError, match="simulated pip failure"):
+        recreateVenv(
+            sys.executable,
+            str(inside),
+            str(project_dir),
+            packages=["x"],
+            runner_create=create,
+            runner_pip=pip_fail,
+        )
+    assert marker.read_text(encoding="utf-8") == "original"
+    assert not any(project_dir.glob(".cdm-venv-stage-*"))
 
 
 def test_collect_install_sources(project_dir, monkeypatch):

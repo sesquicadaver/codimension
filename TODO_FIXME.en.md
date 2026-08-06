@@ -16,7 +16,7 @@
 | E04 (normal unlink) | Launcher cleanup before execvp | P1 | ✅ |
 | E05 | Profile timeout still shell `&` heuristic; orphan `.done` | P1 | ✅ start deadline + marker cleanup |
 | E06 | noexec execute-probe; shell-safe path limits | P1 | ✅ exec probe + DQ-safe paths |
-| D02 / B07 | VENV create/recreate without transaction/rollback | P1 | 🔓 OPEN |
+| D02 / B07 | VENV create/recreate without transaction/rollback | P1 | ✅ staging + commit |
 | C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | 🔓 OPEN |
 | B03 | Project scan cancel/join/coalescing | P1 | 🔓 OPEN |
 | B04 / B05 / B06 / D04 / D05 / D06 | Parser positions / CML / case / encoding / side comments | P1 | 🔓 OPEN |

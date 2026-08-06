@@ -364,19 +364,105 @@ def validateVenvDestination(
     return venv_dir
 
 
-def createVenv(base_python: str, venv_dir: str, project_dir: str | None = None) -> str:
-    """Create a venv; return path to the new python executable.
+def makeStagingVenvDir(venv_dir: str) -> str:
+    """Return a unique sibling staging path next to ``venv_dir`` (audit D02/B07).
 
-    Raises ``RuntimeError`` on failure or unsafe destination.
+    Staging names use a ``.cdm-venv-stage-`` prefix so root auto-detect
+    (``.venv`` / ``venv`` / ``env``) never picks them up.
+    """
+    import time
+
+    abs_dir = os.path.abspath(venv_dir)
+    parent = os.path.dirname(abs_dir) or "."
+    base = os.path.basename(abs_dir) or "venv"
+    safe = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in base)[:64] or "venv"
+    return os.path.join(parent, f".cdm-venv-stage-{safe}-{os.getpid()}-{time.time_ns()}")
+
+
+def discardStagedVenv(staged_dir: str | None) -> None:
+    """Best-effort removal of a staging (or backup) directory."""
+    if not staged_dir:
+        return
+    try:
+        if os.path.lexists(staged_dir):
+            shutil.rmtree(staged_dir, ignore_errors=True)
+    except OSError:
+        _LOG.debug("discard staged venv failed: %s", staged_dir, exc_info=True)
+
+
+def commitStagedVenv(venv_dir: str, staged_dir: str) -> None:
+    """Atomically replace ``venv_dir`` with ``staged_dir`` (same-parent rename).
+
+    Existing ``venv_dir`` is moved aside first and removed only after the new
+    directory is in place. On swap failure the previous tree is restored when
+    possible (audit D02/B07).
+    """
+    import time
+
+    venv_dir = os.path.abspath(venv_dir)
+    staged_dir = os.path.abspath(staged_dir)
+    if venv_dir == staged_dir:
+        raise RuntimeError("staging path must differ from final venv destination")
+    if not os.path.isdir(staged_dir):
+        raise RuntimeError(f"staged venv missing: {staged_dir}")
+
+    backup = None
+    if os.path.lexists(venv_dir):
+        backup = f"{venv_dir}.cdm-bak-{os.getpid()}-{time.time_ns()}"
+        try:
+            os.rename(venv_dir, backup)
+        except OSError as exc:
+            raise RuntimeError(f"cannot move existing venv aside: {venv_dir}: {exc}") from exc
+    try:
+        os.rename(staged_dir, venv_dir)
+    except OSError as exc:
+        if backup and not os.path.lexists(venv_dir):
+            try:
+                os.rename(backup, venv_dir)
+                backup = None
+            except OSError:
+                _LOG.exception("failed to restore venv backup after commit error")
+        raise RuntimeError(f"cannot commit staged venv to {venv_dir}: {exc}") from exc
+    discardStagedVenv(backup)
+
+
+def createVenvInPlace(base_python: str, venv_dir: str) -> str:
+    """Create a venv at ``venv_dir`` without staging (caller owns transaction).
+
+    ``venv_dir`` must not already be a usable venv. Returns the new python path.
     """
     base_python = base_python or sys.executable
-    venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=False)
+    venv_dir = os.path.abspath(venv_dir)
+    if resolveVenvToPython(venv_dir):
+        raise RuntimeError(f"venv already exists at {venv_dir}")
     os.makedirs(os.path.dirname(venv_dir) or ".", exist_ok=True)
     cmd = [base_python, "-m", "venv", venv_dir]
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as exc:
         raise RuntimeError(f"venv create failed: {exc.stderr or exc}") from exc
+    python = resolveVenvToPython(venv_dir)
+    if not python:
+        raise RuntimeError(f"venv created but python not found under {venv_dir}")
+    return python
+
+
+def createVenv(base_python: str, venv_dir: str, project_dir: str | None = None) -> str:
+    """Create a venv transactionally; return path to the new python executable.
+
+    Builds under a sibling staging directory and renames into place so a failed
+    ``python -m venv`` never leaves a half-written destination (audit D02/B07).
+    Raises ``RuntimeError`` on failure or unsafe destination.
+    """
+    base_python = base_python or sys.executable
+    venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=False)
+    staged = makeStagingVenvDir(venv_dir)
+    try:
+        createVenvInPlace(base_python, staged)
+        commitStagedVenv(venv_dir, staged)
+    except Exception:
+        discardStagedVenv(staged)
+        raise
     python = resolveVenvToPython(venv_dir)
     if not python:
         raise RuntimeError(f"venv created but python not found under {venv_dir}")
@@ -433,30 +519,46 @@ def recreateVenv(
     runner_pip=None,
     runner_rmtree=None,
 ) -> str:
-    """Delete (if exists), create venv, sync-install selected sources.
+    """Recreate a venv with staging so the old tree survives until commit.
+
+    Flow (audit D02/B07): create+pip into a sibling staging directory, then
+    rename over the final path. The previous venv is removed only after the new
+    tree is committed. ``runner_create(base, staged_path)`` must create *in
+    place* at the given staging path (no nested commit to the final dir).
+
+    ``runner_rmtree`` is retained for tests/legacy callers; the happy path no
+    longer deletes the live venv before create.
 
     Refuses unsafe destinations via :func:`validateVenvDestination` (audit P0).
     Returns new python path.
     """
     venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=True)
-    rm = runner_rmtree or shutil.rmtree
-    create = runner_create or (lambda base, path: createVenv(base, path, project_dir=project_dir))
+    create = runner_create or (lambda base, path: createVenvInPlace(base, path))
     pip = runner_pip or runPipInstall
-    if os.path.exists(venv_dir):
-        rm(venv_dir)
-    python = create(base_python, venv_dir)
-    cmd = buildPipInstallCommand(
-        python,
-        mode=MODE_SYNC,
-        requirement_files=requirement_files,
-        packages=packages,
-        install_project=install_project,
-        project_dir=project_dir,
-    )
-    # Only run pip if there is something to install beyond bare `pip install`
-    if len(cmd) > 4:
-        pip(cmd, cwd=project_dir)
-    return python
+    # Legacy hook: some tests inject rmtree; transactional path does not need it.
+    _ = runner_rmtree or shutil.rmtree
+    staged = makeStagingVenvDir(venv_dir)
+    try:
+        python = create(base_python, staged)
+        cmd = buildPipInstallCommand(
+            python,
+            mode=MODE_SYNC,
+            requirement_files=requirement_files,
+            packages=packages,
+            install_project=install_project,
+            project_dir=project_dir,
+        )
+        # Only run pip if there is something to install beyond bare `pip install`
+        if len(cmd) > 4:
+            pip(cmd, cwd=project_dir)
+        commitStagedVenv(venv_dir, staged)
+    except Exception:
+        discardStagedVenv(staged)
+        raise
+    final_python = resolveVenvToPython(venv_dir)
+    if not final_python:
+        raise RuntimeError(f"venv recreated but python not found under {venv_dir}")
+    return final_python
 
 
 def collectInstallSources(project) -> dict:

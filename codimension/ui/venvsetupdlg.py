@@ -47,6 +47,7 @@ from .qt import (
 )
 from .venvprocess import (
     ProcessCancelled,
+    create_venv_in_place_with_progress,
     create_venv_with_progress,
     run_pip_with_progress,
 )
@@ -303,7 +304,7 @@ class VenvUpdateDialog(QDialog):
         mode_layout = QVBoxLayout(mode_box)
         self._sync_radio = QRadioButton("Sync — install missing (no --upgrade)", self)
         self._upgrade_radio = QRadioButton("Upgrade — pip install --upgrade", self)
-        self._recreate_radio = QRadioButton("Recreate — delete venv, create, sync install", self)
+        self._recreate_radio = QRadioButton("Recreate — stage new venv, then replace (keeps old until success)", self)
         self._sync_radio.setChecked(True)
         mode_layout.addWidget(self._sync_radio)
         mode_layout.addWidget(self._upgrade_radio)
@@ -361,7 +362,7 @@ class VenvUpdateDialog(QDialog):
                 reply = QMessageBox.warning(
                     self,
                     "Confirm recreate",
-                    f"Delete and recreate:\n{venv_dir}\n\nThis cannot be undone.",
+                    f"Recreate venv (old tree kept until success):\n{venv_dir}",
                     QMessageBox.Yes | QMessageBox.No,
                     QMessageBox.No,
                 )
@@ -374,9 +375,7 @@ class VenvUpdateDialog(QDialog):
                     requirement_files=reqs,
                     packages=packages,
                     install_project=install_proj,
-                    runner_create=lambda base, path: create_venv_with_progress(
-                        self, base, path, project_dir=self._project_dir
-                    ),
+                    runner_create=lambda base, path: create_venv_in_place_with_progress(self, base, path),
                     runner_pip=lambda cmd, cwd=None: run_pip_with_progress(self, cmd, cwd=cwd),
                 )
                 persist = bool(self._project.props.get("pythoninterpreter", "").strip())

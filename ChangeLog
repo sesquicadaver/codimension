@@ -1,5 +1,7 @@
 2026 Aug 05
 
+* Audit P1 D02/B07: VENV create/recreate use sibling staging + rename
+  commit so a failed create/pip leaves the previous tree intact
 * Audit P1 E06 close: execute-probe for launcher work roots (detect
   ``noexec``); ``${prog}`` paths allow spaces/Unicode but reject shell
   metacharacters; shebang interpreter still forbids whitespace

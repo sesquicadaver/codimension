@@ -89,7 +89,8 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | E04 / F07 | launcher unlink + symlink-safe stale cleanup (one-shot legacy `/tmp`) | ✅ |
 | E05 | profile marker + start-based timeout + `.done` cleanup | ✅ |
 | E06 | exec probe + DQ-safe paths (spaces/Unicode; shebang no whitespace) | ✅ |
-| D02 / B07 / C02 / C03 | Transactional VENV + probe + base version | OPEN |
+| D02 / B07 | transactional VENV create/recreate (staging + commit) | ✅ |
+| C02 / C03 | Interpreter probe + recreate base version | OPEN |
 | D04 / B05 / B04 / B06 / D05 / D06 | CML/comments, brief positions, case, encoding, side comments | OPEN |
 | B03 | Cooperative scan cancel + coalescing | OPEN |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |
