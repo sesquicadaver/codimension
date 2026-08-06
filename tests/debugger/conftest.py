@@ -10,7 +10,6 @@ from __future__ import annotations
 import importlib
 import os
 import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -20,22 +19,13 @@ CODIM = ROOT / "codimension"
 
 
 def _ensure_imp_shim() -> None:
-    """yapsy still imports removed stdlib ``imp`` on Python 3.12+."""
-    if "imp" in sys.modules:
-        return
-    imp = types.ModuleType("imp")
+    """Install full ``imp`` compat for yapsy (load_module + PKG_DIRECTORY)."""
+    try:
+        from imp_compat import ensure_imp_compat
+    except ImportError:
+        from codimension.imp_compat import ensure_imp_compat  # type: ignore[no-redef]
 
-    def load_source(name: str, path: str):
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location(name, path)
-        assert spec and spec.loader
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod
-
-    imp.load_source = load_source  # type: ignore[attr-defined]
-    sys.modules["imp"] = imp
+    ensure_imp_compat()
 
 
 def _module_under_codimension(mod: object) -> bool:

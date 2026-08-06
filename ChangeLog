@@ -1,5 +1,8 @@
 2026 Aug 06
 
+* Audit P1 D07/B08/C04: discover bundled ``cdmplugins`` via package path;
+  full ``imp`` compat for yapsy; offscreen smoke builds MainWindow and
+  requires plugin activation; Flow UI import failures no longer become skip
 * Audit P1 B05/B06/D04/D06: comment clusters split on indentation and CML
   record boundaries; ``case`` spans use ``TokenIndex`` (not ``rfind``); side
   comments attach across multi-line fragment headers
