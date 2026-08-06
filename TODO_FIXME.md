@@ -17,7 +17,7 @@
 | E05 | Profile timeout від shell `&` евристики; orphan `.done` | P1 | ✅ start deadline + marker cleanup |
 | E06 | noexec execute-probe; обмеження shell-safe paths | P1 | ✅ exec probe + DQ-safe paths |
 | D02 / B07 | VENV create/recreate без transaction/rollback | P1 | ✅ staging + commit |
-| C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | 🔓 OPEN |
+| C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | ✅ probe + version-matched base |
 | B03 | Project scan cancel/join/coalescing | P1 | 🔓 OPEN |
 | B04 / B05 / B06 / D04 / D05 / D06 | Parser positions / CML / case / encoding / side comments | P1 | 🔓 OPEN |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI skip | P1 | 🔓 OPEN |

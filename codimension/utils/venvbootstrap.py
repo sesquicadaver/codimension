@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import shutil
@@ -36,6 +37,163 @@ _SOURCE_STATUS_LABELS = {
 
 # Session overlay lives here so helpers work without constructing GlobalData.
 _SESSION_PYTHON = ""
+
+# Machine-readable interpreter probe (audit C02).
+_PROBE_SCRIPT = (
+    "import json,sys;"
+    "print(json.dumps({"
+    '"executable":sys.executable,'
+    '"prefix":sys.prefix,'
+    '"base_prefix":sys.base_prefix,'
+    '"version_info":list(sys.version_info[:3]),'
+    '"is_venv":sys.prefix!=sys.base_prefix'
+    "}))"
+)
+_PROBE_TIMEOUT_SEC = 15
+
+
+def probePythonInterpreter(python_path: str) -> dict:
+    """Run ``python_path`` and return executable/prefix/version probe data (C02).
+
+    Raises ``RuntimeError`` when the process fails or the payload is invalid.
+    """
+    if not python_path:
+        raise RuntimeError("interpreter probe: empty path")
+    path = os.path.abspath(python_path)
+    if not os.path.isfile(path) or not os.access(path, os.X_OK):
+        raise RuntimeError(f"interpreter probe: not an executable: {path}")
+    try:
+        completed = subprocess.run(
+            [path, "-c", _PROBE_SCRIPT],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=_PROBE_TIMEOUT_SEC,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(f"interpreter probe timed out: {path}") from exc
+    except OSError as exc:
+        raise RuntimeError(f"interpreter probe failed to start: {path}: {exc}") from exc
+    if completed.returncode != 0:
+        detail = (completed.stderr or completed.stdout or f"exit {completed.returncode}").strip()
+        raise RuntimeError(f"interpreter probe failed ({completed.returncode}): {detail}")
+    try:
+        payload = json.loads((completed.stdout or "").strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError) as exc:
+        raise RuntimeError(f"interpreter probe returned invalid JSON: {path}") from exc
+    required = ("executable", "prefix", "base_prefix", "version_info", "is_venv")
+    if not isinstance(payload, dict) or any(key not in payload for key in required):
+        raise RuntimeError(f"interpreter probe missing fields: {path}")
+    version = payload.get("version_info")
+    if not (isinstance(version, list) and len(version) >= 2 and all(isinstance(x, int) for x in version[:3])):
+        raise RuntimeError(f"interpreter probe bad version_info: {path}")
+    payload["is_venv"] = bool(payload["is_venv"])
+    return payload
+
+
+def parsePyvenvCfg(venv_dir: str) -> dict[str, str]:
+    """Parse ``pyvenv.cfg`` key/value pairs (empty dict if missing)."""
+    cfg_path = os.path.join(os.path.abspath(venv_dir), "pyvenv.cfg")
+    values: dict[str, str] = {}
+    try:
+        with open(cfg_path, encoding="utf-8") as handle:
+            for raw in handle:
+                line = raw.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                values[key.strip().lower()] = value.strip()
+    except OSError:
+        return {}
+    return values
+
+
+def resolveRecreateBasePython(venv_python: str) -> str:
+    """Resolve the base interpreter for recreating ``venv_python``'s venv (C03).
+
+    Prefers ``pyvenv.cfg`` ``executable`` / ``home``, then a version-matched
+    ``pythonX.Y`` on ``PATH``. Uses IDE ``sys.executable`` only when its
+    major.minor matches the current venv — never as a silent version upgrade.
+    """
+    path = os.path.abspath(venv_python)
+    info = probePythonInterpreter(path)
+    target = tuple(info["version_info"][:2])
+    root = venvDirFromPython(path)
+    if not root:
+        raise RuntimeError(f"cannot resolve recreate base: no venv root for {path}")
+
+    cfg = parsePyvenvCfg(root)
+    candidates: list[str] = []
+    exe = cfg.get("executable") or cfg.get("base-executable")
+    if exe:
+        candidates.append(exe)
+    home = cfg.get("home")
+    if home:
+        if os.path.isfile(home) and os.access(home, os.X_OK):
+            candidates.append(home)
+        else:
+            for name in (f"python{target[0]}.{target[1]}", "python3", "python"):
+                candidates.append(os.path.join(home, name))
+
+    which_name = f"python{target[0]}.{target[1]}"
+    try:
+        import shutil as _shutil
+
+        found = _shutil.which(which_name)
+        if found:
+            candidates.append(found)
+    except Exception:
+        pass
+
+    if sys.version_info[:2] == target:
+        candidates.append(sys.executable)
+
+    seen: set[str] = set()
+    for candidate in candidates:
+        cand = os.path.abspath(candidate)
+        if cand in seen:
+            continue
+        seen.add(cand)
+        if not os.path.isfile(cand) or not os.access(cand, os.X_OK):
+            continue
+        if isIdePythonEnvironment(cand) and os.path.realpath(cand) != os.path.realpath(sys.executable):
+            # Skip non-sys IDE-tree noise; sys.executable is allowed when versions match.
+            continue
+        try:
+            probed = probePythonInterpreter(cand)
+        except RuntimeError:
+            continue
+        if tuple(probed["version_info"][:2]) != target:
+            continue
+        if probed.get("is_venv"):
+            # Base must be a non-venv (or at least not the project venv itself).
+            cand_root = venvDirFromPython(cand)
+            if cand_root and os.path.realpath(cand_root) == os.path.realpath(root):
+                continue
+            # Prefer a true base interpreter when available.
+            continue
+        return cand
+
+    # Second pass: allow a matching non-project venv as base (nested tools).
+    for candidate in candidates:
+        cand = os.path.abspath(candidate)
+        if not os.path.isfile(cand) or not os.access(cand, os.X_OK):
+            continue
+        try:
+            probed = probePythonInterpreter(cand)
+        except RuntimeError:
+            continue
+        if tuple(probed["version_info"][:2]) != target:
+            continue
+        cand_root = venvDirFromPython(cand)
+        if cand_root and os.path.realpath(cand_root) == os.path.realpath(root):
+            continue
+        return cand
+
+    raise RuntimeError(
+        f"cannot resolve base Python {target[0]}.{target[1]} to recreate {root}; "
+        f"install python{target[0]}.{target[1]} or set pyvenv.cfg executable/home"
+    )
 
 
 def getSessionPythonInterpreter() -> str:
@@ -135,8 +293,13 @@ def isIdePythonEnvironment(python_path: str) -> bool:
     return False
 
 
-def assertSafeMutableProjectPython(python_path: str) -> str:
-    """Return absolute python path or raise if mutating it would touch the IDE."""
+def assertSafeMutableProjectPython(python_path: str, *, project_dir: str | None = None) -> str:
+    """Return absolute python path after probe-based venv authenticity checks (C02).
+
+    Requires a successful interpreter probe with ``is_venv``, matching
+    ``pyvenv.cfg`` root / ``sys.prefix``, and (when ``project_dir`` is set) that
+    the venv lies inside the project. Refuses the Codimension IDE environment.
+    """
     if not python_path:
         raise RuntimeError("refusing pip/venv mutate: empty interpreter")
     path = os.path.abspath(python_path)
@@ -144,6 +307,23 @@ def assertSafeMutableProjectPython(python_path: str) -> str:
         raise RuntimeError("refusing pip/venv mutate: target is the Codimension IDE interpreter/venv")
     if not os.path.isfile(path) or not os.access(path, os.X_OK):
         raise RuntimeError(f"refusing pip/venv mutate: not an executable: {path}")
+
+    info = probePythonInterpreter(path)
+    if not info.get("is_venv"):
+        raise RuntimeError("refusing pip/venv mutate: target is not a virtual environment")
+
+    root = venvDirFromPython(path)
+    if not root:
+        raise RuntimeError(f"refusing pip/venv mutate: missing pyvenv.cfg for {path}")
+    resolved = resolveVenvToPython(root)
+    if not resolved:
+        raise RuntimeError(f"refusing pip/venv mutate: venv root has no python: {root}")
+    if os.path.realpath(resolved) != os.path.realpath(path):
+        raise RuntimeError(f"refusing pip/venv mutate: executable {path} does not match venv root {root}")
+    if os.path.realpath(str(info["prefix"])) != os.path.realpath(root):
+        raise RuntimeError(f"refusing pip/venv mutate: probe prefix {info['prefix']} != venv root {root}")
+    if project_dir and not isPathInsideProject(root, project_dir):
+        raise RuntimeError(f"refusing pip/venv mutate: venv outside project: {root}")
     return path
 
 
@@ -159,7 +339,8 @@ def requireMutableProjectPython(project) -> str:
         raise RuntimeError(
             "no project venv configured; use VENV… to create/attach one (refusing to mutate the IDE Python)"
         )
-    return assertSafeMutableProjectPython(path)
+    project_dir = project.getProjectDir() if project is not None else None
+    return assertSafeMutableProjectPython(path, project_dir=project_dir)
 
 
 def getEffectiveProjectPython(project) -> str:
@@ -494,13 +675,13 @@ def buildPipInstallCommand(
     return cmd
 
 
-def runPipInstall(cmd: list[str], *, cwd: str | None = None) -> None:
+def runPipInstall(cmd: list[str], *, cwd: str | None = None, project_dir: str | None = None) -> None:
     """Execute pip install command; raise RuntimeError on failure.
 
     Refuses when the target interpreter is the Codimension IDE environment.
     """
     if cmd:
-        assertSafeMutableProjectPython(cmd[0])
+        assertSafeMutableProjectPython(cmd[0], project_dir=project_dir)
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True, cwd=cwd)
     except subprocess.CalledProcessError as exc:
@@ -518,13 +699,19 @@ def recreateVenv(
     runner_create=None,
     runner_pip=None,
     runner_rmtree=None,
+    expected_version: tuple[int, int] | None = None,
+    runner_probe=None,
 ) -> str:
     """Recreate a venv with staging so the old tree survives until commit.
 
-    Flow (audit D02/B07): create+pip into a sibling staging directory, then
-    rename over the final path. The previous venv is removed only after the new
-    tree is committed. ``runner_create(base, staged_path)`` must create *in
-    place* at the given staging path (no nested commit to the final dir).
+    Flow (audit D02/B07 + C02): create+probe(+pip) into a sibling staging
+    directory, then rename over the final path. The previous venv is removed
+    only after the new tree is committed. ``runner_create(base, staged_path)``
+    must create *in place* at the given staging path (no nested commit to the
+    final dir).
+
+    ``expected_version`` (major, minor), when set, must match the staged
+    interpreter probe (audit C03).
 
     ``runner_rmtree`` is retained for tests/legacy callers; the happy path no
     longer deletes the live venv before create.
@@ -535,11 +722,20 @@ def recreateVenv(
     venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=True)
     create = runner_create or (lambda base, path: createVenvInPlace(base, path))
     pip = runner_pip or runPipInstall
+    probe = runner_probe or probePythonInterpreter
     # Legacy hook: some tests inject rmtree; transactional path does not need it.
     _ = runner_rmtree or shutil.rmtree
     staged = makeStagingVenvDir(venv_dir)
     try:
         python = create(base_python, staged)
+        info = probe(python)
+        if not info.get("is_venv"):
+            raise RuntimeError(f"staged interpreter is not a venv: {python}")
+        if expected_version is not None and tuple(info["version_info"][:2]) != tuple(expected_version):
+            raise RuntimeError(
+                f"recreate base produced Python {info['version_info'][0]}.{info['version_info'][1]}, "
+                f"expected {expected_version[0]}.{expected_version[1]}"
+            )
         cmd = buildPipInstallCommand(
             python,
             mode=MODE_SYNC,
@@ -550,7 +746,10 @@ def recreateVenv(
         )
         # Only run pip if there is something to install beyond bare `pip install`
         if len(cmd) > 4:
-            pip(cmd, cwd=project_dir)
+            try:
+                pip(cmd, cwd=project_dir, project_dir=project_dir)
+            except TypeError:
+                pip(cmd, cwd=project_dir)
         commitStagedVenv(venv_dir, staged)
     except Exception:
         discardStagedVenv(staged)
@@ -558,6 +757,7 @@ def recreateVenv(
     final_python = resolveVenvToPython(venv_dir)
     if not final_python:
         raise RuntimeError(f"venv recreated but python not found under {venv_dir}")
+    probe(final_python)
     return final_python
 
 

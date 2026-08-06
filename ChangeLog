@@ -1,3 +1,9 @@
+2026 Aug 06
+
+* Audit P1 C02/C03: mutable VENV requires Python probe + ``pyvenv.cfg``;
+  recreate resolves version-matched base from cfg/PATH (no silent
+  ``sys.executable`` version swap)
+
 2026 Aug 05
 
 * Audit P1 D02/B07: VENV create/recreate use sibling staging + rename
