@@ -504,6 +504,64 @@ def discoverRootVenvCandidates(project_dir: str) -> list[str]:
     return found
 
 
+def maybeAutoAttachProjectVenv(
+    project,
+    *,
+    enabled: bool,
+    persist_to_project: bool = False,
+) -> str | None:
+    """Optionally attach the first discovered project root venv (R114).
+
+    Policy (default):
+    - Setting off → no-op
+    - Skip when a valid configured interpreter already exists
+    - Skip when a session overlay is already set
+    - Prefer ``ROOT_VENV_NAMES`` order (``.venv``, ``venv``, ``env``)
+    - Default attach target is **session** overlay (does not rewrite ``.cdm3``)
+    - When ``persist_to_project`` is True, also write ``pythoninterpreter`` and save
+
+    Returns the attached python path, or ``None`` when skipped.
+    """
+    if not enabled:
+        return None
+    if project is None or not project.isLoaded():
+        return None
+
+    kind, _path = describeAnalysisPythonSource(project)
+    if kind == SOURCE_CONFIGURED:
+        return None
+    if getSessionPythonInterpreter():
+        return None
+
+    project_dir = project.getProjectDir()
+    candidates = discoverRootVenvCandidates(project_dir or "")
+    if not candidates:
+        return None
+
+    python_path = resolveVenvToPython(candidates[0])
+    if not python_path:
+        return None
+
+    setSessionPythonInterpreter(python_path)
+
+    if persist_to_project:
+        # Relative to project dir when possible (matches VENV dialog style).
+        try:
+            rel = os.path.relpath(python_path, project_dir)
+            store = rel if not rel.startswith("..") else python_path
+        except Exception:
+            store = python_path
+        project.props["pythoninterpreter"] = store
+        save = getattr(project, "saveProject", None)
+        if callable(save):
+            save()
+        # Session overlay is redundant once configured is persisted.
+        clearSessionPythonInterpreter()
+        return python_path
+
+    return python_path
+
+
 def venvDirFromPython(python_path: str) -> str | None:
     """Best-effort venv root from ``.../bin/python`` or ``.../Scripts/python.exe``.
 

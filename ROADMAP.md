@@ -42,8 +42,8 @@
 | 1 Test harness | DONE | conformance snapshots + parser suite (~260 tests) |
 | 2 Headless core | DONE | `core.syntax` / `core.flow` + `infrastructure/*` + T085 |
 | 3 Modular monolith | DONE → R110+ | R100–R103: Qt-free utils piece, app façade, routing, boundary matrix |
-| 4–7 Environment | PARTIAL → R114+ | env + drivers + cache registry (R110–R113); auto-attach next |
-| 8–9 Deps + local venv | DONE (T140/T141) | auto-on-open still optional → R114 |
+| 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
+| 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open optional setting shipped |
 | 10–13 Remote backends | MISSING → R121+ | no `ExecutionTarget` / Docker / SSH / K8s |
 | 14–20 Analysis | PARTIAL → R130+ | diagrams/metrics/profiling exist; no SymbolIndex/overlays/risk |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
@@ -75,6 +75,7 @@
 | D-R111 | R111 | `buildAnalysisEnvironment(project)` single constructor; effective python via env |
 | D-R112 | R112 | Lint/tool drivers + process_env bound to AnalysisEnvironment |
 | D-R113 | R113 | Analysis cache registry (brief/flow) + invalidate(project|file|env) |
+| D-R114 | R114 | Optional auto-attach project venv on open (session overlay; Options toggle) |
 
 ---
 
@@ -90,7 +91,7 @@
 | 6 | R111 | Build `AnalysisEnvironment` from project via `venvbootstrap` (single constructor path) | All call sites that need “effective python” can use env object; tests cover precedence | M | DONE |
 | 7 | R112 | Bind lint/tool drivers to `AnalysisEnvironment` (replace ad-hoc path fetches in `process_env` / drivers) | Drivers receive env; `tests/test_lint_drivers.py` + process_env tests updated | M | DONE |
 | 8 | R113 | Analysis cache registry: register brief/flow caches; invalidate on env refresh + file change | API `invalidate(project|file|env)`; tests prove stale purge after interpreter change | M | DONE |
-| 9 | R114 | Optional setting: auto-attach detected project venv on project open | Setting default off; when on, opens project sets session/project interpreter per policy; UI + test | S | OPEN |
+| 9 | R114 | Optional setting: auto-attach detected project venv on project open | Setting default off; when on, opens project sets session/project interpreter per policy; UI + test | S | DONE |
 | 10 | R120 | `DependencyManifest`: formalize `collectInstallSources` → exportable requirements list / lock hint | Headless API + CLI/script or project action writes manifest; unit test | M | OPEN |
 | 11 | R121 | Define `ExecutionTarget` protocol (`run` / `debug` / `profile` / `which_python`) | Protocol in `core` or `app`; mypy-checked; fake target test | S | OPEN |
 | 12 | R122 | Adapt local process runner (`utils.run` / RunManager) to `ExecutionTarget` | Local runs go through protocol; existing argv/debug tests green | M | OPEN |
@@ -135,7 +136,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R114` — Optional auto-attach project venv on open.
+**First OPEN:** `R120` — `DependencyManifest` from install sources.
 
 ---
 

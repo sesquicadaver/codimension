@@ -396,10 +396,21 @@ class CodimensionProject(
             self.__dirWatcher = None
         self.__dirWatcher = self.__createWatcher()
         self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
+        self.__maybeAutoAttachProjectVenv()
         self.sigProjectChanged.emit(self.CompleteProject)
         if self.__pendingRestoreExpanded:
             self.__pendingRestoreExpanded = False
             self.sigRestoreProjectExpandedDirs.emit()
+
+    def __maybeAutoAttachProjectVenv(self):
+        """R114: optional session attach of a discovered root venv."""
+        try:
+            from .settings import Settings
+            from .venvbootstrap import maybeAutoAttachProjectVenv
+
+            maybeAutoAttachProjectVenv(self, enabled=bool(Settings()["autoAttachProjectVenv"]))
+        except Exception:
+            logging.debug("auto-attach project venv skipped", exc_info=True)
 
     def __finishAnalysisRescan(self):
         """Recreate watcher and emit CompleteProject after rescan."""

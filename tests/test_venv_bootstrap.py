@@ -573,3 +573,72 @@ def test_resolve_recreate_base_refuses_version_mismatch(project_dir, monkeypatch
     monkeypatch.setattr(vb.sys, "version_info", (3, 13, 0, "final", 0))
     with pytest.raises(RuntimeError, match="cannot resolve base Python 3.10"):
         vb.resolveRecreateBasePython(str(py))
+
+
+def _make_root_venv(project_dir: Path, name: str = ".venv") -> str:
+    """Create a minimal root venv and return its python path."""
+    root = project_dir / name
+    bin_dir = root / "bin"
+    bin_dir.mkdir(parents=True)
+    (root / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+    py = bin_dir / "python"
+    py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(py, 0o755)
+    return str(py)
+
+
+def test_maybe_auto_attach_disabled_is_noop(project_dir):
+    """R114: default-off setting must not attach."""
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    _make_root_venv(project_dir)
+    proj = _fake_project(project_dir, "")
+    assert vb.maybeAutoAttachProjectVenv(proj, enabled=False) is None
+    assert vb.getSessionPythonInterpreter() == ""
+
+
+def test_maybe_auto_attach_sets_session(project_dir):
+    """R114: enabled attach sets session overlay (does not rewrite props)."""
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    py = _make_root_venv(project_dir)
+    proj = _fake_project(project_dir, "")
+    attached = vb.maybeAutoAttachProjectVenv(proj, enabled=True)
+    assert attached == os.path.abspath(py)
+    assert vb.getSessionPythonInterpreter() == os.path.abspath(py)
+    assert proj.props["pythoninterpreter"] == ""
+    kind, path = vb.describeAnalysisPythonSource(proj)
+    assert kind == vb.SOURCE_SESSION
+    assert path == os.path.abspath(py)
+    vb.clearSessionPythonInterpreter()
+
+
+def test_maybe_auto_attach_skips_configured(project_dir):
+    """R114: existing configured interpreter wins over auto-attach."""
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    _make_root_venv(project_dir)
+    configured = _make_root_venv(project_dir, "custom")
+    proj = _fake_project(project_dir, configured)
+    assert vb.maybeAutoAttachProjectVenv(proj, enabled=True) is None
+    assert vb.getSessionPythonInterpreter() == ""
+
+
+def test_maybe_auto_attach_persist_to_project(project_dir):
+    """R114: persist_to_project writes props and clears session overlay."""
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    py = _make_root_venv(project_dir)
+    proj = _fake_project(project_dir, "")
+    proj.saveProject = MagicMock()
+    attached = vb.maybeAutoAttachProjectVenv(proj, enabled=True, persist_to_project=True)
+    assert attached == os.path.abspath(py)
+    assert proj.props["pythoninterpreter"]
+    proj.saveProject.assert_called_once()
+    assert vb.getSessionPythonInterpreter() == ""
+    kind, _ = vb.describeAnalysisPythonSource(proj)
+    assert kind == vb.SOURCE_CONFIGURED
