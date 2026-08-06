@@ -10,4 +10,4 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **R102** (route project open/unload through `app` façade). TODO_FIXME has no remaining 🔓 OPEN rows.
+Current pointer: **R103** (module boundary matrix in CI). TODO_FIXME has no remaining 🔓 OPEN rows.

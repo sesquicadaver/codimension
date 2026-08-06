@@ -57,6 +57,7 @@ class GlobalDataWrapper:
 
     def __init__(self):
         # Heavy / Qt-touching imports deferred until first GlobalData() call (T084)
+        from app.services import ApplicationServices
         from plugins.manager.pluginmanager import CDMPluginManager
 
         from .briefmodinfocache import BriefModuleInfoCache
@@ -75,6 +76,8 @@ class GlobalDataWrapper:
 
         self.project = CodimensionProject()
         self.project.sigProjectAboutToUnload.connect(self.__clearSessionPythonInterpreter)
+        # R102: UI / startup load+unload go through this façade → project port
+        self.appServices = ApplicationServices(self.project)
 
         self.pluginManager = CDMPluginManager()
 

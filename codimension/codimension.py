@@ -278,7 +278,7 @@ class CodimensionUILauncher:
             pass
         elif self.__projectFile:
             self.__splash.showMessage("Loading project...")
-            globalData.project.loadProject(self.__projectFile)
+            globalData.appServices.load_project(self.__projectFile)
             needSignal = False
         elif self.__args:
             # There are arguments and they are python files

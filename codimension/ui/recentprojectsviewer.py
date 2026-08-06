@@ -583,10 +583,11 @@ class RecentProjectsViewer(QWidget):
             mainWin = GlobalData().mainWindow
             editorsManager = mainWin.editorsManagerWidget.editorsManager
             if editorsManager.closeRequest():
-                prj = GlobalData().project
+                globalData = GlobalData()
+                prj = globalData.project
                 prj.tabsStatus = editorsManager.getTabsStatus()
                 editorsManager.closeAll()
-                prj.loadProject(projectFileName)
+                globalData.appServices.load_project(projectFileName)
                 mainWin.activateProjectTab()
         else:
             logging.error("The project " + os.path.basename(projectFileName) + " disappeared from the file system.")
