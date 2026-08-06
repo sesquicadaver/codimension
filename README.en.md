@@ -28,7 +28,7 @@ Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codi
 - Git plugin is MVP; PRs are created via the **GitHub REST API** (token: `gh auth` → OS keyring → `0600` file)
 - Qt offscreen smoke in PR CI only constructs a bare `QApplication` (not MainWindow / plugins)
 - Full MainWindow smoke is a weekly workflow, not a PR blocker
-- Audit backlog closed in [TODO_FIXME.en.md](TODO_FIXME.en.md); active queue: [ROADMAP.md](ROADMAP.md) (first OPEN: R112)
+- Audit backlog closed in [TODO_FIXME.en.md](TODO_FIXME.en.md); active queue: [ROADMAP.md](ROADMAP.md) (first OPEN: R113)
 
 ## Requirements
 

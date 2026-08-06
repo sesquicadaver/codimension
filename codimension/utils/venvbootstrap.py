@@ -370,21 +370,26 @@ def _project_uuid(project) -> str | None:
     return uid or None
 
 
-def buildAnalysisEnvironment(project) -> AnalysisEnvironment:
-    """Build an immutable ``AnalysisEnvironment`` for ``project`` (R111).
+def buildAnalysisEnvironment(project, *, for_tools: bool = False) -> AnalysisEnvironment:
+    """Build an immutable ``AnalysisEnvironment`` for ``project`` (R111/R112).
 
     Single constructor path: ``describeAnalysisPythonSource`` → typed snapshot
-    with site-packages roots and project id. Callers that need the *effective*
-    analysis interpreter (including broken-config fallback) should use
-    ``getEffectiveProjectPython`` / ``env.python_path`` when not ``invalid``.
+    with site-packages roots and project id.
+
+    When ``for_tools`` is True and the configured interpreter is broken, the
+    snapshot uses the same read-only fallback as ``getEffectiveProjectPython``
+    so lint/test drivers run against a usable interpreter.
     """
     from .analysis_environment import AnalysisEnvironment as _AnalysisEnvironment
 
     kind, path = describeAnalysisPythonSource(project)
+    project_id = _project_uuid(project)
+    if for_tools and kind == SOURCE_INVALID:
+        kind, path = _resolveWithoutConfigured(project)
     return _AnalysisEnvironment.from_source(
         kind,
         path,
-        project_id=_project_uuid(project),
+        project_id=project_id,
     )
 
 

@@ -18,7 +18,8 @@ No separate result tab — success/error shown in status bar.
 import os.path
 
 from ui.qt import QByteArray, QProcess, QWidget, pyqtSignal
-from utils.run import getProjectPythonPath
+
+from cdmplugins.process_env import resolve_tool_python_and_environment
 
 
 class RuffFormatDriver(QWidget):
@@ -65,11 +66,8 @@ class RuffFormatDriver(QWidget):
             os.path.basename(self.__fileName),
         ]
 
-        from cdmplugins.process_env import build_tool_process_environment
-
-        processEnvironment = build_tool_process_environment(self.__encoding)
+        pythonPath, processEnvironment = resolve_tool_python_and_environment(self.__ide.project, self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
-        pythonPath = getProjectPythonPath(self.__ide.project)
         self.__process.start(pythonPath, self.__args)
 
         if not self.__process.waitForStarted():

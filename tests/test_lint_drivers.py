@@ -162,7 +162,20 @@ def _setup_lint_driver_import_stubs():
 
     run_mod = types.ModuleType("utils.run")
     run_mod.getProjectPythonPath = lambda _project: "python"
+    run_mod.getVenvSitePackages = lambda _python: None
     sys.modules["utils.run"] = run_mod
+
+    vb_mod = types.ModuleType("utils.venvbootstrap")
+
+    class _Env:
+        python_path = "python"
+        site_packages_roots = ()
+        source_kind = "ide"
+        project_id = None
+        is_broken = False
+
+    vb_mod.buildAnalysisEnvironment = lambda _project, for_tools=False: _Env()
+    sys.modules["utils.venvbootstrap"] = vb_mod
 
     cdmplugins_pkg = types.ModuleType("cdmplugins")
     cdmplugins_pkg.__path__ = [CDMPLUGINS_DIR]
@@ -358,6 +371,51 @@ def test_lint_driver_start_uses_system_environment():
     assert driver._process is not None
     assert driver._process._env is not None
     assert driver._process._env.contains("PYTHONIOENCODING")
+    assert driver._pythonPath == "python"
     # Inherited from Fake systemEnvironment seeded with os.environ
     if "PATH" in os.environ:
         assert driver._process._env.contains("PATH")
+
+
+def test_build_tool_process_environment_applies_analysis_env(tmp_path):
+    """R112: analysis_env prepends PYTHONPATH and sets VIRTUAL_ENV."""
+    # Avoid lint-driver stubs leaking into this test.
+    sys.modules.pop("utils.analysis_environment", None)
+    sys.modules.pop("utils.venvbootstrap", None)
+
+    from utils.analysis_environment import AnalysisEnvironment
+
+    from cdmplugins.process_env import build_tool_process_environment
+
+    class FakeEnv:
+        def __init__(self):
+            self._values = {"PATH": "/usr/bin", "PYTHONPATH": "/old"}
+
+        def insert(self, key, value):
+            self._values[key] = value
+
+        def value(self, key, default=""):
+            return self._values.get(key, default)
+
+        def contains(self, key):
+            return key in self._values
+
+    venv = tmp_path / ".venv"
+    (venv / "bin").mkdir(parents=True)
+    (venv / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+    site = venv / "lib" / "python3.12" / "site-packages"
+    site.mkdir(parents=True)
+    analysis = AnalysisEnvironment.from_source(
+        "configured",
+        str(venv / "bin" / "python"),
+        site_packages_roots=[str(site)],
+        resolve_site_packages=False,
+    )
+    env = build_tool_process_environment(
+        "utf-8",
+        analysis_env=analysis,
+        env_factory=FakeEnv,
+    )
+    assert env.value("VIRTUAL_ENV") == str(venv)
+    assert env.value("PYTHONPATH").startswith(str(site))
+    assert "/old" in env.value("PYTHONPATH")

@@ -19,9 +19,8 @@ import os.path
 
 from ui.qt import QByteArray, QProcess, QTimer, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
-from utils.run import getProjectPythonPath
 
-from cdmplugins.process_env import build_tool_process_environment
+from cdmplugins.process_env import resolve_tool_python_and_environment
 
 # Terminate grace period before kill (ms) — avoids sync waitForFinished in GUI.
 _STOP_KILL_TIMEOUT_MS = 2000
@@ -84,9 +83,8 @@ class LintDriverBase(QWidget):
         self._stderr = ""
         self._args = self.buildArgs(fileName)
 
-        processEnvironment = build_tool_process_environment(self._encoding)
+        self._pythonPath, processEnvironment = resolve_tool_python_and_environment(self._ide.project, self._encoding)
         self._process.setProcessEnvironment(processEnvironment)
-        self._pythonPath = getProjectPythonPath(self._ide.project)
         self._process.start(self._pythonPath, self._args)
 
         if not self._process.waitForStarted():

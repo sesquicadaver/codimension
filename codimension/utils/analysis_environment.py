@@ -9,17 +9,19 @@
 # (at your option) any later version.
 #
 
-"""Immutable analysis environment snapshot (R110/R111).
+"""Immutable analysis environment snapshot (R110/R111/R112).
 
 Captures the effective Python used for import/analysis, the source kind
 matching ``venvbootstrap.describeAnalysisPythonSource``, optional
 site-packages roots, and the project id. Prefer
 ``venvbootstrap.buildAnalysisEnvironment(project)`` as the single
-constructor from a live project.
+constructor from a live project. Tool drivers use ``for_tools=True`` and
+``tool_environ_overrides``.
 """
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Iterable, Literal, Optional, Sequence
 
@@ -135,3 +137,20 @@ class AnalysisEnvironment:
             site_packages_roots=roots,
             project_id=project_id,
         )
+
+
+def tool_environ_overrides(env: AnalysisEnvironment) -> dict[str, str]:
+    """Return process-env overrides derived from an ``AnalysisEnvironment``.
+
+    - ``PYTHONPATH``: site-packages roots (callers should *prepend* to existing)
+    - ``VIRTUAL_ENV``: venv root when ``python_path`` looks like a venv binary
+    """
+    overrides: dict[str, str] = {}
+    if env.site_packages_roots:
+        overrides["PYTHONPATH"] = os.pathsep.join(env.site_packages_roots)
+    bin_dir = os.path.dirname(env.python_path or "")
+    if os.path.basename(bin_dir) in ("bin", "Scripts"):
+        root = os.path.dirname(bin_dir)
+        if root and os.path.isfile(os.path.join(root, "pyvenv.cfg")):
+            overrides["VIRTUAL_ENV"] = root
+    return overrides
