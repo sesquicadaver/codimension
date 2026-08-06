@@ -1,467 +1,140 @@
-# Codimension — Full Unified Roadmap (Phase 0–38)
+# Codimension — Linear atomic roadmap
 
 > **Language / Мова:** English | [Українська](ROADMAP.uk.md)
 
-> **Fork status (2026-08):** Strong experimental / modernized fork. T001–T141 code landed; **re-audit P0 open items** tracked in [TODO_FIXME.md](TODO_FIXME.md) (VENV async, parser span/comment ownership, scan lifecycle, T130 nightly verify). Do not treat as production-ready analyzer until A02–A08 close. See Living Spec.
+**Baseline:** `master@d8f2e786` (2026-08-06)  
+**Living Spec:** [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md)  
+**Autopilot:** first `OPEN` row below (after empty [TODO_FIXME.md](TODO_FIXME.md))
 
 ---
 
-# Phase 0 — Baseline Stabilization
-**Goal:** Stable execution on Python 3.10+
+## How to use this queue
 
-### Tasks
-- Fix dependencies (`pyproject`)
-- Remove deprecated APIs
-- Stabilize Qt layer
-- Ensure:
-  - open project
-  - open file
-  - build CFG
+1. Work **strictly top-down**: first `OPEN` task only.
+2. One task = **one PR** with tests + docs (ChangeLog, Living Spec, this file).
+3. Mark `DONE` with merge SHA/PR when closed; never skip ahead without an explicit `BLOCKED` reason.
+4. If a task is still too large in practice — **split** it into `Rxxx.a` / `Rxxx.b` and keep order.
+5. Core rules (unchanged): Core ≠ UI; execution via one contract; environment is source of truth; overlays are a separate layer; AI only after deterministic index/CFG.
 
-### Acceptance
-- No crashes
-- Deterministic behavior
+### Size legend
 
----
+| Size | Meaning |
+|------|---------|
+| S | ≤1 day / single module |
+| M | 2–4 days / few modules |
+| L | multi-day / architectural |
 
-# Phase 1 — Test Harness
-**Goal:** Lock behavior
+### Status legend
 
-### Tasks
-- CFG snapshot tests
-- Parser tests
-- Regression suite
-
-### Acceptance
-- CFG changes are controlled
+| Status | Meaning |
+|--------|---------|
+| DONE | Shipped on master |
+| OPEN | Eligible for autopilot / next work |
+| DEFERRED | Intentionally later; do not pull forward |
 
 ---
 
-# Phase 2 — Boundary Extraction
-**Goal:** Separate core from UI
+## Snapshot vs old Phase 0–38
 
-```python
-parse → AST
-build_cfg → Graph
-analyze → Metrics
+| Old phases | Status now | Notes |
+|------------|------------|-------|
+| 0 Baseline | DONE | pyproject 3.10–3.13, Qt IDE, project/file, CFG |
+| 1 Test harness | DONE | conformance snapshots + parser suite (~260 tests) |
+| 2 Headless core | DONE | `core.syntax` / `core.flow` + `infrastructure/*` + T085 |
+| 3 Modular monolith | PARTIAL → queue R100+ | no `app.*`; `utils.importutils` still pulls Qt |
+| 4–7 Environment | PARTIAL → R110+ | venvbootstrap exists; no typed env / cache registry |
+| 8–9 Deps + local venv | DONE (T140/T141) | auto-on-open still optional → R114 |
+| 10–13 Remote backends | MISSING → R121+ | no `ExecutionTarget` / Docker / SSH / K8s |
+| 14–20 Analysis | PARTIAL → R130+ | diagrams/metrics/profiling exist; no SymbolIndex/overlays/risk |
+| 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
+| 25 Plugins | DONE | yapsy + bundled `cdmplugins/*` |
+| 26 AI | MISSING → R151+ | after SymbolIndex |
+| 27–29 Extended overlays | MISSING → R160+ | needs overlay framework R135 |
+| 30–38 Release/update | PARTIAL → R170+ | `ci-gate` + OIDC exist; no channels/auto-update |
 
-Acceptance
-
-Core runs headless
-
-
-
----
-
-Phase 3 — Modular Monolith
-
-Goal: Controlled architecture
-
-Modules
-
-core.*
-app.*
-ui.*
-infra.*
-
-Acceptance
-
-No cyclic deps
-
-UI isolated
-
-
+**Optimization applied:** dropped full `stable/develop` multi-branch theatre for a solo fork; keep `master` + `feature/*` + protected `ci-gate`. Auto-update apply/rollback is deferred until read-only version check works. K8s waits until Docker + SSH prove the contract.
 
 ---
 
-=== ENVIRONMENT ===
+## Archive — DONE (do not re-queue)
 
-Phase 4 — Analysis Environment Model
-
-Goal: Reliable context
-
-Acceptance
-
-Project-bound environment
-
-
-
----
-
-Phase 5 — Environment Introspection
-
-Goal: Real runtime data
-
-Acceptance
-
-Accurate import resolution
-
-
+| ID | Was | Delivered |
+|----|-----|-----------|
+| D0 | Phase 0 | Python 3.10–3.13 packaging, Qt shell, open project/file, CFG path |
+| D1 | Phase 1 | CFG golden snapshots + brief/flow conformance |
+| D2 | Phase 2 | Headless parse APIs + infrastructure facades |
+| D3a | Phase 3 (partial) | T085: `core`/`infrastructure` Qt-free |
+| D9 | Phase 9 / T140–T141 | Project VENV UI, transactional create/recreate, Env: status, refresh |
+| D25 | Phase 25 | Plugin host + Ruff/Mypy/Pytest/Coverage/Bandit/pip-audit/TODO/Git |
+| D-audit | TODO_FIXME P0–P2 | B01–G01 closed (startup, parsers, persistence, docs, constraints, release, branch protection) |
 
 ---
 
-Phase 6 — Analyzer Binding
+## Active queue (strict order)
 
-Goal: Consistency
+| # | ID | Task | Acceptance | Size | Status |
+|---|----|------|------------|------|--------|
+| 1 | R100 | Remove Qt import from `utils.importutils` (extract Qt-facing helpers to `ui/` or inject callable) | `scripts/check_core_import_graph.py` extended **or** dedicated gate: `utils.importutils` imports without `ui.qt`; existing import tests green | M | OPEN |
+| 2 | R101 | Add `codimension/app/` package: `ApplicationServices` façade (project load/unload hooks, no widgets) | Package importable headless; unit test constructs façade with fakes; Living Spec row | S | OPEN |
+| 3 | R102 | Route project open/unload through `app` façade (thin adapter from `GlobalData` / mainwindow) | Call graph shows UI → app → utils/project; no behavior change; regression tests | M | OPEN |
+| 4 | R103 | Document + enforce module boundary matrix (`core`/`infra`/`app`/`utils`/`ui`/`plugins`) in CI | Script fails on new illegal edges; matrix in Living Spec | M | OPEN |
+| 5 | R110 | Introduce immutable `AnalysisEnvironment` dataclass (python path, source kind, site-packages roots, project id) | Typed API + unit tests for project/session/auto/IDE sources matching today’s `describeAnalysisPythonSource` | M | OPEN |
+| 6 | R111 | Build `AnalysisEnvironment` from project via `venvbootstrap` (single constructor path) | All call sites that need “effective python” can use env object; tests cover precedence | M | OPEN |
+| 7 | R112 | Bind lint/tool drivers to `AnalysisEnvironment` (replace ad-hoc path fetches in `process_env` / drivers) | Drivers receive env; `tests/test_lint_drivers.py` + process_env tests updated | M | OPEN |
+| 8 | R113 | Analysis cache registry: register brief/flow caches; invalidate on env refresh + file change | API `invalidate(project|file|env)`; tests prove stale purge after interpreter change | M | OPEN |
+| 9 | R114 | Optional setting: auto-attach detected project venv on project open | Setting default off; when on, opens project sets session/project interpreter per policy; UI + test | S | OPEN |
+| 10 | R120 | `DependencyManifest`: formalize `collectInstallSources` → exportable requirements list / lock hint | Headless API + CLI/script or project action writes manifest; unit test | M | OPEN |
+| 11 | R121 | Define `ExecutionTarget` protocol (`run` / `debug` / `profile` / `which_python`) | Protocol in `core` or `app`; mypy-checked; fake target test | S | OPEN |
+| 12 | R122 | Adapt local process runner (`utils.run` / RunManager) to `ExecutionTarget` | Local runs go through protocol; existing argv/debug tests green | M | OPEN |
+| 13 | R123 | Docker `ExecutionTarget` MVP (image + mount workspace + run argv) | Integration test with docker-or-skip; docs; no GUI required for MVP | L | OPEN |
+| 14 | R124 | SSH `ExecutionTarget` MVP (remote python + sync or mount strategy documented) | Contract tests with mocked transport; docs for unverified platforms | L | OPEN |
+| 15 | R125 | Kubernetes `ExecutionTarget` MVP | Depends on R123+R124 lessons; job/pod run; docs | L | OPEN |
+| 16 | R130 | SymbolIndex schema (name, kind, file, half-open span, container) | Module + schema tests; Living Spec | S | OPEN |
+| 17 | R131 | Populate SymbolIndex from `brief_ast` for project files (async-friendly API) | Index build on sample project; accuracy tests vs known defs | M | OPEN |
+| 18 | R132 | Queries: `find_definitions` / `find_references` on SymbolIndex (bridge search provider) | Unit tests; occurrences provider can call index without behavior regress | M | OPEN |
+| 19 | R133 | Headless `DependencyGraph` from imports (reuse diagram logic without Qt) | Graph build test; optional export JSON | M | OPEN |
+| 20 | R134 | `MetricProvider` interface + radon CC adapter | Provider registry test; UI can keep current viewer | S | OPEN |
+| 21 | R135 | Overlay framework: `OverlayLayer` protocol + attach point on flow/editor (no heavy visuals yet) | Register empty overlay; test hook invoked on redraw/update | M | OPEN |
+| 22 | R136 | Advanced metrics pack (maintainability / raw/Halstead or documented subset) behind MetricProvider | At least 2 metrics beyond CC; tests with fixtures | M | OPEN |
+| 23 | R137 | Git analytics: churn / hotspot summary (git log based) | Headless report API + optional plugin panel; tests with temp repo | M | OPEN |
+| 24 | R138 | Composite risk score (lint + metrics + optional git) | Deterministic formula documented; unit tests; no AI | M | OPEN |
+| 25 | R140 | Headless CFG graph model separated from `flowui` canvas | `core`/`app` graph API from flow parse; canvas consumes model | L | OPEN |
+| 26 | R141 | Debugger graph mode: map frames → CFG nodes | Offscreen/debugger test or documented manual + unit mapping | L | OPEN |
+| 27 | R142 | Graph diff between two CFGs / revisions | Diff API + tests on fixture pairs | M | OPEN |
+| 28 | R143 | Function-local data-flow / taint MVP | Documented subset; tests for sources/sinks in one function | L | OPEN |
+| 29 | R150 | Plugin capability / API version negotiation | Host rejects incompatible plugins cleanly; test | S | OPEN |
+| 30 | R151 | AI context builder (headless): pack SymbolIndex + CFG slice for a symbol | Pure function + tests; no network | M | OPEN |
+| 31 | R152 | AI UI actions behind feature flag (explain / suggest) | Flag off by default; smoke when flag on may mock backend | M | OPEN |
+| 32 | R160 | Environment overlay visualization (env source / path badges on UI) | Uses R135; screenshot or widget test | M | OPEN |
+| 33 | R161 | Dependency overlay (edge heat from DependencyGraph) | Uses R133+R135; test | M | OPEN |
+| 34 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
+| 35 | R170 | Codify branching policy: `master` + `feature/*` / `fix/*` only; no direct push (doc + already protected `ci-gate`) | Doc in CONTRIBUTING + Living Spec; matches GitHub protection | S | OPEN |
+| 36 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
+| 37 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
+| 38 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
+| 39 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
+| 40 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
 
-Acceptance
+### Deferred (explicit)
 
-Analysis depends on env
-
-
-
----
-
-Phase 7 — Cache & Invalidation
-
-Goal: No stale data
-
-
----
-
-=== DEPENDENCIES & EXECUTION ===
-
-Phase 8 — Dependency Discovery
-
-Goal: Generate requirements
-
-
----
-
-Phase 9 — Local venv Backend
-
-Goal: Local isolation
-
-T140 (local UI): Tools → VENV… / Update VENV… (explicit create/attach + pip
-sync|upgrade|recreate).
-T141: re-analyze after VENV/Update; status-bar Env:; unresolved pip opt-in +
-multi-select. Auto-on-open and Docker/SSH/K8s/MCP backends remain later.
-
-
----
-
-Phase 10 — Docker Backend
-
-Goal: Container isolation
-
-
----
-
-Phase 11 — Remote (SSH)
-
-Goal: Remote execution
-
-
----
-
-Phase 12 — Unified Execution Target
-
-ExecutionTarget.run()
-
-Acceptance
-
-Backend-agnostic execution
-
-
+| ID | Task | Why deferred |
+|----|------|--------------|
+| R180 | Auto-apply update + rollback / portable profiles | High risk; after R172–R173 proven |
+| R181 | Full `develop`/`release` promotion pipeline | Overkill vs protected `master` + tags |
+| R182 | MCP / remote IDE agent backend | Not in critical path; after ExecutionTarget |
 
 ---
 
-Phase 13 — Kubernetes Backend
+## Next autopilot pointer
 
-Goal: Scale
-
-
----
-
-=== CORE ANALYSIS ===
-
-Phase 14 — Symbol Index & Dependency Graph
-
+**First OPEN:** `R100` — Remove Qt import from `utils.importutils`.
 
 ---
 
-Phase 15 — Metric System
-
-
----
-
-Phase 16 — Overlay System
-
-
----
-
-Phase 17 — Advanced Metrics
-
-
----
-
-Phase 18 — Runtime Profiling
-
-
----
-
-Phase 19 — Git Analytics
-
-
----
-
-Phase 20 — Composite Risk Model
-
-
----
-
-=== GRAPH ENGINE ===
-
-Phase 21 — Graph Engine Redesign
-
-
----
-
-Phase 22 — Debugger Graph Mode
-
-
----
-
-Phase 23 — Graph Diff
-
-
----
-
-Phase 24 — Data Flow / Taint Analysis
-
-
----
-
-=== PLUGINS ===
-
-Phase 25 — Plugin System
-
-
----
-
-=== AI ===
-
-Phase 26 — AI Layer
-
-
----
-
-=== OVERLAYS EXTENDED ===
-
-Phase 27 — Environment Overlay
-
-
----
-
-Phase 28 — Dependency Overlay
-
-
----
-
-Phase 29 — Deployment Overlay
-
-
----
-
-=== RELEASE / BRANCH / UPDATE ===
-
-Phase 30 — Branching Model
-
-Branches
-
-stable
-
-develop
-
-feature/*
-
-fix/*
-
-release/*
-
-hotfix/*
-
-
-Rules
-
-No direct commits to stable
-
-stable updated via promotion only
-
-
-
----
-
-Phase 31 — Versioning
-
-Channels
-
-stable
-
-beta
-
-dev
-
-
-
----
-
-Phase 32 — CI/CD Promotion Pipeline
-
-Flow
-
-feature → develop → release → stable
-
-Gates
-
-tests
-
-lint
-
-CFG snapshot
-
-packaging
-
-
-
----
-
-Phase 33 — Update Channels
-
-Channels
-
-stable
-
-beta
-
-dev
-
-
-
----
-
-Phase 34 — Auto-Update
-
-Features
-
-version check
-
-download
-
-verify
-
-apply
-
-rollback
-
-
-
----
-
-Phase 35 — Deployment Profiles
-
-Types
-
-dev build
-
-testing build
-
-stable release
-
-portable
-
-container backend
-
-
-
----
-
-Phase 36 — Branch-Aware UI
-
-Features
-
-version info
-
-channel info
-
-update status
-
-
-
----
-
-Phase 37 — Stable vs Experimental
-
-Features
-
-feature flags
-
-experimental plugins
-
-
-
----
-
-Phase 38 — Rollback & Recovery
-
-Features
-
-previous version restore
-
-safe mode
-
-
-
----
-
-FINAL ARCHITECTURE
-
-Code
- → AST
- → CFG
- → Symbol Index
- → Metrics
- → Overlay
- → UI
-
-Execution Targets:
-    venv
-    docker
-    ssh
-    k8s
-
-Tooling:
-    lint
-    test
-    profile
-
-Plugins
-AI (via core)
-
-
----
-
-CORE RULES
-
-1. Core ≠ UI
-
-
-2. Execution via unified contract
-
-
-3. Environment = source of truth
-
-
-4. Overlay = separate layer
-
-
-5. AI only after deterministic system
-
-
-
-
----
-
-FINAL RESULT
-
-Modular code analysis platform with execution-aware, graph-based understanding of Python code
+## Final architecture (target)
+
+```text
+Code → AST → CFG → SymbolIndex → Metrics → Overlay → UI
+ExecutionTarget: local | docker | ssh | k8s
+Tooling: lint | test | profile | (AI via core context)
+```
