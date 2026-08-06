@@ -19,9 +19,11 @@ from utils.venvbootstrap import (
     discoverRootVenvCandidates,
     getEffectiveProjectPython,
     isPathInsideProject,
+    probePythonInterpreter,
     recreateVenv,
     requestAnalysisEnvironmentRefresh,
     requireMutableProjectPython,
+    resolveRecreateBasePython,
     selectedUnresolvedPackages,
     venvDirFromPython,
 )
@@ -237,7 +239,7 @@ class VenvSetupDialog(QDialog):
             if reqs or packages or install_proj:
                 from utils.venvbootstrap import assertSafeMutableProjectPython
 
-                assertSafeMutableProjectPython(python)
+                assertSafeMutableProjectPython(python, project_dir=self._project_dir)
                 cmd = buildPipInstallCommand(
                     python,
                     mode=MODE_SYNC,
@@ -254,7 +256,7 @@ class VenvSetupDialog(QDialog):
                     QMessageBox.No,
                 )
                 if reply == QMessageBox.Yes:
-                    run_pip_with_progress(self, cmd, cwd=self._project_dir)
+                    run_pip_with_progress(self, cmd, cwd=self._project_dir, project_dir=self._project_dir)
 
             persist = (
                 QMessageBox.question(
@@ -359,24 +361,33 @@ class VenvUpdateDialog(QDialog):
                 if not isPathInsideProject(venv_dir, self._project_dir):
                     QMessageBox.warning(self, "Update VENV", "Recreate refused: venv is outside the project.")
                     return
+                base = resolveRecreateBasePython(self._python)
+                current = probePythonInterpreter(self._python)
+                ver = ".".join(str(x) for x in current["version_info"][:2])
                 reply = QMessageBox.warning(
                     self,
                     "Confirm recreate",
-                    f"Recreate venv (old tree kept until success):\n{venv_dir}",
+                    (
+                        f"Recreate venv (old tree kept until success):\n{venv_dir}\n\n"
+                        f"Base interpreter (Python {ver}):\n{base}"
+                    ),
                     QMessageBox.Yes | QMessageBox.No,
                     QMessageBox.No,
                 )
                 if reply != QMessageBox.Yes:
                     return
                 python = recreateVenv(
-                    sys.executable,
+                    base,
                     venv_dir,
                     self._project_dir,
                     requirement_files=reqs,
                     packages=packages,
                     install_project=install_proj,
-                    runner_create=lambda base, path: create_venv_in_place_with_progress(self, base, path),
-                    runner_pip=lambda cmd, cwd=None: run_pip_with_progress(self, cmd, cwd=cwd),
+                    expected_version=tuple(current["version_info"][:2]),
+                    runner_create=lambda b, path: create_venv_in_place_with_progress(self, b, path),
+                    runner_pip=lambda cmd, cwd=None, project_dir=None: run_pip_with_progress(
+                        self, cmd, cwd=cwd, project_dir=project_dir or self._project_dir
+                    ),
                 )
                 persist = bool(self._project.props.get("pythoninterpreter", "").strip())
                 bindInterpreter(self._project, python, persist=persist)
@@ -401,7 +412,7 @@ class VenvUpdateDialog(QDialog):
                 )
                 if reply != QMessageBox.Yes:
                     return
-                run_pip_with_progress(self, cmd, cwd=self._project_dir)
+                run_pip_with_progress(self, cmd, cwd=self._project_dir, project_dir=self._project_dir)
             requestAnalysisEnvironmentRefresh(self._project)
             self.accept()
         except ProcessCancelled:

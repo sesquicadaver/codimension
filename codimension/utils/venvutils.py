@@ -25,9 +25,13 @@ import os
 def resolveVenvToPython(venv_dir: str) -> str | None:
     """Resolves venv directory to python executable.
 
-    Supports: venv/bin/python (Linux), venv/Scripts/python.exe (Windows).
+    Requires ``pyvenv.cfg`` so a bare ``bin/python`` tree is not treated as a
+    venv (audit C02). Supports: venv/bin/python (Linux), venv/Scripts/python.exe
+    (Windows).
     """
     if not venv_dir or not os.path.isdir(venv_dir):
+        return None
+    if not os.path.isfile(os.path.join(venv_dir, "pyvenv.cfg")):
         return None
 
     for candidate in (

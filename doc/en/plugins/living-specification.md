@@ -90,7 +90,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | E05 | profile marker + start-based timeout + `.done` cleanup | ✅ |
 | E06 | exec probe + DQ-safe paths (spaces/Unicode; shebang no whitespace) | ✅ |
 | D02 / B07 | transactional VENV create/recreate (staging + commit) | ✅ |
-| C02 / C03 | Interpreter probe + recreate base version | OPEN |
+| C02 / C03 | interpreter probe + recreate base (no silent IDE version swap) | ✅ |
 | D04 / B05 / B04 / B06 / D05 / D06 | CML/comments, brief positions, case, encoding, side comments | OPEN |
 | B03 | Cooperative scan cancel + coalescing | OPEN |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |

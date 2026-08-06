@@ -69,6 +69,7 @@ def test_discover_venv_candidates_root_only(project_dir):
     # Create a valid root .venv
     vbin = project_dir / ".venv" / "bin"
     vbin.mkdir(parents=True)
+    (project_dir / ".venv" / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
     py = vbin / "python"
     py.write_text("#!/bin/sh\n", encoding="utf-8")
     os.chmod(py, 0o755)
@@ -124,6 +125,18 @@ def test_pip_sync_vs_upgrade_args():
     assert "-r" in up
 
 
+def _fake_probe(path: str, *, version=None, is_venv=True, prefix=None):
+    """Probe stub for recreate tests (avoids executing fake #!/bin/sh pythons)."""
+    root = str(Path(path).resolve().parent.parent)
+    return {
+        "executable": path,
+        "prefix": prefix or root,
+        "base_prefix": "/usr",
+        "version_info": list(version or sys.version_info[:3]),
+        "is_venv": is_venv,
+    }
+
+
 def test_recreate_order_and_refuse_outside(project_dir):
     from utils.venvbootstrap import recreateVenv
     from utils.venvutils import resolveVenvToPython
@@ -152,7 +165,7 @@ def test_recreate_order_and_refuse_outside(project_dir):
         os.chmod(py, 0o755)
         return str(py)
 
-    def pip(cmd, cwd=None):
+    def pip(cmd, cwd=None, project_dir=None):
         calls.append(("pip", cmd, cwd))
         assert (Path(inside) / "old.txt").is_file(), "old venv must survive pip failure window"
 
@@ -163,6 +176,7 @@ def test_recreate_order_and_refuse_outside(project_dir):
         packages=["x"],
         runner_create=create,
         runner_pip=pip,
+        runner_probe=_fake_probe,
     )
     kinds = [c[0] for c in calls]
     assert kinds == ["create", "pip"]
@@ -177,6 +191,7 @@ def test_recreate_order_and_refuse_outside(project_dir):
             str(project_dir),
             runner_create=create,
             runner_pip=pip,
+            runner_probe=_fake_probe,
         )
 
 
@@ -205,6 +220,7 @@ def test_recreate_rolls_back_on_create_failure(project_dir):
             str(project_dir),
             runner_create=boom,
             runner_pip=lambda *_a, **_k: None,
+            runner_probe=_fake_probe,
         )
     assert marker.read_text(encoding="utf-8") == "original"
     assert not any(project_dir.glob(".cdm-venv-stage-*"))
@@ -246,6 +262,7 @@ def test_recreate_rolls_back_on_pip_failure(project_dir):
             packages=["x"],
             runner_create=create,
             runner_pip=pip_fail,
+            runner_probe=_fake_probe,
         )
     assert marker.read_text(encoding="utf-8") == "original"
     assert not any(project_dir.glob(".cdm-venv-stage-*"))
@@ -322,6 +339,7 @@ def test_describe_analysis_python_source_kinds(project_dir):
 
     auto_py = project_dir / ".venv" / "bin" / "python"
     auto_py.parent.mkdir(parents=True)
+    (project_dir / ".venv" / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
     auto_py.write_text("#!/bin/sh\n", encoding="utf-8")
     os.chmod(auto_py, 0o755)
     kind, path = vb.describeAnalysisPythonSource(_fake_project(project_dir, ""))
@@ -447,3 +465,112 @@ def test_create_venv_refuses_ide_prefix(project_dir, monkeypatch):
     monkeypatch.setattr(vb.subprocess, "run", boom)
     with pytest.raises(RuntimeError, match="IDE environment"):
         vb.createVenv(sys.executable, sys.prefix, project_dir=None)
+
+
+def test_probe_python_interpreter_self():
+    """C02: live probe against the test interpreter returns required fields."""
+    from utils.venvbootstrap import probePythonInterpreter
+
+    info = probePythonInterpreter(sys.executable)
+    assert info["executable"]
+    assert "prefix" in info and "base_prefix" in info
+    assert list(info["version_info"][:2]) == list(sys.version_info[:2])
+    assert "is_venv" in info
+
+
+def test_assert_mutable_requires_venv_probe(project_dir, tmp_path, monkeypatch):
+    """C02: bare executable without venv must be refused for mutation."""
+    from utils import venvbootstrap as vb
+
+    bare = tmp_path / "bare-python"
+    bare.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(bare, 0o755)
+
+    def fake_probe(path):
+        return {
+            "executable": path,
+            "prefix": str(tmp_path),
+            "base_prefix": str(tmp_path),
+            "version_info": list(sys.version_info[:3]),
+            "is_venv": False,
+        }
+
+    monkeypatch.setattr(vb, "probePythonInterpreter", fake_probe)
+    monkeypatch.setattr(vb, "isIdePythonEnvironment", lambda _p: False)
+    with pytest.raises(RuntimeError, match="not a virtual environment"):
+        vb.assertSafeMutableProjectPython(str(bare), project_dir=str(project_dir))
+
+
+def test_resolve_recreate_base_prefers_cfg_executable(project_dir, monkeypatch):
+    """C03: recreate base comes from pyvenv.cfg, not a silent IDE version swap."""
+    from utils import venvbootstrap as vb
+
+    root = project_dir / ".venv"
+    bin_dir = root / "bin"
+    bin_dir.mkdir(parents=True)
+    py = bin_dir / "python"
+    py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(py, 0o755)
+    base = project_dir / "base-python"
+    base.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(base, 0o755)
+    (root / "pyvenv.cfg").write_text(
+        f"home = {project_dir}\nexecutable = {base}\nversion = {sys.version_info[0]}.{sys.version_info[1]}.0\n",
+        encoding="utf-8",
+    )
+
+    def probe(path):
+        path = os.path.abspath(path)
+        if path == os.path.abspath(str(py)):
+            return {
+                "executable": path,
+                "prefix": str(root),
+                "base_prefix": "/usr",
+                "version_info": list(sys.version_info[:3]),
+                "is_venv": True,
+            }
+        if path == os.path.abspath(str(base)):
+            return {
+                "executable": path,
+                "prefix": "/usr",
+                "base_prefix": "/usr",
+                "version_info": list(sys.version_info[:3]),
+                "is_venv": False,
+            }
+        raise RuntimeError(f"unexpected probe: {path}")
+
+    monkeypatch.setattr(vb, "probePythonInterpreter", probe)
+    monkeypatch.setattr(vb, "isIdePythonEnvironment", lambda p: os.path.realpath(p) == os.path.realpath(sys.executable))
+    assert vb.resolveRecreateBasePython(str(py)) == os.path.abspath(str(base))
+
+
+def test_resolve_recreate_base_refuses_version_mismatch(project_dir, monkeypatch):
+    """C03: IDE sys.executable must not win when major.minor differs."""
+    from utils import venvbootstrap as vb
+
+    root = project_dir / ".venv"
+    bin_dir = root / "bin"
+    bin_dir.mkdir(parents=True)
+    py = bin_dir / "python"
+    py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(py, 0o755)
+    (root / "pyvenv.cfg").write_text("home = /nonexistent\nversion = 3.10.0\n", encoding="utf-8")
+
+    def probe(path):
+        path = os.path.abspath(path)
+        if path == os.path.abspath(str(py)):
+            return {
+                "executable": path,
+                "prefix": str(root),
+                "base_prefix": "/usr",
+                "version_info": [3, 10, 0],
+                "is_venv": True,
+            }
+        raise RuntimeError("no candidate")
+
+    monkeypatch.setattr(vb, "probePythonInterpreter", probe)
+    monkeypatch.setattr(vb.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(vb.sys, "version_info", (3, 13, 0, "final", 0))
+    with pytest.raises(RuntimeError, match="cannot resolve base Python 3.10"):
+        vb.resolveRecreateBasePython(str(py))
+

@@ -187,10 +187,16 @@ def create_venv_with_progress(
     return str(python)
 
 
-def run_pip_with_progress(parent, cmd: list[str], *, cwd: str | None = None) -> None:
+def run_pip_with_progress(
+    parent,
+    cmd: list[str],
+    *,
+    cwd: str | None = None,
+    project_dir: str | None = None,
+) -> None:
     """Run pip install via QProcess with progress/cancel; refuse IDE targets."""
     if cmd:
-        assertSafeMutableProjectPython(cmd[0])
+        assertSafeMutableProjectPython(cmd[0], project_dir=project_dir)
     run_argv_with_progress(
         parent,
         cmd,
