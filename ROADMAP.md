@@ -44,7 +44,7 @@
 | 3 Modular monolith | DONE → R110+ | R100–R103: Qt-free utils piece, app façade, routing, boundary matrix |
 | 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
 | 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open optional setting shipped |
-| 10–13 Remote backends | MISSING → R121+ | no `ExecutionTarget` / Docker / SSH / K8s |
+| 10–13 Remote backends | PARTIAL → R122+ | ExecutionTarget protocol (R121); local/Docker/SSH/K8s next |
 | 14–20 Analysis | PARTIAL → R130+ | diagrams/metrics/profiling exist; no SymbolIndex/overlays/risk |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
 | 25 Plugins | DONE | yapsy + bundled `cdmplugins/*` |
@@ -77,6 +77,7 @@
 | D-R113 | R113 | Analysis cache registry (brief/flow) + invalidate(project|file|env) |
 | D-R114 | R114 | Optional auto-attach project venv on open (session overlay; Options toggle) |
 | D-R120 | R120 | `DependencyManifest` + export script; collectInstallSources via manifest |
+| D-R121 | R121 | `ExecutionTarget` protocol in `core.execution` + fake target tests |
 
 ---
 
@@ -94,7 +95,7 @@
 | 8 | R113 | Analysis cache registry: register brief/flow caches; invalidate on env refresh + file change | API `invalidate(project|file|env)`; tests prove stale purge after interpreter change | M | DONE |
 | 9 | R114 | Optional setting: auto-attach detected project venv on project open | Setting default off; when on, opens project sets session/project interpreter per policy; UI + test | S | DONE |
 | 10 | R120 | `DependencyManifest`: formalize `collectInstallSources` → exportable requirements list / lock hint | Headless API + CLI/script or project action writes manifest; unit test | M | DONE |
-| 11 | R121 | Define `ExecutionTarget` protocol (`run` / `debug` / `profile` / `which_python`) | Protocol in `core` or `app`; mypy-checked; fake target test | S | OPEN |
+| 11 | R121 | Define `ExecutionTarget` protocol (`run` / `debug` / `profile` / `which_python`) | Protocol in `core` or `app`; mypy-checked; fake target test | S | DONE |
 | 12 | R122 | Adapt local process runner (`utils.run` / RunManager) to `ExecutionTarget` | Local runs go through protocol; existing argv/debug tests green | M | OPEN |
 | 13 | R123 | Docker `ExecutionTarget` MVP (image + mount workspace + run argv) | Integration test with docker-or-skip; docs; no GUI required for MVP | L | OPEN |
 | 14 | R124 | SSH `ExecutionTarget` MVP (remote python + sync or mount strategy documented) | Contract tests with mocked transport; docs for unverified platforms | L | OPEN |
@@ -137,7 +138,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R121` — `ExecutionTarget` protocol.
+**First OPEN:** `R122` — Adapt local runner to `ExecutionTarget`.
 
 ---
 

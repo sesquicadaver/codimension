@@ -9,17 +9,17 @@
 # (at your option) any later version.
 #
 
-"""Headless-capable analysis core (syntax / flow). No Qt imports at package level."""
+"""Headless-capable analysis core (syntax / flow / execution). No Qt at package level."""
 
 from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["syntax", "flow"]
+__all__ = ["syntax", "flow", "execution"]
 
 
 def __getattr__(name: str) -> Any:
-    """Lazy submodule load so importing ``core.syntax`` does not pull ``flow`` first."""
+    """Lazy submodule load so importing ``core.syntax`` does not pull siblings."""
     if name == "syntax":
         from . import syntax as _syntax
 
@@ -28,4 +28,8 @@ def __getattr__(name: str) -> Any:
         from . import flow as _flow
 
         return _flow
+    if name == "execution":
+        from . import execution as _execution
+
+        return _execution
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
