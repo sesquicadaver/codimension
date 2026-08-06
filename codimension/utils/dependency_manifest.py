@@ -74,11 +74,30 @@ class DependencyManifest:
         return ""
 
     def write_requirements(self, path: str, *, mode: str = "w") -> int:
-        """Write unresolved packages to ``path`` (see ``writeRequirementsFile``)."""
-        from .importutils import writeRequirementsFile
+        """Write unresolved packages to ``path`` (Qt-free; mirrors writeRequirementsFile)."""
+        from .config import DEFAULT_ENCODING
+        from .importutils import _parseRequirementsPackageName
 
-        written: int = writeRequirementsFile(path, self.unresolved_packages, mode)
-        return written
+        sorted_pkgs = sorted(self.unresolved_packages)
+        if not sorted_pkgs:
+            return 0
+
+        existing: set[str] = set()
+        if mode == "a" and os.path.isfile(path):
+            with open(path, "r", encoding=DEFAULT_ENCODING) as handle:
+                for line in handle:
+                    pkg = _parseRequirementsPackageName(line)
+                    if pkg:
+                        existing.add(pkg)
+            sorted_pkgs = [p for p in sorted_pkgs if p.lower() not in existing]
+
+        if not sorted_pkgs:
+            return 0
+
+        with open(path, mode, encoding=DEFAULT_ENCODING) as handle:
+            for pkg in sorted_pkgs:
+                handle.write(pkg + "\n")
+        return len(sorted_pkgs)
 
     def _preferred_requirements_file(self) -> Optional[str]:
         """Prefer ``requirements.txt``, else the first discovered file."""
