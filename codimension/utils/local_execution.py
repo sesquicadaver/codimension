@@ -54,11 +54,12 @@ class LocalExecutionTarget:
         self._params = params if params is not None else _default_params()
         if python:
             # Force a concrete interpreter without mutating caller state deeply.
-            if hasattr(self._params, "__setitem__"):
-                self._params["useInherited"] = False
-                self._params["customInterpreter"] = python
+            raw: Any = self._params
+            if hasattr(raw, "__setitem__"):
+                raw["useInherited"] = False
+                raw["customInterpreter"] = python
             else:
-                merged = dict(self._params)
+                merged = dict(raw)
                 merged["useInherited"] = False
                 merged["customInterpreter"] = python
                 self._params = merged
