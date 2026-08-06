@@ -1,5 +1,8 @@
 2026 Aug 06
 
+* R103: document and enforce named-layer boundary matrix
+  (``core``/``infrastructure``/``app``/``utils``/``ui``/``plugins``) via
+  ``scripts/check_module_boundaries.py`` in CI import-gates
 * R102: route project open/unload through ``GlobalData.appServices``
   (mainwindow, projectviewer, recent projects, startup)
 * R101: add ``codimension.app.ApplicationServices`` headless façade
