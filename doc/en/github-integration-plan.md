@@ -36,10 +36,11 @@
 | pyproject.toml | ✅ | Repository, Homepage, build-system |
 | .gitignore | ✅ | venv, build, dist, `.omx`, caches |
 
-### 1.2 What Is Missing (Optional)
+### 1.2 Branch protection / release (G01 / E03)
 
-- Branch protection rules (configured in GitHub UI)
-- CodeQL / security scanning
+- Required status check on `master`: **`ci-gate`** (aggregates ruff/format/mypy/import-gates/test/wheel/smoke/docs)
+- Release workflow verifies tag↔version, constraints, pytest, `twine check`, clean wheel install + offscreen smoke, then publishes via **Trusted Publishing (OIDC)** — no long-lived `PYPI_API_TOKEN`
+- Dependency snapshot: `constraints.txt` (regenerate with `python scripts/generate_constraints.py`)
 
 ---
 
@@ -93,9 +94,9 @@
 
 | Step | Action | File | Description |
 | ---- | ------ | ---- | ----------- |
-| 5.1 | Release workflow | `.github/workflows/release.yml` | Trigger: tag v*, build, twine upload |
-| 5.2 | Secrets | GitHub Secrets | `PYPI_API_TOKEN` for twine |
-| 5.3 | Sync with NOTES.md | — | Automate steps 1–10 from NOTES |
+| 5.1 | Release workflow | `.github/workflows/release.yml` | Tag v*: verify (tests/twine/wheel/smoke) then OIDC publish |
+| 5.2 | Trusted Publishing | PyPI + GitHub OIDC | No long-lived token |
+| 5.3 | Sync with NOTES.md | — | Automate steps from NOTES |
 
 ---
 
@@ -129,7 +130,7 @@ Phase 6 (Tests) — long-term
 
 | Name | Purpose | Used In |
 | ---- | ------- | ------- |
-| `PYPI_API_TOKEN` | PyPI token (pypi-xxx) | release.yml, twine upload |
+| `PYPI` Trusted Publishing (OIDC) | Release publish via `pypa/gh-action-pypi-publish` (no long-lived token) | release.yml |
 | `DISPLAY` | X11 display (for GUI) | Smoke test with xvfb |
 | `QT_QPA_PLATFORM` | `offscreen` for headless Qt | xvfb alternative |
 
@@ -140,7 +141,7 @@ Phase 6 (Tests) — long-term
 | Risk | Mitigation |
 | ---- | ---------- |
 | codimension is a GUI app and needs a display | xvfb-run or import check instead of --help |
-| PyPI token in secrets | Release only, not for PRs |
+| PyPI publish | Trusted Publishing (OIDC); optional GitHub Environment approval |
 | Dependabot — many PRs | Configure grouped updates, ignore major versions |
 | CodeQL — long run time | Separate workflow, does not block merge |
 

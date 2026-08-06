@@ -1,5 +1,9 @@
 2026 Aug 06
 
+* Audit P2 D08/E03/G01: commit ``constraints.txt`` + generate/check scripts;
+  CI installs with ``-c constraints.txt`` and a required ``ci-gate`` job;
+  ``setup.py`` uses runtime-only requirements; release verifies wheel/twine/
+  tests/smoke then publishes via OIDC Trusted Publishing (no API token)
 * Audit P2 B09/B10/C05: validate `.cdm3` on update/reload paths with
   last-known-good retention; ``Settings.flush`` via atomic write that
   preserves mode and fsyncs the directory; project UUID uses ``uuid4`` and

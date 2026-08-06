@@ -28,7 +28,7 @@
 | C04 | Flow UI import → `pytest.skip` | P1 | ✅ fail on import; only skip missing PyQt5 / TryStar |
 | B11 | Docs drift (TODO/Living Spec/`doc/uk`, docs gate coverage) | P2 | ✅ parity + expanded `check_docs` |
 | B09 / B10 / C05 | Schema paths / atomic settings / UUID persist | P2 | ✅ validate all paths; atomic flush; uuid4 + immediate save |
-| D08 / E03 / G01 | Constraints / release verify / branch protection | P2 | 🔓 OPEN |
+| D08 / E03 / G01 | Constraints / release verify / branch protection | P2 | ✅ constraints snapshot; release verify+OIDC; `ci-gate` + master protection |
 
 ## Infrastructure
 

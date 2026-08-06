@@ -1,6 +1,11 @@
-# Release: build та upload на PyPI при push тегу v*
-# Потрібен GitHub Secret: PYPI_API_TOKEN (pypi-xxx)
-# Перед релізом: оновити ChangeLog, codimension/cdmverspec.py, потім git tag -a vX.Y.Z -m "Release X.Y.Z"
+# Release: verify built artifacts, then publish on tag v*
+#
+# This fork is not the PyPI project ``codimension`` (upstream 4.9.1). Publishing
+# is optional and intended only when maintainers deliberately upload (e.g. to
+# TestPyPI or a distinct project). Prefer Trusted Publishing (OIDC).
+#
+# Before tagging: update ChangeLog + codimension/cdmverspec.py, ensure CI is
+# green on the exact commit, then: git tag -a vX.Y.Z -m "Release X.Y.Z"
 name: Release
 
 on:
@@ -8,17 +13,25 @@ on:
     tags:
       - "v*"
 
-jobs:
-  release:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+jobs:
+  verify:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            requirements-runtime.txt
+            constraints.txt
+            pyproject.toml
 
       - name: Validate tag vs cdmverspec
         run: |
@@ -30,14 +43,62 @@ jobs:
           fi
           echo "Version $SPEC OK"
 
-      - name: Install build tools
-        run: pip install build twine
+      - name: Constraints gate
+        run: python scripts/check_constraints.py
 
-      - name: Build
-        run: python -m build
+      - name: Install test extras (pinned)
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install -c constraints.txt -e ".[test,tools,security]"
+          pip check
 
-      - name: Upload to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine upload dist/*
+      - name: Pytest
+        run: |
+          . .venv/bin/activate
+          QT_QPA_PLATFORM=offscreen pytest tests/debugger/ -m debugger_session -v --tb=short
+          pytest tests/ -v --tb=short
+
+      - name: Build + twine check
+        run: |
+          . .venv/bin/activate
+          pip install -c constraints.txt build twine
+          python -m build
+          twine check dist/*
+
+      - name: Clean-venv wheel install + smoke
+        run: |
+          python -m venv .venv-wheel
+          . .venv-wheel/bin/activate
+          pip install --upgrade pip
+          pip install -c constraints.txt dist/codimension-*.whl
+          pip check
+          python -c "import codimension; import cdmplugins; print('import OK')"
+          pip install -c constraints.txt -r requirements.txt
+          QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dist
+          path: dist/*
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dist
+          path: dist
+
+      - name: Publish to PyPI (Trusted Publishing / OIDC)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # Configure a Trusted Publisher on PyPI for this repository + workflow.
+        # Long-lived PYPI_API_TOKEN is intentionally not used (E03).
+        # Optional: add GitHub Environment ``pypi`` for manual approval gates.

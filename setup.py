@@ -72,13 +72,19 @@ def getLongDescription():
 
 
 def getRequirements():
-    """Provides the requirements list"""
-    if not os.path.exists('requirements.txt'):
-        print('Could not find requirements.txt', file=sys.stderr)
+    """Runtime install_requires from ``requirements-runtime.txt`` (not tooling)."""
+    req_path = "requirements-runtime.txt"
+    if not os.path.exists(req_path):
+        print("Could not find requirements-runtime.txt", file=sys.stderr)
         sys.exit(1)
 
-    with open('requirements.txt') as f:
-        required = f.read().splitlines()
+    required = []
+    with open(req_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            required.append(line)
     return required
 
 

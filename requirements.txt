@@ -1,6 +1,8 @@
 # Convenience full install for local/CI (runtime + tools + security).
 # Canonical runtime deps: pyproject.toml [project.dependencies]
-# Groups: pip install -e ".[dev]"  (tools, lint, test, security)
+#                          and requirements-runtime.txt (setup.py install_requires)
+# Pinned CI snapshot: constraints.txt (regenerate via scripts/generate_constraints.py)
+# Groups: pip install -c constraints.txt -e ".[dev]"  (tools, lint, test, security)
 #
 # cdmpyparser/cdmcfparser: C extensions have python_requires='>=3.5,<3.10' on PyPI.
 # Excluded — codimension uses built-in pure-Python fallbacks (brief_ast, flow_ast) for 3.10+.
