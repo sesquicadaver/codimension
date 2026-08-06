@@ -438,7 +438,7 @@ class ProjectViewer(QWidget):
 
     @staticmethod
     def unloadProject():
-        """Unloads the project"""
+        """Unloads the project via ApplicationServices (R102)."""
         # Check first if the project can be unloaded
         globalData = GlobalData()
         mainWindow = globalData.mainWindow
@@ -447,7 +447,7 @@ class ProjectViewer(QWidget):
             globalData.project.tabsStatus = editorsManager.getTabsStatus()
             editorsManager.closeAll()
             globalData.project.fsBrowserExpandedDirs = mainWindow.getProjectExpandedPaths()
-            globalData.project.unloadProject()
+            globalData.appServices.unload_project()
 
     def __onRestorePrjExpandedDirs(self):
         """Triggered when a project tree should restore its previous state"""

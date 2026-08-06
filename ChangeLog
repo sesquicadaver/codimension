@@ -1,5 +1,7 @@
 2026 Aug 06
 
+* R102: route project open/unload through ``GlobalData.appServices``
+  (mainwindow, projectviewer, recent projects, startup)
 * R101: add ``codimension.app.ApplicationServices`` headless façade
   (project load/unload hooks via injectable port); package + T085 coverage
 * R100: remove Qt from ``utils.importutils``; ``buildDirModules`` uses a

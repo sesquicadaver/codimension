@@ -857,7 +857,7 @@ class CodimensionMainWindow(
 
             project = GlobalData().project
             project.fsBrowserExpandedDirs = self.getProjectExpandedPaths()
-            project.unloadProject(False)
+            GlobalData().appServices.unload_project(emit_signal=False)
 
             # Stop the VCS manager threads
             self.vcsManager.dismissAllPlugins()
@@ -1252,13 +1252,14 @@ class CodimensionMainWindow(
         self.__loadProject(projectFile)
 
     def __loadProject(self, projectFile):
-        """Loads the given project"""
+        """Loads the given project via ApplicationServices (R102)."""
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         if self.em.closeRequest():
-            prj = GlobalData().project
+            globalData = GlobalData()
+            prj = globalData.project
             prj.tabsStatus = self.em.getTabsStatus()
             self.em.closeAll()
-            prj.loadProject(projectFile)
+            globalData.appServices.load_project(projectFile)
             if not self._leftSideBar.isMinimized():
                 self.activateProjectTab()
         QApplication.restoreOverrideCursor()

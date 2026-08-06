@@ -41,7 +41,7 @@
 | 0 Baseline | DONE | pyproject 3.10–3.13, Qt IDE, project/file, CFG |
 | 1 Test harness | DONE | conformance snapshots + parser suite (~260 tests) |
 | 2 Headless core | DONE | `core.syntax` / `core.flow` + `infrastructure/*` + T085 |
-| 3 Modular monolith | PARTIAL → queue R102+ | `app.ApplicationServices` (R101); UI not routed yet |
+| 3 Modular monolith | PARTIAL → queue R103+ | UI→app→project (R102); boundary matrix next |
 | 4–7 Environment | PARTIAL → R110+ | venvbootstrap exists; no typed env / cache registry |
 | 8–9 Deps + local venv | DONE (T140/T141) | auto-on-open still optional → R114 |
 | 10–13 Remote backends | MISSING → R121+ | no `ExecutionTarget` / Docker / SSH / K8s |
@@ -69,6 +69,7 @@
 | D-audit | TODO_FIXME P0–P2 | B01–G01 closed (startup, parsers, persistence, docs, constraints, release, branch protection) |
 | D-R100 | R100 | `utils.importutils` Qt-free; progress via callback; T085 gate covers the module |
 | D-R101 | R101 | `codimension.app.ApplicationServices` façade + headless tests; packaging |
+| D-R102 | R102 | UI/startup load+unload via `GlobalData.appServices` |
 
 ---
 
@@ -78,7 +79,7 @@
 |---|----|------|------------|------|--------|
 | 1 | R100 | Remove Qt import from `utils.importutils` (extract Qt-facing helpers to `ui/` or inject callable) | `scripts/check_core_import_graph.py` extended **or** dedicated gate: `utils.importutils` imports without `ui.qt`; existing import tests green | M | DONE |
 | 2 | R101 | Add `codimension/app/` package: `ApplicationServices` façade (project load/unload hooks, no widgets) | Package importable headless; unit test constructs façade with fakes; Living Spec row | S | DONE |
-| 3 | R102 | Route project open/unload through `app` façade (thin adapter from `GlobalData` / mainwindow) | Call graph shows UI → app → utils/project; no behavior change; regression tests | M | OPEN |
+| 3 | R102 | Route project open/unload through `app` façade (thin adapter from `GlobalData` / mainwindow) | Call graph shows UI → app → utils/project; no behavior change; regression tests | M | DONE |
 | 4 | R103 | Document + enforce module boundary matrix (`core`/`infra`/`app`/`utils`/`ui`/`plugins`) in CI | Script fails on new illegal edges; matrix in Living Spec | M | OPEN |
 | 5 | R110 | Introduce immutable `AnalysisEnvironment` dataclass (python path, source kind, site-packages roots, project id) | Typed API + unit tests for project/session/auto/IDE sources matching today’s `describeAnalysisPythonSource` | M | OPEN |
 | 6 | R111 | Build `AnalysisEnvironment` from project via `venvbootstrap` (single constructor path) | All call sites that need “effective python” can use env object; tests cover precedence | M | OPEN |
@@ -129,7 +130,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R102` — Route project open/unload through `app` façade.
+**First OPEN:** `R103` — Document + enforce module boundary matrix in CI.
 
 ---
 
