@@ -26,7 +26,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Reference: Pytest** | cdmplugins.pytest | pytest.cdmp, __init__.py, pytestdriver.py, pytestresultviewer.py | Smoke: Run pytest (Ctrl+Shift+T) |
 | **Base class** | cdmplugins.lintdriverbase | lintdriverbase.py, process_env.py | systemEnvironment + non-blocking stop |
 | **Git VCS / PAT** | cdmplugins.git | gitconfig.py, credentials.py, githubapi.py | gh→keyring→0600; tests/test_credentials_and_atomic.py |
-| **Atomic `.cdm3`** | utils.atomic_io / project_schema | atomic_io.py, project_schema.py, project.py | atomic save; schema on load |
+| **Atomic `.cdm3`** | utils.atomic_io / project_schema | atomic_io.py, project_schema.py, project.py | atomic save; schema on load/update/reload; tests/test_project_persistence.py |
 | **Project scan T050–T052** | utils.project_scan / project / watcher | project_scan.py, project.py, watcher.py | path-aware exclude; symlink visited; async scan; tests/test_project_scan.py |
 | **Packaging / CI T060–T067** | pyproject / CI | pyproject.toml, requirements.txt, ci.yml, scripts/offscreen_gui_smoke.py | deps groups; matrix 3.10–3.13; wheel; offscreen smoke |
 | **Shim identity T071–T073** | parsers / bootstrap | parsers/__init__.py, check_package_relative_imports.py | unified cdmpyparser/cdmcfparser aliases; T072 CI gate |
@@ -96,7 +96,8 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | D07 / B08 / C04 | production startup + plugin load; Flow UI import gate | ✅ |
 | B03 | cooperative scan cancel + coalescing + no GUI sync fallback | ✅ |
 | B11 | Docs drift / docs gate coverage / `doc/uk` parity | ✅ |
-| B09 / B10 / C05 / D08 / E03 / G01 | schema, atomic settings, UUID, deps lock, release, branch protection | OPEN |
+| B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
+| D08 / E03 / G01 | deps lock, release, branch protection | OPEN |
 
 ---
 
