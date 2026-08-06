@@ -10,8 +10,12 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .venvutils import resolveVenvToPython
+
+if TYPE_CHECKING:
+    from .analysis_environment import AnalysisEnvironment
 
 _LOG = logging.getLogger(__name__)
 
@@ -351,10 +355,37 @@ def getEffectiveProjectPython(project) -> str:
     ``describeAnalysisPythonSource``. Mutating ops must use
     ``requireMutableProjectPython``.
     """
-    kind, path = describeAnalysisPythonSource(project)
-    if kind == SOURCE_INVALID:
+    env = buildAnalysisEnvironment(project)
+    if env.source_kind == SOURCE_INVALID:
         return _resolveWithoutConfigured(project)[1]
-    return path
+    return env.python_path
+
+
+def _project_uuid(project) -> str | None:
+    """Return non-empty project UUID, or ``None``."""
+    if project is None or not project.isLoaded():
+        return None
+    props = getattr(project, "props", None) or {}
+    uid = str(props.get("uuid", "") or "").strip()
+    return uid or None
+
+
+def buildAnalysisEnvironment(project) -> AnalysisEnvironment:
+    """Build an immutable ``AnalysisEnvironment`` for ``project`` (R111).
+
+    Single constructor path: ``describeAnalysisPythonSource`` → typed snapshot
+    with site-packages roots and project id. Callers that need the *effective*
+    analysis interpreter (including broken-config fallback) should use
+    ``getEffectiveProjectPython`` / ``env.python_path`` when not ``invalid``.
+    """
+    from .analysis_environment import AnalysisEnvironment as _AnalysisEnvironment
+
+    kind, path = describeAnalysisPythonSource(project)
+    return _AnalysisEnvironment.from_source(
+        kind,
+        path,
+        project_id=_project_uuid(project),
+    )
 
 
 def describeAnalysisPythonSource(project) -> tuple[str, str]:
@@ -379,13 +410,13 @@ def describeAnalysisPythonSource(project) -> tuple[str, str]:
 
 def formatAnalysisEnvStatus(project) -> tuple[str, str]:
     """Return ``(status_bar_text, tooltip_path)`` for the analysis environment."""
-    kind, path = describeAnalysisPythonSource(project)
-    label = _SOURCE_STATUS_LABELS.get(kind, "Env: IDE")
-    if kind == SOURCE_INVALID:
+    env = buildAnalysisEnvironment(project)
+    label = _SOURCE_STATUS_LABELS.get(env.source_kind, "Env: IDE")
+    if env.source_kind == SOURCE_INVALID:
         fallback = _resolveWithoutConfigured(project)[1]
-        tip = f"configured missing: {path}\nanalysis fallback: {fallback}"
+        tip = f"configured missing: {env.python_path}\nanalysis fallback: {fallback}"
         return label, tip
-    return label, path
+    return label, env.python_path
 
 
 def selectedUnresolvedPackages(enabled: bool, items: list[tuple[str, bool]]) -> list[str]:

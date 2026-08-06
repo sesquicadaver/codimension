@@ -1,5 +1,7 @@
 2026 Aug 06
 
+* R111: ``buildAnalysisEnvironment(project)`` as the single constructor;
+  route effective-python / status bar through the env snapshot
 * R110: add immutable ``AnalysisEnvironment`` dataclass (python path,
   source kind, site-packages roots, project id) with parity tests vs
   ``describeAnalysisPythonSource``
