@@ -42,7 +42,7 @@
 | 1 Test harness | DONE | golden CFG + conformance (~260 тестів) |
 | 2 Headless core | DONE | `core.syntax` / `core.flow` + `infrastructure/*` + T085 |
 | 3 Modular monolith | DONE → R110+ | R100–R103: Qt-free utils, app фасад, routing, матриця меж |
-| 4–7 Environment | PARTIAL → R111+ | є `AnalysisEnvironment` (R110); далі конструктор/drivers/cache |
+| 4–7 Environment | PARTIAL → R112+ | env + конструктор (R110–R111); далі drivers/cache |
 | 8–9 Deps + local venv | DONE (T140/T141) | auto-on-open опційно → R114 |
 | 10–13 Remote backends | MISSING → R121+ | немає `ExecutionTarget` / Docker / SSH / K8s |
 | 14–20 Analysis | PARTIAL → R130+ | діаграми/метрики/profiling є; немає SymbolIndex/overlays/risk |
@@ -72,6 +72,7 @@
 | D-R102 | R102 | UI/startup load+unload через `GlobalData.appServices` |
 | D-R103 | R103 | Матриця меж шарів + CI gate (`check_module_boundaries.py`) |
 | D-R110 | R110 | Immutable `AnalysisEnvironment` + тести паритету |
+| D-R111 | R111 | `buildAnalysisEnvironment(project)` — єдиний конструктор |
 
 ---
 
@@ -84,7 +85,7 @@
 | 3 | R102 | Відкриття/unload проєкту через `app` (тонкий адаптер з GlobalData/mainwindow) | UI → app → utils/project; без регресій | M | DONE |
 | 4 | R103 | Матриця меж модулів (`core`/`infra`/`app`/`utils`/`ui`/`plugins`) у CI | Скрипт падає на нові заборонені ребра | M | DONE |
 | 5 | R110 | Immutable `AnalysisEnvironment` (шлях python, source kind, site-packages, id проєкту) | Typed API + тести паритету з `describeAnalysisPythonSource` | M | DONE |
-| 6 | R111 | Збирати `AnalysisEnvironment` з проєкту через `venvbootstrap` | Єдиний конструктор; тести precedence | M | OPEN |
+| 6 | R111 | Збирати `AnalysisEnvironment` з проєкту через `venvbootstrap` | Єдиний конструктор; тести precedence | M | DONE |
 | 7 | R112 | Прив’язати lint/tool drivers до `AnalysisEnvironment` | Drivers отримують env; оновлені тести | M | OPEN |
 | 8 | R113 | Registry кешів аналізу + invalidate на env refresh / зміну файлу | API invalidate; тест на stale після зміни інтерпретатора | M | OPEN |
 | 9 | R114 | Опція: auto-attach проєктного venv при відкритті | Default off; UI + тест | S | OPEN |
@@ -132,7 +133,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R111` — збирати `AnalysisEnvironment` з проєкту через `venvbootstrap`.
+**Перший OPEN:** `R112` — прив’язати lint/tool drivers до `AnalysisEnvironment`.
 
 ---
 

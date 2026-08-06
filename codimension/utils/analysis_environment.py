@@ -9,12 +9,13 @@
 # (at your option) any later version.
 #
 
-"""Immutable analysis environment snapshot (R110).
+"""Immutable analysis environment snapshot (R110/R111).
 
 Captures the effective Python used for import/analysis, the source kind
 matching ``venvbootstrap.describeAnalysisPythonSource``, optional
-site-packages roots, and the project id. Construction from a live project
-is R111; this module defines the typed value object.
+site-packages roots, and the project id. Prefer
+``venvbootstrap.buildAnalysisEnvironment(project)`` as the single
+constructor from a live project.
 """
 
 from __future__ import annotations

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""R110: AnalysisEnvironment dataclass parity with describeAnalysisPythonSource."""
+"""R110/R111: AnalysisEnvironment + buildAnalysisEnvironment constructor."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from utils.analysis_environment import (
     VALID_SOURCE_KINDS,
     AnalysisEnvironment,
 )
+from utils.run import getProjectPythonPath
 
 
 @pytest.fixture
@@ -33,13 +34,15 @@ def _fake_project(project_dir: Path, interpreter: str = "", uuid: str = "uuid-r1
     return proj
 
 
-def _env_from_project(project) -> AnalysisEnvironment:
-    """Mirror R111 intent: describe → AnalysisEnvironment (explicit in tests)."""
-    kind, path = vb.describeAnalysisPythonSource(project)
-    project_id = None
-    if project is not None and project.isLoaded():
-        project_id = (project.props.get("uuid") or "").strip() or None
-    return AnalysisEnvironment.from_source(kind, path, project_id=project_id)
+def _make_venv_python(root: Path, name: str = "venv") -> str:
+    """Create a minimal executable + site-packages under ``root/name``."""
+    py = root / name / "bin" / "python"
+    py.parent.mkdir(parents=True)
+    py.write_text("#!/bin/sh\n", encoding="utf-8")
+    os.chmod(py, 0o755)
+    (root / name / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
+    (root / name / "lib" / "python3.12" / "site-packages").mkdir(parents=True)
+    return str(py)
 
 
 def test_analysis_environment_is_frozen() -> None:
@@ -66,61 +69,59 @@ def test_analysis_environment_kinds_match_venvbootstrap_constants() -> None:
     }
 
 
-def test_analysis_environment_parity_with_describe(project_dir: Path) -> None:
-    """from_source + describe cover configured/session/auto/ide/invalid."""
+def test_build_analysis_environment_precedence(project_dir: Path) -> None:
+    """R111: buildAnalysisEnvironment follows configured→session→auto→ide."""
     vb.clearSessionPythonInterpreter()
 
-    prop_py = str(project_dir / "custom" / "bin" / "python")
-    Path(prop_py).parent.mkdir(parents=True)
-    Path(prop_py).write_text("#!/bin/sh\n", encoding="utf-8")
-    os.chmod(prop_py, 0o755)
-    # Create a site-packages tree so roots resolve
-    site = project_dir / "custom" / "lib" / "python3.12" / "site-packages"
-    site.mkdir(parents=True)
-
-    env = _env_from_project(_fake_project(project_dir, prop_py))
+    prop_py = _make_venv_python(project_dir, "custom")
+    env = vb.buildAnalysisEnvironment(_fake_project(project_dir, prop_py))
     assert env.source_kind == vb.SOURCE_CONFIGURED
     assert env.python_path == os.path.abspath(prop_py)
     assert env.project_id == "uuid-r110"
-    assert env.site_packages_roots == (str(site),)
-    assert env.is_broken is False
+    assert len(env.site_packages_roots) == 1
+    assert vb.getEffectiveProjectPython(_fake_project(project_dir, prop_py)) == env.python_path
+    assert getProjectPythonPath(_fake_project(project_dir, prop_py)) == env.python_path
 
-    sess = str(project_dir / "sess" / "bin" / "python")
-    Path(sess).parent.mkdir(parents=True)
-    Path(sess).write_text("#!/bin/sh\n", encoding="utf-8")
-    os.chmod(sess, 0o755)
-    (project_dir / "sess" / "lib" / "python3.12" / "site-packages").mkdir(parents=True)
+    sess = _make_venv_python(project_dir, "sess")
     vb.setSessionPythonInterpreter(sess)
-    env = _env_from_project(_fake_project(project_dir, ""))
+    env = vb.buildAnalysisEnvironment(_fake_project(project_dir, ""))
     assert env.source_kind == vb.SOURCE_SESSION
     assert env.python_path == os.path.abspath(sess)
-    assert len(env.site_packages_roots) == 1
     vb.clearSessionPythonInterpreter()
 
-    auto_py = project_dir / ".venv" / "bin" / "python"
-    auto_py.parent.mkdir(parents=True)
-    (project_dir / ".venv" / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
-    auto_py.write_text("#!/bin/sh\n", encoding="utf-8")
-    os.chmod(auto_py, 0o755)
-    (project_dir / ".venv" / "lib" / "python3.12" / "site-packages").mkdir(parents=True)
-    env = _env_from_project(_fake_project(project_dir, ""))
+    auto_py = _make_venv_python(project_dir, ".venv")
+    env = vb.buildAnalysisEnvironment(_fake_project(project_dir, ""))
     assert env.source_kind == vb.SOURCE_AUTO
-    assert env.python_path == os.path.abspath(str(auto_py))
+    assert env.python_path == os.path.abspath(auto_py)
 
     empty = project_dir / "emptyproj"
     empty.mkdir()
-    env = _env_from_project(_fake_project(empty, ""))
+    env = vb.buildAnalysisEnvironment(_fake_project(empty, ""))
     assert env.source_kind == vb.SOURCE_IDE
     assert env.python_path == sys.executable
-    assert env.is_ide is True
     assert env.site_packages_roots == ()
+    assert vb.getEffectiveProjectPython(_fake_project(empty, "")) == sys.executable
 
     missing = str(project_dir / "gone" / "bin" / "python")
-    env = _env_from_project(_fake_project(project_dir, missing))
+    broken = _fake_project(project_dir, missing)
+    env = vb.buildAnalysisEnvironment(broken)
     assert env.source_kind == vb.SOURCE_INVALID
     assert "gone" in env.python_path
-    assert env.is_broken is True
     assert env.site_packages_roots == ()
+    # Effective path falls back; described path stays broken
+    effective = vb.getEffectiveProjectPython(broken)
+    assert effective == os.path.abspath(auto_py)
+    assert effective != env.python_path
+
+
+def test_build_analysis_environment_unloaded_project() -> None:
+    """No loaded project → IDE environment without project id."""
+    proj = MagicMock()
+    proj.isLoaded.return_value = False
+    env = vb.buildAnalysisEnvironment(proj)
+    assert env.source_kind == vb.SOURCE_IDE
+    assert env.python_path == sys.executable
+    assert env.project_id is None
 
 
 def test_analysis_environment_explicit_site_packages() -> None:
