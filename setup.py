@@ -178,6 +178,7 @@ def getPackages():
     """Provides packages"""
     return ['codimension',
             'codimension.core',
+            'codimension.app',
             'codimension.infrastructure',
             'codimension.parsers',
             'codimension.analysis',

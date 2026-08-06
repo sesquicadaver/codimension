@@ -1,5 +1,7 @@
 2026 Aug 06
 
+* R101: add ``codimension.app.ApplicationServices`` headless façade
+  (project load/unload hooks via injectable port); package + T085 coverage
 * R100: remove Qt from ``utils.importutils``; ``buildDirModules`` uses a
   progress callback; extend T085 import-graph gate to cover the module
 * Rebuild ROADMAP as a linear atomic queue (R100–R175) with DONE archive,
