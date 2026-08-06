@@ -37,6 +37,36 @@ def isVirtualEnvironment():
     return hasattr(sys, "real_prefix") or sys.base_prefix != sys.prefix
 
 
+def bundledPluginSearchPaths() -> list[str]:
+    """Return directories that may contain bundled ``*.cdmp`` plugins (D07/B08).
+
+    Prefer the installed ``cdmplugins`` package location — ``sys.argv[0]``-relative
+    paths break under pytest, wheel entry points, and many launcher layouts.
+    """
+    paths: list[str] = []
+    try:
+        import cdmplugins
+
+        bundled = os.path.dirname(os.path.abspath(cdmplugins.__file__))
+        if os.path.isdir(bundled):
+            paths.append(bundled)
+    except ImportError:
+        pass
+
+    if isVirtualEnvironment():
+        argv_candidate = os.path.normpath(os.path.dirname(sys.argv[0]) + "/../cdmplugins")
+        if os.path.isdir(argv_candidate) and argv_candidate not in paths:
+            paths.append(argv_candidate)
+
+    for path in sys.path:
+        if not path.endswith(("/site-packages", "\\site-packages")):
+            continue
+        candidate = os.path.join(path, "cdmplugins")
+        if os.path.isdir(candidate) and candidate not in paths:
+            paths.append(candidate)
+    return paths
+
+
 class CDMPluginManager(PluginManager, QObject):
     """Implements the codimension plugin manager"""
 
@@ -62,17 +92,9 @@ class CDMPluginManager(PluginManager, QObject):
         QObject.__init__(self)
 
         searchPaths = [SETTINGS_DIR + "plugins", "/usr/share/codimension3-plugins"]
-        if isVirtualEnvironment():
-            candidate = os.path.normpath(os.path.dirname(sys.argv[0]) + "/../cdmplugins")
-            if os.path.exists(candidate):
+        for candidate in bundledPluginSearchPaths():
+            if candidate not in searchPaths:
                 searchPaths.append(candidate)
-
-            for path in sys.path:
-                if path.endswith("/site-packages"):
-                    candidate = path + "/cdmplugins"
-                    if os.path.exists(candidate):
-                        if candidate not in searchPaths:
-                            searchPaths.append(candidate)
 
         PluginManager.__init__(self, None, searchPaths, "cdmp")
 
@@ -82,6 +104,14 @@ class CDMPluginManager(PluginManager, QObject):
 
     def load(self):
         """Loads the found plugins"""
+        # yapsy still needs a full ``imp`` surface on Python 3.12+ (package plugins).
+        try:
+            from imp_compat import ensure_imp_compat
+        except ImportError:  # pragma: no cover - package layout variant
+            from codimension.imp_compat import ensure_imp_compat  # type: ignore[no-redef]
+
+        ensure_imp_compat()
+
         # Now, let's check the plugins. They must be of known category.
         collectedPlugins = self.__collect()
         self.__applyDisabledPlugins(collectedPlugins)

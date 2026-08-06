@@ -6,7 +6,6 @@ from __future__ import annotations
 import ast
 import os
 import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -108,40 +107,32 @@ class _PermissiveCFlowSettings:
 
 
 def _ensure_imp_shim() -> None:
-    """yapsy still imports removed stdlib ``imp`` on Python 3.12+."""
-    if "imp" in sys.modules:
-        return
-    imp = types.ModuleType("imp")
+    """Install full ``imp`` compat for yapsy (load_module + PKG_DIRECTORY)."""
+    try:
+        from imp_compat import ensure_imp_compat
+    except ImportError:
+        from codimension.imp_compat import ensure_imp_compat  # type: ignore[no-redef]
 
-    def load_source(name: str, path: str):
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location(name, path)
-        assert spec and spec.loader
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod
-
-    imp.load_source = load_source  # type: ignore[attr-defined]
-    sys.modules["imp"] = imp
+    ensure_imp_compat()
 
 
 def test_match_and_try_star_layout_dispatch() -> None:
-    """Match/TryStar must not KeyError in VirtualCanvas.layoutSuite (T028.1)."""
+    """Match/TryStar must not KeyError in VirtualCanvas.layoutSuite (T028.1 / C04).
+
+    Import failures (except missing PyQt5) fail the test — they must not become
+    ``pytest.skip`` and hide Flow UI regressions.
+    """
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     _ensure_imp_shim()
-    try:
-        from PyQt5.QtWidgets import QApplication
+    pytest.importorskip("PyQt5.QtWidgets")
+    from PyQt5.QtWidgets import QApplication
 
-        app = QApplication.instance() or QApplication([])
-        root = str(Path(__file__).resolve().parents[2] / "codimension")
-        if root not in sys.path:
-            sys.path.insert(0, root)
-        import parsers  # noqa: F401
-
-        from flowui.vcanvas import VirtualCanvas
-    except Exception as exc:  # pragma: no cover
-        pytest.skip(f"Flow UI imports unavailable: {exc}")
+    app = QApplication.instance() or QApplication([])
+    root = str(Path(__file__).resolve().parents[2] / "codimension")
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    import parsers  # noqa: F401
+    from flowui.vcanvas import VirtualCanvas
 
     settings = _PermissiveCFlowSettings()
     match_src = (CASES / "match_case.py").read_text(encoding="utf-8")

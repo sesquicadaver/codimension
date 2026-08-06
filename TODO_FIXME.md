@@ -24,7 +24,8 @@
 | B05 / D04 | CML clustering + indentation scopes | P1 | ✅ split on indent / CML head / cml+ |
 | B06 | `case` keyword через `rfind` | P1 | ✅ `TokenIndex.find_name_before` |
 | D06 | Side comments багаторядкових headers | P1 | ✅ header line span |
-| D07 / B08 / C04 | Production startup + plugin load; Flow UI skip | P1 | 🔓 OPEN |
+| D07 / B08 | Production startup + plugin load | P1 | ✅ bundled paths + full `imp` + smoke gate |
+| C04 | Flow UI import → `pytest.skip` | P1 | ✅ fail on import; only skip missing PyQt5 / TryStar |
 | B11 | Docs drift (TODO/Living Spec/`doc/uk`, docs gate coverage) | P2 | 🔓 OPEN |
 | B09 / B10 / C05 | Schema paths / atomic settings / UUID persist | P2 | 🔓 OPEN |
 | D08 / E03 / G01 | Constraints / release verify / branch protection | P2 | 🔓 OPEN |

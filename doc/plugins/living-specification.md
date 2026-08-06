@@ -93,8 +93,8 @@
 | C02 / C03 | interpreter probe + recreate base (no silent IDE version swap) | ✅ |
 | B04 / D05 | brief header/target positions + encoding cookie line-2 | ✅ |
 | B05 / B06 / D04 / D06 | CML clustering, case token, multiline side comments | ✅ |
+| D07 / B08 / C04 | production startup + plugin load; Flow UI import gate | ✅ |
 | B03 | cooperative scan cancel + coalescing + no GUI sync fallback | ✅ |
-| D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |
 | B11 | Docs drift / docs gate coverage / `doc/uk` parity | OPEN |
 | B09 / B10 / C05 / D08 / E03 / G01 | schema, atomic settings, UUID, deps lock, release, branch protection | OPEN |
 
