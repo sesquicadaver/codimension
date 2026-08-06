@@ -300,7 +300,15 @@ def collect_token_comments(source: str, index: SourceIndex) -> tuple[list[_TokCo
 
 
 def _build_clusters(comments: list[_TokComment]) -> list[_CommentCluster]:
-    """Group consecutive full-line comments; each side comment is its own cluster."""
+    """Group consecutive full-line comments; each side comment is its own cluster.
+
+    Cluster boundaries (D04/B05):
+    - adjacent full-line comments only (no blank line — enforced by line numbers);
+    - same indentation (``begin_pos``);
+    - a new ``# cml …`` head always starts a new cluster;
+    - after a CML head, only ``# cml+ …`` continuations may join;
+    - orphan ``cml+`` does not join an ordinary comment cluster.
+    """
     clusters: list[_CommentCluster] = []
     i = 0
     n = len(comments)
@@ -314,26 +322,28 @@ def _build_clusters(comments: list[_TokComment]) -> list[_CommentCluster]:
             continue
 
         group = [c]
+        head_is_cml = bool(_CML_HEAD.match(c.text.strip()))
         j = i + 1
         while j < n:
             nxt = comments[j]
             if not nxt.full_line or nxt.begin_line != group[-1].end_line + 1:
                 break
+            if nxt.begin_pos != group[0].begin_pos:
+                break
+            nxt_text = nxt.text.strip()
+            if _CML_HEAD.match(nxt_text):
+                break
+            if head_is_cml:
+                if not _CML_CONT.match(nxt_text):
+                    break
+            elif _CML_CONT.match(nxt_text):
+                break
             group.append(nxt)
             j += 1
 
-        # Split CML head + cml+ continuations from trailing plain comments
-        if _CML_HEAD.match(group[0].text.strip()):
-            cml_end = 1
-            while cml_end < len(group) and _CML_CONT.match(group[cml_end].text.strip()):
-                cml_end += 1
-            cml_cluster = _CommentCluster(parts=group[:cml_end])
-            _annotate_cml(cml_cluster)
-            clusters.append(cml_cluster)
-            for plain in group[cml_end:]:
-                clusters.append(_CommentCluster(parts=[plain]))
-        else:
-            clusters.append(_CommentCluster(parts=group))
+        cluster = _CommentCluster(parts=group)
+        _annotate_cml(cluster)
+        clusters.append(cluster)
         i = j
     return clusters
 
@@ -400,15 +410,59 @@ def _set_side(frag: Any, cluster: _CommentCluster) -> None:
         frag.sideComment = obj
 
 
-def _attach_side_to_frag(frag: Any, clusters: list[_CommentCluster]) -> None:
-    """Attach side comments on the fragment header line (``beginLine``)."""
+def _header_line_span(frag: Any) -> tuple[int, int] | None:
+    """Inclusive ``(begin_line, end_line)`` of a fragment header for side comments.
+
+    Multi-line signatures place the side comment on the closing header line, not
+    on ``beginLine`` (D06)::
+
+        def calculate(
+            value,
+        ):  # comment
+            ...
+    """
     bln = _frag_begin_line(frag)
     if bln is None:
+        return None
+    body_lines: list[int] = []
+    for child in getattr(frag, "nsuite", None) or []:
+        child_ln = _frag_begin_line(child)
+        if child_ln is not None:
+            body_lines.append(child_ln)
+    for part in getattr(frag, "parts", None) or []:
+        for child in getattr(part, "nsuite", None) or []:
+            child_ln = _frag_begin_line(child)
+            if child_ln is not None:
+                body_lines.append(child_ln)
+    for ep in getattr(frag, "exceptParts", None) or []:
+        for child in getattr(ep, "nsuite", None) or []:
+            child_ln = _frag_begin_line(child)
+            if child_ln is not None:
+                body_lines.append(child_ln)
+    for attr in ("elsePart", "finallyPart"):
+        part = getattr(frag, attr, None)
+        if part is None:
+            continue
+        for child in getattr(part, "nsuite", None) or []:
+            child_ln = _frag_begin_line(child)
+            if child_ln is not None:
+                body_lines.append(child_ln)
+    header_end = (min(body_lines) - 1) if body_lines else bln
+    if header_end < bln:
+        header_end = bln
+    return bln, header_end
+
+
+def _attach_side_to_frag(frag: Any, clusters: list[_CommentCluster]) -> None:
+    """Attach side comments on any line of the fragment header (D06)."""
+    span = _header_line_span(frag)
+    if span is None:
         return
+    bln, header_end = span
     for cluster in clusters:
         if cluster.consumed or cluster.parts[0].full_line:
             continue
-        if cluster.begin_line == bln:
+        if bln <= cluster.begin_line <= header_end:
             _set_side(frag, cluster)
             cluster.consumed = True
 

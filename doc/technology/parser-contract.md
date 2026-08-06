@@ -63,8 +63,9 @@ Current `flow_ast` and `brief_ast` use `SourceIndex` for UTF-8 byte→char conve
 with exclusive-end absolute offsets (`source[begin:end]`). Comment binder uses
 `abs_from_character_column` for tokenize (A07). Brief class/function headers use
 a precomputed `TokenIndex` so keyword, identifier, and header colon are distinct
-(B04). Remaining OPEN in this cluster: CML/comment clustering (D04/B05), `case`
-token span (B06), multiline side comments (D06).
+(B04). Comment clusters split on indentation and CML record boundaries (D04/B05);
+`match`/`case` spans use the token stream (B06); side comments attach across
+multi-line headers (D06).
 
 ---
 

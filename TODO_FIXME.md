@@ -21,7 +21,9 @@
 | B03 | Project scan cancel/join/coalescing | P1 | ✅ interrupt + coalesce + no GUI sync fallback |
 | B04 | brief keyword/name/colon + target/alias positions | P1 | ✅ `TokenIndex` + identifier spans |
 | D05 | Encoding cookie на 2-му рядку після false «coding» | P1 | ✅ scan both lines until real cookie |
-| B05 / B06 / D04 / D06 | CML clustering / case token / side comments | P1 | 🔓 OPEN |
+| B05 / D04 | CML clustering + indentation scopes | P1 | ✅ split on indent / CML head / cml+ |
+| B06 | `case` keyword через `rfind` | P1 | ✅ `TokenIndex.find_name_before` |
+| D06 | Side comments багаторядкових headers | P1 | ✅ header line span |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI skip | P1 | 🔓 OPEN |
 | B11 | Docs drift (TODO/Living Spec/`doc/uk`, docs gate coverage) | P2 | 🔓 OPEN |
 | B09 / B10 / C05 | Schema paths / atomic settings / UUID persist | P2 | 🔓 OPEN |
