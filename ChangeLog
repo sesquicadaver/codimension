@@ -1,5 +1,7 @@
 2026 Aug 06
 
+* R114: optional ``autoAttachProjectVenv`` setting (default off); on project
+  open, attach first discovered root venv as session overlay (UI Options)
 * R113: analysis cache registry (``brief`` / ``flow``); invalidate on
   env refresh, project unload/rescan, and file change
 * R112: bind lint/tool drivers to ``AnalysisEnvironment`` via

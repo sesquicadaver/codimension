@@ -484,6 +484,7 @@ class MainWindowMenuMixin:
             ("Highlight current line", "currentLineVisible", self._currentLineVisibleChanged),
             ("HOME to first non-space", "jumpToFirstNonSpace", self._homeToFirstNonSpaceChanged),
             ("Auto remove trailing spaces on save", "removeTrailingOnSave", self._removeTrailingChanged),
+            ("Auto-attach project venv on open", "autoAttachProjectVenv", self._autoAttachProjectVenvChanged),
             ("Editor calltips", "editorCalltips", self._editorCalltipsChanged),
             ("Show navigation bar", "showNavigationBar", self._showNavBarChanged),
             ("Show control flow navigation bar", "showCFNavigationBar", self._showCFNavBarChanged),

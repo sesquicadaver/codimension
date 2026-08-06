@@ -210,6 +210,8 @@ _DEFAULT_SETTINGS = {
         [-1, "vcsunversioned.png", None, "220,220,255,255", "Not under VCS control"],
         [-2, "vcsstatuserror.png", None, "255,160,160,255", "Error getting status"],
     ],
+    # R114: when True, project open attaches first discovered root venv as session
+    "autoAttachProjectVenv": False,
 }
 
 
