@@ -91,7 +91,8 @@
 | E06 | exec probe + DQ-safe paths (spaces/Unicode; shebang no whitespace) | ✅ |
 | D02 / B07 | transactional VENV create/recreate (staging + commit) | ✅ |
 | C02 / C03 | interpreter probe + recreate base (no silent IDE version swap) | ✅ |
-| D04 / B05 / B04 / B06 / D05 / D06 | CML/comments, brief positions, case, encoding, side comments | OPEN |
+| B04 / D05 | brief header/target positions + encoding cookie line-2 | ✅ |
+| B05 / B06 / D04 / D06 | CML/comments clustering, case token, side comments | OPEN |
 | B03 | cooperative scan cancel + coalescing + no GUI sync fallback | ✅ |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |
 | B11 | Docs drift / docs gate coverage / `doc/uk` parity | OPEN |

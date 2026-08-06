@@ -92,6 +92,21 @@ def test_character_vs_byte_column_apis() -> None:
     assert source[wrong:hash_char]
 
 
+def test_token_index_resolves_multiline_def_colon() -> None:
+    """B04: TokenIndex finds header colon before the suite body."""
+    from parsers.source_spans import TokenIndex
+
+    source = "def f(\n    x,\n) -> int:\n    return x\n"
+    index = SourceIndex.build(source)
+    tokens = TokenIndex.build(source)
+    tree = ast.parse(source)
+    resolved = tokens.suite_header_positions(index, tree.body[0], "f", "def")
+    assert resolved is not None
+    *_, colon_ln, colon_pos = resolved
+    assert colon_ln == 3
+    assert source.splitlines()[colon_ln - 1][colon_pos - 1] == ":"
+
+
 def test_line_count_and_empty() -> None:
     assert build_source_index("").line_count == 1
     idx = build_source_index("a\nb")

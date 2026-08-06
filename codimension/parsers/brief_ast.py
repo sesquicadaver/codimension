@@ -21,9 +21,9 @@ import tokenize
 from sys import maxsize
 
 try:
-    from .source_spans import SourceIndex
+    from .source_spans import SourceIndex, TokenIndex
 except ImportError:  # loaded as standalone module (conformance harness)
-    from parsers.source_spans import SourceIndex  # type: ignore[no-redef]
+    from parsers.source_spans import SourceIndex, TokenIndex  # type: ignore[no-redef]
 VERSION = "3.4.0-ast"
 
 
@@ -600,28 +600,62 @@ def _attr_name_for_instance(target: ast.AST, self_name: str) -> str | None:
     return None
 
 
-def _iter_bound_names(target: ast.AST):
-    """Yield simple ``Name`` ids bound by an assignment target (incl. unpacking)."""
+def _iter_bound_name_nodes(target: ast.AST):
+    """Yield ``(name, Name node)`` bound by an assignment target (incl. unpacking)."""
     if isinstance(target, ast.Name):
-        yield target.id
+        yield target.id, target
     elif isinstance(target, (ast.Tuple, ast.List)):
         for elt in target.elts:
-            yield from _iter_bound_names(elt)
+            yield from _iter_bound_name_nodes(elt)
     elif isinstance(target, ast.Starred):
-        yield from _iter_bound_names(target.value)
+        yield from _iter_bound_name_nodes(target.value)
+
+
+def _iter_bound_names(target: ast.AST):
+    """Yield simple ``Name`` ids bound by an assignment target (incl. unpacking)."""
+    for name, _node in _iter_bound_name_nodes(target):
+        yield name
+
+
+def _iter_instance_attr_nodes(target: ast.AST, self_name: str):
+    """Yield ``(attr, Attribute node)`` from a target (incl. unpacking of attrs)."""
+    if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name):
+        if target.value.id == self_name:
+            yield target.attr, target
+            return
+    if isinstance(target, (ast.Tuple, ast.List)):
+        for elt in target.elts:
+            yield from _iter_instance_attr_nodes(elt, self_name)
+    elif isinstance(target, ast.Starred):
+        yield from _iter_instance_attr_nodes(target.value, self_name)
 
 
 def _iter_instance_attr_names(target: ast.AST, self_name: str):
     """Yield instance attribute names from a target (incl. unpacking of attrs)."""
-    attr = _attr_name_for_instance(target, self_name)
-    if attr is not None:
+    for attr, _node in _iter_instance_attr_nodes(target, self_name):
         yield attr
-        return
-    if isinstance(target, (ast.Tuple, ast.List)):
-        for elt in target.elts:
-            yield from _iter_instance_attr_names(elt, self_name)
-    elif isinstance(target, ast.Starred):
-        yield from _iter_instance_attr_names(target.value, self_name)
+
+
+def _attr_identifier_pos(index: SourceIndex, attr_node: ast.Attribute, attr_name: str):
+    """Return ``(lineno, 1-based col, abs)`` for the attribute identifier."""
+    begin, end, *_ = index.node_span(attr_node)
+    name_begin = end - len(attr_name)
+    if name_begin < begin:
+        name_begin = begin
+    ln, col = index.line_col_from_abs(name_begin)
+    return ln, col, name_begin
+
+
+def _alias_name_pos(index: SourceIndex, alias: ast.alias, fallback_node: ast.AST):
+    """Return ``(lineno, 1-based col, abs)`` for an import alias name."""
+    ln = getattr(alias, "lineno", None)
+    col = getattr(alias, "col_offset", None)
+    if ln is None or col is None:
+        begin, _end, fln, _eln, bpos, _epos = index.node_span(fallback_node)
+        return fln, bpos, begin
+    begin = index.abs_from_utf8_byte_column(ln, col)
+    line, pos = index.line_col_from_abs(begin)
+    return line, pos, begin
 
 
 def _assignment_targets(stmt: ast.AST) -> list[ast.AST]:
@@ -732,6 +766,7 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
 
     mod_info.isOK = True
     index = SourceIndex.build(source)
+    tokens = TokenIndex.build(source)
 
     def pos(node):
         """Return (lineno, 1-based char column, 0-based abs char position)."""
@@ -739,6 +774,16 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             return 1, 1, 0
         begin, _end, ln, _eln, bpos, _epos = index.node_span(node)
         return ln, bpos, begin
+
+    def header_positions(node, name: str, kind: str):
+        """Resolve identifier / keyword / header-colon positions (B04)."""
+        resolved = tokens.suite_header_positions(index, node, name, kind)  # type: ignore[arg-type]
+        if resolved is not None:
+            return resolved
+        # Fallback: keyword at node start; colon unknown → body end (legacy).
+        ln, p, ap = pos(node)
+        colon_ln = getattr(node, "end_lineno", ln) or ln
+        return ln, p, ap, ln, p, colon_ln, 1
 
     def docstring_from_node(node):
         doc = ast.get_docstring(node)
@@ -759,15 +804,14 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                 end_ln = getattr(first, "end_lineno", first.lineno) or first.lineno
                 mod_info._onDocstring(doc, first.lineno, end_ln)
 
-    # Encoding from first lines
+    # Encoding from first two lines (D05: do not stop on a non-cookie "coding" word)
     import re
 
     for i, line in enumerate(source.split("\n")[:2]):
-        if "coding" in line or "encoding" in line.lower():
-            m = re.search(r"coding[:=]\s*([-\w.]+)", line)
-            if m:
-                ln = i + 1
-                mod_info._onEncoding(m.group(1).strip(), ln, 1, index.line_start(ln))
+        m = re.search(r"coding[:=]\s*([-\w.]+)", line)
+        if m:
+            ln = i + 1
+            mod_info._onEncoding(m.group(1).strip(), ln, 1, index.line_start(ln))
             break
 
     # Module-level: imports and globals (including inside control-flow; T015/audit P0)
@@ -776,7 +820,7 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             continue
         if isinstance(node, ast.Import):
             for alias in node.names:
-                ln, p, ap = pos(node)
+                ln, p, ap = _alias_name_pos(index, alias, node)
                 mod_info._onImport(alias.name, ln, p, ap)
                 if alias.asname:
                     mod_info._onAs(alias.asname)
@@ -786,13 +830,14 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             mod_name = ("." * level) + (node.module or "")
             mod_info._onImport(mod_name, ln, p, ap)
             for alias in node.names:
-                mod_info._onWhat(alias.name, ln, p, ap)
+                wln, wp, wap = _alias_name_pos(index, alias, node)
+                mod_info._onWhat(alias.name, wln, wp, wap)
                 if alias.asname:
                     mod_info._onAs(alias.asname)
         else:
             for t in _assignment_targets(node):
-                ln, p, ap = pos(node)
-                for name in _iter_bound_names(t):
+                for name, name_node in _iter_bound_name_nodes(t):
+                    ln, p, ap = pos(name_node)
                     mod_info._onGlobal(name, ln, p, ap, 0)
 
     def visit_class(node, level):
@@ -811,10 +856,7 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             if dec_name:
                 ln, p, ap = pos(dec)
                 mod_info._onDecorator(dec_name, ln, p, ap)
-        ln, p, ap = pos(node)
-        kw_ln, kw_p = ln, p
-        colon_ln = getattr(node, "end_lineno", ln) or ln
-        colon_p = 1
+        ln, p, ap, kw_ln, kw_p, colon_ln, colon_p = header_positions(node, node.name, "class")
         mod_info._onClass(node.name, ln, p, ap, kw_ln, kw_p, colon_ln, colon_p, level)
         for base in node.bases:
             if isinstance(base, ast.Name):
@@ -835,8 +877,8 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
                 visit_class(stmt, level + 1)
             else:
                 for t in _assignment_targets(stmt):
-                    ln2, p2, ap2 = pos(stmt)
-                    for name in _iter_bound_names(t):
+                    for name, name_node in _iter_bound_name_nodes(t):
+                        ln2, p2, ap2 = pos(name_node)
                         mod_info._onClassAttribute(name, ln2, p2, ap2, level)
 
         for stmt in _iter_suite_statements(node.body):
@@ -859,12 +901,10 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             if dec_name:
                 ln, p, ap = pos(dec)
                 mod_info._onDecorator(dec_name, ln, p, ap)
-        ln, p, ap = pos(node)
-        kw_ln, kw_p = ln, p
-        colon_ln = getattr(node, "end_lineno", ln) or ln
-        colon_p = 1
-        ret_ann = _annotation_str(node.returns)
         is_async = isinstance(node, ast.AsyncFunctionDef)
+        kind = "async" if is_async else "def"
+        ln, p, ap, kw_ln, kw_p, colon_ln, colon_p = header_positions(node, node.name, kind)
+        ret_ann = _annotation_str(node.returns)
         mod_info._onFunction(node.name, ln, p, ap, kw_ln, kw_p, colon_ln, colon_p, level, is_async, ret_ann)
         _emit_function_arguments(mod_info, node.args)
         self_name = _method_self_name(node)
@@ -877,8 +917,8 @@ def _ast_to_brief(mod_info: BriefModuleInfo, source: str, filename: str) -> None
             if self_name is None:
                 return
             for t in _assignment_targets(stmt):
-                for attr in _iter_instance_attr_names(t, self_name):
-                    ln2, p2, ap2 = pos(stmt)
+                for attr, attr_node in _iter_instance_attr_nodes(t, self_name):
+                    ln2, p2, ap2 = _attr_identifier_pos(index, attr_node, attr)
                     mod_info._onInstanceAttribute(attr, ln2, p2, ap2, level)
 
         for stmt in _iter_suite_statements(node.body):

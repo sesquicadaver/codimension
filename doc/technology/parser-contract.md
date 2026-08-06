@@ -61,8 +61,10 @@ Shared helper: `codimension.parsers.source_spans` (T003).
 
 Current `flow_ast` and `brief_ast` use `SourceIndex` for UTF-8 byte→char conversion
 with exclusive-end absolute offsets (`source[begin:end]`). Comment binder uses
-`abs_from_character_column` for tokenize (A07). Remaining OPEN: brief name/colon
-positions — TODO_FIXME A08.
+`abs_from_character_column` for tokenize (A07). Brief class/function headers use
+a precomputed `TokenIndex` so keyword, identifier, and header colon are distinct
+(B04). Remaining OPEN in this cluster: CML/comment clustering (D04/B05), `case`
+token span (B06), multiline side comments (D06).
 
 ---
 

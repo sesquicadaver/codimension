@@ -61,7 +61,9 @@
 
 Поточні `flow_ast` / `brief_ast` використовують `SourceIndex` (UTF-8 byte→char) і
 exclusive-end offsets (`source[begin:end]`). Comment binder: `abs_from_character_column`
-для tokenize (A07). Залишковий OPEN: name/colon — TODO_FIXME A08.
+для tokenize (A07). Header class/function: precomputed `TokenIndex` розділяє
+keyword / identifier / header colon (B04). Залишок кластера OPEN: CML/comments
+(D04/B05), `case` (B06), multiline side comments (D06).
 
 ---
 

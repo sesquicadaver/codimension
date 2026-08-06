@@ -18,7 +18,10 @@ precomputed line starts, UTF-8 byte offset → character index, exclusive end.
 from __future__ import annotations
 
 import ast
+import io
+import tokenize
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,9 +144,140 @@ class SourceIndex:
         return self.source[begin:end]
 
 
+@dataclass(frozen=True, slots=True)
+class TokenIndex:
+    """Precomputed ``tokenize`` stream for one decoded source string (B04).
+
+    Used to resolve definition keyword / identifier / header-colon positions
+    that the AST does not expose separately.
+    """
+
+    tokens: tuple[tokenize.TokenInfo, ...]
+
+    @classmethod
+    def build(cls, source: str) -> TokenIndex:
+        """Tokenize ``source`` once; tolerate incomplete buffers via empty index."""
+        tokens: list[tokenize.TokenInfo] = []
+        try:
+            tokens = list(tokenize.generate_tokens(io.StringIO(source).readline))
+        except (tokenize.TokenError, IndentationError):
+            tokens = []
+        return cls(tokens=tuple(tokens))
+
+    def tok_abs(self, index: SourceIndex, tok: tokenize.TokenInfo) -> int:
+        """Absolute character offset of a tokenize token start."""
+        return index.abs_from_character_column(tok.start[0], tok.start[1])
+
+    def suite_header_positions(
+        self,
+        index: SourceIndex,
+        node: ast.AST,
+        name: str,
+        kind: Literal["class", "def", "async"],
+    ) -> tuple[int, int, int, int, int, int, int] | None:
+        """Return name and keyword/colon positions for a class/def header.
+
+        Returns
+        -------
+        (name_ln, name_pos, name_abs, kw_ln, kw_pos, colon_ln, colon_pos)
+            All line/pos values are 1-based UI columns; ``name_abs`` is 0-based.
+            ``None`` if the token stream cannot resolve the header.
+        """
+        if not self.tokens:
+            return None
+
+        start_ln = getattr(node, "lineno", 1) or 1
+        start_col = getattr(node, "col_offset", 0) or 0
+        start_abs = index.abs_from_utf8_byte_column(start_ln, start_col)
+        body = getattr(node, "body", None) or []
+        if body:
+            first = body[0]
+            body_begin = index.abs_from_utf8_byte_column(
+                getattr(first, "lineno", start_ln) or start_ln,
+                getattr(first, "col_offset", 0) or 0,
+            )
+        else:
+            body_begin = index.node_span(node)[1]
+
+        i = 0
+        n = len(self.tokens)
+        while i < n and self.tok_abs(index, self.tokens[i]) < start_abs:
+            i += 1
+
+        kw_tok: tokenize.TokenInfo | None = None
+        if kind == "async":
+            while i < n:
+                tok = self.tokens[i]
+                i += 1
+                if tok.type == tokenize.NAME and tok.string == "async":
+                    kw_tok = tok
+                    break
+            while i < n:
+                tok = self.tokens[i]
+                i += 1
+                if tok.type == tokenize.NAME and tok.string == "def":
+                    break
+        elif kind == "def":
+            while i < n:
+                tok = self.tokens[i]
+                i += 1
+                if tok.type == tokenize.NAME and tok.string == "def":
+                    kw_tok = tok
+                    break
+        else:  # class
+            while i < n:
+                tok = self.tokens[i]
+                i += 1
+                if tok.type == tokenize.NAME and tok.string == "class":
+                    kw_tok = tok
+                    break
+
+        if kw_tok is None:
+            return None
+
+        name_tok: tokenize.TokenInfo | None = None
+        while i < n:
+            tok = self.tokens[i]
+            abs_t = self.tok_abs(index, tok)
+            if abs_t >= body_begin:
+                break
+            if tok.type == tokenize.NAME and tok.string == name:
+                name_tok = tok
+                break
+            i += 1
+        if name_tok is None:
+            return None
+
+        colon_tok: tokenize.TokenInfo | None = None
+        j = i + 1
+        while j < n:
+            tok = self.tokens[j]
+            abs_t = self.tok_abs(index, tok)
+            if abs_t >= body_begin:
+                break
+            if tok.type == tokenize.OP and tok.string == ":":
+                colon_tok = tok
+            j += 1
+        if colon_tok is None:
+            return None
+
+        name_abs = self.tok_abs(index, name_tok)
+        name_ln, name_pos = index.line_col_from_abs(name_abs)
+        kw_abs = self.tok_abs(index, kw_tok)
+        kw_ln, kw_pos = index.line_col_from_abs(kw_abs)
+        colon_abs = self.tok_abs(index, colon_tok)
+        colon_ln, colon_pos = index.line_col_from_abs(colon_abs)
+        return name_ln, name_pos, name_abs, kw_ln, kw_pos, colon_ln, colon_pos
+
+
 def build_source_index(source: str) -> SourceIndex:
     """Public factory for :class:`SourceIndex`."""
     return SourceIndex.build(source)
+
+
+def build_token_index(source: str) -> TokenIndex:
+    """Public factory for :class:`TokenIndex`."""
+    return TokenIndex.build(source)
 
 
 def node_source_segment(source: str, node: ast.AST) -> str | None:
