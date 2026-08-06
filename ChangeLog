@@ -1,5 +1,8 @@
 2026 Aug 06
 
+* R110: add immutable ``AnalysisEnvironment`` dataclass (python path,
+  source kind, site-packages roots, project id) with parity tests vs
+  ``describeAnalysisPythonSource``
 * R103: document and enforce named-layer boundary matrix
   (``core``/``infrastructure``/``app``/``utils``/``ui``/``plugins``) via
   ``scripts/check_module_boundaries.py`` in CI import-gates
