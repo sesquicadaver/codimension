@@ -1325,6 +1325,9 @@ class EditorsManager(QTabWidget):
                 GlobalData().project.onProjectFileUpdated()
             if existedBefore:
                 # Otherwise the FS watcher will signal the changes
+                from utils.analysis_cache import invalidate_analysis_caches
+
+                invalidate_analysis_caches("file", path=fileName)
                 self.sigFileUpdated.emit(fileName, widget.getUUID())
             self.__mainWindow.vcsManager.setLocallyModified(fileName)
 
@@ -1486,6 +1489,9 @@ class EditorsManager(QTabWidget):
 
         uuid = widget.getUUID()
         if existedBefore:
+            from utils.analysis_cache import invalidate_analysis_caches
+
+            invalidate_analysis_caches("file", path=fileName)
             self.sigFileUpdated.emit(fileName, uuid)
         else:
             if widgetType != MainWindowTabWidgetBase.VCSAnnotateViewer:

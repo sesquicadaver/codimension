@@ -60,7 +60,11 @@ class GlobalDataWrapper:
         from app.services import ApplicationServices
         from plugins.manager.pluginmanager import CDMPluginManager
 
-        from .briefmodinfocache import BriefModuleInfoCache
+        from .analysis_cache import (
+            ensure_default_analysis_caches,
+            get_brief_module_info_cache,
+            get_control_flow_info_cache,
+        )
         from .project import CodimensionProject
 
         self.application = None
@@ -84,8 +88,10 @@ class GlobalDataWrapper:
         # Callbacks (widget, fileName) run after a file is saved. Used by ruffformat for format-on-save.
         self.afterSaveCallbacks = []
 
-        self.briefModinfoCache = BriefModuleInfoCache()
-
+        # R113: shared brief/flow caches registered on the analysis cache registry
+        ensure_default_analysis_caches()
+        self.briefModinfoCache = get_brief_module_info_cache()
+        self.controlFlowInfoCache = get_control_flow_info_cache()
         self.graphvizAvailable = self.__checkGraphviz()
         self.javaAvailable = self.__checkJava()
         self.hexdumpAvailable = self.__checkHexdump()
@@ -200,4 +206,7 @@ def GlobalData() -> GlobalDataWrapper:
 def resetGlobalDataForTests() -> None:
     """Test helper: drop the lazy singleton so the next GlobalData() rebuilds it."""
     global _globals_singleton
+    from .analysis_cache import reset_analysis_cache_registry_for_tests
+
     _globals_singleton = None
+    reset_analysis_cache_registry_for_tests()

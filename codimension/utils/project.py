@@ -463,12 +463,19 @@ class CodimensionProject(
 
     def onFSChanged(self, items):
         """Triggered when the watcher detects changes"""
+        from .analysis_cache import invalidate_analysis_caches
+
         for item in items:
             try:
                 if item.startswith("+"):
-                    self.filesList.add(item[1:])
+                    path = item[1:]
+                    self.filesList.add(path)
+                    # New/replaced content: drop stale parse if any.
+                    invalidate_analysis_caches("file", path=path)
                 else:
-                    self.filesList.remove(item[1:])
+                    path = item[1:]
+                    self.filesList.remove(path)
+                    invalidate_analysis_caches("file", path=path)
             except Exception:
                 pass
         self.sigFSChanged.emit(items)
@@ -476,6 +483,12 @@ class CodimensionProject(
     def unloadProject(self, emitSignal=True):
         """Unloads the current project if required"""
         self.sigProjectAboutToUnload.emit()
+        try:
+            from .analysis_cache import invalidate_analysis_caches
+
+            invalidate_analysis_caches("project")
+        except Exception:
+            pass
         self.__resetValues()
         if emitSignal:
             # No need to send a signal e.g. if IDE is closing
@@ -649,13 +662,19 @@ class CodimensionProject(
                 self.sigProjectChanged.emit(self.Properties)
 
     def refreshAnalysisEnvironment(self):
-        """Rescan after interpreter / site-packages change (T141).
+        """Rescan after interpreter / site-packages change (T141/R113).
 
         Used when props did not change (session overlay, pip sync into the same
         interpreter) but import resolution must pick up a new environment.
         """
         if not self.isLoaded():
             return
+        try:
+            from .analysis_cache import invalidate_analysis_caches
+
+            invalidate_analysis_caches("project")
+        except Exception:
+            pass
         self.__generateFilesList(on_complete=self.__finishAnalysisRescan)
 
     def onProjectFileUpdated(self):

@@ -47,6 +47,7 @@
 | **AnalysisEnvironment R110** | utils.analysis_environment | analysis_environment.py | frozen dataclass (path/kind/site-packages/project_id); parity with describe kinds; tests/test_analysis_environment.py |
 | **buildAnalysisEnvironment R111** | utils.venvbootstrap | `buildAnalysisEnvironment`; `getEffectiveProjectPython` / status via env | single constructor; precedence tests in test_analysis_environment.py |
 | **Drivers ↔ AnalysisEnvironment R112** | cdmplugins.process_env + drivers | `resolve_tool_python_and_environment`; LintDriverBase / coverage / pytest / pipaudit / ruffformat | PYTHONPATH/VIRTUAL_ENV from env; tests/test_lint_drivers.py, test_process_env.py |
+| **Analysis cache registry R113** | utils.analysis_cache + brief/flow caches | `invalidate(project\|file\|env)`; ControlFlowInfoCache; wire env refresh / FS / save | tests/test_analysis_cache.py |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -106,7 +107,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R113**.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R114**.
 
 ### Матриця меж модулів (R103)
 
