@@ -7,7 +7,7 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
    - [TODO_FIXME.md](TODO_FIXME.md) — first 🔓 OPEN or PARTIAL row (P0 before P1 before P2)
    - If TODO has no open rows, [ROADMAP.uk.md](ROADMAP.uk.md) / [ROADMAP.md](ROADMAP.md) — first incomplete phase acceptance
 3. Implement that item on a feature branch, open a PR to `sesquicadaver/codimension`, drive CI green.
-4. After green CI + clean review of this cycle’s changes: commit/push as needed; merge per project autopilot standing orders unless the user attached a babysit-only skill that forbids merge.
+4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME + Living Spec + ChangeLog for the closed item.
 
 Current pointer after B03 close: **B04 / B05 / B06 / D04 / D05 / D06** (parser positions / CML / case / encoding / side comments).

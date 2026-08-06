@@ -14,4 +14,4 @@ When the user says `autopilot`, `/autopilot`, or `.autopilot`:
 3. Also see project file `.autopilot` for the current pointer.
 4. Implement on a feature branch, open PR to `sesquicadaver/codimension`, green CI.
 5. Update `TODO_FIXME.md`, Living Spec, and `ChangeLog`.
-6. Merge when CI is green unless a babysit-only skill forbids merge for that turn.
+6. After green CI + clean review: **merge the PR yourself** (standing order). Do not leave merge to the user; babysit-only skills do not override this.
