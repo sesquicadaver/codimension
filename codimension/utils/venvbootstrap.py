@@ -10,8 +10,12 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .venvutils import resolveVenvToPython
+
+if TYPE_CHECKING:
+    from .analysis_environment import AnalysisEnvironment
 
 _LOG = logging.getLogger(__name__)
 
@@ -366,7 +370,7 @@ def _project_uuid(project) -> str | None:
     return uid or None
 
 
-def buildAnalysisEnvironment(project):
+def buildAnalysisEnvironment(project) -> AnalysisEnvironment:
     """Build an immutable ``AnalysisEnvironment`` for ``project`` (R111).
 
     Single constructor path: ``describeAnalysisPythonSource`` → typed snapshot
@@ -374,10 +378,10 @@ def buildAnalysisEnvironment(project):
     analysis interpreter (including broken-config fallback) should use
     ``getEffectiveProjectPython`` / ``env.python_path`` when not ``invalid``.
     """
-    from .analysis_environment import AnalysisEnvironment
+    from .analysis_environment import AnalysisEnvironment as _AnalysisEnvironment
 
     kind, path = describeAnalysisPythonSource(project)
-    return AnalysisEnvironment.from_source(
+    return _AnalysisEnvironment.from_source(
         kind,
         path,
         project_id=_project_uuid(project),
