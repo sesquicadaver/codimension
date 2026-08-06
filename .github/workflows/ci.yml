@@ -113,7 +113,7 @@ jobs:
             requirements-runtime.txt
             constraints.txt
             pyproject.toml
-      - name: Install and run T072/T085 gates
+      - name: Install and run T072/T085/R103 gates
         run: |
           python -m venv .venv
           . .venv/bin/activate
@@ -121,6 +121,7 @@ jobs:
           pip install -c constraints.txt -e ".[lint]"
           python scripts/check_package_relative_imports.py
           python scripts/check_core_import_graph.py
+          python scripts/check_module_boundaries.py
           python scripts/check_constraints.py
 
   test:

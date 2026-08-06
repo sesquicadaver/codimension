@@ -41,7 +41,7 @@
 | 0 Baseline | DONE | pyproject 3.10–3.13, Qt IDE, проєкт/файл, CFG |
 | 1 Test harness | DONE | golden CFG + conformance (~260 тестів) |
 | 2 Headless core | DONE | `core.syntax` / `core.flow` + `infrastructure/*` + T085 |
-| 3 Modular monolith | PARTIAL → R103+ | UI→app→project (R102); далі матриця меж |
+| 3 Modular monolith | DONE → R110+ | R100–R103: Qt-free utils, app фасад, routing, матриця меж |
 | 4–7 Environment | PARTIAL → R110+ | є venvbootstrap; немає typed env / registry кешу |
 | 8–9 Deps + local venv | DONE (T140/T141) | auto-on-open опційно → R114 |
 | 10–13 Remote backends | MISSING → R121+ | немає `ExecutionTarget` / Docker / SSH / K8s |
@@ -70,6 +70,7 @@
 | D-R100 | R100 | `utils.importutils` без Qt; progress через callback; T085 покриває модуль |
 | D-R101 | R101 | `codimension.app.ApplicationServices` + headless тести; packaging |
 | D-R102 | R102 | UI/startup load+unload через `GlobalData.appServices` |
+| D-R103 | R103 | Матриця меж шарів + CI gate (`check_module_boundaries.py`) |
 
 ---
 
@@ -80,7 +81,7 @@
 | 1 | R100 | Прибрати імпорт Qt з `utils.importutils` (винести в `ui/` або DI) | Gate / тест: модуль без `ui.qt`; існуючі import-тести зелені | M | DONE |
 | 2 | R101 | Пакет `codimension/app/`: фасад `ApplicationServices` (load/unload без віджетів) | Headless імпорт + unit з фейками; рядок у Living Spec | S | DONE |
 | 3 | R102 | Відкриття/unload проєкту через `app` (тонкий адаптер з GlobalData/mainwindow) | UI → app → utils/project; без регресій | M | DONE |
-| 4 | R103 | Матриця меж модулів (`core`/`infra`/`app`/`utils`/`ui`/`plugins`) у CI | Скрипт падає на нові заборонені ребра | M | OPEN |
+| 4 | R103 | Матриця меж модулів (`core`/`infra`/`app`/`utils`/`ui`/`plugins`) у CI | Скрипт падає на нові заборонені ребра | M | DONE |
 | 5 | R110 | Immutable `AnalysisEnvironment` (шлях python, source kind, site-packages, id проєкту) | Typed API + тести паритету з `describeAnalysisPythonSource` | M | OPEN |
 | 6 | R111 | Збирати `AnalysisEnvironment` з проєкту через `venvbootstrap` | Єдиний конструктор; тести precedence | M | OPEN |
 | 7 | R112 | Прив’язати lint/tool drivers до `AnalysisEnvironment` | Drivers отримують env; оновлені тести | M | OPEN |
@@ -130,7 +131,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R103` — матриця меж модулів у CI.
+**Перший OPEN:** `R110` — immutable `AnalysisEnvironment`.
 
 ---
 
