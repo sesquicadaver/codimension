@@ -110,7 +110,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R121**.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R122**.
 
 ### Матриця меж модулів (R103)
 
