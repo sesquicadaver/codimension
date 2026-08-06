@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import os
 import time
 from os.path import realpath, sep
 from pathlib import Path
@@ -11,10 +10,10 @@ from pathlib import Path
 import pytest
 
 from codimension.utils.project_scan import (
+    compile_basename_filters,
     is_excluded_by_absolute_paths,
     scan_project_files,
     should_exclude_basename,
-    compile_basename_filters,
 )
 
 

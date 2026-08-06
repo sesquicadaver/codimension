@@ -1,5 +1,7 @@
 2026 Aug 06
 
+* Audit P1 B03: project scan cooperative ``requestInterruption``, bounded
+  join, ``deleteLater``, request coalescing, no sync fallback on GUI thread
 * Audit P1 C02/C03: mutable VENV requires Python probe + ``pyvenv.cfg``;
   recreate resolves version-matched base from cfg/PATH (no silent
   ``sys.executable`` version swap)
