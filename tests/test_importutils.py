@@ -12,7 +12,7 @@ PARSERS_DIR = os.path.join(ROOT, "codimension", "parsers")
 
 
 def _load_importutils():
-    """Load importutils without the full IDE dependency chain."""
+    """Load importutils without the full IDE dependency chain (Qt-free)."""
     parsers_pkg = types.ModuleType("parsers")
     parsers_pkg.__path__ = [PARSERS_DIR]
     sys.modules["parsers"] = parsers_pkg
@@ -25,12 +25,6 @@ def _load_importutils():
     sys.modules["parsers.brief_ast"] = brief_ast
     spec.loader.exec_module(brief_ast)
     sys.modules["cdmpyparser"] = brief_ast
-
-    ui_pkg = types.ModuleType("ui")
-    sys.modules["ui"] = ui_pkg
-    qt_mod = types.ModuleType("ui.qt")
-    qt_mod.QApplication = type("QApplication", (), {"processEvents": staticmethod(lambda: None)})
-    sys.modules["ui.qt"] = qt_mod
 
     utils_pkg = types.ModuleType("utils")
     utils_pkg.__path__ = [UTILS_DIR]
@@ -66,6 +60,16 @@ def _load_importutils():
 _importutils = _load_importutils()
 getUnresolvedPackageNames = _importutils.getUnresolvedPackageNames
 getRequirementsHint = _importutils.getRequirementsHint
+buildDirModules = _importutils.buildDirModules
+
+
+def test_importutils_module_has_no_ui_qt_dependency():
+    """R100: importutils must not pull ui.qt (gate + load-time check)."""
+    assert not hasattr(_importutils, "QApplication")
+    with open(os.path.join(UTILS_DIR, "importutils.py"), encoding="utf-8") as handle:
+        source = handle.read()
+    assert "ui.qt" not in source
+    assert "QApplication" not in source
 
 
 def test_get_unresolved_package_names_skips_relative_imports():
@@ -91,3 +95,16 @@ def test_get_requirements_hint_returns_none_for_relative_only_errors(tmp_path):
     errors = ["Could not resolve 'from .pkg import x' at line 1"]
     unresolved = getUnresolvedPackageNames(errors)
     assert getRequirementsHint(str(tmp_path), unresolved) is None
+
+
+def test_build_dir_modules_reports_progress_without_qt(tmp_path):
+    """buildDirModules uses a callable progress hook, not Qt widgets."""
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    (pkg / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    messages = []
+    modules = buildDirModules(str(pkg), progress_callback=messages.append)
+    assert "mod" in modules
+    assert messages
+    assert all(isinstance(m, str) and m.startswith("Scanning ") for m in messages)

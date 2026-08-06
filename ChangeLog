@@ -1,5 +1,7 @@
 2026 Aug 06
 
+* R100: remove Qt from ``utils.importutils``; ``buildDirModules`` uses a
+  progress callback; extend T085 import-graph gate to cover the module
 * Rebuild ROADMAP as a linear atomic queue (R100–R175) with DONE archive,
   dependency-optimized order, and explicit DEFERRED items; autopilot points
   at R100 after empty TODO_FIXME
