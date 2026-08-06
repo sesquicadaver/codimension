@@ -319,13 +319,9 @@ def assertSafeMutableProjectPython(python_path: str, *, project_dir: str | None 
     if not resolved:
         raise RuntimeError(f"refusing pip/venv mutate: venv root has no python: {root}")
     if os.path.realpath(resolved) != os.path.realpath(path):
-        raise RuntimeError(
-            f"refusing pip/venv mutate: executable {path} does not match venv root {root}"
-        )
+        raise RuntimeError(f"refusing pip/venv mutate: executable {path} does not match venv root {root}")
     if os.path.realpath(str(info["prefix"])) != os.path.realpath(root):
-        raise RuntimeError(
-            f"refusing pip/venv mutate: probe prefix {info['prefix']} != venv root {root}"
-        )
+        raise RuntimeError(f"refusing pip/venv mutate: probe prefix {info['prefix']} != venv root {root}")
     if project_dir and not isPathInsideProject(root, project_dir):
         raise RuntimeError(f"refusing pip/venv mutate: venv outside project: {root}")
     return path

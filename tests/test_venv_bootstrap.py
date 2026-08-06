@@ -573,4 +573,3 @@ def test_resolve_recreate_base_refuses_version_mismatch(project_dir, monkeypatch
     monkeypatch.setattr(vb.sys, "version_info", (3, 13, 0, "final", 0))
     with pytest.raises(RuntimeError, match="cannot resolve base Python 3.10"):
         vb.resolveRecreateBasePython(str(py))
-
