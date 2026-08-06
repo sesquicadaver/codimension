@@ -9,7 +9,6 @@ import os
 import shutil
 import subprocess
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .venvutils import resolveVenvToPython
@@ -869,27 +868,21 @@ def collectInstallSources(project) -> dict:
       requirement_files: list[str]
       has_pyproject: bool
       unresolved_packages: list[str]
-    """
-    from .importutils import generateRequirementsFromProject
 
-    project_dir = project.getProjectDir()
-    req_files: list[str] = []
-    if project_dir and os.path.isdir(project_dir):
-        for path in sorted(Path(project_dir).glob("requirements*.txt")):
-            if path.is_file():
-                req_files.append(str(path.resolve()))
-    has_pyproject = bool(project_dir and os.path.isfile(os.path.join(project_dir, "pyproject.toml")))
-    packages: list[str] = []
+    Implementation delegates to ``DependencyManifest`` (R120).
+    """
+    from .dependency_manifest import buildDependencyManifest
+
     try:
-        packages_set, _ = generateRequirementsFromProject(project.filesList)
-        packages = sorted(packages_set)
+        return buildDependencyManifest(project).as_dict()
     except Exception:
-        _LOG.exception("collect unresolved packages failed")
-    return {
-        "requirement_files": req_files,
-        "has_pyproject": has_pyproject,
-        "unresolved_packages": packages,
-    }
+        _LOG.exception("collectInstallSources failed")
+        project_dir = project.getProjectDir() if project is not None else None
+        return {
+            "requirement_files": [],
+            "has_pyproject": bool(project_dir and os.path.isfile(os.path.join(project_dir, "pyproject.toml"))),
+            "unresolved_packages": [],
+        }
 
 
 def saveInterpreterToProject(project, python_or_venv: str) -> None:

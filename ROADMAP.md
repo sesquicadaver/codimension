@@ -76,6 +76,7 @@
 | D-R112 | R112 | Lint/tool drivers + process_env bound to AnalysisEnvironment |
 | D-R113 | R113 | Analysis cache registry (brief/flow) + invalidate(project|file|env) |
 | D-R114 | R114 | Optional auto-attach project venv on open (session overlay; Options toggle) |
+| D-R120 | R120 | `DependencyManifest` + export script; collectInstallSources via manifest |
 
 ---
 
@@ -92,7 +93,7 @@
 | 7 | R112 | Bind lint/tool drivers to `AnalysisEnvironment` (replace ad-hoc path fetches in `process_env` / drivers) | Drivers receive env; `tests/test_lint_drivers.py` + process_env tests updated | M | DONE |
 | 8 | R113 | Analysis cache registry: register brief/flow caches; invalidate on env refresh + file change | API `invalidate(project|file|env)`; tests prove stale purge after interpreter change | M | DONE |
 | 9 | R114 | Optional setting: auto-attach detected project venv on project open | Setting default off; when on, opens project sets session/project interpreter per policy; UI + test | S | DONE |
-| 10 | R120 | `DependencyManifest`: formalize `collectInstallSources` → exportable requirements list / lock hint | Headless API + CLI/script or project action writes manifest; unit test | M | OPEN |
+| 10 | R120 | `DependencyManifest`: formalize `collectInstallSources` → exportable requirements list / lock hint | Headless API + CLI/script or project action writes manifest; unit test | M | DONE |
 | 11 | R121 | Define `ExecutionTarget` protocol (`run` / `debug` / `profile` / `which_python`) | Protocol in `core` or `app`; mypy-checked; fake target test | S | OPEN |
 | 12 | R122 | Adapt local process runner (`utils.run` / RunManager) to `ExecutionTarget` | Local runs go through protocol; existing argv/debug tests green | M | OPEN |
 | 13 | R123 | Docker `ExecutionTarget` MVP (image + mount workspace + run argv) | Integration test with docker-or-skip; docs; no GUI required for MVP | L | OPEN |
@@ -136,7 +137,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R120` — `DependencyManifest` from install sources.
+**First OPEN:** `R121` — `ExecutionTarget` protocol.
 
 ---
 

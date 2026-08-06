@@ -76,6 +76,7 @@
 | D-R112 | R112 | Lint/tool drivers + process_env на AnalysisEnvironment |
 | D-R113 | R113 | Registry кешів аналізу (brief/flow) + invalidate(project|file|env) |
 | D-R114 | R114 | Опційне auto-attach проєктного venv при відкритті (session; Options) |
+| D-R120 | R120 | `DependencyManifest` + export script; collectInstallSources через manifest |
 
 ---
 
@@ -92,7 +93,7 @@
 | 7 | R112 | Прив’язати lint/tool drivers до `AnalysisEnvironment` | Drivers отримують env; оновлені тести | M | DONE |
 | 8 | R113 | Registry кешів аналізу + invalidate на env refresh / зміну файлу | API invalidate; тест на stale після зміни інтерпретатора | M | DONE |
 | 9 | R114 | Опція: auto-attach проєктного venv при відкритті | Default off; UI + тест | S | DONE |
-| 10 | R120 | `DependencyManifest` з `collectInstallSources` → експорт requirements | Headless API + тест | M | OPEN |
+| 10 | R120 | `DependencyManifest` з `collectInstallSources` → експорт requirements | Headless API + тест | M | DONE |
 | 11 | R121 | Протокол `ExecutionTarget` (`run` / `debug` / `profile` / `which_python`) | Protocol + fake target тест | S | OPEN |
 | 12 | R122 | Локальний runner (`utils.run` / RunManager) через `ExecutionTarget` | Існуючі argv/debug тести зелені | M | OPEN |
 | 13 | R123 | Docker `ExecutionTarget` MVP | docker-or-skip інтеграційний тест; docs | L | OPEN |
@@ -136,7 +137,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R120` — `DependencyManifest` з джерел install.
+**Перший OPEN:** `R121` — протокол `ExecutionTarget`.
 
 ---
 
