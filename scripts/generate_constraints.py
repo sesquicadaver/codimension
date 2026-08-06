@@ -4,6 +4,9 @@
 
 Creates a temporary virtualenv, installs the project with all optional groups,
 freezes non-editable pins, and writes ``constraints.txt`` at the repo root.
+
+Prefer generating with **Python 3.10** (lowest CI matrix) so pins resolve on
+3.10–3.13. If a pin's ``Requires-Python`` excludes 3.10, lower it before commit.
 """
 
 from __future__ import annotations

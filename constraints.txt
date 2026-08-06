@@ -1,5 +1,6 @@
 # Generated dependency snapshot for CI/dev (D08).
-# Regenerate: python scripts/generate_constraints.py
+# Baseline: pins must resolve on Python 3.10 (lowest CI matrix) through 3.13.
+# Regenerate: python3.10 scripts/generate_constraints.py  (prefer 3.10 interpreter)
 # Runtime metadata ranges stay in pyproject.toml / requirements*.txt
 ast_serialize==0.6.0
 astroid==2.5
@@ -49,12 +50,12 @@ pyflakes==2.4.0
 Pygments==2.20.0
 pylint==2.5.3
 pyparsing==3.3.2
-PyQt5-Qt5==5.15.19
 PyQt5==5.15.11
+PyQt5-Qt5==5.15.19
 PyQt5_sip==12.19.0
+pytest==9.1.1
 pytest-cov==7.1.0
 pytest-qt==4.5.0
-pytest==9.1.1
 python-magic==0.4.27
 PyYAML==6.0.3
 QDarkStyle==3.2.3
@@ -67,7 +68,7 @@ ruff==0.16.1
 setuptools==83.0.0
 six==1.17.0
 sortedcontainers==2.4.0
-stevedore==5.9.0
+stevedore==5.8.0
 toml==0.10.2
 tomli==2.4.1
 tomli_w==1.2.0
