@@ -21,6 +21,15 @@ from utils.run import getProjectPythonPath
 @pytest.fixture
 def project_dir(tmp_path: Path) -> Path:
     """Temporary project root."""
+    # Drop lint-driver stubs that may have replaced real utils modules.
+    for name in (
+        "utils.venvbootstrap",
+        "utils.analysis_environment",
+        "utils.run",
+        "utils.misc",
+        "utils",
+    ):
+        sys.modules.pop(name, None)
     root = tmp_path / "proj"
     root.mkdir()
     return root

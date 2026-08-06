@@ -21,7 +21,8 @@ import sys
 
 from ui.qt import QByteArray, QProcess, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
-from utils.run import getProjectPythonPath
+
+from cdmplugins.process_env import resolve_tool_python_and_environment
 
 
 class PipAuditDriver(QWidget):
@@ -67,11 +68,10 @@ class PipAuditDriver(QWidget):
 
         self.__args = ["-m", "pip_audit", "--format", "json"]
 
-        from cdmplugins.process_env import build_tool_process_environment
-
-        processEnvironment = build_tool_process_environment(self.__encoding)
+        self.__pythonPath, processEnvironment = resolve_tool_python_and_environment(
+            self.__ide.project, self.__encoding
+        )
         self.__process.setProcessEnvironment(processEnvironment)
-        self.__pythonPath = getProjectPythonPath(self.__ide.project)
         self.__process.start(self.__pythonPath, self.__args)
 
         if not self.__process.waitForStarted():

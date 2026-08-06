@@ -1,5 +1,7 @@
 2026 Aug 06
 
+* R112: bind lint/tool drivers to ``AnalysisEnvironment`` via
+  ``resolve_tool_python_and_environment`` (PYTHONPATH / VIRTUAL_ENV)
 * R111: ``buildAnalysisEnvironment(project)`` as the single constructor;
   route effective-python / status bar through the env snapshot
 * R110: add immutable ``AnalysisEnvironment`` dataclass (python path,

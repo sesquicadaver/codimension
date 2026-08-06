@@ -35,7 +35,7 @@ from ui.qt import (
 from utils.fileutils import isPythonMime
 from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
-from utils.run import getProjectPythonPath
+from utils.venvbootstrap import buildAnalysisEnvironment
 
 from .ruffformatconfig import loadFormatOnSave, saveFormatOnSave
 from .ruffformatdriver import RuffFormatDriver
@@ -184,7 +184,8 @@ class RuffFormatPlugin(WizardInterface):
         if not os.path.isabs(fileName):
             return
         try:
-            pythonPath = getProjectPythonPath(self.ide.project)
+            analysis_env = buildAnalysisEnvironment(self.ide.project, for_tools=True)
+            pythonPath = analysis_env.python_path
             result = subprocess.run(
                 [pythonPath, "-m", "ruff", "format", fileName],
                 capture_output=True,
