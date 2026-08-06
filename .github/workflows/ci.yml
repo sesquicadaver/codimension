@@ -27,13 +27,15 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             requirements.txt
+            requirements-runtime.txt
+            constraints.txt
             pyproject.toml
       - name: Install lint extras
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
-          pip install -e ".[lint]"
+          pip install -c constraints.txt -e ".[lint]"
       - name: Ruff check
         run: |
           . .venv/bin/activate
@@ -54,13 +56,15 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             requirements.txt
+            requirements-runtime.txt
+            constraints.txt
             pyproject.toml
       - name: Install lint extras
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
-          pip install -e ".[lint]"
+          pip install -c constraints.txt -e ".[lint]"
       - name: Ruff format check
         run: |
           . .venv/bin/activate
@@ -81,13 +85,15 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             requirements.txt
+            requirements-runtime.txt
+            constraints.txt
             pyproject.toml
       - name: Install lint extras
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
-          pip install -e ".[lint]"
+          pip install -c constraints.txt -e ".[lint]"
       - name: Mypy
         run: |
           . .venv/bin/activate
@@ -104,15 +110,18 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             requirements.txt
+            requirements-runtime.txt
+            constraints.txt
             pyproject.toml
       - name: Install and run T072/T085 gates
         run: |
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
-          pip install -e ".[lint]"
+          pip install -c constraints.txt -e ".[lint]"
           python scripts/check_package_relative_imports.py
           python scripts/check_core_import_graph.py
+          python scripts/check_constraints.py
 
   test:
     runs-on: ubuntu-latest
@@ -131,6 +140,8 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             requirements.txt
+            requirements-runtime.txt
+            constraints.txt
             pyproject.toml
 
       - name: Install and pytest
@@ -138,7 +149,7 @@ jobs:
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
-          pip install -e ".[test,tools,security]"
+          pip install -c constraints.txt -e ".[test,tools,security]"
           pip check
           echo "::group::Debugger session e2e (offscreen)"
           QT_QPA_PLATFORM=offscreen pytest tests/debugger/ -m debugger_session -v --tb=short
@@ -157,6 +168,8 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             requirements.txt
+            requirements-runtime.txt
+            constraints.txt
             pyproject.toml
 
       - name: Build wheel and clean-venv install
@@ -169,7 +182,7 @@ jobs:
           python -m venv .venv-wheel
           . .venv-wheel/bin/activate
           pip install --upgrade pip
-          pip install dist/codimension-*.whl
+          pip install -c constraints.txt dist/codimension-*.whl
           pip check
           python -c "import codimension; print(codimension.__file__)"
 
@@ -185,6 +198,8 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             requirements.txt
+            requirements-runtime.txt
+            constraints.txt
             pyproject.toml
 
       - name: Install, import, pip-audit, offscreen GUI smoke
@@ -192,10 +207,10 @@ jobs:
           python -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -e .
+          pip install -c constraints.txt -r requirements.txt
+          pip install -c constraints.txt -e .
           python -c "import codimension; import cdmplugins; print('OK')"
-          pip install pip-audit
+          pip install -c constraints.txt pip-audit
           pip-audit -r requirements.txt
           QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py
 
@@ -208,4 +223,42 @@ jobs:
         with:
           python-version: "3.12"
       - name: Markdown link and README invariants
-        run: python scripts/check_docs.py
+        run: |
+          python scripts/check_docs.py
+          python scripts/check_constraints.py
+
+  # Single required status for branch protection (G01).
+  ci-gate:
+    if: always()
+    needs:
+      - ruff
+      - ruff-format
+      - mypy
+      - import-gates
+      - test
+      - wheel
+      - smoke
+      - docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all CI jobs success
+        run: |
+          set -euo pipefail
+          results=(
+            "${{ needs.ruff.result }}"
+            "${{ needs.ruff-format.result }}"
+            "${{ needs.mypy.result }}"
+            "${{ needs.import-gates.result }}"
+            "${{ needs.test.result }}"
+            "${{ needs.wheel.result }}"
+            "${{ needs.smoke.result }}"
+            "${{ needs.docs.result }}"
+          )
+          for r in "${results[@]}"; do
+            echo "need result: $r"
+            if [ "$r" != "success" ]; then
+              echo "ci-gate failed: required job result=$r"
+              exit 1
+            fi
+          done
+          echo "ci-gate OK"

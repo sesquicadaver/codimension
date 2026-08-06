@@ -36,10 +36,11 @@
 | pyproject.toml | ✅ | Repository, Homepage, build-system |
 | .gitignore | ✅ | venv, build, dist, `.omx`, caches |
 
-### 1.2 Що відсутнє (опційно)
+### 1.2 Branch protection / release (G01 / E03)
 
-- Branch protection rules (налаштовуються в GitHub UI)
-- CodeQL / security scanning
+- Required status check on `master`: **`ci-gate`** (aggregates ruff/format/mypy/import-gates/test/wheel/smoke/docs)
+- Release workflow verifies tag↔version, constraints, pytest, `twine check`, clean wheel install + offscreen smoke, then publishes via **Trusted Publishing (OIDC)** — no long-lived `PYPI_API_TOKEN`
+- Dependency snapshot: `constraints.txt` (regenerate with `python scripts/generate_constraints.py`)
 
 ---
 
@@ -93,9 +94,9 @@
 
 | Крок | Дія | Файл | Опис |
 | ---- | --- | ---- | ---- |
-| 5.1 | Release workflow | `.github/workflows/release.yml` | Trigger: tag v*, build, twine upload |
-| 5.2 | Секрети | GitHub Secrets | `PYPI_API_TOKEN` для twine |
-| 5.3 | Синхронізація з NOTES.md | — | Автоматизація кроків 1–10 з NOTES |
+| 5.1 | Release workflow | `.github/workflows/release.yml` | Tag v*: verify (tests/twine/wheel/smoke) then OIDC publish |
+| 5.2 | Trusted Publishing | PyPI + GitHub OIDC | No long-lived token |
+| 5.3 | Синхронізація з NOTES.md | — | Автоматизація кроків з NOTES |
 
 ---
 
@@ -129,7 +130,7 @@
 
 | Назва | Призначення | Де використовується |
 | ----- | ----------- | -------------------- |
-| `PYPI_API_TOKEN` | Токен PyPI (pypi-xxx) | release.yml, twine upload |
+| `PYPI` Trusted Publishing (OIDC) | Release publish via `pypa/gh-action-pypi-publish` (no long-lived token) | release.yml |
 | `DISPLAY` | X11 display (для GUI) | Smoke test з xvfb |
 | `QT_QPA_PLATFORM` | `offscreen` для headless Qt | Альтернатива xvfb |
 
@@ -140,7 +141,7 @@
 | Ризик | Мітигація |
 | ----- | --------- |
 | codimension — GUI, потребує display | xvfb-run або перевірка імпорту замість --help |
-| PyPI token у секретах | Тільки для release, не для PR |
+| PyPI publish | Trusted Publishing (OIDC); optional GitHub Environment approval |
 | Dependabot — багато PR | Налаштувати груповані оновлення, ignore для major |
 | CodeQL — довгий прогон | Окремий workflow, не блокує merge |
 
