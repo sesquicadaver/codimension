@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import stat
+import sys
 import uuid
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -15,23 +16,29 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _purge_incomplete_stubs(*prefixes: str) -> None:
+    """Remove sys.modules stubs that are not the real package files under codimension/."""
+    for name in list(sys.modules):
+        if not any(name == p or name.startswith(p + ".") for p in prefixes):
+            continue
+        mod = sys.modules.get(name)
+        if mod is None:
+            continue
+        file_name = (getattr(mod, "__file__", None) or "").replace("\\", "/")
+        if "codimension/" not in file_name and "codimension\\" not in file_name:
+            del sys.modules[name]
+
+
 @pytest.fixture
 def project_mod(monkeypatch, tmp_path):
     """Import project helpers with SETTINGS_DIR redirected under tmp_path."""
     settings_dir = tmp_path / "settings"
     settings_dir.mkdir()
-    monkeypatch.setenv("HOME", str(tmp_path))
-
-    # Ensure package imports resolve
-    import sys
-
-    sys.path.insert(0, str(ROOT / "codimension"))
-    sys.path.insert(0, str(ROOT))
+    # Credentials / gitconfig tests leave incomplete utils.settings and ui.qt stubs.
+    _purge_incomplete_stubs("utils", "ui")
 
     import utils.project as project
-    import utils.settings as settings_mod
 
-    monkeypatch.setattr(settings_mod, "SETTINGS_DIR", str(settings_dir) + os.sep)
     monkeypatch.setattr(project, "SETTINGS_DIR", str(settings_dir) + os.sep)
     monkeypatch.setattr(project, "Settings", MagicMock(return_value=MagicMock(addRecentProject=MagicMock())))
     return project, settings_dir
@@ -156,8 +163,9 @@ def test_uuid_migration_persists_immediately(project_mod, tmp_path, monkeypatch)
     assert proj.props["uuid"] == disk["uuid"]
 
 
-def test_settings_flush_atomic(tmp_path, monkeypatch):
+def test_settings_flush_uses_atomic_write(tmp_path, monkeypatch):
     """Settings.flush must go through atomic_write_text (B10)."""
+    _purge_incomplete_stubs("utils", "ui")
     import utils.settings as settings_mod
 
     calls = []
@@ -173,3 +181,7 @@ def test_settings_flush_atomic(tmp_path, monkeypatch):
     settings_mod.SettingsWrapper.flush(wrapper)
     assert calls and calls[0].endswith("settings.json")
     assert (tmp_path / "settings.json").exists()
+    # Guard against regression to open(..., "w")
+    src = (ROOT / "codimension" / "utils" / "settings.py").read_text(encoding="utf-8")
+    assert "atomic_write_text(" in src
+    assert 'open(self.__fullFileName, "w"' not in src
