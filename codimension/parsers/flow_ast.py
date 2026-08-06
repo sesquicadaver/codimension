@@ -22,10 +22,10 @@ from typing import Any
 
 try:
     from .comment_binder import bind_comments
-    from .source_spans import SourceIndex
+    from .source_spans import SourceIndex, TokenIndex
 except ImportError:  # loaded as standalone module (conformance harness)
     from parsers.comment_binder import bind_comments  # type: ignore[no-redef]
-    from parsers.source_spans import SourceIndex  # type: ignore[no-redef]
+    from parsers.source_spans import SourceIndex, TokenIndex  # type: ignore[no-redef]
 
 # Fragment type constants (from cflowfragmenttypes.hpp)
 UNDEFINED_FRAGMENT = -1
@@ -543,6 +543,7 @@ class _FlowBuilder(ast.NodeVisitor):
     def __init__(self, source: str):
         self.source = source
         self.index = SourceIndex.build(source)
+        self.tokens = TokenIndex.build(source)
         self.control_flow = _ControlFlow(source)
 
     def _pos(self, node: ast.AST) -> tuple[int, int, int, int, int, int]:
@@ -789,7 +790,7 @@ class _FlowBuilder(ast.NodeVisitor):
         return frag
 
     def _visit_match(self, node: ast.Match) -> _MatchFrag:
-        """Build Match fragment with Case parts (T023)."""
+        """Build Match fragment with Case parts (T023 / B06)."""
         b, e, bln, eln, bpos, epos = self._pos(node)
         frag = _MatchFrag(b, e, bln, eln, bpos, epos)
         try:
@@ -797,20 +798,22 @@ class _FlowBuilder(ast.NodeVisitor):
         except Exception:
             subj = ""
         frag._display_value = f"match {subj}:" if subj else "match"
+        case_column: int | None = None
+        search_lo = b
         for case in node.cases:
-            # Span from ``case`` keyword through last body stmt (audit P0)
             pb, _, _pbln, _, _pbpos, _ = self._pos(case.pattern)
             cb, cbln, cbpos = pb, _pbln, _pbpos
-            search_lo = max(b, pb - 80)
-            region = self.source[search_lo:pb]
-            rel = region.rfind("case")
-            if rel >= 0:
-                cb = search_lo + rel
-                # Recompute line/pos from absolute begin via SourceIndex
-                if self.index is not None:
-                    cbln, cbpos = self.index.line_col_from_abs(cb)
-                else:
-                    cbln, cbpos = _pbln, _pbpos
+            found = self.tokens.find_name_before(
+                self.index,
+                "case",
+                lo_abs=search_lo,
+                hi_abs=pb,
+                column=case_column,
+            )
+            if found is not None:
+                cb, cbln, cbpos = found
+                # tokenize column is 0-based; lock subsequent arms to this indent.
+                case_column = cbpos - 1
             if case.body:
                 _, ce, _, celn, _, cepos = self._pos(case.body[-1])
             else:
@@ -829,6 +832,8 @@ class _FlowBuilder(ast.NodeVisitor):
             part = _CasePart(cb, ce, cbln, celn, cbpos, cepos, display_value=display)
             self._visit_suite(case.body, part.nsuite)
             frag.parts.append(part)
+            # Next arm searches after this arm's body so inner ``case = …`` is out of range.
+            search_lo = ce
         return frag
 
     def _visit_return(self, node: ast.Return) -> _ReturnFrag:

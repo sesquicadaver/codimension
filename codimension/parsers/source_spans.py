@@ -269,6 +269,36 @@ class TokenIndex:
         colon_ln, colon_pos = index.line_col_from_abs(colon_abs)
         return name_ln, name_pos, name_abs, kw_ln, kw_pos, colon_ln, colon_pos
 
+    def find_name_before(
+        self,
+        index: SourceIndex,
+        name: str,
+        *,
+        lo_abs: int,
+        hi_abs: int,
+        column: int | None = None,
+    ) -> tuple[int, int, int] | None:
+        """Return ``(abs, lineno, 1-based col)`` for the last NAME ``name`` in range.
+
+        ``column``, when set, is the 0-based character column that the token must
+        start at (used to ignore deeper soft-keyword lookalikes such as
+        ``case = 1`` inside a prior match arm — B06).
+        """
+        best: tokenize.TokenInfo | None = None
+        for tok in self.tokens:
+            if tok.type != tokenize.NAME or tok.string != name:
+                continue
+            if column is not None and tok.start[1] != column:
+                continue
+            abs_t = self.tok_abs(index, tok)
+            if lo_abs <= abs_t < hi_abs:
+                best = tok
+        if best is None:
+            return None
+        abs_t = self.tok_abs(index, best)
+        ln, pos = index.line_col_from_abs(abs_t)
+        return abs_t, ln, pos
+
 
 def build_source_index(source: str) -> SourceIndex:
     """Public factory for :class:`SourceIndex`."""

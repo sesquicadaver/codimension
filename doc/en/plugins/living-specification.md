@@ -92,7 +92,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | D02 / B07 | transactional VENV create/recreate (staging + commit) | ✅ |
 | C02 / C03 | interpreter probe + recreate base (no silent IDE version swap) | ✅ |
 | B04 / D05 | brief header/target positions + encoding cookie line-2 | ✅ |
-| B05 / B06 / D04 / D06 | CML/comments clustering, case token, side comments | OPEN |
+| B05 / B06 / D04 / D06 | CML clustering, case token, multiline side comments | ✅ |
 | B03 | cooperative scan cancel + coalescing + no GUI sync fallback | ✅ |
 | D07 / B08 / C04 | Production startup + plugin load; Flow UI import gate | OPEN |
 | B11 | Docs drift / docs gate coverage / `doc/uk` parity | OPEN |

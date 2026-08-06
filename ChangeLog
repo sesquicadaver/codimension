@@ -1,5 +1,8 @@
 2026 Aug 06
 
+* Audit P1 B05/B06/D04/D06: comment clusters split on indentation and CML
+  record boundaries; ``case`` spans use ``TokenIndex`` (not ``rfind``); side
+  comments attach across multi-line fragment headers
 * Audit P1 B04/D05: brief ``TokenIndex`` separates class/function keyword,
   identifier and header colon; assignment/import/attribute positions bind to
   identifiers; encoding cookie scans both first lines until a real match
