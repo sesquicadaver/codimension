@@ -11,7 +11,13 @@ CODMENSION_DIR = os.path.join(ROOT, "codimension")
 
 
 def _load_astview():
-    """Import ASTView with minimal Qt stubs."""
+    """Import ASTView with minimal Qt stubs.
+
+    Stubs are removed afterwards so later test modules see the real ``utils`` /
+    ``ui`` packages (collection order used to leave a non-package ``utils``).
+    """
+    saved = {key: sys.modules.get(key) for key in ("ui", "ui.itemdelegates", "ui.qt", "utils", "utils.astutils")}
+
     ui_pkg = types.ModuleType("ui")
     ui_pkg.__path__ = [os.path.join(CODMENSION_DIR, "ui")]
     sys.modules["ui"] = ui_pkg
@@ -27,10 +33,6 @@ def _load_astview():
     ui_pkg.itemdelegates = delegates
 
     qt_mod = types.ModuleType("ui.qt")
-
-    class _Signal:
-        def connect(self, *_args, **_kwargs):
-            return None
 
     class _pyqtSignal:
         def __init__(self, *_args, **_kwargs):
@@ -57,18 +59,26 @@ def _load_astview():
     astutils = types.ModuleType("utils.astutils")
     astutils.parseSourceToAST = lambda source, filename: __import__("ast").parse(source, filename)
     utils_pkg = types.ModuleType("utils")
+    utils_pkg.__path__ = [os.path.join(CODMENSION_DIR, "utils")]
     utils_pkg.astutils = astutils
     sys.modules["utils"] = utils_pkg
     sys.modules["utils.astutils"] = astutils
 
-    spec = importlib.util.spec_from_file_location(
-        "editor.astview",
-        os.path.join(CODMENSION_DIR, "editor", "astview.py"),
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["editor.astview"] = module
-    spec.loader.exec_module(module)
-    return module.ASTView
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "editor.astview",
+            os.path.join(CODMENSION_DIR, "editor", "astview.py"),
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["editor.astview"] = module
+        spec.loader.exec_module(module)
+        return module.ASTView
+    finally:
+        for key, prev in saved.items():
+            if prev is None:
+                sys.modules.pop(key, None)
+            else:
+                sys.modules[key] = prev
 
 
 _ASTView = _load_astview()

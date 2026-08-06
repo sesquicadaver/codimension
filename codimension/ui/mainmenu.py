@@ -28,10 +28,6 @@ import sys
 
 from utils.diskvaluesrelay import getRecentFiles
 from utils.globals import GlobalData
-from utils.importutils import (
-    generateRequirementsFromProject,
-    writeRequirementsFile,
-)
 from utils.misc import getIDETemplateFile, getLocaleDate, getProjectTemplateFile
 from utils.pixmapcache import getIcon
 from utils.settings import CLEAR_AND_REUSE, NO_CLEAR_AND_REUSE, NO_REUSE
@@ -681,6 +677,8 @@ class MainWindowMenuMixin:
 
     def _onGenerateRequirementsFile(self):
         """Generate requirements.txt from unresolved imports (Tools → Project utilities)."""
+        from utils.dependency_manifest import buildDependencyManifest
+
         project = GlobalData().project
         if not project.isLoaded():
             QMessageBox.warning(self, "Project", "No project loaded.")
@@ -694,7 +692,8 @@ class MainWindowMenuMixin:
 
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
-            packages, _ = generateRequirementsFromProject(project.filesList, progressCallback)
+            manifest = buildDependencyManifest(project, progress_callback=progressCallback)
+            packages = list(manifest.unresolved_packages)
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -711,7 +710,11 @@ class MainWindowMenuMixin:
         if os.path.isfile(reqPath):
             msg = QMessageBox(self)
             msg.setWindowTitle("Generate requirements")
-            msg.setText(f"requirements.txt already exists.\nDetected packages: {', '.join(sorted(packages))}")
+            hint = manifest.lock_hint()
+            detail = f"Detected packages: {', '.join(packages)}"
+            if hint:
+                detail += f"\nHint: {hint}"
+            msg.setText(f"requirements.txt already exists.\n{detail}")
             msg.addButton("Overwrite", QMessageBox.ActionRole)
             appendBtn = msg.addButton("Append new only", QMessageBox.ActionRole)
             cancelBtn = msg.addButton("Cancel", QMessageBox.RejectRole)
@@ -724,7 +727,7 @@ class MainWindowMenuMixin:
                 mode = "a"
 
         try:
-            written = writeRequirementsFile(reqPath, packages, mode)
+            written = manifest.write_requirements(reqPath, mode=mode)
             if written > 0:
                 QMessageBox.information(
                     self,

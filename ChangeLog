@@ -1,5 +1,7 @@
 2026 Aug 06
 
+* R120: ``DependencyManifest`` formalizes install sources; export script
+  ``scripts/export_dependency_manifest.py``; Generate requirements uses manifest
 * R114: optional ``autoAttachProjectVenv`` setting (default off); on project
   open, attach first discovered root venv as session overlay (UI Options)
 * R113: analysis cache registry (``brief`` / ``flow``); invalidate on
