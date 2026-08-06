@@ -3,11 +3,11 @@
 > **Мова / Language:** [English](../en/README.md) | Українська
 
 **Активний репозиторій:** https://github.com/sesquicadaver/codimension  
-**Версія:** 4.11.0 | **Python:** 3.10+ | **Встановлення:** лише з вихідного коду ([../INSTALL.md](../INSTALL.md))
+**Версія:** 4.11.0 | **Python (CI):** 3.10–3.13 | **Встановлення:** з цього репозиторію ([../INSTALL.md](../INSTALL.md))
 
 Цей індекс описує **українські** переклади. Англійські версії — у [doc/en/](../en/README.md). Канонічні шляхи `doc/<topic>/` збережено для сумісності.
 
-Каталог `doc/www/` — архівне дзеркало codimension.org (2017–2020), не оновлюється.
+Каталог `doc/www/` — локальне архівне дзеркало старого сайту; не підтримується.
 
 ---
 
@@ -16,7 +16,7 @@
 | Документ | Зміст |
 | -------- | ----- |
 | [../../README.md](../../README.md) | Огляд проєкту, встановлення, розробка |
-| [../INSTALL.md](../INSTALL.md) | Детальна інструкція (Linux / Windows / macOS) |
+| [../INSTALL.md](../INSTALL.md) | Встановлення (Linux CI-tested; інші ОС не перевірені) |
 | [../../FORK.md](../../FORK.md) | Що змінено відносно upstream |
 | [../../CONTRIBUTING.md](../../CONTRIBUTING.md) | Як вносити зміни, CI |
 | [../../ROADMAP.uk.md](../../ROADMAP.uk.md) | Довгостроковий план (Phase 0–38) |
@@ -45,6 +45,7 @@
 | ---------- | --------------- |
 | [project/project.md](project/project.md) | [../project/project.md](../project/project.md) |
 | [technology/technology.md](technology/technology.md) | [../technology/technology.md](../technology/technology.md) |
+| [technology/parser-contract.md](technology/parser-contract.md) | [../technology/parser-contract.md](../technology/parser-contract.md) |
 | [md/mdsupport.md](md/mdsupport.md) | [../md/mdsupport.md](../md/mdsupport.md) |
 | [smartzoom/smartzoom.md](smartzoom/smartzoom.md) | [../smartzoom/smartzoom.md](../smartzoom/smartzoom.md) |
 | [dependencies/dependencies.md](dependencies/dependencies.md) | [../dependencies/dependencies.md](../dependencies/dependencies.md) |
@@ -66,12 +67,13 @@
 | -------- | ----- |
 | [../LICENSE_COMPLIANCE.md](../LICENSE_COMPLIANCE.md) | GPL v3 для форку |
 | [../../FORK.md](../../FORK.md) | Copyright та модифікації |
+| [../../LICENSE](../../LICENSE) | Повний текст GPL v3 |
 
 ---
 
 ## Архів (не оновлюється)
 
-- `doc/www/codimension.org/` — статичне дзеркало codimension.org
+- `doc/www/codimension.org/` — статичне дзеркало старого сайту
 - Посилання на `pip install codimension`, Python 2, старі парсери — **не актуальні** для цього форку
 
 Див. також [BILINGUAL.md](../BILINGUAL.md).

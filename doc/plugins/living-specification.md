@@ -68,7 +68,7 @@
 | Wheel | `python -m build` + clean venv `pip install` + `pip check` | .github/workflows/ci.yml |
 | pip-audit | `pip-audit -r requirements.txt` | .github/workflows/ci.yml |
 | Pytest | `pytest tests/` (matrix 3.10–3.13; count from latest green Actions run) | .github/workflows/ci.yml |
-| Docs links | `python scripts/check_docs.py` | .github/workflows/ci.yml |
+| Docs links | `python scripts/check_docs.py` (links/images/dirs/anchors/ref/HTML; UA↔EN; TODO↔Living Spec; CI matrix) | .github/workflows/ci.yml |
 
 ---
 
@@ -81,7 +81,7 @@
 - [x] CI: перевіряти останній green Actions run на `master` (не зберігати static SHA/test count у цьому файлі)
 - [x] Документація: [doc/README.md](../README.md)
 
-### Відкриті пункти аудиту (після PR #28 / a2c88921)
+### Відкриті пункти аудиту (після PR #37 / 44cc1794)
 
 | ID | Тема | Статус |
 |----|------|--------|
@@ -95,7 +95,7 @@
 | B05 / B06 / D04 / D06 | CML clustering, case token, multiline side comments | ✅ |
 | D07 / B08 / C04 | production startup + plugin load; Flow UI import gate | ✅ |
 | B03 | cooperative scan cancel + coalescing + no GUI sync fallback | ✅ |
-| B11 | Docs drift / docs gate coverage / `doc/uk` parity | OPEN |
+| B11 | Docs drift / docs gate coverage / `doc/uk` parity | ✅ |
 | B09 / B10 / C05 / D08 / E03 / G01 | schema, atomic settings, UUID, deps lock, release, branch protection | OPEN |
 
 ---

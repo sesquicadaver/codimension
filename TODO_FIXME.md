@@ -2,10 +2,10 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-08-05 (аудит master@a2c88921 / PR #28)  
+**Дата перевірки:** 2026-08-06 (аудит master@44cc1794 / PR #37)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
-## Відкриті блокери (аудит @ a2c88921)
+## Відкриті блокери (аудит @ 44cc1794)
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
@@ -26,7 +26,7 @@
 | D06 | Side comments багаторядкових headers | P1 | ✅ header line span |
 | D07 / B08 | Production startup + plugin load | P1 | ✅ bundled paths + full `imp` + smoke gate |
 | C04 | Flow UI import → `pytest.skip` | P1 | ✅ fail on import; only skip missing PyQt5 / TryStar |
-| B11 | Docs drift (TODO/Living Spec/`doc/uk`, docs gate coverage) | P2 | 🔓 OPEN |
+| B11 | Docs drift (TODO/Living Spec/`doc/uk`, docs gate coverage) | P2 | ✅ parity + expanded `check_docs` |
 | B09 / B10 / C05 | Schema paths / atomic settings / UUID persist | P2 | 🔓 OPEN |
 | D08 / E03 / G01 | Constraints / release verify / branch protection | P2 | 🔓 OPEN |
 
@@ -35,7 +35,7 @@
 | Тема | Стан |
 |------|------|
 | **CI** | перевіряти latest green Actions на HEAD (не static count у README) |
-| **Docs gate** | `python scripts/check_docs.py` (partial: .md links; див. B11) |
+| **Docs gate** | `python scripts/check_docs.py` (links/images/dirs/anchors/ref/HTML; UA↔EN; TODO↔Living Spec; CI matrix) |
 | **Nightly full-IDE** | weekly, не PR-blocker |
 | **Living Spec** | матриця модулів; без static SHA/test count |
 
