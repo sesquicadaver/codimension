@@ -41,7 +41,7 @@
 | 0 Baseline | DONE | pyproject 3.10–3.13, Qt IDE, проєкт/файл, CFG |
 | 1 Test harness | DONE | golden CFG + conformance (~260 тестів) |
 | 2 Headless core | DONE | `core.syntax` / `core.flow` + `infrastructure/*` + T085 |
-| 3 Modular monolith | PARTIAL → R101+ | `importutils` без Qt (R100); ще немає `app.*` |
+| 3 Modular monolith | PARTIAL → R102+ | є `app.ApplicationServices` (R101); UI ще не маршрутизовано |
 | 4–7 Environment | PARTIAL → R110+ | є venvbootstrap; немає typed env / registry кешу |
 | 8–9 Deps + local venv | DONE (T140/T141) | auto-on-open опційно → R114 |
 | 10–13 Remote backends | MISSING → R121+ | немає `ExecutionTarget` / Docker / SSH / K8s |
@@ -68,6 +68,7 @@
 | D25 | Phase 25 | Plugin host + інструментальні плагіни |
 | D-audit | TODO_FIXME P0–P2 | B01–G01 закриті |
 | D-R100 | R100 | `utils.importutils` без Qt; progress через callback; T085 покриває модуль |
+| D-R101 | R101 | `codimension.app.ApplicationServices` + headless тести; packaging |
 
 ---
 
@@ -76,7 +77,7 @@
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
 | 1 | R100 | Прибрати імпорт Qt з `utils.importutils` (винести в `ui/` або DI) | Gate / тест: модуль без `ui.qt`; існуючі import-тести зелені | M | DONE |
-| 2 | R101 | Пакет `codimension/app/`: фасад `ApplicationServices` (load/unload без віджетів) | Headless імпорт + unit з фейками; рядок у Living Spec | S | OPEN |
+| 2 | R101 | Пакет `codimension/app/`: фасад `ApplicationServices` (load/unload без віджетів) | Headless імпорт + unit з фейками; рядок у Living Spec | S | DONE |
 | 3 | R102 | Відкриття/unload проєкту через `app` (тонкий адаптер з GlobalData/mainwindow) | UI → app → utils/project; без регресій | M | OPEN |
 | 4 | R103 | Матриця меж модулів (`core`/`infra`/`app`/`utils`/`ui`/`plugins`) у CI | Скрипт падає на нові заборонені ребра | M | OPEN |
 | 5 | R110 | Immutable `AnalysisEnvironment` (шлях python, source kind, site-packages, id проєкту) | Typed API + тести паритету з `describeAnalysisPythonSource` | M | OPEN |
@@ -128,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R101` — пакет `codimension/app/` / `ApplicationServices`.
+**Перший OPEN:** `R102` — відкриття/unload проєкту через `app` фасад.
 
 ---
 

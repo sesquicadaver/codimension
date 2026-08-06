@@ -31,7 +31,8 @@
 | Packaging / CI T060–T067 | pyproject / CI | pyproject.toml, requirements.txt, requirements-runtime.txt, constraints.txt, ci.yml, release.yml, scripts/offscreen_gui_smoke.py | deps groups; matrix 3.10–3.13; constraints gate; wheel; offscreen smoke; release verify |
 | **Shim identity T071–T073** | parsers / bootstrap | parsers/__init__.py, check_package_relative_imports.py | unified cdmpyparser/cdmcfparser aliases; T072 CI gate |
 | **Headless core T080–T082** | core / infrastructure | core/syntax.py, core/flow.py, infrastructure/* | tests/test_core_headless.py |
-| **Core import graph T085 / R100** | CI + utils | scripts/check_core_import_graph.py; utils/importutils.py | no Qt/UI in core/infrastructure; `importutils` Qt-free + progress callback; tests/test_importutils.py, test_t085_core_import_graph.py |
+| **ApplicationServices R101** | app | app/__init__.py, app/services.py | headless façade + fakes; tests/test_app_services.py; T085 covers `codimension/app` |
+| **Core import graph T085 / R100** | CI + utils | scripts/check_core_import_graph.py; utils/importutils.py | no Qt/UI in core/infrastructure/app; `importutils` Qt-free + progress callback; tests/test_importutils.py, test_t085_core_import_graph.py |
 | **MainWindow routing T083** | ui.mainwindow / mainwindow_debug | mainwindow.py, mainwindow_debug.py | MRO mixins; no extendInstance; DebuggerMixin |
 | **Lazy GlobalData T084** | utils.globals | globals.py | create-on-first-call; tests/test_globals_lazy.py |
 | **Debugger session e2e T100–T102** | debugger + utils.run / runmanager | run.py (`_debuggerClientPath`); tests/debugger/ | session-first offscreen: stop-at-first-line, continue, step/stop |
@@ -99,7 +100,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R101**.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R102**.
 
 ---
 
