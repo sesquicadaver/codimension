@@ -5,9 +5,9 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 1. Do **not** ask which PR or task to pick.
 2. Resolve the work queue in this order:
    - [TODO_FIXME.md](TODO_FIXME.md) — first 🔓 OPEN or PARTIAL row (P0 before P1 before P2)
-   - If TODO has no open rows, [ROADMAP.uk.md](ROADMAP.uk.md) / [ROADMAP.md](ROADMAP.md) — first incomplete phase acceptance
+   - If TODO has no open rows, [ROADMAP.uk.md](ROADMAP.uk.md) / [ROADMAP.md](ROADMAP.md) — first **OPEN** atomic task (`Rxxx`)
 3. Implement that item on a feature branch, open a PR to `sesquicadaver/codimension`, drive CI green.
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
-5. Update TODO_FIXME + Living Spec + ChangeLog for the closed item.
+5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer after D08/E03/G01 close: TODO_FIXME has no remaining 🔓 OPEN rows — next `/autopilot` follows ROADMAP incomplete phase acceptance.
+Current pointer: **R100** (remove Qt import from `utils.importutils`). TODO_FIXME has no remaining 🔓 OPEN rows.

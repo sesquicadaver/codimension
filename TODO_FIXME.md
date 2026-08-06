@@ -2,10 +2,12 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-08-06 (аудит master@44cc1794 / PR #37)  
+**Дата перевірки:** 2026-08-06 (аудит master@d8f2e786 / PR #40)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
-## Відкриті блокери (аудит @ 44cc1794)
+## Відкриті блокери (аудит @ d8f2e786)
+
+Аудиторні P0–P2 з TODO закриті. Подальша робота — лінійна черга атомарних задач у [ROADMAP.uk.md](ROADMAP.uk.md) (перший OPEN: **R100**).
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|

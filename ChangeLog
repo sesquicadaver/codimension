@@ -1,5 +1,8 @@
 2026 Aug 06
 
+* Rebuild ROADMAP as a linear atomic queue (R100–R175) with DONE archive,
+  dependency-optimized order, and explicit DEFERRED items; autopilot points
+  at R100 after empty TODO_FIXME
 * Audit P2 D08/E03/G01: commit ``constraints.txt`` + generate/check scripts;
   CI installs with ``-c constraints.txt`` and a required ``ci-gate`` job;
   ``setup.py`` uses runtime-only requirements; release verifies wheel/twine/
