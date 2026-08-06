@@ -19,6 +19,10 @@ from collections.abc import Callable, Iterable, Sequence
 from os.path import isdir, islink, realpath, sep
 
 
+class ScanCancelled(Exception):
+    """Raised when ``should_cancel`` returns true during a project scan (B03)."""
+
+
 def path_is_under_or_equal(candidate: str, root: str) -> bool:
     """True if ``candidate`` is ``root`` or a path under it (realpath, sep-normalized)."""
     cand = realpath(candidate)
@@ -74,12 +78,15 @@ def scan_project_files(
     exclude_absolute_paths: Sequence[str] | None = None,
     venv_dir: str | None = None,
     should_exclude: Callable[[str], bool] | None = None,
+    should_cancel: Callable[[], bool] | None = None,
 ) -> set[str]:
     """Scan ``project_dir`` into a set of absolute file/dir paths (dirs end with sep).
 
     - Basename filters apply to entry names only (legacy Settings filters).
     - ``exclude_absolute_paths`` are path-aware (T050).
     - Symlink cycles / out-of-tree links are bounded via visited realpaths (T051).
+    - ``should_cancel`` is checked cooperatively during the walk (audit B03);
+      raises :class:`ScanCancelled` when it returns true.
     """
     root = realpath(project_dir)
     if not root.endswith(sep):
@@ -103,12 +110,18 @@ def scan_project_files(
             return should_exclude(name)
         return should_exclude_basename(name, filters)
 
+    def _check_cancel() -> None:
+        if should_cancel is not None and should_cancel():
+            raise ScanCancelled("project scan cancelled")
+
     def _walk(path: str) -> None:
+        _check_cancel()
         try:
             entries = os.listdir(path)
         except OSError:
             return
         for item in entries:
+            _check_cancel()
             if _exclude_name(item):
                 continue
             candidate = path + item
@@ -139,4 +152,5 @@ def scan_project_files(
                 files.add(candidate)
 
     _walk(root_sep)
+    _check_cancel()
     return files

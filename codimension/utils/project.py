@@ -42,7 +42,7 @@ from .debugenv import DebuggerEnvironment
 from .filepositions import FilePositions
 from .flowgroups import FlowUICollapsedGroups
 from .fsenv import FileSystemEnvironment
-from .project_scan import is_excluded_by_absolute_paths, scan_project_files
+from .project_scan import ScanCancelled, is_excluded_by_absolute_paths, scan_project_files
 from .project_schema import ProjectSchemaError, safe_user_project_dir, validate_project_props
 from .runparamscache import RunParametersCache
 from .searchenv import SearchEnvironment
@@ -51,32 +51,51 @@ from .userencodings import FileEncodings
 from .venvutils import getProjectVenvDir
 from .watcher import Watcher
 
+# Bounded wait when unloading / resetting an in-flight scan (audit B03).
+_SCAN_JOIN_TIMEOUT_MS = 5000
+
 
 class _ProjectScanThread(QThread):
     """Background project tree scan (T052) — keeps GUI responsive."""
 
-    sigDone = pyqtSignal(object)
-    sigFailed = pyqtSignal(str)
+    sigDone = pyqtSignal(object, int)  # files set, generation
+    sigFailed = pyqtSignal(str, int)
 
-    def __init__(self, project_dir, basename_filters, exclude_paths, venv_dir, parent=None):
+    def __init__(
+        self,
+        project_dir,
+        basename_filters,
+        exclude_paths,
+        venv_dir,
+        generation: int,
+        parent=None,
+    ):
         QThread.__init__(self, parent)
         self._project_dir = project_dir
         self._basename_filters = basename_filters
         self._exclude_paths = exclude_paths
         self._venv_dir = venv_dir
+        self._generation = generation
 
     def run(self):
-        """Scan project tree off the GUI thread."""
+        """Scan project tree off the GUI thread with cooperative cancel (B03)."""
         try:
             result = scan_project_files(
                 self._project_dir,
                 basename_filters=self._basename_filters,
                 exclude_absolute_paths=self._exclude_paths,
                 venv_dir=self._venv_dir,
+                should_cancel=self.isInterruptionRequested,
             )
-            self.sigDone.emit(result)
+        except ScanCancelled:
+            return
         except Exception as exc:
-            self.sigFailed.emit(str(exc))
+            if not self.isInterruptionRequested():
+                self.sigFailed.emit(str(exc), self._generation)
+            return
+        if self.isInterruptionRequested():
+            return
+        self.sigDone.emit(result, self._generation)
 
 
 # Saved in .cdm3 file
@@ -135,6 +154,7 @@ class CodimensionProject(
         self.__scanThread = None
         self.__scanGeneration = 0
         self.__scanOnComplete = None
+        self.__scanCoalesce = False
         self.__pendingRestoreExpanded = False
 
         # Avoid pylint complains
@@ -439,16 +459,24 @@ class CodimensionProject(
             self.saveProject()
             self.sigProjectChanged.emit(self.Properties)
 
-    def __cancelScan(self):
-        """Invalidate any in-flight background scan."""
+    def __cancelScan(self, *, join_ms: int = _SCAN_JOIN_TIMEOUT_MS):
+        """Interrupt any in-flight background scan (audit B03).
+
+        Drops the post-scan callback, invalidates the generation counter, requests
+        cooperative interruption, and optionally waits a bounded time. The
+        thread is cleaned via ``finished`` → ``deleteLater``.
+        """
         self.__scanGeneration += 1
         self.__scanOnComplete = None
-        if self.__scanThread is not None:
-            try:
-                self.__scanThread.sigDone.disconnect(self.__onScanDone)
-                self.__scanThread.sigFailed.disconnect(self.__onScanFailed)
-            except Exception:
-                pass
+        self.__scanCoalesce = False
+        thread = self.__scanThread
+        if thread is None:
+            return
+        thread.requestInterruption()
+        if join_ms > 0:
+            if not thread.wait(join_ms):
+                logging.warning("Project scan thread did not finish within %sms", join_ms)
+        if thread is self.__scanThread:
             self.__scanThread = None
 
     def __invokeScanComplete(self):
@@ -470,38 +498,66 @@ class CodimensionProject(
         )
         self.sigFilesListReady.emit()
 
-    def __generateFilesList(self, *, sync=None, on_complete=None):
-        """Generate filesList; async when QApplication exists (T052).
-
-        ``on_complete`` runs only after ``filesList`` is populated so callers can
-        emit ``CompleteProject`` with a consistent project tree.
-        """
-        if sync is None:
-            sync = QApplication.instance() is None
-        # Preserve callback across cancel only after we set the new one
-        self.__cancelScan()
-        self.__scanOnComplete = on_complete
-        if sync:
-            self.__scanSync()
-            self.__invokeScanComplete()
-            return
-
-        generation = self.__scanGeneration
-        # Keep last known list until scan finishes; empty only on first load
+    def __startScanThread(self, generation: int) -> None:
+        """Start a background scan for ``generation`` (caller owns coalesce flags)."""
         if not self.filesList:
             self.filesList = {self.getProjectDir()}
-
         thread = _ProjectScanThread(
             self.getProjectDir(),
             list(self.__excludeFilter),
             self.getExcludeFromAnalysisAsAbsolutePaths(),
             getProjectVenvDir(self),
+            generation,
             parent=self,
         )
         self.__scanThread = thread
-        thread.sigDone.connect(lambda result, gen=generation: self.__onScanDone(result, gen))
-        thread.sigFailed.connect(lambda msg, gen=generation: self.__onScanFailed(msg, gen))
+        thread.sigDone.connect(self.__onScanDone)
+        thread.sigFailed.connect(self.__onScanFailed)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(self.__onScanThreadFinished)
         thread.start()
+
+    def __onScanThreadFinished(self) -> None:
+        """Clear thread ref and start a coalesced rescan if one was queued (B03)."""
+        thread = self.sender()
+        if thread is self.__scanThread:
+            self.__scanThread = None
+        if not self.__scanCoalesce:
+            return
+        if not self.isLoaded() or QApplication.instance() is None:
+            self.__scanCoalesce = False
+            return
+        self.__scanCoalesce = False
+        self.__startScanThread(self.__scanGeneration)
+
+    def __generateFilesList(self, *, sync=None, on_complete=None):
+        """Generate filesList; async when QApplication exists (T052 / B03).
+
+        Concurrent requests coalesce: the in-flight scan is interrupted and a
+        single replacement scan runs after it finishes. ``on_complete`` runs
+        only after ``filesList`` is populated so callers can emit
+        ``CompleteProject`` with a consistent project tree.
+        """
+        if sync is None:
+            sync = QApplication.instance() is None
+        if sync:
+            self.__cancelScan()
+            self.__scanOnComplete = on_complete
+            self.__scanSync()
+            self.__invokeScanComplete()
+            return
+
+        # Latest callback wins when scans are coalesced.
+        self.__scanOnComplete = on_complete
+        if self.__scanThread is not None and self.__scanThread.isRunning():
+            self.__scanGeneration += 1
+            self.__scanCoalesce = True
+            self.__scanThread.requestInterruption()
+            return
+
+        self.__scanGeneration += 1
+        self.__scanCoalesce = False
+        self.__startScanThread(self.__scanGeneration)
 
     def __onScanDone(self, result, generation):
         """Apply background scan results if still current."""
@@ -513,12 +569,12 @@ class CodimensionProject(
         self.__invokeScanComplete()
 
     def __onScanFailed(self, message, generation):
-        """Log scan failure; fall back to sync scan for consistency."""
+        """Log scan failure without blocking the GUI on a sync rescan (B03)."""
         if generation != self.__scanGeneration:
             return
         logging.error("Project scan failed: %s", message)
         self.__scanThread = None
-        self.__scanSync()
+        # Keep the last known filesList; never fall back to sync I/O on the GUI thread.
         self.__invokeScanComplete()
 
     def isProjectDir(self, path):

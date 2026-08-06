@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-import os
+import importlib
+import sys
 import time
 from os.path import realpath, sep
 from pathlib import Path
@@ -11,11 +12,30 @@ from pathlib import Path
 import pytest
 
 from codimension.utils.project_scan import (
+    compile_basename_filters,
     is_excluded_by_absolute_paths,
     scan_project_files,
     should_exclude_basename,
-    compile_basename_filters,
 )
+
+_CODIM = Path(__file__).resolve().parents[1] / "codimension"
+
+
+def _purge_stub_ui_for_project() -> None:
+    """Drop incomplete ``ui`` stubs so ``utils.project`` can import real ``ui.qt``."""
+    dirty = False
+    for name in list(sys.modules):
+        if name != "ui" and not name.startswith("ui."):
+            continue
+        mod = sys.modules.get(name)
+        path = getattr(mod, "__file__", None) or ""
+        if not path or "codimension/ui" not in path.replace("\\", "/"):
+            del sys.modules[name]
+            dirty = True
+    if dirty:
+        importlib.invalidate_caches()
+    if str(_CODIM) not in sys.path:
+        sys.path.insert(0, str(_CODIM))
 
 
 def _mk_tree(root: Path) -> None:
@@ -132,6 +152,137 @@ def test_t052_async_scan_start_returns_quickly(tmp_path: Path) -> None:
     samples.sort()
     p95 = samples[int(len(samples) * 0.95) - 1] if len(samples) >= 2 else samples[-1]
     assert p95 <= 200.0, f"GUI-thread start latency p95={p95:.1f}ms samples={samples}"
+
+
+def test_scan_cancelled_raises(tmp_path: Path) -> None:
+    """B03: should_cancel aborts the walk with ScanCancelled."""
+    from codimension.utils.project_scan import ScanCancelled
+
+    for i in range(20):
+        d = tmp_path / f"d{i}"
+        d.mkdir()
+        for j in range(10):
+            (d / f"f{j}.py").write_text("x=1\n", encoding="utf-8")
+
+    calls = {"n": 0}
+
+    def cancel_after_few() -> bool:
+        calls["n"] += 1
+        return calls["n"] > 5
+
+    with pytest.raises(ScanCancelled):
+        scan_project_files(str(tmp_path) + sep, should_cancel=cancel_after_few)
+
+
+def test_b03_project_scan_coalesce_and_interrupt(tmp_path: Path, monkeypatch) -> None:
+    """B03: overlapping generateFilesList coalesces; interrupt stops I/O."""
+    pytest.importorskip("PyQt5")
+    import threading
+
+    from PyQt5.QtWidgets import QApplication
+
+    _purge_stub_ui_for_project()
+    sys.modules.pop("utils.project", None)
+    sys.modules.pop("codimension.utils.project", None)
+
+    from codimension.utils import project as project_mod
+    from codimension.utils.project import CodimensionProject
+    from codimension.utils.project_scan import ScanCancelled
+
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+
+    proj_file = tmp_path / "demo.cdm3"
+    proj_file.write_text('{"uuid": "00000000-0000-0000-0000-000000000001"}\n', encoding="utf-8")
+    (tmp_path / "a.py").write_text("a=1\n", encoding="utf-8")
+
+    started = threading.Event()
+    release = threading.Event()
+    scans = {"n": 0}
+
+    def slow_scan(*_a, **kwargs):
+        scans["n"] += 1
+        started.set()
+        # Wait until interrupted or released.
+        while not release.is_set():
+            cancel = kwargs.get("should_cancel")
+            if cancel is not None and cancel():
+                raise ScanCancelled("cancelled")
+            time.sleep(0.01)
+        cancel = kwargs.get("should_cancel")
+        if cancel is not None and cancel():
+            raise ScanCancelled("cancelled")
+        return {str(tmp_path) + sep, str(tmp_path / "a.py")}
+
+    monkeypatch.setattr(project_mod, "scan_project_files", slow_scan)
+
+    project = CodimensionProject()
+    project.fileName = str(proj_file)
+    project.filesList = {str(tmp_path) + sep}
+
+    done = {"count": 0}
+
+    def _complete():
+        done["count"] += 1
+
+    project._CodimensionProject__generateFilesList(on_complete=_complete)  # noqa: SLF001
+    assert started.wait(5), "first scan did not start"
+    # Second request while first is blocked → coalesce + interrupt.
+    project._CodimensionProject__generateFilesList(on_complete=_complete)  # noqa: SLF001
+    assert project._CodimensionProject__scanCoalesce is True  # noqa: SLF001
+    thread = project._CodimensionProject__scanThread  # noqa: SLF001
+    assert thread is not None
+    assert thread.isInterruptionRequested()
+
+    # Let the interrupted worker exit; coalesced rescan should start.
+    deadline = time.time() + 10
+    while scans["n"] < 2 and time.time() < deadline:
+        app.processEvents()
+        time.sleep(0.01)
+    assert scans["n"] >= 2, f"expected coalesced restart, scans={scans['n']}"
+    release.set()
+
+    deadline = time.time() + 10
+    while done["count"] < 1 and time.time() < deadline:
+        app.processEvents()
+        time.sleep(0.01)
+    assert done["count"] >= 1
+    project._CodimensionProject__cancelScan()  # noqa: SLF001
+
+
+def test_b03_scan_failed_does_not_sync_on_gui(tmp_path: Path, monkeypatch) -> None:
+    """B03: failure path must not call synchronous scan when QApplication exists."""
+    pytest.importorskip("PyQt5")
+    from PyQt5.QtWidgets import QApplication
+
+    _purge_stub_ui_for_project()
+    sys.modules.pop("utils.project", None)
+    sys.modules.pop("codimension.utils.project", None)
+
+    from codimension.utils.project import CodimensionProject
+
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+
+    proj_file = tmp_path / "demo.cdm3"
+    proj_file.write_text("{}\n", encoding="utf-8")
+    project = CodimensionProject()
+    project.fileName = str(proj_file)
+    project.filesList = {str(tmp_path) + sep}
+    before = set(project.filesList)
+
+    called = {"sync": False}
+
+    def boom_sync(_self):
+        called["sync"] = True
+
+    monkeypatch.setattr(CodimensionProject, "_CodimensionProject__scanSync", boom_sync)
+    gen = project._CodimensionProject__scanGeneration  # noqa: SLF001
+    project._CodimensionProject__onScanFailed("boom", gen)  # noqa: SLF001
+    assert called["sync"] is False
+    assert project.filesList == before
 
 
 def test_should_exclude_basename_pylintrc_exception() -> None:
