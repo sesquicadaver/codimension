@@ -51,6 +51,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Auto-attach project venv R114** | utils.venvbootstrap + Settings + Options | `maybeAutoAttachProjectVenv`; `autoAttachProjectVenv` (default off); session overlay | tests/test_venv_bootstrap.py |
 | **DependencyManifest R120** | utils.dependency_manifest | `buildDependencyManifest`; lock_hint; export script; collectInstallSources delegate | tests/test_dependency_manifest.py |
 | **ExecutionTarget R121** | core.execution | Protocol `run`/`debug`/`profile`/`which_python`; ExecutionRequest/Result | tests/test_execution_target.py |
+| **LocalExecutionTarget R122** | utils.local_execution + utils.run | `LocalExecutionTarget`; `getCwdCmdEnv` via protocol | tests/test_local_execution.py, test_run_argv.py |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../../technology/parser-contract.md), [uk](../../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -110,7 +111,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — first OPEN **R122**.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — first OPEN **R123**.
 
 ### Module boundary matrix (R103)
 
