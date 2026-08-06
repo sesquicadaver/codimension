@@ -31,6 +31,7 @@ from copy import deepcopy
 
 from ui.qt import QDir, QObject, pyqtSignal
 
+from .atomic_io import atomic_write_text
 from .config import CONFIG_DIR, SETTINGS_ENCODING
 from .debugenv import DebuggerEnvironment
 from .filepositions import FilePositions
@@ -358,10 +359,10 @@ class SettingsWrapper(
             pass
 
     def flush(self):
-        """Writes the settings to the disk"""
+        """Writes the settings to the disk atomically (B10)."""
         try:
-            with open(self.__fullFileName, "w", encoding=SETTINGS_ENCODING) as diskfile:
-                json.dump(self.__values, diskfile, default=settingsToJSON, indent=4)
+            payload = json.dumps(self.__values, default=settingsToJSON, indent=4) + "\n"
+            atomic_write_text(self.__fullFileName, payload, encoding=SETTINGS_ENCODING)
         except Exception as exc:
             logging.error("Error saving setting (to %s): %s", self.__fullFileName, str(exc))
 

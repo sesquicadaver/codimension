@@ -117,6 +117,34 @@ _DEFAULT_PROJECT_PROPS = {
 }  # Optional venv/python path
 
 
+def new_project_uuid() -> str:
+    """Allocate a new project UUID (random; not time-based uuid1)."""
+    return str(uuid.uuid4())
+
+
+def merge_project_defaults(props: dict) -> dict:
+    """Fill missing `.cdm3` keys from defaults (mutates and returns ``props``)."""
+    for key, value in _DEFAULT_PROJECT_PROPS.items():
+        if key not in props:
+            props[key] = copy.deepcopy(value)
+    return props
+
+
+def load_validated_project_props(project_file: str) -> dict:
+    """Read and schema-validate a `.cdm3` file; never returns ``{}`` on failure."""
+    path = realpath(project_file)
+    if not exists(path):
+        raise Exception("Cannot find project file " + project_file)
+    try:
+        with open(path, "r", encoding=DEFAULT_ENCODING) as diskfile:
+            props = json.load(diskfile)
+        return merge_project_defaults(validate_project_props(props))
+    except ProjectSchemaError as exc:
+        raise Exception("Bad project file " + project_file + ": " + str(exc)) from exc
+    except Exception as exc:
+        raise Exception("Bad project file " + project_file + ": " + str(exc)) from exc
+
+
 class CodimensionProject(
     QObject,
     DebuggerEnvironment,
@@ -215,7 +243,12 @@ class CodimensionProject(
     def createNew(self, fileName, props):
         """Creates a new project"""
         # Try to create the user project directory (canonical UUID under SETTINGS_DIR)
-        projectUuid = str(uuid.uuid1())
+        try:
+            validated = merge_project_defaults(validate_project_props(copy.deepcopy(props)))
+        except ProjectSchemaError as exc:
+            logging.error("Cannot create project with invalid properties: %s", exc)
+            raise
+        projectUuid = new_project_uuid()
         try:
             userProjectDir = safe_user_project_dir(SETTINGS_DIR, projectUuid)
         except ProjectSchemaError as exc:
@@ -240,8 +273,8 @@ class CodimensionProject(
         self.__resetValues()
 
         self.fileName = fileName
-        props["uuid"] = projectUuid
-        self.props = props
+        validated["uuid"] = projectUuid
+        self.props = validated
         self.userProjectDir = userProjectDir
 
         self.__createProjectFile()  # ~/.codimension3/uuidNN/project
@@ -276,8 +309,7 @@ class CodimensionProject(
     def __createProjectFile(self):
         """Helper function to create the user project file"""
         try:
-            with open(self.userProjectDir + "project", "w", encoding=DEFAULT_ENCODING) as diskfile:
-                diskfile.write(self.fileName)
+            atomic_write_text(self.userProjectDir + "project", self.fileName, encoding=DEFAULT_ENCODING)
         except Exception as exc:
             logging.error("Could not create the %s project file: %s", self.userProjectDir, str(exc))
 
@@ -310,27 +342,20 @@ class CodimensionProject(
             raise Exception("Unexpected project file extension. Expected: .cdm3")
 
         try:
-            with open(path, "r", encoding=DEFAULT_ENCODING) as diskfile:
-                props = json.load(diskfile)
-            props = validate_project_props(props)
-        except ProjectSchemaError as exc:
-            raise Exception("Bad project file " + projectFile + ": " + str(exc)) from exc
+            props = load_validated_project_props(path)
         except Exception as exc:
-            # Bad error - cannot load project file at all
-            raise Exception("Bad project file " + projectFile) from exc
+            # Preserve message shape for callers
+            raise Exception(str(exc)) from exc
 
         self.__resetValues()
         self.fileName = path
         self.props = props
 
-        # Make sure the old projects have the new fields as well
-        for key, value in _DEFAULT_PROJECT_PROPS.items():
-            if key not in self.props:
-                self.props[key] = value
-
+        uuid_migrated = False
         if self.props["uuid"] == "":
             logging.warning("Project file does not have UUID. Re-generate it...")
-            self.props["uuid"] = str(uuid.uuid1())
+            self.props["uuid"] = new_project_uuid()
+            uuid_migrated = True
         try:
             self.userProjectDir = safe_user_project_dir(SETTINGS_DIR, self.props["uuid"])
         except ProjectSchemaError as exc:
@@ -349,6 +374,10 @@ class CodimensionProject(
 
         # The project might have been moved...
         self.__createProjectFile()  # ~/.codimension3/uuidNN/project
+
+        # Persist migrated UUID immediately so the next open reuses the same state dir (C05).
+        if uuid_migrated:
+            self.saveProject()
 
         # Update the recent list
         Settings().addRecentProject(self.fileName)
@@ -599,11 +628,19 @@ class CodimensionProject(
         return path in self.topLevelDirs
 
     def updateProperties(self, props):
-        """Updates the project properties"""
-        if self.props != props:
+        """Updates the project properties via the same schema pipeline as load (B09)."""
+        try:
+            validated = merge_project_defaults(validate_project_props(copy.deepcopy(props)))
+        except ProjectSchemaError as exc:
+            logging.error("Rejecting invalid project properties update: %s", exc)
+            raise
+        # Keep existing UUID when the dialog omits / blanks it.
+        if not validated.get("uuid") and self.props.get("uuid"):
+            validated["uuid"] = self.props["uuid"]
+        if self.props != validated:
             analysis_props = ("excludeFromAnalysis", "importdirs", "pythoninterpreter")
-            need_rescan = any(self.props.get(p) != props.get(p) for p in analysis_props)
-            self.props = props
+            need_rescan = any(self.props.get(p) != validated.get(p) for p in analysis_props)
+            self.props = validated
             self.saveProject()
             if need_rescan:
                 # CompleteProject after filesList is ready
@@ -622,9 +659,17 @@ class CodimensionProject(
         self.__generateFilesList(on_complete=self.__finishAnalysisRescan)
 
     def onProjectFileUpdated(self):
-        """Called when a project file is updated via direct editing"""
-        self.props = getProjectProperties(self.fileName)
-
+        """Reload `.cdm3` from disk; keep last-known-good props on validation failure."""
+        try:
+            props = load_validated_project_props(self.fileName)
+        except Exception as exc:
+            logging.error(
+                "Ignoring invalid project file edit (%s); keeping last-known-good props: %s",
+                self.fileName,
+                exc,
+            )
+            return
+        self.props = props
         # no need to save, but signal just in case
         self.sigProjectChanged.emit(self.Properties)
 
@@ -719,22 +764,16 @@ class CodimensionProject(
 
 
 def getProjectProperties(projectFile):
-    """Provides project properties or throws an exception"""
-    path = realpath(projectFile)
-    if not exists(path):
-        raise Exception("Cannot find project file " + projectFile)
-
-    try:
-        with open(path, "r", encoding=DEFAULT_ENCODING) as diskfile:
-            return json.load(diskfile)
-    except Exception as exc:
-        logging.error("Error reading project file %s: %s", projectFile, str(exc))
-        return {}
+    """Provides validated project properties or throws an exception (B09)."""
+    return load_validated_project_props(projectFile)
 
 
 def getProjectFileTooltip(fileName):
     """Provides a project file tooltip"""
-    props = getProjectProperties(fileName)
+    try:
+        props = getProjectProperties(fileName)
+    except Exception:
+        props = {}
     return "\n".join(
         [
             "Version: " + props.get("version", "n/a"),

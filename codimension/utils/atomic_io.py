@@ -14,8 +14,44 @@
 from __future__ import annotations
 
 import os
+import stat
 import tempfile
 from typing import Callable
+
+
+def _existing_mode(path: str) -> int | None:
+    """Return previous POSIX mode bits when ``path`` already exists."""
+    try:
+        return stat.S_IMODE(os.stat(path).st_mode)
+    except OSError:
+        return None
+
+
+def _fsync_directory(directory: str) -> None:
+    """Best-effort directory fsync so ``os.replace`` is durable."""
+    try:
+        dir_fd = os.open(directory, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(dir_fd)
+    except OSError:
+        pass
+    finally:
+        os.close(dir_fd)
+
+
+def _commit_temp(tmp_path: str, path: str, mode: int | None) -> None:
+    """Replace ``path`` with ``tmp_path``, preserve/apply mode, fsync directory."""
+    directory = os.path.dirname(path) or "."
+    effective_mode = mode if mode is not None else _existing_mode(path)
+    os.replace(tmp_path, path)
+    if effective_mode is not None:
+        try:
+            os.chmod(path, effective_mode)
+        except OSError:
+            pass
+    _fsync_directory(directory)
 
 
 def atomic_write_text(
@@ -25,7 +61,11 @@ def atomic_write_text(
     encoding: str = "utf-8",
     mode: int | None = None,
 ) -> None:
-    """Write ``content`` to ``path`` atomically; optional POSIX ``mode`` after replace."""
+    """Write ``content`` to ``path`` atomically.
+
+    When ``mode`` is ``None`` and ``path`` already exists, the previous file
+    mode is preserved. The parent directory is fsync'd after ``os.replace``.
+    """
     directory = os.path.dirname(path) or "."
     fd, tmp_path = tempfile.mkstemp(prefix=".cdm_atomic_", dir=directory)
     try:
@@ -33,10 +73,8 @@ def atomic_write_text(
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(tmp_path, path)
-        tmp_path = ""  # replaced successfully
-        if mode is not None:
-            os.chmod(path, mode)
+        _commit_temp(tmp_path, path, mode)
+        tmp_path = ""
     finally:
         if tmp_path and os.path.exists(tmp_path):
             try:
@@ -54,10 +92,8 @@ def atomic_write_bytes(path: str, content: bytes, *, mode: int | None = None) ->
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(tmp_path, path)
+        _commit_temp(tmp_path, path, mode)
         tmp_path = ""
-        if mode is not None:
-            os.chmod(path, mode)
     finally:
         if tmp_path and os.path.exists(tmp_path):
             try:
@@ -73,13 +109,10 @@ def atomic_write_via(path: str, writer: Callable[[str], None], *, mode: int | No
     os.close(fd)
     try:
         writer(tmp_path)
-        # Ensure durability of whatever writer produced
         with open(tmp_path, "rb") as handle:
             os.fsync(handle.fileno())
-        os.replace(tmp_path, path)
+        _commit_temp(tmp_path, path, mode)
         tmp_path = ""
-        if mode is not None:
-            os.chmod(path, mode)
     finally:
         if tmp_path and os.path.exists(tmp_path):
             try:
