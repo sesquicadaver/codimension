@@ -18,7 +18,7 @@ Codimension інтегрує пакет Python pyflakes
 
 Ось як повідомлення pyflakes виглядають на полі редактора:
 
-![Pyflakes на полі редактора](../pyflakes/flakesmargin.png "Pyflakes на полі редактора")
+![Pyflakes на полі редактора](../../pyflakes/flakesmargin.png "Pyflakes на полі редактора")
 
 Кожне повідомлення пов’язане з номером рядка, тому на відповідному рядку з’являється
 іконка червоної крапки. Коли курсор миші наводиться на іконку повідомлення pyflakes,
@@ -26,7 +26,7 @@ Codimension інтегрує пакет Python pyflakes
 
 Ось як виглядає звіт на рядку стану:
 
-![Pyflakes на рядку стану](../pyflakes/flakesstatus.png "Pyflakes на рядку стану")
+![Pyflakes на рядку стану](../../pyflakes/flakesstatus.png "Pyflakes на рядку стану")
 
 Якщо є повідомлення pyflakes, на рядку стану відображається іконка червоного
 знак оклику. Іконка підтримує подвійне натискання: курсор перейде на перший рядок,
@@ -37,4 +37,4 @@ Codimension інтегрує пакет Python pyflakes
 Якщо pyflakes не має повідомлень для поточного буфера редагування, замість цього
 відображається зелена іконка.
 
-![Pyflakes OK](../pyflakes/flakesok.png "Pyflakes OK")
+![Pyflakes OK](../../pyflakes/flakesok.png "Pyflakes OK")

@@ -1,5 +1,9 @@
 2026 Aug 06
 
+* Audit P2 B11: expand ``scripts/check_docs.py`` (images/dirs/extensionless,
+  anchors, reference-style/HTML links, UA↔EN index parity, TODO↔Living Spec
+  status sync, CI Python matrix from ``ci.yml``/pyproject); align ``doc/uk``
+  index and topic image paths with English/canonical docs
 * Audit P1 D07/B08/C04: discover bundled ``cdmplugins`` via package path;
   full ``imp`` compat for yapsy; offscreen smoke builds MainWindow and
   requires plugin activation; Flow UI import failures no longer become skip
