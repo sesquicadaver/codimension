@@ -83,9 +83,7 @@ class LintDriverBase(QWidget):
         self._stderr = ""
         self._args = self.buildArgs(fileName)
 
-        self._pythonPath, processEnvironment = resolve_tool_python_and_environment(
-            self._ide.project, self._encoding
-        )
+        self._pythonPath, processEnvironment = resolve_tool_python_and_environment(self._ide.project, self._encoding)
         self._process.setProcessEnvironment(processEnvironment)
         self._process.start(self._pythonPath, self._args)
 

@@ -67,9 +67,7 @@ class PytestDriver(QWidget):
             os.path.basename(self.__fileName),
         ]
 
-        self.__pythonPath, processEnvironment = resolve_tool_python_and_environment(
-            self.__ide.project, self.__encoding
-        )
+        self.__pythonPath, processEnvironment = resolve_tool_python_and_environment(self.__ide.project, self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
         self.__process.start(self.__pythonPath, self.__args)
 

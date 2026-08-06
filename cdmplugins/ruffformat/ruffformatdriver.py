@@ -66,9 +66,7 @@ class RuffFormatDriver(QWidget):
             os.path.basename(self.__fileName),
         ]
 
-        pythonPath, processEnvironment = resolve_tool_python_and_environment(
-            self.__ide.project, self.__encoding
-        )
+        pythonPath, processEnvironment = resolve_tool_python_and_environment(self.__ide.project, self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
         self.__process.start(pythonPath, self.__args)
 
