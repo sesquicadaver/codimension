@@ -49,7 +49,7 @@
 | 14–20 Analysis | DONE | R130–R138 (індекс, графи імпортів, метрики, overlays framework, git analytics, risk) |
 | 21–24 Graph | DONE → R150+ | R140–R143 (model, canvas, frames, diff, taint MVP) здано |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
-| 26 AI | PARTIAL → R152+ | R151 context packer зданий; UI-дії ще OPEN |
+| 26 AI | DONE (MVP) | R151 context + R152 UI explain/suggest за flag (offline/mock; без LLM) |
 | 27–29 Extended overlays | MISSING → R160+ | Фреймворк R135 DONE; візуальні шари R160–R162 ще OPEN |
 | 30–38 Release/update | PARTIAL → R171+ | `ci-gate` + OIDC + політика гілок (R170); немає channels/auto-update |
 

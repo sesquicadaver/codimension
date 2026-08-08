@@ -49,7 +49,7 @@
 | 14–20 Analysis | DONE | R130–R138: SymbolIndex, DependencyGraph, MetricProvider (+MI/Halstead/raw), OverlayLayer, git analytics, risk score |
 | 21–24 Graph | DONE → R150+ | R140–R143 (model, canvas, frames, diff, taint MVP) shipped |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
-| 26 AI | PARTIAL → R152+ | R151 context packer shipped; UI actions still OPEN |
+| 26 AI | DONE (MVP) | R151 context + R152 flag-gated UI explain/suggest (offline/mock; no LLM) |
 | 27–29 Extended overlays | MISSING → R160+ | Overlay **framework** R135 DONE; visual layers R160–R162 still OPEN |
 | 30–38 Release/update | PARTIAL → R171+ | `ci-gate` + OIDC + branching policy (R170) exist; no channels/auto-update yet |
 
