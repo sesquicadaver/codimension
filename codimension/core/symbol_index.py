@@ -9,10 +9,10 @@
 # (at your option) any later version.
 #
 
-"""SymbolIndex schema — name, kind, file, half-open span, container (R130).
+"""SymbolIndex schema + definition/reference queries (R130/R132).
 
-Population from ``brief_ast`` is R131; queries are R132. This module is Qt-free
-and lives in ``core`` so headless tooling can depend on the schema alone.
+Population from ``brief_ast`` is R131. This module is Qt-free and lives in
+``core`` so headless tooling can depend on the schema alone.
 """
 
 from __future__ import annotations
@@ -39,6 +39,20 @@ class SymbolKind(str, Enum):
     ATTRIBUTE = "attribute"
     IMPORT = "import"
     UNKNOWN = "unknown"
+
+
+# Kinds treated as definitions by ``find_definitions`` (imports are references).
+DEFINITION_KINDS: frozenset[SymbolKind] = frozenset(
+    {
+        SymbolKind.MODULE,
+        SymbolKind.CLASS,
+        SymbolKind.FUNCTION,
+        SymbolKind.METHOD,
+        SymbolKind.VARIABLE,
+        SymbolKind.ATTRIBUTE,
+        SymbolKind.UNKNOWN,
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +100,7 @@ class SymbolRecord:
             ``None`` for module-level symbols.
         qualname: Optional fully-qualified name; when omitted, derived as
             ``container.name`` or ``name``.
+        line: Optional 1-based source line (from brief_ast) for search bridges.
         extras: Immutable optional metadata bag for later tasks.
     """
 
@@ -95,6 +110,7 @@ class SymbolRecord:
     span: SourceSpan
     container: Optional[str] = None
     qualname: Optional[str] = None
+    line: Optional[int] = None
     extras: Mapping[str, str] = field(default_factory=_empty_extras)
 
     def __post_init__(self) -> None:
