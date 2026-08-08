@@ -1,5 +1,8 @@
 2026 Aug 08
 
+* R133: headless ``DependencyGraph`` from imports (``utils.dependency_graph``)
+  via ``brief_ast``; local vs external nodes; JSON / DOT export; no Qt /
+  GlobalData resolution path
 * R132: ``SymbolIndex.find_definitions`` / ``find_references``; optional
   ``line`` on records; occurrences bridge
   (``build_occurrence_results_from_index``) without changing Jedi default path

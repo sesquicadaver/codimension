@@ -45,7 +45,7 @@
 | 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
 | 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open опція поставлена |
 | 10–13 Remote backends | DONE (R121–R125) | ExecutionTarget: local, Docker, SSH, Kubernetes MVP |
-| 14–20 Analysis | PARTIAL → R133+ | SymbolIndex schema/populate/queries (R130–R132); далі graphs/overlays |
+| 14–20 Analysis | PARTIAL → R134+ | SymbolIndex + DependencyGraph (R130–R133); далі metrics/overlays |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | після SymbolIndex |
@@ -85,6 +85,7 @@
 | D-R130 | R130 | схема `core.symbol_index` (SymbolRecord + half-open span) |
 | D-R131 | R131 | Наповнення SymbolIndex з brief_ast (`utils.symbol_index_brief`) |
 | D-R132 | R132 | `find_definitions` / `find_references` + міст occurrences |
+| D-R133 | R133 | Headless `DependencyGraph` з імпортів (JSON/DOT export) |
 
 ---
 
@@ -110,7 +111,7 @@
 | 16 | R130 | Схема SymbolIndex (name, kind, file, half-open span, container) | Модуль + тести; Living Spec | S | DONE |
 | 17 | R131 | Наповнення SymbolIndex з `brief_ast` по файлах проєкту | Тести точності на фікстурах | M | DONE |
 | 18 | R132 | Запити `find_definitions` / `find_references` (+ міст до search) | Unit + без регресії occurrences | M | DONE |
-| 19 | R133 | Headless `DependencyGraph` з імпортів (без Qt) | Тест побудови; опційний JSON export | M | OPEN |
+| 19 | R133 | Headless `DependencyGraph` з імпортів (без Qt) | Тест побудови; опційний JSON export | M | DONE |
 | 20 | R134 | Інтерфейс `MetricProvider` + адаптер radon CC | Registry тест | S | OPEN |
 | 21 | R135 | Overlay framework: `OverlayLayer` + точка підключення (без важкої графіки) | Реєстрація порожнього overlay; тест хука | M | OPEN |
 | 22 | R136 | Розширені метрики (≥2 понад CC) через MetricProvider | Фікстури + тести | M | OPEN |
@@ -145,7 +146,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R133` — headless `DependencyGraph` з імпортів.
+**Перший OPEN:** `R134` — інтерфейс `MetricProvider` + адаптер radon CC.
 
 ---
 
