@@ -110,6 +110,26 @@ class ControlFlowNavigationBar(QFrame):
         self.__depsHotBadge.setMaximumWidth(260)
         self.__layout.addWidget(self.__depsHotBadge)
 
+        # R162: deployment Dockerfile / Compose presence badges
+        self.__deployDockerBadge = HeaderLabel("deploy:—", None, self)
+        self.__deployDockerBadge.setTextFormat(Qt.PlainText)
+        self.__deployDockerBadge.setAlignment(Qt.AlignCenter)
+        self.__deployDockerBadge.setWordWrap(False)
+        self.__deployDockerBadge.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.__deployDockerBadge.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.__deployDockerBadge.setToolTip("Deployment artifacts (read-only)")
+        self.__layout.addWidget(self.__deployDockerBadge)
+
+        self.__deployComposeBadge = HeaderFitLabel(self)
+        self.__deployComposeBadge.setTextFormat(Qt.PlainText)
+        self.__deployComposeBadge.setAlignment(Qt.AlignLeft)
+        self.__deployComposeBadge.setWordWrap(False)
+        self.__deployComposeBadge.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.__deployComposeBadge.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.__deployComposeBadge.setMinimumWidth(40)
+        self.__deployComposeBadge.setMaximumWidth(160)
+        self.__layout.addWidget(self.__deployComposeBadge)
+
         self.__spacer = ToolBarExpandingSpacer(self)
         self.__spacer.setMinimumWidth(0)
         self.__layout.addWidget(self.__spacer)
@@ -223,6 +243,16 @@ class ControlFlowNavigationBar(QFrame):
         self.__depsHotBadge.setToolTip(tip)
         self.__depsEdgesBadge.setVisible(True)
         self.__depsHotBadge.setVisible(bool(hot_badge))
+
+    def setDeployBadges(self, docker_badge, compose_badge, tooltip=""):
+        """Sets R162 deployment Dockerfile / Compose overlay badges."""
+        self.__deployDockerBadge.setText(str(docker_badge or "deploy:—"))
+        self.__deployComposeBadge.setText(str(compose_badge or ""))
+        tip = str(tooltip or "Deployment artifacts (read-only)")
+        self.__deployDockerBadge.setToolTip(tip)
+        self.__deployComposeBadge.setToolTip(tip)
+        self.__deployDockerBadge.setVisible(True)
+        self.__deployComposeBadge.setVisible(bool(compose_badge))
 
     def envSourceBadgeText(self):
         """Return the current env source badge text (tests / diagnostics)."""

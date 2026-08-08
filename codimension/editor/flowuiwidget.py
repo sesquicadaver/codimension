@@ -59,6 +59,7 @@ from ui.qt import (
 )
 from ui.spacers import ToolBarExpandingSpacer, ToolBarVSpacer
 from utils.dependency_overlay import ensure_dependency_overlay
+from utils.deployment_overlay import ensure_deployment_overlay
 from utils.diskvaluesrelay import getCollapsedGroups, getFilePosition, setCollapsedGroups
 from utils.environment_overlay import ensure_environment_overlay
 from utils.fileutils import isPythonMime
@@ -313,6 +314,11 @@ class FlowUIWidget(QWidget):
         self.__depsOverlay.add_sink(self.__onDepsOverlayBadge)
         self.__depsOverlay.refresh()
 
+        # R162: Dockerfile / Compose presence badges via OverlayLayer.
+        self.__deployOverlay = ensure_deployment_overlay()
+        self.__deployOverlay.add_sink(self.__onDeployOverlayBadge)
+        self.__deployOverlay.refresh()
+
     def __onEnvOverlayBadge(self, badge):
         """Apply environment overlay badge payload to the navigation bar."""
         self.__navBar.setEnvBadges(badge.source_badge, badge.path_badge, badge.tooltip)
@@ -320,6 +326,10 @@ class FlowUIWidget(QWidget):
     def __onDepsOverlayBadge(self, badge):
         """Apply dependency edge-heat overlay payload to the navigation bar."""
         self.__navBar.setDepsHeatBadges(badge.edges_badge, badge.hot_badge, badge.tooltip)
+
+    def __onDeployOverlayBadge(self, badge):
+        """Apply deployment overlay badge payload to the navigation bar."""
+        self.__navBar.setDeployBadges(badge.docker_badge, badge.compose_badge, badge.tooltip)
 
     def __saveNavBarProps(self):
         """Saves the current view props in the dynamic props"""

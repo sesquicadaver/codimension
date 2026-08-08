@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R162: deployment overlay — read-only Dockerfile / Compose detection via
+  R135; ``deploy:docker×N`` / ``compose:N`` nav badges; fixture tests
 * R161: dependency overlay — edge heat from ``DependencyGraph`` (R133) via
   R135 layer; ``deps:N`` / ``hot:…`` nav badges; deps connector tint by heat
 * R160: environment overlay — ``env:source`` + path badges on flow nav bar
