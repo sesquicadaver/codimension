@@ -89,6 +89,7 @@
 | D-R134 | R134 | `MetricProvider` + registry + radon CC adapter |
 | D-R135 | R135 | `OverlayLayer` + attach hosts flow/editor |
 | D-R136 | R136 | Розширені метрики (MI + Halstead + raw LOC) |
+| D-R137 | R137 | Git churn/hotspot analytics (`utils.git_analytics`) |
 
 ---
 
@@ -118,7 +119,7 @@
 | 20 | R134 | Інтерфейс `MetricProvider` + адаптер radon CC | Registry тест | S | DONE |
 | 21 | R135 | Overlay framework: `OverlayLayer` + точка підключення (без важкої графіки) | Реєстрація порожнього overlay; тест хука | M | DONE |
 | 22 | R136 | Розширені метрики (≥2 понад CC) через MetricProvider | Фікстури + тести | M | DONE |
-| 23 | R137 | Git analytics: churn / hotspot (git log) | Headless API + тест на temp repo | M | OPEN |
+| 23 | R137 | Git analytics: churn / hotspot (git log) | Headless API + тест на temp repo | M | DONE |
 | 24 | R138 | Composite risk score (lint + metrics ± git) | Документована формула; unit; без AI | M | OPEN |
 | 25 | R140 | Headless CFG graph model окремо від canvas `flowui` | API з flow parse; canvas споживає модель | L | OPEN |
 | 26 | R141 | Debugger graph mode: кадри → вузли CFG | Mapping unit / offscreen | L | OPEN |
@@ -149,7 +150,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R137` — Git analytics (churn / hotspot).
+**Перший OPEN:** `R138` — Composite risk score (lint + metrics ± git).
 
 ---
 
