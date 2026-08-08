@@ -20,7 +20,8 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from core.cfg import CfgEdgeKind, CfgGraph, CfgNode, CfgNodeKind, from_control_flow
+from core.cfg import CfgEdgeKind, CfgGraph, from_control_flow
+from core.cfg_frames import nodes_covering_line
 
 
 def bind_cfg_graph(canvas: Any, cflow: Any) -> CfgGraph:
@@ -55,15 +56,6 @@ def module_entry_successor(graph: CfgGraph) -> Optional[str]:
     return succ[0] if succ else None
 
 
-def nodes_for_line(graph: CfgGraph, line: int) -> tuple[CfgNode, ...]:
+def nodes_for_line(graph: CfgGraph, line: int):
     """Return non-synthetic nodes whose line range covers ``line``."""
-    if line < 1:
-        return ()
-    out: list[CfgNode] = []
-    skip = {CfgNodeKind.ENTRY, CfgNodeKind.EXIT, CfgNodeKind.JOIN, CfgNodeKind.MODULE}
-    for node in graph.nodes.values():
-        if node.kind in skip:
-            continue
-        if node.begin_line <= line <= node.end_line:
-            out.append(node)
-    return tuple(out)
+    return nodes_covering_line(graph, line)

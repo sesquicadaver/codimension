@@ -213,11 +213,32 @@ class StackViewer(QWidget):
                 funcArgs = ""
 
             item = StackFrameItem(fName, lineNo, funcName, funcArgs, frameNumber)
+            self.__annotateCfgNode(item, fName, lineNo, funcName, frameNumber)
             self.__framesList.addTopLevelItem(item)
             frameNumber += 1
         self.__resizeColumns()
         self.__framesList.topLevelItem(0).setCurrent(True)
         self.__stackLabel.setText("Stack (total: " + str(len(stack)) + ")")
+
+    def __annotateCfgNode(self, item, fileName, lineNo, funcName, frameNumber):
+        """Attach best CFG node id to the frame tooltip (R141 graph mode)."""
+        try:
+            from core.cfg_frames import DebuggerFrame, map_frame_from_source_file
+        except Exception:
+            return
+        node = map_frame_from_source_file(
+            DebuggerFrame(
+                file_name=fileName,
+                line=int(lineNo),
+                func_name=funcName or "",
+                frame_number=int(frameNumber),
+            )
+        )
+        if node is None:
+            return
+        tip = item.toolTip(0) or ""
+        extra = "CFG node: " + node.id + " (" + str(node.kind.value) + ")"
+        item.setToolTip(0, (tip + "\n" + extra) if tip else extra)
 
     def getFrameNumber(self):
         """Provides the current frame number"""

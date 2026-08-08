@@ -47,7 +47,7 @@
 | 8–9 Deps + local venv | DONE | T140/T141/R114 + DependencyManifest R120 |
 | 10–13 Remote backends | DONE | ExecutionTarget R121–R125: local, Docker, SSH, Kubernetes MVPs |
 | 14–20 Analysis | DONE | R130–R138: SymbolIndex, DependencyGraph, MetricProvider (+MI/Halstead/raw), OverlayLayer, git analytics, risk score |
-| 21–24 Graph | PARTIAL → R141+ | R140.a model + R140.b canvas bind shipped; debugger map still OPEN |
+| 21–24 Graph | PARTIAL → R142+ | R140–R141 (model, canvas bind, frame→node map) shipped; graph diff still OPEN |
 | 25 Plugins | DONE | yapsy + bundled `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | SymbolIndex + metrics ready; needs CFG graph slice (R140.a) |
 | 27–29 Extended overlays | MISSING → R160+ | Overlay **framework** R135 DONE; visual layers R160–R162 still OPEN |
@@ -95,6 +95,7 @@
 | D-R170 | R170 | Branching policy documented: `master` + `feature/*` / `fix/*`; no direct push (`ci-gate`) |
 | D-R140.a | R140.a | Headless CFG graph model (`core.cfg`) from flow parse |
 | D-R140.b | R140.b | `flowui.cfg_adapter` binds `CfgGraph` in `layoutModule`; editor `getCfgGraph` |
+| D-R141 | R141 | Debugger frames → CFG nodes (`core.cfg_frames`); stack tooltip annotation |
 
 ---
 
@@ -102,20 +103,19 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R141 | Debugger graph mode: map frames → CFG nodes | Offscreen/debugger test or documented manual + unit mapping | L | OPEN |
-| 2 | R142 | Graph diff between two CFGs / revisions | Diff API + tests on fixture pairs | M | OPEN |
-| 3 | R143 | Function-local data-flow / taint MVP | Documented subset; tests for sources/sinks in one function | L | OPEN |
-| 4 | R150 | Plugin capability / API version negotiation | Host rejects incompatible plugins cleanly; test | S | OPEN |
-| 5 | R151 | AI context builder (headless): pack SymbolIndex + CFG slice for a symbol | Pure function + tests; no network | M | OPEN |
-| 6 | R152 | AI UI actions behind feature flag (explain / suggest) | Flag off by default; smoke when flag on may mock backend | M | OPEN |
-| 7 | R160 | Environment overlay visualization (env source / path badges on UI) | Uses R135; screenshot or widget test | M | OPEN |
-| 8 | R161 | Dependency overlay (edge heat from DependencyGraph) | Uses R133+R135; test | M | OPEN |
-| 9 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
-| 10 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
-| 11 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
-| 12 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
-| 13 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
-| 14 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
+| 1 | R142 | Graph diff between two CFGs / revisions | Diff API + tests on fixture pairs | M | OPEN |
+| 2 | R143 | Function-local data-flow / taint MVP | Documented subset; tests for sources/sinks in one function | L | OPEN |
+| 3 | R150 | Plugin capability / API version negotiation | Host rejects incompatible plugins cleanly; test | S | OPEN |
+| 4 | R151 | AI context builder (headless): pack SymbolIndex + CFG slice for a symbol | Pure function + tests; no network | M | OPEN |
+| 5 | R152 | AI UI actions behind feature flag (explain / suggest) | Flag off by default; smoke when flag on may mock backend | M | OPEN |
+| 6 | R160 | Environment overlay visualization (env source / path badges on UI) | Uses R135; screenshot or widget test | M | OPEN |
+| 7 | R161 | Dependency overlay (edge heat from DependencyGraph) | Uses R133+R135; test | M | OPEN |
+| 8 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
+| 9 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
+| 10 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
+| 11 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
+| 12 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
+| 13 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
 
 ### Deferred (explicit)
 
@@ -129,7 +129,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R141` — debugger graph mode: map frames → CFG nodes.
+**First OPEN:** `R142` — graph diff between two CFGs / revisions.
 
 ---
 
