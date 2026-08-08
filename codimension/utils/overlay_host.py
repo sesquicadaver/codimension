@@ -78,9 +78,17 @@ def ensure_environment_overlay(host: Optional[OverlayHost] = None):
     return _ensure(host)
 
 
+def ensure_dependency_overlay(host: Optional[OverlayHost] = None):
+    """Register the R161 dependency edge-heat overlay on the flow host if missing."""
+    from utils.dependency_overlay import ensure_dependency_overlay as _ensure
+
+    return _ensure(host)
+
+
 __all__ = [
     "OverlayHost",
     "editor_overlay_host",
+    "ensure_dependency_overlay",
     "ensure_empty_overlay",
     "ensure_environment_overlay",
     "flow_overlay_host",

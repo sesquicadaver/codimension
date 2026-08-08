@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R161: dependency overlay — edge heat from ``DependencyGraph`` (R133) via
+  R135 layer; ``deps:N`` / ``hot:…`` nav badges; deps connector tint by heat
 * R160: environment overlay — ``env:source`` + path badges on flow nav bar
   via R135 ``EnvironmentOverlayLayer``; status-bar env refresh notifies overlays
 * R152: AI UI explain/suggest behind ``CDM_AI_UI`` (default off) —

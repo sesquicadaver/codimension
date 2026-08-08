@@ -58,6 +58,7 @@ from ui.qt import (
     QWidget,
 )
 from ui.spacers import ToolBarExpandingSpacer, ToolBarVSpacer
+from utils.dependency_overlay import ensure_dependency_overlay
 from utils.diskvaluesrelay import getCollapsedGroups, getFilePosition, setCollapsedGroups
 from utils.environment_overlay import ensure_environment_overlay
 from utils.fileutils import isPythonMime
@@ -307,9 +308,18 @@ class FlowUIWidget(QWidget):
         self.__envOverlay.add_sink(self.__onEnvOverlayBadge)
         self.__envOverlay.refresh()
 
+        # R161: dependency edge-heat badges via OverlayLayer.
+        self.__depsOverlay = ensure_dependency_overlay()
+        self.__depsOverlay.add_sink(self.__onDepsOverlayBadge)
+        self.__depsOverlay.refresh()
+
     def __onEnvOverlayBadge(self, badge):
         """Apply environment overlay badge payload to the navigation bar."""
         self.__navBar.setEnvBadges(badge.source_badge, badge.path_badge, badge.tooltip)
+
+    def __onDepsOverlayBadge(self, badge):
+        """Apply dependency edge-heat overlay payload to the navigation bar."""
+        self.__navBar.setDepsHeatBadges(badge.edges_badge, badge.hot_badge, badge.tooltip)
 
     def __saveNavBarProps(self):
         """Saves the current view props in the dynamic props"""
@@ -682,8 +692,13 @@ class FlowUIWidget(QWidget):
             if not fileName:
                 fileName = self.__parentWidget.getShortName()
 
+            # R161: refresh DependencyGraph edge heats for the focus file.
+            deps_badge = self.__depsOverlay.refresh(focus_path=fileName if fileName else None)
+
             # Top level canvas has no adress and no parent canvas
             self.__canvas = DepsVirtualCanvas(self.cflowSettings, None, None, None)
+            self.__canvas.deps_focus_max_heat = deps_badge.focus_max_heat
+            self.__canvas.deps_edge_heats = deps_badge.heats
             lStart = timer()
             self.__canvas.layoutTopLevel(fileName, deps)
             lEnd = timer()
@@ -692,6 +707,7 @@ class FlowUIWidget(QWidget):
             self.scene().setSceneRect(0, 0, width, height)
             self.__canvas.draw(self.scene(), 0, 0)
             dEnd = timer()
+            notify_flow_overlays("deps", path=fileName)
             if self.isDebugMode():
                 logging.info("Redrawing is done. Size: %d x %d", width, height)
                 logging.info("Layout timing: %f", lEnd - lStart)
