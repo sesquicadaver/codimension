@@ -100,6 +100,7 @@
 | D-R143 | R143 | Function-local taint MVP (`core.taint`); documented subset |
 | D-R150 | R150 | Plugin capability / API negotiation (`plugins.capabilities`) |
 | D-R151 | R151 | AI context packer (`core.ai_context`): SymbolIndex + CFG slice |
+| D-R152 | R152 | AI UI explain/suggest behind `CDM_AI_UI` (default off; offline/mock backend) |
 
 ---
 
@@ -107,15 +108,14 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R152 | AI UI actions behind feature flag (explain / suggest) | Flag off by default; smoke when flag on may mock backend | M | OPEN |
-| 2 | R160 | Environment overlay visualization (env source / path badges on UI) | Uses R135; screenshot or widget test | M | OPEN |
-| 3 | R161 | Dependency overlay (edge heat from DependencyGraph) | Uses R133+R135; test | M | OPEN |
-| 4 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
-| 5 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
-| 6 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
-| 7 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
-| 8 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
-| 9 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
+| 1 | R160 | Environment overlay visualization (env source / path badges on UI) | Uses R135; screenshot or widget test | M | OPEN |
+| 2 | R161 | Dependency overlay (edge heat from DependencyGraph) | Uses R133+R135; test | M | OPEN |
+| 3 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
+| 4 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
+| 5 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
+| 6 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
+| 7 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
+| 8 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
 
 ### Deferred (explicit)
 
@@ -129,7 +129,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R152` — AI UI actions behind feature flag.
+**First OPEN:** `R160` — Environment overlay visualization.
 
 ---
 

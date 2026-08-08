@@ -100,6 +100,7 @@
 | D-R143 | R143 | Function-local taint MVP (`core.taint`); задокументована підмножина |
 | D-R150 | R150 | Plugin capability / API negotiation (`plugins.capabilities`) |
 | D-R151 | R151 | AI context packer (`core.ai_context`): SymbolIndex + CFG slice |
+| D-R152 | R152 | AI UI explain/suggest за `CDM_AI_UI` (default off; offline/mock backend) |
 
 ---
 
@@ -107,15 +108,14 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
-| 2 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
-| 3 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
-| 4 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
-| 5 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
-| 6 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
-| 7 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
-| 8 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 9 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
+| 2 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
+| 3 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
+| 4 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
+| 5 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
+| 6 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
+| 7 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
+| 8 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -129,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R152` — AI UI-дії за feature flag.
+**Перший OPEN:** `R160` — Environment overlay.
 
 ---
 

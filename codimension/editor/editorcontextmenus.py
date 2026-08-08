@@ -19,11 +19,20 @@
 
 """Sets up and handles the text editor conext menus"""
 
+import logging
 import os.path
 
 from analysis.disasm import OPT_NO_OPTIMIZATION, OPT_OPTIMIZE_ASSERT, OPT_OPTIMIZE_DOCSTRINGS
 from autocomplete.bufferutils import getContext
 from cdmpyparser import getBriefModuleInfoFromMemory
+from core.ai_ui import (
+    AI_UI_ENV,
+    AiAction,
+    AiUiDisabledError,
+    is_ai_ui_enabled,
+    list_ai_menu_entries,
+    run_ai_action_for_source,
+)
 from ui.qt import QActionGroup, QApplication, QMenu, QMessageBox
 from utils.diskvaluesrelay import getFileEncoding, setFileEncoding
 from utils.encoding import (
@@ -78,6 +87,13 @@ class EditorContextMenuMixin:
 
         menu = self._menu.addMenu(self.__initDiagramsMenu())
         menu.setIcon(getIcon("diagramsmenu.png"))
+        self._menu.addSeparator()
+
+        # R152: AI explain / suggest — visible only when CDM_AI_UI is enabled.
+        self.__aiMenu = self.__initAiMenu()
+        self.__aiMenuAction = self._menu.addMenu(self.__aiMenu)
+        self.__aiMenuAction.setIcon(getIcon("toolsmenu.png"))
+        self.__aiMenuAction.setVisible(is_ai_ui_enabled())
         self._menu.addSeparator()
 
         self.__menuOpenAsFile = self._menu.addAction(getIcon("filemenu.png"), "O&pen as file", self.openAsFile)
@@ -163,6 +179,49 @@ class EditorContextMenuMixin:
         )
         return self.diagramsMenu
 
+    def __initAiMenu(self):
+        """Creates the experimental AI actions menu (R152)."""
+        self.aiMenu = QMenu("A&I (experimental)")
+        # Always register actions; parent menu visibility is flag-gated at show time.
+        for action, label in list_ai_menu_entries(environ={AI_UI_ENV: "1"}):
+            if action is AiAction.EXPLAIN:
+                self.aiMenu.addAction(label, self.__onAiExplain)
+            elif action is AiAction.SUGGEST:
+                self.aiMenu.addAction(label, self.__onAiSuggest)
+        return self.aiMenu
+
+    def __onAiExplain(self):
+        """Editor action: explain symbol under cursor (flag-gated)."""
+        self.__runAiAction(AiAction.EXPLAIN)
+
+    def __onAiSuggest(self):
+        """Editor action: suggest improvements for symbol under cursor (flag-gated)."""
+        self.__runAiAction(AiAction.SUGGEST)
+
+    def __runAiAction(self, action: AiAction):
+        """Build offline AI context and show the backend result."""
+        if not is_ai_ui_enabled():
+            QMessageBox.information(self, "AI UI disabled", f"Set {AI_UI_ENV}=1 to enable experimental AI actions.")
+            return
+        name = self.getCurrentOrSelection()[0].strip()
+        if not name or not name.isidentifier():
+            QMessageBox.warning(self, "AI action", "Place the cursor on a Python identifier (function or class).")
+            return
+        file_name = self._parent.getFileName() or self._parent.getShortName() or "<buffer>"
+        try:
+            result = run_ai_action_for_source(action, self.text, name, file=file_name)
+        except AiUiDisabledError:
+            QMessageBox.information(self, "AI UI disabled", f"Set {AI_UI_ENV}=1 to enable experimental AI actions.")
+            return
+        except ValueError as exc:
+            QMessageBox.warning(self, "AI action", str(exc))
+            return
+        except Exception:
+            logging.exception("AI UI action %s failed for %r", action.value, name)
+            QMessageBox.warning(self, "AI action", f"Failed to run {action.value} for {name!r}.")
+            return
+        QMessageBox.information(self, f"AI {action.value}: {result.symbol_name}", result.text)
+
     def contextMenuEvent(self, event):
         """Called just before showing a context menu"""
         # Accepting needs to suppress the native menu
@@ -192,6 +251,8 @@ class EditorContextMenuMixin:
             self.runParamAct.setEnabled(runEnabled)
             self.profileAct.setEnabled(runEnabled)
             self.profileParamAct.setEnabled(runEnabled)
+
+        self.__aiMenuAction.setVisible(is_ai_ui_enabled() and isPython)
 
         if absFileName:
             self.__menuClearEncoding.setEnabled(getFileEncoding(fileName) is not None)
@@ -354,6 +415,7 @@ class EditorContextMenuMixin:
         self.toolsMenu.deleteLater()
         self.disasmMenu.deleteLater()
         self.diagramsMenu.deleteLater()
+        self.aiMenu.deleteLater()
         self._menu.deleteLater()
 
         mainWindow = GlobalData().mainWindow
