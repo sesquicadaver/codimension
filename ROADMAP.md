@@ -49,7 +49,7 @@
 | 14–20 Analysis | DONE | R130–R138: SymbolIndex, DependencyGraph, MetricProvider (+MI/Halstead/raw), OverlayLayer, git analytics, risk score |
 | 21–24 Graph | DONE → R150+ | R140–R143 (model, canvas, frames, diff, taint MVP) shipped |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
-| 26 AI | MISSING → R151+ | SymbolIndex + metrics ready; needs CFG graph slice (R140.a) |
+| 26 AI | PARTIAL → R152+ | R151 context packer shipped; UI actions still OPEN |
 | 27–29 Extended overlays | MISSING → R160+ | Overlay **framework** R135 DONE; visual layers R160–R162 still OPEN |
 | 30–38 Release/update | PARTIAL → R171+ | `ci-gate` + OIDC + branching policy (R170) exist; no channels/auto-update yet |
 
@@ -99,6 +99,7 @@
 | D-R142 | R142 | CFG graph diff (`core.cfg_diff`) via stable content keys |
 | D-R143 | R143 | Function-local taint MVP (`core.taint`); documented subset |
 | D-R150 | R150 | Plugin capability / API negotiation (`plugins.capabilities`) |
+| D-R151 | R151 | AI context packer (`core.ai_context`): SymbolIndex + CFG slice |
 
 ---
 
@@ -106,16 +107,15 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R151 | AI context builder (headless): pack SymbolIndex + CFG slice for a symbol | Pure function + tests; no network | M | OPEN |
-| 2 | R152 | AI UI actions behind feature flag (explain / suggest) | Flag off by default; smoke when flag on may mock backend | M | OPEN |
-| 3 | R160 | Environment overlay visualization (env source / path badges on UI) | Uses R135; screenshot or widget test | M | OPEN |
-| 4 | R161 | Dependency overlay (edge heat from DependencyGraph) | Uses R133+R135; test | M | OPEN |
-| 5 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
-| 6 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
-| 7 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
-| 8 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
-| 9 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
-| 10 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
+| 1 | R152 | AI UI actions behind feature flag (explain / suggest) | Flag off by default; smoke when flag on may mock backend | M | OPEN |
+| 2 | R160 | Environment overlay visualization (env source / path badges on UI) | Uses R135; screenshot or widget test | M | OPEN |
+| 3 | R161 | Dependency overlay (edge heat from DependencyGraph) | Uses R133+R135; test | M | OPEN |
+| 4 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
+| 5 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
+| 6 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
+| 7 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
+| 8 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
+| 9 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
 
 ### Deferred (explicit)
 
@@ -129,7 +129,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R151` — AI context builder (SymbolIndex + CFG slice).
+**First OPEN:** `R152` — AI UI actions behind feature flag.
 
 ---
 
