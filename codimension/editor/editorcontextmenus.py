@@ -198,7 +198,7 @@ class EditorContextMenuMixin:
         """Editor action: suggest improvements for symbol under cursor (flag-gated)."""
         self.__runAiAction(AiAction.SUGGEST)
 
-    def __runAiAction(self, action: AiAction):
+    def __runAiAction(self, action):
         """Build offline AI context and show the backend result."""
         if not is_ai_ui_enabled():
             QMessageBox.information(self, "AI UI disabled", f"Set {AI_UI_ENV}=1 to enable experimental AI actions.")
