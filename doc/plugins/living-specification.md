@@ -62,6 +62,7 @@
 | **MetricProvider R134** | core.metrics + utils.radon_cc_provider | Protocol + registry; radon CC adapter | tests/test_metric_provider.py |
 | **OverlayLayer R135** | core.overlay + utils.overlay_host | Protocol + registry; flow redraw / editor update attach | tests/test_overlay.py |
 | **Advanced metrics R136** | utils.radon_metrics_pack | MI + Halstead volume + raw LOC as MetricProvider | tests/test_radon_metrics_pack.py |
+| **Git analytics R137** | utils.git_analytics | churn/hotspot from `git log --numstat`; text formatter | tests/test_git_analytics.py |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -121,7 +122,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R137**.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R138**.
 
 ### Матриця меж модулів (R103)
 

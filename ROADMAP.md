@@ -89,6 +89,7 @@
 | D-R134 | R134 | `MetricProvider` + registry + radon CC adapter |
 | D-R135 | R135 | `OverlayLayer` + flow/editor attach hosts |
 | D-R136 | R136 | Advanced metrics pack (MI + Halstead + raw LOC) |
+| D-R137 | R137 | Git churn/hotspot analytics (`utils.git_analytics`) |
 
 ---
 
@@ -118,7 +119,7 @@
 | 20 | R134 | `MetricProvider` interface + radon CC adapter | Provider registry test; UI can keep current viewer | S | DONE |
 | 21 | R135 | Overlay framework: `OverlayLayer` protocol + attach point on flow/editor (no heavy visuals yet) | Register empty overlay; test hook invoked on redraw/update | M | DONE |
 | 22 | R136 | Advanced metrics pack (maintainability / raw/Halstead or documented subset) behind MetricProvider | At least 2 metrics beyond CC; tests with fixtures | M | DONE |
-| 23 | R137 | Git analytics: churn / hotspot summary (git log based) | Headless report API + optional plugin panel; tests with temp repo | M | OPEN |
+| 23 | R137 | Git analytics: churn / hotspot summary (git log based) | Headless report API + optional plugin panel; tests with temp repo | M | DONE |
 | 24 | R138 | Composite risk score (lint + metrics + optional git) | Deterministic formula documented; unit tests; no AI | M | OPEN |
 | 25 | R140 | Headless CFG graph model separated from `flowui` canvas | `core`/`app` graph API from flow parse; canvas consumes model | L | OPEN |
 | 26 | R141 | Debugger graph mode: map frames → CFG nodes | Offscreen/debugger test or documented manual + unit mapping | L | OPEN |
@@ -149,7 +150,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R137` — Git analytics (churn / hotspot summary).
+**First OPEN:** `R138` — Composite risk score (lint + metrics ± git).
 
 ---
 
