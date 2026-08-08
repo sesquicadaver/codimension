@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R130: ``SymbolIndex`` schema in ``core.symbol_index`` (name, kind, file,
+  half-open span, container) + schema tests; population deferred to R131
 * R125: ``KubernetesExecutionTarget`` MVP with ``K8sJobTransport`` /
   Fake+kubectl transports; Job stub metadata; docs for unverified clusters
 * R124: ``SSHExecutionTarget`` MVP with injectable ``SSHTransport``;
