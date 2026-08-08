@@ -5,7 +5,7 @@
 Цей проєкт — **активний форк** [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension).
 
 **Репозиторій:** https://github.com/sesquicadaver/codimension  
-**Версія:** 4.11.0 (`codimension/cdmverspec.py`)  
+**Версія:** 4.11.0 (`codimension/cdmverspec.py`; канал `release_channel`, default `stable`)  
 **Python:** 3.10+ (`pyproject.toml`: `requires-python >= "3.10"`)
 
 ## Чому форк

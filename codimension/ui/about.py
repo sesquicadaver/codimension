@@ -19,8 +19,8 @@
 
 """About dialog implementation"""
 
+from cdmverspec import version_with_channel
 from flowui.cml import CMLVersion
-from utils.globals import GlobalData
 from utils.pixmapcache import getPixmap
 from utils.versions import getComponentInfo
 
@@ -46,8 +46,9 @@ class AboutDialog(QDialog):
         iconLabel.setPixmap(getPixmap("logo-48x48.png"))
         iconLabel.setScaledContents(False)
         hboxLayout.addWidget(iconLabel)
+        # R171: show version + release channel (stable/beta/dev); still one version string.
         versionLabel = QLabel(
-            "<b>Codimension IDE version " + str(GlobalData().version) + "<br>"
+            "<b>Codimension IDE version " + version_with_channel() + "<br>"
             "CML version " + str(CMLVersion.VERSION) + "</b><p>Copyright (c) Sergey Satskiy 2010-2025</p>"
             "<p>Modified version. See FORK.md.</p>"
         )
