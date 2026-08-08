@@ -22,6 +22,7 @@ __all__ = [
     "cfg_frames",
     "cfg_diff",
     "taint",
+    "ai_context",
     "execution",
     "symbol_index",
     "metrics",
@@ -56,6 +57,10 @@ def __getattr__(name: str) -> Any:
         from . import taint as _taint
 
         return _taint
+    if name == "ai_context":
+        from . import ai_context as _ai_context
+
+        return _ai_context
     if name == "execution":
         from . import execution as _execution
 
