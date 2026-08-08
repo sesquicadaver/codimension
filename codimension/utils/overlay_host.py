@@ -85,10 +85,18 @@ def ensure_dependency_overlay(host: Optional[OverlayHost] = None):
     return _ensure(host)
 
 
+def ensure_deployment_overlay(host: Optional[OverlayHost] = None):
+    """Register the R162 deployment hint overlay on the flow host if missing."""
+    from utils.deployment_overlay import ensure_deployment_overlay as _ensure
+
+    return _ensure(host)
+
+
 __all__ = [
     "OverlayHost",
     "editor_overlay_host",
     "ensure_dependency_overlay",
+    "ensure_deployment_overlay",
     "ensure_empty_overlay",
     "ensure_environment_overlay",
     "flow_overlay_host",

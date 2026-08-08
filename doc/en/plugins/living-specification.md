@@ -75,6 +75,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **AI UI R152** | core.ai_ui + editor.editorcontextmenus | Explain/suggest behind `CDM_AI_UI` (default off); offline/mock backend | tests/test_ai_ui.py |
 | **Env overlay R160** | utils.environment_overlay + editor.flowuinavbar | `env:source` + path badges on flow nav via R135; status bar notifies `env` | tests/test_environment_overlay.py |
 | **Deps overlay R161** | utils.dependency_overlay + diagram.depsitems | Edge heat from DependencyGraph; nav badges; connector tint | tests/test_dependency_overlay.py |
+| **Deploy overlay R162** | utils.deployment_overlay + editor.flowuinavbar | Read-only Dockerfile/Compose hints; nav badges | tests/test_deployment_overlay.py; fixtures/deployment |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../../technology/parser-contract.md), [uk](../../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -134,7 +135,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — first OPEN **R162** (Deployment overlay).
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — first OPEN **R171** (Release channel metadata).
 
 ### Module boundary matrix (R103)
 
