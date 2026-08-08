@@ -1,5 +1,8 @@
 2026 Aug 08
 
+* R135: ``OverlayLayer`` protocol + registry in ``core.overlay``; flow/editor
+  attach hosts (``utils.overlay_host``) notified on redraw/update; empty layer
+  for registration smoke
 * R134: ``MetricProvider`` protocol + ``MetricProviderRegistry`` in
   ``core.metrics``; radon CC adapter (``utils.radon_cc_provider``); UI viewers
   unchanged

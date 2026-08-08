@@ -35,6 +35,7 @@ from utils.diskvaluesrelay import getFileEncoding, setFileEncoding
 from utils.encoding import detectEolString, detectWriteEncoding, readEncodedFile, writeEncodedFile
 from utils.fileutils import getFileProperties, isMarkdownMime, isPythonMime
 from utils.globals import GlobalData
+from utils.overlay_host import notify_editor_overlays
 from utils.settings import Settings
 
 from .bpmargin import CDMBreakpointMargin
@@ -855,6 +856,11 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
     def setAnalysisMessages(self, messages, ccMessages):
         """Shows up analysis messages"""
         self.getMargin("cdm_flakes_margin").setAnalysisMessages(messages, ccMessages)
+        path = None
+        parent = self.parent()
+        if parent is not None and hasattr(parent, "getFileName"):
+            path = parent.getFileName() or None
+        notify_editor_overlays("update", path=path)
 
     def highlightInCFlow(self):
         """Triggered when highlight in the control flow is requested"""

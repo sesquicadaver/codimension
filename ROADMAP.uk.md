@@ -45,7 +45,7 @@
 | 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
 | 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open опція поставлена |
 | 10–13 Remote backends | DONE (R121–R125) | ExecutionTarget: local, Docker, SSH, Kubernetes MVP |
-| 14–20 Analysis | PARTIAL → R135+ | SymbolIndex + DependencyGraph + MetricProvider (R130–R134); далі overlays |
+| 14–20 Analysis | PARTIAL → R136+ | SymbolIndex + DependencyGraph + MetricProvider + OverlayLayer (R130–R135) |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | після SymbolIndex |
@@ -87,6 +87,7 @@
 | D-R132 | R132 | `find_definitions` / `find_references` + міст occurrences |
 | D-R133 | R133 | Headless `DependencyGraph` з імпортів (JSON/DOT export) |
 | D-R134 | R134 | `MetricProvider` + registry + radon CC adapter |
+| D-R135 | R135 | `OverlayLayer` + attach hosts flow/editor |
 
 ---
 
@@ -114,7 +115,7 @@
 | 18 | R132 | Запити `find_definitions` / `find_references` (+ міст до search) | Unit + без регресії occurrences | M | DONE |
 | 19 | R133 | Headless `DependencyGraph` з імпортів (без Qt) | Тест побудови; опційний JSON export | M | DONE |
 | 20 | R134 | Інтерфейс `MetricProvider` + адаптер radon CC | Registry тест | S | DONE |
-| 21 | R135 | Overlay framework: `OverlayLayer` + точка підключення (без важкої графіки) | Реєстрація порожнього overlay; тест хука | M | OPEN |
+| 21 | R135 | Overlay framework: `OverlayLayer` + точка підключення (без важкої графіки) | Реєстрація порожнього overlay; тест хука | M | DONE |
 | 22 | R136 | Розширені метрики (≥2 понад CC) через MetricProvider | Фікстури + тести | M | OPEN |
 | 23 | R137 | Git analytics: churn / hotspot (git log) | Headless API + тест на temp repo | M | OPEN |
 | 24 | R138 | Composite risk score (lint + metrics ± git) | Документована формула; unit; без AI | M | OPEN |
@@ -147,7 +148,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R135` — Overlay framework (`OverlayLayer` + точка підключення).
+**Перший OPEN:** `R136` — розширені метрики через MetricProvider.
 
 ---
 
