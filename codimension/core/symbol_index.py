@@ -17,10 +17,15 @@ and lives in ``core`` so headless tooling can depend on the schema alone.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from types import MappingProxyType
 from typing import Iterable, Iterator, Mapping, Optional, Sequence
+
+
+def _empty_extras() -> Mapping[str, str]:
+    """Return a fresh empty immutable extras mapping."""
+    return MappingProxyType({})
 
 
 class SymbolKind(str, Enum):
@@ -90,7 +95,7 @@ class SymbolRecord:
     span: SourceSpan
     container: Optional[str] = None
     qualname: Optional[str] = None
-    extras: Mapping[str, str] = MappingProxyType({})
+    extras: Mapping[str, str] = field(default_factory=_empty_extras)
 
     def __post_init__(self) -> None:
         """Normalize kind/extras and derive ``qualname`` when missing."""
