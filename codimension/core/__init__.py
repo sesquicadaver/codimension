@@ -21,6 +21,7 @@ __all__ = [
     "cfg",
     "cfg_frames",
     "cfg_diff",
+    "taint",
     "execution",
     "symbol_index",
     "metrics",
@@ -51,6 +52,10 @@ def __getattr__(name: str) -> Any:
         from . import cfg_diff as _cfg_diff
 
         return _cfg_diff
+    if name == "taint":
+        from . import taint as _taint
+
+        return _taint
     if name == "execution":
         from . import execution as _execution
 
