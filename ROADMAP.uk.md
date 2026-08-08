@@ -44,7 +44,7 @@
 | 3 Modular monolith | DONE → R110+ | R100–R103: Qt-free utils, app фасад, routing, матриця меж |
 | 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
 | 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open опція поставлена |
-| 10–13 Remote backends | PARTIAL → R125+ | ExecutionTarget local+Docker+SSH (R121–R124); далі K8s |
+| 10–13 Remote backends | DONE (R121–R125) | ExecutionTarget: local, Docker, SSH, Kubernetes MVP |
 | 14–20 Analysis | PARTIAL → R130+ | діаграми/метрики/profiling є; немає SymbolIndex/overlays/risk |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` |
@@ -81,6 +81,7 @@
 | D-R122 | R122 | `LocalExecutionTarget` + `getCwdCmdEnv` через ExecutionTarget |
 | D-R123 | R123 | `DockerExecutionTarget` MVP + docker-or-skip інтеграційний тест |
 | D-R124 | R124 | `SSHExecutionTarget` + FakeSSHTransport; docs sync/платформи |
+| D-R125 | R125 | `KubernetesExecutionTarget` + FakeK8sJobTransport; Job stub docs |
 
 ---
 
@@ -102,7 +103,7 @@
 | 12 | R122 | Локальний runner (`utils.run` / RunManager) через `ExecutionTarget` | Існуючі argv/debug тести зелені | M | DONE |
 | 13 | R123 | Docker `ExecutionTarget` MVP | docker-or-skip інтеграційний тест; docs | L | DONE |
 | 14 | R124 | SSH `ExecutionTarget` MVP | Мокований транспорт; docs | L | DONE |
-| 15 | R125 | Kubernetes `ExecutionTarget` MVP | Після R123+R124; docs | L | OPEN |
+| 15 | R125 | Kubernetes `ExecutionTarget` MVP | Після R123+R124; docs | L | DONE |
 | 16 | R130 | Схема SymbolIndex (name, kind, file, half-open span, container) | Модуль + тести; Living Spec | S | OPEN |
 | 17 | R131 | Наповнення SymbolIndex з `brief_ast` по файлах проєкту | Тести точності на фікстурах | M | OPEN |
 | 18 | R132 | Запити `find_definitions` / `find_references` (+ міст до search) | Unit + без регресії occurrences | M | OPEN |
@@ -141,7 +142,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R125` — Kubernetes `ExecutionTarget` MVP.
+**Перший OPEN:** `R130` — схема SymbolIndex.
 
 ---
 
