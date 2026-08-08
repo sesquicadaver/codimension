@@ -7,7 +7,7 @@
 
 ## Open blockers
 
-Audit P0–P2 rows in TODO are closed. Further work is the linear atomic queue in [ROADMAP.md](ROADMAP.md) (first OPEN: **R140.a**).
+Audit P0–P2 rows in TODO are closed. Further work is the linear atomic queue in [ROADMAP.md](ROADMAP.md) (first OPEN: **R140.b**).
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|

@@ -47,7 +47,7 @@
 | 8–9 Deps + local venv | DONE | T140/T141/R114 + DependencyManifest R120 |
 | 10–13 Remote backends | DONE | ExecutionTarget R121–R125 (local/Docker/SSH/K8s) |
 | 14–20 Analysis | DONE | R130–R138 (індекс, графи імпортів, метрики, overlays framework, git analytics, risk) |
-| 21–24 Graph | PARTIAL → R140.a+ | Parse є (`core.flow` / `flow_ast`); окрема graph-модель + споживання canvas — OPEN |
+| 21–24 Graph | PARTIAL → R140.b+ | Graph model R140.a (`core.cfg`) зданий; споживання canvas ще OPEN |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | SymbolIndex готовий; потрібен зріз CFG (R140.a) |
 | 27–29 Extended overlays | MISSING → R160+ | Фреймворк R135 DONE; візуальні шари R160–R162 ще OPEN |
@@ -93,6 +93,7 @@
 | D-R137 | R137 | Git churn/hotspot analytics (`utils.git_analytics`) |
 | D-R138 | R138 | Composite risk score `cdm-risk-v1` (`core.risk_score`) |
 | D-R170 | R170 | Політика гілок: `master` + `feature/*` / `fix/*`; без прямого push (`ci-gate`) |
+| D-R140.a | R140.a | Headless CFG graph model (`core.cfg`) з flow parse |
 
 ---
 
@@ -100,22 +101,21 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R140.a | Headless CFG **graph model** API з flow parse (вузли/ребра/spans; без Qt; дані з `core.flow` / `flow_ast`, не canvas) | Модуль + unit на фікстурах; Living Spec; без перепису `flowui` | M | OPEN |
-| 2 | R140.b | `flowui` / editor canvas **споживає** модель R140.a (тонкий адаптер; паритет поведінки) | Існуючі CF тести/smoke зелені; одне джерело істини для layout | L | OPEN |
-| 3 | R141 | Debugger graph mode: кадри → вузли CFG | Mapping unit / offscreen | L | OPEN |
-| 4 | R142 | Graph diff двох CFG / ревізій | Diff API + фікстури | M | OPEN |
-| 5 | R143 | Function-local data-flow / taint MVP | Задокументований підмножина + тести | L | OPEN |
-| 6 | R150 | Версіонування capabilities плагінів | Несумісний плагін відхиляється; тест | S | OPEN |
-| 7 | R151 | AI context builder (headless): SymbolIndex + зріз CFG | Чиста функція + тести; без мережі | M | OPEN |
-| 8 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
-| 9 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
-| 10 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
-| 11 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
-| 12 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
-| 13 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
-| 14 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
-| 15 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 16 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R140.b | `flowui` / editor canvas **споживає** модель R140.a (тонкий адаптер; паритет поведінки) | Існуючі CF тести/smoke зелені; одне джерело істини для layout | L | OPEN |
+| 2 | R141 | Debugger graph mode: кадри → вузли CFG | Mapping unit / offscreen | L | OPEN |
+| 3 | R142 | Graph diff двох CFG / ревізій | Diff API + фікстури | M | OPEN |
+| 4 | R143 | Function-local data-flow / taint MVP | Задокументований підмножина + тести | L | OPEN |
+| 5 | R150 | Версіонування capabilities плагінів | Несумісний плагін відхиляється; тест | S | OPEN |
+| 6 | R151 | AI context builder (headless): SymbolIndex + зріз CFG | Чиста функція + тести; без мережі | M | OPEN |
+| 7 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
+| 8 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
+| 9 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
+| 10 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
+| 11 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
+| 12 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
+| 13 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
+| 14 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
+| 15 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -129,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R140.a` — Headless CFG graph model API (споживання canvas = R140.b).
+**Перший OPEN:** `R140.b` — `flowui` споживає graph model `core.cfg`.
 
 ---
 

@@ -65,6 +65,7 @@
 | **Git analytics R137** | utils.git_analytics | churn/hotspot from `git log --numstat`; text formatter | tests/test_git_analytics.py |
 | **Risk score R138** | core.risk_score | `compute_risk_score` lint+metrics±git (`cdm-risk-v1`) | tests/test_risk_score.py |
 | **Branching policy R170** | docs | CONTRIBUTING(+.en): `master` + `feature/*`/`fix/*`; no direct push; `ci-gate` | GitHub branch protection + docs gate |
+| **CFG graph model R140.a** | core.cfg | `CfgNode`/`CfgEdge`/`CfgGraph`; `build_cfg_graph` from flow parse | tests/test_cfg_graph.py |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -124,7 +125,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R140.a** (CFG graph model API; canvas = R140.b).
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R140.b** (canvas споживає `core.cfg`).
 
 ### Матриця меж модулів (R103)
 
