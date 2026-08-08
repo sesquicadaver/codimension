@@ -1,5 +1,8 @@
 2026 Aug 08
 
+* R131: populate ``SymbolIndex`` from ``brief_ast``
+  (``utils.symbol_index_brief``); async-friendly ``on_file`` callback; accuracy
+  tests on nested class/method/import fixtures
 * R130: ``SymbolIndex`` schema in ``core.symbol_index`` (name, kind, file,
   half-open span, container) + schema tests; population deferred to R131
 * R125: ``KubernetesExecutionTarget`` MVP with ``K8sJobTransport`` /

@@ -45,7 +45,7 @@
 | 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
 | 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open опція поставлена |
 | 10–13 Remote backends | DONE (R121–R125) | ExecutionTarget: local, Docker, SSH, Kubernetes MVP |
-| 14–20 Analysis | PARTIAL → R131+ | схема SymbolIndex (R130); далі populate/queries/overlays |
+| 14–20 Analysis | PARTIAL → R132+ | SymbolIndex schema+populate (R130–R131); далі queries/overlays |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | після SymbolIndex |
@@ -83,6 +83,7 @@
 | D-R124 | R124 | `SSHExecutionTarget` + FakeSSHTransport; docs sync/платформи |
 | D-R125 | R125 | `KubernetesExecutionTarget` + FakeK8sJobTransport; Job stub docs |
 | D-R130 | R130 | схема `core.symbol_index` (SymbolRecord + half-open span) |
+| D-R131 | R131 | Наповнення SymbolIndex з brief_ast (`utils.symbol_index_brief`) |
 
 ---
 
@@ -106,7 +107,7 @@
 | 14 | R124 | SSH `ExecutionTarget` MVP | Мокований транспорт; docs | L | DONE |
 | 15 | R125 | Kubernetes `ExecutionTarget` MVP | Після R123+R124; docs | L | DONE |
 | 16 | R130 | Схема SymbolIndex (name, kind, file, half-open span, container) | Модуль + тести; Living Spec | S | DONE |
-| 17 | R131 | Наповнення SymbolIndex з `brief_ast` по файлах проєкту | Тести точності на фікстурах | M | OPEN |
+| 17 | R131 | Наповнення SymbolIndex з `brief_ast` по файлах проєкту | Тести точності на фікстурах | M | DONE |
 | 18 | R132 | Запити `find_definitions` / `find_references` (+ міст до search) | Unit + без регресії occurrences | M | OPEN |
 | 19 | R133 | Headless `DependencyGraph` з імпортів (без Qt) | Тест побудови; опційний JSON export | M | OPEN |
 | 20 | R134 | Інтерфейс `MetricProvider` + адаптер radon CC | Registry тест | S | OPEN |
@@ -143,7 +144,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R131` — наповнення SymbolIndex з `brief_ast`.
+**Перший OPEN:** `R132` — запити `find_definitions` / `find_references`.
 
 ---
 
