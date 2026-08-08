@@ -90,6 +90,26 @@ class ControlFlowNavigationBar(QFrame):
         self.__envPathBadge.setMaximumWidth(220)
         self.__layout.addWidget(self.__envPathBadge)
 
+        # R161: dependency edge-heat badges (OverlayLayer sink)
+        self.__depsEdgesBadge = HeaderLabel("deps:0", None, self)
+        self.__depsEdgesBadge.setTextFormat(Qt.PlainText)
+        self.__depsEdgesBadge.setAlignment(Qt.AlignCenter)
+        self.__depsEdgesBadge.setWordWrap(False)
+        self.__depsEdgesBadge.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.__depsEdgesBadge.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.__depsEdgesBadge.setToolTip("Import dependency edge heat")
+        self.__layout.addWidget(self.__depsEdgesBadge)
+
+        self.__depsHotBadge = HeaderFitLabel(self)
+        self.__depsHotBadge.setTextFormat(Qt.PlainText)
+        self.__depsHotBadge.setAlignment(Qt.AlignLeft)
+        self.__depsHotBadge.setWordWrap(False)
+        self.__depsHotBadge.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.__depsHotBadge.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.__depsHotBadge.setMinimumWidth(40)
+        self.__depsHotBadge.setMaximumWidth(260)
+        self.__layout.addWidget(self.__depsHotBadge)
+
         self.__spacer = ToolBarExpandingSpacer(self)
         self.__spacer.setMinimumWidth(0)
         self.__layout.addWidget(self.__spacer)
@@ -194,6 +214,16 @@ class ControlFlowNavigationBar(QFrame):
         self.__envSourceBadge.setVisible(bool(source_badge))
         self.__envPathBadge.setVisible(bool(path_badge))
 
+    def setDepsHeatBadges(self, edges_badge, hot_badge, tooltip=""):
+        """Sets R161 dependency edge-heat overlay badges."""
+        self.__depsEdgesBadge.setText(str(edges_badge or "deps:0"))
+        self.__depsHotBadge.setText(str(hot_badge or ""))
+        tip = str(tooltip or "Import dependency edge heat")
+        self.__depsEdgesBadge.setToolTip(tip)
+        self.__depsHotBadge.setToolTip(tip)
+        self.__depsEdgesBadge.setVisible(True)
+        self.__depsHotBadge.setVisible(bool(hot_badge))
+
     def envSourceBadgeText(self):
         """Return the current env source badge text (tests / diagnostics)."""
         return self.__envSourceBadge.text()
@@ -201,6 +231,14 @@ class ControlFlowNavigationBar(QFrame):
     def envPathBadgeText(self):
         """Return the current env path badge text (tests / diagnostics)."""
         return self.__envPathBadge.text()
+
+    def depsEdgesBadgeText(self):
+        """Return the current deps edge-count badge text."""
+        return self.__depsEdgesBadge.text()
+
+    def depsHotBadgeText(self):
+        """Return the current hottest-edge badge text."""
+        return self.__depsHotBadge.text()
 
     def setSelectionLabel(self, text, tooltip):
         """Sets selection label"""

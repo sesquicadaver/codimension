@@ -50,7 +50,7 @@
 | 21–24 Graph | DONE → R150+ | R140–R143 (model, canvas, frames, diff, taint MVP) shipped |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 flag-gated UI explain/suggest (offline/mock; no LLM) |
-| 27–29 Extended overlays | PARTIAL → R161+ | R135 + R160 env badges DONE; dependency/deployment overlays still OPEN |
+| 27–29 Extended overlays | PARTIAL → R162 | R135 + R160/R161 DONE; deployment overlay still OPEN |
 | 30–38 Release/update | PARTIAL → R171+ | `ci-gate` + OIDC + branching policy (R170) exist; no channels/auto-update yet |
 
 **Optimization applied:** solo-fork model — `master` + `feature/*` / `fix/*` + protected `ci-gate` (no `stable/develop` theatre). Auto-update apply/rollback stays deferred until read-only version check (R172–R173) works.
@@ -102,6 +102,7 @@
 | D-R151 | R151 | AI context packer (`core.ai_context`): SymbolIndex + CFG slice |
 | D-R152 | R152 | AI UI explain/suggest behind `CDM_AI_UI` (default off; offline/mock backend) |
 | D-R160 | R160 | Environment overlay: `env:source` + path badges on flow nav via R135 |
+| D-R161 | R161 | Dependency overlay: edge heat from DependencyGraph via R135 |
 
 ---
 
@@ -109,13 +110,12 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R161 | Dependency overlay (edge heat from DependencyGraph) | Uses R133+R135; test | M | OPEN |
-| 2 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
-| 3 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
-| 4 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
-| 5 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
-| 6 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
-| 7 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
+| 1 | R162 | Deployment overlay hints (Dockerfile/compose detection) | Read-only hints; test on fixtures | S | OPEN |
+| 2 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev` label, still one version) | Field + docs; no multi-branch required | S | OPEN |
+| 3 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
+| 4 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
+| 5 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
+| 6 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
 
 ### Deferred (explicit)
 
@@ -129,7 +129,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R161` — Dependency overlay (edge heat).
+**First OPEN:** `R162` — Deployment overlay hints.
 
 ---
 

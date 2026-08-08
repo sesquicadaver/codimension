@@ -25,7 +25,8 @@ from flowui.abovebadges import AboveBadgesSpacer
 from flowui.auxitems import BadgeItem, Connector
 from flowui.cellelement import CellElement
 from flowui.textmixin import TextMixin
-from ui.qt import QBrush, QGraphicsItem, QGraphicsRectItem, QPen, QRectF, Qt
+from ui.qt import QBrush, QColor, QGraphicsItem, QGraphicsRectItem, QPen, QRectF, Qt
+from utils.dependency_overlay import heat_to_rgb
 from utils.globals import GlobalData
 
 
@@ -84,6 +85,12 @@ class SelfModule(CellElement, TextMixin, QGraphicsRectItem):
                 baseX + self.width,
                 baseY + self.height / 2.0,
             )
+            # R161: color the stub connector by focus-module max outgoing edge heat.
+            heat = float(getattr(self.canvas, "deps_focus_max_heat", 0.0) or 0.0)
+            if heat > 0.0:
+                red, green, blue = heat_to_rgb(heat)
+                self.connector.penColor = QColor(red, green, blue)
+                self.connector.penWidth = 1 + int(3 * heat)
             scene.addItem(self.connector)
 
         # Draw comment badges
