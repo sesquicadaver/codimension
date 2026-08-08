@@ -109,9 +109,7 @@ class DockerExecutionTarget:
             return self._container_workdir
         prefix = workspace + os.sep
         if not abs_path.startswith(prefix):
-            raise ValueError(
-                f"script {host_path!r} is outside workspace {workspace!r}"
-            )
+            raise ValueError(f"script {host_path!r} is outside workspace {workspace!r}")
         rel = abs_path[len(prefix) :].replace(os.sep, "/")
         return f"{self._container_workdir}/{rel}"
 
