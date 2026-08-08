@@ -249,8 +249,7 @@ class CDMPluginManager(PluginManager, QObject):
                     toBeRemoved.append(plugin.getPath())
                 except Exception as excpt:
                     logging.error(
-                        "Error checking capabilities of plugin at %s. "
-                        "The plugin disabled. Error message:\n%s",
+                        "Error checking capabilities of plugin at %s. The plugin disabled. Error message:\n%s",
                         plugin.getPath(),
                         str(excpt),
                     )
