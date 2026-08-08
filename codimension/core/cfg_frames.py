@@ -91,15 +91,17 @@ def _ancestor_has_func(graph: CfgGraph, node: CfgNode, func_name: str) -> bool:
 def _score_node(graph: CfgGraph, node: CfgNode, frame: DebuggerFrame) -> int:
     """Higher score = better match for ``frame``."""
     # Prefer innermost (narrower) spans.
-    span_lines = max(0, node.end_line - node.begin_line)
-    score = max(0, 10_000 - span_lines)
+    begin = int(node.begin_line)
+    end = int(node.end_line)
+    span_lines = max(0, end - begin)
+    score = int(max(0, 10_000 - span_lines))
     want = _func_key(frame.func_name)
     label = _func_key(node.label)
     is_scope = node.kind in (CfgNodeKind.FUNCTION, CfgNodeKind.CLASS)
 
-    if want and is_scope and label == want and node.begin_line == frame.line:
+    if want and is_scope and label == want and begin == frame.line:
         # Stopped on the ``def`` / ``class`` line itself.
-        return 100_000 + score
+        return int(100_000 + score)
 
     if is_scope:
         # Body stops should map to inner statements, not the enclosing scope node.
@@ -114,7 +116,7 @@ def _score_node(graph: CfgGraph, node: CfgNode, frame: DebuggerFrame) -> int:
             score += 40_000
         elif label and (want in label or label in want):
             score += 5_000
-    return score
+    return int(score)
 
 
 def rank_frame_matches(graph: CfgGraph, frame: DebuggerFrame) -> tuple[FrameCfgMatch, ...]:
@@ -183,7 +185,7 @@ def frame_from_stack_item(item: Sequence[object], frame_number: int = 0) -> Debu
     Expected shape: ``(fileName, line, [funcName, [funcArgs]])``.
     """
     file_name = str(item[0]) if item else ""
-    line = int(item[1]) if len(item) > 1 else 0
+    line = int(str(item[1])) if len(item) > 1 else 0
     func_name = str(item[2]) if len(item) >= 3 else ""
     if func_name.startswith("<"):
         func_name = ""
