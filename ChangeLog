@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R125: ``KubernetesExecutionTarget`` MVP with ``K8sJobTransport`` /
+  Fake+kubectl transports; Job stub metadata; docs for unverified clusters
 * R124: ``SSHExecutionTarget`` MVP with injectable ``SSHTransport``;
   FakeSSHTransport contract tests; SubprocessSSHTransport best-effort;
   docs for remote-path sync + unverified platforms
