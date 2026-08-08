@@ -40,6 +40,18 @@ def _span_for_name(obj: object) -> SourceSpan:
     return SourceSpan(start, start + len(name))
 
 
+def _line_for(obj: object) -> Optional[int]:
+    """Return 1-based brief_ast line when present."""
+    line = getattr(obj, "line", None)
+    if line is None:
+        return None
+    try:
+        value = int(line)
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None
+
+
 def _emit_function(
     out: list[SymbolRecord],
     func: Function,
@@ -56,6 +68,7 @@ def _emit_function(
         file=file,
         span=_span_for_name(func),
         container=container,
+        line=_line_for(func),
     )
     out.append(rec)
     nested_container = rec.qualname
@@ -78,6 +91,7 @@ def _emit_class(
         file=file,
         span=_span_for_name(cls),
         container=container,
+        line=_line_for(cls),
     )
     out.append(rec)
     qn = rec.qualname
@@ -89,6 +103,7 @@ def _emit_class(
                 file=file,
                 span=_span_for_name(attr),
                 container=qn,
+                line=_line_for(attr),
             )
         )
     for attr in cls.instanceAttributes:
@@ -99,6 +114,7 @@ def _emit_class(
                 file=file,
                 span=_span_for_name(attr),
                 container=qn,
+                line=_line_for(attr),
                 extras={"scope": "instance"},
             )
         )
@@ -119,6 +135,7 @@ def symbols_from_brief(info: BriefModuleInfo, file: str) -> list[SymbolRecord]:
                 file=file,
                 span=_span_for_name(imp),
                 container=None,
+                line=_line_for(imp),
             )
         )
         for what in imp.what:
@@ -129,6 +146,7 @@ def symbols_from_brief(info: BriefModuleInfo, file: str) -> list[SymbolRecord]:
                     file=file,
                     span=_span_for_name(what),
                     container=None,
+                    line=_line_for(what),
                     extras={"from": imp.name},
                 )
             )
@@ -140,6 +158,7 @@ def symbols_from_brief(info: BriefModuleInfo, file: str) -> list[SymbolRecord]:
                 file=file,
                 span=_span_for_name(glob),
                 container=None,
+                line=_line_for(glob),
             )
         )
     for func in info.functions:

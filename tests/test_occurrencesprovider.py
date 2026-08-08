@@ -65,6 +65,8 @@ def _load_occurrences_modules():
 
 _occurrencesprovider = _load_occurrences_modules()
 build_occurrence_results = _occurrencesprovider.build_occurrence_results
+build_occurrence_results_from_index = _occurrencesprovider.build_occurrence_results_from_index
+definitions_from_symbol_index = _occurrencesprovider.definitions_from_symbol_index
 OccurrencesSearchProvider = _occurrencesprovider.OccurrencesSearchProvider
 
 
@@ -121,3 +123,26 @@ def test_can_redo_requires_existing_absolute_file(tmp_path):
     assert not OccurrencesSearchProvider.canRedo(
         {"filename": str(tmp_path / "missing.py"), "line": 1, "column": 0, "name": "x"}
     )
+
+
+def test_bridge_from_symbol_index_without_behavior_change():
+    """SymbolIndex bridge feeds the same builder; Jedi path stays untouched."""
+    # Import core via codimension path (not the stubbed utils package).
+    codim = os.path.join(ROOT, "codimension")
+    if codim not in sys.path:
+        sys.path.insert(0, codim)
+    from core.symbol_index import SymbolIndex, SymbolKind, build_symbol
+
+    index = SymbolIndex(
+        [
+            build_symbol("Helper", SymbolKind.CLASS, "/proj/a.py", 0, 6, line=3),
+            build_symbol("Helper", SymbolKind.IMPORT, "/proj/b.py", 0, 6, line=1),
+            build_symbol("Helper", SymbolKind.CLASS, "/proj/c.py", 0, 6, line=None),
+        ]
+    )
+    defs = definitions_from_symbol_index(index, "Helper")
+    assert [(d.module_path, d.line) for d in defs] == [("/proj/a.py", 3), ("/proj/b.py", 1)]
+
+    items = build_occurrence_results_from_index(index, "Helper", lambda _p: "")
+    assert len(items) == 2
+    assert {i.fileName for i in items} == {"/proj/a.py", "/proj/b.py"}
