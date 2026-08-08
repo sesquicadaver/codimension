@@ -48,7 +48,7 @@
 | 10–13 Remote backends | DONE | ExecutionTarget R121–R125 (local/Docker/SSH/K8s) |
 | 14–20 Analysis | DONE | R130–R138 (індекс, графи імпортів, метрики, overlays framework, git analytics, risk) |
 | 21–24 Graph | DONE → R150+ | R140–R143 (model, canvas, frames, diff, taint MVP) здано |
-| 25 Plugins | DONE | yapsy + `cdmplugins/*` |
+| 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | MISSING → R151+ | SymbolIndex готовий; потрібен зріз CFG (R140.a) |
 | 27–29 Extended overlays | MISSING → R160+ | Фреймворк R135 DONE; візуальні шари R160–R162 ще OPEN |
 | 30–38 Release/update | PARTIAL → R171+ | `ci-gate` + OIDC + політика гілок (R170); немає channels/auto-update |
@@ -98,6 +98,7 @@
 | D-R141 | R141 | Debugger frames → CFG nodes (`core.cfg_frames`); анотація tooltip у stack |
 | D-R142 | R142 | CFG graph diff (`core.cfg_diff`) через стабільні content keys |
 | D-R143 | R143 | Function-local taint MVP (`core.taint`); задокументована підмножина |
+| D-R150 | R150 | Plugin capability / API negotiation (`plugins.capabilities`) |
 
 ---
 
@@ -105,17 +106,16 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R150 | Версіонування capabilities плагінів | Несумісний плагін відхиляється; тест | S | OPEN |
-| 2 | R151 | AI context builder (headless): SymbolIndex + зріз CFG | Чиста функція + тести; без мережі | M | OPEN |
-| 3 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
-| 4 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
-| 5 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
-| 6 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
-| 7 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
-| 8 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
-| 9 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
-| 10 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 11 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R151 | AI context builder (headless): SymbolIndex + зріз CFG | Чиста функція + тести; без мережі | M | OPEN |
+| 2 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
+| 3 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
+| 4 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
+| 5 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
+| 6 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
+| 7 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
+| 8 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
+| 9 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
+| 10 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -129,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R150` — версіонування capabilities плагінів.
+**Перший OPEN:** `R151` — AI context builder (SymbolIndex + зріз CFG).
 
 ---
 

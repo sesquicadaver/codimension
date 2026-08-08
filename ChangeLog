@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R150: plugin capability / API negotiation (``plugins.capabilities``) —
+  host rejects incompatible plugins; ruff declares requirements; tests
 * R143: function-local taint MVP (``core.taint``) — param/input sources to
   eval/exec/os/subprocess sinks; documented subset; EN/UK tech note
 * R142: CFG graph diff (``core.cfg_diff``) — stable content keys; added /

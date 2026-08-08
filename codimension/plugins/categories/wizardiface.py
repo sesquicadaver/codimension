@@ -48,6 +48,15 @@ class WizardInterface(CDMPluginBase):
         """
         raise NotImplementedError("isIDEVersionCompatible() must be overridden")
 
+    @staticmethod
+    def getCapabilityRequirements():
+        """Optional R150 capability / API requirements (default: none).
+
+        Return a ``PluginCapabilitySpec`` to opt into host negotiation, or
+        ``None`` for legacy compatibility.
+        """
+        return None
+
     def activate(self, ideSettings, ideGlobalData):
         """Can be may overriden to do specific plugin activation handling.
 
