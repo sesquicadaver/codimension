@@ -20,6 +20,7 @@ __all__ = [
     "flow",
     "cfg",
     "cfg_frames",
+    "cfg_diff",
     "execution",
     "symbol_index",
     "metrics",
@@ -46,6 +47,10 @@ def __getattr__(name: str) -> Any:
         from . import cfg_frames as _cfg_frames
 
         return _cfg_frames
+    if name == "cfg_diff":
+        from . import cfg_diff as _cfg_diff
+
+        return _cfg_diff
     if name == "execution":
         from . import execution as _execution
 
