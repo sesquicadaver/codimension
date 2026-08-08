@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R160: environment overlay — ``env:source`` + path badges on flow nav bar
+  via R135 ``EnvironmentOverlayLayer``; status-bar env refresh notifies overlays
 * R152: AI UI explain/suggest behind ``CDM_AI_UI`` (default off) —
   ``core.ai_ui`` + editor context menu; offline summary / mock backend; no network
 * R151: headless AI context packer (``core.ai_context``) — SymbolIndex +

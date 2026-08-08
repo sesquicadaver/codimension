@@ -70,6 +70,26 @@ class ControlFlowNavigationBar(QFrame):
         self.__pathLabel.setMinimumWidth(40)
         self.__layout.addWidget(self.__pathLabel)
 
+        # R160: analysis environment source + path badges (OverlayLayer sink)
+        self.__envSourceBadge = HeaderLabel("env:IDE", None, self)
+        self.__envSourceBadge.setTextFormat(Qt.PlainText)
+        self.__envSourceBadge.setAlignment(Qt.AlignCenter)
+        self.__envSourceBadge.setWordWrap(False)
+        self.__envSourceBadge.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.__envSourceBadge.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.__envSourceBadge.setToolTip("Python used for import analysis")
+        self.__layout.addWidget(self.__envSourceBadge)
+
+        self.__envPathBadge = HeaderFitLabel(self)
+        self.__envPathBadge.setTextFormat(Qt.PlainText)
+        self.__envPathBadge.setAlignment(Qt.AlignLeft)
+        self.__envPathBadge.setWordWrap(False)
+        self.__envPathBadge.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.__envPathBadge.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.__envPathBadge.setMinimumWidth(48)
+        self.__envPathBadge.setMaximumWidth(220)
+        self.__layout.addWidget(self.__envPathBadge)
+
         self.__spacer = ToolBarExpandingSpacer(self)
         self.__spacer.setMinimumWidth(0)
         self.__layout.addWidget(self.__spacer)
@@ -163,6 +183,24 @@ class ControlFlowNavigationBar(QFrame):
         """Sets the path visible"""
         self.__pathLabel.setVisible(switchOn)
         self.__spacer.setVisible(not switchOn)
+
+    def setEnvBadges(self, source_badge, path_badge, tooltip=""):
+        """Sets R160 environment source/path overlay badges."""
+        self.__envSourceBadge.setText(str(source_badge or ""))
+        self.__envPathBadge.setText(str(path_badge or ""))
+        tip = str(tooltip or "")
+        self.__envSourceBadge.setToolTip(tip if tip else "Python used for import analysis")
+        self.__envPathBadge.setToolTip(tip if tip else "Python used for import analysis")
+        self.__envSourceBadge.setVisible(bool(source_badge))
+        self.__envPathBadge.setVisible(bool(path_badge))
+
+    def envSourceBadgeText(self):
+        """Return the current env source badge text (tests / diagnostics)."""
+        return self.__envSourceBadge.text()
+
+    def envPathBadgeText(self):
+        """Return the current env path badge text (tests / diagnostics)."""
+        return self.__envPathBadge.text()
 
     def setSelectionLabel(self, text, tooltip):
         """Sets selection label"""

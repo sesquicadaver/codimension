@@ -59,6 +59,7 @@ from ui.qt import (
 )
 from ui.spacers import ToolBarExpandingSpacer, ToolBarVSpacer
 from utils.diskvaluesrelay import getCollapsedGroups, getFilePosition, setCollapsedGroups
+from utils.environment_overlay import ensure_environment_overlay
 from utils.fileutils import isPythonMime
 from utils.globals import GlobalData
 from utils.overlay_host import notify_flow_overlays
@@ -300,6 +301,15 @@ class FlowUIWidget(QWidget):
 
         self.__restoreNavBarProps()
         self.setSmartZoomLevel(Settings()["smartZoom"])
+
+        # R160: environment source/path badges on the flow nav bar via OverlayLayer.
+        self.__envOverlay = ensure_environment_overlay()
+        self.__envOverlay.add_sink(self.__onEnvOverlayBadge)
+        self.__envOverlay.refresh()
+
+    def __onEnvOverlayBadge(self, badge):
+        """Apply environment overlay badge payload to the navigation bar."""
+        self.__navBar.setEnvBadges(badge.source_badge, badge.path_badge, badge.tooltip)
 
     def __saveNavBarProps(self):
         """Saves the current view props in the dynamic props"""

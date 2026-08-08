@@ -50,7 +50,7 @@
 | 21–24 Graph | DONE → R150+ | R140–R143 (model, canvas, frames, diff, taint MVP) здано |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 UI explain/suggest за flag (offline/mock; без LLM) |
-| 27–29 Extended overlays | MISSING → R160+ | Фреймворк R135 DONE; візуальні шари R160–R162 ще OPEN |
+| 27–29 Extended overlays | PARTIAL → R161+ | R135 + R160 env badges DONE; dependency/deployment ще OPEN |
 | 30–38 Release/update | PARTIAL → R171+ | `ci-gate` + OIDC + політика гілок (R170); немає channels/auto-update |
 
 **Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply оновлень — після read-only version check (R172–R173).
@@ -101,6 +101,7 @@
 | D-R150 | R150 | Plugin capability / API negotiation (`plugins.capabilities`) |
 | D-R151 | R151 | AI context packer (`core.ai_context`): SymbolIndex + CFG slice |
 | D-R152 | R152 | AI UI explain/suggest за `CDM_AI_UI` (default off; offline/mock backend) |
+| D-R160 | R160 | Environment overlay: бейджі `env:source` + path на flow nav через R135 |
 
 ---
 
@@ -108,14 +109,13 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
-| 2 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
-| 3 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
-| 4 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
-| 5 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
-| 6 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
-| 7 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 8 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
+| 2 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
+| 3 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
+| 4 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
+| 5 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
+| 6 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
+| 7 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -129,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R160` — Environment overlay.
+**Перший OPEN:** `R161` — Dependency overlay.
 
 ---
 
