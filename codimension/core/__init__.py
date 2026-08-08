@@ -9,13 +9,13 @@
 # (at your option) any later version.
 #
 
-"""Headless-capable analysis core (syntax / flow / execution / symbols / metrics / overlays). No Qt."""
+"""Headless-capable analysis core (syntax / flow / execution / symbols / metrics / overlays / risk). No Qt."""
 
 from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["syntax", "flow", "execution", "symbol_index", "metrics", "overlay"]
+__all__ = ["syntax", "flow", "execution", "symbol_index", "metrics", "overlay", "risk_score"]
 
 
 def __getattr__(name: str) -> Any:
@@ -44,4 +44,8 @@ def __getattr__(name: str) -> Any:
         from . import overlay as _overlay
 
         return _overlay
+    if name == "risk_score":
+        from . import risk_score as _risk_score
+
+        return _risk_score
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R138: composite risk score (``core.risk_score``) — deterministic lint +
+  metrics + optional git formula (``cdm-risk-v1``); unit tests; no AI
 * R137: headless git churn/hotspot analytics (``utils.git_analytics``) via
   ``git log --numstat``; text formatter for optional plugin panel; temp-repo tests
 * R136: advanced radon metrics pack behind ``MetricProvider`` — maintainability
