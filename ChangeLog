@@ -1,5 +1,8 @@
 2026 Aug 08
 
+* R134: ``MetricProvider`` protocol + ``MetricProviderRegistry`` in
+  ``core.metrics``; radon CC adapter (``utils.radon_cc_provider``); UI viewers
+  unchanged
 * R133: headless ``DependencyGraph`` from imports (``utils.dependency_graph``)
   via ``brief_ast``; local vs external nodes; JSON / DOT export; no Qt /
   GlobalData resolution path

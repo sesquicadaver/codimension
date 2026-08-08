@@ -45,7 +45,7 @@
 | 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
 | 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open optional setting shipped |
 | 10–13 Remote backends | DONE (R121–R125) | ExecutionTarget: local, Docker, SSH, Kubernetes MVPs |
-| 14–20 Analysis | PARTIAL → R134+ | SymbolIndex + DependencyGraph (R130–R133); metrics/overlays next |
+| 14–20 Analysis | PARTIAL → R135+ | SymbolIndex + DependencyGraph + MetricProvider (R130–R134); overlays next |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
 | 25 Plugins | DONE | yapsy + bundled `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | after SymbolIndex |
@@ -86,6 +86,7 @@
 | D-R131 | R131 | Populate SymbolIndex from brief_ast (`utils.symbol_index_brief`) |
 | D-R132 | R132 | `find_definitions` / `find_references` + occurrences index bridge |
 | D-R133 | R133 | Headless `DependencyGraph` from imports (JSON/DOT export) |
+| D-R134 | R134 | `MetricProvider` + registry + radon CC adapter |
 
 ---
 
@@ -112,7 +113,7 @@
 | 17 | R131 | Populate SymbolIndex from `brief_ast` for project files (async-friendly API) | Index build on sample project; accuracy tests vs known defs | M | DONE |
 | 18 | R132 | Queries: `find_definitions` / `find_references` on SymbolIndex (bridge search provider) | Unit tests; occurrences provider can call index without behavior regress | M | DONE |
 | 19 | R133 | Headless `DependencyGraph` from imports (reuse diagram logic without Qt) | Graph build test; optional export JSON | M | DONE |
-| 20 | R134 | `MetricProvider` interface + radon CC adapter | Provider registry test; UI can keep current viewer | S | OPEN |
+| 20 | R134 | `MetricProvider` interface + radon CC adapter | Provider registry test; UI can keep current viewer | S | DONE |
 | 21 | R135 | Overlay framework: `OverlayLayer` protocol + attach point on flow/editor (no heavy visuals yet) | Register empty overlay; test hook invoked on redraw/update | M | OPEN |
 | 22 | R136 | Advanced metrics pack (maintainability / raw/Halstead or documented subset) behind MetricProvider | At least 2 metrics beyond CC; tests with fixtures | M | OPEN |
 | 23 | R137 | Git analytics: churn / hotspot summary (git log based) | Headless report API + optional plugin panel; tests with temp repo | M | OPEN |
@@ -146,7 +147,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R134` — `MetricProvider` interface + radon CC adapter.
+**First OPEN:** `R135` — Overlay framework (`OverlayLayer` protocol + attach point).
 
 ---
 

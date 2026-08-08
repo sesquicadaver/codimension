@@ -9,13 +9,13 @@
 # (at your option) any later version.
 #
 
-"""Headless-capable analysis core (syntax / flow / execution / symbols). No Qt."""
+"""Headless-capable analysis core (syntax / flow / execution / symbols / metrics). No Qt."""
 
 from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["syntax", "flow", "execution", "symbol_index"]
+__all__ = ["syntax", "flow", "execution", "symbol_index", "metrics"]
 
 
 def __getattr__(name: str) -> Any:
@@ -36,4 +36,8 @@ def __getattr__(name: str) -> Any:
         from . import symbol_index as _symbol_index
 
         return _symbol_index
+    if name == "metrics":
+        from . import metrics as _metrics
+
+        return _metrics
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
