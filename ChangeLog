@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R140.a: headless CFG graph model (``core.cfg``) — nodes/edges/spans from
+  ``core.flow`` parse; ENTRY/EXIT; if/loop/try/match wiring; canvas deferred to R140.b
 * Docs/queue sync: ROADMAP Active = OPEN only; split R140→R140.a/R140.b;
   snapshot for R130–R138 + R135 overlay framework; R170 branching policy in
   CONTRIBUTING + Living Spec; tip ``master@c9da2526``; pointer ``R140.a``
