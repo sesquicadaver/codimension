@@ -71,10 +71,18 @@ def ensure_empty_overlay(host: OverlayHost) -> EmptyOverlayLayer:
     return host.registry.get("empty")  # type: ignore[return-value]
 
 
+def ensure_environment_overlay(host: Optional[OverlayHost] = None):
+    """Register the R160 environment badge overlay on the flow host if missing."""
+    from utils.environment_overlay import ensure_environment_overlay as _ensure
+
+    return _ensure(host)
+
+
 __all__ = [
     "OverlayHost",
     "editor_overlay_host",
     "ensure_empty_overlay",
+    "ensure_environment_overlay",
     "flow_overlay_host",
     "notify_editor_overlays",
     "notify_flow_overlays",

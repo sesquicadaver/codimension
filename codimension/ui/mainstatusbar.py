@@ -137,6 +137,7 @@ class MainWindowStatusBarMixin:
     def updateAnalysisEnvStatus(self):
         """Refresh status-bar analysis environment indicator (T141)."""
         from utils.globals import GlobalData
+        from utils.overlay_host import notify_flow_overlays
         from utils.venvbootstrap import formatAnalysisEnvStatus
 
         project = GlobalData().project
@@ -144,11 +145,14 @@ class MainWindowStatusBarMixin:
             self.sbAnalysisEnv.setVisible(False)
             self.sbAnalysisEnv.setText("Env: IDE")
             self.sbAnalysisEnv.setToolTip("Python used for import analysis")
+            notify_flow_overlays("env")
             return
         text, path = formatAnalysisEnvStatus(project)
         self.sbAnalysisEnv.setText(text)
         self.sbAnalysisEnv.setToolTip(path)
         self.sbAnalysisEnv.setVisible(True)
+        # R160: keep flow env badges in sync with the status-bar source of truth.
+        notify_flow_overlays("env")
 
     def _showVCSLabelContextMenu(self, pos):
         """Triggered when a context menu is requested for a VCS label"""
