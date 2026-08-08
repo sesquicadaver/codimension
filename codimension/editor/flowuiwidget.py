@@ -61,6 +61,7 @@ from ui.spacers import ToolBarExpandingSpacer, ToolBarVSpacer
 from utils.diskvaluesrelay import getCollapsedGroups, getFilePosition, setCollapsedGroups
 from utils.fileutils import isPythonMime
 from utils.globals import GlobalData
+from utils.overlay_host import notify_flow_overlays
 from utils.pixmapcache import getIcon
 from utils.settings import Settings
 
@@ -726,6 +727,7 @@ class FlowUIWidget(QWidget):
                 logging.info("Layout timing: %f", lEnd - lStart)
                 logging.info("Render timing: %f", rEnd - lEnd)
                 logging.info("Draw timing: %f", dEnd - rEnd)
+            notify_flow_overlays("redraw", path=fileName)
         except Exception as exc:
             logging.error(str(exc))
             raise
