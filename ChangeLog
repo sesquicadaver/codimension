@@ -1,5 +1,8 @@
 2026 Aug 08
 
+* R124: ``SSHExecutionTarget`` MVP with injectable ``SSHTransport``;
+  FakeSSHTransport contract tests; SubprocessSSHTransport best-effort;
+  docs for remote-path sync + unverified platforms
 * R123: ``DockerExecutionTarget`` MVP — ``docker run`` with workspace mount;
   docker-or-skip integration test; debug/profile via in-container pdb/cProfile
 
