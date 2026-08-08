@@ -9,13 +9,23 @@
 # (at your option) any later version.
 #
 
-"""Headless-capable analysis core (syntax / flow / cfg / execution / symbols / metrics / overlays / risk). No Qt."""
+"""Headless-capable analysis core (syntax/flow/cfg/cfg_frames/execution/…). No Qt."""
 
 from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["syntax", "flow", "cfg", "execution", "symbol_index", "metrics", "overlay", "risk_score"]
+__all__ = [
+    "syntax",
+    "flow",
+    "cfg",
+    "cfg_frames",
+    "execution",
+    "symbol_index",
+    "metrics",
+    "overlay",
+    "risk_score",
+]
 
 
 def __getattr__(name: str) -> Any:
@@ -32,6 +42,10 @@ def __getattr__(name: str) -> Any:
         from . import cfg as _cfg
 
         return _cfg
+    if name == "cfg_frames":
+        from . import cfg_frames as _cfg_frames
+
+        return _cfg_frames
     if name == "execution":
         from . import execution as _execution
 
