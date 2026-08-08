@@ -45,7 +45,7 @@
 | 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
 | 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open optional setting shipped |
 | 10–13 Remote backends | DONE (R121–R125) | ExecutionTarget: local, Docker, SSH, Kubernetes MVPs |
-| 14–20 Analysis | PARTIAL → R136+ | SymbolIndex + DependencyGraph + MetricProvider + OverlayLayer (R130–R135) |
+| 14–20 Analysis | DONE (R130–R136) | SymbolIndex, DependencyGraph, MetricProvider (+ MI/Halstead/raw), OverlayLayer |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
 | 25 Plugins | DONE | yapsy + bundled `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | after SymbolIndex |
@@ -88,6 +88,7 @@
 | D-R133 | R133 | Headless `DependencyGraph` from imports (JSON/DOT export) |
 | D-R134 | R134 | `MetricProvider` + registry + radon CC adapter |
 | D-R135 | R135 | `OverlayLayer` + flow/editor attach hosts |
+| D-R136 | R136 | Advanced metrics pack (MI + Halstead + raw LOC) |
 
 ---
 
@@ -116,7 +117,7 @@
 | 19 | R133 | Headless `DependencyGraph` from imports (reuse diagram logic without Qt) | Graph build test; optional export JSON | M | DONE |
 | 20 | R134 | `MetricProvider` interface + radon CC adapter | Provider registry test; UI can keep current viewer | S | DONE |
 | 21 | R135 | Overlay framework: `OverlayLayer` protocol + attach point on flow/editor (no heavy visuals yet) | Register empty overlay; test hook invoked on redraw/update | M | DONE |
-| 22 | R136 | Advanced metrics pack (maintainability / raw/Halstead or documented subset) behind MetricProvider | At least 2 metrics beyond CC; tests with fixtures | M | OPEN |
+| 22 | R136 | Advanced metrics pack (maintainability / raw/Halstead or documented subset) behind MetricProvider | At least 2 metrics beyond CC; tests with fixtures | M | DONE |
 | 23 | R137 | Git analytics: churn / hotspot summary (git log based) | Headless report API + optional plugin panel; tests with temp repo | M | OPEN |
 | 24 | R138 | Composite risk score (lint + metrics + optional git) | Deterministic formula documented; unit tests; no AI | M | OPEN |
 | 25 | R140 | Headless CFG graph model separated from `flowui` canvas | `core`/`app` graph API from flow parse; canvas consumes model | L | OPEN |
@@ -148,7 +149,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R136` — Advanced metrics pack behind MetricProvider.
+**First OPEN:** `R137` — Git analytics (churn / hotspot summary).
 
 ---
 
