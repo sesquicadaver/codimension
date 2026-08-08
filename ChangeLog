@@ -1,3 +1,8 @@
+2026 Aug 08
+
+* R123: ``DockerExecutionTarget`` MVP — ``docker run`` with workspace mount;
+  docker-or-skip integration test; debug/profile via in-container pdb/cProfile
+
 2026 Aug 06
 
 * R122: ``LocalExecutionTarget`` adapts ``utils.run`` argv builders to
