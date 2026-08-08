@@ -27,7 +27,8 @@ REF_DEF_RE = re.compile(r"^\[([^\]]+)\]:\s*(\S+)", re.MULTILINE)
 HTML_HREF_RE = re.compile(r"""<a\s+[^>]*href=["']([^"']+)["']""", re.IGNORECASE)
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
 FENCE_RE = re.compile(r"^```.*?$.*?^```\s*$", re.MULTILINE | re.DOTALL)
-VERSION_RE = re.compile(r'version\s*=\s*"([^"]+)"')
+VERSION_RE = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
+RELEASE_CHANNEL_RE = re.compile(r'^release_channel\s*=\s*"(stable|beta|dev)"', re.MULTILINE)
 CLASSIFIER_PY_RE = re.compile(r'Programming Language :: Python :: (3\.\d+)"')
 CI_MATRIX_RE = re.compile(r"python-version:\s*\[([^\]]+)\]")
 _CODE_EXT = {
@@ -324,10 +325,13 @@ def check_invariants(root: Path) -> list[str]:
     """Version presence and forbidden marketing in root READMEs."""
     errors: list[str] = []
     version_file = root / "codimension" / "cdmverspec.py"
-    match = VERSION_RE.search(version_file.read_text(encoding="utf-8"))
+    verspec_text = version_file.read_text(encoding="utf-8")
+    match = VERSION_RE.search(verspec_text)
     if not match:
         errors.append("cdmverspec.py: version not found")
         return errors
+    if not RELEASE_CHANNEL_RE.search(verspec_text):
+        errors.append("cdmverspec.py: release_channel not found (expected stable|beta|dev)")
     ver = match.group(1)
     for name in ("README.md", "README.en.md"):
         text = (root / name).read_text(encoding="utf-8")

@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R171: release channel metadata in ``cdmverspec`` (``stable``/``beta``/``dev``);
+  ``CDM_RELEASE_CHANNEL`` override; About shows ``version (channel)``; docs gate
 * R162: deployment overlay — read-only Dockerfile / Compose detection via
   R135; ``deploy:docker×N`` / ``compose:N`` nav badges; fixture tests
 * R161: dependency overlay — edge heat from ``DependencyGraph`` (R133) via

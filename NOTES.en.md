@@ -50,7 +50,8 @@ password=<password>
 
 1. Update ChangeLog
 2. Make sure git clone is clean
-3. Edit `codimension/cdmverspec.py` setting the new version
+3. Edit `codimension/cdmverspec.py` setting the new ``version`` and, if needed,
+   ``release_channel`` (``stable`` / ``beta`` / ``dev``; R171 — still one version)
 4. Build (recommended):
 
 ```shell
