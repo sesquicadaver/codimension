@@ -253,6 +253,7 @@ class FlowUIWidget(QWidget):
         self.__navBar = None
         self.__cf = None
         self.__canvas = None
+        self.__cfg_graph = None
         self.__validGroups = []
         self.__allGroupId = set()
 
@@ -343,6 +344,14 @@ class FlowUIWidget(QWidget):
 
     def getParentWidget(self):
         return self.__parentWidget
+
+    def getCfgGraph(self):
+        """Return the CFG graph bound at last successful CF layout, or None."""
+        if self.__canvas is not None:
+            bound = getattr(self.__canvas, "cfg_graph", None)
+            if bound is not None:
+                return bound
+        return self.__cfg_graph
 
     def view(self):
         """Provides a reference to the current view"""
@@ -715,6 +724,7 @@ class FlowUIWidget(QWidget):
             self.__canvas = VirtualCanvas(self.cflowSettings, None, None, self.__validGroups, collapsedGroups, None)
             lStart = timer()
             self.__canvas.layoutModule(self.__cf)
+            self.__cfg_graph = getattr(self.__canvas, "cfg_graph", None)
             lEnd = timer()
             self.__canvas.setEditor(self.__editor)
             width, height = self.__canvas.render()
@@ -756,6 +766,7 @@ class FlowUIWidget(QWidget):
             self.__updateTimer.stop()
             self.__cleanupCanvas()
             self.__cf = None
+            self.__cfg_graph = None
             self.__validGroups = []
             self.setVisible(False)
             self.__navBar.updateInfoIcon(self.__navBar.STATE_UNKNOWN)
@@ -800,6 +811,7 @@ class FlowUIWidget(QWidget):
         self.__navBar.deleteLater()
         self.__cf = None
 
+        self.__cfg_graph = None
         self.__saveAsButton.menu().deleteLater()
         self.__saveAsButton.deleteLater()
 

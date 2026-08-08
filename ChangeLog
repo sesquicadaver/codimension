@@ -1,5 +1,8 @@
 2026 Aug 08
 
+* R140.b: Flow UI consumes ``core.cfg`` — ``flowui.cfg_adapter`` binds
+  ``CfgGraph`` in ``VirtualCanvas.layoutModule``; editor ``getCfgGraph``;
+  CF fragment tree remains layout payload (no second layout tree)
 * R140.a: headless CFG graph model (``core.cfg``) — nodes/edges/spans from
   ``core.flow`` parse; ENTRY/EXIT; if/loop/try/match wiring; canvas deferred to R140.b
 * Docs/queue sync: ROADMAP Active = OPEN only; split R140→R140.a/R140.b;

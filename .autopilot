@@ -10,5 +10,5 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **R140.b** (flowui/canvas consumes core.cfg graph model). TODO_FIXME has no remaining 🔓 OPEN rows.
+Current pointer: **R141** (debugger graph mode: map frames → CFG nodes). TODO_FIXME has no remaining 🔓 OPEN rows.
 Active queue lists OPEN only; DONE history lives in ROADMAP Archive.
