@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R152: AI UI explain/suggest behind ``CDM_AI_UI`` (default off) —
+  ``core.ai_ui`` + editor context menu; offline summary / mock backend; no network
 * R151: headless AI context packer (``core.ai_context``) — SymbolIndex +
   CFG slice + source excerpt for a symbol; JSON-friendly; no network
 * R150: plugin capability / API negotiation (``plugins.capabilities``) —

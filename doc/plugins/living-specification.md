@@ -72,6 +72,7 @@
 | **Taint MVP R143** | core.taint | Function-local sources→sinks; задокументована підмножина | tests/test_taint.py; [taint-mvp.md](../uk/technology/taint-mvp.md) |
 | **Plugin capabilities R150** | plugins.capabilities + pluginmanager | `PluginCapabilitySpec` / negotiate; host відхиляє несумісні | tests/test_plugin_capabilities.py |
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice для символу; JSON; без мережі | tests/test_ai_context.py |
+| **AI UI R152** | core.ai_ui + editor.editorcontextmenus | Explain/suggest за `CDM_AI_UI` (default off); offline/mock backend | tests/test_ai_ui.py |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -131,7 +132,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R152** (AI UI-дії за feature flag).
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R160** (Environment overlay).
 
 ### Матриця меж модулів (R103)
 
