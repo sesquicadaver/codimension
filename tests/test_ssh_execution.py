@@ -3,18 +3,54 @@
 
 from __future__ import annotations
 
+import os
+import sys
+from pathlib import Path
+
+import parsers  # noqa: E402,F401
 import pytest
-from core.execution import ExecutionTarget, assert_execution_target, build_request
-from utils.ssh_execution import (
-    FakeSSHTransport,
-    SSHExecutionTarget,
-    SubprocessSSHTransport,
-    ssh_cli_available,
-    ssh_execution_target,
-)
+
+_CODIM = Path(__file__).resolve().parents[1] / "codimension"
+
+
+def _under_codimension(mod: object) -> bool:
+    path = getattr(mod, "__file__", None)
+    if path:
+        return "/codimension/" in os.path.abspath(path).replace("\\", "/")
+    pkg_path = getattr(mod, "__path__", None)
+    if not pkg_path:
+        return False
+    try:
+        first = os.path.abspath(list(pkg_path)[0]).replace("\\", "/")
+    except Exception:
+        return False
+    return "/codimension/" in first
+
+
+@pytest.fixture(autouse=True)
+def _purge_stubs():
+    import importlib
+
+    dirty = False
+    for name in list(sys.modules):
+        if name not in ("ui", "utils") and not name.startswith(("ui.", "utils.")):
+            continue
+        mod = sys.modules[name]
+        if _under_codimension(mod):
+            continue
+        del sys.modules[name]
+        dirty = True
+    if dirty:
+        importlib.invalidate_caches()
+        if str(_CODIM) not in sys.path:
+            sys.path.insert(0, str(_CODIM))
+    yield
 
 
 def test_ssh_target_is_execution_target():
+    from core.execution import ExecutionTarget, assert_execution_target
+    from utils.ssh_execution import FakeSSHTransport, SSHExecutionTarget, ssh_execution_target
+
     transport = FakeSSHTransport()
     target = SSHExecutionTarget(transport, python="/usr/bin/python3", host_label="box")
     assert isinstance(target, ExecutionTarget)
@@ -24,6 +60,9 @@ def test_ssh_target_is_execution_target():
 
 
 def test_ssh_run_prepare_does_not_touch_transport():
+    from core.execution import build_request
+    from utils.ssh_execution import FakeSSHTransport, SSHExecutionTarget
+
     transport = FakeSSHTransport(stdout="should-not-run")
     target = SSHExecutionTarget(transport, host_label="dev")
     result = target.run(build_request("/remote/app.py", ["--flag"]))
@@ -35,6 +74,9 @@ def test_ssh_run_prepare_does_not_touch_transport():
 
 
 def test_ssh_run_wait_uses_transport():
+    from core.execution import build_request
+    from utils.ssh_execution import FakeSSHTransport, SSHExecutionTarget
+
     transport = FakeSSHTransport(exit_code=0, stdout="hello-ssh\n")
     target = SSHExecutionTarget(transport, python="python3", host_label="dev")
     result = target.run(
@@ -51,6 +93,9 @@ def test_ssh_run_wait_uses_transport():
 
 
 def test_ssh_debug_and_profile_argv():
+    from core.execution import build_request
+    from utils.ssh_execution import FakeSSHTransport, SSHExecutionTarget
+
     transport = FakeSSHTransport()
     target = SSHExecutionTarget(transport)
     dbg = target.debug(build_request("/r/x.py"))
@@ -61,6 +106,8 @@ def test_ssh_debug_and_profile_argv():
 
 
 def test_subprocess_ssh_transport_builds_argv():
+    from utils.ssh_execution import SubprocessSSHTransport
+
     transport = SubprocessSSHTransport(
         "example.com",
         user="alice",
@@ -78,9 +125,13 @@ def test_subprocess_ssh_transport_builds_argv():
 
 
 def test_subprocess_ssh_transport_rejects_empty_host():
+    from utils.ssh_execution import SubprocessSSHTransport
+
     with pytest.raises(ValueError, match="host"):
         SubprocessSSHTransport("  ")
 
 
 def test_ssh_cli_available_is_bool():
+    from utils.ssh_execution import ssh_cli_available
+
     assert isinstance(ssh_cli_available(), bool)
