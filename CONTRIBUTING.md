@@ -5,15 +5,22 @@
 Цей проєкт — форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Оригінал не підтримується.  
 Активний репозиторій: https://github.com/sesquicadaver/codimension
 
+## Політика гілок (R170)
+
+- Єдина довгоживуча гілка: **`master`** (захищена: required `ci-gate`, без прямого push).
+- Робочі гілки лише: **`feature/*`** (нова функціональність) або **`fix/*`** (виправлення).
+- Зміни потрапляють у `master` **тільки через Pull Request** після зеленого CI.
+- Не створюємо паралельних `stable` / `develop` / `release` гілок для цього форку.
+
 ## Як внести зміни
 
 1. **Fork** репозиторій (якщо ще не зробили)
-2. Створіть гілку: `git checkout -b feature/your-feature`
+2. Створіть гілку від актуального `master`: `git checkout -b feature/your-feature` (або `fix/...`)
 3. Внесіть зміни, дотримуючись існуючого стилю
 4. Запустіть перевірки (див. розділ CI нижче)
 5. Оновіть `ChangeLog` та відповідну документацію в `doc/`
 6. Зробіть commit з зрозумілим повідомленням
-7. Push та створіть [Pull Request](https://github.com/sesquicadaver/codimension/compare) (шаблон заповниться автоматично)
+7. Push та створіть [Pull Request](https://github.com/sesquicadaver/codimension/compare) у `master` (шаблон заповниться автоматично)
 
 **Issues:** при створенні issue оберіть шаблон (Bug report / Feature request).
 

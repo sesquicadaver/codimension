@@ -5,15 +5,22 @@
 This project is a fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Upstream is unmaintained.  
 Active repository: https://github.com/sesquicadaver/codimension
 
+## Branching policy (R170)
+
+- Sole long-lived branch: **`master`** (protected: required `ci-gate`, no direct push).
+- Work branches only: **`feature/*`** (new work) or **`fix/*`** (bugfixes).
+- Land changes on `master` **only via Pull Request** after green CI.
+- Do not maintain parallel `stable` / `develop` / `release` branches for this fork.
+
 ## How to contribute
 
 1. **Fork** the repository (if you have not already)
-2. Create a branch: `git checkout -b feature/your-feature`
+2. Branch from current `master`: `git checkout -b feature/your-feature` (or `fix/...`)
 3. Make changes following existing style
 4. Run checks (see CI section below)
 5. Update `ChangeLog` and relevant docs in `doc/` (both languages when applicable — see [doc/BILINGUAL.md](doc/BILINGUAL.md))
 6. Commit with a clear message
-7. Push and open a [Pull Request](https://github.com/sesquicadaver/codimension/compare) (template fills automatically)
+7. Push and open a [Pull Request](https://github.com/sesquicadaver/codimension/compare) targeting `master` (template fills automatically)
 
 **Issues:** choose a template when creating an issue (Bug report / Feature request).
 

@@ -1,5 +1,8 @@
 2026 Aug 08
 
+* Docs/queue sync: ROADMAP Active = OPEN only; split R140→R140.a/R140.b;
+  snapshot for R130–R138 + R135 overlay framework; R170 branching policy in
+  CONTRIBUTING + Living Spec; tip ``master@c9da2526``; pointer ``R140.a``
 * R138: composite risk score (``core.risk_score``) — deterministic lint +
   metrics + optional git formula (``cdm-risk-v1``); unit tests; no AI
 * R137: headless git churn/hotspot analytics (``utils.git_analytics``) via
