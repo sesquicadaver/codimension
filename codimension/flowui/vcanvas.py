@@ -157,6 +157,8 @@ class VirtualCanvas:
         self.__currentCF = None
         self.__currentScopeClass = None
         self.isNoScope = False
+        # Navigable CFG model (R140.b); set by layoutModule via cfg_adapter
+        self.cfg_graph = None
 
         # Rendering support
         self.width = 0
@@ -199,6 +201,7 @@ class VirtualCanvas:
         self.addr = None
         self.__currentCF = None
         self.__currentScopeClass = None
+        self.cfg_graph = None
         self.scopeRectangle = None
         self.__validGroups = None
         self.__validGroupBeginLines = None
@@ -1265,7 +1268,15 @@ class VirtualCanvas:
         raise Exception("Logic error: cannot set the leader reference")
 
     def layoutModule(self, cflow):
-        """Lays out a module"""
+        """Lays out a module.
+
+        Binds the headless :class:`~core.cfg.CfgGraph` onto this canvas
+        (R140.b) before cell allocation so consumers share one structural
+        model. Cell layout still walks the CF fragment tree (payload).
+        """
+        from .cfg_adapter import bind_cfg_graph
+
+        bind_cfg_graph(self, cflow)
         self.isNoScope = True
         vacantRow = 0
 

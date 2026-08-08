@@ -12,7 +12,8 @@
 """Headless CFG graph model separated from ``flowui`` canvas (R140.a).
 
 Builds an immutable-ish node/edge graph from a control-flow fragment tree
-(``core.flow`` / ``cdmcfparser``). Canvas consumption is deferred to R140.b.
+(``core.flow`` / ``cdmcfparser``). Flow UI binds the graph via
+``flowui.cfg_adapter`` during ``VirtualCanvas.layoutModule`` (R140.b).
 
 Spans are half-open Unicode character ranges ``[start, end)`` via
 :class:`core.symbol_index.SourceSpan`.
