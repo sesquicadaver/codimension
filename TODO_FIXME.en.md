@@ -2,12 +2,12 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-08-06 (audit master@d8f2e786 / PR #40)  
+**Last review:** 2026-08-08 (queue synced to master@c9da2526; audit P0–P2 closed earlier @ d8f2e786 / PR #40)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Open blockers (audit @ d8f2e786)
+## Open blockers
 
-Audit P0–P2 rows in TODO are closed. Further work is the linear atomic queue in [ROADMAP.md](ROADMAP.md) (first OPEN: **R140**).
+Audit P0–P2 rows in TODO are closed. Further work is the linear atomic queue in [ROADMAP.md](ROADMAP.md) (first OPEN: **R140.a**).
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|

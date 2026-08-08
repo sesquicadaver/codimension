@@ -2,9 +2,10 @@
 
 > **Мова / Language:** Українська | [English](ROADMAP.md)
 
-**Базовий зріз:** `master@d8f2e786` (2026-08-06)  
+**Поточний tip (синхронізація docs):** `master@c9da2526` (2026-08-08, після R138)  
+**Історичний baseline черги:** `master@d8f2e786` (2026-08-06) — старт лінійного R100+  
 **Living Spec:** [doc/plugins/living-specification.md](doc/plugins/living-specification.md)  
-**Autopilot:** перший рядок `OPEN` нижче (після порожнього [TODO_FIXME.md](TODO_FIXME.md))
+**Autopilot:** перший рядок `OPEN` в **Активній черзі** (після порожнього [TODO_FIXME.md](TODO_FIXME.md))
 
 ---
 
@@ -12,7 +13,7 @@
 
 1. Працювати **строго зверху вниз**: лише перша задача зі статусом `OPEN`.
 2. Одна задача = **один PR** з тестами та документацією (ChangeLog, Living Spec, цей файл).
-3. Після злиття позначати `DONE` (SHA/PR); не стрибати вперед без явного `BLOCKED`.
+3. Після злиття позначати `DONE` (SHA/PR) і переносити рядок в **Архів**; не стрибати вперед без явного `BLOCKED`.
 4. Якщо задача виявилась завеликою — **розщепити** на `Rxxx.a` / `Rxxx.b`, зберігаючи порядок.
 5. Правила: Core ≠ UI; execution через один контракт; environment = source of truth; overlays окремим шаром; AI лише після детермінованого індексу/CFG.
 
@@ -28,7 +29,7 @@
 
 | Status | Значення |
 |--------|----------|
-| DONE | Уже в master |
+| DONE | Уже в master (лише в Архіві) |
 | OPEN | Наступна робота / autopilot |
 | DEFERRED | Свідомо пізніше |
 
@@ -39,20 +40,20 @@
 | Старі фази | Зараз | Примітка |
 |------------|-------|----------|
 | 0 Baseline | DONE | pyproject 3.10–3.13, Qt IDE, проєкт/файл, CFG |
-| 1 Test harness | DONE | golden CFG + conformance (~260 тестів) |
-| 2 Headless core | DONE | `core.syntax` / `core.flow` + `infrastructure/*` + T085 |
-| 3 Modular monolith | DONE → R110+ | R100–R103: Qt-free utils, app фасад, routing, матриця меж |
-| 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
-| 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open опція поставлена |
-| 10–13 Remote backends | DONE (R121–R125) | ExecutionTarget: local, Docker, SSH, Kubernetes MVP |
-| 14–20 Analysis | DONE (R130–R136) | SymbolIndex, DependencyGraph, MetricProvider (+ MI/Halstead/raw), OverlayLayer |
-| 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
+| 1 Test harness | DONE | conformance + parser (~348 `test_*` / 72 файли; лічильник пливе — дивись CI) |
+| 2 Headless core | DONE | `core.syntax` / `core.flow` parse façade + `infrastructure/*` + T085 |
+| 3 Modular monolith | DONE | R100–R103 |
+| 4–7 Environment | DONE | R110–R114 |
+| 8–9 Deps + local venv | DONE | T140/T141/R114 + DependencyManifest R120 |
+| 10–13 Remote backends | DONE | ExecutionTarget R121–R125 (local/Docker/SSH/K8s) |
+| 14–20 Analysis | DONE | R130–R138 (індекс, графи імпортів, метрики, overlays framework, git analytics, risk) |
+| 21–24 Graph | PARTIAL → R140.a+ | Parse є (`core.flow` / `flow_ast`); окрема graph-модель + споживання canvas — OPEN |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` |
-| 26 AI | MISSING → R151+ | після SymbolIndex |
-| 27–29 Extended overlays | MISSING → R160+ | потрібен фреймворк R135 |
-| 30–38 Release/update | PARTIAL → R170+ | є `ci-gate` + OIDC; немає channels/auto-update |
+| 26 AI | MISSING → R151+ | SymbolIndex готовий; потрібен зріз CFG (R140.a) |
+| 27–29 Extended overlays | MISSING → R160+ | Фреймворк R135 DONE; візуальні шари R160–R162 ще OPEN |
+| 30–38 Release/update | PARTIAL → R171+ | `ci-gate` + OIDC + політика гілок (R170); немає channels/auto-update |
 
-**Оптимізація:** для форку з `master` + `feature/*` не нав’язуємо повний `stable/develop` цирк. Auto-apply оновлень — після read-only version check. K8s — після Docker + SSH.
+**Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply оновлень — після read-only version check (R172–R173).
 
 ---
 
@@ -74,7 +75,7 @@
 | D-R110 | R110 | Immutable `AnalysisEnvironment` + тести паритету |
 | D-R111 | R111 | `buildAnalysisEnvironment(project)` — єдиний конструктор |
 | D-R112 | R112 | Lint/tool drivers + process_env на AnalysisEnvironment |
-| D-R113 | R113 | Registry кешів аналізу (brief/flow) + invalidate(project|file|env) |
+| D-R113 | R113 | Registry кешів аналізу (brief/flow) + invalidate(project\|file\|env) |
 | D-R114 | R114 | Опційне auto-attach проєктного venv при відкритті (session; Options) |
 | D-R120 | R120 | `DependencyManifest` + export script; collectInstallSources через manifest |
 | D-R121 | R121 | Протокол `ExecutionTarget` у `core.execution` + fake-тести |
@@ -91,53 +92,30 @@
 | D-R136 | R136 | Розширені метрики (MI + Halstead + raw LOC) |
 | D-R137 | R137 | Git churn/hotspot analytics (`utils.git_analytics`) |
 | D-R138 | R138 | Composite risk score `cdm-risk-v1` (`core.risk_score`) |
+| D-R170 | R170 | Політика гілок: `master` + `feature/*` / `fix/*`; без прямого push (`ci-gate`) |
 
 ---
 
-## Активна черга (суворий порядок)
+## Активна черга (суворий порядок — лише OPEN)
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R100 | Прибрати імпорт Qt з `utils.importutils` (винести в `ui/` або DI) | Gate / тест: модуль без `ui.qt`; існуючі import-тести зелені | M | DONE |
-| 2 | R101 | Пакет `codimension/app/`: фасад `ApplicationServices` (load/unload без віджетів) | Headless імпорт + unit з фейками; рядок у Living Spec | S | DONE |
-| 3 | R102 | Відкриття/unload проєкту через `app` (тонкий адаптер з GlobalData/mainwindow) | UI → app → utils/project; без регресій | M | DONE |
-| 4 | R103 | Матриця меж модулів (`core`/`infra`/`app`/`utils`/`ui`/`plugins`) у CI | Скрипт падає на нові заборонені ребра | M | DONE |
-| 5 | R110 | Immutable `AnalysisEnvironment` (шлях python, source kind, site-packages, id проєкту) | Typed API + тести паритету з `describeAnalysisPythonSource` | M | DONE |
-| 6 | R111 | Збирати `AnalysisEnvironment` з проєкту через `venvbootstrap` | Єдиний конструктор; тести precedence | M | DONE |
-| 7 | R112 | Прив’язати lint/tool drivers до `AnalysisEnvironment` | Drivers отримують env; оновлені тести | M | DONE |
-| 8 | R113 | Registry кешів аналізу + invalidate на env refresh / зміну файлу | API invalidate; тест на stale після зміни інтерпретатора | M | DONE |
-| 9 | R114 | Опція: auto-attach проєктного venv при відкритті | Default off; UI + тест | S | DONE |
-| 10 | R120 | `DependencyManifest` з `collectInstallSources` → експорт requirements | Headless API + тест | M | DONE |
-| 11 | R121 | Протокол `ExecutionTarget` (`run` / `debug` / `profile` / `which_python`) | Protocol + fake target тест | S | DONE |
-| 12 | R122 | Локальний runner (`utils.run` / RunManager) через `ExecutionTarget` | Існуючі argv/debug тести зелені | M | DONE |
-| 13 | R123 | Docker `ExecutionTarget` MVP | docker-or-skip інтеграційний тест; docs | L | DONE |
-| 14 | R124 | SSH `ExecutionTarget` MVP | Мокований транспорт; docs | L | DONE |
-| 15 | R125 | Kubernetes `ExecutionTarget` MVP | Після R123+R124; docs | L | DONE |
-| 16 | R130 | Схема SymbolIndex (name, kind, file, half-open span, container) | Модуль + тести; Living Spec | S | DONE |
-| 17 | R131 | Наповнення SymbolIndex з `brief_ast` по файлах проєкту | Тести точності на фікстурах | M | DONE |
-| 18 | R132 | Запити `find_definitions` / `find_references` (+ міст до search) | Unit + без регресії occurrences | M | DONE |
-| 19 | R133 | Headless `DependencyGraph` з імпортів (без Qt) | Тест побудови; опційний JSON export | M | DONE |
-| 20 | R134 | Інтерфейс `MetricProvider` + адаптер radon CC | Registry тест | S | DONE |
-| 21 | R135 | Overlay framework: `OverlayLayer` + точка підключення (без важкої графіки) | Реєстрація порожнього overlay; тест хука | M | DONE |
-| 22 | R136 | Розширені метрики (≥2 понад CC) через MetricProvider | Фікстури + тести | M | DONE |
-| 23 | R137 | Git analytics: churn / hotspot (git log) | Headless API + тест на temp repo | M | DONE |
-| 24 | R138 | Composite risk score (lint + metrics ± git) | Документована формула; unit; без AI | M | DONE |
-| 25 | R140 | Headless CFG graph model окремо від canvas `flowui` | API з flow parse; canvas споживає модель | L | OPEN |
-| 26 | R141 | Debugger graph mode: кадри → вузли CFG | Mapping unit / offscreen | L | OPEN |
-| 27 | R142 | Graph diff двох CFG / ревізій | Diff API + фікстури | M | OPEN |
-| 28 | R143 | Function-local data-flow / taint MVP | Задокументований підмножина + тести | L | OPEN |
-| 29 | R150 | Версіонування capabilities плагінів | Несумісний плагін відхиляється; тест | S | OPEN |
-| 30 | R151 | AI context builder (headless): SymbolIndex + зріз CFG | Чиста функція + тести; без мережі | M | OPEN |
-| 31 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
-| 32 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
-| 33 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
-| 34 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
-| 35 | R170 | Політика гілок: лише `master` + `feature/*`/`fix/*` (doc + `ci-gate`) | CONTRIBUTING + Living Spec | S | OPEN |
-| 36 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
-| 37 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
-| 38 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
-| 39 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 40 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R140.a | Headless CFG **graph model** API з flow parse (вузли/ребра/spans; без Qt; дані з `core.flow` / `flow_ast`, не canvas) | Модуль + unit на фікстурах; Living Spec; без перепису `flowui` | M | OPEN |
+| 2 | R140.b | `flowui` / editor canvas **споживає** модель R140.a (тонкий адаптер; паритет поведінки) | Існуючі CF тести/smoke зелені; одне джерело істини для layout | L | OPEN |
+| 3 | R141 | Debugger graph mode: кадри → вузли CFG | Mapping unit / offscreen | L | OPEN |
+| 4 | R142 | Graph diff двох CFG / ревізій | Diff API + фікстури | M | OPEN |
+| 5 | R143 | Function-local data-flow / taint MVP | Задокументований підмножина + тести | L | OPEN |
+| 6 | R150 | Версіонування capabilities плагінів | Несумісний плагін відхиляється; тест | S | OPEN |
+| 7 | R151 | AI context builder (headless): SymbolIndex + зріз CFG | Чиста функція + тести; без мережі | M | OPEN |
+| 8 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
+| 9 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
+| 10 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
+| 11 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
+| 12 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
+| 13 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
+| 14 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
+| 15 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
+| 16 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -145,20 +123,20 @@
 |----|--------|------|
 | R180 | Auto-apply оновлення + rollback / portable profiles | Високий ризик; після R172–R173 |
 | R181 | Повний pipeline `develop`→`release`→`stable` | Надлишково при protected `master` + tags |
-| R182 | MCP / remote agent backend | Після ExecutionTarget |
+| R182 | MCP / remote agent backend | Не на критичному шляху; ExecutionTarget (R121–R125) уже є — лише за явним запитом продукту |
 
 ---
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R140` — Headless CFG graph model окремо від `flowui`.
+**Перший OPEN:** `R140.a` — Headless CFG graph model API (споживання canvas = R140.b).
 
 ---
 
 ## Цільова архітектура
 
 ```text
-Code → AST → CFG → SymbolIndex → Metrics → Overlay → UI
+Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
 ```
