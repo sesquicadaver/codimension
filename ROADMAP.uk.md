@@ -90,6 +90,7 @@
 | D-R135 | R135 | `OverlayLayer` + attach hosts flow/editor |
 | D-R136 | R136 | Розширені метрики (MI + Halstead + raw LOC) |
 | D-R137 | R137 | Git churn/hotspot analytics (`utils.git_analytics`) |
+| D-R138 | R138 | Composite risk score `cdm-risk-v1` (`core.risk_score`) |
 
 ---
 
@@ -120,7 +121,7 @@
 | 21 | R135 | Overlay framework: `OverlayLayer` + точка підключення (без важкої графіки) | Реєстрація порожнього overlay; тест хука | M | DONE |
 | 22 | R136 | Розширені метрики (≥2 понад CC) через MetricProvider | Фікстури + тести | M | DONE |
 | 23 | R137 | Git analytics: churn / hotspot (git log) | Headless API + тест на temp repo | M | DONE |
-| 24 | R138 | Composite risk score (lint + metrics ± git) | Документована формула; unit; без AI | M | OPEN |
+| 24 | R138 | Composite risk score (lint + metrics ± git) | Документована формула; unit; без AI | M | DONE |
 | 25 | R140 | Headless CFG graph model окремо від canvas `flowui` | API з flow parse; canvas споживає модель | L | OPEN |
 | 26 | R141 | Debugger graph mode: кадри → вузли CFG | Mapping unit / offscreen | L | OPEN |
 | 27 | R142 | Graph diff двох CFG / ревізій | Diff API + фікстури | M | OPEN |
@@ -150,7 +151,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R138` — Composite risk score (lint + metrics ± git).
+**Перший OPEN:** `R140` — Headless CFG graph model окремо від `flowui`.
 
 ---
 

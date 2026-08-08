@@ -90,6 +90,7 @@
 | D-R135 | R135 | `OverlayLayer` + flow/editor attach hosts |
 | D-R136 | R136 | Advanced metrics pack (MI + Halstead + raw LOC) |
 | D-R137 | R137 | Git churn/hotspot analytics (`utils.git_analytics`) |
+| D-R138 | R138 | Composite risk score `cdm-risk-v1` (`core.risk_score`) |
 
 ---
 
@@ -120,7 +121,7 @@
 | 21 | R135 | Overlay framework: `OverlayLayer` protocol + attach point on flow/editor (no heavy visuals yet) | Register empty overlay; test hook invoked on redraw/update | M | DONE |
 | 22 | R136 | Advanced metrics pack (maintainability / raw/Halstead or documented subset) behind MetricProvider | At least 2 metrics beyond CC; tests with fixtures | M | DONE |
 | 23 | R137 | Git analytics: churn / hotspot summary (git log based) | Headless report API + optional plugin panel; tests with temp repo | M | DONE |
-| 24 | R138 | Composite risk score (lint + metrics + optional git) | Deterministic formula documented; unit tests; no AI | M | OPEN |
+| 24 | R138 | Composite risk score (lint + metrics + optional git) | Deterministic formula documented; unit tests; no AI | M | DONE |
 | 25 | R140 | Headless CFG graph model separated from `flowui` canvas | `core`/`app` graph API from flow parse; canvas consumes model | L | OPEN |
 | 26 | R141 | Debugger graph mode: map frames → CFG nodes | Offscreen/debugger test or documented manual + unit mapping | L | OPEN |
 | 27 | R142 | Graph diff between two CFGs / revisions | Diff API + tests on fixture pairs | M | OPEN |
@@ -150,7 +151,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R138` — Composite risk score (lint + metrics ± git).
+**First OPEN:** `R140` — Headless CFG graph model separated from `flowui`.
 
 ---
 
