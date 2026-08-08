@@ -1,5 +1,8 @@
 2026 Aug 06
 
+* R122: ``LocalExecutionTarget`` adapts ``utils.run`` argv builders to
+  ``ExecutionTarget``; ``getCwdCmdEnv`` prepares local run/profile/debug
+  through the protocol (RunManager unchanged at the session layer)
 * R121: ``ExecutionTarget`` protocol (``run`` / ``debug`` / ``profile`` /
   ``which_python``) in ``core.execution`` with request/result types + fake tests
 * R120: ``DependencyManifest`` formalizes install sources; export script

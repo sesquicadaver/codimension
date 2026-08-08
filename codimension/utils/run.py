@@ -668,17 +668,27 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
     is replaced by a single launcher path (audit E01). Profile without redirect
     uses ``python -m cProfile`` (E02) and a completion marker so results are
     not tied to terminal lifetime (E05).
+
+    Argv is prepared via ``LocalExecutionTarget`` (R122) so local runs share
+    the ``ExecutionTarget`` contract with future remote backends.
     """
     if kind not in [RUN, PROFILE, DEBUG]:
         raise Exception("Unknown command requested. Supported command types are: run, profile, debug.")
 
+    from core.execution import build_request
+
+    from .local_execution import LocalExecutionTarget
+
     arguments = parseCommandLineArguments(params["arguments"])
+    target = LocalExecutionTarget(params)
+    request = build_request(path, arguments, tcp_port=tcpServerPort, procuuid=procuuid)
     if kind == RUN:
-        argv = buildArgvToRun(path, arguments, params, tcpServerPort, procuuid)
+        result = target.run(request)
     elif kind == PROFILE:
-        argv = buildArgvToProfile(path, arguments, params, tcpServerPort, procuuid)
+        result = target.profile(request)
     else:
-        argv = buildArgvToDebug(path, arguments, params, tcpServerPort, procuuid)
+        result = target.debug(request)
+    argv = list(result.argv)
 
     environment = getNoArgsEnvironment(params)
 
