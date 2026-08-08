@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R136: advanced radon metrics pack behind ``MetricProvider`` — maintainability
+  index, Halstead volume, raw LOC (``utils.radon_metrics_pack``); ≥2 beyond CC
 * R135: ``OverlayLayer`` protocol + registry in ``core.overlay``; flow/editor
   attach hosts (``utils.overlay_host``) notified on redraw/update; empty layer
   for registration smoke

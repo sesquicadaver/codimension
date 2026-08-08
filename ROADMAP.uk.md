@@ -45,7 +45,7 @@
 | 4–7 Environment | DONE (R110–R114) | typed env, drivers, cache registry, optional auto-attach |
 | 8–9 Deps + local venv | DONE (T140/T141/R114) | auto-on-open опція поставлена |
 | 10–13 Remote backends | DONE (R121–R125) | ExecutionTarget: local, Docker, SSH, Kubernetes MVP |
-| 14–20 Analysis | PARTIAL → R136+ | SymbolIndex + DependencyGraph + MetricProvider + OverlayLayer (R130–R135) |
+| 14–20 Analysis | DONE (R130–R136) | SymbolIndex, DependencyGraph, MetricProvider (+ MI/Halstead/raw), OverlayLayer |
 | 21–24 Graph | MISSING → R140+ | legacy `flowui` ≠ redesign |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | після SymbolIndex |
@@ -88,6 +88,7 @@
 | D-R133 | R133 | Headless `DependencyGraph` з імпортів (JSON/DOT export) |
 | D-R134 | R134 | `MetricProvider` + registry + radon CC adapter |
 | D-R135 | R135 | `OverlayLayer` + attach hosts flow/editor |
+| D-R136 | R136 | Розширені метрики (MI + Halstead + raw LOC) |
 
 ---
 
@@ -116,7 +117,7 @@
 | 19 | R133 | Headless `DependencyGraph` з імпортів (без Qt) | Тест побудови; опційний JSON export | M | DONE |
 | 20 | R134 | Інтерфейс `MetricProvider` + адаптер radon CC | Registry тест | S | DONE |
 | 21 | R135 | Overlay framework: `OverlayLayer` + точка підключення (без важкої графіки) | Реєстрація порожнього overlay; тест хука | M | DONE |
-| 22 | R136 | Розширені метрики (≥2 понад CC) через MetricProvider | Фікстури + тести | M | OPEN |
+| 22 | R136 | Розширені метрики (≥2 понад CC) через MetricProvider | Фікстури + тести | M | DONE |
 | 23 | R137 | Git analytics: churn / hotspot (git log) | Headless API + тест на temp repo | M | OPEN |
 | 24 | R138 | Composite risk score (lint + metrics ± git) | Документована формула; unit; без AI | M | OPEN |
 | 25 | R140 | Headless CFG graph model окремо від canvas `flowui` | API з flow parse; canvas споживає модель | L | OPEN |
@@ -148,7 +149,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R136` — розширені метрики через MetricProvider.
+**Перший OPEN:** `R137` — Git analytics (churn / hotspot).
 
 ---
 
