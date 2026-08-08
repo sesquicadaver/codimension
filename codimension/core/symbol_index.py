@@ -9,10 +9,10 @@
 # (at your option) any later version.
 #
 
-"""SymbolIndex schema — name, kind, file, half-open span, container (R130).
+"""SymbolIndex schema + definition/reference queries (R130/R132).
 
-Population from ``brief_ast`` is R131; queries are R132. This module is Qt-free
-and lives in ``core`` so headless tooling can depend on the schema alone.
+Population from ``brief_ast`` is R131. This module is Qt-free and lives in
+``core`` so headless tooling can depend on the schema alone.
 """
 
 from __future__ import annotations
@@ -39,6 +39,20 @@ class SymbolKind(str, Enum):
     ATTRIBUTE = "attribute"
     IMPORT = "import"
     UNKNOWN = "unknown"
+
+
+# Kinds treated as definitions by ``find_definitions`` (imports are references).
+DEFINITION_KINDS: frozenset[SymbolKind] = frozenset(
+    {
+        SymbolKind.MODULE,
+        SymbolKind.CLASS,
+        SymbolKind.FUNCTION,
+        SymbolKind.METHOD,
+        SymbolKind.VARIABLE,
+        SymbolKind.ATTRIBUTE,
+        SymbolKind.UNKNOWN,
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +100,7 @@ class SymbolRecord:
             ``None`` for module-level symbols.
         qualname: Optional fully-qualified name; when omitted, derived as
             ``container.name`` or ``name``.
+        line: Optional 1-based source line (from brief_ast) for search bridges.
         extras: Immutable optional metadata bag for later tasks.
     """
 
@@ -95,6 +110,7 @@ class SymbolRecord:
     span: SourceSpan
     container: Optional[str] = None
     qualname: Optional[str] = None
+    line: Optional[int] = None
     extras: Mapping[str, str] = field(default_factory=_empty_extras)
 
     def __post_init__(self) -> None:
@@ -165,6 +181,57 @@ class SymbolIndex:
         """Return records whose ``container`` equals ``container`` (incl. None)."""
         return tuple(r for r in self._records if r.container == container)
 
+    def find_definitions(
+        self,
+        name: str,
+        *,
+        file: Optional[str] = None,
+        kind: Optional[SymbolKind] = None,
+        qualname: Optional[str] = None,
+    ) -> tuple[SymbolRecord, ...]:
+        """Return defining records for ``name`` (excludes import references).
+
+        Filters are AND-combined. ``qualname`` matches the derived/fully
+        qualified name exactly when provided.
+        """
+        out: list[SymbolRecord] = []
+        for record in self._records:
+            if record.name != name:
+                continue
+            if record.kind not in DEFINITION_KINDS:
+                continue
+            if file is not None and record.file != file:
+                continue
+            if kind is not None and record.kind is not kind:
+                continue
+            if qualname is not None and record.qualname != qualname:
+                continue
+            out.append(record)
+        return tuple(out)
+
+    def find_references(
+        self,
+        name: str,
+        *,
+        file: Optional[str] = None,
+    ) -> tuple[SymbolRecord, ...]:
+        """Return reference-like records for ``name``.
+
+        MVP: ``IMPORT`` kind and any record with ``extras['role'] == 'reference'``.
+        Full name-use analysis is deferred; search bridges may combine this with
+        ``find_definitions`` for an occurrences-style report.
+        """
+        out: list[SymbolRecord] = []
+        for record in self._records:
+            if record.name != name:
+                continue
+            if file is not None and record.file != file:
+                continue
+            role = record.extras.get("role")
+            if record.kind is SymbolKind.IMPORT or role == "reference":
+                out.append(record)
+        return tuple(out)
+
 
 def build_symbol(
     name: str,
@@ -175,6 +242,7 @@ def build_symbol(
     *,
     container: Optional[str] = None,
     qualname: Optional[str] = None,
+    line: Optional[int] = None,
     extras: Optional[Mapping[str, str]] = None,
 ) -> SymbolRecord:
     """Convenience constructor for a ``SymbolRecord`` with a half-open span."""
@@ -185,5 +253,6 @@ def build_symbol(
         span=SourceSpan(start, end),
         container=container,
         qualname=qualname,
+        line=line,
         extras=MappingProxyType(dict(extras) if extras else {}),
     )

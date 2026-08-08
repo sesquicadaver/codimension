@@ -1,5 +1,8 @@
 2026 Aug 08
 
+* R132: ``SymbolIndex.find_definitions`` / ``find_references``; optional
+  ``line`` on records; occurrences bridge
+  (``build_occurrence_results_from_index``) without changing Jedi default path
 * R131: populate ``SymbolIndex`` from ``brief_ast``
   (``utils.symbol_index_brief``); async-friendly ``on_file`` callback; accuracy
   tests on nested class/method/import fixtures

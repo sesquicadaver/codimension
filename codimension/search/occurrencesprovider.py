@@ -21,12 +21,16 @@
 
 import logging
 import os.path
+from collections import namedtuple
 
 from autocomplete.completelists import getOccurrences
 from utils.globals import GlobalData
 
 from .resultprovideriface import SearchResultProviderIFace
 from .searchsupport import ItemToSearchIn, getSearchItemIndex
+
+# Lightweight stand-in matching the jedi-like fields ``build_occurrence_results`` reads.
+_IndexOccurrence = namedtuple("_IndexOccurrence", "line module_path name")
 
 
 def build_occurrence_results(definitions, fallback_file_name, symbol_name, uuid_resolver):
@@ -46,6 +50,37 @@ def build_occurrence_results(definitions, fallback_file_name, symbol_name, uuid_
         match_name = symbol_name or getattr(definition, "name", "")
         result[index].addMatch(match_name, line_number)
     return result
+
+
+def definitions_from_symbol_index(index, symbol_name, *, include_references=True):
+    """Adapt ``SymbolIndex`` query hits to jedi-like occurrence objects (R132).
+
+    Does not change the default Jedi path in ``searchAgain``; callers may use
+    this bridge when an index is available. Records without a ``line`` are
+    skipped (same as invalid Jedi definitions).
+    """
+    if index is None or not symbol_name:
+        return []
+    records = list(index.find_definitions(symbol_name))
+    if include_references:
+        records.extend(index.find_references(symbol_name))
+    out = []
+    seen = set()
+    for record in records:
+        if record.line is None:
+            continue
+        key = (record.file, record.line, record.name)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(_IndexOccurrence(record.line, record.file, record.name))
+    return out
+
+
+def build_occurrence_results_from_index(index, symbol_name, uuid_resolver, fallback_file_name=""):
+    """Build search viewer items from a ``SymbolIndex`` without Jedi (R132)."""
+    definitions = definitions_from_symbol_index(index, symbol_name)
+    return build_occurrence_results(definitions, fallback_file_name, symbol_name, uuid_resolver)
 
 
 class OccurrencesSearchProvider(SearchResultProviderIFace):
