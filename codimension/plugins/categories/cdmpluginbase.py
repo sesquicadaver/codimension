@@ -62,6 +62,16 @@ class CDMPluginBase(IPlugin, QObject):
         """
         return None
 
+    @staticmethod
+    def getCapabilityRequirements():
+        """Return a :class:`~plugins.capabilities.PluginCapabilitySpec` or None.
+
+        ``None`` (default) means the plugin does not declare API/capability
+        requirements and is accepted by any host that already passed
+        ``isIDEVersionCompatible``. Override to opt into R150 negotiation.
+        """
+        return None
+
 
 class ViewAndToolbar:
     """Incapsulates access to a certain view widget inside a side panel"""

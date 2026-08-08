@@ -52,6 +52,11 @@ class VersionControlSystemInterface(CDMPluginBase):
         raise Exception("isIDEVersionCompatible() must be overridden")
 
     @staticmethod
+    def getCapabilityRequirements():
+        """Optional R150 capability / API requirements (default: none)."""
+        return None
+
+    @staticmethod
     def getVCSName():
         """Should provide the specific version control name, e.g. SVN"""
         raise Exception("getVCSName() must be overridden")

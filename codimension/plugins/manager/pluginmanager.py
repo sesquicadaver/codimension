@@ -24,6 +24,7 @@ import os.path
 import sys
 
 from packaging.version import Version
+from plugins.capabilities import negotiate_plugin_capabilities
 from ui.qt import QObject, pyqtSignal
 from utils.settings import SETTINGS_DIR, Settings
 from yapsy.PluginManager import PluginManager
@@ -87,6 +88,8 @@ class CDMPluginManager(PluginManager, QObject):
     # Exception on basic methods
     BAD_INTERFACE = 6
     USER_DISABLED = 7
+    # Plugin API / capability negotiation failed (R150)
+    INCOMPATIBLE_CAPABILITIES = 8
 
     def __init__(self):
         QObject.__init__(self)
@@ -117,6 +120,7 @@ class CDMPluginManager(PluginManager, QObject):
         self.__applyDisabledPlugins(collectedPlugins)
 
         self.__checkIDECompatibility(collectedPlugins)
+        self.__checkCapabilities(collectedPlugins)
         self.__sysVsUserConflicts(collectedPlugins)
         self.__categoryConflicts(collectedPlugins)
         self.__activatePlugins(collectedPlugins)
@@ -218,6 +222,49 @@ class CDMPluginManager(PluginManager, QObject):
         for path in toBeRemoved:
             for category in collectedPlugins:
                 for plugin in collectedPlugins[category]:
+                    if plugin.getPath() == path:
+                        collectedPlugins[category].remove(plugin)
+                        break
+
+    def __checkCapabilities(self, collectedPlugins):
+        """Reject plugins whose API/capability requirements the host cannot meet (R150)."""
+        toBeRemoved = []
+        for category in collectedPlugins:
+            for plugin in list(collectedPlugins[category]):
+                try:
+                    getter = getattr(plugin.getObject(), "getCapabilityRequirements", None)
+                    spec = getter() if callable(getter) else None
+                    result = negotiate_plugin_capabilities(spec)
+                    if result.ok:
+                        continue
+                    logging.warning(
+                        "Plugin %s rejected by capability negotiation: %s (path: %s)",
+                        plugin.getName(),
+                        result.reason,
+                        plugin.getPath(),
+                    )
+                    plugin.conflictType = CDMPluginManager.INCOMPATIBLE_CAPABILITIES
+                    plugin.conflictMessage = result.reason
+                    self.unknownPlugins.append(plugin)
+                    toBeRemoved.append(plugin.getPath())
+                except Exception as excpt:
+                    logging.error(
+                        "Error checking capabilities of plugin at %s. "
+                        "The plugin disabled. Error message:\n%s",
+                        plugin.getPath(),
+                        str(excpt),
+                    )
+                    plugin.conflictType = CDMPluginManager.BAD_INTERFACE
+                    plugin.conflictMessage = "Error checking plugin capabilities"
+                    if category in self.inactivePlugins:
+                        self.inactivePlugins[category].append(plugin)
+                    else:
+                        self.inactivePlugins[category] = [plugin]
+                    toBeRemoved.append(plugin.getPath())
+
+        for path in toBeRemoved:
+            for category in collectedPlugins:
+                for plugin in list(collectedPlugins[category]):
                     if plugin.getPath() == path:
                         collectedPlugins[category].remove(plugin)
                         break
@@ -421,6 +468,16 @@ class CDMPluginManager(PluginManager, QObject):
         except Exception:
             # Could not successfully call the interface method
             return "Error checking IDE version compatibility"
+
+        # Second-b, API / capability negotiation (R150)
+        try:
+            getter = getattr(cdmPlugin.getObject(), "getCapabilityRequirements", None)
+            spec = getter() if callable(getter) else None
+            result = negotiate_plugin_capabilities(spec)
+            if not result.ok:
+                return result.reason
+        except Exception:
+            return "Error checking plugin capabilities"
 
         # Third, the other plugin with the same name is active
         if category in self.activePlugins:

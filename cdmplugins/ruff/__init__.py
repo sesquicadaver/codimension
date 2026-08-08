@@ -15,6 +15,7 @@ import logging
 import os.path
 
 from packaging.version import Version
+from plugins.capabilities import PluginCapabilitySpec
 from plugins.categories.wizardiface import WizardInterface
 from ui.mainwindowtabwidgetbase import MainWindowTabWidgetBase
 from ui.qt import QAction, QApplication, QCursor, QKeySequence, QMenu, QShortcut, Qt, QTabBar
@@ -44,6 +45,14 @@ class RuffPlugin(WizardInterface):
     def isIDEVersionCompatible(ideVersion):
         """Checks if the IDE version is compatible with the plugin."""
         return Version(ideVersion) >= Version("4.7.1")
+
+    @staticmethod
+    def getCapabilityRequirements():
+        """Declare host API / capability needs (R150)."""
+        return PluginCapabilitySpec(
+            min_api_version=1,
+            required=frozenset({"wizard", "side_bars", "editors_manager"}),
+        )
 
     def activate(self, ideSettings, ideGlobalData):
         """Activates the plugin."""
