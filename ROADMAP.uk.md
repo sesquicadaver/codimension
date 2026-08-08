@@ -47,7 +47,7 @@
 | 8–9 Deps + local venv | DONE | T140/T141/R114 + DependencyManifest R120 |
 | 10–13 Remote backends | DONE | ExecutionTarget R121–R125 (local/Docker/SSH/K8s) |
 | 14–20 Analysis | DONE | R130–R138 (індекс, графи імпортів, метрики, overlays framework, git analytics, risk) |
-| 21–24 Graph | PARTIAL → R142+ | R140–R141 (model, canvas bind, frame→node) здано; graph diff ще OPEN |
+| 21–24 Graph | PARTIAL → R143+ | R140–R142 (model, canvas, frames, diff) здано; data-flow ще OPEN |
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` |
 | 26 AI | MISSING → R151+ | SymbolIndex готовий; потрібен зріз CFG (R140.a) |
 | 27–29 Extended overlays | MISSING → R160+ | Фреймворк R135 DONE; візуальні шари R160–R162 ще OPEN |
@@ -96,6 +96,7 @@
 | D-R140.a | R140.a | Headless CFG graph model (`core.cfg`) з flow parse |
 | D-R140.b | R140.b | `flowui.cfg_adapter` біндить `CfgGraph` у `layoutModule`; editor `getCfgGraph` |
 | D-R141 | R141 | Debugger frames → CFG nodes (`core.cfg_frames`); анотація tooltip у stack |
+| D-R142 | R142 | CFG graph diff (`core.cfg_diff`) через стабільні content keys |
 
 ---
 
@@ -103,19 +104,18 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R142 | Graph diff двох CFG / ревізій | Diff API + фікстури | M | OPEN |
-| 2 | R143 | Function-local data-flow / taint MVP | Задокументований підмножина + тести | L | OPEN |
-| 3 | R150 | Версіонування capabilities плагінів | Несумісний плагін відхиляється; тест | S | OPEN |
-| 4 | R151 | AI context builder (headless): SymbolIndex + зріз CFG | Чиста функція + тести; без мережі | M | OPEN |
-| 5 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
-| 6 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
-| 7 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
-| 8 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
-| 9 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
-| 10 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
-| 11 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
-| 12 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 13 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R143 | Function-local data-flow / taint MVP | Задокументований підмножина + тести | L | OPEN |
+| 2 | R150 | Версіонування capabilities плагінів | Несумісний плагін відхиляється; тест | S | OPEN |
+| 3 | R151 | AI context builder (headless): SymbolIndex + зріз CFG | Чиста функція + тести; без мережі | M | OPEN |
+| 4 | R152 | AI UI-дії за feature flag | Flag default off | M | OPEN |
+| 5 | R160 | Environment overlay (бейджі джерела env) | На базі R135 | M | OPEN |
+| 6 | R161 | Dependency overlay (тепло ребер) | R133+R135 | M | OPEN |
+| 7 | R162 | Deployment overlay (Dockerfile/compose hints) | Read-only; фікстури | S | OPEN |
+| 8 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) | Поле + docs | S | OPEN |
+| 9 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
+| 10 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
+| 11 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
+| 12 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -129,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R142` — graph diff двох CFG / ревізій.
+**Перший OPEN:** `R143` — function-local data-flow / taint MVP.
 
 ---
 

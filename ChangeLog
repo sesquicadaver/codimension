@@ -1,5 +1,7 @@
 2026 Aug 08
 
+* R142: CFG graph diff (``core.cfg_diff``) — stable content keys; added /
+  removed / changed nodes and edges; fixture-pair tests
 * R141: debugger frames → CFG nodes (``core.cfg_frames``) — ranked line/func
   mapping; stack viewer tooltip shows best node id; unit + file tests
 * R140.b: Flow UI consumes ``core.cfg`` — ``flowui.cfg_adapter`` binds
