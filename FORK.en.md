@@ -46,7 +46,7 @@ Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git*
 
 - `ExecutionTarget`: local / Docker / SSH / Kubernetes MVP
 - SymbolIndex, DependencyGraph, MetricProvider, OverlayLayer, risk score
-- CFG model + taint MVP; AI context + flag-gated explain/suggest (`ai_ui` / `CDM_AI_UI`)
+- CFG model + taint MVP; AI: Options → AI + editor explain/suggest (`ai_ui` / `CDM_AI_UI`)
 - Overlays: env / deps heat / deploy hints; update check + verified download (no auto-apply)
 - Feature flags: `~/.codimension3/feature_flags.json`
 
