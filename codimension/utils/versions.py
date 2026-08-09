@@ -169,7 +169,7 @@ def getComponentInfo():
         (
             "Codimension IDE",
             version,
-            "http://codimension.org/",
+            "https://github.com/sesquicadaver/codimension",
             None,
             "GPL-3.0",
             "http://www.gnu.org/licenses/gpl-3.0.html",
@@ -181,7 +181,7 @@ def getComponentInfo():
         (
             "Codimension python parser",
             version,
-            "http://codimension.org/",
+            "https://github.com/SergeySatskiy/cdm-pythonparser",
             None,
             "GPL-3.0",
             "http://www.gnu.org/licenses/gpl-3.0.html",
@@ -193,7 +193,7 @@ def getComponentInfo():
         (
             "Codimension python control flow parser",
             version,
-            "http://codimension.org/",
+            "https://github.com/SergeySatskiy/cdm-flowparser",
             None,
             "GPL-3.0",
             "http://www.gnu.org/licenses/gpl-3.0.html",

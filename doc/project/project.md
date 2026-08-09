@@ -120,7 +120,7 @@ Unresolved packages for pip are **opt-in** (unchecked by default) with a multi-s
 
 ### AI (experimental)
 
-**Options → AI**:
+**Options** (top-level items, after *Project venv on open*):
 - **Enable AI (experimental)** — persistent flag `ai_ui` (`~/.codimension3/feature_flags.json`)
 - **AI settings…** — same toggle + offline backend notes
 

@@ -1355,12 +1355,17 @@ class CodimensionMainWindow(
     @staticmethod
     def _onHomePage():
         """Triggered when opening the home page is requested"""
-        QDesktopServices.openUrl(QUrl("http://codimension.org"))
+        QDesktopServices.openUrl(QUrl("https://github.com/sesquicadaver/codimension"))
 
     @staticmethod
     def _onAllShortcurs():
         """Triggered when opening key bindings page is requested"""
-        QDesktopServices.openUrl(QUrl("http://codimension.org/documentation/cheatsheet.html"))
+        QDesktopServices.openUrl(
+            QUrl(
+                "https://github.com/sesquicadaver/codimension/blob/master/"
+                "doc/www/codimension.org/documentation/cheatsheet.html"
+            )
+        )
 
     def _onCheckForUpdates(self):
         """R172/R173: check GitHub Releases; optional verified download to cache."""

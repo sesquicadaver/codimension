@@ -120,7 +120,7 @@ Unresolved для pip — **opt-in** (за замовчуванням вимкн
 
 ### AI (experimental)
 
-**Options → AI**:
+**Options** (пункти верхнього рівня, після *Project venv on open*):
 - **Enable AI (experimental)** — persistent прапорець `ai_ui` (`~/.codimension3/feature_flags.json`)
 - **AI settings…** — той самий перемикач + нотатки про offline backend
 
