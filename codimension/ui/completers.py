@@ -25,7 +25,17 @@
 
 """Various kinds of completers"""
 
-from .qt import QCompleter, QDir, QDirModel, QStringListModel
+from .qt import QCompleter, QDir, QFileSystemModel, QStringListModel
+
+
+def _dir_filters(show_hidden: bool, *, files: bool) -> QDir.Filters:
+    """Build QDir filters for path completers."""
+    base = QDir.Drives | QDir.AllDirs | QDir.NoDotAndDotDot
+    if files:
+        base |= QDir.Files
+    if show_hidden:
+        base |= QDir.Hidden
+    return QDir.Filters(base)
 
 
 class FileCompleter(QCompleter):
@@ -33,17 +43,12 @@ class FileCompleter(QCompleter):
 
     def __init__(self, parent=None, completionMode=QCompleter.PopupCompletion, showHidden=False):
         QCompleter.__init__(self, parent)
-        self.__model = QDirModel(self)
-
-        if showHidden:
-            filters = QDir.Filters(QDir.Dirs | QDir.Files | QDir.Drives | QDir.AllDirs | QDir.Hidden)
-        else:
-            filters = QDir.Filters(QDir.Dirs | QDir.Files | QDir.Drives | QDir.AllDirs)
-        self.__model.setFilter(filters)
-
+        # QFileSystemModel loads asynchronously; QDirModel often freezes on large trees.
+        self.__model = QFileSystemModel(self)
+        self.__model.setFilter(_dir_filters(showHidden, files=True))
+        self.__model.setRootPath(QDir.homePath())
         self.setModel(self.__model)
         self.setCompletionMode(completionMode)
-
         if parent:
             parent.setCompleter(self)
 
@@ -53,17 +58,11 @@ class DirCompleter(QCompleter):
 
     def __init__(self, parent=None, completionMode=QCompleter.PopupCompletion, showHidden=False):
         QCompleter.__init__(self, parent)
-        self.__model = QDirModel(self)
-
-        if showHidden:
-            filters = QDir.Filters(QDir.Drives | QDir.AllDirs | QDir.Hidden)
-        else:
-            filters = QDir.Filters(QDir.Drives | QDir.AllDirs)
-        self.__model.setFilter(filters)
-
+        self.__model = QFileSystemModel(self)
+        self.__model.setFilter(_dir_filters(showHidden, files=False))
+        self.__model.setRootPath(QDir.homePath())
         self.setModel(self.__model)
         self.setCompletionMode(completionMode)
-
         if parent:
             parent.setCompleter(self)
 

@@ -50,6 +50,23 @@ NO_CLEAR_AND_REUSE = 1
 NO_REUSE = 2
 
 
+def prune_recent_project_paths(paths) -> list:
+    """Keep only existing unique ``.cdm3`` project files (realpath, order preserved)."""
+    kept: list = []
+    seen: set = set()
+    for item in paths or []:
+        if not item or not isinstance(item, str):
+            continue
+        abs_path = os.path.realpath(item)
+        if abs_path in seen:
+            continue
+        if not os.path.isfile(abs_path):
+            continue
+        seen.add(abs_path)
+        kept.append(abs_path)
+    return kept
+
+
 class ProfilerSettings:
     """Holds IDE-wide profiler options"""
 
@@ -361,6 +378,9 @@ class SettingsWrapper(
             self.__saveErrors("\n".join(readErrors))
             self.flush()
 
+        # Drop missing recent projects so stale host paths do not linger in the UI.
+        self.pruneRecentProjects(needFlush=True)
+
         SearchEnvironment.setLimit(self, self.__values["maxSearchEntries"])
         FileSystemEnvironment.setLimit(self, self.__values["maxRecentFiles"])
 
@@ -387,6 +407,8 @@ class SettingsWrapper(
     def addRecentProject(self, projectFile, needFlush=True):
         """Adds the recent project to the list"""
         absProjectFile = os.path.realpath(projectFile)
+        if not os.path.isfile(absProjectFile):
+            return
         recentProjects = self.__values["recentProjects"]
 
         if absProjectFile in recentProjects:
@@ -412,6 +434,27 @@ class SettingsWrapper(
             if needFlush:
                 self.flush()
             self.sigRecentListChanged.emit()
+
+    def pruneRecentProjects(self, needFlush=True) -> bool:
+        """Remove missing recent project paths. Return True if list changed."""
+        recent = list(self.__values.get("recentProjects") or [])
+        kept = prune_recent_project_paths(recent)
+        if kept == recent:
+            return False
+        self.__values["recentProjects"] = kept
+        if needFlush:
+            self.flush()
+        self.sigRecentListChanged.emit()
+        return True
+
+    def clearRecentProjects(self, needFlush=True) -> None:
+        """Clear the entire recent projects list (local settings only)."""
+        if not self.__values.get("recentProjects"):
+            return
+        self.__values["recentProjects"] = []
+        if needFlush:
+            self.flush()
+        self.sigRecentListChanged.emit()
 
     @staticmethod
     def getDefaultGeometry():
