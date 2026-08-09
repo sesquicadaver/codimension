@@ -1161,9 +1161,11 @@ class CodimensionMainWindow(
         """Editor setting changed"""
         self.settings["removeTrailingOnSave"] = not self.settings["removeTrailingOnSave"]
 
-    def _autoAttachProjectVenvChanged(self):
-        """R114: toggle auto-attach of discovered project venv on open."""
-        self.settings["autoAttachProjectVenv"] = not self.settings["autoAttachProjectVenv"]
+    def _projectVenvPolicyChanged(self, act):
+        """R176: Options → Project venv on open policy selector."""
+        data = act.data()
+        if data:
+            self.settings["projectVenvPolicy"] = data
 
     def _editorCalltipsChanged(self):
         """Editor calltips changed"""

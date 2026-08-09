@@ -44,7 +44,7 @@
 | 2 Headless core | DONE | `core.syntax` / `core.flow` parse façade + `infrastructure/*` + T085 |
 | 3 Modular monolith | DONE | R100–R103 |
 | 4–7 Environment | DONE | R110–R114 |
-| 8–9 Deps + local venv | DONE | T140/T141/R114 + DependencyManifest R120 |
+| 8–9 Deps + local venv | DONE | T140/T141/R114/R176 + DependencyManifest R120 |
 | 10–13 Remote backends | DONE | ExecutionTarget R121–R125 (local/Docker/SSH/K8s) |
 | 14–20 Analysis | DONE | R130–R138 (індекс, графи імпортів, метрики, overlays framework, git analytics, risk) |
 | 21–24 Graph | DONE → R150+ | R140–R143 (model, canvas, frames, diff, taint MVP) здано |
@@ -109,6 +109,7 @@
 | D-R173 | R173 | Verified download артефакту в cache (`utils.update_download`; fail closed) |
 | D-R174 | R174 | Persistent feature flags (`core.feature_flags`); гейт AI UI (`ai_ui`) |
 | D-R175 | R175 | Safe-mode старт (`--safe-mode` / `CDM_SAFE_MODE`); без плагінів і overlays |
+| D-R176 | R176 | Політика проєктного venv (`projectVenvPolicy`); default auto_session + діагностика + клік Env: |
 
 ---
 
@@ -130,7 +131,7 @@
 
 ## Вказівник autopilot
 
-**Активна черга порожня.** Далі — лише за явним запитом на deferred **R180** / **R181** / **R182**.
+**Активна черга порожня** (R176 злито). Далі — лише за явним запитом на deferred **R180** / **R181** / **R182**.
 
 ---
 
