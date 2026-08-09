@@ -51,7 +51,7 @@
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 UI explain/suggest за flag (offline/mock; без LLM) |
 | 27–29 Extended overlays | DONE | R135 + R160/R161/R162 (env, deps heat, deploy hints) |
-| 30–38 Release/update | PARTIAL → R174+ | R171–R173 (канал, check, verified download); flags/safe-mode ще OPEN |
+| 30–38 Release/update | PARTIAL → R175 | R171–R174 (канал→flags); safe-mode ще OPEN |
 
 **Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply оновлень відкладено (R180) після R173.
 
@@ -107,6 +107,7 @@
 | D-R171 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) |
 | D-R172 | R172 | In-app read-only перевірка GitHub Releases (`utils.update_check`) |
 | D-R173 | R173 | Verified download артефакту в cache (`utils.update_download`; fail closed) |
+| D-R174 | R174 | Persistent feature flags (`core.feature_flags`); гейт AI UI (`ai_ui`) |
 
 ---
 
@@ -114,8 +115,7 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 2 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -129,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R174` — feature flags для experimental plugins/UI.
+**Перший OPEN:** `R175` — safe-mode старт (без плагінів / overlays).
 
 ---
 

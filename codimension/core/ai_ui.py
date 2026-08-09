@@ -9,27 +9,33 @@
 # (at your option) any later version.
 #
 
-"""AI explain / suggest actions gated by ``CDM_AI_UI`` (R152).
+"""AI explain / suggest actions gated by feature flags (R152 / R174).
 
 Headless orchestration: no Qt, no network. The default backend formats an
 :class:`~core.ai_context.AiContextPack` locally (offline summary). UI layers
 must call :func:`is_ai_ui_enabled` before exposing menu entries.
+
+Enable via persistent flag ``ai_ui`` (R174) or env ``CDM_AI_UI`` (override).
 """
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from enum import Enum
 from typing import Mapping, MutableMapping, Optional, Protocol
 
 from core.ai_context import AiContextPack, build_ai_context_from_source
+from core.feature_flags import (
+    FLAG_AI_UI,
+    FLAG_ENV_OVERRIDES,
+    FeatureFlagsStore,
+    enable_flag_in_environ,
+    is_feature_enabled,
+)
 from core.symbol_index import SymbolKind
 
 #: Environment variable that enables AI UI actions (default: off).
-AI_UI_ENV = "CDM_AI_UI"
-
-_TRUTHY = frozenset({"1", "true", "yes", "on"})
+AI_UI_ENV = FLAG_ENV_OVERRIDES[FLAG_AI_UI]
 
 
 class AiUiDisabledError(RuntimeError):
@@ -143,16 +149,22 @@ class MockAiBackend:
         return f"{self._prefix}:suggest:{pack.symbol.name}"
 
 
-def is_ai_ui_enabled(environ: Optional[Mapping[str, str]] = None) -> bool:
-    """Return True when AI UI actions are enabled (env flag, default off)."""
-    env: Mapping[str, str] = os.environ if environ is None else environ
-    raw = str(env.get(AI_UI_ENV, "")).strip().lower()
-    return raw in _TRUTHY
+def is_ai_ui_enabled(
+    environ: Optional[Mapping[str, str]] = None,
+    *,
+    store: Optional[FeatureFlagsStore] = None,
+) -> bool:
+    """Return True when AI UI is enabled (env override or persistent ``ai_ui``)."""
+    return bool(is_feature_enabled(FLAG_AI_UI, store=store, environ=environ))
 
 
-def list_ai_menu_entries(environ: Optional[Mapping[str, str]] = None) -> tuple[tuple[AiAction, str], ...]:
+def list_ai_menu_entries(
+    environ: Optional[Mapping[str, str]] = None,
+    *,
+    store: Optional[FeatureFlagsStore] = None,
+) -> tuple[tuple[AiAction, str], ...]:
     """Return ``(action, label)`` pairs for the editor menu, or empty when off."""
-    if not is_ai_ui_enabled(environ):
+    if not is_ai_ui_enabled(environ, store=store):
         return ()
     return (
         (AiAction.EXPLAIN, "Explain with AI…"),
@@ -166,10 +178,11 @@ def run_ai_action(
     *,
     backend: Optional[AiBackend] = None,
     environ: Optional[Mapping[str, str]] = None,
+    store: Optional[FeatureFlagsStore] = None,
 ) -> AiActionResult:
     """Run ``action`` on an existing pack; requires the feature flag."""
-    if not is_ai_ui_enabled(environ):
-        raise AiUiDisabledError(f"AI UI disabled (set {AI_UI_ENV}=1 to enable)")
+    if not is_ai_ui_enabled(environ, store=store):
+        raise AiUiDisabledError(f"AI UI disabled (set {AI_UI_ENV}=1 or enable feature flag {FLAG_AI_UI!r})")
     active: AiBackend = backend if backend is not None else OfflineSummaryBackend()
     if action is AiAction.EXPLAIN:
         text = active.explain(pack)
@@ -194,17 +207,18 @@ def run_ai_action_for_source(
     kind: Optional[SymbolKind] = None,
     backend: Optional[AiBackend] = None,
     environ: Optional[Mapping[str, str]] = None,
+    store: Optional[FeatureFlagsStore] = None,
 ) -> AiActionResult:
     """Build context from ``source`` then run ``action`` (flag-gated)."""
-    if not is_ai_ui_enabled(environ):
-        raise AiUiDisabledError(f"AI UI disabled (set {AI_UI_ENV}=1 to enable)")
+    if not is_ai_ui_enabled(environ, store=store):
+        raise AiUiDisabledError(f"AI UI disabled (set {AI_UI_ENV}=1 or enable feature flag {FLAG_AI_UI!r})")
     pack = build_ai_context_from_source(source, name, file=file, kind=kind)
-    return run_ai_action(action, pack, backend=backend, environ=environ)
+    return run_ai_action(action, pack, backend=backend, environ=environ, store=store)
 
 
 def enable_ai_ui_for_tests(environ: MutableMapping[str, str]) -> None:
-    """Set the flag in a mutable environ mapping (tests / smoke helpers)."""
-    environ[AI_UI_ENV] = "1"
+    """Set the env override in a mutable environ mapping (tests / smoke helpers)."""
+    enable_flag_in_environ(FLAG_AI_UI, environ)
 
 
 __all__ = [
