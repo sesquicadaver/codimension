@@ -54,7 +54,9 @@ def select_open_file(
 ) -> str:
     """Native open-file picker; empty string if cancelled."""
     start = _safe_start_dir(start_path)
-    selected = QFileDialog.getOpenFileName(parent, title, start, name_filter)
-    if isinstance(selected, tuple):
-        selected = selected[0]
-    return os.path.normpath(selected) if selected else ""
+    result = QFileDialog.getOpenFileName(parent, title, start, name_filter)
+    # PyQt5 returns (path, selectedFilter); guard for older APIs that return str.
+    path = result[0] if isinstance(result, tuple) else result
+    if not path:
+        return ""
+    return os.path.normpath(str(path))

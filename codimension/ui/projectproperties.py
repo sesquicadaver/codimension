@@ -513,9 +513,7 @@ class ProjectPropertiesDialog(QDialog):
     def onAddExclude(self):
         """Add a directory or file to exclude from analysis."""
         startDir = self.dirEdit.text()
-        pathToAdd = select_existing_directory(
-            self, "Select directory to exclude from analysis", startDir
-        )
+        pathToAdd = select_existing_directory(self, "Select directory to exclude from analysis", startDir)
         if not pathToAdd:
             pathToAdd = select_open_file(self, "Or select file to exclude", startDir, "All Files (*)")
         if not pathToAdd:

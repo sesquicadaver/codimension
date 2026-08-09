@@ -364,9 +364,7 @@ class RecentProjectsViewer(QWidget):
         self.copyPrjPathButton.triggered.connect(self.__prjPathToClipboard)
         self.trashButton = QAction(getIcon("delitem.png"), "Remove selected (not from the disk)", self)
         self.trashButton.triggered.connect(self.__deleteProject)
-        self.clearAllButton = QAction(
-            getIcon("trash.png"), "Clear all recent projects (local settings only)", self
-        )
+        self.clearAllButton = QAction(getIcon("trash.png"), "Clear all recent projects (local settings only)", self)
         self.clearAllButton.triggered.connect(self.__clearAllProjects)
 
         self.lowerToolbar = QToolBar()
