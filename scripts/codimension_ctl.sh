@@ -1,0 +1,295 @@
+#!/usr/bin/env bash
+# Codimension local deploy / remove / status / run (repo checkout + .venv).
+#
+# Usage:
+#   ./scripts/codimension_ctl.sh install [--minimal|--tools] [--desktop] [--reinstall] [--yes]
+#   ./scripts/codimension_ctl.sh uninstall [--purge-config] [--keep-venv] [--yes]
+#   ./scripts/codimension_ctl.sh status
+#   ./scripts/codimension_ctl.sh run [--safe-mode] [path/to/project.cdm3]
+#   ./scripts/codimension_ctl.sh -h|--help
+#
+# Non-interactive: always pass --yes where confirmation would be required.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+VENV="${ROOT}/.venv"
+PY="${VENV}/bin/python"
+PIP="${VENV}/bin/pip"
+CDM="${VENV}/bin/codimension"
+DESKTOP_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/applications"
+DESKTOP_FILE="${DESKTOP_DIR}/codimension-local.desktop"
+ICON_SRC="${ROOT}/resources/codimension.png"
+ICON_DST="${XDG_DATA_HOME:-${HOME}/.local/share}/icons/hicolor/256x256/apps/codimension.png"
+CONFIG_DIR="${HOME}/.codimension3"
+
+YES=0
+MINIMAL=0
+TOOLS=1
+DESKTOP=0
+REINSTALL=0
+PURGE_CONFIG=0
+KEEP_VENV=0
+
+die() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+info() {
+  echo "==> $*"
+}
+
+usage() {
+  cat <<'EOF'
+Codimension local deploy / remove / status / run (repo checkout + .venv).
+
+Usage:
+  ./scripts/codimension_ctl.sh install [--minimal|--tools] [--desktop] [--reinstall] [--yes]
+  ./scripts/codimension_ctl.sh uninstall [--purge-config] [--keep-venv] [--yes]
+  ./scripts/codimension_ctl.sh status
+  ./scripts/codimension_ctl.sh run [--safe-mode] [path/to/project.cdm3]
+  ./scripts/codimension_ctl.sh -h|--help
+
+Non-interactive: pass --yes where confirmation would be required.
+EOF
+}
+
+need_cmd() {
+  command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
+}
+
+python_ok() {
+  local candidate="$1"
+  "$candidate" - <<'PY'
+import sys
+raise SystemExit(0 if sys.version_info >= (3, 10) else 1)
+PY
+}
+
+pick_python() {
+  local c
+  for c in "${PYTHON:-}" python3.13 python3.12 python3.11 python3.10 python3; do
+    [[ -z "$c" ]] && continue
+    if command -v "$c" >/dev/null 2>&1 && python_ok "$(command -v "$c")"; then
+      command -v "$c"
+      return 0
+    fi
+  done
+  die "need Python >= 3.10 (set PYTHON=/path/to/python if needed)"
+}
+
+confirm() {
+  local msg="$1"
+  if [[ "$YES" -eq 1 ]]; then
+    return 0
+  fi
+  if [[ ! -t 0 ]]; then
+    die "refusing '$msg' without --yes (stdin is not a TTY)"
+  fi
+  read -r -p "$msg [y/N] " ans
+  [[ "$ans" == "y" || "$ans" == "Y" || "$ans" == "yes" ]]
+}
+
+install_desktop() {
+  mkdir -p "$DESKTOP_DIR" "$(dirname "$ICON_DST")"
+  if [[ -f "$ICON_SRC" ]]; then
+    cp -f "$ICON_SRC" "$ICON_DST"
+  fi
+  cat >"$DESKTOP_FILE" <<EOF
+[Desktop Entry]
+Name=Codimension (local)
+GenericName=Codimension
+Comment=Codimension Python IDE (this checkout)
+Exec=${CDM} %F
+TryExec=${CDM}
+Path=${ROOT}
+Terminal=false
+Type=Application
+Icon=codimension
+Categories=Development;IDE;
+MimeType=application/x-codimension-project;
+StartupNotify=true
+EOF
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$DESKTOP_DIR" >/dev/null 2>&1 || true
+  fi
+  info "desktop entry: $DESKTOP_FILE"
+}
+
+remove_desktop() {
+  if [[ -f "$DESKTOP_FILE" ]]; then
+    rm -f "$DESKTOP_FILE"
+    info "removed $DESKTOP_FILE"
+  fi
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$DESKTOP_DIR" >/dev/null 2>&1 || true
+  fi
+}
+
+cmd_status() {
+  echo "root:     $ROOT"
+  echo "venv:     $VENV$([ -d "$VENV" ] && echo " (exists)" || echo " (missing)")"
+  echo "python:   $([ -x "$PY" ] && "$PY" -V || echo "n/a")"
+  echo "entry:    $([ -x "$CDM" ] && echo "$CDM" || echo "missing")"
+  if [[ -x "$PY" ]]; then
+    ROOT_ENV="$ROOT" "$PY" - <<'PY' || true
+import importlib.util
+import os
+import sys
+root = os.environ["ROOT_ENV"]
+sys.path.insert(0, root)
+sys.path.insert(0, os.path.join(root, "codimension"))
+print("package: ", "yes" if importlib.util.find_spec("codimension") else "no")
+print("plugins: ", "yes" if importlib.util.find_spec("cdmplugins") else "no")
+try:
+    from cdmverspec import version
+    print("version: ", version)
+except Exception as exc:
+    print("version: ", f"n/a ({exc})")
+PY
+  fi
+  echo "desktop:  $([ -f "$DESKTOP_FILE" ] && echo "$DESKTOP_FILE" || echo "not installed")"
+  echo "config:   $([ -d "$CONFIG_DIR" ] && echo "$CONFIG_DIR" || echo "absent")"
+}
+
+cmd_install() {
+  need_cmd python3
+  local base_py
+  base_py="$(pick_python)"
+  info "base Python: $base_py ($("$base_py" -V 2>&1))"
+
+  if [[ "$REINSTALL" -eq 1 && -d "$VENV" ]]; then
+    confirm "Remove existing venv at $VENV?" || die "aborted"
+    info "removing $VENV"
+    rm -rf "$VENV"
+  fi
+
+  if [[ ! -d "$VENV" ]]; then
+    info "creating venv"
+    "$base_py" -m venv "$VENV"
+  fi
+  [[ -x "$PY" ]] || die "venv python missing: $PY"
+
+  info "upgrading pip"
+  "$PY" -m pip install --upgrade pip wheel setuptools
+
+  local spec="."
+  if [[ "$MINIMAL" -eq 1 ]]; then
+    TOOLS=0
+  fi
+  if [[ "$TOOLS" -eq 1 ]]; then
+    spec=".[tools,lint,test,security]"
+  fi
+
+  info "installing editable $spec"
+  "$PIP" install -e "$spec"
+
+  # pylint/astroid pin wrapt<1.13; on 3.11+ that wrapt is broken — refresh without deps.
+  local major minor
+  major="$("$PY" -c 'import sys; print(sys.version_info.major)')"
+  minor="$("$PY" -c 'import sys; print(sys.version_info.minor)')"
+  if [[ "$major" -gt 3 || ( "$major" -eq 3 && "$minor" -ge 11 ) ]]; then
+    info "Python ${major}.${minor}: installing wrapt>=1.14 --no-deps (pylint stack)"
+    "$PIP" install 'wrapt>=1.14' --no-deps || true
+  fi
+
+  [[ -x "$CDM" ]] || die "entry point missing after install: $CDM"
+
+  info "smoke import"
+  "$PY" -c 'import codimension, cdmplugins; print("ok", codimension.__file__)'
+
+  if [[ "$DESKTOP" -eq 1 ]]; then
+    install_desktop
+  fi
+
+  info "deploy complete"
+  echo
+  echo "Run:"
+  echo "  ./scripts/codimension_ctl.sh run"
+  echo "  # or: $CDM"
+  echo
+  echo "Remove:"
+  echo "  ./scripts/codimension_ctl.sh uninstall --yes"
+  echo "  ./scripts/codimension_ctl.sh uninstall --purge-config --yes   # also wipe ~/.codimension3"
+}
+
+cmd_uninstall() {
+  if [[ -d "$VENV" && "$KEEP_VENV" -eq 0 ]]; then
+    confirm "Delete venv $VENV?" || die "aborted"
+    info "removing $VENV"
+    rm -rf "$VENV"
+  elif [[ -x "$PIP" && "$KEEP_VENV" -eq 1 ]]; then
+    info "pip uninstall codimension (venv kept)"
+    "$PIP" uninstall -y codimension || true
+  fi
+
+  remove_desktop
+
+  if [[ "$PURGE_CONFIG" -eq 1 ]]; then
+    if [[ -d "$CONFIG_DIR" ]]; then
+      confirm "Delete IDE config $CONFIG_DIR (recent projects, settings)?" || die "aborted"
+      info "removing $CONFIG_DIR"
+      rm -rf "$CONFIG_DIR"
+    else
+      info "config dir absent: $CONFIG_DIR"
+    fi
+  else
+    info "kept config: $CONFIG_DIR (use --purge-config to remove)"
+  fi
+
+  info "uninstall complete"
+}
+
+cmd_run() {
+  if [[ ! -x "$CDM" ]]; then
+    die "not installed ($CDM missing). Run: ./scripts/codimension_ctl.sh install --yes"
+  fi
+  # Prefer checkout packages over stale site-packages stubs.
+  export PYTHONPATH="${ROOT}${PYTHONPATH:+:$PYTHONPATH}"
+  exec "$CDM" "$@"
+}
+
+# ---- argv ----
+[[ $# -ge 1 ]] || { usage; exit 2; }
+CMD="$1"
+shift
+
+case "$CMD" in
+  -h|--help|help)
+    usage
+    exit 0
+    ;;
+  install|uninstall|status|run) ;;
+  *)
+    die "unknown command: $CMD (try --help)"
+    ;;
+esac
+
+if [[ "$CMD" != "run" ]]; then
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --yes|-y) YES=1 ;;
+      --minimal) MINIMAL=1; TOOLS=0 ;;
+      --tools) TOOLS=1; MINIMAL=0 ;;
+      --desktop) DESKTOP=1 ;;
+      --reinstall) REINSTALL=1 ;;
+      --purge-config) PURGE_CONFIG=1 ;;
+      --keep-venv) KEEP_VENV=1 ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        die "unknown option for $CMD: $1"
+        ;;
+    esac
+    shift
+  done
+fi
+
+case "$CMD" in
+  install) cmd_install ;;
+  uninstall) cmd_uninstall ;;
+  status) cmd_status ;;
+  run) cmd_run "$@" ;;
+esac
