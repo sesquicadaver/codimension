@@ -2,9 +2,9 @@
 
 > **Мова / Language:** Українська | [English](en/github-integration-plan.md)
 
-**Версія:** 1.4  
-**Дата:** 2026-08-03  
-**Статус:** Виконано (Фази 1–5); CI актуалізовано 2026-08 (matrix 3.10–3.13, 173 pytest, wheel, offscreen GUI, debugger_session, T072/T085)
+**Версія:** 1.5  
+**Дата:** 2026-08-09  
+**Статус:** Виконано (Фази 1–5); CI актуалізовано 2026-08 (matrix 3.10–3.13, pytest у CI, wheel, offscreen GUI, debugger_session, T072/T085; без static test count)
 
 ---
 
@@ -20,7 +20,7 @@
 | Mypy | ✅ | codimension, cdmplugins (flowui/everything.py excluded) |
 | Smoke test | ✅ | `import codimension; import cdmplugins` |
 | Offscreen GUI smoke | ✅ | `scripts/offscreen_gui_smoke.py` (`QT_QPA_PLATFORM=offscreen`) |
-| Pytest | ✅ | **173** tests у `tests/`; matrix Python **3.10–3.13** |
+| Pytest | ✅ | suite у `tests/`; matrix Python **3.10–3.13** (лічильник — лише в CI) |
 | Debugger session gate | ✅ | `pytest tests/debugger/ -m debugger_session` |
 | T072 / T085 gates | ✅ | package-relative imports; core import graph |
 | Wheel + pip check | ✅ | clean venv install job |

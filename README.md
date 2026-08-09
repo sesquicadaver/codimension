@@ -19,6 +19,7 @@
 - Pure-Python AST-парсери під compatibility-іменами `cdmpyparser` / `cdmcfparser` (C-extension не потрібен)
 - UI плагінів у `cdmplugins/` (Ruff, Mypy, Pytest тощо потребують optional extras)
 - Debugger (breakpoints, watchpoints); debugger session tests у CI
+- Help → Check for updates (GitHub Releases; verified download у cache, без auto-apply)
 - CI на **Ubuntu**: Ruff, format, Mypy, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen bootstrap smoke, `pip-audit`
 
 ## Обмеження
@@ -28,7 +29,7 @@
 - Git-плагін — MVP; PR створюється через **GitHub REST API** (токен: `gh auth` → keyring → файл `0600`)
 - Qt offscreen smoke у PR CI створює лише `QApplication` (не MainWindow / plugins)
 - Full MainWindow smoke — weekly workflow, не PR-blocker
-- Технічний борг аудиту закрито в [TODO_FIXME.md](TODO_FIXME.md); активна черга: [ROADMAP.uk.md](ROADMAP.uk.md) (перший OPEN: R172)
+- Технічний борг аудиту закрито в [TODO_FIXME.md](TODO_FIXME.md); активна черга: [ROADMAP.uk.md](ROADMAP.uk.md) (перший OPEN: **R175** — safe-mode; відкладено R180–R182)
 
 ## Вимоги
 
