@@ -480,7 +480,6 @@ class MainWindowMenuMixin:
             ("Highlight current line", "currentLineVisible", self._currentLineVisibleChanged),
             ("HOME to first non-space", "jumpToFirstNonSpace", self._homeToFirstNonSpaceChanged),
             ("Auto remove trailing spaces on save", "removeTrailingOnSave", self._removeTrailingChanged),
-            ("Auto-attach project venv on open", "autoAttachProjectVenv", self._autoAttachProjectVenvChanged),
             ("Editor calltips", "editorCalltips", self._editorCalltipsChanged),
             ("Show navigation bar", "showNavigationBar", self._showNavBarChanged),
             ("Show control flow navigation bar", "showCFNavigationBar", self._showCFNavBarChanged),
@@ -492,6 +491,27 @@ class MainWindowMenuMixin:
             act.setCheckable(True)
             act.setChecked(self.settings[valueName])
             act.changed.connect(handler)
+
+        optionsMenu.addSeparator()
+        venvPolicyMenu = optionsMenu.addMenu("Project venv on open")
+        self.__venvPolicyGroup = QActionGroup(self)
+        from utils.venvbootstrap import (
+            VENV_POLICY_AUTO_PERSIST,
+            VENV_POLICY_AUTO_SESSION,
+            VENV_POLICY_MANUAL,
+        )
+
+        for name, data in (
+            ("Manual (no auto-attach)", VENV_POLICY_MANUAL),
+            ("Auto-attach as session (default)", VENV_POLICY_AUTO_SESSION),
+            ("Auto-attach and save to project", VENV_POLICY_AUTO_PERSIST),
+        ):
+            act = venvPolicyMenu.addAction(name)
+            act.setCheckable(True)
+            act.setData(data)
+            act.setActionGroup(self.__venvPolicyGroup)
+            act.setChecked(self.settings["projectVenvPolicy"] == data)
+        venvPolicyMenu.triggered.connect(self._projectVenvPolicyChanged)
 
         optionsMenu.addSeparator()
         redirectedMenu = optionsMenu.addMenu("Redirected I/O")
@@ -664,9 +684,9 @@ class MainWindowMenuMixin:
 
     def _onVenvUpdate(self):
         """Upgrade/sync/recreate packages in the effective project venv (T140)."""
-        from utils.venvbootstrap import venvUpdateActionEnabled
+        from utils.venvbootstrap import SOURCE_INVALID, describeAnalysisPythonSource, venvUpdateActionEnabled
 
-        from .venvsetupdlg import VenvUpdateDialog
+        from .venvsetupdlg import VenvSetupDialog, VenvUpdateDialog
 
         project = GlobalData().project
         if not venvUpdateActionEnabled(project):
@@ -675,6 +695,11 @@ class MainWindowMenuMixin:
                 "Update VENV",
                 "No project venv configured yet.\nUse VENV… to create or attach one first.",
             )
+            return
+        kind, _path = describeAnalysisPythonSource(project)
+        if kind == SOURCE_INVALID:
+            # Broken configured path cannot be mutated — reattach/create instead (R176).
+            VenvSetupDialog(self).exec_()
             return
         VenvUpdateDialog(self).exec_()
 
@@ -1011,6 +1036,9 @@ class MainWindowMenuMixin:
         self.__ideCreateTemplateAct.setEnabled(not exists)
         self.__ideEditTemplateAct.setEnabled(exists)
         self.__ideDelTemplateAct.setEnabled(exists)
+        policy = self.settings["projectVenvPolicy"]
+        for act in self.__venvPolicyGroup.actions():
+            act.setChecked(act.data() == policy)
 
     def __helpAboutToShow(self):
         """Triggered when help menu is about to show"""

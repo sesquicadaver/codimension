@@ -210,8 +210,10 @@ _DEFAULT_SETTINGS = {
         [-1, "vcsunversioned.png", None, "220,220,255,255", "Not under VCS control"],
         [-2, "vcsstatuserror.png", None, "255,160,160,255", "Error getting status"],
     ],
-    # R114: when True, project open attaches first discovered root venv as session
-    "autoAttachProjectVenv": False,
+    # R176: project venv on open — manual | auto_session | auto_persist
+    "projectVenvPolicy": "auto_session",
+    # Legacy R114 bool; kept in sync with projectVenvPolicy (True unless manual)
+    "autoAttachProjectVenv": True,
 }
 
 
@@ -339,6 +341,20 @@ class SettingsWrapper(
                 readErrors.append(
                     "Disk file " + self.__fullFileName + " contains extra value '" + item + "'. It will be lost."
                 )
+
+        # R176: introduce projectVenvPolicy; keep legacy bool in sync.
+        # Missing policy → new default auto_session (old disk False was the previous
+        # default, not a strong opt-out). Legacy True already matches auto_session.
+        try:
+            from .venvbootstrap import normalizeProjectVenvPolicy, syncLegacyAutoAttachFromPolicy
+
+            if "projectVenvPolicy" not in diskValues:
+                self.__values["projectVenvPolicy"] = "auto_session"
+            self.__values["projectVenvPolicy"] = normalizeProjectVenvPolicy(self.__values.get("projectVenvPolicy"))
+            self.__values["autoAttachProjectVenv"] = syncLegacyAutoAttachFromPolicy(self.__values["projectVenvPolicy"])
+        except Exception:
+            self.__values["projectVenvPolicy"] = "auto_session"
+            self.__values["autoAttachProjectVenv"] = True
 
         # If format is bad then overwrite the file
         if readErrors:
@@ -490,7 +506,19 @@ class SettingsWrapper(
         return self.__values[key]
 
     def __setitem__(self, key, value):
-        self.__values[key] = value
+        if key == "projectVenvPolicy":
+            from .venvbootstrap import normalizeProjectVenvPolicy, syncLegacyAutoAttachFromPolicy
+
+            value = normalizeProjectVenvPolicy(value)
+            self.__values[key] = value
+            self.__values["autoAttachProjectVenv"] = syncLegacyAutoAttachFromPolicy(value)
+        elif key == "autoAttachProjectVenv":
+            from .venvbootstrap import projectVenvPolicyFromLegacyAutoAttach
+
+            self.__values[key] = bool(value)
+            self.__values["projectVenvPolicy"] = projectVenvPolicyFromLegacyAutoAttach(bool(value))
+        else:
+            self.__values[key] = value
         if key == "flowSplitterSizes":
             self.sigFlowSplitterChanged.emit()
         elif key == "hidedocstrings":

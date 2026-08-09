@@ -44,7 +44,7 @@
 | 2 Headless core | DONE | `core.syntax` / `core.flow` parse façade + `infrastructure/*` + T085 |
 | 3 Modular monolith | DONE | R100–R103: Qt-free utils piece, app façade, routing, boundary matrix |
 | 4–7 Environment | DONE | R110–R114: typed env, drivers, cache registry, optional auto-attach |
-| 8–9 Deps + local venv | DONE | T140/T141/R114 + DependencyManifest R120 |
+| 8–9 Deps + local venv | DONE | T140/T141/R114/R176 + DependencyManifest R120 |
 | 10–13 Remote backends | DONE | ExecutionTarget R121–R125: local, Docker, SSH, Kubernetes MVPs |
 | 14–20 Analysis | DONE | R130–R138: SymbolIndex, DependencyGraph, MetricProvider (+MI/Halstead/raw), OverlayLayer, git analytics, risk score |
 | 21–24 Graph | DONE → R150+ | R140–R143 (model, canvas, frames, diff, taint MVP) shipped |
@@ -109,6 +109,7 @@
 | D-R173 | R173 | Verified update artifact download to cache (`utils.update_download`; fail closed) |
 | D-R174 | R174 | Persistent feature flags (`core.feature_flags`); gates AI UI (`ai_ui`) |
 | D-R175 | R175 | Safe-mode startup (`--safe-mode` / `CDM_SAFE_MODE`); plugins + overlays off |
+| D-R176 | R176 | Project venv policy (`projectVenvPolicy`); default auto_session + diagnostics + Env: click |
 
 ---
 
@@ -130,7 +131,7 @@
 
 ## Next autopilot pointer
 
-**Active queue empty.** Next work only on explicit ask for deferred **R180** / **R181** / **R182**.
+**Active queue empty** (R176 shipped). Next work only on explicit ask for deferred **R180** / **R181** / **R182**.
 
 ---
 

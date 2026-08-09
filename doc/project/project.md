@@ -91,18 +91,30 @@ the project tabs accordingly. The new files can be created in the IDE or
 copied/created using the other ways outside of the IDE. The same is applied to
 the file or directory removal.
 
-### Analysis environment (T140 / T141)
+### Analysis environment (T140 / T141 / R176)
 
 Resolution order for the Python used in import analysis and plugin runs:
 
 1. **configured** — `pythoninterpreter` in `.cdm3` (Project Properties or saved from **VENV…**)
-2. **session** — temporary overlay after **VENV…** if you decline saving to the project
+2. **session** — temporary overlay after **VENV…** / auto-attach if not saved to the project
 3. **auto** — root `.venv` / `venv` / `env` if present
 4. **IDE** — `sys.executable` of the Codimension process
 
-The status bar shows **Env: project | session | auto | IDE** (tooltip = full path).
+If `pythoninterpreter` is set but not resolvable → **Env: broken** (analysis uses fallback; mutate refused).
 
-**Tools → Project utilities → VENV…** (only when `pythoninterpreter` is empty): create or attach a root venv, optionally pip-install from `requirements*.txt` / `pyproject.toml` / reviewed unresolved packages. **Update VENV…** supports sync / upgrade / recreate. There is **no** auto-create on project open. After setup/update the IDE re-analyzes imports so unresolved counts refresh.
+The status bar shows **Env: project | session | auto | IDE | broken** (tooltip = path + hint). Double-click **Env:** opens **VENV…** / **Update VENV…**.
+
+**Options → Project venv on open** (`projectVenvPolicy`, R176):
+
+| Policy | On project open |
+|--------|-----------------|
+| `manual` | No auto-attach |
+| `auto_session` (**default**) | First root venv → session overlay |
+| `auto_persist` | Same + write into `.cdm3` |
+
+**broken** configured, or **IDE** plus `requirements*.txt` / `pyproject.toml`, logs a WARNING pointing to **VENV…**. There is **no** auto-create on open.
+
+**Tools → Project utilities → VENV…** (when `pythoninterpreter` is empty or broken): create/attach, optional pip. **Update VENV…** redirects to **VENV…** when the configured path is broken. After setup/update the IDE re-analyzes imports.
 
 Unresolved packages for pip are **opt-in** (unchecked by default) with a multi-select review list.
 

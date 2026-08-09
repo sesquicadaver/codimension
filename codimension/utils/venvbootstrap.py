@@ -30,6 +30,18 @@ SOURCE_AUTO = "auto"
 SOURCE_IDE = "ide"
 SOURCE_INVALID = "invalid"  # configured path set but not resolvable (audit P0)
 
+# R176: IDE-wide project venv policy (Options → Project venv on open).
+VENV_POLICY_MANUAL = "manual"
+VENV_POLICY_AUTO_SESSION = "auto_session"
+VENV_POLICY_AUTO_PERSIST = "auto_persist"
+VENV_POLICIES = frozenset(
+    {
+        VENV_POLICY_MANUAL,
+        VENV_POLICY_AUTO_SESSION,
+        VENV_POLICY_AUTO_PERSIST,
+    }
+)
+
 _SOURCE_STATUS_LABELS = {
     SOURCE_CONFIGURED: "Env: project",
     SOURCE_SESSION: "Env: session",
@@ -418,9 +430,127 @@ def formatAnalysisEnvStatus(project) -> tuple[str, str]:
     label = _SOURCE_STATUS_LABELS.get(env.source_kind, "Env: IDE")
     if env.source_kind == SOURCE_INVALID:
         fallback = _resolveWithoutConfigured(project)[1]
-        tip = f"configured missing: {env.python_path}\nanalysis fallback: {fallback}"
+        tip = (
+            f"configured missing: {env.python_path}\n"
+            f"analysis fallback: {fallback}\n"
+            "Double-click: VENV… (recreate/attach)"
+        )
         return label, tip
-    return label, env.python_path
+    if env.source_kind == SOURCE_IDE:
+        tip = f"{env.python_path}\nDouble-click: VENV… (create/attach project venv)"
+        return label, tip
+    tip = f"{env.python_path}\nDouble-click: Update VENV…"
+    return label, tip
+
+
+def normalizeProjectVenvPolicy(value: str | None) -> str:
+    """Return a valid ``projectVenvPolicy`` value (default: auto_session)."""
+    if value in VENV_POLICIES:
+        return str(value)
+    return VENV_POLICY_AUTO_SESSION
+
+
+def projectVenvPolicyFromLegacyAutoAttach(auto_attach: bool) -> str:
+    """Map legacy ``autoAttachProjectVenv`` bool to R176 policy.
+
+    ``True`` → ``auto_session``. ``False`` maps to ``manual`` only when the
+    caller is migrating an *explicit* disk value; new defaults use
+    ``auto_session`` via ``normalizeProjectVenvPolicy``.
+    """
+    return VENV_POLICY_AUTO_SESSION if auto_attach else VENV_POLICY_MANUAL
+
+
+def syncLegacyAutoAttachFromPolicy(policy: str) -> bool:
+    """Legacy bool mirror: True when policy auto-attaches."""
+    return normalizeProjectVenvPolicy(policy) != VENV_POLICY_MANUAL
+
+
+def projectHasDependencyHints(project) -> bool:
+    """True when the project root advertises pip/pyproject dependencies."""
+    project_dir = project.getProjectDir() if project is not None else None
+    if not project_dir or not os.path.isdir(project_dir):
+        return False
+    if os.path.isfile(os.path.join(project_dir, "pyproject.toml")):
+        return True
+    try:
+        for name in os.listdir(project_dir):
+            if name == "requirements.txt":
+                return True
+            if name.startswith("requirements") and name.endswith(".txt"):
+                return True
+    except OSError:
+        return False
+    return False
+
+
+def emitProjectVenvDiagnostics(project) -> None:
+    """Log actionable WARNINGs for broken/missing project venv (R176)."""
+    if project is None or not project.isLoaded():
+        return
+    kind, path = describeAnalysisPythonSource(project)
+    if kind == SOURCE_INVALID:
+        fallback = _resolveWithoutConfigured(project)[1]
+        _LOG.warning(
+            "Configured pythoninterpreter is missing or not executable: %s. "
+            "Analysis fallback: %s. Use Tools → Project utilities → VENV… "
+            "to recreate or attach a project venv.",
+            path,
+            fallback,
+        )
+        return
+    if kind == SOURCE_IDE and projectHasDependencyHints(project):
+        _LOG.warning(
+            "No project venv configured; analysis uses the IDE Python (%s). "
+            "Use Tools → Project utilities → VENV… to create or attach one "
+            "(project has requirements/pyproject dependencies).",
+            path,
+        )
+
+
+def preferredVenvUiAction(project) -> str:
+    """Return status-bar / redirect action: ``venv_setup``, ``venv_update``, or ``none``."""
+    if project is None or not project.isLoaded():
+        return "none"
+    kind, _path = describeAnalysisPythonSource(project)
+    if kind == SOURCE_INVALID:
+        return "venv_setup"
+    if kind == SOURCE_IDE:
+        return "venv_setup"
+    if kind in (SOURCE_CONFIGURED, SOURCE_SESSION, SOURCE_AUTO):
+        return "venv_update"
+    return "none"
+
+
+def applyProjectVenvPolicyOnOpen(project, policy: str | None = None) -> str | None:
+    """Apply IDE venv policy after project open, then emit diagnostics (R176).
+
+    Returns the attached python path, or ``None`` when nothing was attached.
+    """
+    if policy is None:
+        try:
+            from .settings import Settings
+
+            policy = Settings()["projectVenvPolicy"]
+        except Exception:
+            policy = VENV_POLICY_AUTO_SESSION
+    policy = normalizeProjectVenvPolicy(policy)
+
+    attached: str | None = None
+    if policy != VENV_POLICY_MANUAL:
+        attached = maybeAutoAttachProjectVenv(
+            project,
+            enabled=True,
+            persist_to_project=(policy == VENV_POLICY_AUTO_PERSIST),
+        )
+        if attached:
+            _LOG.info(
+                "Attached project venv (%s): %s",
+                "persist" if policy == VENV_POLICY_AUTO_PERSIST else "session",
+                attached,
+            )
+
+    emitProjectVenvDiagnostics(project)
+    return attached
 
 
 def selectedUnresolvedPackages(enabled: bool, items: list[tuple[str, bool]]) -> list[str]:
@@ -509,15 +639,16 @@ def maybeAutoAttachProjectVenv(
     enabled: bool,
     persist_to_project: bool = False,
 ) -> str | None:
-    """Optionally attach the first discovered project root venv (R114).
+    """Optionally attach the first discovered project root venv (R114/R176).
 
-    Policy (default):
-    - Setting off → no-op
+    Policy:
+    - ``enabled`` False → no-op
     - Skip when a valid configured interpreter already exists
     - Skip when a session overlay is already set
     - Prefer ``ROOT_VENV_NAMES`` order (``.venv``, ``venv``, ``env``)
     - Default attach target is **session** overlay (does not rewrite ``.cdm3``)
     - When ``persist_to_project`` is True, also write ``pythoninterpreter`` and save
+    - Broken configured (``invalid``) does **not** block attach when a root venv exists
 
     Returns the attached python path, or ``None`` when skipped.
     """

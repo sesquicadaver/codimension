@@ -1,5 +1,8 @@
 2026 Aug 09
 
+* R176: project venv policy (``projectVenvPolicy``: manual / auto_session /
+  auto_persist); default auto-attach session; WARNING on broken/IDE+deps;
+  Env: double-click → VENV…; Options selector
 * R175: safe-mode startup (``--safe-mode`` / ``CDM_SAFE_MODE``) skips plugins
   and flow overlays; active ROADMAP queue empty (deferred R180–R182)
 * Docs sync: tip ``master@01be812c``; queue pointers → R175 (README, ROADMAP,

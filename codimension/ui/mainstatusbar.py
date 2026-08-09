@@ -66,7 +66,11 @@ class MainWindowStatusBarMixin:
         self.__statusBar.addPermanentWidget(self.sbDebugState)
         self.sbDebugState.setVisible(False)
 
-        self.sbAnalysisEnv = StatusBarFramedLabel(text="Env: IDE", callback=None, parent=self.__statusBar)
+        self.sbAnalysisEnv = StatusBarFramedLabel(
+            text="Env: IDE",
+            callback=self._onAnalysisEnvLabelActivate,
+            parent=self.__statusBar,
+        )
         self.sbAnalysisEnv.setToolTip("Python used for import analysis")
         self.__statusBar.addPermanentWidget(self.sbAnalysisEnv)
         self.sbAnalysisEnv.setVisible(False)
@@ -153,6 +157,17 @@ class MainWindowStatusBarMixin:
         self.sbAnalysisEnv.setVisible(True)
         # R160: keep flow env badges in sync with the status-bar source of truth.
         notify_flow_overlays("env")
+
+    def _onAnalysisEnvLabelActivate(self):
+        """Double-click Env: → VENV… / Update VENV… (R176)."""
+        from utils.globals import GlobalData
+        from utils.venvbootstrap import preferredVenvUiAction
+
+        action = preferredVenvUiAction(GlobalData().project)
+        if action == "venv_setup":
+            self._onVenvSetup()
+        elif action == "venv_update":
+            self._onVenvUpdate()
 
     def _showVCSLabelContextMenu(self, pos):
         """Triggered when a context menu is requested for a VCS label"""

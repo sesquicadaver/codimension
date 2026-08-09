@@ -354,7 +354,8 @@ def test_describe_analysis_python_source_kinds(project_dir):
 
     text, tip = vb.formatAnalysisEnvStatus(_fake_project(empty, ""))
     assert text == "Env: IDE"
-    assert tip == sys.executable
+    assert sys.executable in tip
+    assert "VENV" in tip
 
 
 def test_selected_unresolved_packages_opt_in():
@@ -588,13 +589,15 @@ def _make_root_venv(project_dir: Path, name: str = ".venv") -> str:
 
 
 def test_maybe_auto_attach_disabled_is_noop(project_dir):
-    """R114: default-off setting must not attach."""
+    """R114/R176: manual policy path must not attach."""
     from utils import venvbootstrap as vb
 
     vb.clearSessionPythonInterpreter()
     _make_root_venv(project_dir)
     proj = _fake_project(project_dir, "")
     assert vb.maybeAutoAttachProjectVenv(proj, enabled=False) is None
+    assert vb.getSessionPythonInterpreter() == ""
+    assert vb.applyProjectVenvPolicyOnOpen(proj, policy=vb.VENV_POLICY_MANUAL) is None
     assert vb.getSessionPythonInterpreter() == ""
 
 
@@ -642,3 +645,72 @@ def test_maybe_auto_attach_persist_to_project(project_dir):
     assert vb.getSessionPythonInterpreter() == ""
     kind, _ = vb.describeAnalysisPythonSource(proj)
     assert kind == vb.SOURCE_CONFIGURED
+
+
+def test_apply_policy_auto_session_attaches(project_dir):
+    """R176: auto_session attaches root venv as session overlay."""
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    py = _make_root_venv(project_dir)
+    proj = _fake_project(project_dir, "")
+    attached = vb.applyProjectVenvPolicyOnOpen(proj, policy=vb.VENV_POLICY_AUTO_SESSION)
+    assert attached == os.path.abspath(py)
+    assert vb.getSessionPythonInterpreter() == os.path.abspath(py)
+    vb.clearSessionPythonInterpreter()
+
+
+def test_emit_diagnostics_broken_configured(project_dir, caplog):
+    """R176: broken pythoninterpreter logs actionable WARNING."""
+    import logging
+
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    missing = str(project_dir / "gone" / "bin" / "python")
+    proj = _fake_project(project_dir, missing)
+    with caplog.at_level(logging.WARNING, logger="utils.venvbootstrap"):
+        vb.emitProjectVenvDiagnostics(proj)
+    assert any("missing or not executable" in r.message for r in caplog.records)
+    assert any("VENV" in r.message for r in caplog.records)
+
+
+def test_emit_diagnostics_ide_with_requirements(project_dir, caplog):
+    """R176: IDE env + requirements.txt → WARNING suggesting VENV…."""
+    import logging
+
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    (project_dir / "requirements.txt").write_text("numpy\n", encoding="utf-8")
+    proj = _fake_project(project_dir, "")
+    assert vb.projectHasDependencyHints(proj) is True
+    with caplog.at_level(logging.WARNING, logger="utils.venvbootstrap"):
+        vb.emitProjectVenvDiagnostics(proj)
+    assert any("No project venv configured" in r.message for r in caplog.records)
+
+
+def test_preferred_venv_ui_action(project_dir):
+    from utils import venvbootstrap as vb
+
+    vb.clearSessionPythonInterpreter()
+    assert vb.preferredVenvUiAction(_fake_project(project_dir, "")) == "venv_setup"
+    broken = _fake_project(project_dir, str(project_dir / "gone" / "bin" / "python"))
+    assert vb.preferredVenvUiAction(broken) == "venv_setup"
+    configured = _fake_project(project_dir, "/usr/bin/python3")
+    assert vb.preferredVenvUiAction(configured) == "venv_update"
+
+
+def test_normalize_project_venv_policy():
+    from utils.venvbootstrap import (
+        VENV_POLICY_AUTO_PERSIST,
+        VENV_POLICY_AUTO_SESSION,
+        VENV_POLICY_MANUAL,
+        normalizeProjectVenvPolicy,
+        syncLegacyAutoAttachFromPolicy,
+    )
+
+    assert normalizeProjectVenvPolicy("manual") == VENV_POLICY_MANUAL
+    assert normalizeProjectVenvPolicy("bogus") == VENV_POLICY_AUTO_SESSION
+    assert syncLegacyAutoAttachFromPolicy(VENV_POLICY_MANUAL) is False
+    assert syncLegacyAutoAttachFromPolicy(VENV_POLICY_AUTO_PERSIST) is True

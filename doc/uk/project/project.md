@@ -91,18 +91,30 @@ UUID проєкту використовується для його ідент�
 скопіювати/створити іншими способами поза IDE. Те саме стосується
 видалення файлів або каталогів.
 
-### Середовище аналізу (T140 / T141)
+### Середовище аналізу (T140 / T141 / R176)
 
 Порядок вибору Python для резолву імпортів і запуску плагінів:
 
 1. **configured** — `pythoninterpreter` у `.cdm3` (властивості проєкту або збереження з **VENV…**)
-2. **session** — тимчасовий overlay після **VENV…**, якщо не зберегли в проєкт
+2. **session** — тимчасовий overlay після **VENV…** / auto-attach, якщо не зберегли в проєкт
 3. **auto** — кореневий `.venv` / `venv` / `env`, якщо є
 4. **IDE** — `sys.executable` процесу Codimension
 
-У status bar: **Env: project | session | auto | IDE** (tooltip — повний шлях).
+Якщо `pythoninterpreter` заданий, але не резолвиться — **Env: broken** (аналіз на fallback; mutate заборонено).
 
-**Tools → Project utilities → VENV…** (лише коли `pythoninterpreter` порожній): create/attach, опційний pip з `requirements*.txt` / `pyproject.toml` / перевірених unresolved. **Update VENV…** — sync / upgrade / recreate. **Немає** auto-create при open. Після setup/update IDE робить re-analyze імпортів.
+У status bar: **Env: project | session | auto | IDE | broken** (tooltip — шлях + підказка). Подвійний клік по **Env:** відкриває **VENV…** / **Update VENV…**.
+
+**Options → Project venv on open** (`projectVenvPolicy`, R176):
+
+| Політика | Поведінка при open |
+|----------|--------------------|
+| `manual` | Без auto-attach |
+| `auto_session` (**default**) | Перший кореневий venv → session overlay |
+| `auto_persist` | Те саме + запис у `.cdm3` |
+
+При **broken** configured або **IDE** + `requirements*.txt` / `pyproject.toml` — WARNING у лог з підказкою на **VENV…**. Auto-create немає.
+
+**Tools → Project utilities → VENV…** (коли `pythoninterpreter` порожній або broken): create/attach, опційний pip. **Update VENV…** при broken перенаправляє на **VENV…**. Після setup/update — re-analyze імпортів.
 
 Unresolved для pip — **opt-in** (за замовчуванням вимкнено) з multi-select.
 

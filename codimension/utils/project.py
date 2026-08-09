@@ -403,14 +403,13 @@ class CodimensionProject(
             self.sigRestoreProjectExpandedDirs.emit()
 
     def __maybeAutoAttachProjectVenv(self):
-        """R114: optional session attach of a discovered root venv."""
+        """R176: apply project venv policy + diagnostics after open."""
         try:
-            from .settings import Settings
-            from .venvbootstrap import maybeAutoAttachProjectVenv
+            from .venvbootstrap import applyProjectVenvPolicyOnOpen
 
-            maybeAutoAttachProjectVenv(self, enabled=bool(Settings()["autoAttachProjectVenv"]))
+            applyProjectVenvPolicyOnOpen(self)
         except Exception:
-            logging.debug("auto-attach project venv skipped", exc_info=True)
+            logging.debug("project venv policy on open skipped", exc_info=True)
 
     def __finishAnalysisRescan(self):
         """Recreate watcher and emit CompleteProject after rescan."""
