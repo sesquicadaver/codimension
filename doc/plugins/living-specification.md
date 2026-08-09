@@ -54,6 +54,7 @@
 | **Tool host fallback R178** | cdmplugins.process_env | `python_module_available`; explicit `use_ide_host` (no silent fallback) | tests/test_process_env.py |
 | **Install missing tool R179** | cdmplugins.tool_host + drivers | Dialog Install / IDE once / Cancel; pip into mutable project venv | tests/test_process_env.py |
 | **Tool probe env isolation** | cdmplugins.process_env | Clean-env ``python_module_available``; strip IDE PYTHONPATH for tool QProcess | tests/test_process_env.py |
+| **Product docs isolation** | utils.embedded_docs + package_docs_filter + doc/user | Help fail-closed → `doc/user/index.md`; shared wheel filter; no repo-root `.cdm3` | tests/test_embedded_docs.py |
 | **Recent files prune** | utils.fsenv + recent viewer + IDE smoke | Drop missing/`pytest-of-*`/`t130-script`; smoke uses temp Settings dir | tests/test_fsenv.py |
 | **Recent projects prune** | utils.settings + recentprojectsviewer + ui.filedialogs | Native dir pickers; QFileSystemModel completers; prune/clear recent `.cdm3` | tests/test_recent_projects_prune.py |
 | **Local deploy ctl** | scripts/codimension_ctl.sh + run_codimension.sh | install/uninstall for `.venv`; optional desktop; `--purge-config`; launch via run script | manual smoke after install |

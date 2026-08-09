@@ -44,6 +44,7 @@ git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
 ./scripts/codimension_ctl.sh install --yes --desktop
 ./scripts/run_codimension.sh
+# optional: ./scripts/run_codimension.sh /path/to/project.cdm3
 ```
 
 Видалення: `./scripts/codimension_ctl.sh uninstall --yes`  
