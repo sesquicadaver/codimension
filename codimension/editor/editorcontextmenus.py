@@ -89,7 +89,7 @@ class EditorContextMenuMixin:
         menu.setIcon(getIcon("diagramsmenu.png"))
         self._menu.addSeparator()
 
-        # R152: AI explain / suggest — visible only when CDM_AI_UI is enabled.
+        # R152/R174: AI explain / suggest — feature flag ai_ui or CDM_AI_UI.
         self.__aiMenu = self.__initAiMenu()
         self.__aiMenuAction = self._menu.addMenu(self.__aiMenu)
         self.__aiMenuAction.setIcon(getIcon("toolsmenu.png"))
@@ -201,7 +201,11 @@ class EditorContextMenuMixin:
     def __runAiAction(self, action):
         """Build offline AI context and show the backend result."""
         if not is_ai_ui_enabled():
-            QMessageBox.information(self, "AI UI disabled", f"Set {AI_UI_ENV}=1 to enable experimental AI actions.")
+            QMessageBox.information(
+                self,
+                "AI UI disabled",
+                f"Enable feature flag 'ai_ui' or set {AI_UI_ENV}=1 for experimental AI actions.",
+            )
             return
         name = self.getCurrentOrSelection()[0].strip()
         if not name or not name.isidentifier():
@@ -211,7 +215,11 @@ class EditorContextMenuMixin:
         try:
             result = run_ai_action_for_source(action, self.text, name, file=file_name)
         except AiUiDisabledError:
-            QMessageBox.information(self, "AI UI disabled", f"Set {AI_UI_ENV}=1 to enable experimental AI actions.")
+            QMessageBox.information(
+                self,
+                "AI UI disabled",
+                f"Enable feature flag 'ai_ui' or set {AI_UI_ENV}=1 for experimental AI actions.",
+            )
             return
         except ValueError as exc:
             QMessageBox.warning(self, "AI action", str(exc))

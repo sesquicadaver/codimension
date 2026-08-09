@@ -1,5 +1,7 @@
 2026 Aug 09
 
+* R174: persistent feature flags (``core.feature_flags``); gates experimental
+  AI UI via ``ai_ui`` (env ``CDM_AI_UI`` still overrides)
 * R173: verified update artifact download to cache (``utils.update_download``);
   SHA-256 from API digest or sidecar; fail closed; Help offers download
 * R172: in-app read-only “check for updates” via GitHub Releases API
