@@ -70,11 +70,12 @@ class PipAuditDriver(QWidget):
         self.__args = ["-m", "pip_audit", "--format", "json"]
 
         module = module_from_python_args(self.__args)
+        parent = getattr(self.__ide, "mainWindow", None) or self
         resolved = ensure_tool_python_and_environment(
             self.__ide.project,
             self.__encoding,
             module=module,
-            parent=self,
+            parent=parent,
         )
         if isinstance(resolved, str):
             self.__process = None

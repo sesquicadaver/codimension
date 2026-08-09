@@ -394,6 +394,9 @@ def test_build_tool_process_environment_applies_analysis_env(tmp_path):
         def insert(self, key, value):
             self._values[key] = value
 
+        def remove(self, key):
+            self._values.pop(key, None)
+
         def value(self, key, default=""):
             return self._values.get(key, default)
 
@@ -418,4 +421,5 @@ def test_build_tool_process_environment_applies_analysis_env(tmp_path):
     )
     assert env.value("VIRTUAL_ENV") == str(venv)
     assert env.value("PYTHONPATH").startswith(str(site))
-    assert "/old" in env.value("PYTHONPATH")
+    # Inherited IDE PYTHONPATH must not leak into project tool runs.
+    assert "/old" not in env.value("PYTHONPATH")

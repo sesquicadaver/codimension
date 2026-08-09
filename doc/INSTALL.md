@@ -49,6 +49,8 @@ python -m pip install -e ".[tools,lint,test,security]"
 # або повний convenience snapshot (runtime + lint/test/security):
 python -m pip install -r requirements.txt
 python -m pip install -e .
+# Python 3.11+: pylint stack needs a newer wrapt than astroid 2.5 allows
+python -m pip install 'wrapt>=1.14' --no-deps
 ```
 
 `requirements.txt` — **не** мінімальний користувацький install; це full local/CI environment.

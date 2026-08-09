@@ -85,11 +85,12 @@ class LintDriverBase(QWidget):
         self._args = self.buildArgs(fileName)
         module = module_from_python_args(self._args)
 
+        parent = getattr(self._ide, "mainWindow", None) or self
         resolved = ensure_tool_python_and_environment(
             self._ide.project,
             self._encoding,
             module=module,
-            parent=self,
+            parent=parent,
         )
         if isinstance(resolved, str):
             self._process = None
@@ -174,7 +175,9 @@ class LintDriverBase(QWidget):
             results["QProcessError"] = self._processError
 
         if self._stderr and not self._stdout.strip():
-            results["ProcessError"] = "Error:\n" + self._stderr
+            # Prefix path:line for Log click-to-source (R177).
+            loc = f"{self._fileName}:1: " if self._fileName else ""
+            results["ProcessError"] = loc + "Error:\n" + self._stderr
             self.sigFinished.emit(results)
             self._args = None
             return

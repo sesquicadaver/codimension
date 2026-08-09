@@ -134,10 +134,11 @@ stale Recent entry removes it quietly (no WARNING spam).
 ### Lint/test plugins and project venv (R178 / R179)
 
 Drivers (`ruff`, `mypy`, `bandit`, …) use the **project Python** for checks.
-If the tool module is missing there, Codimension offers to **install it into the
-project venv** (`pip install …`). Optionally **Use IDE tools once** (project
-site-packages stay on `PYTHONPATH`). There is no silent IDE fallback — Cancel
-shows a soft message instead of a `No module named` traceback.
+Module presence is probed in a **clean environment** (IDE `PYTHONPATH` does not
+leak into the project interpreter). If the tool is missing, Codimension offers
+to **install it into the project venv** (`pip install …`). Optionally **Use IDE
+tools once**. Cancel shows a soft message; process failures are logged with
+`path:line:` for Log click navigation.
 
 ### Excluding paths from analysis
 
