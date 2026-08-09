@@ -165,7 +165,8 @@ def default_fetch(url: str, *, timeout: float = DEFAULT_TIMEOUT) -> bytes:
         method="GET",
     )
     with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return resp.read()
+        body = resp.read()
+        return body if isinstance(body, bytes) else bytes(body)
 
 
 def resolve_releases_url(environ: Optional[Mapping[str, str]] = None) -> str:
