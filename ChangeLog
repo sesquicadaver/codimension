@@ -1,5 +1,8 @@
 2026 Aug 09
 
+* R178: lint/test drivers fall back to IDE Python when the ``-m`` tool
+  module is missing from the project venv (keep project site-packages on
+  ``PYTHONPATH``)
 * R177: Log click-to-source — import errors prefixed ``path:line:``;
   double-click in Log opens the file (``utils.log_location``)
 * R176: project venv policy (``projectVenvPolicy``: manual / auto_session /

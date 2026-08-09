@@ -22,7 +22,11 @@ import sys
 from ui.qt import QByteArray, QProcess, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
 
-from cdmplugins.process_env import resolve_tool_python_and_environment
+from cdmplugins.process_env import (
+    module_from_python_args,
+    python_module_available,
+    resolve_tool_python_and_environment,
+)
 
 
 class PipAuditDriver(QWidget):
@@ -68,7 +72,18 @@ class PipAuditDriver(QWidget):
 
         self.__args = ["-m", "pip_audit", "--format", "json"]
 
-        self.__pythonPath, processEnvironment = resolve_tool_python_and_environment(self.__ide.project, self.__encoding)
+        module = module_from_python_args(self.__args)
+        self.__pythonPath, processEnvironment = resolve_tool_python_and_environment(
+            self.__ide.project,
+            self.__encoding,
+            module=module,
+        )
+        if module and not python_module_available(self.__pythonPath, module):
+            self.__process = None
+            return (
+                f"Python module '{module}' is not installed in the project or IDE environment. "
+                f"Install it (e.g. pip install {module}) or disable the plugin."
+            )
         self.__process.setProcessEnvironment(processEnvironment)
         self.__process.start(self.__pythonPath, self.__args)
 

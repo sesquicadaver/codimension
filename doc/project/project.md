@@ -124,6 +124,14 @@ Import-analysis errors in the **Log** tab are prefixed with `path:line: …`.
 **Double-click** such a line to open the file at that line (pointing-hand cursor
 on hover). Lines without a location are ignored.
 
+### Lint/test plugins and project venv (R178)
+
+Drivers (`ruff`, `mypy`, `bandit`, …) prefer the **project Python**. If the tool
+module is missing there, they **fall back to the IDE Python** (where `.[tools,lint]`
+is usually installed) while keeping the project site-packages on `PYTHONPATH`.
+If the module is missing everywhere, a soft message is shown instead of a
+`No module named` traceback.
+
 ### Excluding paths from analysis
 
 Paths listed in **Exclude from analysis** (project properties) and the project
