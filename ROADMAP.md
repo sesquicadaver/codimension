@@ -51,9 +51,9 @@
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 flag-gated UI explain/suggest (offline/mock; no LLM) |
 | 27–29 Extended overlays | DONE | R135 framework + R160 env + R161 deps heat + R162 deploy hints |
-| 30–38 Release/update | PARTIAL → R173+ | Channel (R171) + read-only GitHub check (R172); download/verify still OPEN |
+| 30–38 Release/update | PARTIAL → R174+ | R171–R173 (channel, check, verified download); flags/safe-mode still OPEN |
 
-**Optimization applied:** solo-fork model — `master` + `feature/*` / `fix/*` + protected `ci-gate` (no `stable/develop` theatre). Auto-update apply/rollback stays deferred until download+verify (R173) is proven.
+**Optimization applied:** solo-fork model — `master` + `feature/*` / `fix/*` + protected `ci-gate` (no `stable/develop` theatre). Auto-update apply/rollback stays deferred (R180) until product asks after R173.
 
 ---
 
@@ -106,6 +106,7 @@
 | D-R162 | R162 | Deployment overlay: read-only Dockerfile/Compose hints via R135 |
 | D-R171 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev`) |
 | D-R172 | R172 | In-app read-only GitHub Releases update check (`utils.update_check`) |
+| D-R173 | R173 | Verified update artifact download to cache (`utils.update_download`; fail closed) |
 
 ---
 
@@ -113,9 +114,8 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
-| 2 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
-| 3 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
+| 1 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
+| 2 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
 
 ### Deferred (explicit)
 
@@ -129,7 +129,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R173` — Download + checksum verify update artifact.
+**First OPEN:** `R174` — Feature flags module for experimental plugins/UI.
 
 ---
 
