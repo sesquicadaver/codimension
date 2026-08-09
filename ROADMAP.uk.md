@@ -51,9 +51,9 @@
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 UI explain/suggest за flag (offline/mock; без LLM) |
 | 27–29 Extended overlays | DONE | R135 + R160/R161/R162 (env, deps heat, deploy hints) |
-| 30–38 Release/update | PARTIAL → R172+ | Канал у `cdmverspec` (R171); read-only check оновлень ще OPEN |
+| 30–38 Release/update | PARTIAL → R173+ | Канал (R171) + read-only GitHub check (R172); download/verify ще OPEN |
 
-**Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply оновлень — після read-only version check (R172–R173).
+**Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply оновлень — після доведеного download+verify (R173).
 
 ---
 
@@ -105,6 +105,7 @@
 | D-R161 | R161 | Dependency overlay: edge heat з DependencyGraph через R135 |
 | D-R162 | R162 | Deployment overlay: read-only Dockerfile/Compose hints через R135 |
 | D-R171 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) |
+| D-R172 | R172 | In-app read-only перевірка GitHub Releases (`utils.update_check`) |
 
 ---
 
@@ -112,10 +113,9 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R172 | In-app «перевірити оновлення» (GitHub Releases, read-only) | Мокований HTTP тест | M | OPEN |
-| 2 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
-| 3 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 4 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
+| 2 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
+| 3 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -129,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R172` — in-app перевірка оновлень (GitHub Releases).
+**Перший OPEN:** `R173` — завантаження + перевірка checksum артефакту.
 
 ---
 

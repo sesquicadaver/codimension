@@ -51,9 +51,9 @@
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 flag-gated UI explain/suggest (offline/mock; no LLM) |
 | 27–29 Extended overlays | DONE | R135 framework + R160 env + R161 deps heat + R162 deploy hints |
-| 30–38 Release/update | PARTIAL → R172+ | Channel label in `cdmverspec` (R171); read-only update check still OPEN |
+| 30–38 Release/update | PARTIAL → R173+ | Channel (R171) + read-only GitHub check (R172); download/verify still OPEN |
 
-**Optimization applied:** solo-fork model — `master` + `feature/*` / `fix/*` + protected `ci-gate` (no `stable/develop` theatre). Auto-update apply/rollback stays deferred until read-only version check (R172–R173) works.
+**Optimization applied:** solo-fork model — `master` + `feature/*` / `fix/*` + protected `ci-gate` (no `stable/develop` theatre). Auto-update apply/rollback stays deferred until download+verify (R173) is proven.
 
 ---
 
@@ -105,6 +105,7 @@
 | D-R161 | R161 | Dependency overlay: edge heat from DependencyGraph via R135 |
 | D-R162 | R162 | Deployment overlay: read-only Dockerfile/Compose hints via R135 |
 | D-R171 | R171 | Release channel metadata in `cdmverspec` (`stable`/`beta`/`dev`) |
+| D-R172 | R172 | In-app read-only GitHub Releases update check (`utils.update_check`) |
 
 ---
 
@@ -112,10 +113,9 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R172 | In-app “check for updates” against GitHub Releases (read-only) | Shows newer tag if any; test with mocked HTTP | M | OPEN |
-| 2 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
-| 3 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
-| 4 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
+| 1 | R173 | Download + checksum verify update artifact | Writes to cache dir; verify fail closed; tests | M | OPEN |
+| 2 | R174 | Feature flags module for experimental plugins/UI | Persistent flags; gate one existing experimental path; tests | S | OPEN |
+| 3 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
 
 ### Deferred (explicit)
 
@@ -129,7 +129,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R172` — In-app check for updates (GitHub Releases).
+**First OPEN:** `R173` — Download + checksum verify update artifact.
 
 ---
 

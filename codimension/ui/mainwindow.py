@@ -94,6 +94,7 @@ from .qt import (
     QFileDialog,
     QMainWindow,
     QMenu,
+    QMessageBox,
     QSize,
     QSizePolicy,
     QSplitter,
@@ -1343,6 +1344,35 @@ class CodimensionMainWindow(
     def _onAllShortcurs():
         """Triggered when opening key bindings page is requested"""
         QDesktopServices.openUrl(QUrl("http://codimension.org/documentation/cheatsheet.html"))
+
+    def _onCheckForUpdates(self):
+        """R172: read-only GitHub Releases update check (no download)."""
+        from utils.update_check import check_for_updates, format_update_message
+
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        try:
+            result = check_for_updates()
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        text = format_update_message(result)
+        if result.status == "error":
+            QMessageBox.warning(self, "Check for updates", text)
+            return
+        if result.status == "update_available" and result.latest is not None:
+            url = result.latest.html_url
+            if url:
+                answer = QMessageBox.question(
+                    self,
+                    "Check for updates",
+                    text + "\n\nOpen the release page in a browser?",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.Yes,
+                )
+                if answer == QMessageBox.Yes:
+                    QDesktopServices.openUrl(QUrl(url))
+                return
+        QMessageBox.information(self, "Check for updates", text)
 
     def _onAbout(self):
         """Triggered when 'About' info is requested"""

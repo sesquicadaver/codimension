@@ -1,3 +1,8 @@
+2026 Aug 09
+
+* R172: in-app read-only “check for updates” via GitHub Releases API
+  (``utils.update_check``); Help menu action; mocked HTTP tests
+
 2026 Aug 08
 
 * R171: release channel metadata in ``cdmverspec`` (``stable``/``beta``/``dev``);

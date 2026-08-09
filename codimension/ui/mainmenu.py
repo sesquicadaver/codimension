@@ -604,6 +604,9 @@ class MainWindowMenuMixin:
         )
         self.__homePageAct = helpMenu.addAction(getIcon("homepagemenu.png"), "Codimension &home page", self._onHomePage)
         helpMenu.addSeparator()
+        self.__checkUpdatesAct = helpMenu.addAction(
+            getIcon("homepagemenu.png"), "Check for &updates…", self._onCheckForUpdates
+        )
         self.__aboutAct = helpMenu.addAction(getIcon("logo.png"), "A&bout codimension", self._onAbout)
         return helpMenu
 
