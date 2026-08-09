@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Launch Codimension from this repo's .venv (thin wrapper).
-# Prefer: ./scripts/codimension_ctl.sh run
+# Launch Codimension from this repo's .venv.
 # Usage:
 #   ./scripts/run_codimension.sh
 #   ./scripts/run_codimension.sh path/to/project.cdm3
@@ -8,4 +7,15 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-exec "${ROOT}/scripts/codimension_ctl.sh" run "$@"
+CDM="${ROOT}/.venv/bin/codimension"
+
+if [[ ! -x "$CDM" ]]; then
+  echo "error: missing $CDM" >&2
+  echo "hint: ./scripts/codimension_ctl.sh install --yes" >&2
+  exit 1
+fi
+
+# Prefer the checkout's cdmplugins package over a namespace stub in site-packages.
+export PYTHONPATH="${ROOT}${PYTHONPATH:+:$PYTHONPATH}"
+
+exec "$CDM" "$@"

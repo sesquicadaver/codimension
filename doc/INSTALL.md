@@ -13,7 +13,7 @@
 
 ```bash
 ./scripts/codimension_ctl.sh install --yes --desktop
-./scripts/codimension_ctl.sh run
+./scripts/run_codimension.sh
 ```
 
 | Команда | Дія |
@@ -22,14 +22,13 @@
 | `install --minimal --yes` | лише runtime-залежності |
 | `install --reinstall --yes` | знищити `.venv` і поставити заново |
 | `install --desktop --yes` | також ярлик у `~/.local/share/applications/` |
-| `status` | стан venv / entry point / config |
-| `run` | запуск IDE з цього checkout |
 | `uninstall --yes` | видалити `.venv` і локальний desktop-ярлик |
 | `uninstall --purge-config --yes` | те саме + `~/.codimension3` |
 
+Запуск: `./scripts/run_codimension.sh`  
 Довідка: `./scripts/codimension_ctl.sh --help`
 
-Після `git pull` завжди: `./scripts/codimension_ctl.sh install --yes` (підхопить зміни коду в editable-режимі; `--reinstall` — якщо venv «зламаний»).
+Після `git pull`: `./scripts/codimension_ctl.sh install --yes` (editable підхопить код; `--reinstall` — якщо venv «зламаний»).
 
 ## Підтримувані платформи
 
@@ -57,7 +56,7 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[tools,lint,test,security]"
 # Python 3.11+:
 python -m pip install 'wrapt>=1.14' --no-deps
-./scripts/codimension_ctl.sh run
+./scripts/run_codimension.sh
 ```
 
 ## Development / CI

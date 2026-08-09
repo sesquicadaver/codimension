@@ -13,7 +13,7 @@ From the repository root:
 
 ```bash
 ./scripts/codimension_ctl.sh install --yes --desktop
-./scripts/codimension_ctl.sh run
+./scripts/run_codimension.sh
 ```
 
 | Command | Action |
@@ -22,11 +22,10 @@ From the repository root:
 | `install --minimal --yes` | runtime dependencies only |
 | `install --reinstall --yes` | wipe `.venv` and reinstall |
 | `install --desktop --yes` | also add `~/.local/share/applications/` launcher |
-| `status` | venv / entry point / config state |
-| `run` | start the IDE from this checkout |
 | `uninstall --yes` | remove `.venv` and local desktop launcher |
 | `uninstall --purge-config --yes` | same + `~/.codimension3` |
 
+Launch: `./scripts/run_codimension.sh`  
 Help: `./scripts/codimension_ctl.sh --help`
 
 After `git pull`: `./scripts/codimension_ctl.sh install --yes` (editable picks up code; use `--reinstall` if the venv is broken).
@@ -57,7 +56,7 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[tools,lint,test,security]"
 # Python 3.11+:
 python -m pip install 'wrapt>=1.14' --no-deps
-./scripts/codimension_ctl.sh run
+./scripts/run_codimension.sh
 ```
 
 ## Removal

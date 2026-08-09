@@ -1,7 +1,8 @@
 2026 Aug 09
 
-* Deploy: ``scripts/codimension_ctl.sh`` install/uninstall/status/run for
-  local ``.venv`` deploy (optional desktop launcher; ``--purge-config``)
+* Deploy: ``scripts/codimension_ctl.sh`` install/uninstall for local
+  ``.venv`` (optional desktop; ``--purge-config``); launch via
+  ``scripts/run_codimension.sh``
 * New project / Open project: native file dialogs (avoid Qt non-native hang
   on large home trees); path completers use ``QFileSystemModel``; prune and
   clear recent projects in local ``~/.codimension3`` settings only

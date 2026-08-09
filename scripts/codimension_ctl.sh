@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Codimension local deploy / remove / status / run (repo checkout + .venv).
+# Codimension local deploy / remove (repo checkout + .venv).
 #
 # Usage:
 #   ./scripts/codimension_ctl.sh install [--minimal|--tools] [--desktop] [--reinstall] [--yes]
 #   ./scripts/codimension_ctl.sh uninstall [--purge-config] [--keep-venv] [--yes]
-#   ./scripts/codimension_ctl.sh status
-#   ./scripts/codimension_ctl.sh run [--safe-mode] [path/to/project.cdm3]
 #   ./scripts/codimension_ctl.sh -h|--help
 #
-# Non-interactive: always pass --yes where confirmation would be required.
+# Launch after install: ./scripts/run_codimension.sh
+# Non-interactive: pass --yes where confirmation would be required.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -41,15 +40,14 @@ info() {
 
 usage() {
   cat <<'EOF'
-Codimension local deploy / remove / status / run (repo checkout + .venv).
+Codimension local deploy / remove (repo checkout + .venv).
 
 Usage:
   ./scripts/codimension_ctl.sh install [--minimal|--tools] [--desktop] [--reinstall] [--yes]
   ./scripts/codimension_ctl.sh uninstall [--purge-config] [--keep-venv] [--yes]
-  ./scripts/codimension_ctl.sh status
-  ./scripts/codimension_ctl.sh run [--safe-mode] [path/to/project.cdm3]
   ./scripts/codimension_ctl.sh -h|--help
 
+Launch: ./scripts/run_codimension.sh
 Non-interactive: pass --yes where confirmation would be required.
 EOF
 }
@@ -126,32 +124,6 @@ remove_desktop() {
   fi
 }
 
-cmd_status() {
-  echo "root:     $ROOT"
-  echo "venv:     $VENV$([ -d "$VENV" ] && echo " (exists)" || echo " (missing)")"
-  echo "python:   $([ -x "$PY" ] && "$PY" -V || echo "n/a")"
-  echo "entry:    $([ -x "$CDM" ] && echo "$CDM" || echo "missing")"
-  if [[ -x "$PY" ]]; then
-    ROOT_ENV="$ROOT" "$PY" - <<'PY' || true
-import importlib.util
-import os
-import sys
-root = os.environ["ROOT_ENV"]
-sys.path.insert(0, root)
-sys.path.insert(0, os.path.join(root, "codimension"))
-print("package: ", "yes" if importlib.util.find_spec("codimension") else "no")
-print("plugins: ", "yes" if importlib.util.find_spec("cdmplugins") else "no")
-try:
-    from cdmverspec import version
-    print("version: ", version)
-except Exception as exc:
-    print("version: ", f"n/a ({exc})")
-PY
-  fi
-  echo "desktop:  $([ -f "$DESKTOP_FILE" ] && echo "$DESKTOP_FILE" || echo "not installed")"
-  echo "config:   $([ -d "$CONFIG_DIR" ] && echo "$CONFIG_DIR" || echo "absent")"
-}
-
 cmd_install() {
   need_cmd python3
   local base_py
@@ -204,13 +176,12 @@ cmd_install() {
 
   info "deploy complete"
   echo
-  echo "Run:"
-  echo "  ./scripts/codimension_ctl.sh run"
-  echo "  # or: $CDM"
+  echo "Run:  ./scripts/run_codimension.sh"
+  echo "      # or: $CDM"
   echo
   echo "Remove:"
   echo "  ./scripts/codimension_ctl.sh uninstall --yes"
-  echo "  ./scripts/codimension_ctl.sh uninstall --purge-config --yes   # also wipe ~/.codimension3"
+  echo "  ./scripts/codimension_ctl.sh uninstall --purge-config --yes"
 }
 
 cmd_uninstall() {
@@ -240,15 +211,6 @@ cmd_uninstall() {
   info "uninstall complete"
 }
 
-cmd_run() {
-  if [[ ! -x "$CDM" ]]; then
-    die "not installed ($CDM missing). Run: ./scripts/codimension_ctl.sh install --yes"
-  fi
-  # Prefer checkout packages over stale site-packages stubs.
-  export PYTHONPATH="${ROOT}${PYTHONPATH:+:$PYTHONPATH}"
-  exec "$CDM" "$@"
-}
-
 # ---- argv ----
 [[ $# -ge 1 ]] || { usage; exit 2; }
 CMD="$1"
@@ -259,37 +221,33 @@ case "$CMD" in
     usage
     exit 0
     ;;
-  install|uninstall|status|run) ;;
+  install|uninstall) ;;
   *)
     die "unknown command: $CMD (try --help)"
     ;;
 esac
 
-if [[ "$CMD" != "run" ]]; then
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --yes|-y) YES=1 ;;
-      --minimal) MINIMAL=1; TOOLS=0 ;;
-      --tools) TOOLS=1; MINIMAL=0 ;;
-      --desktop) DESKTOP=1 ;;
-      --reinstall) REINSTALL=1 ;;
-      --purge-config) PURGE_CONFIG=1 ;;
-      --keep-venv) KEEP_VENV=1 ;;
-      -h|--help)
-        usage
-        exit 0
-        ;;
-      *)
-        die "unknown option for $CMD: $1"
-        ;;
-    esac
-    shift
-  done
-fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --yes|-y) YES=1 ;;
+    --minimal) MINIMAL=1; TOOLS=0 ;;
+    --tools) TOOLS=1; MINIMAL=0 ;;
+    --desktop) DESKTOP=1 ;;
+    --reinstall) REINSTALL=1 ;;
+    --purge-config) PURGE_CONFIG=1 ;;
+    --keep-venv) KEEP_VENV=1 ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "unknown option for $CMD: $1"
+      ;;
+  esac
+  shift
+done
 
 case "$CMD" in
   install) cmd_install ;;
   uninstall) cmd_uninstall ;;
-  status) cmd_status ;;
-  run) cmd_run "$@" ;;
 esac
