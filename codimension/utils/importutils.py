@@ -177,6 +177,23 @@ def __getBaseSysPath():
     return list(sys.path)
 
 
+def __resolution_from_spec(importObj, spec, *, what=None, item_index=None):
+    """Build a resolved ``ImportResolution`` from a ``ModuleSpec``, or ``None``.
+
+    Python 3.11+ ships many stdlib modules as frozen (``origin='frozen'``,
+    ``has_location=False``). Treating those as unresolved produced false
+    WARNINGs for ``import os`` / ``import io`` on import diagrams.
+    """
+    if spec is None:
+        return None
+    origin = getattr(spec, "origin", None)
+    if origin in ("frozen", "built-in"):
+        return ImportResolution(importObj, item_index, True, None, what)
+    if spec.has_location and origin:
+        return ImportResolution(importObj, item_index, False, origin, what)
+    return None
+
+
 def __resolveImport(importObj, baseAndProjectPaths, result):
     """Resolves imports like: 'import x'"""
 
@@ -194,11 +211,10 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
 
     try:
         spec = importlib.util.find_spec(importObj.name)
-        if spec:
-            if spec.has_location:
-                result.append(ImportResolution(importObj, None, False, spec.origin, None))
-                return
-            # Something unknown; it's not clear what to do
+        resolved = __resolution_from_spec(importObj, spec)
+        if resolved is not None:
+            result.append(resolved)
+            return
     except Exception:
         pass
     finally:
@@ -223,65 +239,63 @@ def __resolveFrom(importObj, importName, result):
     find_spec must be None for absolute resolution - passing a path causes
     incorrect behavior (e.g. 'import os' fails).
     """
+    what_names = [what.name for what in importObj.what]
     if importObj.name in sys.builtin_module_names:
-        result.append(ImportResolution(importObj, None, True, None, [what.name for what in importObj.what]))
+        result.append(ImportResolution(importObj, None, True, None, what_names))
         return
 
     try:
         spec = importlib.util.find_spec(importName)
-        if spec:
-            if spec.has_location:
-                result.append(
-                    ImportResolution(importObj, None, False, spec.origin, [what.name for what in importObj.what])
-                )
-                return
+        resolved = __resolution_from_spec(importObj, spec, what=what_names)
+        if resolved is not None:
+            result.append(resolved)
+            return
 
-            # No location and it could not be a builtin module because they
-            # have been handled above
-            if spec.loader is not None:
-                # Unknown loader so not clear what to do
-                result.append(
-                    ImportResolution(
-                        importObj,
-                        None,
-                        False,
-                        None,
-                        None,
-                        "Could not resolve 'from " + importObj.name + " import ...' at line " + str(importObj.line),
-                    )
+        if spec is None:
+            pass
+        elif spec.loader is not None:
+            # Found a loader but not a file/frozen origin we understand.
+            result.append(
+                ImportResolution(
+                    importObj,
+                    None,
+                    False,
+                    None,
+                    None,
+                    "Could not resolve 'from " + importObj.name + " import ...' at line " + str(importObj.line),
                 )
-                return
-
-            # Loader is None but found something. Maybe it is a submodule
-            if spec.submodule_search_locations:
-                for index, what in enumerate(importObj.what):
-                    impName = importName + "." + what.name
-                    found = False
-                    try:
-                        spec = importlib.util.find_spec(impName)
-                        if spec:
-                            if spec.has_location:
-                                result.append(ImportResolution(importObj, index, False, spec.origin, None))
-                                found = True
-                    except Exception:
-                        pass
-                    if not found:
-                        result.append(
-                            ImportResolution(
-                                importObj,
-                                index,
-                                False,
-                                None,
-                                None,
-                                "Could not resolve 'from "
-                                + importObj.name
-                                + " import "
-                                + what.name
-                                + "' at line "
-                                + str(importObj.line),
-                            )
+            )
+            return
+        elif spec.submodule_search_locations:
+            # Namespace / package without a single file — resolve each name.
+            for index, what in enumerate(importObj.what):
+                impName = importName + "." + what.name
+                found = False
+                try:
+                    sub_spec = importlib.util.find_spec(impName)
+                    sub_resolved = __resolution_from_spec(importObj, sub_spec, item_index=index)
+                    if sub_resolved is not None:
+                        result.append(sub_resolved)
+                        found = True
+                except Exception:
+                    pass
+                if not found:
+                    result.append(
+                        ImportResolution(
+                            importObj,
+                            index,
+                            False,
+                            None,
+                            None,
+                            "Could not resolve 'from "
+                            + importObj.name
+                            + " import "
+                            + what.name
+                            + "' at line "
+                            + str(importObj.line),
                         )
-                return
+                    )
+            return
     except Exception:
         pass
 

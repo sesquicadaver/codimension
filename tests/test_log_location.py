@@ -56,3 +56,11 @@ def test_line_must_be_positive(tmp_path: Path):
     py = tmp_path / "z.py"
     py.write_text("", encoding="utf-8")
     assert parse_log_location(f"{py}:0: bad") is None
+
+
+def test_at_line_format_with_path(tmp_path: Path):
+    py = tmp_path / "imp.py"
+    py.write_text("import os\n", encoding="utf-8")
+    path = str(py)
+    msg = f"WARNING  … {path} Could not resolve 'import os' at line 2"
+    assert parse_log_location(msg) == (path, 2)
