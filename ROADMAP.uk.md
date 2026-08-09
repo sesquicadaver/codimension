@@ -2,7 +2,7 @@
 
 > **Мова / Language:** Українська | [English](ROADMAP.md)
 
-**Поточний tip (синхронізація docs):** `master@c9da2526` (2026-08-08, після R138)  
+**Поточний tip (синхронізація docs):** `master@01be812c` (2026-08-09, після R174)  
 **Історичний baseline черги:** `master@d8f2e786` (2026-08-06) — старт лінійного R100+  
 **Living Spec:** [doc/plugins/living-specification.md](doc/plugins/living-specification.md)  
 **Autopilot:** перший рядок `OPEN` в **Активній черзі** (після порожнього [TODO_FIXME.md](TODO_FIXME.md))

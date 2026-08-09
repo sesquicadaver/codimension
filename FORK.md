@@ -42,15 +42,27 @@ Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git*
 - Occurrences search redo (`searchAgain` / `canRedo`)
 - Offscreen debugger e2e + nightly full-IDE smoke (T100–T130)
 
+### Headless core / аналіз (R100+)
+
+- `ExecutionTarget`: local / Docker / SSH / Kubernetes MVP
+- SymbolIndex, DependencyGraph, MetricProvider, OverlayLayer, risk score
+- CFG model + taint MVP; AI context + flag-gated explain/suggest (`ai_ui` / `CDM_AI_UI`)
+- Overlays: env / deps heat / deploy hints; update check + verified download (без auto-apply)
+- Feature flags: `~/.codimension3/feature_flags.json`
+
 ### Інше
 
 - FS smart zoom (рівень 4) у flow UI
 - mistune 3.x (`utils/md.py`), pip-audit без CVE-ignore
-- CI: ruff + mypy на `codimension` і `cdmplugins`, pytest (**173** тести), wheel, offscreen GUI smoke, pip-audit
+- CI: ruff + mypy на `codimension` і `cdmplugins`, pytest matrix 3.10–3.13, wheel, offscreen GUI smoke, pip-audit (лічильник тестів — лише в CI)
 
 ### UX
 
 - Без автозавантаження останнього проєкту при старті (швидкий запуск)
+
+### Стан плану
+
+Лінійна черга майже завершена (~95%). Відкрито: **R175** (safe-mode). Відкладено: R180–R182. Див. [ROADMAP.uk.md](ROADMAP.uk.md).
 
 ## Встановлення
 

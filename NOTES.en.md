@@ -55,6 +55,7 @@ password=<password>
    Publish a GitHub Release with a PEP 440 tag (``vX.Y.Z``) and a wheel/sdist
    plus SHA-256 (API digest or ``*.sha256`` / ``SHA256SUMS``) so Help → Check for
    updates can verify a cache download (R172–R173); apply/install remains R180.
+   Experimental AI UI: persistent flag ``ai_ui`` or env ``CDM_AI_UI`` (R174).
 4. Build (recommended):
 
 ```shell

@@ -2,9 +2,9 @@
 
 # Codimension GitHub Integration Plan
 
-**Version:** 1.4  
-**Date:** 2026-08-03  
-**Status:** Completed (Phases 1–5); CI current as of 2026-08 (matrix 3.10–3.13, 173 pytest, wheel, offscreen GUI, debugger_session, T072/T085)
+**Version:** 1.5  
+**Date:** 2026-08-09  
+**Status:** Completed (Phases 1–5); CI current as of 2026-08 (matrix 3.10–3.13, pytest in CI, wheel, offscreen GUI, debugger_session, T072/T085; no static test count)
 
 ---
 
@@ -20,7 +20,7 @@
 | Mypy | ✅ | codimension, cdmplugins (flowui/everything.py excluded) |
 | Smoke test | ✅ | `import codimension; import cdmplugins` |
 | Offscreen GUI smoke | ✅ | `scripts/offscreen_gui_smoke.py` (`QT_QPA_PLATFORM=offscreen`) |
-| Pytest | ✅ | **173** tests in `tests/`; matrix Python **3.10–3.13** |
+| Pytest | ✅ | suite under `tests/`; matrix Python **3.10–3.13** (counts — CI only) |
 | Debugger session gate | ✅ | `pytest tests/debugger/ -m debugger_session` |
 | T072 / T085 gates | ✅ | package-relative imports; core import graph |
 | Wheel + pip check | ✅ | clean venv install job |

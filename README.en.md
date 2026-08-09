@@ -19,6 +19,7 @@ Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codi
 - Pure-Python AST parsers exposed under the compatibility names `cdmpyparser` / `cdmcfparser` (no C extension required)
 - Plugin UI in `cdmplugins/` (Ruff, Mypy, Pytest, … need optional extras)
 - Debugger (breakpoints, watchpoints); debugger session tests in CI
+- Help → Check for updates (GitHub Releases; verified cache download, no auto-apply)
 - CI on **Ubuntu**: Ruff, format, Mypy, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen bootstrap smoke, `pip-audit`
 
 ## Limitations
@@ -28,7 +29,7 @@ Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codi
 - Git plugin is MVP; PRs are created via the **GitHub REST API** (token: `gh auth` → OS keyring → `0600` file)
 - Qt offscreen smoke in PR CI only constructs a bare `QApplication` (not MainWindow / plugins)
 - Full MainWindow smoke is a weekly workflow, not a PR blocker
-- Audit backlog closed in [TODO_FIXME.en.md](TODO_FIXME.en.md); active queue: [ROADMAP.md](ROADMAP.md) (first OPEN: R172)
+- Audit backlog closed in [TODO_FIXME.en.md](TODO_FIXME.en.md); active queue: [ROADMAP.md](ROADMAP.md) (first OPEN: **R175** — safe-mode; deferred R180–R182)
 
 ## Requirements
 

@@ -42,15 +42,27 @@ Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git*
 - Occurrences search redo (`searchAgain` / `canRedo`)
 - Offscreen debugger e2e + nightly full-IDE smoke (T100–T130)
 
+### Headless core / analysis (R100+)
+
+- `ExecutionTarget`: local / Docker / SSH / Kubernetes MVP
+- SymbolIndex, DependencyGraph, MetricProvider, OverlayLayer, risk score
+- CFG model + taint MVP; AI context + flag-gated explain/suggest (`ai_ui` / `CDM_AI_UI`)
+- Overlays: env / deps heat / deploy hints; update check + verified download (no auto-apply)
+- Feature flags: `~/.codimension3/feature_flags.json`
+
 ### Other
 
 - FS smart zoom (level 4) in flow UI
 - mistune 3.x (`utils/md.py`), pip-audit without CVE ignore
-- CI: ruff + mypy on `codimension` and `cdmplugins`, pytest (**173** tests), wheel, offscreen GUI smoke, pip-audit
+- CI: ruff + mypy on `codimension` and `cdmplugins`, pytest matrix 3.10–3.13, wheel, offscreen GUI smoke, pip-audit (test counts — CI only)
 
 ### UX
 
 - No auto-load of last project on startup (faster launch)
+
+### Plan status
+
+Linear queue nearly complete (~95%). Open: **R175** (safe-mode). Deferred: R180–R182. See [ROADMAP.md](ROADMAP.md).
 
 ## Installation
 

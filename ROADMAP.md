@@ -2,7 +2,7 @@
 
 > **Language / Мова:** English | [Українська](ROADMAP.uk.md)
 
-**Current tip (docs sync):** `master@c9da2526` (2026-08-08, after R138)  
+**Current tip (docs sync):** `master@01be812c` (2026-08-09, after R174)  
 **Queue freeze baseline (historical):** `master@d8f2e786` (2026-08-06) — start of the linear R100+ rebuild  
 **Living Spec:** [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md)  
 **Autopilot:** first `OPEN` row in **Active queue** (after empty [TODO_FIXME.md](TODO_FIXME.md))
