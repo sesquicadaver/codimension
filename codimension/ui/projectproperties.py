@@ -32,6 +32,7 @@ from utils.project import getProjectProperties
 from utils.settings import SETTINGS_DIR
 
 from .completers import DirCompleter, FileCompleter
+from .filedialogs import select_existing_directory, select_open_file
 from .itemdelegates import NoOutlineHeightDelegate
 from .labels import FramedLabel
 from .qt import (
@@ -41,7 +42,6 @@ from .qt import (
     QDialog,
     QDialogButtonBox,
     QEvent,
-    QFileDialog,
     QGridLayout,
     QLabel,
     QLineEdit,
@@ -413,62 +413,44 @@ class ProjectPropertiesDialog(QDialog):
 
     def onDirButton(self):
         """Displays a directory selection dialog"""
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog | QFileDialog.ShowDirsOnly
-        dirName = QFileDialog.getExistingDirectory(self, "Select project directory", self.dirEdit.text(), options)
+        dirName = select_existing_directory(self, "Select project directory", self.dirEdit.text())
         if dirName:
-            self.dirEdit.setText(os.path.normpath(dirName))
+            self.dirEdit.setText(dirName)
 
     def onScriptButton(self):
         """Displays a file selection dialog"""
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        scriptName = QFileDialog.getOpenFileName(
+        scriptName = select_open_file(
             self,
             "Select project main script",
             self.dirEdit.text(),
             "Python Files (*.py);;All Files (*)",
-            options=options,
         )
-        if isinstance(scriptName, tuple):
-            scriptName = scriptName[0]
         if scriptName:
-            self.scriptEdit.setText(os.path.normpath(scriptName))
+            self.scriptEdit.setText(scriptName)
 
     def onMdDocButton(self):
         """Displays an md file selection dialog"""
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        mdFileName = QFileDialog.getOpenFileName(
+        mdFileName = select_open_file(
             self,
             "Select project doc startup MD file",
             self.dirEdit.text(),
             "Markdown Files (*.md);;All Files (*)",
-            options=options,
         )
-        if isinstance(mdFileName, tuple):
-            mdFileName = mdFileName[0]
         if mdFileName:
-            self.mdDocEdit.setText(os.path.normpath(mdFileName))
+            self.mdDocEdit.setText(mdFileName)
 
     def onVenvButton(self):
         """Displays venv directory or Python executable selection."""
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
         startDir = self.venvEdit.text().strip() or self.dirEdit.text()
-        path, _ = QFileDialog.getOpenFileName(
+        path = select_open_file(
             self,
             "Select Python interpreter (e.g. venv/bin/python)",
             startDir,
             "Python (*python*);;All Files (*)",
-            options=options,
         )
         if not path:
-            dirPath = QFileDialog.getExistingDirectory(self, "Or select venv directory", startDir, options=options)
-            if dirPath:
-                path = os.path.normpath(dirPath)
+            path = select_existing_directory(self, "Or select venv directory", startDir)
         if path:
-            path = os.path.normpath(path)
             if self.__project and hasattr(self.__project, "getProjectDir"):
                 projDir = self.__project.getProjectDir()
                 if projDir and path.startswith(projDir):
@@ -483,11 +465,7 @@ class ProjectPropertiesDialog(QDialog):
 
     def onAddImportDir(self):
         """Displays a directory selection dialog"""
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog | QFileDialog.ShowDirsOnly
-        dirName = QFileDialog.getExistingDirectory(
-            self, "Select import directory", self.dirEdit.text(), options=options
-        )
+        dirName = select_existing_directory(self, "Select import directory", self.dirEdit.text())
 
         if not dirName:
             return
@@ -534,22 +512,13 @@ class ProjectPropertiesDialog(QDialog):
 
     def onAddExclude(self):
         """Add a directory or file to exclude from analysis."""
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog | QFileDialog.ShowDirsOnly
         startDir = self.dirEdit.text()
-        pathToAdd = QFileDialog.getExistingDirectory(
-            self, "Select directory to exclude from analysis", startDir, options=options
-        )
+        pathToAdd = select_existing_directory(self, "Select directory to exclude from analysis", startDir)
         if not pathToAdd:
-            options = QFileDialog.Options()
-            options |= QFileDialog.DontUseNativeDialog
-            pathToAdd, _ = QFileDialog.getOpenFileName(
-                self, "Or select file to exclude", startDir, "All Files (*)", options=options
-            )
+            pathToAdd = select_open_file(self, "Or select file to exclude", startDir, "All Files (*)")
         if not pathToAdd:
             return
 
-        pathToAdd = os.path.normpath(pathToAdd)
         if self.__project and self.__project.isProjectDir(pathToAdd):
             pathToAdd = relpath(pathToAdd, self.dirEdit.text())
 

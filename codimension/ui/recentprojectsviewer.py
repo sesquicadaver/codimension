@@ -265,6 +265,9 @@ class RecentProjectsViewer(QWidget):
         self.__delPrjMenuItem = self.__projectMenu.addAction(
             getIcon("trash.png"), "Delete from recent", self.__deleteProject
         )
+        self.__clearAllPrjMenuItem = self.__projectMenu.addAction(
+            getIcon("trash.png"), "Clear all recent projects", self.__clearAllProjects
+        )
         self.projectsView.setContextMenuPolicy(Qt.CustomContextMenu)
         self.projectsView.customContextMenuRequested.connect(self.__handleShowPrjContextMenu)
 
@@ -361,6 +364,8 @@ class RecentProjectsViewer(QWidget):
         self.copyPrjPathButton.triggered.connect(self.__prjPathToClipboard)
         self.trashButton = QAction(getIcon("delitem.png"), "Remove selected (not from the disk)", self)
         self.trashButton.triggered.connect(self.__deleteProject)
+        self.clearAllButton = QAction(getIcon("trash.png"), "Clear all recent projects (local settings only)", self)
+        self.clearAllButton.triggered.connect(self.__clearAllProjects)
 
         self.lowerToolbar = QToolBar()
         self.lowerToolbar.setMovable(False)
@@ -372,6 +377,7 @@ class RecentProjectsViewer(QWidget):
         self.lowerToolbar.addAction(self.copyPrjPathButton)
         self.lowerToolbar.addWidget(ToolBarExpandingSpacer(self))
         self.lowerToolbar.addAction(self.trashButton)
+        self.lowerToolbar.addAction(self.clearAllButton)
 
         self.projectsView = QTreeWidget()
         self.projectsView.setAlternatingRowColors(True)
@@ -427,6 +433,8 @@ class RecentProjectsViewer(QWidget):
 
     def __updateProjectToolbarButtons(self):
         """Updates the toolbar buttons depending on the __projectContextItem"""
+        hasAny = self.projectsView.topLevelItemCount() > 0
+        self.clearAllButton.setEnabled(hasAny)
         if self.__projectContextItem is None:
             self.loadButton.setEnabled(False)
             self.propertiesButton.setEnabled(False)
@@ -562,6 +570,10 @@ class RecentProjectsViewer(QWidget):
         fName = self.__projectContextItem.getFilename()
         Settings().deleteRecentProject(fName)
 
+    def __clearAllProjects(self):
+        """Clear the entire recent projects list from local settings."""
+        Settings().clearRecentProjects()
+
     def __loadProject(self):
         """handles 'Load' context menu item"""
         if self.__projectContextItem is None:
@@ -596,6 +608,7 @@ class RecentProjectsViewer(QWidget):
 
     def __populateProjects(self):
         """Populates the recent projects"""
+        Settings().pruneRecentProjects(needFlush=True)
         self.projectsView.clear()
         for item in Settings()["recentProjects"]:
             self.projectsView.addTopLevelItem(RecentProjectViewItem(item))

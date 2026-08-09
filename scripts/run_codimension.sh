@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch Codimension from this repo's .venv (dev checkout).
+# Launch Codimension from this repo's .venv.
 # Usage:
 #   ./scripts/run_codimension.sh
 #   ./scripts/run_codimension.sh path/to/project.cdm3
@@ -11,7 +11,7 @@ CDM="${ROOT}/.venv/bin/codimension"
 
 if [[ ! -x "$CDM" ]]; then
   echo "error: missing $CDM" >&2
-  echo "hint: cd \"$ROOT\" && python3 -m venv .venv && .venv/bin/pip install -e ." >&2
+  echo "hint: ./scripts/codimension_ctl.sh install --yes" >&2
   exit 1
 fi
 

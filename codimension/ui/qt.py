@@ -90,8 +90,8 @@ from PyQt5.QtWidgets import (
     QCompleter,
     QDialog,
     QDialogButtonBox,
-    QDirModel,  # obsolete but used by completers
     QFileDialog,
+    QFileSystemModel,
     QFontComboBox,
     QFontDialog,
     QFrame,
@@ -171,7 +171,7 @@ __all__ = [
     "QDialog",
     "QDialogButtonBox",
     "QDir",
-    "QDirModel",
+    "QFileSystemModel",
     "QMimeData",
     "QMutex",
     "QDoubleValidator",

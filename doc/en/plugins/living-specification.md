@@ -55,6 +55,8 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Install missing tool R179** | cdmplugins.tool_host + drivers | Dialog Install / IDE once / Cancel; pip into mutable project venv | tests/test_process_env.py |
 | **Tool probe env isolation** | cdmplugins.process_env | Clean-env ``python_module_available``; strip IDE PYTHONPATH for tool QProcess | tests/test_process_env.py |
 | **Recent files prune** | utils.fsenv + recent viewer + IDE smoke | Drop missing/`pytest-of-*`/`t130-script`; smoke uses temp Settings dir | tests/test_fsenv.py |
+| **Recent projects prune** | utils.settings + recentprojectsviewer + ui.filedialogs | Native dir pickers; QFileSystemModel completers; prune/clear recent `.cdm3` | tests/test_recent_projects_prune.py |
+| **Local deploy ctl** | scripts/codimension_ctl.sh + run_codimension.sh | install/uninstall for `.venv`; optional desktop; `--purge-config`; launch via run script | manual smoke after install |
 | **DependencyManifest R120** | utils.dependency_manifest | `buildDependencyManifest`; lock_hint; export script; collectInstallSources delegate | tests/test_dependency_manifest.py |
 | **ExecutionTarget R121** | core.execution | Protocol `run`/`debug`/`profile`/`which_python`; ExecutionRequest/Result | tests/test_execution_target.py |
 | **LocalExecutionTarget R122** | utils.local_execution + utils.run | `LocalExecutionTarget`; `getCwdCmdEnv` via protocol | tests/test_local_execution.py, test_run_argv.py |

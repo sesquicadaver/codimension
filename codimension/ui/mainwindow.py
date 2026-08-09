@@ -1661,22 +1661,18 @@ class CodimensionMainWindow(
         """Shows up a dialog to open a project"""
         if self.debugMode:
             return
-        dialog = QFileDialog(self, "Open project")
-        dialog.setFileMode(QFileDialog.ExistingFile)
-        dialog.setOption(QFileDialog.DontUseNativeDialog, True)
-        dialog.setNameFilter("Codimension project files (*.cdm3)")
-        urls = []
-        for dname in QDir.drives():
-            urls.append(QUrl.fromLocalFile(dname.absoluteFilePath()))
-        urls.append(QUrl.fromLocalFile(QDir.homePath()))
-        dialog.setDirectory(QDir.homePath())
-        dialog.setSidebarUrls(urls)
+        from .filedialogs import select_open_file
 
-        if dialog.exec_() != QDialog.Accepted:
+        fileName = select_open_file(
+            self,
+            "Open project",
+            QDir.homePath(),
+            "Codimension project files (*.cdm3);;All Files (*)",
+        )
+        if not fileName:
             return
 
-        fileNames = dialog.selectedFiles()
-        fileName = os.path.realpath(str(fileNames[0]))
+        fileName = os.path.realpath(fileName)
         if fileName == GlobalData().project.fileName:
             logging.warning("The selected project to load is the currently loaded one.")
             return

@@ -42,29 +42,19 @@
 ```bash
 git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install .
-# або з кореня репо (venv + PYTHONPATH):
+./scripts/codimension_ctl.sh install --yes --desktop
 ./scripts/run_codimension.sh
-# ./scripts/run_codimension.sh ./codimension.cdm3
 ```
 
-Плагіни аналізаторів (Ruff, Mypy, Pytest, …):
+Видалення: `./scripts/codimension_ctl.sh uninstall --yes`  
+(повне, з конфігом: `./scripts/codimension_ctl.sh uninstall --purge-config --yes`)
 
-```bash
-python -m pip install ".[tools,lint,test,security]"
-```
-
-Деталі: [doc/uk/README.md](doc/uk/README.md) → встановлення ([doc/INSTALL.md](doc/INSTALL.md)).
+Деталі: [doc/INSTALL.md](doc/INSTALL.md).
 
 ## Розробка
 
 ```bash
-python -m pip install -e ".[tools,lint,test,security]"
-# або convenience snapshot:
-# python -m pip install -r requirements.txt && python -m pip install -e .
+./scripts/codimension_ctl.sh install --yes
 pytest tests/ -v
 ruff check codimension cdmplugins
 ```
