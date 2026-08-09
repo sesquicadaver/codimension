@@ -46,7 +46,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install .
-codimension
+# або з кореня репо (venv + PYTHONPATH):
+./scripts/run_codimension.sh
+# ./scripts/run_codimension.sh ./codimension.cdm3
 ```
 
 Плагіни аналізаторів (Ruff, Mypy, Pytest, …):
