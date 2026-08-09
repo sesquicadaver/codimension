@@ -53,6 +53,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Log click-to-source R177** | utils.log_location + ui.logviewer + importutils | `parse_log_location`; import errors `path:line:`; Log double-click → `openFile` | tests/test_log_location.py, test_importutils.py |
 | **Tool host fallback R178** | cdmplugins.process_env | `python_module_available`; explicit `use_ide_host` (no silent fallback) | tests/test_process_env.py |
 | **Install missing tool R179** | cdmplugins.tool_host + drivers | Dialog Install / IDE once / Cancel; pip into mutable project venv | tests/test_process_env.py |
+| **Recent files prune** | utils.fsenv + recent viewer + IDE smoke | Drop missing/`pytest-of-*`/`t130-script`; smoke uses temp Settings dir | tests/test_fsenv.py |
 | **DependencyManifest R120** | utils.dependency_manifest | `buildDependencyManifest`; lock_hint; export script; collectInstallSources delegate | tests/test_dependency_manifest.py |
 | **ExecutionTarget R121** | core.execution | Protocol `run`/`debug`/`profile`/`which_python`; ExecutionRequest/Result | tests/test_execution_target.py |
 | **LocalExecutionTarget R122** | utils.local_execution + utils.run | `LocalExecutionTarget`; `getCwdCmdEnv` via protocol | tests/test_local_execution.py, test_run_argv.py |

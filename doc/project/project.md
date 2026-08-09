@@ -124,6 +124,12 @@ Import-analysis errors in the **Log** tab are prefixed with `path:line: …`.
 **Double-click** such a line to open the file at that line (pointing-hand cursor
 on hover). Lines without a location are ignored.
 
+### Recent files cleanup
+
+Missing files and ephemeral pytest/temp paths (`pytest-of-*`, `t130-script`)
+are dropped from **Recent files** on load and are not re-added. Opening a
+stale Recent entry removes it quietly (no WARNING spam).
+
 ### Lint/test plugins and project venv (R178 / R179)
 
 Drivers (`ruff`, `mypy`, `bandit`, …) use the **project Python** for checks.

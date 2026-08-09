@@ -20,6 +20,27 @@ class FakeSplash:
         del msg
 
 
+def isolate_settings_dir(settings_dir: str) -> str:
+    """Re-bind the Settings singleton FS/positions stores under ``settings_dir``.
+
+    Full-IDE smoke must not write Recent files / lastpositions into the
+    developer's real ``~/.codimension3``.
+    """
+    import utils.settings as settings_mod
+    from utils.filepositions import FilePositions
+    from utils.fsenv import FileSystemEnvironment
+
+    root = os.path.realpath(settings_dir)
+    os.makedirs(root, exist_ok=True)
+    if not root.endswith(os.path.sep):
+        root += os.path.sep
+    settings_mod.SETTINGS_DIR = root
+    settings = settings_mod.Settings()
+    FileSystemEnvironment.setup(settings, root)
+    FilePositions.setup(settings, root)
+    return root
+
+
 def _configure_debugger_settings() -> object:
     """Inline stop-at-first-line settings (avoid qapp-bound fixtures)."""
     from utils.settings import DebuggerSettings, Settings
@@ -34,17 +55,24 @@ def _configure_debugger_settings() -> object:
     return settings
 
 
-def build_main_window() -> tuple["CodimensionMainWindow", "CodimensionApplication"]:
+def build_main_window(
+    settings_dir: str | None = None,
+) -> tuple["CodimensionMainWindow", "CodimensionApplication"]:
     """Mirror ``codimension.py`` minimal UI bootstrap; return (window, app).
 
     Must not reuse a plain ``QApplication`` fixture — creates
     ``CodimensionApplication`` and assigns ``GlobalData().application``.
+
+    Pass ``settings_dir`` to keep smoke runs out of the real user config dir.
     """
     from ui.application import CodimensionApplication
     from utils.globals import GlobalData
     from utils.skin import Skin, populateSampleSkin
 
     os.environ["QT_X11_NO_NATIVE_MENUBAR"] = "1"
+
+    if settings_dir is not None:
+        isolate_settings_dir(settings_dir)
 
     gd = GlobalData()
     gd.version = "t130-smoke"
