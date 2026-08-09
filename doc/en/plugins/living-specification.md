@@ -50,6 +50,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Analysis cache registry R113** | utils.analysis_cache + brief/flow caches | `invalidate(project\|file\|env)`; ControlFlowInfoCache; wire env refresh / FS / save | tests/test_analysis_cache.py |
 | **Auto-attach project venv R114** | utils.venvbootstrap + Settings + Options | `maybeAutoAttachProjectVenv`; superseded by R176 policy | tests/test_venv_bootstrap.py |
 | **Project venv policy R176** | utils.venvbootstrap + Settings + Options + status bar | `projectVenvPolicy` (`manual`/`auto_session`/`auto_persist`); `applyProjectVenvPolicyOnOpen`; diagnostics WARNINGs; Env: double-click | tests/test_venv_bootstrap.py |
+| **Log click-to-source R177** | utils.log_location + ui.logviewer + importutils | `parse_log_location`; import errors `path:line:`; Log double-click → `openFile` | tests/test_log_location.py, test_importutils.py |
 | **DependencyManifest R120** | utils.dependency_manifest | `buildDependencyManifest`; lock_hint; export script; collectInstallSources delegate | tests/test_dependency_manifest.py |
 | **ExecutionTarget R121** | core.execution | Protocol `run`/`debug`/`profile`/`which_python`; ExecutionRequest/Result | tests/test_execution_target.py |
 | **LocalExecutionTarget R122** | utils.local_execution + utils.run | `LocalExecutionTarget`; `getCwdCmdEnv` via protocol | tests/test_local_execution.py, test_run_argv.py |

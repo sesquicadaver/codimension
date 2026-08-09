@@ -90,6 +90,15 @@ def test_get_unresolved_package_names_collects_third_party():
     assert getUnresolvedPackageNames(errors) == {"numpy", "requests"}
 
 
+def test_get_unresolved_package_names_with_file_line_prefix():
+    """R177: path:line: prefixes must not break package extraction."""
+    errors = [
+        "/proj/a.py:2: Could not resolve 'from numpy import array' at line 2",
+        "/proj/b.py:3: Could not resolve 'import requests' at line 3",
+    ]
+    assert getUnresolvedPackageNames(errors) == {"numpy", "requests"}
+
+
 def test_get_requirements_hint_returns_none_for_relative_only_errors(tmp_path):
     """No misleading pip hint when only relative imports failed."""
     errors = ["Could not resolve 'from .pkg import x' at line 1"]

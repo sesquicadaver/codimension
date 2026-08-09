@@ -782,10 +782,11 @@ class ImportsDiagramProgress(QDialog):
                     "or project path settings, not missing pip packages.",
                     len(self.__allImportErrors),
                 )
-                for err in self.__allImportErrors[:10]:
-                    logging.warning(err)
-                if len(self.__allImportErrors) > 10:
-                    logging.warning("... and %d more", len(self.__allImportErrors) - 10)
+            # R177: always emit sample path:line errors (after hint) for Log click-to-source.
+            for err in self.__allImportErrors[:10]:
+                logging.warning(err)
+            if len(self.__allImportErrors) > 10:
+                logging.warning("... and %d more", len(self.__allImportErrors) - 10)
 
         self.accept()
 
