@@ -182,11 +182,7 @@ def ensure_tool_python_and_environment(
         can_install = False
 
     ide_python = sys.executable
-    ide_available = (
-        bool(ide_python)
-        and ide_python != python_path
-        and python_module_available(ide_python, module)
-    )
+    ide_available = bool(ide_python) and ide_python != python_path and python_module_available(ide_python, module)
 
     choice = _prompt_tool_host_choice(
         parent,
@@ -201,9 +197,7 @@ def ensure_tool_python_and_environment(
 
     if choice == "install":
         if not can_install:
-            return mutable_error or (
-                f"Cannot install '{package}' into the project Python."
-            )
+            return mutable_error or (f"Cannot install '{package}' into the project Python.")
         try:
             from ui.venvprocess import ProcessCancelled
         except ImportError:
@@ -231,10 +225,7 @@ def ensure_tool_python_and_environment(
             use_ide_host=False,
         )
         if not python_module_available(python_path, module):
-            return (
-                f"Installed '{package}' but module '{module}' is still not importable "
-                f"in {python_path}."
-            )
+            return f"Installed '{package}' but module '{module}' is still not importable in {python_path}."
         return python_path, process_env
 
     if choice == "ide":
