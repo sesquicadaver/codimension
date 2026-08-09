@@ -51,7 +51,7 @@
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 flag-gated UI explain/suggest (offline/mock; no LLM) |
 | 27–29 Extended overlays | DONE | R135 framework + R160 env + R161 deps heat + R162 deploy hints |
-| 30–38 Release/update | PARTIAL → R175 | R171–R174 (channel→flags); safe-mode still OPEN |
+| 30–38 Release/update | DONE | R171–R175 (channel→safe-mode); auto-apply deferred as R180 |
 
 **Optimization applied:** solo-fork model — `master` + `feature/*` / `fix/*` + protected `ci-gate` (no `stable/develop` theatre). Auto-update apply/rollback stays deferred (R180) until product asks after R173.
 
@@ -108,6 +108,7 @@
 | D-R172 | R172 | In-app read-only GitHub Releases update check (`utils.update_check`) |
 | D-R173 | R173 | Verified update artifact download to cache (`utils.update_download`; fail closed) |
 | D-R174 | R174 | Persistent feature flags (`core.feature_flags`); gates AI UI (`ai_ui`) |
+| D-R175 | R175 | Safe-mode startup (`--safe-mode` / `CDM_SAFE_MODE`); plugins + overlays off |
 
 ---
 
@@ -115,7 +116,7 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R175 | Safe-mode startup (disable plugins / overlays) | CLI or env `CDM_SAFE_MODE=1`; smoke | S | OPEN |
+| — | — | *(empty)* | — | — | — |
 
 ### Deferred (explicit)
 
@@ -129,7 +130,7 @@
 
 ## Next autopilot pointer
 
-**First OPEN:** `R175` — Safe-mode startup (disable plugins / overlays).
+**Active queue empty.** Next work only on explicit ask for deferred **R180** / **R181** / **R182**.
 
 ---
 

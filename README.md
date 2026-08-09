@@ -29,7 +29,7 @@
 - Git-плагін — MVP; PR створюється через **GitHub REST API** (токен: `gh auth` → keyring → файл `0600`)
 - Qt offscreen smoke у PR CI створює лише `QApplication` (не MainWindow / plugins)
 - Full MainWindow smoke — weekly workflow, не PR-blocker
-- Технічний борг аудиту закрито в [TODO_FIXME.md](TODO_FIXME.md); активна черга: [ROADMAP.uk.md](ROADMAP.uk.md) (перший OPEN: **R175** — safe-mode; відкладено R180–R182)
+- Технічний борг аудиту закрито в [TODO_FIXME.md](TODO_FIXME.md); активна черга [ROADMAP.uk.md](ROADMAP.uk.md) порожня (відкладено R180–R182); safe-mode: `--safe-mode` / `CDM_SAFE_MODE=1`
 
 ## Вимоги
 

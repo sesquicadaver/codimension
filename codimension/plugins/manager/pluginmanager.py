@@ -107,6 +107,17 @@ class CDMPluginManager(PluginManager, QObject):
 
     def load(self):
         """Loads the found plugins"""
+        from core.safe_mode import is_safe_mode_enabled, safe_mode_reason
+
+        if is_safe_mode_enabled():
+            import logging
+
+            logging.info(
+                "PluginManager.load skipped (%s)",
+                safe_mode_reason() or "safe mode",
+            )
+            return
+
         # yapsy still needs a full ``imp`` surface on Python 3.12+ (package plugins).
         try:
             from imp_compat import ensure_imp_compat

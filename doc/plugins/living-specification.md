@@ -74,6 +74,7 @@
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice для символу; JSON; без мережі | tests/test_ai_context.py |
 | **AI UI R152** | core.ai_ui + editor.editorcontextmenus | Explain/suggest за `CDM_AI_UI` / flag `ai_ui` (default off); offline/mock | tests/test_ai_ui.py |
 | **Feature flags R174** | core.feature_flags | Persistent JSON flags; env overrides; гейт AI UI | tests/test_feature_flags.py |
+| **Safe mode R175** | core.safe_mode + codimension/pluginmanager/overlays | `--safe-mode` / `CDM_SAFE_MODE`; без плагінів і overlays | tests/test_safe_mode.py |
 | **Env overlay R160** | utils.environment_overlay + editor.flowuinavbar | Бейджі `env:source` + path на flow nav через R135; status bar → `env` | tests/test_environment_overlay.py |
 | **Deps overlay R161** | utils.dependency_overlay + diagram.depsitems | Edge heat з DependencyGraph; nav badges; tint connector | tests/test_dependency_overlay.py |
 | **Deploy overlay R162** | utils.deployment_overlay + editor.flowuinavbar | Read-only Dockerfile/Compose hints; nav badges | tests/test_deployment_overlay.py; fixtures/deployment |
@@ -139,7 +140,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — перший OPEN **R175** (safe-mode); відкладено R180–R182.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **активна черга порожня**; deferred R180–R182 лише за явним запитом.
 
 ### Матриця меж модулів (R103)
 

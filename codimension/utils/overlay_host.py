@@ -53,12 +53,20 @@ def editor_overlay_host() -> OverlayHost:
 
 
 def notify_flow_overlays(reason: str, *, path: Optional[str] = None) -> None:
-    """Notify flow-surface overlay layers."""
+    """Notify flow-surface overlay layers (no-op in R175 safe mode)."""
+    from core.safe_mode import is_safe_mode_enabled
+
+    if is_safe_mode_enabled():
+        return
     _FLOW_HOST.notify(reason, path=path)
 
 
 def notify_editor_overlays(reason: str, *, path: Optional[str] = None) -> None:
-    """Notify editor-surface overlay layers."""
+    """Notify editor-surface overlay layers (no-op in R175 safe mode)."""
+    from core.safe_mode import is_safe_mode_enabled
+
+    if is_safe_mode_enabled():
+        return
     _EDITOR_HOST.notify(reason, path=path)
 
 

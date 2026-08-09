@@ -280,8 +280,31 @@ class DeploymentOverlayLayer:
                 _LOG.debug("deployment overlay sink failed", exc_info=True)
 
 
+class _SafeModeDeploymentOverlay:
+    """No-op deployment overlay when R175 safe mode is active."""
+
+    layer_id = DEPLOYMENT_LAYER_ID + "-safe-disabled"
+
+    def add_sink(self, callback: Callable[[DeploymentBadgeInfo], None]) -> None:
+        del callback
+
+    def on_update(self, context: OverlayContext) -> None:
+        del context
+
+    def refresh(self, project=None) -> DeploymentBadgeInfo:
+        del project
+        return empty_deployment_badge()
+
+
+_SAFE_MODE_DEPLOY_OVERLAY = _SafeModeDeploymentOverlay()
+
+
 def ensure_deployment_overlay(host: Optional[OverlayHost] = None) -> DeploymentOverlayLayer:
     """Register the deployment overlay on the flow host if missing."""
+    from core.safe_mode import is_safe_mode_enabled
+
+    if is_safe_mode_enabled():
+        return _SAFE_MODE_DEPLOY_OVERLAY  # type: ignore[return-value]
     target = host if host is not None else flow_overlay_host()
     if target.registry.has(DEPLOYMENT_LAYER_ID):
         layer = target.registry.get(DEPLOYMENT_LAYER_ID)
