@@ -37,6 +37,41 @@ _DEFAULT_FS_PROPS: dict[str, list[Any]] = {
 }  # [path, ...]
 
 
+def is_transient_recent_path(path: str) -> bool:
+    """True for pytest/temp host paths that must not pollute Recent files."""
+    if not path:
+        return True
+    normalized = os.path.normpath(path).replace("\\", "/")
+    parts = [part for part in normalized.split("/") if part]
+    for part in parts:
+        if part.startswith("pytest-of-"):
+            return True
+        if part.startswith("pytest-"):
+            suffix = part[len("pytest-") :]
+            if suffix.isdigit():
+                return True
+    # Codimension T130 full-IDE smoke leftover directory name.
+    if "t130-script" in parts:
+        return True
+    return False
+
+
+def prune_recent_files(files: list[str] | None) -> list[str]:
+    """Drop missing, transient, and duplicate recent paths (order preserved)."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for path in files or []:
+        if not path or path in seen:
+            continue
+        if is_transient_recent_path(path):
+            continue
+        if not os.path.exists(path):
+            continue
+        seen.add(path)
+        out.append(path)
+    return out
+
+
 class FileSystemEnvironment:
     """Loads/stores/saves the fs related environment"""
 
@@ -74,6 +109,7 @@ class FileSystemEnvironment:
         if self.__fseFileName:
             default = deepcopy(_DEFAULT_FS_PROPS)
             self.__props = loadJSON(self.__fseFileName, "file system environment", default)
+            self.__prune_recent_on_disk()
 
     def save(self):
         """Saves the file system environment into a file"""
@@ -83,6 +119,14 @@ class FileSystemEnvironment:
     def setLimit(self, newLimit):
         """Sets the new limit to the number of entries"""
         self.__limit = newLimit
+
+    def __prune_recent_on_disk(self) -> None:
+        """Persist a cleaned recent list after load when stale entries exist."""
+        recent = self.__props.get("recent") or []
+        pruned = prune_recent_files(recent)
+        if pruned != recent:
+            self.__props["recent"] = pruned
+            FileSystemEnvironment.save(self)
 
     @property
     def tabStatus(self):
@@ -101,11 +145,13 @@ class FileSystemEnvironment:
 
     @recentFiles.setter
     def recentFiles(self, files):
-        self.__props["recent"] = files
+        self.__props["recent"] = prune_recent_files(files)
         FileSystemEnvironment.save(self)
 
     def addRecentFile(self, path):
         """Adds a single recent file. True if a new file was inserted."""
+        if not path or is_transient_recent_path(path) or not os.path.exists(path):
+            return False
         if path in self.__props["recent"]:
             self.__props["recent"].remove(path)
             self.__props["recent"].insert(0, path)

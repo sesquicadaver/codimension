@@ -636,7 +636,9 @@ class RecentProjectsViewer(QWidget):
         fName = self.__fileContextItem.getFilename()
 
         if not self.__fileContextItem.isValid():
-            logging.warning("Cannot open %s", fName)
+            # Stale Recent entries (e.g. deleted pytest tmp scripts) — drop quietly.
+            logging.info("Removing missing recent file %s", fName)
+            self.removeRecentFile(fName)
             return
 
         mime, _, _ = getFileProperties(fName)

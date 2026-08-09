@@ -1,5 +1,7 @@
 2026 Aug 09
 
+* Prune missing/transient Recent files (``pytest-of-*``, ``t130-script``);
+  isolate full-IDE smoke Settings dir so tests do not pollute ``~/.codimension3``
 * R179: when a lint/test ``-m`` tool is missing from the project venv, offer
   Install into project / Use IDE tools once / Cancel (no silent IDE fallback)
 * R178: lint/test drivers fall back to IDE Python when the ``-m`` tool

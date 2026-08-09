@@ -49,6 +49,7 @@ from utils.fileutils import (
     isPythonFile,
     isPythonMime,
 )
+from utils.fsenv import is_transient_recent_path
 from utils.globals import GlobalData
 from utils.misc import getDefaultProjectDoc, getNewFileTemplate
 from utils.pixmapcache import getIcon
@@ -2018,6 +2019,8 @@ class EditorsManager(QTabWidget):
                 fileName = os.path.abspath(prjDir + os.path.sep + fileName)
 
             if not os.path.exists(fileName):
+                if is_transient_recent_path(fileName):
+                    continue
                 logging.warning("Cannot restore last session tab. File is not found (" + fileName + ")")
                 continue
 

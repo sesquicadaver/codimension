@@ -38,7 +38,8 @@ def test_mainwindow_debug_stop_at_first_line(ide_env, tmp_path):
 
     from .ide_bootstrap import build_main_window
 
-    main_window, app = build_main_window()
+    # Keep Recent/lastpositions out of the developer's real ~/.codimension3.
+    main_window, app = build_main_window(settings_dir=str(tmp_path / "cdm-settings"))
     script = write_script(tmp_path)
     try:
         main_window._runManager.debug(str(script), False)
