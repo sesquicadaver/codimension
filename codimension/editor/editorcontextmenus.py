@@ -212,8 +212,7 @@ class EditorContextMenuMixin:
             QMessageBox.information(
                 self,
                 "AI UI disabled",
-                "Enable AI via Options → AI → Enable AI (experimental), "
-                f"or AI settings…, or set {AI_UI_ENV}=1.",
+                f"Enable AI via Options → AI → Enable AI (experimental), or AI settings…, or set {AI_UI_ENV}=1.",
             )
             return
         name = self.getCurrentOrSelection()[0].strip()
@@ -227,8 +226,7 @@ class EditorContextMenuMixin:
             QMessageBox.information(
                 self,
                 "AI UI disabled",
-                "Enable AI via Options → AI → Enable AI (experimental), "
-                f"or AI settings…, or set {AI_UI_ENV}=1.",
+                f"Enable AI via Options → AI → Enable AI (experimental), or AI settings…, or set {AI_UI_ENV}=1.",
             )
             return
         except ValueError as exc:
