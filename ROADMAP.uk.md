@@ -111,6 +111,7 @@
 | D-R175 | R175 | Safe-mode старт (`--safe-mode` / `CDM_SAFE_MODE`); без плагінів і overlays |
 | D-R176 | R176 | Політика проєктного venv (`projectVenvPolicy`); default auto_session + діагностика + клік Env: |
 | D-R177 | R177 | Log → джерело: `path:line:` помилки імпортів + double-click у Log |
+| D-R178 | R178 | Fallback host інструментів: IDE Python, якщо `-m` модуля немає в project venv |
 
 ---
 
@@ -132,7 +133,7 @@
 
 ## Вказівник autopilot
 
-**Активна черга порожня** (R177 злито). Далі — лише за явним запитом на deferred **R180** / **R181** / **R182**.
+**Активна черга порожня** (R178 злито). Далі — лише за явним запитом на deferred **R180** / **R181** / **R182**.
 
 ---
 

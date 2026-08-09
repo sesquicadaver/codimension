@@ -36,6 +36,73 @@ def test_build_tool_process_environment_inherits_and_overrides():
     assert env.value("FOO") == "bar"
 
 
+def test_module_from_python_args():
+    from cdmplugins.process_env import module_from_python_args
+
+    assert module_from_python_args(["-m", "mypy", "x.py"]) == "mypy"
+    assert module_from_python_args(["-m", "ruff", "check"]) == "ruff"
+    assert module_from_python_args(["check"]) is None
+    assert module_from_python_args(None) is None
+
+
+def test_python_module_available_stdlib():
+    from cdmplugins.process_env import python_module_available
+
+    assert python_module_available(sys.executable, "json") is True
+    assert python_module_available(sys.executable, "definitely_missing_mod_xyz") is False
+
+
+def test_resolve_tool_falls_back_to_ide_when_module_missing(tmp_path, monkeypatch):
+    """R178: project Python without tool → IDE Python that has it."""
+    from unittest.mock import MagicMock
+
+    from utils.analysis_environment import AnalysisEnvironment
+
+    from cdmplugins import process_env as pe
+
+    project_py = str(tmp_path / "proj" / "bin" / "python")
+    ide_py = str(tmp_path / "ide" / "bin" / "python")
+    site = str(tmp_path / "proj" / "lib" / "site-packages")
+
+    def fake_available(python_path, module, **_kwargs):
+        if module != "mypy":
+            return False
+        return python_path == ide_py
+
+    monkeypatch.setattr(pe, "python_module_available", fake_available)
+    monkeypatch.setattr(pe.sys, "executable", ide_py)
+
+    analysis = AnalysisEnvironment(
+        python_path=project_py,
+        source_kind="configured",
+        site_packages_roots=(site,),
+        project_id="uuid",
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.buildAnalysisEnvironment",
+        lambda _project, for_tools=False: analysis,
+    )
+
+    class FakeEnv:
+        def __init__(self):
+            self.values = {}
+
+        def insert(self, key, value):
+            self.values[key] = value
+
+        def value(self, key, default=""):
+            return self.values.get(key, default)
+
+    proj = MagicMock()
+    python_path, env = pe.resolve_tool_python_and_environment(
+        proj,
+        module="mypy",
+        env_factory=FakeEnv,
+    )
+    assert python_path == ide_py
+    assert site in env.value("PYTHONPATH", "")
+
+
 def test_build_tool_environ_applies_analysis_env(tmp_path):
     """R112 headless environ mirrors process_env analysis_env handling."""
     sys.modules.pop("utils.analysis_environment", None)

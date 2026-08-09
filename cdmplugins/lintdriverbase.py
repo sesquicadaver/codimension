@@ -20,7 +20,11 @@ import os.path
 from ui.qt import QByteArray, QProcess, QTimer, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
 
-from cdmplugins.process_env import resolve_tool_python_and_environment
+from cdmplugins.process_env import (
+    module_from_python_args,
+    python_module_available,
+    resolve_tool_python_and_environment,
+)
 
 # Terminate grace period before kill (ms) — avoids sync waitForFinished in GUI.
 _STOP_KILL_TIMEOUT_MS = 2000
@@ -82,8 +86,19 @@ class LintDriverBase(QWidget):
         self._stdout = ""
         self._stderr = ""
         self._args = self.buildArgs(fileName)
+        module = module_from_python_args(self._args)
 
-        self._pythonPath, processEnvironment = resolve_tool_python_and_environment(self._ide.project, self._encoding)
+        self._pythonPath, processEnvironment = resolve_tool_python_and_environment(
+            self._ide.project,
+            self._encoding,
+            module=module,
+        )
+        if module and not python_module_available(self._pythonPath, module):
+            self._process = None
+            return (
+                f"Python module '{module}' is not installed in the project or IDE environment. "
+                f"Install it (e.g. pip install {module}) or disable the plugin."
+            )
         self._process.setProcessEnvironment(processEnvironment)
         self._process.start(self._pythonPath, self._args)
 

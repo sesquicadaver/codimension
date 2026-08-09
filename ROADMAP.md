@@ -111,6 +111,7 @@
 | D-R175 | R175 | Safe-mode startup (`--safe-mode` / `CDM_SAFE_MODE`); plugins + overlays off |
 | D-R176 | R176 | Project venv policy (`projectVenvPolicy`); default auto_session + diagnostics + Env: click |
 | D-R177 | R177 | Log click-to-source: `path:line:` import errors + LogViewer double-click |
+| D-R178 | R178 | Tool host fallback: IDE Python when `-m` tool missing in project venv |
 
 ---
 
@@ -132,7 +133,7 @@
 
 ## Next autopilot pointer
 
-**Active queue empty** (R177 shipped). Next work only on explicit ask for deferred **R180** / **R181** / **R182**.
+**Active queue empty** (R178 shipped). Next work only on explicit ask for deferred **R180** / **R181** / **R182**.
 
 ---
 
