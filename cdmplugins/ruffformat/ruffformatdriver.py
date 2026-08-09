@@ -19,11 +19,8 @@ import os.path
 
 from ui.qt import QByteArray, QProcess, QWidget, pyqtSignal
 
-from cdmplugins.process_env import (
-    module_from_python_args,
-    python_module_available,
-    resolve_tool_python_and_environment,
-)
+from cdmplugins.process_env import module_from_python_args
+from cdmplugins.tool_host import ensure_tool_python_and_environment
 
 
 class RuffFormatDriver(QWidget):
@@ -71,17 +68,16 @@ class RuffFormatDriver(QWidget):
         ]
 
         module = module_from_python_args(self.__args)
-        pythonPath, processEnvironment = resolve_tool_python_and_environment(
+        resolved = ensure_tool_python_and_environment(
             self.__ide.project,
             self.__encoding,
             module=module,
+            parent=self,
         )
-        if module and not python_module_available(pythonPath, module):
+        if isinstance(resolved, str):
             self.__process = None
-            return (
-                f"Python module '{module}' is not installed in the project or IDE environment. "
-                f"Install it (e.g. pip install {module}) or disable the plugin."
-            )
+            return resolved
+        pythonPath, processEnvironment = resolved
         self.__process.setProcessEnvironment(processEnvironment)
         self.__process.start(pythonPath, self.__args)
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""T030 — ToolProcessEnvironment builder."""
+"""T030 / R178 / R179 — ToolProcessEnvironment and tool host ensure."""
 
 from __future__ import annotations
 
@@ -52,8 +52,8 @@ def test_python_module_available_stdlib():
     assert python_module_available(sys.executable, "definitely_missing_mod_xyz") is False
 
 
-def test_resolve_tool_falls_back_to_ide_when_module_missing(tmp_path, monkeypatch):
-    """R178: project Python without tool → IDE Python that has it."""
+def test_resolve_tool_stays_on_project_when_module_missing(tmp_path, monkeypatch):
+    """R179: no silent IDE fallback from resolve()."""
     from unittest.mock import MagicMock
 
     from utils.analysis_environment import AnalysisEnvironment
@@ -99,8 +99,239 @@ def test_resolve_tool_falls_back_to_ide_when_module_missing(tmp_path, monkeypatc
         module="mypy",
         env_factory=FakeEnv,
     )
+    assert python_path == project_py
+    assert site in env.value("PYTHONPATH", "")
+
+
+def test_resolve_tool_use_ide_host_explicit(tmp_path, monkeypatch):
+    """R179: IDE host only when use_ide_host=True."""
+    from unittest.mock import MagicMock
+
+    from utils.analysis_environment import AnalysisEnvironment
+
+    from cdmplugins import process_env as pe
+
+    project_py = str(tmp_path / "proj" / "bin" / "python")
+    ide_py = str(tmp_path / "ide" / "bin" / "python")
+    site = str(tmp_path / "proj" / "lib" / "site-packages")
+
+    monkeypatch.setattr(pe.sys, "executable", ide_py)
+
+    analysis = AnalysisEnvironment(
+        python_path=project_py,
+        source_kind="configured",
+        site_packages_roots=(site,),
+        project_id="uuid",
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.buildAnalysisEnvironment",
+        lambda _project, for_tools=False: analysis,
+    )
+
+    class FakeEnv:
+        def __init__(self):
+            self.values = {}
+
+        def insert(self, key, value):
+            self.values[key] = value
+
+        def value(self, key, default=""):
+            return self.values.get(key, default)
+
+    python_path, env = pe.resolve_tool_python_and_environment(
+        MagicMock(),
+        module="mypy",
+        env_factory=FakeEnv,
+        use_ide_host=True,
+    )
     assert python_path == ide_py
     assert site in env.value("PYTHONPATH", "")
+
+
+def test_pip_package_for_module():
+    from cdmplugins.tool_host import pip_package_for_module
+
+    assert pip_package_for_module("mypy") == "mypy"
+    assert pip_package_for_module("pip_audit") == "pip-audit"
+    assert pip_package_for_module("custom_tool") == "custom-tool"
+
+
+def test_ensure_install_into_project(tmp_path, monkeypatch):
+    """R179: Install choice runs pip into project Python and re-probes."""
+    from unittest.mock import MagicMock
+
+    from utils.analysis_environment import AnalysisEnvironment
+
+    from cdmplugins import process_env as pe
+    from cdmplugins import tool_host as th
+
+    project_py = str(tmp_path / "proj" / "bin" / "python")
+    site = str(tmp_path / "proj" / "lib" / "site-packages")
+    installed = {"mypy": False}
+
+    def fake_available(python_path, module, **_kwargs):
+        if module != "mypy":
+            return False
+        if python_path != project_py:
+            return False
+        return installed["mypy"]
+
+    monkeypatch.setattr(pe, "python_module_available", fake_available)
+    monkeypatch.setattr(th, "python_module_available", fake_available)
+
+    analysis = AnalysisEnvironment(
+        python_path=project_py,
+        source_kind="configured",
+        site_packages_roots=(site,),
+        project_id="uuid",
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.buildAnalysisEnvironment",
+        lambda _project, for_tools=False: analysis,
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.requireMutableProjectPython",
+        lambda _project: project_py,
+    )
+
+    calls: list[list[str]] = []
+
+    def fake_install(cmd, cwd, project_dir):
+        calls.append(cmd)
+        installed["mypy"] = True
+
+    class FakeEnv:
+        def __init__(self):
+            self.values = {}
+
+        def insert(self, key, value):
+            self.values[key] = value
+
+        def value(self, key, default=""):
+            return self.values.get(key, default)
+
+    proj = MagicMock()
+    proj.getProjectDir.return_value = str(tmp_path)
+
+    result = th.ensure_tool_python_and_environment(
+        proj,
+        module="mypy",
+        env_factory=FakeEnv,
+        choice_provider=lambda **_kwargs: "install",
+        install_runner=fake_install,
+    )
+    assert not isinstance(result, str)
+    python_path, env = result
+    assert python_path == project_py
+    assert calls and "mypy" in calls[0]
+    assert site in env.value("PYTHONPATH", "")
+
+
+def test_ensure_ide_once(tmp_path, monkeypatch):
+    """R179: Use IDE tools once keeps project site-packages."""
+    from unittest.mock import MagicMock
+
+    from utils.analysis_environment import AnalysisEnvironment
+
+    from cdmplugins import process_env as pe
+    from cdmplugins import tool_host as th
+
+    project_py = str(tmp_path / "proj" / "bin" / "python")
+    ide_py = str(tmp_path / "ide" / "bin" / "python")
+    site = str(tmp_path / "proj" / "lib" / "site-packages")
+
+    def fake_available(python_path, module, **_kwargs):
+        return module == "mypy" and python_path == ide_py
+
+    monkeypatch.setattr(pe, "python_module_available", fake_available)
+    monkeypatch.setattr(th, "python_module_available", fake_available)
+    monkeypatch.setattr(pe.sys, "executable", ide_py)
+    monkeypatch.setattr(th.sys, "executable", ide_py)
+
+    analysis = AnalysisEnvironment(
+        python_path=project_py,
+        source_kind="configured",
+        site_packages_roots=(site,),
+        project_id="uuid",
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.buildAnalysisEnvironment",
+        lambda _project, for_tools=False: analysis,
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.requireMutableProjectPython",
+        lambda _project: project_py,
+    )
+
+    class FakeEnv:
+        def __init__(self):
+            self.values = {}
+
+        def insert(self, key, value):
+            self.values[key] = value
+
+        def value(self, key, default=""):
+            return self.values.get(key, default)
+
+    result = th.ensure_tool_python_and_environment(
+        MagicMock(),
+        module="mypy",
+        env_factory=FakeEnv,
+        choice_provider=lambda **_kwargs: "ide",
+    )
+    assert not isinstance(result, str)
+    python_path, env = result
+    assert python_path == ide_py
+    assert site in env.value("PYTHONPATH", "")
+
+
+def test_ensure_cancel_headless(tmp_path, monkeypatch):
+    """R179: without UI / choice_provider → soft error, no install."""
+    from unittest.mock import MagicMock
+
+    from utils.analysis_environment import AnalysisEnvironment
+
+    from cdmplugins import process_env as pe
+    from cdmplugins import tool_host as th
+
+    project_py = str(tmp_path / "proj" / "bin" / "python")
+
+    monkeypatch.setattr(pe, "python_module_available", lambda *_a, **_k: False)
+    monkeypatch.setattr(th, "python_module_available", lambda *_a, **_k: False)
+
+    analysis = AnalysisEnvironment(
+        python_path=project_py,
+        source_kind="configured",
+        site_packages_roots=(),
+        project_id="uuid",
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.buildAnalysisEnvironment",
+        lambda _project, for_tools=False: analysis,
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.requireMutableProjectPython",
+        lambda _project: project_py,
+    )
+
+    class FakeEnv:
+        def __init__(self):
+            self.values = {}
+
+        def insert(self, key, value):
+            self.values[key] = value
+
+        def value(self, key, default=""):
+            return self.values.get(key, default)
+
+    result = th.ensure_tool_python_and_environment(
+        MagicMock(),
+        module="mypy",
+        env_factory=FakeEnv,
+    )
+    assert isinstance(result, str)
+    assert "not installed" in result
+    assert "mypy" in result
 
 
 def test_build_tool_environ_applies_analysis_env(tmp_path):
