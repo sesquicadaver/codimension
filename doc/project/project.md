@@ -118,6 +118,16 @@ The status bar shows **Env: project | session | auto | IDE | broken** (tooltip =
 
 Unresolved packages for pip are **opt-in** (unchecked by default) with a multi-select review list.
 
+### AI (experimental)
+
+**Options → AI**:
+- **Enable AI (experimental)** — persistent flag `ai_ui` (`~/.codimension3/feature_flags.json`)
+- **AI settings…** — same toggle + offline backend notes
+
+**Editor context menu → AI** (Python buffers): **AI settings…**, **Explain with AI…**, **Suggest with AI…**.
+Explain/Suggest stay disabled until the flag is on. Backend is local offline summary
+(SymbolIndex + CFG; no LLM / no API key). Env override: `CDM_AI_UI=1|0`.
+
 ### Log → source (R177)
 
 Import-analysis errors in the **Log** tab are prefixed with `path:line: …`.

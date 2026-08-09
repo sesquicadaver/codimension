@@ -1167,6 +1167,21 @@ class CodimensionMainWindow(
         if data:
             self.settings["projectVenvPolicy"] = data
 
+    def _aiUiEnabledTriggered(self, checked):
+        """Options → AI → Enable AI (experimental)."""
+        from core.ai_ui import ai_ui_env_override_active, set_ai_ui_enabled
+
+        if ai_ui_env_override_active():
+            return
+        set_ai_ui_enabled(bool(checked))
+
+    def _onAiSettings(self):
+        """Options → AI → AI settings… (and editor context menu)."""
+        from ui.aisettingsdlg import AiSettingsDialog
+
+        dlg = AiSettingsDialog(self)
+        dlg.exec_()
+
     def _editorCalltipsChanged(self):
         """Editor calltips changed"""
         self.settings["editorCalltips"] = not self.settings["editorCalltips"]

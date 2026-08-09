@@ -20,6 +20,7 @@ Enable via persistent flag ``ai_ui`` (R174) or env ``CDM_AI_UI`` (override).
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from enum import Enum
 from typing import Mapping, MutableMapping, Optional, Protocol
@@ -29,13 +30,53 @@ from core.feature_flags import (
     FLAG_AI_UI,
     FLAG_ENV_OVERRIDES,
     FeatureFlagsStore,
+    default_feature_flags_path,
     enable_flag_in_environ,
+    get_feature_flags_store,
     is_feature_enabled,
+    set_feature_enabled,
 )
 from core.symbol_index import SymbolKind
 
 #: Environment variable that enables AI UI actions (default: off).
 AI_UI_ENV = FLAG_ENV_OVERRIDES[FLAG_AI_UI]
+
+#: Human-readable name of the default offline backend (no network / no API key).
+AI_DEFAULT_BACKEND_LABEL = "offline-summary (local CFG/symbol pack; no LLM)"
+
+
+def ai_ui_env_override_active(environ: Optional[Mapping[str, str]] = None) -> bool:
+    """True when ``CDM_AI_UI`` is set (non-empty) and overrides the persistent flag."""
+    env: Mapping[str, str] = os.environ if environ is None else environ
+    return AI_UI_ENV in env and str(env.get(AI_UI_ENV, "")).strip() != ""
+
+
+def set_ai_ui_enabled(
+    enabled: bool,
+    *,
+    store: Optional[FeatureFlagsStore] = None,
+    persist: bool = True,
+) -> None:
+    """Persist the ``ai_ui`` feature flag (Options / settings dialog)."""
+    set_feature_enabled(FLAG_AI_UI, enabled, store=store, persist=persist)
+
+
+def describe_ai_ui_settings(
+    environ: Optional[Mapping[str, str]] = None,
+    *,
+    store: Optional[FeatureFlagsStore] = None,
+) -> dict[str, object]:
+    """Snapshot for the AI settings UI (flag, env override, store path, backend)."""
+    active_store = store if store is not None else get_feature_flags_store()
+    env_active = ai_ui_env_override_active(environ)
+    return {
+        "enabled": is_ai_ui_enabled(environ, store=store),
+        "store_enabled": active_store.is_enabled(FLAG_AI_UI),
+        "env_override_active": env_active,
+        "env_key": AI_UI_ENV,
+        "flags_path": active_store.path or default_feature_flags_path(),
+        "backend_label": AI_DEFAULT_BACKEND_LABEL,
+    }
 
 
 class AiUiDisabledError(RuntimeError):
@@ -222,6 +263,7 @@ def enable_ai_ui_for_tests(environ: MutableMapping[str, str]) -> None:
 
 
 __all__ = [
+    "AI_DEFAULT_BACKEND_LABEL",
     "AI_UI_ENV",
     "AiAction",
     "AiActionResult",
@@ -229,9 +271,12 @@ __all__ = [
     "AiUiDisabledError",
     "MockAiBackend",
     "OfflineSummaryBackend",
+    "ai_ui_env_override_active",
+    "describe_ai_ui_settings",
     "enable_ai_ui_for_tests",
     "is_ai_ui_enabled",
     "list_ai_menu_entries",
     "run_ai_action",
     "run_ai_action_for_source",
+    "set_ai_ui_enabled",
 ]
