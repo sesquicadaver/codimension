@@ -51,9 +51,9 @@
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 UI explain/suggest за flag (offline/mock; без LLM) |
 | 27–29 Extended overlays | DONE | R135 + R160/R161/R162 (env, deps heat, deploy hints) |
-| 30–38 Release/update | PARTIAL → R173+ | Канал (R171) + read-only GitHub check (R172); download/verify ще OPEN |
+| 30–38 Release/update | PARTIAL → R174+ | R171–R173 (канал, check, verified download); flags/safe-mode ще OPEN |
 
-**Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply оновлень — після доведеного download+verify (R173).
+**Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply оновлень відкладено (R180) після R173.
 
 ---
 
@@ -106,6 +106,7 @@
 | D-R162 | R162 | Deployment overlay: read-only Dockerfile/Compose hints через R135 |
 | D-R171 | R171 | Метадані каналу в `cdmverspec` (`stable`/`beta`/`dev`) |
 | D-R172 | R172 | In-app read-only перевірка GitHub Releases (`utils.update_check`) |
+| D-R173 | R173 | Verified download артефакту в cache (`utils.update_download`; fail closed) |
 
 ---
 
@@ -113,9 +114,8 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R173 | Завантаження + перевірка checksum артефакту | Fail closed; тести | M | OPEN |
-| 2 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
-| 3 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
+| 1 | R174 | Feature flags для experimental plugins/UI | Persistent flags + тест | S | OPEN |
+| 2 | R175 | Safe-mode старт (`CDM_SAFE_MODE=1`, без плагінів/overlays) | Smoke | S | OPEN |
 
 ### Відкладено (явно)
 
@@ -129,7 +129,7 @@
 
 ## Вказівник autopilot
 
-**Перший OPEN:** `R173` — завантаження + перевірка checksum артефакту.
+**Перший OPEN:** `R174` — feature flags для experimental plugins/UI.
 
 ---
 

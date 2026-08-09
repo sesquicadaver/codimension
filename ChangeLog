@@ -1,5 +1,7 @@
 2026 Aug 09
 
+* R173: verified update artifact download to cache (``utils.update_download``);
+  SHA-256 from API digest or sidecar; fail closed; Help offers download
 * R172: in-app read-only “check for updates” via GitHub Releases API
   (``utils.update_check``); Help menu action; mocked HTTP tests
 

@@ -13,7 +13,8 @@
 
 Fetches the public Releases API for the fork repo, compares tags to the
 installed ``cdmverspec.version``, and reports whether a newer release exists.
-No download or apply — that is R173+. Network access is injectable for tests.
+Asset metadata is attached for R173 download+verify. Apply/install is R180+.
+Network access is injectable for tests.
 """
 
 from __future__ import annotations
@@ -44,6 +45,17 @@ FetchFn = Callable[[str], bytes]
 
 
 @dataclass(frozen=True)
+class ReleaseAsset:
+    """One GitHub release asset (downloadable file)."""
+
+    name: str
+    browser_download_url: str
+    size: int = 0
+    content_type: str = ""
+    digest: Optional[str] = None  # e.g. ``sha256:<hex>`` from the API
+
+
+@dataclass(frozen=True)
 class ReleaseInfo:
     """One non-draft GitHub release of interest."""
 
@@ -52,6 +64,7 @@ class ReleaseInfo:
     prerelease: bool
     html_url: str
     published_at: Optional[str] = None
+    assets: tuple[ReleaseAsset, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -80,6 +93,39 @@ def normalize_version_tag(tag: str) -> Optional[str]:
     return raw
 
 
+def parse_release_assets(raw_assets: Any) -> tuple[ReleaseAsset, ...]:
+    """Parse the ``assets`` array from a GitHub release JSON object."""
+    if not isinstance(raw_assets, list):
+        return ()
+    out: list[ReleaseAsset] = []
+    for item in raw_assets:
+        if not isinstance(item, Mapping):
+            continue
+        name = str(item.get("name") or "").strip()
+        url = str(item.get("browser_download_url") or "").strip()
+        if not name or not url:
+            continue
+        size_raw = item.get("size", 0)
+        try:
+            size = int(size_raw) if size_raw is not None else 0
+        except (TypeError, ValueError):
+            size = 0
+        digest_raw = item.get("digest")
+        digest = str(digest_raw).strip() if digest_raw else None
+        if digest == "":
+            digest = None
+        out.append(
+            ReleaseAsset(
+                name=name,
+                browser_download_url=url,
+                size=max(size, 0),
+                content_type=str(item.get("content_type") or ""),
+                digest=digest,
+            )
+        )
+    return tuple(out)
+
+
 def parse_release_item(item: Mapping[str, Any]) -> Optional[ReleaseInfo]:
     """Parse one GitHub release JSON object; skip drafts and unparseable tags."""
     if bool(item.get("draft")):
@@ -97,6 +143,7 @@ def parse_release_item(item: Mapping[str, Any]) -> Optional[ReleaseInfo]:
         prerelease=bool(item.get("prerelease")),
         html_url=html_url,
         published_at=published_at,
+        assets=parse_release_assets(item.get("assets")),
     )
 
 
@@ -273,12 +320,14 @@ __all__ = [
     "DEFAULT_RELEASES_URL",
     "DEFAULT_TIMEOUT",
     "RELEASES_URL_ENV",
+    "ReleaseAsset",
     "ReleaseInfo",
     "UpdateCheckResult",
     "check_for_updates",
     "default_fetch",
     "format_update_message",
     "normalize_version_tag",
+    "parse_release_assets",
     "parse_release_item",
     "parse_releases_payload",
     "release_allowed_for_channel",

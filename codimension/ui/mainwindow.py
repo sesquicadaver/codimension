@@ -1346,8 +1346,13 @@ class CodimensionMainWindow(
         QDesktopServices.openUrl(QUrl("http://codimension.org/documentation/cheatsheet.html"))
 
     def _onCheckForUpdates(self):
-        """R172: read-only GitHub Releases update check (no download)."""
+        """R172/R173: check GitHub Releases; optional verified download to cache."""
         from utils.update_check import check_for_updates, format_update_message
+        from utils.update_download import (
+            default_update_cache_dir,
+            download_and_verify,
+            select_primary_artifact,
+        )
 
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
@@ -1360,7 +1365,42 @@ class CodimensionMainWindow(
             QMessageBox.warning(self, "Check for updates", text)
             return
         if result.status == "update_available" and result.latest is not None:
-            url = result.latest.html_url
+            latest = result.latest
+            artifact = select_primary_artifact(latest.assets)
+            url = latest.html_url
+            if artifact is not None:
+                answer = QMessageBox.question(
+                    self,
+                    "Check for updates",
+                    text
+                    + "\n\nDownload and verify the artifact into the local cache?"
+                    + "\n(Requires a trusted SHA-256; apply/install is not done.)",
+                    QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                    QMessageBox.Yes,
+                )
+                if answer == QMessageBox.Yes:
+                    QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+                    try:
+                        dl = download_and_verify(latest, default_update_cache_dir())
+                    finally:
+                        QApplication.restoreOverrideCursor()
+                    if dl.status == "ok":
+                        QMessageBox.information(
+                            self,
+                            "Check for updates",
+                            dl.message or f"Verified download:\n{dl.path}",
+                        )
+                    else:
+                        QMessageBox.warning(
+                            self,
+                            "Check for updates",
+                            (dl.message or "Download failed.") + (f"\n{dl.error}" if dl.error else ""),
+                        )
+                    return
+                if answer == QMessageBox.No and url:
+                    QDesktopServices.openUrl(QUrl(url))
+                    return
+                return
             if url:
                 answer = QMessageBox.question(
                     self,

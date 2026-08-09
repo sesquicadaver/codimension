@@ -52,8 +52,9 @@ password=<password>
 2. Make sure git clone is clean
 3. Edit `codimension/cdmverspec.py` setting the new ``version`` and, if needed,
    ``release_channel`` (``stable`` / ``beta`` / ``dev``; R171 — still one version).
-   Publish a GitHub Release with a PEP 440 tag (``vX.Y.Z``) so Help → Check for
-   updates (R172) can see it; download/apply remains R173+.
+   Publish a GitHub Release with a PEP 440 tag (``vX.Y.Z``) and a wheel/sdist
+   plus SHA-256 (API digest or ``*.sha256`` / ``SHA256SUMS``) so Help → Check for
+   updates can verify a cache download (R172–R173); apply/install remains R180.
 4. Build (recommended):
 
 ```shell
