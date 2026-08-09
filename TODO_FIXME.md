@@ -2,7 +2,7 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-08-09 (черга синхронізована з master@01be812c після R174; аудит P0–P2 закритий раніше @ d8f2e786 / PR #40)  
+**Дата перевірки:** 2026-08-09 (черга синхронізована з master@44c37b50 після R174; аудит P0–P2 закритий раніше @ d8f2e786 / PR #40)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
 ## Відкриті блокери

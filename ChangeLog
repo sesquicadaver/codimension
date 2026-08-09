@@ -1,6 +1,6 @@
 2026 Aug 09
 
-* Docs sync: tip ``master@01be812c``; queue pointers → R175 (README, ROADMAP,
+* Docs sync: tip ``master@44c37b50``; queue pointers → R175 (README, ROADMAP,
   TODO_FIXME, Living Spec, FORK); drop stale R172 / static test counts
 * R174: persistent feature flags (``core.feature_flags``); gates experimental
   AI UI via ``ai_ui`` (env ``CDM_AI_UI`` still overrides)

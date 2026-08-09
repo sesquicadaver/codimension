@@ -2,7 +2,7 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-08-09 (queue synced to master@01be812c after R174; audit P0–P2 closed earlier @ d8f2e786 / PR #40)  
+**Last review:** 2026-08-09 (queue synced to master@44c37b50 after R174; audit P0–P2 closed earlier @ d8f2e786 / PR #40)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
 ## Open blockers
