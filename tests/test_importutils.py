@@ -36,10 +36,16 @@ def _load_importutils():
 
     globals_mod = types.ModuleType("utils.globals")
 
-    class _GlobalData:
-        originalSysPath = []
+    class _Project:
+        @staticmethod
+        def isLoaded():
+            return False
 
-    globals_mod.GlobalData = _GlobalData
+    class _GlobalData:
+        originalSysPath = list(sys.path)
+        project = _Project()
+
+    globals_mod.GlobalData = lambda: _GlobalData()
     sys.modules["utils.globals"] = globals_mod
 
     run_mod = types.ModuleType("utils.run")
@@ -117,3 +123,23 @@ def test_build_dir_modules_reports_progress_without_qt(tmp_path):
     assert "mod" in modules
     assert messages
     assert all(isinstance(m, str) and m.startswith("Scanning ") for m in messages)
+
+
+def test_resolve_frozen_stdlib_import_os(tmp_path):
+    """Frozen stdlib modules (os/io on 3.11+) must resolve, not WARN."""
+    resolve_imports = _importutils.resolveImports
+
+    class _Imp:
+        def __init__(self, name, line):
+            self.name = name
+            self.line = line
+            self.what = []
+            self.alias = ""
+
+    path = str(tmp_path / "mod.py")
+    (tmp_path / "mod.py").write_text("import os\nimport io\n", encoding="utf-8")
+    resolved, errors = resolve_imports(path, [_Imp("os", 1), _Imp("io", 2)])
+    assert not errors, errors
+    names = {item[0] for item in resolved}
+    assert "os" in names
+    assert "io" in names

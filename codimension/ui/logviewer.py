@@ -49,12 +49,31 @@ MAX_LINES = 10000
 
 
 class _LogMessagesEdit(QPlainTextEdit):
-    """Log text area with double-click navigation to path:line (R177)."""
+    """Log text area with click navigation to path:line (R177)."""
 
     def __init__(self, parent=None):
         QPlainTextEdit.__init__(self, parent)
         self.setMouseTracking(True)
-        self.setToolTip("Double-click a line with path:line to open the source")
+        self.__pressPos = None
+        self.setToolTip("Click a line with path:line to open the source")
+
+    def mousePressEvent(self, event):
+        """Remember press position to distinguish click from drag-select."""
+        if event.button() == Qt.LeftButton:
+            self.__pressPos = event.pos()
+        QPlainTextEdit.mousePressEvent(self, event)
+
+    def mouseReleaseEvent(self, event):
+        """Open file:line on a short left-click over a navigable location."""
+        if event.button() == Qt.LeftButton and self.__pressPos is not None:
+            moved = (event.pos() - self.__pressPos).manhattanLength()
+            self.__pressPos = None
+            if moved <= 4 and self.__gotoLocationAt(event.pos()):
+                event.accept()
+                return
+        else:
+            self.__pressPos = None
+        QPlainTextEdit.mouseReleaseEvent(self, event)
 
     def mouseDoubleClickEvent(self, event):
         """Open file:line when the line under the cursor has a location."""

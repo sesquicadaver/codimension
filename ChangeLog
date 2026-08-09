@@ -1,5 +1,7 @@
 2026 Aug 09
 
+* Treat frozen stdlib modules (``os``/``io`` on 3.11+) as resolved for
+  import diagrams; Log click (not only double-click) opens ``path:line``
 * Prune missing/transient Recent files (``pytest-of-*``, ``t130-script``);
   isolate full-IDE smoke Settings dir so tests do not pollute ``~/.codimension3``
 * R179: when a lint/test ``-m`` tool is missing from the project venv, offer

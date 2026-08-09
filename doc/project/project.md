@@ -121,8 +121,9 @@ Unresolved packages for pip are **opt-in** (unchecked by default) with a multi-s
 ### Log → source (R177)
 
 Import-analysis errors in the **Log** tab are prefixed with `path:line: …`.
-**Double-click** such a line to open the file at that line (pointing-hand cursor
-on hover). Lines without a location are ignored.
+**Click** (or double-click) such a line to open the file at that line
+(pointing-hand cursor on hover). Lines without a location are ignored.
+Frozen stdlib modules (`os`, `io`, … on Python 3.11+) are treated as resolved.
 
 ### Recent files cleanup
 
