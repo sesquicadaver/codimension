@@ -10,6 +10,6 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **active queue empty** (R178 done). TODO_FIXME has no remaining 🔓 OPEN rows.
+Current pointer: **R179** (install missing tools into project venv). TODO_FIXME has no remaining 🔓 OPEN rows.
 Deferred only (do not pull forward without an explicit ask): **R180**, **R181**, **R182**.
 Active queue lists OPEN only; DONE history lives in ROADMAP Archive.

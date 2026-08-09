@@ -124,13 +124,13 @@ Import-analysis errors in the **Log** tab are prefixed with `path:line: …`.
 **Double-click** such a line to open the file at that line (pointing-hand cursor
 on hover). Lines without a location are ignored.
 
-### Lint/test plugins and project venv (R178)
+### Lint/test plugins and project venv (R178 / R179)
 
-Drivers (`ruff`, `mypy`, `bandit`, …) prefer the **project Python**. If the tool
-module is missing there, they **fall back to the IDE Python** (where `.[tools,lint]`
-is usually installed) while keeping the project site-packages on `PYTHONPATH`.
-If the module is missing everywhere, a soft message is shown instead of a
-`No module named` traceback.
+Drivers (`ruff`, `mypy`, `bandit`, …) use the **project Python** for checks.
+If the tool module is missing there, Codimension offers to **install it into the
+project venv** (`pip install …`). Optionally **Use IDE tools once** (project
+site-packages stay on `PYTHONPATH`). There is no silent IDE fallback — Cancel
+shows a soft message instead of a `No module named` traceback.
 
 ### Excluding paths from analysis
 

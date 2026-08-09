@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Build a QProcessEnvironment that inherits the system environment (T030/R112/R178)."""
+"""Build a QProcessEnvironment that inherits the system environment (T030/R112/R178/R179)."""
 
 from __future__ import annotations
 
@@ -126,16 +126,17 @@ def resolve_tool_python_and_environment(
     *,
     env_factory: Callable[[], Any] | None = None,
     module: str | None = None,
+    use_ide_host: bool = False,
 ) -> tuple[str, Any]:
     """Return ``(python_path, QProcessEnvironment)`` from project analysis env.
 
     Uses ``buildAnalysisEnvironment(..., for_tools=True)`` so broken configured
     interpreters fall back the same way as ``getEffectiveProjectPython``.
 
-    When ``module`` is set (R178) and that import is missing in the project
-    Python, falls back to the IDE ``sys.executable`` if the module is available
-    there. Project ``site-packages`` stay on ``PYTHONPATH`` so analysis still
-    sees project packages.
+    By default the project Python is used even when ``module`` is missing
+    (R179: install-into-project is preferred). Pass ``use_ide_host=True`` only
+    after an explicit user choice to host the tool in the IDE Python while
+    keeping project ``site-packages`` on ``PYTHONPATH``.
     """
     from utils.analysis_environment import AnalysisEnvironment
     from utils.venvbootstrap import buildAnalysisEnvironment
@@ -143,16 +144,15 @@ def resolve_tool_python_and_environment(
     analysis_env = buildAnalysisEnvironment(project, for_tools=True)
     python_path = analysis_env.python_path
 
-    if module and not python_module_available(python_path, module):
+    if use_ide_host:
         ide_python = sys.executable
-        if ide_python != python_path and python_module_available(ide_python, module):
+        if ide_python and ide_python != python_path:
             _LOG.info(
-                "Tool module %s not in project Python (%s); using IDE Python (%s)",
-                module,
-                python_path,
+                "Hosting tool module %s on IDE Python (%s); project was %s",
+                module or "(none)",
                 ide_python,
+                python_path,
             )
-            # Keep project site-packages for import/type resolution; host the tool in IDE.
             analysis_env = AnalysisEnvironment(
                 python_path=ide_python,
                 source_kind=analysis_env.source_kind,
@@ -160,13 +160,12 @@ def resolve_tool_python_and_environment(
                 project_id=analysis_env.project_id,
             )
             python_path = ide_python
-        else:
-            _LOG.warning(
-                "Tool module %s is not installed in project Python (%s) or IDE Python (%s)",
-                module,
-                python_path,
-                ide_python,
-            )
+    elif module and not python_module_available(python_path, module):
+        _LOG.warning(
+            "Tool module %s is not installed in project Python (%s)",
+            module,
+            python_path,
+        )
 
     process_env = build_tool_process_environment(
         encoding,

@@ -124,12 +124,13 @@ Unresolved для pip — **opt-in** (за замовчуванням вимкн
 **Подвійний клік** по такому рядку відкриває файл у редакторі на вказаному рядку
 (курсор-рука при наведенні). Рядки без локації ігноруються.
 
-### Плагіни lint/test і project venv (R178)
+### Плагіни lint/test і project venv (R178 / R179)
 
-Драйвери (`ruff`, `mypy`, `bandit`, …) спочатку пробують **project Python**.
-Якщо модуля інструмента там немає — **fallback на IDE Python** (де зазвичай
-встановлені `.[tools,lint]`), зберігаючи `PYTHONPATH` site-packages проєкту.
-Якщо модуля немає ніде — м’яке повідомлення замість traceback `No module named`.
+Драйвери (`ruff`, `mypy`, `bandit`, …) перевіряють код через **project Python**.
+Якщо модуля інструмента там немає — діалог: **встановити в project venv**
+(`pip install …`) або опційно **Use IDE tools once** (site-packages проєкту
+лишаються в `PYTHONPATH`). Тихого fallback на IDE немає — Cancel дає м’яке
+повідомлення замість traceback `No module named`.
 
 ### Виключення шляхів з аналізу
 
