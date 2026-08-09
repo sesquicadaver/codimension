@@ -1394,8 +1394,7 @@ class CodimensionMainWindow(
                         QMessageBox.warning(
                             self,
                             "Check for updates",
-                            (dl.message or "Download failed.")
-                            + (f"\n{dl.error}" if dl.error else ""),
+                            (dl.message or "Download failed.") + (f"\n{dl.error}" if dl.error else ""),
                         )
                     return
                 if answer == QMessageBox.No and url:
