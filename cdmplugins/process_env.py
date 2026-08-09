@@ -78,6 +78,13 @@ def build_tool_process_environment(
         env = QProcessEnvironment.systemEnvironment()
     env.insert("PYTHONIOENCODING", encoding or "utf-8")
     if analysis_env is not None:
+        # Drop inherited IDE PYTHONPATH before applying project analysis roots.
+        if hasattr(env, "remove"):
+            env.remove("PYTHONPATH")
+        elif isinstance(env, dict):
+            env.pop("PYTHONPATH", None)
+        else:
+            env.insert("PYTHONPATH", "")
         _apply_analysis_env(env, analysis_env)
     if overrides:
         for key, value in overrides.items():
@@ -95,24 +102,42 @@ def module_from_python_args(args: Sequence[str] | None) -> str | None:
     return name or None
 
 
+def _module_probe_environ() -> dict[str, str]:
+    """Environment for probing a target interpreter (no IDE PYTHONPATH leak).
+
+    The Codimension process often has ``PYTHONPATH`` pointing at the IDE tree
+    and/or its site-packages. Inheriting that into
+    ``project_venv/bin/python -c 'import mypy'`` makes the probe succeed even
+    when the project venv does not have the tool — then ``QProcess`` runs
+    without that leak and fails with ``No module named …``.
+    """
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    env.pop("PYTHONHOME", None)
+    return env
+
+
 def python_module_available(
     python_path: str,
     module: str,
     *,
     timeout: float = _MODULE_PROBE_TIMEOUT_SEC,
+    env: Mapping[str, str] | None = None,
 ) -> bool:
-    """True if ``python_path -c 'import module'`` succeeds."""
+    """True if ``python_path -c 'import module'`` succeeds in a clean probe env."""
     if not python_path or not module:
         return False
     # Only allow simple module names (no path injection).
     if not module.replace("_", "").replace(".", "").isalnum():
         return False
+    probe_env = dict(env) if env is not None else _module_probe_environ()
     try:
         completed = subprocess.run(
             [python_path, "-c", f"import {module}"],
             check=False,
             capture_output=True,
             timeout=timeout,
+            env=probe_env,
         )
     except (OSError, subprocess.TimeoutExpired):
         return False

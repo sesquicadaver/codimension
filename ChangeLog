@@ -1,5 +1,8 @@
 2026 Aug 09
 
+* Tool host: clean-env module probe (no IDE PYTHONPATH leak) so missing
+  mypy/ruff/bandit in the project venv shows Install dialog; ProcessError
+  lines prefixed with ``path:line:`` for Log click; wrapt pin for pylint
 * Treat frozen stdlib modules (``os``/``io`` on 3.11+) as resolved for
   import diagrams; Log click (not only double-click) opens ``path:line``
 * Prune missing/transient Recent files (``pytest-of-*``, ``t130-script``);

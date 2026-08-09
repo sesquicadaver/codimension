@@ -21,6 +21,9 @@ def test_build_tool_process_environment_inherits_and_overrides():
         def insert(self, key, value):
             self.values[key] = value
 
+        def remove(self, key):
+            self.values.pop(key, None)
+
         def value(self, key, default=""):
             return self.values.get(key, default)
 
@@ -50,6 +53,24 @@ def test_python_module_available_stdlib():
 
     assert python_module_available(sys.executable, "json") is True
     assert python_module_available(sys.executable, "definitely_missing_mod_xyz") is False
+
+
+def test_python_module_available_ignores_ide_pythonpath(tmp_path, monkeypatch):
+    """Probe must not see IDE site-packages via inherited PYTHONPATH."""
+    from cdmplugins.process_env import python_module_available
+
+    # Create a fake "foreign" package visible only via PYTHONPATH.
+    site = tmp_path / "foreign-site"
+    pkg = site / "probe_only_mod_xyz"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("# probe bait\n", encoding="utf-8")
+    monkeypatch.setenv("PYTHONPATH", str(site))
+
+    # Inherited env would find it; clean probe must not.
+    assert python_module_available(sys.executable, "probe_only_mod_xyz") is False
+    # Explicit polluted env still allows opt-in (tests / special hosts).
+    polluted = {**os.environ, "PYTHONPATH": str(site)}
+    assert python_module_available(sys.executable, "probe_only_mod_xyz", env=polluted) is True
 
 
 def test_resolve_tool_stays_on_project_when_module_missing(tmp_path, monkeypatch):
@@ -89,6 +110,9 @@ def test_resolve_tool_stays_on_project_when_module_missing(tmp_path, monkeypatch
 
         def insert(self, key, value):
             self.values[key] = value
+
+        def remove(self, key):
+            self.values.pop(key, None)
 
         def value(self, key, default=""):
             return self.values.get(key, default)
@@ -134,6 +158,9 @@ def test_resolve_tool_use_ide_host_explicit(tmp_path, monkeypatch):
 
         def insert(self, key, value):
             self.values[key] = value
+
+        def remove(self, key):
+            self.values.pop(key, None)
 
         def value(self, key, default=""):
             return self.values.get(key, default)
@@ -207,6 +234,9 @@ def test_ensure_install_into_project(tmp_path, monkeypatch):
         def insert(self, key, value):
             self.values[key] = value
 
+        def remove(self, key):
+            self.values.pop(key, None)
+
         def value(self, key, default=""):
             return self.values.get(key, default)
 
@@ -270,6 +300,9 @@ def test_ensure_ide_once(tmp_path, monkeypatch):
         def insert(self, key, value):
             self.values[key] = value
 
+        def remove(self, key):
+            self.values.pop(key, None)
+
         def value(self, key, default=""):
             return self.values.get(key, default)
 
@@ -283,6 +316,80 @@ def test_ensure_ide_once(tmp_path, monkeypatch):
     python_path, env = result
     assert python_path == ide_py
     assert site in env.value("PYTHONPATH", "")
+
+
+def test_ensure_offers_install_for_adaptivefc_style_venv(tmp_path, monkeypatch):
+    """Project venv without mypy → ensure prompts (not silent start)."""
+    from unittest.mock import MagicMock
+
+    from utils.analysis_environment import AnalysisEnvironment
+
+    from cdmplugins import process_env as pe
+    from cdmplugins import tool_host as th
+
+    project_py = "/home/sesquicadaver/Projects/AdaptiveFC/.venv/bin/python"
+    if not os.path.isfile(project_py):
+        import pytest
+
+        pytest.skip("AdaptiveFC project venv not present on this machine")
+
+    # Pollute like a mis-launched IDE: PYTHONPATH includes Codimension tools.
+    ide_site = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        ".venv",
+        "lib",
+        f"python{sys.version_info.major}.{sys.version_info.minor}",
+        "site-packages",
+    )
+    if os.path.isdir(ide_site):
+        monkeypatch.setenv("PYTHONPATH", ide_site)
+
+    # Real clean probe against AdaptiveFC python.
+    assert pe.python_module_available(project_py, "mypy") is False
+
+    analysis = AnalysisEnvironment(
+        python_path=project_py,
+        source_kind="configured",
+        site_packages_roots=(),
+        project_id="adaptivefc-test",
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.buildAnalysisEnvironment",
+        lambda _project, for_tools=False: analysis,
+    )
+    monkeypatch.setattr(
+        "utils.venvbootstrap.requireMutableProjectPython",
+        lambda _project: project_py,
+    )
+
+    class FakeEnv:
+        def __init__(self):
+            self.values = {}
+
+        def insert(self, key, value):
+            self.values[key] = value
+
+        def remove(self, key):
+            self.values.pop(key, None)
+
+        def value(self, key, default=""):
+            return self.values.get(key, default)
+
+    choices: list[str] = []
+
+    def provider(**kwargs):
+        choices.append(kwargs["module"])
+        return "cancel"
+
+    result = th.ensure_tool_python_and_environment(
+        MagicMock(),
+        module="mypy",
+        env_factory=FakeEnv,
+        choice_provider=provider,
+    )
+    assert isinstance(result, str)
+    assert "mypy" in result
+    assert choices == ["mypy"]
 
 
 def test_ensure_cancel_headless(tmp_path, monkeypatch):
@@ -320,6 +427,9 @@ def test_ensure_cancel_headless(tmp_path, monkeypatch):
 
         def insert(self, key, value):
             self.values[key] = value
+
+        def remove(self, key):
+            self.values.pop(key, None)
 
         def value(self, key, default=""):
             return self.values.get(key, default)

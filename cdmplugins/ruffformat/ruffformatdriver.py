@@ -68,11 +68,12 @@ class RuffFormatDriver(QWidget):
         ]
 
         module = module_from_python_args(self.__args)
+        parent = getattr(self.__ide, "mainWindow", None) or self
         resolved = ensure_tool_python_and_environment(
             self.__ide.project,
             self.__encoding,
             module=module,
-            parent=self,
+            parent=parent,
         )
         if isinstance(resolved, str):
             self.__process = None
@@ -127,10 +128,11 @@ class RuffFormatDriver(QWidget):
             "StdErr": self.__stderr,
         }
 
+        loc = f"{self.__fileName}:1: " if self.__fileName else ""
         if exitCode != 0 and self.__stderr:
-            results["ProcessError"] = "ruff format error:\n" + self.__stderr.strip()
+            results["ProcessError"] = loc + "ruff format error:\n" + self.__stderr.strip()
         elif self.__stderr and not self.__stdout:
-            results["ProcessError"] = "ruff format:\n" + self.__stderr.strip()
+            results["ProcessError"] = loc + "ruff format:\n" + self.__stderr.strip()
 
         self.sigFinished.emit(results)
         self.__args = None

@@ -134,10 +134,10 @@ Frozen stdlib (`os`, `io`, … на Python 3.11+) вважаються розв�
 ### Плагіни lint/test і project venv (R178 / R179)
 
 Драйвери (`ruff`, `mypy`, `bandit`, …) перевіряють код через **project Python**.
-Якщо модуля інструмента там немає — діалог: **встановити в project venv**
-(`pip install …`) або опційно **Use IDE tools once** (site-packages проєкту
-лишаються в `PYTHONPATH`). Тихого fallback на IDE немає — Cancel дає м’яке
-повідомлення замість traceback `No module named`.
+Наявність модуля зондується в **чистому env** (IDE `PYTHONPATH` не «протікає»
+у інтерпретатор проєкту). Якщо модуля немає — діалог: **встановити в project
+venv** або **Use IDE tools once**. Помилки процесу в Log мають префікс
+`шлях:рядок:` для кліку.
 
 ### Виключення шляхів з аналізу
 

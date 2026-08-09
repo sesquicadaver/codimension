@@ -64,3 +64,12 @@ def test_at_line_format_with_path(tmp_path: Path):
     path = str(py)
     msg = f"WARNING  … {path} Could not resolve 'import os' at line 2"
     assert parse_log_location(msg) == (path, 2)
+
+
+def test_process_error_prefix_clickable(tmp_path: Path):
+    """Lint ProcessError lines prefixed with path:line: are navigable."""
+    py = tmp_path / "app.py"
+    py.write_text("x = 1\n", encoding="utf-8")
+    path = str(py)
+    msg = f"ERROR      2026-08-09 13:25:25,720 {path}:1: Error:\n/proj/.venv/bin/python: No module named mypy"
+    assert parse_log_location(msg) == (path, 1)
