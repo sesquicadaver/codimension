@@ -1,5 +1,7 @@
 2026 Aug 09
 
+* Options: surface Enable AI / AI settings as top-level items (not a nested
+  submenu); replace dead ``codimension.org`` links with GitHub fork/upstream
 * AI: Options → AI (Enable + AI settings…) and editor context menu AI
   (settings / explain / suggest); persistent ``ai_ui`` flag with ``CDM_AI_UI`` override
 * Tool host: clean-env module probe (no IDE PYTHONPATH leak) so missing

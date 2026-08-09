@@ -27,9 +27,9 @@ from utils.project import CodimensionProject
 
 from .texttabwidget import TextTabWidget
 
-# Primary: active fork. Secondary: original (unmaintained).
+# Active fork + upstream repo (legacy project website is offline).
 FORK_URL = "https://github.com/sesquicadaver/codimension"
-ORIGINAL_URL = "http://codimension.org"
+UPSTREAM_URL = "https://github.com/SergeySatskiy/codimension"
 
 
 class WelcomeWidget(TextTabWidget):
@@ -128,8 +128,8 @@ or clicking any time the main toolbar button with the markdown icon.</p>
             + FORK_URL
             + """'>GitHub (fork)</a>,
        <a href='"""
-            + ORIGINAL_URL
-            + """'>Codimension home page (archive)</a>.
+            + UPSTREAM_URL
+            + """'>upstream repository</a>.
     </p>
   </td>
 </tr>

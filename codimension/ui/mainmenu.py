@@ -513,13 +513,13 @@ class MainWindowMenuMixin:
             act.setChecked(self.settings["projectVenvPolicy"] == data)
         venvPolicyMenu.triggered.connect(self._projectVenvPolicyChanged)
 
+        # Top-level (not a nested submenu) so the items are hard to miss.
         optionsMenu.addSeparator()
-        aiMenu = optionsMenu.addMenu("AI")
-        self.__aiEnableAct = aiMenu.addAction("Enable AI (experimental)")
+        self.__aiEnableAct = optionsMenu.addAction("Enable AI (experimental)")
         self.__aiEnableAct.setCheckable(True)
         self.__aiEnableAct.setChecked(False)
         self.__aiEnableAct.triggered.connect(self._aiUiEnabledTriggered)
-        aiMenu.addAction("AI settings…", self._onAiSettings)
+        optionsMenu.addAction("AI settings…", self._onAiSettings)
 
         optionsMenu.addSeparator()
         redirectedMenu = optionsMenu.addMenu("Redirected I/O")

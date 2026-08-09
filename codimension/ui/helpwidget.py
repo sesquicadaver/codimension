@@ -267,8 +267,8 @@ class QuickHelpWidget(TextTabWidget):
     <br>
     <p align="left">
         Note: The industry common keys are not shown above. Please refer to
-        <a href="http://codimension.org/documentation/cheatsheet.html">
-           http://codimension.org/documentation/cheatsheet.html</a> for the complete list of
+        <a href="https://github.com/sesquicadaver/codimension/blob/master/doc/www/codimension.org/documentation/cheatsheet.html">
+           the cheatsheet in the repository</a> for the complete list of
            bindings.
     </p>
 

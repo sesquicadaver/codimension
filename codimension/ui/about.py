@@ -100,7 +100,8 @@ of its features have been implemented yet.
 </p>
 <p align="justify">
 More information: <a href='https://github.com/sesquicadaver/codimension'>GitHub (fork)</a>,
-<a href='http://codimension.org'>Codimension home page</a>.<br> Happy coding with Codimension!
+<a href='https://github.com/SergeySatskiy/codimension'>upstream repository</a>.
+<br> Happy coding with Codimension!
 </p>""")
         browser.setOpenExternalLinks(True)
         return browser
