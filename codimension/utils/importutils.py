@@ -450,6 +450,7 @@ def resolveImports(fileName, imports):
     """
     result = []
     errors = []
+    abs_file = os.path.abspath(fileName) if fileName else ""
     for resolution in getImportResolutions(fileName, imports):
         if resolution.isResolved():
             if resolution.builtIn:
@@ -462,7 +463,18 @@ def resolveImports(fileName, imports):
                 what = resolution.what
             result.append((resolution.getVisibleName(), path, what))
         else:
-            errors.append(resolution.errMessage)
+            msg = resolution.errMessage or "Could not resolve import"
+            # R177: prefix with path:line: so LogViewer can navigate on double-click.
+            if abs_file and not msg.startswith(abs_file + ":"):
+                line = getattr(resolution.importObj, "line", None) or 1
+                try:
+                    line = int(line)
+                except (TypeError, ValueError):
+                    line = 1
+                if line < 1:
+                    line = 1
+                msg = f"{abs_file}:{line}: {msg}"
+            errors.append(msg)
 
     return result, errors
 

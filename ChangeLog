@@ -1,5 +1,7 @@
 2026 Aug 09
 
+* R177: Log click-to-source — import errors prefixed ``path:line:``;
+  double-click in Log opens the file (``utils.log_location``)
 * R176: project venv policy (``projectVenvPolicy``: manual / auto_session /
   auto_persist); default auto-attach session; WARNING on broken/IDE+deps;
   Env: double-click → VENV…; Options selector

@@ -118,6 +118,12 @@ The status bar shows **Env: project | session | auto | IDE | broken** (tooltip =
 
 Unresolved packages for pip are **opt-in** (unchecked by default) with a multi-select review list.
 
+### Log → source (R177)
+
+Import-analysis errors in the **Log** tab are prefixed with `path:line: …`.
+**Double-click** such a line to open the file at that line (pointing-hand cursor
+on hover). Lines without a location are ignored.
+
 ### Excluding paths from analysis
 
 Paths listed in **Exclude from analysis** (project properties) and the project

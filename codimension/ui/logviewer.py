@@ -26,6 +26,7 @@
 """The log viewer implementation"""
 
 from utils.colorfont import getZoomedMonoFont
+from utils.log_location import parse_log_location
 from utils.pixmapcache import getIcon
 
 from .qt import (
@@ -45,6 +46,53 @@ from .qt import (
 from .spacers import ToolBarExpandingSpacer
 
 MAX_LINES = 10000
+
+
+class _LogMessagesEdit(QPlainTextEdit):
+    """Log text area with double-click navigation to path:line (R177)."""
+
+    def __init__(self, parent=None):
+        QPlainTextEdit.__init__(self, parent)
+        self.setMouseTracking(True)
+        self.setToolTip("Double-click a line with path:line to open the source")
+
+    def mouseDoubleClickEvent(self, event):
+        """Open file:line when the line under the cursor has a location."""
+        if event.button() == Qt.LeftButton and self.__gotoLocationAt(event.pos()):
+            event.accept()
+            return
+        QPlainTextEdit.mouseDoubleClickEvent(self, event)
+
+    def mouseMoveEvent(self, event):
+        """Pointing hand when hovering a navigable location line."""
+        if self.__locationAt(event.pos()) is not None:
+            self.viewport().setCursor(Qt.PointingHandCursor)
+        else:
+            self.viewport().setCursor(Qt.IBeamCursor)
+        QPlainTextEdit.mouseMoveEvent(self, event)
+
+    def __locationAt(self, pos):
+        """Return ``(path, line)`` for the block under ``pos``, or ``None``."""
+        cursor = self.cursorForPosition(pos)
+        text = cursor.block().text()
+        return parse_log_location(text)
+
+    def __gotoLocationAt(self, pos) -> bool:
+        """Navigate to location under ``pos``. True if handled."""
+        loc = self.__locationAt(pos)
+        if loc is None:
+            return False
+        path, line = loc
+        try:
+            from utils.globals import GlobalData
+
+            main_window = GlobalData().mainWindow
+            if main_window is None:
+                return False
+            main_window.openFile(path, line)
+            return True
+        except Exception:
+            return False
 
 
 class LogViewer(QWidget):
@@ -87,7 +135,7 @@ class LogViewer(QWidget):
     def __createLayout(self, parent):
         """Helper to create the viewer layout"""
         # Messages list area
-        self.messages = QPlainTextEdit(parent)
+        self.messages = _LogMessagesEdit(parent)
         self.messages.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.messages.setReadOnly(True)
         self.messages.setMaximumBlockCount(MAX_LINES)
