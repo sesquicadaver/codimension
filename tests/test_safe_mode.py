@@ -97,7 +97,10 @@ def test_overlays_disabled_in_safe_mode() -> None:
     assert called == []
 
 
-def test_plugin_manager_load_skipped(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_plugin_manager_load_skipped() -> None:
+    """``load`` returns before collect when safe mode is on (no full manager init)."""
+    from types import SimpleNamespace
+
     from core.safe_mode import activate_safe_mode_from_cli
     from imp_compat import ensure_imp_compat
 
@@ -105,6 +108,5 @@ def test_plugin_manager_load_skipped(monkeypatch: pytest.MonkeyPatch) -> None:
     from plugins.manager.pluginmanager import CDMPluginManager
 
     activate_safe_mode_from_cli()
-    mgr = CDMPluginManager()
-    monkeypatch.setattr(mgr, "collectPlugins", lambda: (_ for _ in ()).throw(AssertionError("collect")))
-    mgr.load()  # must return without collecting
+    # Unbound call: guard must return before any ``self`` use / collect.
+    CDMPluginManager.load(SimpleNamespace())
