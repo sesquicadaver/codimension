@@ -112,7 +112,7 @@
 | D-R176 | R176 | Project venv policy (`projectVenvPolicy`); default auto_session + diagnostics + Env: click |
 | D-R177 | R177 | Log click-to-source: `path:line:` import errors + LogViewer double-click |
 | D-R178 | R178 | Tool host fallback: IDE Python when `-m` tool missing in project venv |
-| D-R179 | R179 | Install missing `-m` tools into project venv (dialog; IDE host opt-in) |
+| D-R179 | R179 | Install missing `-m` tools into project venv (dialog; IDE host opt-in) — PR #89 / `8c19d108` |
 
 ---
 
@@ -120,7 +120,7 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R179 | Install missing tool into project venv | Dialog Install / Use IDE once / Cancel; pip via mutable project Python; drivers wired; tests | S | OPEN |
+| — | — | *(empty)* | — | — | — |
 
 ### Deferred (explicit)
 
@@ -134,7 +134,7 @@
 
 ## Next autopilot pointer
 
-**R179** (install missing analysis tools into project venv). Then deferred **R180** / **R181** / **R182** only on explicit ask.
+**Active queue empty** (R179 shipped — PR #89 / `8c19d108`). Next work only on explicit ask for deferred **R180** / **R181** / **R182**.
 
 ---
 
