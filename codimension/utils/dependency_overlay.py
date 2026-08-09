@@ -295,8 +295,31 @@ class DependencyOverlayLayer:
                 _LOG.debug("dependency overlay sink failed", exc_info=True)
 
 
+class _SafeModeDependencyOverlay:
+    """No-op dependency overlay when R175 safe mode is active."""
+
+    layer_id = DEPENDENCY_LAYER_ID + "-safe-disabled"
+
+    def add_sink(self, callback: Callable[[DepsHeatBadgeInfo], None]) -> None:
+        del callback
+
+    def on_update(self, context: OverlayContext) -> None:
+        del context
+
+    def refresh(self, project=None, *, focus_path: Optional[str] = None) -> DepsHeatBadgeInfo:
+        del project, focus_path
+        return empty_deps_heat_badge()
+
+
+_SAFE_MODE_DEPS_OVERLAY = _SafeModeDependencyOverlay()
+
+
 def ensure_dependency_overlay(host: Optional[OverlayHost] = None) -> DependencyOverlayLayer:
     """Register the dependency heat overlay on the flow host if missing."""
+    from core.safe_mode import is_safe_mode_enabled
+
+    if is_safe_mode_enabled():
+        return _SAFE_MODE_DEPS_OVERLAY  # type: ignore[return-value]
     target = host if host is not None else flow_overlay_host()
     if target.registry.has(DEPENDENCY_LAYER_ID):
         layer = target.registry.get(DEPENDENCY_LAYER_ID)

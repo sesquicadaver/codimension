@@ -62,7 +62,7 @@ Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git*
 
 ### Plan status
 
-Linear queue nearly complete (~95%). Open: **R175** (safe-mode). Deferred: R180–R182. See [ROADMAP.md](ROADMAP.md).
+Linear R100+ queue **complete** (including R175 safe-mode). Deferred: R180–R182. See [ROADMAP.md](ROADMAP.md).
 
 ## Installation
 

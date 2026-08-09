@@ -56,6 +56,7 @@ password=<password>
    plus SHA-256 (API digest or ``*.sha256`` / ``SHA256SUMS``) so Help → Check for
    updates can verify a cache download (R172–R173); apply/install remains R180.
    Experimental AI UI: persistent flag ``ai_ui`` or env ``CDM_AI_UI`` (R174).
+   Safe-mode IDE: ``codimension --safe-mode`` or ``CDM_SAFE_MODE=1`` (R175).
 4. Build (recommended):
 
 ```shell

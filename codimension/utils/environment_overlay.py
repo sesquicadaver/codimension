@@ -161,8 +161,31 @@ class EnvironmentOverlayLayer:
         return badge
 
 
+class _SafeModeEnvironmentOverlay:
+    """No-op env overlay when R175 safe mode is active."""
+
+    layer_id = ENVIRONMENT_LAYER_ID + "-safe-disabled"
+
+    def add_sink(self, callback: Callable[[EnvBadgeInfo], None]) -> None:
+        del callback
+
+    def on_update(self, context: OverlayContext) -> None:
+        del context
+
+    def refresh(self, project=None) -> EnvBadgeInfo:
+        del project
+        return EnvBadgeInfo(source_kind="safe", source_badge="", path_badge="", tooltip="Safe mode: overlays off")
+
+
+_SAFE_MODE_ENV_OVERLAY = _SafeModeEnvironmentOverlay()
+
+
 def ensure_environment_overlay(host: Optional[OverlayHost] = None) -> EnvironmentOverlayLayer:
     """Register the environment overlay on the flow host if missing."""
+    from core.safe_mode import is_safe_mode_enabled
+
+    if is_safe_mode_enabled():
+        return _SAFE_MODE_ENV_OVERLAY  # type: ignore[return-value]
     target = host if host is not None else flow_overlay_host()
     if target.registry.has(ENVIRONMENT_LAYER_ID):
         layer = target.registry.get(ENVIRONMENT_LAYER_ID)

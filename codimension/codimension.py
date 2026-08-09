@@ -188,8 +188,19 @@ class CodimensionUILauncher:
             default=False,
             help="do not restore previous IDE state (default: Off)",
         )
+        parser.add_option(
+            "--safe-mode",
+            action="store_true",
+            dest="safeMode",
+            default=False,
+            help="skip plugins and flow overlays (also: CDM_SAFE_MODE=1)",
+        )
 
         self.__options, self.__args = parser.parse_args()
+        if self.__options.safeMode:
+            from core.safe_mode import activate_safe_mode_from_cli
+
+            activate_safe_mode_from_cli()
         self.setupLogging()
 
         # The default exception handler can be replaced
@@ -262,8 +273,15 @@ class CodimensionUILauncher:
         """UI launchpad"""
         globalData = GlobalData()
 
-        self.__splash.showMessage("Loading plugins...")
-        globalData.pluginManager.load()
+        from core.safe_mode import is_safe_mode_enabled, safe_mode_reason
+
+        if is_safe_mode_enabled():
+            reason = safe_mode_reason() or "safe mode"
+            self.__splash.showMessage(f"Safe mode ({reason}): plugins skipped...")
+            logging.info("Safe mode active (%s): plugins and overlays disabled", reason)
+        else:
+            self.__splash.showMessage("Loading plugins...")
+            globalData.pluginManager.load()
 
         settings = Settings()
         mainWindow = globalData.mainWindow

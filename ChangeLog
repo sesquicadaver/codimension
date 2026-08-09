@@ -1,5 +1,7 @@
 2026 Aug 09
 
+* R175: safe-mode startup (``--safe-mode`` / ``CDM_SAFE_MODE``) skips plugins
+  and flow overlays; active ROADMAP queue empty (deferred R180–R182)
 * Docs sync: tip ``master@01be812c``; queue pointers → R175 (README, ROADMAP,
   TODO_FIXME, Living Spec, FORK); drop stale R172 / static test counts
 * R174: persistent feature flags (``core.feature_flags``); gates experimental

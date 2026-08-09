@@ -62,7 +62,7 @@ Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git*
 
 ### Стан плану
 
-Лінійна черга майже завершена (~95%). Відкрито: **R175** (safe-mode). Відкладено: R180–R182. Див. [ROADMAP.uk.md](ROADMAP.uk.md).
+Лінійна черга R100+ **завершена** (включно з R175 safe-mode). Відкладено: R180–R182. Див. [ROADMAP.uk.md](ROADMAP.uk.md).
 
 ## Встановлення
 
