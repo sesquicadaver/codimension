@@ -19,6 +19,19 @@
 - Плагіни: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
 
+## pylint / wrapt на Python 3.11+
+
+`cdmpylintplugin` тягне старий `pylint==2.5.3` → `astroid==2.5` → `wrapt<1.13`.
+У `constraints.txt` лишається `wrapt==1.12.1` (інакше `pip install -c`
+не резолвиться з astroid); цей wrapt імпортує видалений
+`inspect.formatargspec` і падає на 3.11+. Після install у IDE venv:
+
+```bash
+.venv/bin/pip install 'wrapt>=1.14' --no-deps
+```
+
+(конфлікт з pin astroid очікуваний; після цього `python -m pylint` працює).
+
 ---
 
 # How to prepare a release (maintainers)

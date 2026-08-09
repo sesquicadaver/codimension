@@ -2,7 +2,8 @@
 
 * Tool host: clean-env module probe (no IDE PYTHONPATH leak) so missing
   mypy/ruff/bandit in the project venv shows Install dialog; ProcessError
-  lines prefixed with ``path:line:`` for Log click; wrapt pin for pylint
+  lines prefixed with ``path:line:`` for Log click; keep ``wrapt==1.12.1``
+  in constraints (astroid) and document ``wrapt>=1.14 --no-deps`` for Py3.11+ pylint
 * Treat frozen stdlib modules (``os``/``io`` on 3.11+) as resolved for
   import diagrams; Log click (not only double-click) opens ``path:line``
 * Prune missing/transient Recent files (``pytest-of-*``, ``t130-script``);

@@ -19,6 +19,19 @@ See [doc/en/INSTALL.md](doc/en/INSTALL.md) (Ukrainian: [doc/INSTALL.md](doc/INST
 - Plugins: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
 
+## pylint / wrapt on Python 3.11+
+
+`cdmpylintplugin` pulls `pylint==2.5.3` → `astroid==2.5` → `wrapt<1.13`.
+`constraints.txt` keeps `wrapt==1.12.1` so `pip install -c constraints.txt`
+resolves; that build imports removed `inspect.formatargspec` and fails on 3.11+.
+After install into the IDE venv:
+
+```bash
+.venv/bin/pip install 'wrapt>=1.14' --no-deps
+```
+
+(expected conflict with the astroid pin; `python -m pylint` then works).
+
 ---
 
 # How to prepare a release (maintainers)

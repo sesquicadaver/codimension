@@ -75,6 +75,7 @@ tomli_w==1.2.0
 typing_extensions==4.16.0
 urllib3==2.7.0
 vulture==2.16
-# 1.12.1 imports removed inspect.formatargspec (breaks on Python 3.11+)
-wrapt==1.17.2
+# astroid 2.5 requires wrapt<1.13; on Python 3.11+ after install run:
+#   pip install 'wrapt>=1.14' --no-deps
+wrapt==1.12.1
 Yapsy==1.12.2
