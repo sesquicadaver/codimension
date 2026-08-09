@@ -514,6 +514,14 @@ class MainWindowMenuMixin:
         venvPolicyMenu.triggered.connect(self._projectVenvPolicyChanged)
 
         optionsMenu.addSeparator()
+        aiMenu = optionsMenu.addMenu("AI")
+        self.__aiEnableAct = aiMenu.addAction("Enable AI (experimental)")
+        self.__aiEnableAct.setCheckable(True)
+        self.__aiEnableAct.setChecked(False)
+        self.__aiEnableAct.triggered.connect(self._aiUiEnabledTriggered)
+        aiMenu.addAction("AI settings…", self._onAiSettings)
+
+        optionsMenu.addSeparator()
         redirectedMenu = optionsMenu.addMenu("Redirected I/O")
         optionItems = [
             ("Reuse I/O console if available and clear", CLEAR_AND_REUSE),
@@ -1039,6 +1047,18 @@ class MainWindowMenuMixin:
         policy = self.settings["projectVenvPolicy"]
         for act in self.__venvPolicyGroup.actions():
             act.setChecked(act.data() == policy)
+
+        from core.ai_ui import ai_ui_env_override_active, is_ai_ui_enabled
+
+        self.__aiEnableAct.setChecked(is_ai_ui_enabled())
+        env_locked = ai_ui_env_override_active()
+        self.__aiEnableAct.setEnabled(not env_locked)
+        if env_locked:
+            from core.ai_ui import AI_UI_ENV
+
+            self.__aiEnableAct.setToolTip(f"Overridden by environment variable {AI_UI_ENV}")
+        else:
+            self.__aiEnableAct.setToolTip("Persistent feature flag ai_ui (also: Options → AI → AI settings…)")
 
     def __helpAboutToShow(self):
         """Triggered when help menu is about to show"""

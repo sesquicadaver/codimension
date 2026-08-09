@@ -19,6 +19,12 @@ See [doc/en/INSTALL.md](doc/en/INSTALL.md) (Ukrainian: [doc/INSTALL.md](doc/INST
 - Plugins: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
 
+## AI (experimental)
+
+**Options → AI → Enable AI** or **AI settings…**. Editor context menu → **AI**.
+Flag `ai_ui` in `~/.codimension3/feature_flags.json`; override: `CDM_AI_UI=1`.
+Backend is offline for now (no LLM).
+
 ## pylint / wrapt on Python 3.11+
 
 `cdmpylintplugin` pulls `pylint==2.5.3` → `astroid==2.5` → `wrapt<1.13`.

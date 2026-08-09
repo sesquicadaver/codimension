@@ -118,6 +118,16 @@ UUID проєкту використовується для його ідент�
 
 Unresolved для pip — **opt-in** (за замовчуванням вимкнено) з multi-select.
 
+### AI (experimental)
+
+**Options → AI**:
+- **Enable AI (experimental)** — persistent прапорець `ai_ui` (`~/.codimension3/feature_flags.json`)
+- **AI settings…** — той самий перемикач + нотатки про offline backend
+
+**ПКМ редактора → AI** (Python): **AI settings…**, **Explain with AI…**, **Suggest with AI…**.
+Explain/Suggest вимкнені, доки прапорець off. Backend — локальний offline summary
+(SymbolIndex + CFG; без LLM / API-ключа). Override: `CDM_AI_UI=1|0`.
+
 ### Log → джерело (R177)
 
 Помилки аналізу імпортів у вкладці **Log** мають префікс `шлях:рядок: …`.

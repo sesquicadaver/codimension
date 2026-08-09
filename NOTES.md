@@ -19,6 +19,12 @@
 - Плагіни: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
 
+## AI (experimental)
+
+**Options → AI → Enable AI** або **AI settings…**. ПКМ у Python-буфері → **AI**.
+Прапорець `ai_ui` у `~/.codimension3/feature_flags.json`; override: `CDM_AI_UI=1`.
+Backend зараз offline (без LLM).
+
 ## pylint / wrapt на Python 3.11+
 
 `cdmpylintplugin` тягне старий `pylint==2.5.3` → `astroid==2.5` → `wrapt<1.13`.

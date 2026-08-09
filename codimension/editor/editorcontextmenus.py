@@ -30,7 +30,6 @@ from core.ai_ui import (
     AiAction,
     AiUiDisabledError,
     is_ai_ui_enabled,
-    list_ai_menu_entries,
     run_ai_action_for_source,
 )
 from ui.qt import QActionGroup, QApplication, QMenu, QMessageBox
@@ -89,11 +88,10 @@ class EditorContextMenuMixin:
         menu.setIcon(getIcon("diagramsmenu.png"))
         self._menu.addSeparator()
 
-        # R152/R174: AI explain / suggest — feature flag ai_ui or CDM_AI_UI.
+        # R152/R174: AI explain / suggest — Options → AI flag; always listed for Python.
         self.__aiMenu = self.__initAiMenu()
         self.__aiMenuAction = self._menu.addMenu(self.__aiMenu)
         self.__aiMenuAction.setIcon(getIcon("toolsmenu.png"))
-        self.__aiMenuAction.setVisible(is_ai_ui_enabled())
         self._menu.addSeparator()
 
         self.__menuOpenAsFile = self._menu.addAction(getIcon("filemenu.png"), "O&pen as file", self.openAsFile)
@@ -180,15 +178,25 @@ class EditorContextMenuMixin:
         return self.diagramsMenu
 
     def __initAiMenu(self):
-        """Creates the experimental AI actions menu (R152)."""
-        self.aiMenu = QMenu("A&I (experimental)")
-        # Always register actions; parent menu visibility is flag-gated at show time.
-        for action, label in list_ai_menu_entries(environ={AI_UI_ENV: "1"}):
-            if action is AiAction.EXPLAIN:
-                self.aiMenu.addAction(label, self.__onAiExplain)
-            elif action is AiAction.SUGGEST:
-                self.aiMenu.addAction(label, self.__onAiSuggest)
+        """Creates the AI context submenu (settings + explain/suggest)."""
+        self.aiMenu = QMenu("A&I")
+        self.__aiSettingsAct = self.aiMenu.addAction("AI settings…", self.__onAiSettings)
+        self.aiMenu.addSeparator()
+        self.__aiExplainAct = self.aiMenu.addAction("Explain with AI…", self.__onAiExplain)
+        self.__aiSuggestAct = self.aiMenu.addAction("Suggest with AI…", self.__onAiSuggest)
         return self.aiMenu
+
+    def __onAiSettings(self):
+        """Open Options-equivalent AI settings dialog from the editor menu."""
+        main_window = GlobalData().mainWindow
+        if main_window is not None and hasattr(main_window, "_onAiSettings"):
+            main_window._onAiSettings()
+            return
+        QMessageBox.information(
+            self,
+            "AI settings",
+            f"Use Options → AI, or set {AI_UI_ENV}=1 / feature flag ai_ui.",
+        )
 
     def __onAiExplain(self):
         """Editor action: explain symbol under cursor (flag-gated)."""
@@ -204,7 +212,8 @@ class EditorContextMenuMixin:
             QMessageBox.information(
                 self,
                 "AI UI disabled",
-                f"Enable feature flag 'ai_ui' or set {AI_UI_ENV}=1 for experimental AI actions.",
+                "Enable AI via Options → AI → Enable AI (experimental), "
+                f"or AI settings…, or set {AI_UI_ENV}=1.",
             )
             return
         name = self.getCurrentOrSelection()[0].strip()
@@ -218,7 +227,8 @@ class EditorContextMenuMixin:
             QMessageBox.information(
                 self,
                 "AI UI disabled",
-                f"Enable feature flag 'ai_ui' or set {AI_UI_ENV}=1 for experimental AI actions.",
+                "Enable AI via Options → AI → Enable AI (experimental), "
+                f"or AI settings…, or set {AI_UI_ENV}=1.",
             )
             return
         except ValueError as exc:
@@ -260,7 +270,11 @@ class EditorContextMenuMixin:
             self.profileAct.setEnabled(runEnabled)
             self.profileParamAct.setEnabled(runEnabled)
 
-        self.__aiMenuAction.setVisible(is_ai_ui_enabled() and isPython)
+        # Always offer AI for Python buffers; actions stay flag-gated.
+        self.__aiMenuAction.setVisible(isPython)
+        ai_on = is_ai_ui_enabled()
+        self.__aiExplainAct.setEnabled(ai_on)
+        self.__aiSuggestAct.setEnabled(ai_on)
 
         if absFileName:
             self.__menuClearEncoding.setEnabled(getFileEncoding(fileName) is not None)
