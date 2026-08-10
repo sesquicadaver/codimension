@@ -11,9 +11,9 @@
 
 """AI explain / suggest actions gated by feature flags (R152 / R174).
 
-Headless orchestration: no Qt, no network. The default backend formats an
-:class:`~core.ai_context.AiContextPack` locally (offline summary). UI layers
-must call :func:`is_ai_ui_enabled` before exposing menu entries.
+Headless orchestration: no Qt. Default backend is resolved from
+:mod:`core.ai_config` (offline unless the user selects a remote provider).
+UI layers must call :func:`is_ai_ui_enabled` before exposing menu entries.
 
 Enable via persistent flag ``ai_ui`` (R174) or env ``CDM_AI_UI`` (override).
 """
@@ -25,7 +25,17 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Mapping, MutableMapping, Optional, Protocol
 
+from core.ai_config import (
+    PROVIDER_ANTHROPIC,
+    PROVIDER_OFFLINE,
+    PROVIDER_OLLAMA,
+    PROVIDER_OPENAI,
+    describe_ai_provider_settings,
+    get_ai_api_key,
+    load_ai_config,
+)
 from core.ai_context import AiContextPack, build_ai_context_from_source
+from core.ai_http import AiBackendConfigError, HttpChatBackend
 from core.feature_flags import (
     FLAG_AI_UI,
     FLAG_ENV_OVERRIDES,
@@ -61,21 +71,70 @@ def set_ai_ui_enabled(
     set_feature_enabled(FLAG_AI_UI, enabled, store=store, persist=persist)
 
 
+def resolve_default_backend(
+    *,
+    home: Optional[str] = None,
+    settings_path: Optional[str] = None,
+    token_path: Optional[str] = None,
+) -> AiBackend:
+    """Build the configured backend (offline by default).
+
+    Raises:
+        AiBackendConfigError: remote provider selected but key/settings incomplete.
+    """
+    cfg = load_ai_config(path=settings_path, home=home)
+    if cfg.provider == PROVIDER_OFFLINE:
+        return OfflineSummaryBackend()
+    api_key = get_ai_api_key(cfg.provider, home=home, token_path=token_path)
+    if cfg.provider in (PROVIDER_OPENAI, PROVIDER_ANTHROPIC) and not api_key:
+        raise AiBackendConfigError(
+            f"API key required for provider {cfg.provider!r}. Set it in Options → AI → AI settings…"
+        )
+    if cfg.provider == PROVIDER_OLLAMA and not (cfg.base_url or "").strip():
+        raise AiBackendConfigError("Ollama base URL is empty. Set it in AI settings…")
+    backend: AiBackend = HttpChatBackend(cfg, api_key=api_key)
+    return backend
+
+
 def describe_ai_ui_settings(
     environ: Optional[Mapping[str, str]] = None,
     *,
     store: Optional[FeatureFlagsStore] = None,
+    home: Optional[str] = None,
+    settings_path: Optional[str] = None,
+    token_path: Optional[str] = None,
 ) -> dict[str, object]:
-    """Snapshot for the AI settings UI (flag, env override, store path, backend)."""
+    """Snapshot for the AI settings UI (flag, env override, provider, key status)."""
     active_store = store if store is not None else get_feature_flags_store()
     env_active = ai_ui_env_override_active(environ)
+    provider_snap = describe_ai_provider_settings(
+        home=home,
+        settings_path=settings_path,
+        token_path=token_path,
+    )
+    provider = str(provider_snap["provider"])
+    if provider == PROVIDER_OFFLINE:
+        backend_label = AI_DEFAULT_BACKEND_LABEL
+    else:
+        model = str(provider_snap.get("model") or "")
+        key_note = "key OK" if provider_snap.get("api_key_configured") else "key missing"
+        if provider == PROVIDER_OLLAMA:
+            key_note = "local HTTP"
+        backend_label = f"{provider} / {model} ({key_note})"
     return {
         "enabled": is_ai_ui_enabled(environ, store=store),
         "store_enabled": active_store.is_enabled(FLAG_AI_UI),
         "env_override_active": env_active,
         "env_key": AI_UI_ENV,
         "flags_path": active_store.path or default_feature_flags_path(),
-        "backend_label": AI_DEFAULT_BACKEND_LABEL,
+        "backend_label": backend_label,
+        "provider": provider,
+        "provider_label": provider_snap.get("provider_label"),
+        "model": provider_snap.get("model"),
+        "base_url": provider_snap.get("base_url"),
+        "requires_api_key": provider_snap.get("requires_api_key"),
+        "api_key_configured": provider_snap.get("api_key_configured"),
+        "settings_path": provider_snap.get("settings_path"),
     }
 
 
@@ -220,11 +279,22 @@ def run_ai_action(
     backend: Optional[AiBackend] = None,
     environ: Optional[Mapping[str, str]] = None,
     store: Optional[FeatureFlagsStore] = None,
+    home: Optional[str] = None,
+    settings_path: Optional[str] = None,
+    token_path: Optional[str] = None,
 ) -> AiActionResult:
     """Run ``action`` on an existing pack; requires the feature flag."""
     if not is_ai_ui_enabled(environ, store=store):
         raise AiUiDisabledError(f"AI UI disabled (set {AI_UI_ENV}=1 or enable feature flag {FLAG_AI_UI!r})")
-    active: AiBackend = backend if backend is not None else OfflineSummaryBackend()
+    active: AiBackend
+    if backend is not None:
+        active = backend
+    else:
+        active = resolve_default_backend(
+            home=home,
+            settings_path=settings_path,
+            token_path=token_path,
+        )
     if action is AiAction.EXPLAIN:
         text = active.explain(pack)
     elif action is AiAction.SUGGEST:
@@ -249,12 +319,24 @@ def run_ai_action_for_source(
     backend: Optional[AiBackend] = None,
     environ: Optional[Mapping[str, str]] = None,
     store: Optional[FeatureFlagsStore] = None,
+    home: Optional[str] = None,
+    settings_path: Optional[str] = None,
+    token_path: Optional[str] = None,
 ) -> AiActionResult:
     """Build context from ``source`` then run ``action`` (flag-gated)."""
     if not is_ai_ui_enabled(environ, store=store):
         raise AiUiDisabledError(f"AI UI disabled (set {AI_UI_ENV}=1 or enable feature flag {FLAG_AI_UI!r})")
     pack = build_ai_context_from_source(source, name, file=file, kind=kind)
-    return run_ai_action(action, pack, backend=backend, environ=environ, store=store)
+    return run_ai_action(
+        action,
+        pack,
+        backend=backend,
+        environ=environ,
+        store=store,
+        home=home,
+        settings_path=settings_path,
+        token_path=token_path,
+    )
 
 
 def enable_ai_ui_for_tests(environ: MutableMapping[str, str]) -> None:
@@ -268,6 +350,7 @@ __all__ = [
     "AiAction",
     "AiActionResult",
     "AiBackend",
+    "AiBackendConfigError",
     "AiUiDisabledError",
     "MockAiBackend",
     "OfflineSummaryBackend",
@@ -276,6 +359,7 @@ __all__ = [
     "enable_ai_ui_for_tests",
     "is_ai_ui_enabled",
     "list_ai_menu_entries",
+    "resolve_default_backend",
     "run_ai_action",
     "run_ai_action_for_source",
     "set_ai_ui_enabled",

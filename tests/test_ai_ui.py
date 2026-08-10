@@ -6,6 +6,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from core.ai_config import PROVIDER_OPENAI, AiConfig, save_ai_config
+from core.ai_http import AiBackendConfigError
 from core.ai_ui import (
     AI_UI_ENV,
     AiAction,
@@ -17,6 +19,7 @@ from core.ai_ui import (
     enable_ai_ui_for_tests,
     is_ai_ui_enabled,
     list_ai_menu_entries,
+    resolve_default_backend,
     run_ai_action_for_source,
     set_ai_ui_enabled,
 )
@@ -96,3 +99,39 @@ def test_env_override_active() -> None:
     assert ai_ui_env_override_active(environ={AI_UI_ENV: "1"}) is True
     assert ai_ui_env_override_active(environ={AI_UI_ENV: ""}) is False
     assert ai_ui_env_override_active(environ={}) is False
+
+
+def test_resolve_default_backend_offline(tmp_path: Path) -> None:
+    backend = resolve_default_backend(home=str(tmp_path))
+    assert isinstance(backend, OfflineSummaryBackend)
+    assert backend.name == "offline-summary"
+
+
+def test_resolve_default_backend_openai_needs_key(tmp_path: Path) -> None:
+    save_ai_config(
+        AiConfig(provider=PROVIDER_OPENAI, model="gpt-4o-mini"),
+        home=str(tmp_path),
+    )
+    with pytest.raises(AiBackendConfigError):
+        resolve_default_backend(home=str(tmp_path))
+
+
+def test_run_uses_offline_when_no_config(tmp_path: Path) -> None:
+    env = {AI_UI_ENV: "1"}
+    result = run_ai_action_for_source(
+        AiAction.EXPLAIN,
+        _SRC,
+        "target",
+        file="m.py",
+        environ=env,
+        home=str(tmp_path),
+    )
+    assert result.backend_name == "offline-summary"
+    assert "target" in result.text
+
+
+def test_describe_includes_provider(tmp_path: Path) -> None:
+    store = FeatureFlagsStore(str(tmp_path / "feature_flags.json"))
+    snap = describe_ai_ui_settings(environ={}, store=store, home=str(tmp_path))
+    assert snap["provider"] == "offline"
+    assert snap["api_key_configured"] is False

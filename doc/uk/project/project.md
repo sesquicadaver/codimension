@@ -122,11 +122,13 @@ Unresolved для pip — **opt-in** (за замовчуванням вимкн
 
 **Options** (пункти верхнього рівня, після *Project venv on open*):
 - **Enable AI (experimental)** — persistent прапорець `ai_ui` (`~/.codimension3/feature_flags.json`)
-- **AI settings…** — той самий перемикач + нотатки про offline backend
+- **AI settings…** — перемикач, провайдер (offline / OpenAI / Anthropic / Ollama),
+  модель, base URL, API-ключ (keyring або `~/.codimension3/ai_api_key` mode 0600)
 
 **ПКМ редактора → AI** (Python): **AI settings…**, **Explain with AI…**, **Suggest with AI…**.
-Explain/Suggest вимкнені, доки прапорець off. Backend — локальний offline summary
-(SymbolIndex + CFG; без LLM / API-ключа). Override: `CDM_AI_UI=1|0`.
+Explain/Suggest вимкнені, доки прапорець off. За замовчуванням — offline summary
+(SymbolIndex + CFG). Віддалені провайдери потребують збереженого ключа (окрім Ollama).
+Override: `CDM_AI_UI=1|0`.
 
 ### Log → джерело (R177)
 

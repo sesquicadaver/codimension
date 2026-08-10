@@ -122,11 +122,13 @@ Unresolved packages for pip are **opt-in** (unchecked by default) with a multi-s
 
 **Options** (top-level items, after *Project venv on open*):
 - **Enable AI (experimental)** — persistent flag `ai_ui` (`~/.codimension3/feature_flags.json`)
-- **AI settings…** — same toggle + offline backend notes
+- **AI settings…** — enable toggle, provider (offline / OpenAI / Anthropic / Ollama),
+  model, base URL, API key (keyring or `~/.codimension3/ai_api_key` mode 0600)
 
 **Editor context menu → AI** (Python buffers): **AI settings…**, **Explain with AI…**, **Suggest with AI…**.
-Explain/Suggest stay disabled until the flag is on. Backend is local offline summary
-(SymbolIndex + CFG; no LLM / no API key). Env override: `CDM_AI_UI=1|0`.
+Explain/Suggest stay disabled until the flag is on. Default provider is offline
+(SymbolIndex + CFG summary). Remote providers need a stored key (except Ollama).
+Env override: `CDM_AI_UI=1|0`.
 
 ### Log → source (R177)
 

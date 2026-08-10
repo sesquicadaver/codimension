@@ -73,5 +73,6 @@ def test_ai_ui_gated_by_persistent_flag(tmp_path: Path) -> None:
         "target",
         environ={},
         store=store,
+        home=str(tmp_path),
     )
     assert "target" in result.text
