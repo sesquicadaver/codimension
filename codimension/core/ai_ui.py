@@ -88,12 +88,12 @@ def resolve_default_backend(
     api_key = get_ai_api_key(cfg.provider, home=home, token_path=token_path)
     if cfg.provider in (PROVIDER_OPENAI, PROVIDER_ANTHROPIC) and not api_key:
         raise AiBackendConfigError(
-            f"API key required for provider {cfg.provider!r}. "
-            "Set it in Options → AI → AI settings…"
+            f"API key required for provider {cfg.provider!r}. Set it in Options → AI → AI settings…"
         )
     if cfg.provider == PROVIDER_OLLAMA and not (cfg.base_url or "").strip():
         raise AiBackendConfigError("Ollama base URL is empty. Set it in AI settings…")
-    return HttpChatBackend(cfg, api_key=api_key)
+    backend: AiBackend = HttpChatBackend(cfg, api_key=api_key)
+    return backend
 
 
 def describe_ai_ui_settings(

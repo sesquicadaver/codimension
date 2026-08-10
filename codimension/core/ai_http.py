@@ -17,7 +17,8 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
-from typing import Callable, Mapping, Optional
+from contextlib import AbstractContextManager
+from typing import Any, Callable, Mapping, Optional
 from urllib.parse import urljoin
 
 from core.ai_config import (
@@ -32,7 +33,7 @@ DEFAULT_TIMEOUT_SEC = 45.0
 MAX_EXCERPT_CHARS = 4000
 MAX_RESPONSE_CHARS = 12000
 
-UrlOpener = Callable[..., object]
+UrlOpener = Callable[..., AbstractContextManager[Any]]
 
 
 class AiBackendConfigError(RuntimeError):
@@ -56,8 +57,7 @@ def _pack_prompt(action: str, pack: AiContextPack) -> str:
     ]
     if pack.cfg_slice is not None:
         lines.append(
-            f"CFG: root={pack.cfg_slice.root_id}; "
-            f"nodes={len(pack.cfg_slice.nodes)}; edges={len(pack.cfg_slice.edges)}"
+            f"CFG: root={pack.cfg_slice.root_id}; nodes={len(pack.cfg_slice.nodes)}; edges={len(pack.cfg_slice.edges)}"
         )
     if pack.notes:
         lines.append("Notes: " + "; ".join(pack.notes))
@@ -91,7 +91,7 @@ def _http_json(
         headers=dict(headers),
         method="POST",
     )
-    open_fn = opener or urllib.request.urlopen
+    open_fn: UrlOpener = opener if opener is not None else urllib.request.urlopen
     try:
         with open_fn(request, timeout=timeout) as response:
             raw = response.read()
@@ -168,13 +168,10 @@ class HttpChatBackend:
         self._opener = opener
         provider = self._config.provider
         if provider not in (PROVIDER_OPENAI, PROVIDER_ANTHROPIC, PROVIDER_OLLAMA):
-            raise AiBackendConfigError(
-                f"HttpChatBackend does not support provider {provider!r}; use offline"
-            )
+            raise AiBackendConfigError(f"HttpChatBackend does not support provider {provider!r}; use offline")
         if provider in (PROVIDER_OPENAI, PROVIDER_ANTHROPIC) and not self._api_key:
             raise AiBackendConfigError(
-                f"API key required for provider {provider!r}. "
-                "Set it in Options → AI → AI settings…"
+                f"API key required for provider {provider!r}. Set it in Options → AI → AI settings…"
             )
 
     @property

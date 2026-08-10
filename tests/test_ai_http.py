@@ -47,13 +47,7 @@ def test_openai_compatible_explain(monkeypatch: pytest.MonkeyPatch) -> None:
         captured["headers"] = dict(request.header_items())
         captured["body"] = json.loads(request.data.decode("utf-8"))
         captured["timeout"] = timeout
-        return _FakeResponse(
-            {
-                "choices": [
-                    {"message": {"role": "assistant", "content": "target adds one"}}
-                ]
-            }
-        )
+        return _FakeResponse({"choices": [{"message": {"role": "assistant", "content": "target adds one"}}]})
 
     cfg = AiConfig(
         provider=PROVIDER_OPENAI,
@@ -75,9 +69,7 @@ def test_anthropic_suggest() -> None:
         assert request.full_url.endswith("/v1/messages")
         headers = {k.lower(): v for k, v in request.header_items()}
         assert headers.get("x-api-key") == "anth-key"
-        return _FakeResponse(
-            {"content": [{"type": "text", "text": "Keep it simple"}]}
-        )
+        return _FakeResponse({"content": [{"type": "text", "text": "Keep it simple"}]})
 
     cfg = AiConfig(
         provider=PROVIDER_ANTHROPIC,

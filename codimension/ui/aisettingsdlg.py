@@ -139,9 +139,7 @@ class AiSettingsDialog(QDialog):
                 f"Backend: {snap['backend_label']}"
             )
         else:
-            self.__statusLabel.setText(
-                f"Persistent flag file: {snap['flags_path']}\nBackend: {snap['backend_label']}"
-            )
+            self.__statusLabel.setText(f"Persistent flag file: {snap['flags_path']}\nBackend: {snap['backend_label']}")
 
     def __current_provider(self) -> str:
         data = self.__providerCombo.currentData()
