@@ -80,7 +80,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Taint MVP R143** | core.taint | Function-local sources→sinks; documented subset | tests/test_taint.py; [taint-mvp.md](../../technology/taint-mvp.md) |
 | **Plugin capabilities R150** | plugins.capabilities + pluginmanager | `PluginCapabilitySpec` / negotiate; host rejects incompatible | tests/test_plugin_capabilities.py |
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice for a symbol; JSON-friendly; no network | tests/test_ai_context.py |
-| **AI UI R152** | core.ai_ui + core.ai_config + core.ai_http + editor.editorcontextmenus + ui.aisettingsdlg + Options | Options top-level Enable AI / AI settings…; editor AI menu; `ai_ui` / `CDM_AI_UI`; provider+key (default offline) | tests/test_ai_ui.py, test_ai_config.py, test_ai_http.py, test_ai_options_menu.py |
+| **AI UI R152** | core.ai_ui + core.ai_tasks + core.ai_docstring + core.ai_http + ui.airesultviewer + ui.aichatviewer + ui.ai_controller + editor/Options | Analyze project/module/symbol; Google docstring + Apply; AI Result (Save); on-demand AI Chat; live provider required | tests/test_ai_ui.py, test_ai_tasks.py, test_ai_config.py, test_ai_http.py |
 | **Feature flags R174** | core.feature_flags | Persistent JSON flags; env overrides; gates AI UI | tests/test_feature_flags.py |
 | **Safe mode R175** | core.safe_mode + codimension/pluginmanager/overlays | `--safe-mode` / `CDM_SAFE_MODE`; skip plugins + overlays | tests/test_safe_mode.py |
 | **Env overlay R160** | utils.environment_overlay + editor.flowuinavbar | `env:source` + path badges on flow nav via R135; status bar notifies `env` | tests/test_environment_overlay.py |

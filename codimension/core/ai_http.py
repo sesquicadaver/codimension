@@ -180,20 +180,28 @@ class HttpChatBackend:
 
     def explain(self, pack: AiContextPack) -> str:
         """Ask the provider to explain ``pack``."""
-        return self._complete("explain", pack)
+        return self.complete(
+            "You are a concise Python code assistant inside Codimension IDE.",
+            _pack_prompt("explain", pack),
+        )
 
     def suggest(self, pack: AiContextPack) -> str:
         """Ask the provider for suggestions about ``pack``."""
-        return self._complete("suggest", pack)
+        return self.complete(
+            "You are a concise Python code assistant inside Codimension IDE.",
+            _pack_prompt("suggest", pack),
+        )
 
-    def _complete(self, action: str, pack: AiContextPack) -> str:
-        prompt = _pack_prompt(action, pack)
+    def complete(self, system: str, user: str) -> str:
+        """Run a single chat completion with explicit system/user messages."""
         provider = self._config.provider
         if provider == PROVIDER_ANTHROPIC:
-            return self._call_anthropic(prompt)
-        return self._call_openai_compatible(prompt)
+            # Anthropic: fold system into the API system field when supported;
+            # messages API accepts top-level ``system``.
+            return self._call_anthropic(user, system=system)
+        return self._call_openai_compatible(user, system=system)
 
-    def _call_openai_compatible(self, prompt: str) -> str:
+    def _call_openai_compatible(self, prompt: str, *, system: str = "") -> str:
         url = _join_url(self._config.base_url, "chat/completions")
         headers = {
             "Content-Type": "application/json",
@@ -201,15 +209,13 @@ class HttpChatBackend:
         }
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
+        messages: list[dict[str, str]] = []
+        if (system or "").strip():
+            messages.append({"role": "system", "content": system.strip()})
+        messages.append({"role": "user", "content": prompt})
         payload = {
             "model": self._config.model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a concise Python code assistant inside Codimension IDE.",
-                },
-                {"role": "user", "content": prompt},
-            ],
+            "messages": messages,
             "temperature": 0.2,
         }
         parsed = _http_json(
@@ -221,7 +227,7 @@ class HttpChatBackend:
         )
         return _openai_text(parsed)
 
-    def _call_anthropic(self, prompt: str) -> str:
+    def _call_anthropic(self, prompt: str, *, system: str = "") -> str:
         url = _join_url(self._config.base_url, "v1/messages")
         headers = {
             "Content-Type": "application/json",
@@ -229,11 +235,13 @@ class HttpChatBackend:
             "x-api-key": self._api_key or "",
             "anthropic-version": "2023-06-01",
         }
-        payload = {
+        payload: dict[str, object] = {
             "model": self._config.model,
-            "max_tokens": 1024,
+            "max_tokens": 4096,
             "messages": [{"role": "user", "content": prompt}],
         }
+        if (system or "").strip():
+            payload["system"] = system.strip()
         parsed = _http_json(
             url,
             payload,

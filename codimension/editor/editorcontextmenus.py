@@ -19,20 +19,12 @@
 
 """Sets up and handles the text editor conext menus"""
 
-import logging
 import os.path
 
 from analysis.disasm import OPT_NO_OPTIMIZATION, OPT_OPTIMIZE_ASSERT, OPT_OPTIMIZE_DOCSTRINGS
 from autocomplete.bufferutils import getContext
 from cdmpyparser import getBriefModuleInfoFromMemory
-from core.ai_http import AiBackendConfigError, AiHttpError
-from core.ai_ui import (
-    AI_UI_ENV,
-    AiAction,
-    AiUiDisabledError,
-    is_ai_ui_enabled,
-    run_ai_action_for_source,
-)
+from core.ai_ui import AI_UI_ENV, is_ai_ui_enabled
 from ui.qt import QActionGroup, QApplication, QMenu, QMessageBox
 from utils.diskvaluesrelay import getFileEncoding, setFileEncoding
 from utils.encoding import (
@@ -179,12 +171,16 @@ class EditorContextMenuMixin:
         return self.diagramsMenu
 
     def __initAiMenu(self):
-        """Creates the AI context submenu (settings + explain/suggest)."""
+        """Creates the AI context submenu (analysis + docstring + chat)."""
         self.aiMenu = QMenu("A&I")
         self.__aiSettingsAct = self.aiMenu.addAction("AI settings…", self.__onAiSettings)
         self.aiMenu.addSeparator()
-        self.__aiExplainAct = self.aiMenu.addAction("Explain with AI…", self.__onAiExplain)
-        self.__aiSuggestAct = self.aiMenu.addAction("Suggest with AI…", self.__onAiSuggest)
+        self.__aiAnalyzeModuleAct = self.aiMenu.addAction("Analyze module…", self.__onAiAnalyzeModule)
+        self.__aiAnalyzeSymbolAct = self.aiMenu.addAction("Analyze symbol…", self.__onAiAnalyzeSymbol)
+        self.__aiDocstringAct = self.aiMenu.addAction("Generate docstring…", self.__onAiDocstring)
+        self.aiMenu.addSeparator()
+        self.__aiAnalyzeProjectAct = self.aiMenu.addAction("Analyze project…", self.__onAiAnalyzeProject)
+        self.__aiChatAct = self.aiMenu.addAction("AI Chat…", self.__onAiChat)
         return self.aiMenu
 
     def __onAiSettings(self):
@@ -199,51 +195,30 @@ class EditorContextMenuMixin:
             f"Use Options → AI, or set {AI_UI_ENV}=1 / feature flag ai_ui.",
         )
 
-    def __onAiExplain(self):
-        """Editor action: explain symbol under cursor (flag-gated)."""
-        self.__runAiAction(AiAction.EXPLAIN)
+    def __onAiAnalyzeModule(self):
+        main_window = GlobalData().mainWindow
+        if main_window is not None and hasattr(main_window, "_onAiAnalyzeModule"):
+            main_window._onAiAnalyzeModule()
 
-    def __onAiSuggest(self):
-        """Editor action: suggest improvements for symbol under cursor (flag-gated)."""
-        self.__runAiAction(AiAction.SUGGEST)
+    def __onAiAnalyzeSymbol(self):
+        main_window = GlobalData().mainWindow
+        if main_window is not None and hasattr(main_window, "_onAiAnalyzeSymbol"):
+            main_window._onAiAnalyzeSymbol()
 
-    def __runAiAction(self, action):
-        """Build offline AI context and show the backend result."""
-        if not is_ai_ui_enabled():
-            QMessageBox.information(
-                self,
-                "AI UI disabled",
-                f"Enable AI via Options → AI → Enable AI (experimental), or AI settings…, or set {AI_UI_ENV}=1.",
-            )
-            return
-        name = self.getCurrentOrSelection()[0].strip()
-        if not name or not name.isidentifier():
-            QMessageBox.warning(self, "AI action", "Place the cursor on a Python identifier (function or class).")
-            return
-        file_name = self._parent.getFileName() or self._parent.getShortName() or "<buffer>"
-        try:
-            result = run_ai_action_for_source(action, self.text, name, file=file_name)
-        except AiUiDisabledError:
-            QMessageBox.information(
-                self,
-                "AI UI disabled",
-                f"Enable AI via Options → AI → Enable AI (experimental), or AI settings…, or set {AI_UI_ENV}=1.",
-            )
-            return
-        except AiBackendConfigError as exc:
-            QMessageBox.warning(self, "AI settings", str(exc))
-            return
-        except AiHttpError as exc:
-            QMessageBox.warning(self, "AI provider", str(exc))
-            return
-        except ValueError as exc:
-            QMessageBox.warning(self, "AI action", str(exc))
-            return
-        except Exception:
-            logging.exception("AI UI action %s failed for %r", action.value, name)
-            QMessageBox.warning(self, "AI action", f"Failed to run {action.value} for {name!r}.")
-            return
-        QMessageBox.information(self, f"AI {action.value}: {result.symbol_name}", result.text)
+    def __onAiDocstring(self):
+        main_window = GlobalData().mainWindow
+        if main_window is not None and hasattr(main_window, "_onAiDocstring"):
+            main_window._onAiDocstring()
+
+    def __onAiAnalyzeProject(self):
+        main_window = GlobalData().mainWindow
+        if main_window is not None and hasattr(main_window, "_onAiAnalyzeProject"):
+            main_window._onAiAnalyzeProject()
+
+    def __onAiChat(self):
+        main_window = GlobalData().mainWindow
+        if main_window is not None and hasattr(main_window, "_onAiChat"):
+            main_window._onAiChat()
 
     def contextMenuEvent(self, event):
         """Called just before showing a context menu"""
@@ -278,8 +253,11 @@ class EditorContextMenuMixin:
         # Always offer AI for Python buffers; actions stay flag-gated.
         self.__aiMenuAction.setVisible(isPython)
         ai_on = is_ai_ui_enabled()
-        self.__aiExplainAct.setEnabled(ai_on)
-        self.__aiSuggestAct.setEnabled(ai_on)
+        self.__aiAnalyzeModuleAct.setEnabled(ai_on)
+        self.__aiAnalyzeSymbolAct.setEnabled(ai_on)
+        self.__aiDocstringAct.setEnabled(ai_on)
+        self.__aiAnalyzeProjectAct.setEnabled(ai_on)
+        self.__aiChatAct.setEnabled(ai_on)
 
         if absFileName:
             self.__menuClearEncoding.setEnabled(getFileEncoding(fileName) is not None)
