@@ -1,5 +1,8 @@
 2026 Aug 09
 
+* AI settings: provider selector (offline / OpenAI / Anthropic / Ollama),
+  model + base URL, API key via OS keyring or ``~/.codimension3/ai_api_key``
+  (mode 0600); default remains offline; HTTP via stdlib urllib
 * Deploy: ``scripts/codimension_ctl.sh`` install/uninstall for local
   ``.venv`` (optional desktop; ``--purge-config``); launch via
   ``scripts/run_codimension.sh``

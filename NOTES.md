@@ -23,7 +23,9 @@
 
 **Options → Enable AI (experimental)** / **AI settings…**. ПКМ у Python → **AI**.
 Прапорець `ai_ui` у `~/.codimension3/feature_flags.json`; override: `CDM_AI_UI=1`.
-Backend зараз offline (без LLM). Після оновлення: `pip install -e .` і перезапуск.
+Провайдер (offline / OpenAI / Anthropic / Ollama) і модель — `~/.codimension3/ai_settings.json`;
+ключ API — keyring або `~/.codimension3/ai_api_key` (0600), не в дереві проєкту.
+За замовчуванням offline (локальний CFG/symbol summary). Після оновлення: `pip install -e .` і перезапуск.
 
 ## pylint / wrapt на Python 3.11+
 

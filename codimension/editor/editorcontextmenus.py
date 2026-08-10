@@ -25,6 +25,7 @@ import os.path
 from analysis.disasm import OPT_NO_OPTIMIZATION, OPT_OPTIMIZE_ASSERT, OPT_OPTIMIZE_DOCSTRINGS
 from autocomplete.bufferutils import getContext
 from cdmpyparser import getBriefModuleInfoFromMemory
+from core.ai_http import AiBackendConfigError, AiHttpError
 from core.ai_ui import (
     AI_UI_ENV,
     AiAction,
@@ -228,6 +229,12 @@ class EditorContextMenuMixin:
                 "AI UI disabled",
                 f"Enable AI via Options → AI → Enable AI (experimental), or AI settings…, or set {AI_UI_ENV}=1.",
             )
+            return
+        except AiBackendConfigError as exc:
+            QMessageBox.warning(self, "AI settings", str(exc))
+            return
+        except AiHttpError as exc:
+            QMessageBox.warning(self, "AI provider", str(exc))
             return
         except ValueError as exc:
             QMessageBox.warning(self, "AI action", str(exc))

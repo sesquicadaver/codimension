@@ -23,7 +23,10 @@ See [doc/en/INSTALL.md](doc/en/INSTALL.md) (Ukrainian: [doc/INSTALL.md](doc/INST
 
 **Options → Enable AI (experimental)** / **AI settings…**. Editor context menu → **AI**.
 Flag `ai_ui` in `~/.codimension3/feature_flags.json`; override: `CDM_AI_UI=1`.
-Backend is offline for now (no LLM). After update: `pip install -e .` and restart.
+Provider (offline / OpenAI / Anthropic / Ollama) and model live in
+`~/.codimension3/ai_settings.json`; API key in OS keyring or
+`~/.codimension3/ai_api_key` (mode 0600), never in the project tree.
+Default remains offline (local CFG/symbol summary). After update: `pip install -e .` and restart.
 
 ## pylint / wrapt on Python 3.11+
 

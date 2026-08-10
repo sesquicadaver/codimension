@@ -80,7 +80,7 @@
 | **Taint MVP R143** | core.taint | Function-local sources→sinks; задокументована підмножина | tests/test_taint.py; [taint-mvp.md](../uk/technology/taint-mvp.md) |
 | **Plugin capabilities R150** | plugins.capabilities + pluginmanager | `PluginCapabilitySpec` / negotiate; host відхиляє несумісні | tests/test_plugin_capabilities.py |
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice для символу; JSON; без мережі | tests/test_ai_context.py |
-| **AI UI R152** | core.ai_ui + editor.editorcontextmenus + ui.aisettingsdlg + Options | Options top-level Enable AI / AI settings…; ПКМ AI; `ai_ui` / `CDM_AI_UI`; offline | tests/test_ai_ui.py, test_ai_options_menu.py |
+| **AI UI R152** | core.ai_ui + core.ai_config + core.ai_http + editor.editorcontextmenus + ui.aisettingsdlg + Options | Options top-level Enable AI / AI settings…; ПКМ AI; `ai_ui` / `CDM_AI_UI`; provider+key (default offline) | tests/test_ai_ui.py, test_ai_config.py, test_ai_http.py, test_ai_options_menu.py |
 | **Feature flags R174** | core.feature_flags | Persistent JSON flags; env overrides; гейт AI UI | tests/test_feature_flags.py |
 | **Safe mode R175** | core.safe_mode + codimension/pluginmanager/overlays | `--safe-mode` / `CDM_SAFE_MODE`; без плагінів і overlays | tests/test_safe_mode.py |
 | **Env overlay R160** | utils.environment_overlay + editor.flowuinavbar | Бейджі `env:source` + path на flow nav через R135; status bar → `env` | tests/test_environment_overlay.py |
