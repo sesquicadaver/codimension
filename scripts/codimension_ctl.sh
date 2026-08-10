@@ -153,8 +153,14 @@ cmd_install() {
     spec=".[tools,lint,test,security]"
   fi
 
-  info "installing editable $spec"
-  "$PIP" install -e "$spec"
+  # Always install from repo root — ``pip install -e .`` follows the caller's CWD,
+  # so running ``./codimension_ctl.sh`` from ``scripts/`` would otherwise target scripts/.
+  [[ -f "${ROOT}/pyproject.toml" ]] || die "pyproject.toml missing under ROOT=$ROOT"
+  info "installing editable $spec (from $ROOT)"
+  (
+    cd "$ROOT"
+    "$PIP" install -e "$spec"
+  )
 
   # pylint/astroid pin wrapt<1.13; on 3.11+ that wrapt is broken — refresh without deps.
   local major minor
