@@ -141,6 +141,12 @@ cmd_install() {
     "$base_py" -m venv "$VENV"
   fi
   [[ -x "$PY" ]] || die "venv python missing: $PY"
+  # Detect relocated/copied venvs whose shebangs still point elsewhere.
+  local venv_prefix
+  venv_prefix="$("$PY" -c 'import sys; print(sys.prefix)')"
+  if [[ "$venv_prefix" != "$VENV" ]]; then
+    die "venv is broken/relocated: python prefix is $venv_prefix (expected $VENV). Re-run with --reinstall"
+  fi
 
   info "upgrading pip"
   "$PY" -m pip install --upgrade pip wheel setuptools
