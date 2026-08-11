@@ -24,7 +24,9 @@ See [doc/en/INSTALL.md](doc/en/INSTALL.md) (Ukrainian: [doc/INSTALL.md](doc/INST
 **Options → Enable AI** / **AI settings…** / **AI actions**. Editor → **AI**.
 Flag `ai_ui`; override `CDM_AI_UI=1`. Provider is user-chosen (OpenAI / Anthropic / Ollama) —
 analysis requires a live provider (offline does not fake an LLM).
-Base set: project analysis (all `.py`), module, symbol; Google docstring + Apply;
+Base set: project analysis (all `.py`), module analysis **only in the open
+project context** (local imports + neighbour modules), symbol analysis;
+Google docstring + Apply (selection + lean support context to the model);
 results in **AI Result** (Save); **AI Chat** is an on-demand panel.
 
 ## pylint / wrapt on Python 3.11+

@@ -24,7 +24,9 @@
 **Options → Enable AI** / **AI settings…** / **AI actions**. ПКМ → **AI**.
 Прапорець `ai_ui`; override `CDM_AI_UI=1`. Провайдер на вибір (OpenAI / Anthropic / Ollama) —
 для аналізу потрібен live provider (offline не підміняє LLM).
-База: аналіз проєкту (усі `.py`), модуля, символу; Google docstring + Apply;
+База: аналіз проєкту (усі `.py`), модуля **лише в контексті відкритого проєкту**
+(локальні імпорти + сусідні модулі), символу; Google docstring + Apply
+(у ШІ йде **виділений фрагмент** + компактний контекст імпортів/обгортки);
 результат у вкладці **AI Result** (Save); **AI Chat** — on-demand панель.
 
 ## pylint / wrapt на Python 3.11+

@@ -13,6 +13,11 @@ import logging
 import os
 
 from core.ai_docstring import apply_google_docstring
+from core.ai_docstring_context import (
+    infer_symbol_name,
+    normalize_editor_selection,
+    resolve_docstring_fragment,
+)
 from core.ai_tasks import AiTaskKind, AiTaskRequest, list_project_py_files
 from core.ai_ui import is_ai_ui_enabled
 from utils.globals import GlobalData
@@ -20,7 +25,7 @@ from utils.pixmapcache import getIcon
 
 from .aichatviewer import AiChatViewer
 from .aiworker import AiTaskDriver
-from .qt import QMessageBox
+from .qt import QMessageBox, QTextCursor
 
 
 class AiWorkspaceController:
@@ -106,25 +111,47 @@ class AiWorkspaceController:
         self._start(request)
 
     def startAnalyzeModule(self) -> None:
-        """Analyze the current Python buffer / file."""
+        """Analyze the current project Python module (project context required)."""
         if not self._requireReady():
+            return
+        project = GlobalData().project
+        if project is None or not project.isLoaded():
+            QMessageBox.warning(
+                self._mw,
+                "AI",
+                "Module analysis requires an open project. Open a .cdm3 project first.",
+            )
             return
         editor = self._currentEditor()
         if editor is None or not getattr(editor, "isPythonBuffer", lambda: False)():
-            QMessageBox.warning(self._mw, "AI", "Open a Python file to analyze the module.")
+            QMessageBox.warning(self._mw, "AI", "Open a Python file from the project to analyze.")
             return
-        path = editor.getFileName() or "<buffer>"
-        try:
-            widget = self._mw.em.currentWidget()
-            if widget is not None and hasattr(widget, "getShortName"):
-                path = editor.getFileName() or widget.getShortName() or "<buffer>"
-        except Exception:
-            pass
+        path = editor.getFileName() or ""
+        if not path or not os.path.isabs(path):
+            QMessageBox.warning(
+                self._mw,
+                "AI",
+                "Save the file into the project before running module analysis.",
+            )
+            return
+        if not project.isProjectFile(path):
+            QMessageBox.warning(
+                self._mw,
+                "AI",
+                "This file is outside the open project. Module analysis runs only on project modules.",
+            )
+            return
+        files = list_project_py_files(project.filesList, project.getProjectDir())
+        if not files:
+            QMessageBox.warning(self._mw, "AI", "No Python files found in the project.")
+            return
         request = AiTaskRequest(
             kind=AiTaskKind.ANALYZE_MODULE,
             title=f"Module analysis: {os.path.basename(path)}",
             file_path=path,
             source=editor.text or "",
+            project_dir=project.getProjectDir(),
+            project_files=files,
         )
         self._start(request)
 
@@ -155,27 +182,60 @@ class AiWorkspaceController:
         self._start(request)
 
     def startDocstring(self) -> None:
-        """Generate a Google-style docstring for the symbol under the cursor."""
+        """Generate a Google-style docstring for the selection or symbol under cursor.
+
+        Sends the selected fragment as the authoritative payload, plus lean
+        supporting context (imports / enclosing definition). Multi-line
+        selections are honored (unlike search helpers that drop them).
+        """
         if not self._requireReady():
             return
         editor = self._currentEditor()
         if editor is None or not getattr(editor, "isPythonBuffer", lambda: False)():
             QMessageBox.warning(self._mw, "AI", "Open a Python file and select a function/class.")
             return
+        source = editor.text or ""
+        selected = ""
+        cursor_line = 1
+        word = ""
         try:
-            name = editor.getCurrentOrSelection()[0].strip()
+            cursor = editor.textCursor()
+            cursor_line = cursor.blockNumber() + 1
+            if cursor.hasSelection():
+                selected = normalize_editor_selection(cursor.selectedText()).strip()
+            word_cursor = editor.textCursor()
+            word_cursor.select(QTextCursor.WordUnderCursor)
+            word = (word_cursor.selectedText() or "").strip()
         except Exception:
-            name = ""
-        if not name or not name.isidentifier():
-            QMessageBox.warning(self._mw, "AI", "Place the cursor on a function or class name.")
+            selected = ""
+            word = ""
+
+        fragment, name = resolve_docstring_fragment(
+            source,
+            selected_text=selected,
+            symbol_name=infer_symbol_name(selected, word),
+            cursor_line=cursor_line,
+        )
+        if not fragment:
+            QMessageBox.warning(
+                self._mw,
+                "AI",
+                "Select a function/class (or place the cursor on its name) before generating a docstring.",
+            )
             return
+        if not name:
+            # Apply needs a symbol; still allow generation but warn lightly.
+            name = infer_symbol_name(fragment, word)
         path = editor.getFileName() or "<buffer>"
+        title = f"Docstring: {name}" if name else "Docstring: selection"
         request = AiTaskRequest(
             kind=AiTaskKind.DOCSTRING,
-            title=f"Docstring: {name}",
+            title=title,
             file_path=path,
-            source=editor.text or "",
+            source=source,
             symbol_name=name,
+            selected_text=selected or fragment,
+            cursor_line=cursor_line,
         )
         self._start(request)
 

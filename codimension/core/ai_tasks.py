@@ -20,6 +20,14 @@ from enum import Enum
 from typing import Callable, Iterable, Optional, Sequence
 
 from core.ai_context import AiContextPack, build_ai_context_from_source
+from core.ai_docstring_context import (
+    build_docstring_support_context,
+    resolve_docstring_fragment,
+)
+from core.ai_project_context import (
+    assert_path_in_project,
+    build_project_module_context,
+)
 from core.symbol_index import SymbolKind
 
 CompleteFn = Callable[[str, str], str]
@@ -51,8 +59,11 @@ class AiTaskRequest:
     symbol_name: str = ""
     symbol_kind: Optional[SymbolKind] = None
     project_files: tuple[str, ...] = ()
+    project_dir: str = ""
     chat_message: str = ""
     chat_history: tuple[tuple[str, str], ...] = ()
+    selected_text: str = ""
+    cursor_line: int = 0
 
 
 @dataclass(frozen=True)
@@ -104,6 +115,8 @@ def _system_analyst() -> str:
     return (
         "You are a senior Python engineer inside the Codimension IDE. "
         "Be concrete, structured, and actionable. Use markdown headings and bullets. "
+        "Stay strictly inside the provided project context: do not invent project "
+        "modules, symbols, or algorithms that are not evidenced in the sources. "
         "Do not invent APIs that are not in the provided source."
     )
 
@@ -113,20 +126,37 @@ def _system_docstring() -> str:
         "You write Google-style Python docstrings only. "
         "Return ONLY the docstring body suitable to place inside triple quotes "
         "(no surrounding quotes, no code fences, no prose outside the docstring). "
-        "Include Args / Returns / Raises sections when applicable."
+        "Include Args / Returns / Raises sections when applicable. "
+        "The Selected fragment is authoritative: document that code. "
+        "Use Supporting context only for names, imports, and enclosing signature — "
+        "do not invent behavior absent from the fragment. "
+        "Never claim that information is missing when a Selected fragment is provided."
     )
 
 
-def build_module_analysis_prompt(path: str, source: str) -> tuple[str, str]:
-    """System + user prompts for module analysis."""
-    user = (
-        f"Analyze this Python module end-to-end.\n"
-        f"File: {path}\n\n"
-        f"Cover: purpose, public API, key types/functions, control-flow risks, "
-        f"coupling, and concrete improvement suggestions.\n\n"
-        f"Source:\n{_truncate(source, MAX_MODULE_CHARS)}"
-    )
-    return _system_analyst(), user
+def build_module_analysis_prompt(
+    path: str,
+    source: str,
+    *,
+    project_context_block: str = "",
+) -> tuple[str, str]:
+    """System + user prompts for project-scoped module analysis."""
+    ctx = (project_context_block or "").strip()
+    user_parts = [
+        "Analyze this Python module end-to-end **within the open Codimension project**.",
+        f"File: {path}",
+        "",
+        "Cover: purpose in the project, public API, key types/functions, "
+        "how it couples to other project modules, control-flow risks, "
+        "and concrete improvement suggestions that preserve project algorithms.",
+        "",
+    ]
+    if ctx:
+        user_parts.append(ctx)
+        user_parts.append("")
+    user_parts.append("Module source:")
+    user_parts.append(_truncate(source, MAX_MODULE_CHARS))
+    return _system_analyst(), "\n".join(user_parts)
 
 
 def build_symbol_analysis_prompt(pack: AiContextPack) -> tuple[str, str]:
@@ -143,13 +173,30 @@ def build_symbol_analysis_prompt(pack: AiContextPack) -> tuple[str, str]:
     return _system_analyst(), user
 
 
-def build_docstring_prompt(pack: AiContextPack) -> tuple[str, str]:
-    """System + user prompts for a Google-style docstring."""
+def build_docstring_prompt(
+    *,
+    symbol_name: str,
+    file_path: str,
+    selected_fragment: str,
+    support_context: str = "",
+) -> tuple[str, str]:
+    """System + user prompts for a Google-style docstring.
+
+    ``selected_fragment`` is the code to document. ``support_context`` is lean
+    module/enclosing info so the model does not invent or refuse for lack of data.
+    """
+    fragment = (selected_fragment or "").strip()
+    if not fragment:
+        raise ValueError("docstring prompt requires a non-empty selected fragment")
+    support = (support_context or "").strip() or "(none)"
     user = (
-        f"Write a {DOCSTRING_STYLE}-style docstring for this symbol.\n"
-        f"Symbol: {pack.symbol.qualname or pack.symbol.name} ({pack.symbol.kind.value})\n"
-        f"File: {pack.symbol.file}\n\n"
-        f"Source:\n{_truncate(pack.source_excerpt, MAX_MODULE_CHARS)}"
+        f"Write a {DOCSTRING_STYLE}-style docstring for the selected Python code.\n"
+        f"Symbol (apply target, if known): {symbol_name or '(unknown)'}\n"
+        f"File: {file_path or '<buffer>'}\n\n"
+        f"## Selected fragment (authoritative — write the docstring for THIS code)\n"
+        f"{_truncate(fragment, MAX_MODULE_CHARS)}\n\n"
+        f"## Supporting context (names/signature/imports only; do not invent beyond this)\n"
+        f"{_truncate(support, MAX_MODULE_CHARS)}"
     )
     return _system_docstring(), user
 
@@ -216,16 +263,33 @@ def execute_ai_task(
 
     kind = request.kind
     if kind is AiTaskKind.ANALYZE_MODULE:
-        source = request.source or _read_text(request.file_path)
-        system, user = build_module_analysis_prompt(request.file_path or "<module>", source)
-        _progress(f"Analyzing module {request.file_path or ''}…")
+        if not (request.project_dir or "").strip() or not request.project_files:
+            raise ValueError("Module analysis requires an open project context (project_dir + project .py file list).")
+        module_path = assert_path_in_project(
+            request.file_path,
+            request.project_dir,
+            request.project_files,
+        )
+        source = request.source or _read_text(module_path)
+        ctx = build_project_module_context(
+            module_path=module_path,
+            source=source,
+            project_dir=request.project_dir,
+            project_files=request.project_files,
+        )
+        system, user = build_module_analysis_prompt(
+            module_path,
+            source,
+            project_context_block=ctx.to_prompt_block(),
+        )
+        _progress(f"Analyzing module in project context: {ctx.module_relpath}…")
         text = complete_fn(system, user)
         return AiTaskResult(
             kind=kind,
             title=request.title,
             text=text,
             backend_name=backend_name,
-            file_path=request.file_path,
+            file_path=module_path,
         )
 
     if kind is AiTaskKind.ANALYZE_SYMBOL:
@@ -248,14 +312,30 @@ def execute_ai_task(
         )
 
     if kind is AiTaskKind.DOCSTRING:
-        pack = build_ai_context_from_source(
+        fragment, resolved_name = resolve_docstring_fragment(
             request.source,
-            request.symbol_name,
-            file=request.file_path or "<memory>",
-            kind=request.symbol_kind,
+            selected_text=request.selected_text,
+            symbol_name=request.symbol_name,
+            cursor_line=request.cursor_line,
         )
-        system, user = build_docstring_prompt(pack)
-        _progress(f"Generating docstring for {request.symbol_name}…")
+        symbol_name = resolved_name or request.symbol_name
+        if not fragment:
+            raise ValueError(
+                "No code fragment for docstring: select a function/class "
+                "(or place the cursor on its name)."
+            )
+        support = build_docstring_support_context(
+            request.source,
+            symbol_name=symbol_name,
+            selected_fragment=fragment,
+        )
+        system, user = build_docstring_prompt(
+            symbol_name=symbol_name,
+            file_path=request.file_path or "<memory>",
+            selected_fragment=fragment,
+            support_context=support,
+        )
+        _progress(f"Generating docstring for {symbol_name or 'selection'}…")
         text = complete_fn(system, user).strip()
         if text.startswith('"""') or text.startswith("'''"):
             # Model sometimes wraps quotes — strip outer fences lightly.
@@ -269,7 +349,7 @@ def execute_ai_task(
             text=text,
             backend_name=backend_name,
             file_path=request.file_path,
-            symbol_name=request.symbol_name,
+            symbol_name=symbol_name,
         )
 
     if kind is AiTaskKind.CHAT:
