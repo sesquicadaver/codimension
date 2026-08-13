@@ -6,6 +6,8 @@
   module analysis is project-scoped (imports + neighbour modules);
   docstring prompts use the editor selection plus lean support context
   (not CFG/reference packs)
+* ``codimension_ctl.sh install``: always ``pip install -e`` from repo root
+  (safe when invoked from ``scripts/``)
 
 2026 Aug 09
 

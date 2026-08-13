@@ -141,6 +141,12 @@ cmd_install() {
     "$base_py" -m venv "$VENV"
   fi
   [[ -x "$PY" ]] || die "venv python missing: $PY"
+  # Detect relocated/copied venvs whose shebangs still point elsewhere.
+  local venv_prefix
+  venv_prefix="$("$PY" -c 'import sys; print(sys.prefix)')"
+  if [[ "$venv_prefix" != "$VENV" ]]; then
+    die "venv is broken/relocated: python prefix is $venv_prefix (expected $VENV). Re-run with --reinstall"
+  fi
 
   info "upgrading pip"
   "$PY" -m pip install --upgrade pip wheel setuptools
@@ -153,8 +159,14 @@ cmd_install() {
     spec=".[tools,lint,test,security]"
   fi
 
-  info "installing editable $spec"
-  "$PIP" install -e "$spec"
+  # Always install from repo root — ``pip install -e .`` follows the caller's CWD,
+  # so running ``./codimension_ctl.sh`` from ``scripts/`` would otherwise target scripts/.
+  [[ -f "${ROOT}/pyproject.toml" ]] || die "pyproject.toml missing under ROOT=$ROOT"
+  info "installing editable $spec (from $ROOT)"
+  (
+    cd "$ROOT"
+    "$PIP" install -e "$spec"
+  )
 
   # pylint/astroid pin wrapt<1.13; on 3.11+ that wrapt is broken — refresh without deps.
   local major minor

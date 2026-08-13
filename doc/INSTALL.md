@@ -13,6 +13,7 @@
 
 ```bash
 ./scripts/codimension_ctl.sh install --yes --desktop
+# (safe from any cwd; install always uses the repo root)
 ./scripts/run_codimension.sh
 ```
 
