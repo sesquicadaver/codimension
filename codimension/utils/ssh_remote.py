@@ -269,7 +269,7 @@ class ParamikoSftpSession:
 
     def read_bytes(self, path: str) -> bytes:
         with self._sftp.open(_norm_remote(path), "rb") as handle:
-            return handle.read()
+            return bytes(handle.read())
 
     def write_bytes(self, path: str, data: bytes) -> None:
         path = _norm_remote(path)
@@ -428,7 +428,7 @@ def load_ssh_password(profile_id: str, settings_dir: Optional[str] = None) -> st
 
         value = keyring.get_password(KEYRING_SERVICE, profile_id)
         if value is not None:
-            return value
+            return str(value)
     except Exception:
         pass
     path = password_file_path(profile_id, settings_dir)

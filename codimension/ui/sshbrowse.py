@@ -90,7 +90,9 @@ class SshBrowseDialog(QDialog):
         layout.addWidget(self.__list)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, parent=self)
-        self.__okBtn = buttons.button(QDialogButtonBox.Ok)
+        ok_btn = buttons.button(QDialogButtonBox.Ok)
+        assert ok_btn is not None
+        self.__okBtn = ok_btn
         self.__okBtn.setText("Select")
         self.__okBtn.setEnabled(False)
         buttons.accepted.connect(self.__on_accept)
@@ -147,8 +149,8 @@ class SshBrowseDialog(QDialog):
         entries.sort(key=lambda item: (not item[2], item[0].lower()))
         for label, full, is_dir in entries:
             item = QListWidgetItem(label)
-            item.setData(Qt.UserRole, full)
-            item.setData(Qt.UserRole + 1, is_dir)
+            item.setData(Qt.ItemDataRole.UserRole, full)
+            item.setData(Qt.ItemDataRole.UserRole + 1, is_dir)
             self.__list.addItem(item)
 
     def __go_up(self) -> None:
@@ -159,8 +161,8 @@ class SshBrowseDialog(QDialog):
         self.__chdir(self.__pathEdit.text().strip() or "/")
 
     def __on_double_click(self, item: QListWidgetItem) -> None:
-        full = item.data(Qt.UserRole)
-        is_dir = bool(item.data(Qt.UserRole + 1))
+        full = item.data(Qt.ItemDataRole.UserRole)
+        is_dir = bool(item.data(Qt.ItemDataRole.UserRole + 1))
         if is_dir:
             self.__chdir(str(full))
         elif self.__mode in (self.MODE_FILE, self.MODE_FILE_OR_DIR):
@@ -172,7 +174,7 @@ class SshBrowseDialog(QDialog):
         if item is None:
             self.__okBtn.setEnabled(self.__mode in (self.MODE_DIR, self.MODE_FILE_OR_DIR))
             return
-        is_dir = bool(item.data(Qt.UserRole + 1))
+        is_dir = bool(item.data(Qt.ItemDataRole.UserRole + 1))
         if self.__mode == self.MODE_DIR:
             self.__okBtn.setEnabled(True)
         elif self.__mode == self.MODE_FILE:
@@ -183,8 +185,8 @@ class SshBrowseDialog(QDialog):
     def __on_accept(self) -> None:
         item = self.__list.currentItem()
         if item is not None:
-            full = str(item.data(Qt.UserRole))
-            is_dir = bool(item.data(Qt.UserRole + 1))
+            full = str(item.data(Qt.ItemDataRole.UserRole))
+            is_dir = bool(item.data(Qt.ItemDataRole.UserRole + 1))
             if self.__mode == self.MODE_DIR:
                 self.__selected = full if is_dir else self.__cwd
                 self.accept()

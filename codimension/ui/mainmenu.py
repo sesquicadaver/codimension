@@ -107,12 +107,8 @@ class MainWindowMenuMixin:
             getIcon("project.png"), "&Open project", self._openProject, "Ctrl+Shift+O"
         )
         prjMenu.addSeparator()
-        self.__openRemoteProjectAct = prjMenu.addAction(
-            "Open remote project (SSH)...", self._onOpenRemoteProject
-        )
-        self.__newRemoteProjectAct = prjMenu.addAction(
-            "Create remote project (SSH)...", self._onNewRemoteProject
-        )
+        self.__openRemoteProjectAct = prjMenu.addAction("Open remote project (SSH)...", self._onOpenRemoteProject)
+        self.__newRemoteProjectAct = prjMenu.addAction("Create remote project (SSH)...", self._onNewRemoteProject)
         prjMenu.addSeparator()
         self._unloadProjectAct = prjMenu.addAction(
             getIcon("unloadproject.png"), "&Unload project", self.projectViewer.unloadProject
@@ -700,8 +696,9 @@ class MainWindowMenuMixin:
         """Project → Create remote project (SSH)..."""
         self.__runRemoteProjectDialog(mode="create")
 
-    def __runRemoteProjectDialog(self, *, mode: str) -> None:
+    def __runRemoteProjectDialog(self, mode):
         """Show SSH open/create dialog and load the local cache project."""
+        # Untyped like other mixin handlers so mypy does not require host attrs.
         if self.debugMode:
             return
         if not self.em.closeRequest():

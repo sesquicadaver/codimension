@@ -385,7 +385,7 @@ class SshRemoteProjectDialog(QDialog):
         if profile.auth == "password" and not password:
             QMessageBox.warning(self, self.windowTitle(), "Password is required for password auth.")
             return None
-        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
         try:
             if self.__connect_fn is not None:
                 self.__session = self.__connect_fn(profile, password)
@@ -490,7 +490,7 @@ class SshRemoteProjectDialog(QDialog):
             "creationdate": self.__creationDateEdit.text().strip(),
             "importdirs": ["."],
         }
-        return default_cdm3_json(project_name, extra)
+        return str(default_cdm3_json(project_name, extra))
 
     def __onAccept(self) -> None:
         try:
@@ -527,7 +527,7 @@ class SshRemoteProjectDialog(QDialog):
         if session is None:
             return
 
-        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
         try:
             if self.__mode == self.MODE_OPEN:
                 self.__binding = open_remote_project(session, profile, remote_path, settings_dir=self.__settings_dir)
