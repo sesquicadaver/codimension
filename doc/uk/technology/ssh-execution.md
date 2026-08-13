@@ -33,3 +33,11 @@
 | run | `python script args…` |
 | debug | `python -m pdb script…` (без IDE TCP redirect) |
 | profile | `python -m cProfile -o outfile script…` |
+
+## Зв’язок із remote projects
+
+IDE **Open/Create remote project**, Save→SFTP і **Run on SSH** описані в
+[`ssh-remote-project.md`](ssh-remote-project.md) (довідка:
+[Remote projects over SSH](../../user/ssh-remote-projects.md)). R124 лишається
+headless `ExecutionTarget`, коли remote-шлях скрипта вже існує.
+Повний remote IDE debug відкладено.

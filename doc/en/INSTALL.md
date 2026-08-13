@@ -54,11 +54,15 @@ cd codimension
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e ".[tools,lint,test,security]"
+python -m pip install -e ".[tools,lint,test,security,ssh]"
 # Python 3.11+:
 python -m pip install 'wrapt>=1.14' --no-deps
 ./scripts/run_codimension.sh
 ```
+
+Do not run the IDE from a checkout under **Trash** (the desktop launcher and
+`run_codimension.sh` refuse that). After moving the repo: `cd -P /path/to/codimension`
+so `$PWD` is not stuck on a deleted path.
 
 ## Removal
 
@@ -70,4 +74,5 @@ python -m pip install 'wrapt>=1.14' --no-deps
 ## Next
 
 - In-app user guide: [../user/index.md](../user/index.md)
+- Remote SSH projects: [../user/ssh-remote-projects.md](../user/ssh-remote-projects.md)
 - Repository: https://github.com/sesquicadaver/codimension

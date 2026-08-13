@@ -1,5 +1,8 @@
 2026 Aug 13
 
+* Documentation: user guide for SSH remote projects; README/INSTALL/NOTES/FORK/
+  ROADMAP/project indexes aligned with Open/Create/Browse/Save/Run MVP and
+  ``codimension_ctl.sh`` install (incl. ``.[ssh]``); living-spec 1.5
 * SSH Open/Create: remote SFTP file-manager Browse… for project dir/script/venv/docs
   (parity with local New project fields); Connect… then pick paths
 * Project menu: surface Open/Create remote SSH projects under local New/Open

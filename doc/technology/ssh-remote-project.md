@@ -64,8 +64,9 @@ Optional extra: `pip install -e '.[ssh]'` (pulls `paramiko` and `keyring`).
 ## Relation to R124
 
 [`ssh-execution.md`](ssh-execution.md) covers **headless run** when the script
-path already exists on the remote host. Open/Create here is the missing project
-bootstrap; full remote-first edit/run/lint sync remains a follow-up.
+path already exists on the remote host. Open/Create + Save upload + IDE **Run**
+on SSH-bound projects are implemented here; full remote IDE **debug** remains
+deferred.
 
 ## Platforms
 

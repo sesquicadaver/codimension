@@ -136,6 +136,13 @@
 
 **Активна черга порожня** (R179 злито — PR #89 / `8c19d108`). Далі — лише за явним запитом на deferred **R180** / **R181** / **R182**.
 
+### Поставлено поза R-чергою (запит продукту)
+
+| Область | Статус | Документація |
+|---------|--------|--------------|
+| SSH remote Open/Create + Browse… + Save upload + IDE Run | MVP | [ssh-remote-project.md](doc/technology/ssh-remote-project.md), [довідка](doc/user/ssh-remote-projects.md) |
+| Повний remote IDE debug / Profile по SSH | Відкладено | Ті самі docs |
+
 ---
 
 ## Цільова архітектура

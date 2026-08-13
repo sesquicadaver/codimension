@@ -35,6 +35,20 @@ Codimension підтримує роботу з проєктом і без ньо
 
 ![Вкладка проєкту](../../project/projectbar.png "Вкладка проєкту")
 
+### Віддалені проєкти по SSH
+
+Якщо дерево проєкту на іншому хості:
+
+- **Project → Open remote project (SSH)...**
+- **Project → Create remote project (SSH)...**
+
+(одразу під локальними New/Open). Connect, потім **Browse…** у remote
+file-manager. Локальний кеш: `~/.codimension3/remote-projects/`. **Save**
+заливає на remote; **Run** виконує на хості. Debug/Profile по SSH поки немає.
+
+Довідка: [Remote projects over SSH](../../user/ssh-remote-projects.md).
+Технологія: [ssh-remote-project.md](../technology/ssh-remote-project.md).
+
 Панель проєкту має дві кнопки. Одна — для вивантаження проєкту, інша —
 для перегляду або редагування властивостей проєкту.
 

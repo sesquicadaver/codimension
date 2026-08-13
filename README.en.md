@@ -15,6 +15,7 @@ Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codi
 - Python editing with a synchronized control-flow diagram
 - Import / class / dependency diagrams; dead code, complexity, pyflakes in the editor
 - `.cdm3` projects (no auto-load of the last project on startup)
+- Remote SSH projects: Open/Create + Browse…; Save→upload; Run on host (debug deferred); see [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md)
 - Local Project VENV (Tools → **VENV…** / **Update VENV…**; **Env:** status)
 - Pure-Python AST parsers exposed under the compatibility names `cdmpyparser` / `cdmcfparser` (no C extension required)
 - Plugin UI in `cdmplugins/` (Ruff, Mypy, Pytest, … need optional extras)
@@ -42,27 +43,20 @@ Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codi
 ```bash
 git clone https://github.com/sesquicadaver/codimension.git
 cd codimension
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install .
-codimension
+./scripts/codimension_ctl.sh install --yes --desktop
+./scripts/run_codimension.sh
+# optional: ./scripts/run_codimension.sh /path/to/project.cdm3
 ```
 
-Analyzer plugins (Ruff, Mypy, Pytest, …):
+Removal: `./scripts/codimension_ctl.sh uninstall --yes`  
+(full, including config: `./scripts/codimension_ctl.sh uninstall --purge-config --yes`)
 
-```bash
-python -m pip install ".[tools,lint,test,security]"
-```
-
-Details: [doc/en/README.md](doc/en/README.md) → install ([doc/en/INSTALL.md](doc/en/INSTALL.md)).
+Default install pulls tools/lint/test/security/**ssh**. Details: [doc/en/INSTALL.md](doc/en/INSTALL.md).
 
 ## Development
 
 ```bash
-python -m pip install -e ".[tools,lint,test,security]"
-# or the convenience CI snapshot:
-# python -m pip install -r requirements.txt && python -m pip install -e .
+./scripts/codimension_ctl.sh install --yes
 pytest tests/ -v
 ruff check codimension cdmplugins
 ```

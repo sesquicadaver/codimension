@@ -60,4 +60,5 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 ## Зв’язок з R124
 
 [`ssh-execution.md`](ssh-execution.md) — headless run уже наявного remote-шляху.
-Open/Create — bootstrap проєкту; повний remote-first edit/run/lint — наступні фази.
+Open/Create + Save upload + IDE **Run** для SSH-проєктів реалізовані тут;
+повний remote IDE **debug** відкладено.

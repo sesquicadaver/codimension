@@ -34,13 +34,19 @@
 
 ## Середовище
 
-Проєкт тестується лише у віртуальному середовищі (venv):
+Проєкт тестується лише у віртуальному середовищі (venv). Рекомендовано:
+
+```shell
+./scripts/codimension_ctl.sh install --yes
+```
+
+Або вручну:
 
 ```shell
 python3 -m venv .venv
 .venv/bin/pip install --upgrade pip
 .venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e .
+.venv/bin/pip install -e ".[tools,lint,test,security,ssh]"
 ```
 
 ## CI (локально перед PR)

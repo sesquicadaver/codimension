@@ -34,13 +34,19 @@ Active repository: https://github.com/sesquicadaver/codimension
 
 ## Environment
 
-The project is tested only in a virtual environment (venv):
+The project is tested only in a virtual environment (venv). Recommended:
+
+```shell
+./scripts/codimension_ctl.sh install --yes
+```
+
+Or manually:
 
 ```shell
 python3 -m venv .venv
 .venv/bin/pip install --upgrade pip
 .venv/bin/pip install -r requirements.txt
-.venv/bin/pip install -e .
+.venv/bin/pip install -e ".[tools,lint,test,security,ssh]"
 ```
 
 ## CI (local, before PR)

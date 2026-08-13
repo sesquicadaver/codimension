@@ -4,8 +4,8 @@
 
 <!-- markdownlint-disable MD060 -->
 
-**Version:** 1.4  
-**Date:** 2026-08-08  
+**Version:** 1.5  
+**Date:** 2026-08-13  
 **Source:** [plugins-implementation-plan.md](plugins-implementation-plan.md)
 
 Requirements-to-module-to-tests matrix. Updated with every plugin change.
