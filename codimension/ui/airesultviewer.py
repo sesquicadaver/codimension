@@ -68,7 +68,7 @@ class AiResultViewer(QWidget):
         self.__applyDocAct.setEnabled(False)
 
         toolbar = QToolBar(self)
-        toolbar.setOrientation(Qt.Vertical)
+        toolbar.setOrientation(Qt.Vertical)  # type: ignore[attr-defined]
         toolbar.setMovable(False)
         toolbar.setIconSize(QSize(16, 16))
         toolbar.setFixedWidth(28)

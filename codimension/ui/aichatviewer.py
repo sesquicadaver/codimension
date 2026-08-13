@@ -20,7 +20,6 @@ from .qt import (
     QLineEdit,
     QPlainTextEdit,
     QPushButton,
-    Qt,
     QVBoxLayout,
     QWidget,
 )
@@ -81,7 +80,7 @@ class AiChatViewer(QWidget):
 
     def focusInput(self) -> None:
         """Focus the prompt field."""
-        self.__input.setFocus(Qt.OtherFocusReason)
+        self.__input.setFocus()
 
     def __append(self, role: str, text: str) -> None:
         self.__log.appendPlainText(f"{role}: {text}\n")

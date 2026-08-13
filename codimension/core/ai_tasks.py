@@ -321,8 +321,7 @@ def execute_ai_task(
         symbol_name = resolved_name or request.symbol_name
         if not fragment:
             raise ValueError(
-                "No code fragment for docstring: select a function/class "
-                "(or place the cursor on its name)."
+                "No code fragment for docstring: select a function/class (or place the cursor on its name)."
             )
         support = build_docstring_support_context(
             request.source,

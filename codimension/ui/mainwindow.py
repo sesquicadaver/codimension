@@ -65,6 +65,8 @@ from utils.project import CodimensionProject
 from utils.runmanager import RunManager
 
 from .about import AboutDialog
+from .ai_controller import AiWorkspaceController
+from .airesultviewer import AiResultViewer
 from .classesviewer import ClassesViewer
 from .editorsmanager import EditorsManager
 from .findfile import FindFileDialog
@@ -75,8 +77,6 @@ from .functionsviewer import FunctionsViewer
 from .globalsviewer import GlobalsViewer
 from .gotolinewidget import GotoLineWidget
 from .logviewer import LogViewer
-from .airesultviewer import AiResultViewer
-from .ai_controller import AiWorkspaceController
 from .mainmenu import MainWindowMenuMixin
 from .mainredirectedio import MainWindowRedirectedIOMixin
 from .mainstatusbar import MainWindowStatusBarMixin
