@@ -113,6 +113,8 @@ class MainWindowMenuMixin:
             getIcon("smalli.png"), "&Properties", self.projectViewer.projectProperties
         )
         self.__gitRepoAct = prjMenu.addAction("Git &repository...", self._onGitRepository)
+        self.__openRemoteProjectAct = prjMenu.addAction("Open &remote project (SSH)…", self._onOpenRemoteProject)
+        self.__newRemoteProjectAct = prjMenu.addAction("&New remote project (SSH)…", self._onNewRemoteProject)
         prjMenu.addSeparator()
         self._prjTemplateMenu = QMenu("Project-specific &template", self)
         self.__createPrjTemplateAct = self._prjTemplateMenu.addAction(getIcon("generate.png"), "&Create")
@@ -649,6 +651,8 @@ class MainWindowMenuMixin:
         """Triggered when project menu is about to show"""
         self.__newProjectAct.setEnabled(not self.debugMode)
         self.__openProjectAct.setEnabled(not self.debugMode)
+        self.__openRemoteProjectAct.setEnabled(not self.debugMode)
+        self.__newRemoteProjectAct.setEnabled(not self.debugMode)
         self._unloadProjectAct.setEnabled(not self.debugMode)
 
         # Recent projects part
@@ -679,6 +683,36 @@ class MainWindowMenuMixin:
         """Triggered when project menu is about to hide"""
         self.__newProjectAct.setEnabled(True)
         self.__openProjectAct.setEnabled(True)
+        self.__openRemoteProjectAct.setEnabled(True)
+        self.__newRemoteProjectAct.setEnabled(True)
+
+    def _onOpenRemoteProject(self):
+        """Project → Open remote project (SSH)…"""
+        self.__runRemoteProjectDialog(mode="open")
+
+    def _onNewRemoteProject(self):
+        """Project → New remote project (SSH)…"""
+        self.__runRemoteProjectDialog(mode="create")
+
+    def __runRemoteProjectDialog(self, *, mode: str) -> None:
+        """Show SSH open/create dialog and load the local cache project."""
+        if self.debugMode:
+            return
+        if not self.em.closeRequest():
+            return
+
+        from .sshprojectdlg import SshRemoteProjectDialog
+
+        dlg = SshRemoteProjectDialog(self, mode=mode)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        binding = dlg.binding()
+        if binding is None or not binding.local_cdm3:
+            QMessageBox.warning(self, "SSH remote project", "No local project file was produced.")
+            return
+        self._loadProject(binding.local_cdm3)
+        if os.path.isfile(binding.local_cdm3):
+            self.settings.addRecentProject(binding.local_cdm3)
 
     def _onVenvSetup(self):
         """Create/attach project venv when pythoninterpreter is unset (T140)."""

@@ -1,0 +1,45 @@
+> **Language / Мова:** English | [Українська](../uk/technology/ssh-remote-project.md)
+
+# SSH remote project open/create
+
+Remote-first projects: the canonical tree lives on the SSH host; Codimension
+keeps a **local cache** under `~/.codimension3/remote-projects/<profile-id>/`
+and opens the downloaded `.cdm3` like a normal project.
+
+## UI
+
+- **Project → Open remote project (SSH)…** — connect, resolve remote `.cdm3`
+  (file or directory containing one), download the project tree, load cache.
+- **Project → New remote project (SSH)…** — create remote directory + `.cdm3`,
+  seed the local cache, load it.
+
+## Auth
+
+| Mode | Behaviour |
+| ---- | --------- |
+| SSH key / agent | Paramiko `look_for_keys` / agent; optional identity file |
+| Password | Paramiko password auth; optional remember via OS keyring or `ssh_password_<id>` mode `0600` |
+
+Host profiles (no secrets) are stored in `~/.codimension3/ssh_hosts.json`.
+
+## Limits (MVP download)
+
+- Max **5000** files
+- Max **200 MiB** total
+- Skipped directory names: `.git`, `.hg`, `.svn`, `__pycache__`, `.venv`, `venv`, `node_modules`
+
+## Dependency
+
+Optional extra: `pip install -e '.[ssh]'` (pulls `paramiko` and `keyring`).
+
+## Relation to R124
+
+[`ssh-execution.md`](ssh-execution.md) covers **headless run** when the script
+path already exists on the remote host. Open/Create here is the missing project
+bootstrap; full remote-first edit/run/lint sync remains a follow-up.
+
+## Platforms
+
+SFTP paths are treated as POSIX-style (typical for OpenSSH on Linux, macOS, and
+Windows OpenSSH). Live Paramiko connectivity is best-effort; contract tests use
+`FakeSftpSession` (no network).

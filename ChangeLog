@@ -1,3 +1,10 @@
+2026 Aug 13
+
+* SSH remote project open/create (MVP): Project menu Open/New remote (SSH);
+  host profiles in ``ssh_hosts.json``; password via keyring or 0600 file;
+  Paramiko SFTP optional (``.[ssh]``); local cache under
+  ``~/.codimension3/remote-projects/``; Fake SFTP contract tests
+
 2026 Aug 10
 
 * AI workspace: analyze project (all ``.py``, chunked), module, symbol;

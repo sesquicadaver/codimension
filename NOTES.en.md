@@ -20,6 +20,12 @@ IDE Help: [doc/user/index.md](doc/user/index.md).
 - Plugins: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
 
+## SSH remote projects (MVP)
+
+**Project → Open remote project (SSH)…** / **New remote project (SSH)…**.
+Cache: `~/.codimension3/remote-projects/`. Optional: `pip install -e '.[ssh]'`.
+Details: [doc/technology/ssh-remote-project.md](doc/technology/ssh-remote-project.md).
+
 ## AI (experimental)
 
 **Options → Enable AI** / **AI settings…** / **AI actions**. Editor → **AI**.

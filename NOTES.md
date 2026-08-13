@@ -19,6 +19,12 @@
 - Плагіни: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
 
+## SSH remote projects (MVP)
+
+**Project → Open remote project (SSH)…** / **New remote project (SSH)…**.
+Кеш: `~/.codimension3/remote-projects/`. Опційно: `pip install -e '.[ssh]'`.
+Деталі: [doc/uk/technology/ssh-remote-project.md](doc/uk/technology/ssh-remote-project.md).
+
 ## AI (experimental)
 
 **Options → Enable AI** / **AI settings…** / **AI actions**. ПКМ → **AI**.
