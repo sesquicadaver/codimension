@@ -10,11 +10,16 @@
 # Non-interactive: pass --yes where confirmation would be required.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Always resolve the physical checkout path. After a folder is moved to Trash,
+# bash may still show ``~/codimension`` in the prompt (stale $PWD) while the
+# shell — and ``./codimension_ctl.sh`` — are actually under Trash/files/….
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+ROOT="$(cd "${_SCRIPT_DIR}/.." && pwd -P)"
 VENV="${ROOT}/.venv"
 PY="${VENV}/bin/python"
 PIP="${VENV}/bin/pip"
 CDM="${VENV}/bin/codimension"
+RUN_SH="${ROOT}/scripts/run_codimension.sh"
 DESKTOP_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/applications"
 DESKTOP_FILE="${DESKTOP_DIR}/codimension-local.desktop"
 ICON_SRC="${ROOT}/resources/codimension.png"
@@ -56,6 +61,28 @@ need_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
 }
 
+refuse_trash_checkout() {
+  # Classic footgun: ~/codimension was moved to Trash while this terminal was
+  # inside it. The prompt can still show ``~/codimension/scripts`` (stale $PWD)
+  # but ``pwd -P`` / this script already live under Trash/files/….
+  case "$ROOT" in
+    */.local/share/Trash/*|*/Trash/*|*/.Trash/*)
+      die "refusing install: physical script path is under Trash:
+  ROOT=$ROOT
+  PWD(logical)=${PWD:-?}
+  pwd -P=$(pwd -P 2>/dev/null || echo '?')
+
+The prompt path can lie after the folder was moved to Trash. You are not
+running the new ~/codimension clone.
+
+Fix (copy-paste):
+  cd -P \$HOME/codimension
+  pwd -P    # must be …/codimension  (no Trash)
+  ./scripts/codimension_ctl.sh install --desktop --yes"
+      ;;
+  esac
+}
+
 python_ok() {
   local candidate="$1"
   "$candidate" - <<'PY'
@@ -89,17 +116,20 @@ confirm() {
 }
 
 install_desktop() {
+  [[ -x "$RUN_SH" ]] || die "launcher missing: $RUN_SH"
   mkdir -p "$DESKTOP_DIR" "$(dirname "$ICON_DST")"
   if [[ -f "$ICON_SRC" ]]; then
     cp -f "$ICON_SRC" "$ICON_DST"
   fi
+  # Use run_codimension.sh (sets PYTHONPATH) — not a raw venv entry point.
+  # Quote paths for spaces; %F stays outside quotes per Desktop Entry Spec.
   cat >"$DESKTOP_FILE" <<EOF
 [Desktop Entry]
-Name=Codimension (local)
+Name=Codimension
 GenericName=Codimension
-Comment=Codimension Python IDE (this checkout)
-Exec=${CDM} %F
-TryExec=${CDM}
+Comment=Codimension Python IDE (checkout: ${ROOT})
+Exec=${RUN_SH} %F
+TryExec=${RUN_SH}
 Path=${ROOT}
 Terminal=false
 Type=Application
@@ -112,6 +142,7 @@ EOF
     update-desktop-database "$DESKTOP_DIR" >/dev/null 2>&1 || true
   fi
   info "desktop entry: $DESKTOP_FILE"
+  info "menu Exec -> $RUN_SH"
 }
 
 remove_desktop() {
@@ -125,10 +156,12 @@ remove_desktop() {
 }
 
 cmd_install() {
+  refuse_trash_checkout
   need_cmd python3
   local base_py
   base_py="$(pick_python)"
   info "base Python: $base_py ($("$base_py" -V 2>&1))"
+  info "install ROOT: $ROOT"
 
   if [[ "$REINSTALL" -eq 1 && -d "$VENV" ]]; then
     confirm "Remove existing venv at $VENV?" || die "aborted"
@@ -156,7 +189,7 @@ cmd_install() {
     TOOLS=0
   fi
   if [[ "$TOOLS" -eq 1 ]]; then
-    spec=".[tools,lint,test,security]"
+    spec=".[tools,lint,test,security,ssh]"
   fi
 
   # Always install from repo root — ``pip install -e .`` follows the caller's CWD,
@@ -165,7 +198,8 @@ cmd_install() {
   info "installing editable $spec (from $ROOT)"
   (
     cd "$ROOT"
-    "$PIP" install -e "$spec"
+    # Prefer ``python -m pip`` — a relocated venv can leave ``bin/pip`` pointing elsewhere.
+    "$PY" -m pip install -e "$spec"
   )
 
   # pylint/astroid pin wrapt<1.13; on 3.11+ that wrapt is broken — refresh without deps.
@@ -174,7 +208,7 @@ cmd_install() {
   minor="$("$PY" -c 'import sys; print(sys.version_info.minor)')"
   if [[ "$major" -gt 3 || ( "$major" -eq 3 && "$minor" -ge 11 ) ]]; then
     info "Python ${major}.${minor}: installing wrapt>=1.14 --no-deps (pylint stack)"
-    "$PIP" install 'wrapt>=1.14' --no-deps || true
+    "$PY" -m pip install 'wrapt>=1.14' --no-deps || true
   fi
 
   [[ -x "$CDM" ]] || die "entry point missing after install: $CDM"
@@ -190,6 +224,11 @@ cmd_install() {
   echo
   echo "Run:  ./scripts/run_codimension.sh"
   echo "      # or: $CDM"
+  if [[ "$DESKTOP" -eq 1 ]]; then
+    echo "Menu: Codimension  ($DESKTOP_FILE)"
+  else
+    echo "Menu: add with  ./scripts/codimension_ctl.sh install --desktop --yes"
+  fi
   echo
   echo "Remove:"
   echo "  ./scripts/codimension_ctl.sh uninstall --yes"

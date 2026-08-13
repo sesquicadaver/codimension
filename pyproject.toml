@@ -68,8 +68,12 @@ security = [
   "bandit>=1.7.0",
   "pip-audit>=2.0.0",
 ]
+ssh = [
+  "paramiko>=3.0",
+  "keyring>=23.0",
+]
 dev = [
-  "codimension[tools,lint,test,security]",
+  "codimension[tools,lint,test,security,ssh]",
 ]
 
 [project.urls]

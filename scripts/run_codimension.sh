@@ -6,8 +6,16 @@
 #   ./scripts/run_codimension.sh --safe-mode
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 CDM="${ROOT}/.venv/bin/codimension"
+
+case "$ROOT" in
+  */.local/share/Trash/*|*/Trash/*|*/.Trash/*)
+    echo "error: refusing to launch from Trash checkout: $ROOT" >&2
+    echo "hint: cd -P \$HOME/codimension && ./scripts/run_codimension.sh" >&2
+    exit 1
+    ;;
+esac
 
 if [[ ! -x "$CDM" ]]; then
   echo "error: missing $CDM" >&2
@@ -15,7 +23,9 @@ if [[ ! -x "$CDM" ]]; then
   exit 1
 fi
 
-# Prefer the checkout's cdmplugins package over a namespace stub in site-packages.
+# Repo root on PYTHONPATH so ``cdmplugins`` resolves; the ``codimension`` package
+# itself must come from the editable install (do NOT put ROOT/codimension first —
+# that shadows the package with the top-level ``codimension.py`` module).
 export PYTHONPATH="${ROOT}${PYTHONPATH:+:$PYTHONPATH}"
 
 exec "$CDM" "$@"

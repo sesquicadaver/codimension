@@ -15,6 +15,7 @@
 - Редагування Python і синхронізована control-flow діаграма
 - Діаграми імпортів / класів / залежностей; dead code, складність, pyflakes у редакторі
 - Проєкти `.cdm3` (без автозавантаження останнього проєкту)
+- Віддалені проєкти по SSH: Open/Create + Browse…; Save→upload; Run на хості (debug deferred); див. [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md)
 - Локальний Project VENV (Tools → **VENV…** / **Update VENV…**; status **Env:**)
 - Pure-Python AST-парсери під compatibility-іменами `cdmpyparser` / `cdmcfparser` (C-extension не потрібен)
 - UI плагінів у `cdmplugins/` (Ruff, Mypy, Pytest тощо потребують optional extras)

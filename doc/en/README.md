@@ -47,6 +47,8 @@ The `doc/www/` directory is a local archive mirror of the old site and is not ma
 | [../project/project.md](../project/project.md) | [../uk/project/project.md](../uk/project/project.md) |
 | [../technology/technology.md](../technology/technology.md) | [../uk/technology/technology.md](../uk/technology/technology.md) |
 | [../technology/parser-contract.md](../technology/parser-contract.md) | [../uk/technology/parser-contract.md](../uk/technology/parser-contract.md) |
+| [../technology/ssh-execution.md](../technology/ssh-execution.md) | [../uk/technology/ssh-execution.md](../uk/technology/ssh-execution.md) |
+| [../technology/ssh-remote-project.md](../technology/ssh-remote-project.md) | [../uk/technology/ssh-remote-project.md](../uk/technology/ssh-remote-project.md) |
 | [../md/mdsupport.md](../md/mdsupport.md) | [../uk/md/mdsupport.md](../uk/md/mdsupport.md) |
 | [../smartzoom/smartzoom.md](../smartzoom/smartzoom.md) | [../uk/smartzoom/smartzoom.md](../uk/smartzoom/smartzoom.md) |
 | [../dependencies/dependencies.md](../dependencies/dependencies.md) | [../uk/dependencies/dependencies.md](../uk/dependencies/dependencies.md) |

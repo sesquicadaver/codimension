@@ -19,10 +19,10 @@
 
 | Команда | Дія |
 | ------- | --- |
-| `install --yes` | `.venv` + editable install з tools/lint/test/security |
+| `install --yes` | `.venv` + editable install з tools/lint/test/security/**ssh** |
 | `install --minimal --yes` | лише runtime-залежності |
 | `install --reinstall --yes` | знищити `.venv` і поставити заново |
-| `install --desktop --yes` | також ярлик у `~/.local/share/applications/` |
+| `install --desktop --yes` | ярлик у `~/.local/share/applications/` → `scripts/run_codimension.sh` (не з Trash) |
 | `uninstall --yes` | видалити `.venv` і локальний desktop-ярлик |
 | `uninstall --purge-config --yes` | те саме + `~/.codimension3` |
 
@@ -54,18 +54,22 @@ cd codimension
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -e ".[tools,lint,test,security]"
+python -m pip install -e ".[tools,lint,test,security,ssh]"
 # Python 3.11+:
 python -m pip install 'wrapt>=1.14' --no-deps
 ./scripts/run_codimension.sh
 ```
+
+Не запускайте IDE з checkout у **Trash** (desktop-ярлик і `run_codimension.sh`
+відмовляють). Після переміщення репозиторію: `cd -P /path/to/codimension` —
+інакше `$PWD` може лишатися на старому (видаленому) шляху.
 
 ## Development / CI
 
 ```bash
 ./scripts/codimension_ctl.sh install --yes
 # або:
-python -m pip install -e ".[tools,lint,test,security]"
+python -m pip install -e ".[tools,lint,test,security,ssh]"
 python -m pip install -r requirements.txt   # повний CI snapshot, не мінімум
 ```
 
@@ -80,4 +84,5 @@ python -m pip install -r requirements.txt   # повний CI snapshot, не м�
 ## Далі
 
 - Користувацька довідка IDE: [user/index.md](user/index.md)
+- Віддалені проєкти SSH: [user/ssh-remote-projects.md](user/ssh-remote-projects.md)
 - Репозиторій: https://github.com/sesquicadaver/codimension

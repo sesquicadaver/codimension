@@ -7,8 +7,9 @@
 
 ## Installation for Users
 
-The only supported method is cloning the repository and running `pip install -e .` in a venv.  
-See [doc/en/INSTALL.md](doc/en/INSTALL.md) (Ukrainian: [doc/INSTALL.md](doc/INSTALL.md)).
+Recommended: `./scripts/codimension_ctl.sh install --yes --desktop`, then
+`./scripts/run_codimension.sh` (see [doc/en/INSTALL.md](doc/en/INSTALL.md);
+Ukrainian: [doc/INSTALL.md](doc/INSTALL.md)).
 IDE Help: [doc/user/index.md](doc/user/index.md).
 
 `pip install codimension` from PyPI installs the **outdated upstream version (2020)**, not this fork.
@@ -19,6 +20,16 @@ IDE Help: [doc/user/index.md](doc/user/index.md).
 - Generate requirements file; **VENV… / Update VENV…** (T140); status-bar **Env:** (T141)
 - Plugins: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
+
+## SSH remote projects (MVP)
+
+**Project → Open remote project (SSH)...** / **Create remote project (SSH)...**
+(directly under local New/Open). Connect + **Browse…** (remote file manager)
+for dir/script/venv/docs — same fields as local New project.
+Cache: `~/.codimension3/remote-projects/`. Save → upload; **Run** on host
+(SSH debug deferred).
+User guide: [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md).
+Technology: [doc/technology/ssh-remote-project.md](doc/technology/ssh-remote-project.md).
 
 ## AI (experimental)
 

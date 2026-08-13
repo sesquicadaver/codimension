@@ -7,8 +7,9 @@
 
 ## Встановлення для користувачів
 
-Єдиний підтримуваний спосіб — клонування репозиторію та `pip install -e .` у venv.  
-Див. [doc/INSTALL.md](doc/INSTALL.md). Help у IDE: [doc/user/index.md](doc/user/index.md).
+Рекомендовано: `./scripts/codimension_ctl.sh install --yes --desktop`, запуск
+`./scripts/run_codimension.sh` (див. [doc/INSTALL.md](doc/INSTALL.md)).
+Help у IDE: [doc/user/index.md](doc/user/index.md).
 
 `pip install codimension` з PyPI встановлює **застарілу upstream-версію (2020)**, не цей форк.
 
@@ -18,6 +19,16 @@
 - Generate requirements file; **VENV… / Update VENV…** (T140); status bar **Env:** (T141)
 - Плагіни: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke
+
+## SSH remote projects (MVP)
+
+**Project → Open remote project (SSH)...** / **Create remote project (SSH)...**
+(одразу під локальними New/Open). Connect + **Browse…** (remote file manager)
+для теки/скрипта/venv/docs — як локальний New project.
+Кеш: `~/.codimension3/remote-projects/`. Save → upload; **Run** на хості
+(debug по SSH ще немає).
+Докладно: [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md),
+[doc/technology/ssh-remote-project.md](doc/technology/ssh-remote-project.md).
 
 ## AI (experimental)
 

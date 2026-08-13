@@ -47,6 +47,8 @@
 | [project/project.md](project/project.md) | [../project/project.md](../project/project.md) |
 | [technology/technology.md](technology/technology.md) | [../technology/technology.md](../technology/technology.md) |
 | [technology/parser-contract.md](technology/parser-contract.md) | [../technology/parser-contract.md](../technology/parser-contract.md) |
+| [technology/ssh-execution.md](technology/ssh-execution.md) | [../technology/ssh-execution.md](../technology/ssh-execution.md) |
+| [technology/ssh-remote-project.md](technology/ssh-remote-project.md) | [../technology/ssh-remote-project.md](../technology/ssh-remote-project.md) |
 | [md/mdsupport.md](md/mdsupport.md) | [../md/mdsupport.md](../md/mdsupport.md) |
 | [smartzoom/smartzoom.md](smartzoom/smartzoom.md) | [../smartzoom/smartzoom.md](../smartzoom/smartzoom.md) |
 | [dependencies/dependencies.md](dependencies/dependencies.md) | [../dependencies/dependencies.md](../dependencies/dependencies.md) |

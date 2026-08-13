@@ -24,11 +24,15 @@ In-app documentation for the Codimension IDE.
 - [Dependencies](../dependencies/dependencies.md)
 - [Disassembling](../disassembling/disassembling.md)
 
+## Projects
+
+- [Projects](../project/project.md)
+- [Remote projects over SSH](ssh-remote-projects.md)
+
 ## Other
 
 - [Plugins](../plugins/plugins.md)
 - [Markdown support](../md/mdsupport.md)
-- [Projects](../project/project.md)
 - [Editor settings](../editorsettings/editorsettings.md)
 - [Color schemes](../colorschemes/colorschemes.md)
 

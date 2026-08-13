@@ -136,6 +136,13 @@
 
 **Active queue empty** (R179 shipped — PR #89 / `8c19d108`). Next work only on explicit ask for deferred **R180** / **R181** / **R182**.
 
+### Shipped outside the R-queue (product ask)
+
+| Area | Status | Docs |
+|------|--------|------|
+| SSH remote project Open/Create + Browse… + Save upload + IDE Run | MVP | [ssh-remote-project.md](doc/technology/ssh-remote-project.md), [user guide](doc/user/ssh-remote-projects.md) |
+| Full remote IDE debug / Profile over SSH | Deferred | Same docs |
+
 ---
 
 ## Final architecture (target)

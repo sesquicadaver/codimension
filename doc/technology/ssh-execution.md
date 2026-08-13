@@ -32,3 +32,11 @@ transport in automated tests; validate live SSH per deployment before production
 | run | `python script args…` |
 | debug | `python -m pdb script…` (no IDE TCP redirect) |
 | profile | `python -m cProfile -o outfile script…` |
+
+## Relation to SSH remote projects
+
+IDE **Open/Create remote project**, Save→SFTP, and **Run on SSH** are documented
+in [`ssh-remote-project.md`](ssh-remote-project.md) (user guide:
+[Remote projects over SSH](../user/ssh-remote-projects.md)). R124 remains the
+headless `ExecutionTarget` path when the remote script path already exists.
+Full remote IDE debug is deferred.

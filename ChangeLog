@@ -1,3 +1,23 @@
+2026 Aug 13
+
+* Documentation: user guide for SSH remote projects; README/INSTALL/NOTES/FORK/
+  ROADMAP/project indexes aligned with Open/Create/Browse/Save/Run MVP and
+  ``codimension_ctl.sh`` install (incl. ``.[ssh]``); living-spec 1.5
+* SSH Open/Create: remote SFTP file-manager Browse… for project dir/script/venv/docs
+  (parity with local New project fields); Connect… then pick paths
+* Project menu: surface Open/Create remote SSH projects under local New/Open
+  (ASCII labels); launch script prefers checkout package path / refuses Trash
+* SSH remote: Save→SFTP upload; Run executes on the host (debug deferred);
+  default ``codimension_ctl.sh install`` includes ``.[ssh]`` (paramiko)
+* ``codimension_ctl.sh --desktop``: Exec uses ``run_codimension.sh``; refuse
+  install from Trash paths (dead menu entries after checkout delete/move)
+* SSH remote download: default unlimited size/file count (large projects OK);
+  optional caps via kwargs or ``CDM_SSH_MAX_FILES`` / ``CDM_SSH_MAX_BYTES``
+* SSH remote project open/create (MVP): Project menu Open/New remote (SSH);
+  host profiles in ``ssh_hosts.json``; password via keyring or 0600 file;
+  Paramiko SFTP optional (``.[ssh]``); local cache under
+  ``~/.codimension3/remote-projects/``; Fake SFTP contract tests
+
 2026 Aug 10
 
 * AI workspace: analyze project (all ``.py``, chunked), module, symbol;

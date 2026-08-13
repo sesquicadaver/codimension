@@ -35,6 +35,21 @@ loaded project name is shown in the project tab, look at the top bar:
 
 ![Project tab](projectbar.png "Project tab")
 
+### Remote projects over SSH
+
+For projects whose tree lives on another host, use:
+
+- **Project → Open remote project (SSH)...**
+- **Project → Create remote project (SSH)...**
+
+(directly under local New/Open). Connect, then **Browse…** in a remote
+file-manager dialog. Codimension downloads a local cache under
+`~/.codimension3/remote-projects/`, uploads on **Save**, and can **Run** on the
+host. Debug/Profile over SSH are not available yet.
+
+User guide: [Remote projects over SSH](../user/ssh-remote-projects.md).
+Technology: [SSH remote project](../technology/ssh-remote-project.md).
+
 The project bar has two buttons. One is for unloading the project and the other
 is for viewing or editing the project properties.
 

@@ -45,6 +45,9 @@ Ruff, Mypy, Pytest, Coverage, Bandit, pip-audit, Ruff format, TODO panel, **Git*
 ### Headless core / аналіз (R100+)
 
 - `ExecutionTarget`: local / Docker / SSH / Kubernetes MVP
+- **SSH remote projects (UI):** Open/Create + SFTP Browse…; локальний кеш;
+  Save→upload; Run на хості (IDE debug deferred). Див.
+  [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md)
 - SymbolIndex, DependencyGraph, MetricProvider, OverlayLayer, risk score
 - CFG model + taint MVP; AI: Options → AI + ПКМ explain/suggest (`ai_ui` / `CDM_AI_UI`); provider+API key (default offline)
 - Overlays: env / deps heat / deploy hints; update check + verified download (без auto-apply)
