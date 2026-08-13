@@ -1376,9 +1376,7 @@ class CodimensionMainWindow(
 
         startMD = resolve_product_help_index()
         if not startMD:
-            logging.error(
-                "Product documentation is not found (expected doc/user/index.md next to the package)."
-            )
+            logging.error("Product documentation is not found (expected doc/user/index.md next to the package).")
         else:
             self.em.openMarkdownFullView(startMD, True)
 
