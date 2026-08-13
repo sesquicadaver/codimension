@@ -85,14 +85,14 @@ def test_set_ai_ui_enabled_and_describe(tmp_path: Path) -> None:
     assert ai_ui_env_override_active(environ={}) is False
     set_ai_ui_enabled(True, store=store)
     assert store.is_enabled(FLAG_AI_UI) is True
-    snap = describe_ai_ui_settings(environ={}, store=store)
+    snap = describe_ai_ui_settings(environ={}, store=store, home=str(tmp_path))
     assert snap["enabled"] is True
     assert snap["store_enabled"] is True
     assert snap["env_override_active"] is False
     assert AI_UI_ENV in str(snap["env_key"])
     assert "offline" in str(snap["backend_label"]).lower()
     set_ai_ui_enabled(False, store=store)
-    assert describe_ai_ui_settings(environ={}, store=store)["enabled"] is False
+    assert describe_ai_ui_settings(environ={}, store=store, home=str(tmp_path))["enabled"] is False
 
 
 def test_env_override_active() -> None:

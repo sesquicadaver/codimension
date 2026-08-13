@@ -21,12 +21,13 @@ See [doc/en/INSTALL.md](doc/en/INSTALL.md) (Ukrainian: [doc/INSTALL.md](doc/INST
 
 ## AI (experimental)
 
-**Options → Enable AI (experimental)** / **AI settings…**. Editor context menu → **AI**.
-Flag `ai_ui` in `~/.codimension3/feature_flags.json`; override: `CDM_AI_UI=1`.
-Provider (offline / OpenAI / Anthropic / Ollama) and model live in
-`~/.codimension3/ai_settings.json`; API key in OS keyring or
-`~/.codimension3/ai_api_key` (mode 0600), never in the project tree.
-Default remains offline (local CFG/symbol summary). After update: `pip install -e .` and restart.
+**Options → Enable AI** / **AI settings…** / **AI actions**. Editor → **AI**.
+Flag `ai_ui`; override `CDM_AI_UI=1`. Provider is user-chosen (OpenAI / Anthropic / Ollama) —
+analysis requires a live provider (offline does not fake an LLM).
+Base set: project analysis (all `.py`), module analysis **only in the open
+project context** (local imports + neighbour modules), symbol analysis;
+Google docstring + Apply (selection + lean support context to the model);
+results in **AI Result** (Save); **AI Chat** is an on-demand panel.
 
 ## pylint / wrapt on Python 3.11+
 

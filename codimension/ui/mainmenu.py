@@ -520,6 +520,13 @@ class MainWindowMenuMixin:
         self.__aiEnableAct.setChecked(False)
         self.__aiEnableAct.triggered.connect(self._aiUiEnabledTriggered)
         optionsMenu.addAction("AI settings…", self._onAiSettings)
+        aiActionsMenu = optionsMenu.addMenu("AI actions")
+        aiActionsMenu.addAction("Analyze project…", self._onAiAnalyzeProject)
+        aiActionsMenu.addAction("Analyze module…", self._onAiAnalyzeModule)
+        aiActionsMenu.addAction("Analyze symbol…", self._onAiAnalyzeSymbol)
+        aiActionsMenu.addAction("Generate docstring…", self._onAiDocstring)
+        aiActionsMenu.addSeparator()
+        aiActionsMenu.addAction("AI Chat…", self._onAiChat)
 
         optionsMenu.addSeparator()
         redirectedMenu = optionsMenu.addMenu("Redirected I/O")

@@ -21,11 +21,13 @@
 
 ## AI (experimental)
 
-**Options → Enable AI (experimental)** / **AI settings…**. ПКМ у Python → **AI**.
-Прапорець `ai_ui` у `~/.codimension3/feature_flags.json`; override: `CDM_AI_UI=1`.
-Провайдер (offline / OpenAI / Anthropic / Ollama) і модель — `~/.codimension3/ai_settings.json`;
-ключ API — keyring або `~/.codimension3/ai_api_key` (0600), не в дереві проєкту.
-За замовчуванням offline (локальний CFG/symbol summary). Після оновлення: `pip install -e .` і перезапуск.
+**Options → Enable AI** / **AI settings…** / **AI actions**. ПКМ → **AI**.
+Прапорець `ai_ui`; override `CDM_AI_UI=1`. Провайдер на вибір (OpenAI / Anthropic / Ollama) —
+для аналізу потрібен live provider (offline не підміняє LLM).
+База: аналіз проєкту (усі `.py`), модуля **лише в контексті відкритого проєкту**
+(локальні імпорти + сусідні модулі), символу; Google docstring + Apply
+(у ШІ йде **виділений фрагмент** + компактний контекст імпортів/обгортки);
+результат у вкладці **AI Result** (Save); **AI Chat** — on-demand панель.
 
 ## pylint / wrapt на Python 3.11+
 

@@ -65,6 +65,8 @@ from utils.project import CodimensionProject
 from utils.runmanager import RunManager
 
 from .about import AboutDialog
+from .ai_controller import AiWorkspaceController
+from .airesultviewer import AiResultViewer
 from .classesviewer import ClassesViewer
 from .editorsmanager import EditorsManager
 from .findfile import FindFileDialog
@@ -315,6 +317,13 @@ class CodimensionMainWindow(
         self.searchResultsViewer = SearchResultsViewer()
         self._bottomSideBar.addTab(self.searchResultsViewer, getIcon("findindir.png"), "Search results", "search", 1)
         self._bottomSideBar.tabButton("search", QTabBar.RightSide).resize(0, 0)
+
+        self.aiResultViewer = AiResultViewer(self)
+        self._bottomSideBar.addTab(self.aiResultViewer, getIcon("helpviewer.png"), "AI Result", "airesult", 2)
+        self._bottomSideBar.tabButton("airesult", QTabBar.RightSide).resize(0, 0)
+        self.aiChatViewer = None  # created on demand
+        self.aiController = AiWorkspaceController(self)
+        self.aiResultViewer.applyDocstringAction().triggered.connect(self.aiController.applyLastDocstring)
 
         # Create outline viewer
         self.outlineViewer = FileOutlineViewer(self.em, self)
@@ -1181,6 +1190,26 @@ class CodimensionMainWindow(
 
         dlg = AiSettingsDialog(self)
         dlg.exec_()
+
+    def _onAiAnalyzeProject(self):
+        """Options / context: analyze all project .py files."""
+        self.aiController.startAnalyzeProject()
+
+    def _onAiAnalyzeModule(self):
+        """Analyze the current Python module."""
+        self.aiController.startAnalyzeModule()
+
+    def _onAiAnalyzeSymbol(self):
+        """Analyze function/class under the cursor."""
+        self.aiController.startAnalyzeSymbol()
+
+    def _onAiDocstring(self):
+        """Generate a Google-style docstring for the symbol under the cursor."""
+        self.aiController.startDocstring()
+
+    def _onAiChat(self):
+        """Show the on-demand AI Chat panel."""
+        self.aiController.ensureChatTab()
 
     def _editorCalltipsChanged(self):
         """Editor calltips changed"""

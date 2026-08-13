@@ -1,3 +1,12 @@
+2026 Aug 10
+
+* AI workspace: analyze project (all ``.py``, chunked), module, symbol;
+  Google docstring generation with Apply; AI Result panel with Save;
+  on-demand AI Chat panel; live provider required (no silent offline analysis);
+  module analysis is project-scoped (imports + neighbour modules);
+  docstring prompts use the editor selection plus lean support context
+  (not CFG/reference packs)
+
 2026 Aug 09
 
 * AI settings: provider selector (offline / OpenAI / Anthropic / Ollama),

@@ -94,10 +94,10 @@ class AiSettingsDialog(QDialog):
         layout.addLayout(form)
 
         info = QLabel(
-            "Actions: editor context menu → AI → Explain / Suggest.\n"
-            "Default provider is Offline (local CFG/symbol summary; no network).\n"
-            "API keys are stored in the OS keyring when available, otherwise in "
-            "~/.codimension3/ai_api_key (mode 0600). Keys are never written into the project.\n"
+            "Base actions: analyze project / module / symbol, generate Google docstring.\n"
+            "Results open in the bottom AI Result panel (Save available).\n"
+            "AI Chat is an on-demand bottom panel (Options → AI actions → AI Chat…).\n"
+            "Live provider required (OpenAI / Anthropic / Ollama) — offline cannot analyze.\n"
             f"Environment override: {AI_UI_ENV}=1|0 (wins over the Enable checkbox).",
             self,
         )

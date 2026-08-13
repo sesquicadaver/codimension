@@ -23,7 +23,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Mapping, MutableMapping, Optional, Protocol
+from typing import TYPE_CHECKING, Callable, Mapping, MutableMapping, Optional, Protocol
 
 from core.ai_config import (
     PROVIDER_ANTHROPIC,
@@ -47,6 +47,12 @@ from core.feature_flags import (
     set_feature_enabled,
 )
 from core.symbol_index import SymbolKind
+
+if TYPE_CHECKING:
+    from core.ai_tasks import AiTaskRequest, AiTaskResult
+else:
+    AiTaskRequest = object  # type: ignore[misc,assignment]
+    AiTaskResult = object  # type: ignore[misc,assignment]
 
 #: Environment variable that enables AI UI actions (default: off).
 AI_UI_ENV = FLAG_ENV_OVERRIDES[FLAG_AI_UI]
@@ -76,14 +82,25 @@ def resolve_default_backend(
     home: Optional[str] = None,
     settings_path: Optional[str] = None,
     token_path: Optional[str] = None,
+    require_live: bool = False,
 ) -> AiBackend:
     """Build the configured backend (offline by default).
 
+    Args:
+        require_live: When True, reject the offline provider (analysis / chat /
+            docstring need a real model — OpenAI, Anthropic, or Ollama).
+
     Raises:
-        AiBackendConfigError: remote provider selected but key/settings incomplete.
+        AiBackendConfigError: remote provider selected but key/settings incomplete,
+            or ``require_live`` with offline provider.
     """
     cfg = load_ai_config(path=settings_path, home=home)
     if cfg.provider == PROVIDER_OFFLINE:
+        if require_live:
+            raise AiBackendConfigError(
+                "Select a live AI provider (OpenAI, Anthropic, or Ollama) in "
+                "Options → AI → AI settings… Offline mode cannot analyze code."
+            )
         return OfflineSummaryBackend()
     api_key = get_ai_api_key(cfg.provider, home=home, token_path=token_path)
     if cfg.provider in (PROVIDER_OPENAI, PROVIDER_ANTHROPIC) and not api_key:
@@ -94,6 +111,42 @@ def resolve_default_backend(
         raise AiBackendConfigError("Ollama base URL is empty. Set it in AI settings…")
     backend: AiBackend = HttpChatBackend(cfg, api_key=api_key)
     return backend
+
+
+def run_ai_task(
+    request: AiTaskRequest,
+    *,
+    environ: Optional[Mapping[str, str]] = None,
+    store: Optional[FeatureFlagsStore] = None,
+    home: Optional[str] = None,
+    settings_path: Optional[str] = None,
+    token_path: Optional[str] = None,
+    progress: Optional[Callable[[str], None]] = None,
+) -> AiTaskResult:
+    """Execute an analysis / docstring / chat task on a live backend."""
+    from core.ai_tasks import execute_ai_task
+
+    if not is_ai_ui_enabled(environ, store=store):
+        raise AiUiDisabledError(f"AI UI disabled (set {AI_UI_ENV}=1 or enable feature flag {FLAG_AI_UI!r})")
+    backend = resolve_default_backend(
+        home=home,
+        settings_path=settings_path,
+        token_path=token_path,
+        require_live=True,
+    )
+    complete = getattr(backend, "complete", None)
+    if complete is None:
+        raise AiBackendConfigError("Configured backend cannot run live completions")
+
+    def _complete(system: str, user: str) -> str:
+        return str(complete(system, user))
+
+    return execute_ai_task(
+        request,
+        _complete,
+        progress=progress,
+        backend_name=str(getattr(backend, "name", "live")),
+    )
 
 
 def describe_ai_ui_settings(
@@ -362,5 +415,6 @@ __all__ = [
     "resolve_default_backend",
     "run_ai_action",
     "run_ai_action_for_source",
+    "run_ai_task",
     "set_ai_ui_enabled",
 ]
