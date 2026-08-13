@@ -8,10 +8,17 @@ and opens the downloaded `.cdm3` like a normal project.
 
 ## UI
 
-- **Project → Open remote project (SSH)…** — connect, resolve remote `.cdm3`
-  (file or directory containing one), download the project tree, load cache.
-- **Project → New remote project (SSH)…** — create remote directory + `.cdm3`,
-  seed the local cache, load it.
+- **Project → Open remote project (SSH)...** — connect, then **Browse…** in a
+  remote file-manager dialog to pick a `.cdm3` or project directory; download
+  and load the local cache.
+- **Project → Create remote project (SSH)...** — connect, **Browse…** for the
+  parent directory; same property fields as local New project (main script,
+  markdown doc, remote venv/python, author, …) also via remote Browse…; create
+  remote `.cdm3` + local cache.
+
+Both items sit directly under local New/Open project. Use **Connect…** before
+browsing (Browse will connect automatically if needed).
+
 
 ## Auth
 

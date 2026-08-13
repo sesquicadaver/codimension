@@ -1,5 +1,9 @@
 2026 Aug 13
 
+* SSH Open/Create: remote SFTP file-manager Browse… for project dir/script/venv/docs
+  (parity with local New project fields); Connect… then pick paths
+* Project menu: surface Open/Create remote SSH projects under local New/Open
+  (ASCII labels); launch script prefers checkout package path / refuses Trash
 * SSH remote: Save→SFTP upload; Run executes on the host (debug deferred);
   default ``codimension_ctl.sh install`` includes ``.[ssh]`` (paramiko)
 * ``codimension_ctl.sh --desktop``: Exec uses ``run_codimension.sh``; refuse

@@ -10,10 +10,11 @@
 # Non-interactive: pass --yes where confirmation would be required.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-if command -v realpath >/dev/null 2>&1; then
-  ROOT="$(realpath "$ROOT")"
-fi
+# Always resolve the physical checkout path. After a folder is moved to Trash,
+# bash may still show ``~/codimension`` in the prompt (stale $PWD) while the
+# shell — and ``./codimension_ctl.sh`` — are actually under Trash/files/….
+_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+ROOT="$(cd "${_SCRIPT_DIR}/.." && pwd -P)"
 VENV="${ROOT}/.venv"
 PY="${VENV}/bin/python"
 PIP="${VENV}/bin/pip"
@@ -61,14 +62,23 @@ need_cmd() {
 }
 
 refuse_trash_checkout() {
-  # Desktop Environments often refuse to launch Exec= from Trash; also a common
-  # footgun after moving an old clone to the bin and re-running ctl from there.
+  # Classic footgun: ~/codimension was moved to Trash while this terminal was
+  # inside it. The prompt can still show ``~/codimension/scripts`` (stale $PWD)
+  # but ``pwd -P`` / this script already live under Trash/files/….
   case "$ROOT" in
     */.local/share/Trash/*|*/Trash/*|*/.Trash/*)
-      die "refusing install from Trash checkout: $ROOT
-Run ctl from a real clone, e.g.:
-  ~/codimension/scripts/codimension_ctl.sh install --desktop --yes
-  # or:  /path/to/git-clone/scripts/codimension_ctl.sh install --desktop --yes"
+      die "refusing install: physical script path is under Trash:
+  ROOT=$ROOT
+  PWD(logical)=${PWD:-?}
+  pwd -P=$(pwd -P 2>/dev/null || echo '?')
+
+The prompt path can lie after the folder was moved to Trash. You are not
+running the new ~/codimension clone.
+
+Fix (copy-paste):
+  cd -P \$HOME/codimension
+  pwd -P    # must be …/codimension  (no Trash)
+  ./scripts/codimension_ctl.sh install --desktop --yes"
       ;;
   esac
 }

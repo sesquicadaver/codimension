@@ -652,21 +652,40 @@ def create_remote_project(
     return binding
 
 
-def default_cdm3_json(project_name: str) -> str:
+def default_cdm3_json(project_name: str, extra: Optional[Mapping[str, object]] = None) -> str:
     """Minimal valid ``.cdm3`` body for a new remote project."""
+    props: dict[str, object] = {
+        "uuid": "",
+        "scriptname": "",
+        "description": f"Remote SSH project {project_name}",
+    }
+    if extra:
+        props.update(dict(extra))
+    return cdm3_json_from_props(props)
+
+
+def cdm3_json_from_props(props: Mapping[str, object]) -> str:
+    """Build a validated ``.cdm3`` JSON document from property mapping."""
     from utils.project import merge_project_defaults, new_project_uuid
     from utils.project_schema import validate_project_props
 
-    props = merge_project_defaults(
-        validate_project_props(
-            {
-                "uuid": new_project_uuid(),
-                "scriptname": "",
-                "description": f"Remote SSH project {project_name}",
-            }
-        )
-    )
-    return json.dumps(props, indent=4) + "\n"
+    data = dict(props)
+    if not str(data.get("uuid") or "").strip():
+        data["uuid"] = new_project_uuid()
+    merged = merge_project_defaults(validate_project_props(data))
+    return json.dumps(merged, indent=4) + "\n"
+
+
+def remote_relpath(project_root: str, remote_path: str) -> str:
+    """Return path relative to ``project_root`` when possible (POSIX)."""
+    root = _norm_remote(project_root)
+    path = _norm_remote(remote_path)
+    if path == root:
+        return "."
+    prefix = root if root.endswith("/") else root + "/"
+    if path.startswith(prefix):
+        return path[len(prefix) :]
+    return path
 
 
 def _make_profile_id(host: str, user: str, port: int) -> str:
@@ -700,6 +719,7 @@ __all__ = [
     "SshHostProfile",
     "connect_paramiko_sftp",
     "create_remote_project",
+    "cdm3_json_from_props",
     "default_cdm3_json",
     "download_remote_tree",
     "find_remote_cdm3",
@@ -707,6 +727,7 @@ __all__ = [
     "load_ssh_password",
     "open_remote_project",
     "read_binding",
+    "remote_relpath",
     "require_paramiko",
     "resolve_download_limits",
     "save_host_profiles",

@@ -135,6 +135,29 @@ def test_fake_open_and_create(tmp_path):
     assert created.remote_root == "/projects/fresh"
 
 
+def test_remote_relpath_and_cdm3_props():
+    import json
+
+    from utils.ssh_remote import cdm3_json_from_props, remote_relpath
+
+    assert remote_relpath("/home/u/proj", "/home/u/proj/main.py") == "main.py"
+    assert remote_relpath("/home/u/proj", "/home/u/proj") == "."
+    assert remote_relpath("/home/u/proj", "/other/x.py") == "/other/x.py"
+    body = cdm3_json_from_props(
+        {
+            "uuid": "",
+            "scriptname": "main.py",
+            "author": "A",
+            "description": "d",
+            "pythoninterpreter": "venv/bin/python",
+        }
+    )
+    props = json.loads(body)
+    assert props["scriptname"] == "main.py"
+    assert props["uuid"]
+    assert props["pythoninterpreter"] == "venv/bin/python"
+
+
 def test_download_optional_limits(tmp_path):
     from utils.ssh_remote import FakeSftpSession, download_remote_tree
 

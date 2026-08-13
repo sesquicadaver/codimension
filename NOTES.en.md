@@ -22,9 +22,11 @@ IDE Help: [doc/user/index.md](doc/user/index.md).
 
 ## SSH remote projects (MVP)
 
-**Project → Open remote project (SSH)…** / **New remote project (SSH)…**.
-Cache: `~/.codimension3/remote-projects/`. Save → remote upload; **Run** on the
-host (SSH debug deferred). `codimension_ctl.sh install` pulls `paramiko`.
+**Project → Open remote project (SSH)...** / **Create remote project (SSH)...**
+(directly under local New/Open). Connect + **Browse…** (remote file manager)
+for dir/script/venv/docs — same fields as local New project.
+Cache: `~/.codimension3/remote-projects/`. Save → upload; **Run** on host
+(SSH debug deferred).
 Details: [doc/technology/ssh-remote-project.md](doc/technology/ssh-remote-project.md).
 
 ## AI (experimental)

@@ -106,6 +106,14 @@ class MainWindowMenuMixin:
         self.__openProjectAct = prjMenu.addAction(
             getIcon("project.png"), "&Open project", self._openProject, "Ctrl+Shift+O"
         )
+        prjMenu.addSeparator()
+        self.__openRemoteProjectAct = prjMenu.addAction(
+            "Open remote project (SSH)...", self._onOpenRemoteProject
+        )
+        self.__newRemoteProjectAct = prjMenu.addAction(
+            "Create remote project (SSH)...", self._onNewRemoteProject
+        )
+        prjMenu.addSeparator()
         self._unloadProjectAct = prjMenu.addAction(
             getIcon("unloadproject.png"), "&Unload project", self.projectViewer.unloadProject
         )
@@ -113,8 +121,6 @@ class MainWindowMenuMixin:
             getIcon("smalli.png"), "&Properties", self.projectViewer.projectProperties
         )
         self.__gitRepoAct = prjMenu.addAction("Git &repository...", self._onGitRepository)
-        self.__openRemoteProjectAct = prjMenu.addAction("Open &remote project (SSH)…", self._onOpenRemoteProject)
-        self.__newRemoteProjectAct = prjMenu.addAction("&New remote project (SSH)…", self._onNewRemoteProject)
         prjMenu.addSeparator()
         self._prjTemplateMenu = QMenu("Project-specific &template", self)
         self.__createPrjTemplateAct = self._prjTemplateMenu.addAction(getIcon("generate.png"), "&Create")
@@ -687,11 +693,11 @@ class MainWindowMenuMixin:
         self.__newRemoteProjectAct.setEnabled(True)
 
     def _onOpenRemoteProject(self):
-        """Project → Open remote project (SSH)…"""
+        """Project → Open remote project (SSH)..."""
         self.__runRemoteProjectDialog(mode="open")
 
     def _onNewRemoteProject(self):
-        """Project → New remote project (SSH)…"""
+        """Project → Create remote project (SSH)..."""
         self.__runRemoteProjectDialog(mode="create")
 
     def __runRemoteProjectDialog(self, *, mode: str) -> None:

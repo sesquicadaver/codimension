@@ -8,10 +8,15 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 
 ## UI
 
-- **Project → Open remote project (SSH)…** — підключення, пошук `.cdm3`,
-  завантаження дерева, відкриття кешу.
-- **Project → New remote project (SSH)…** — створення каталогу + `.cdm3` на
-  хості, локальний кеш, відкриття.
+- **Project → Open remote project (SSH)...** — Connect, потім **Browse…** у
+  remote file-manager: вибір `.cdm3` або каталогу проєкту; завантаження кешу.
+- **Project → Create remote project (SSH)...** — Connect, **Browse…** батьківського
+  каталогу; поля як у локальному New project (main script, markdown, remote
+  venv/python, author, …) теж через Browse…; створення remote `.cdm3` + кеш.
+
+Обидва пункти — одразу під локальними New/Open. **Connect…** перед Browse
+(або Browse підключить автоматично).
+
 
 ## Auth
 
