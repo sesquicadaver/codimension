@@ -1,5 +1,9 @@
 2026 Aug 13
 
+* ``codimension_ctl.sh --desktop``: Exec uses ``run_codimension.sh``; refuse
+  install from Trash paths (dead menu entries after checkout delete/move)
+* SSH remote download: default unlimited size/file count (large projects OK);
+  optional caps via kwargs or ``CDM_SSH_MAX_FILES`` / ``CDM_SSH_MAX_BYTES``
 * SSH remote project open/create (MVP): Project menu Open/New remote (SSH);
   host profiles in ``ssh_hosts.json``; password via keyring or 0600 file;
   Paramiko SFTP optional (``.[ssh]``); local cache under

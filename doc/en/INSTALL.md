@@ -22,7 +22,7 @@ From the repository root:
 | `install --yes` | `.venv` + editable install with tools/lint/test/security |
 | `install --minimal --yes` | runtime dependencies only |
 | `install --reinstall --yes` | wipe `.venv` and reinstall |
-| `install --desktop --yes` | also add `~/.local/share/applications/` launcher |
+| `install --desktop --yes` | `~/.local/share/applications/` launcher → `scripts/run_codimension.sh` (refuse Trash checkouts) |
 | `uninstall --yes` | remove `.venv` and local desktop launcher |
 | `uninstall --purge-config --yes` | same + `~/.codimension3` |
 

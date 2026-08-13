@@ -22,11 +22,20 @@ and opens the downloaded `.cdm3` like a normal project.
 
 Host profiles (no secrets) are stored in `~/.codimension3/ssh_hosts.json`.
 
-## Limits (MVP download)
+## Download scope
 
-- Max **5000** files
-- Max **200 MiB** total
-- Skipped directory names: `.git`, `.hg`, `.svn`, `__pycache__`, `.venv`, `venv`, `node_modules`
+By default the whole remote project tree is downloaded (**no** file-count or
+byte-size cap). Optional safety stops:
+
+| Control | Meaning |
+| ------- | ------- |
+| `max_files` / `max_bytes` kwargs | Positive integer = hard stop; `0` / omitted = unlimited |
+| `CDM_SSH_MAX_FILES` | Env override for file count (when kwargs omitted) |
+| `CDM_SSH_MAX_BYTES` | Env override for total bytes (when kwargs omitted) |
+
+Skipped directory names: `.git`, `.hg`, `.svn`, `__pycache__`, `.venv`, `venv`,
+`node_modules`.
+
 
 ## Dependency
 

@@ -22,7 +22,7 @@
 | `install --yes` | `.venv` + editable install з tools/lint/test/security |
 | `install --minimal --yes` | лише runtime-залежності |
 | `install --reinstall --yes` | знищити `.venv` і поставити заново |
-| `install --desktop --yes` | також ярлик у `~/.local/share/applications/` |
+| `install --desktop --yes` | ярлик у `~/.local/share/applications/` → `scripts/run_codimension.sh` (не з Trash) |
 | `uninstall --yes` | видалити `.venv` і локальний desktop-ярлик |
 | `uninstall --purge-config --yes` | те саме + `~/.codimension3` |
 

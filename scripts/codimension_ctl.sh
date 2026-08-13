@@ -11,10 +11,14 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if command -v realpath >/dev/null 2>&1; then
+  ROOT="$(realpath "$ROOT")"
+fi
 VENV="${ROOT}/.venv"
 PY="${VENV}/bin/python"
 PIP="${VENV}/bin/pip"
 CDM="${VENV}/bin/codimension"
+RUN_SH="${ROOT}/scripts/run_codimension.sh"
 DESKTOP_DIR="${XDG_DATA_HOME:-${HOME}/.local/share}/applications"
 DESKTOP_FILE="${DESKTOP_DIR}/codimension-local.desktop"
 ICON_SRC="${ROOT}/resources/codimension.png"
@@ -56,6 +60,19 @@ need_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
 }
 
+refuse_trash_checkout() {
+  # Desktop Environments often refuse to launch Exec= from Trash; also a common
+  # footgun after moving an old clone to the bin and re-running ctl from there.
+  case "$ROOT" in
+    */.local/share/Trash/*|*/Trash/*|*/.Trash/*)
+      die "refusing install from Trash checkout: $ROOT
+Run ctl from a real clone, e.g.:
+  ~/codimension/scripts/codimension_ctl.sh install --desktop --yes
+  # or:  /path/to/git-clone/scripts/codimension_ctl.sh install --desktop --yes"
+      ;;
+  esac
+}
+
 python_ok() {
   local candidate="$1"
   "$candidate" - <<'PY'
@@ -89,17 +106,20 @@ confirm() {
 }
 
 install_desktop() {
+  [[ -x "$RUN_SH" ]] || die "launcher missing: $RUN_SH"
   mkdir -p "$DESKTOP_DIR" "$(dirname "$ICON_DST")"
   if [[ -f "$ICON_SRC" ]]; then
     cp -f "$ICON_SRC" "$ICON_DST"
   fi
+  # Use run_codimension.sh (sets PYTHONPATH) — not a raw venv entry point.
+  # Quote paths for spaces; %F stays outside quotes per Desktop Entry Spec.
   cat >"$DESKTOP_FILE" <<EOF
 [Desktop Entry]
-Name=Codimension (local)
+Name=Codimension
 GenericName=Codimension
-Comment=Codimension Python IDE (this checkout)
-Exec=${CDM} %F
-TryExec=${CDM}
+Comment=Codimension Python IDE (checkout: ${ROOT})
+Exec=${RUN_SH} %F
+TryExec=${RUN_SH}
 Path=${ROOT}
 Terminal=false
 Type=Application
@@ -112,6 +132,7 @@ EOF
     update-desktop-database "$DESKTOP_DIR" >/dev/null 2>&1 || true
   fi
   info "desktop entry: $DESKTOP_FILE"
+  info "menu Exec -> $RUN_SH"
 }
 
 remove_desktop() {
@@ -125,10 +146,12 @@ remove_desktop() {
 }
 
 cmd_install() {
+  refuse_trash_checkout
   need_cmd python3
   local base_py
   base_py="$(pick_python)"
   info "base Python: $base_py ($("$base_py" -V 2>&1))"
+  info "install ROOT: $ROOT"
 
   if [[ "$REINSTALL" -eq 1 && -d "$VENV" ]]; then
     confirm "Remove existing venv at $VENV?" || die "aborted"
@@ -190,6 +213,11 @@ cmd_install() {
   echo
   echo "Run:  ./scripts/run_codimension.sh"
   echo "      # or: $CDM"
+  if [[ "$DESKTOP" -eq 1 ]]; then
+    echo "Menu: Codimension  ($DESKTOP_FILE)"
+  else
+    echo "Menu: add with  ./scripts/codimension_ctl.sh install --desktop --yes"
+  fi
   echo
   echo "Remove:"
   echo "  ./scripts/codimension_ctl.sh uninstall --yes"

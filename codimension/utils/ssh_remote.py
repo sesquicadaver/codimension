@@ -35,9 +35,12 @@ BINDING_FILENAME = "binding.json"
 KEYRING_SERVICE = "codimension-ssh"
 TOKEN_FILE_MODE = 0o600
 
-# Conservative MVP limits for recursive download.
-MAX_REMOTE_FILES = 5000
-MAX_REMOTE_BYTES = 200 * 1024 * 1024
+# Optional safety caps: 0 means unlimited (default). Override via kwargs or
+# env ``CDM_SSH_MAX_FILES`` / ``CDM_SSH_MAX_BYTES`` (positive integers).
+MAX_REMOTE_FILES = 0
+MAX_REMOTE_BYTES = 0
+ENV_MAX_FILES = "CDM_SSH_MAX_FILES"
+ENV_MAX_BYTES = "CDM_SSH_MAX_BYTES"
 SKIP_DIR_NAMES = frozenset({".git", ".hg", ".svn", "__pycache__", ".venv", "venv", "node_modules"})
 
 _SAFE_ID = re.compile(r"[^a-zA-Z0-9._-]+")
@@ -461,15 +464,44 @@ def find_remote_cdm3(session: SftpSession, remote_path: str) -> str:
     return _norm_remote(posixpath.join(path, names[0]))
 
 
+def resolve_download_limits(
+    *,
+    max_files: Optional[int] = None,
+    max_bytes: Optional[int] = None,
+) -> tuple[int, int]:
+    """Return ``(max_files, max_bytes)``; ``0`` means unlimited.
+
+    Explicit kwargs win; otherwise read ``CDM_SSH_MAX_FILES`` /
+    ``CDM_SSH_MAX_BYTES``; otherwise module defaults (unlimited).
+    """
+    files = MAX_REMOTE_FILES if max_files is None else int(max_files)
+    size = MAX_REMOTE_BYTES if max_bytes is None else int(max_bytes)
+    if max_files is None:
+        raw = os.environ.get(ENV_MAX_FILES, "").strip()
+        if raw:
+            files = max(0, int(raw))
+    if max_bytes is None:
+        raw = os.environ.get(ENV_MAX_BYTES, "").strip()
+        if raw:
+            size = max(0, int(raw))
+    return max(0, files), max(0, size)
+
+
 def download_remote_tree(
     session: SftpSession,
     remote_root: str,
     local_root: str,
     *,
-    max_files: int = MAX_REMOTE_FILES,
-    max_bytes: int = MAX_REMOTE_BYTES,
+    max_files: Optional[int] = None,
+    max_bytes: Optional[int] = None,
 ) -> int:
-    """Recursively download ``remote_root`` into ``local_root``. Return file count."""
+    """Recursively download ``remote_root`` into ``local_root``. Return file count.
+
+    By default there is **no** file-count or byte-size cap (large projects are
+    supported). Pass positive ``max_files`` / ``max_bytes``, or set
+    ``CDM_SSH_MAX_FILES`` / ``CDM_SSH_MAX_BYTES``, to enforce an optional safety stop.
+    """
+    limit_files, limit_bytes = resolve_download_limits(max_files=max_files, max_bytes=max_bytes)
     remote_root = _norm_remote(remote_root)
     os.makedirs(local_root, exist_ok=True)
     count = 0
@@ -491,11 +523,11 @@ def download_remote_tree(
                 continue
             data = session.read_bytes(remote_item)
             total += len(data)
-            if total > max_bytes:
-                raise RuntimeError(f"remote project exceeds download size limit ({max_bytes} bytes)")
+            if limit_bytes > 0 and total > limit_bytes:
+                raise RuntimeError(f"remote project exceeds download size limit ({limit_bytes} bytes)")
             count += 1
-            if count > max_files:
-                raise RuntimeError(f"remote project exceeds file count limit ({max_files})")
+            if limit_files > 0 and count > limit_files:
+                raise RuntimeError(f"remote project exceeds file count limit ({limit_files})")
             os.makedirs(os.path.dirname(local_item) or ".", exist_ok=True)
             Path(local_item).write_bytes(data)
     return count
@@ -676,6 +708,7 @@ __all__ = [
     "open_remote_project",
     "read_binding",
     "require_paramiko",
+    "resolve_download_limits",
     "save_host_profiles",
     "store_ssh_password",
     "upload_file",

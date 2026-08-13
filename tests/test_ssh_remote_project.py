@@ -135,12 +135,23 @@ def test_fake_open_and_create(tmp_path):
     assert created.remote_root == "/projects/fresh"
 
 
-def test_download_limits(tmp_path):
+def test_download_optional_limits(tmp_path):
     from utils.ssh_remote import FakeSftpSession, download_remote_tree
 
     session = FakeSftpSession({"a.txt": "x" * 100, "b.txt": "y" * 100})
+    # Default: unlimited — both files land in the cache.
+    assert download_remote_tree(session, "/", str(tmp_path / "full")) == 2
     with pytest.raises(RuntimeError, match="size limit"):
-        download_remote_tree(session, "/", str(tmp_path / "out"), max_files=10, max_bytes=50)
+        download_remote_tree(session, "/", str(tmp_path / "capped"), max_files=10, max_bytes=50)
+
+
+def test_download_env_limits(tmp_path, monkeypatch):
+    from utils.ssh_remote import FakeSftpSession, download_remote_tree
+
+    monkeypatch.setenv("CDM_SSH_MAX_FILES", "1")
+    session = FakeSftpSession({"a.txt": "aa", "b.txt": "bb"})
+    with pytest.raises(RuntimeError, match="file count limit"):
+        download_remote_tree(session, "/", str(tmp_path / "env"))
 
 
 def test_find_remote_cdm3():
