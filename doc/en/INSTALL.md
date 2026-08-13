@@ -19,7 +19,7 @@ From the repository root:
 
 | Command | Action |
 | ------- | ------ |
-| `install --yes` | `.venv` + editable install with tools/lint/test/security |
+| `install --yes` | `.venv` + editable install with tools/lint/test/security/**ssh** |
 | `install --minimal --yes` | runtime dependencies only |
 | `install --reinstall --yes` | wipe `.venv` and reinstall |
 | `install --desktop --yes` | `~/.local/share/applications/` launcher → `scripts/run_codimension.sh` (refuse Trash checkouts) |

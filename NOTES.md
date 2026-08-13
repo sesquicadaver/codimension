@@ -22,7 +22,8 @@
 ## SSH remote projects (MVP)
 
 **Project → Open remote project (SSH)…** / **New remote project (SSH)…**.
-Кеш: `~/.codimension3/remote-projects/`. Опційно: `pip install -e '.[ssh]'`.
+Кеш: `~/.codimension3/remote-projects/`. Save → upload на remote; **Run** на
+хості (debug по SSH ще немає). `codimension_ctl.sh install` тягне `paramiko`.
 Деталі: [doc/uk/technology/ssh-remote-project.md](doc/uk/technology/ssh-remote-project.md).
 
 ## AI (experimental)

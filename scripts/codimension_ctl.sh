@@ -179,7 +179,7 @@ cmd_install() {
     TOOLS=0
   fi
   if [[ "$TOOLS" -eq 1 ]]; then
-    spec=".[tools,lint,test,security]"
+    spec=".[tools,lint,test,security,ssh]"
   fi
 
   # Always install from repo root — ``pip install -e .`` follows the caller's CWD,
@@ -188,7 +188,8 @@ cmd_install() {
   info "installing editable $spec (from $ROOT)"
   (
     cd "$ROOT"
-    "$PIP" install -e "$spec"
+    # Prefer ``python -m pip`` — a relocated venv can leave ``bin/pip`` pointing elsewhere.
+    "$PY" -m pip install -e "$spec"
   )
 
   # pylint/astroid pin wrapt<1.13; on 3.11+ that wrapt is broken — refresh without deps.
@@ -197,7 +198,7 @@ cmd_install() {
   minor="$("$PY" -c 'import sys; print(sys.version_info.minor)')"
   if [[ "$major" -gt 3 || ( "$major" -eq 3 && "$minor" -ge 11 ) ]]; then
     info "Python ${major}.${minor}: installing wrapt>=1.14 --no-deps (pylint stack)"
-    "$PIP" install 'wrapt>=1.14' --no-deps || true
+    "$PY" -m pip install 'wrapt>=1.14' --no-deps || true
   fi
 
   [[ -x "$CDM" ]] || die "entry point missing after install: $CDM"

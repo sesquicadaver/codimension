@@ -36,6 +36,19 @@ byte-size cap). Optional safety stops:
 Skipped directory names: `.git`, `.hg`, `.svn`, `__pycache__`, `.venv`, `venv`,
 `node_modules`.
 
+## Edit / Run (no remote IDE debug yet)
+
+When a project has `binding.json` in its local cache root:
+
+- **Save** uploads the file to the remote path (source of truth = remote).
+- **Run** uploads the script and executes `python3 <remote-script>` over SSH;
+  stdout/stderr go to the Log / redirected IO console.
+- **Debug / Profile** on SSH-bound projects are refused with a clear message
+  (full remote IDE debug is deferred).
+
+Requires `paramiko` (`pip install -e '.[ssh]'`; included in default
+`codimension_ctl.sh install`).
+
 
 ## Dependency
 

@@ -226,6 +226,11 @@ class CodimensionMainWindow(
         self._runManager.sigIncomingMessage.connect(self._debugger.onIncomingMessage)
         self._runManager.sigProcessFinished.connect(self._debugger.onProcessFinished)
 
+        from utils.ssh_project_runtime import after_save_upload_remote
+
+        if after_save_upload_remote not in GlobalData().afterSaveCallbacks:
+            GlobalData().afterSaveCallbacks.append(after_save_upload_remote)
+
         settings.sigTextZoomChanged.connect(self.onTextZoomChanged)
 
         # Flow UI/markdown renderer

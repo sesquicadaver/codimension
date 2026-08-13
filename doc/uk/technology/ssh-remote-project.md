@@ -36,6 +36,17 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 Пропуск каталогів: `.git`, `.hg`, `.svn`, `__pycache__`, `.venv`, `venv`,
 `node_modules`.
 
+## Edit / Run (remote IDE debug ще немає)
+
+Якщо в корені кешу є `binding.json`:
+
+- **Save** — upload файлу на remote (джерело правди = remote).
+- **Run** — upload скрипта + `python3 <remote-script>` по SSH; вивід у Log / IO.
+- **Debug / Profile** для SSH-проєкту поки що відхиляються з повідомленням.
+
+Потрібен `paramiko` (`pip install -e '.[ssh]'`; є в звичайному
+`codimension_ctl.sh install`).
+
 
 ## Залежність
 

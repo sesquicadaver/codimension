@@ -519,6 +519,11 @@ class RunManager(QObject):
             if not self.__updateParameters(path, RUN):
                 return
 
+        from utils.ssh_project_runtime import try_handle_ide_run
+
+        if try_handle_ide_run(path, kind="run"):
+            return
+
         remoteProc = self.__prepareRemoteProcess(path, RUN)
         try:
             remoteProc.procWrapper.start()
@@ -536,6 +541,11 @@ class RunManager(QObject):
             if not self.__updateParameters(path, PROFILE):
                 return
 
+        from utils.ssh_project_runtime import try_handle_ide_run
+
+        if try_handle_ide_run(path, kind="profile"):
+            return
+
         remoteProc = self.__prepareRemoteProcess(path, PROFILE)
         try:
             remoteProc.procWrapper.start()
@@ -552,6 +562,11 @@ class RunManager(QObject):
         if needDialog:
             if not self.__updateParameters(path, DEBUG):
                 return
+
+        from utils.ssh_project_runtime import try_handle_ide_run
+
+        if try_handle_ide_run(path, kind="debug"):
+            return
 
         remoteProc = self.__prepareRemoteProcess(path, DEBUG)
 

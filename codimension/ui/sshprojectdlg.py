@@ -140,7 +140,8 @@ class SshRemoteProjectDialog(QDialog):
         layout.addLayout(form)
 
         hint = QLabel(
-            "Requires optional dependency: pip install 'paramiko>=3.0' (or pip install -e '.[ssh]').",
+            "Needs paramiko (included in default codimension_ctl.sh install; "
+            "or: pip install -e '.[ssh]').",
             self,
         )
         hint.setWordWrap(True)

@@ -1,5 +1,7 @@
 2026 Aug 13
 
+* SSH remote: Save→SFTP upload; Run executes on the host (debug deferred);
+  default ``codimension_ctl.sh install`` includes ``.[ssh]`` (paramiko)
 * ``codimension_ctl.sh --desktop``: Exec uses ``run_codimension.sh``; refuse
   install from Trash paths (dead menu entries after checkout delete/move)
 * SSH remote download: default unlimited size/file count (large projects OK);
