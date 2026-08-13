@@ -69,5 +69,5 @@ python -m pip install 'wrapt>=1.14' --no-deps
 
 ## Next
 
-- Documentation index: [README.md](README.md)
+- In-app user guide: [../user/index.md](../user/index.md)
 - Repository: https://github.com/sesquicadaver/codimension

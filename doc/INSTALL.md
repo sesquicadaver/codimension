@@ -79,5 +79,5 @@ python -m pip install -r requirements.txt   # повний CI snapshot, не м�
 
 ## Далі
 
-- Індекс документації: [uk/README.md](uk/README.md)
+- Користувацька довідка IDE: [user/index.md](user/index.md)
 - Репозиторій: https://github.com/sesquicadaver/codimension
