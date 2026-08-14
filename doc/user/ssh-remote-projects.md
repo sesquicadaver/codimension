@@ -9,9 +9,8 @@ Headless remote run (no project bootstrap): [SSH ExecutionTarget](../technology/
 
 ## Prerequisites
 
-- Default install includes SSH extras (`paramiko`, `keyring`):
-  `./scripts/codimension_ctl.sh install --yes`
-- Or manually: `python -m pip install -e '.[ssh]'`
+- Runtime install already includes `paramiko` and `keyring`
+  (`./scripts/codimension_ctl.sh install --yes`, including `--minimal`)
 - Network reachability to the host; key/agent or password auth
 
 ## Open an existing remote project

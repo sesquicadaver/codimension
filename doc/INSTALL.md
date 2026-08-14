@@ -19,7 +19,7 @@
 
 | Команда | Дія |
 | ------- | --- |
-| `install --yes` | `.venv` + editable install з tools/lint/test/security/**ssh** |
+| `install --yes` | `.venv` + editable install з tools/lint/test/security (paramiko/keyring — runtime) |
 | `install --minimal --yes` | лише runtime-залежності |
 | `install --reinstall --yes` | знищити `.venv` і поставити заново |
 | `install --desktop --yes` | ярлик у `~/.local/share/applications/` → `scripts/run_codimension.sh` (не з Trash) |

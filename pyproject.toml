@@ -44,6 +44,8 @@ dependencies = [
   "pygments>=2.20.0",
   "qdarkstyle>=2.8.1",
   "packaging>=21.0",
+  "paramiko>=3.0",
+  "keyring>=23.0",
 ]
 
 [project.optional-dependencies]
@@ -68,6 +70,7 @@ security = [
   "bandit>=1.7.0",
   "pip-audit>=2.0.0",
 ]
+# Alias: packages are also in [project.dependencies] (SSH is a main-menu feature).
 ssh = [
   "paramiko>=3.0",
   "keyring>=23.0",

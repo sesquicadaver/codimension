@@ -53,13 +53,9 @@ When a project has `binding.json` in its local cache root:
 - **Debug / Profile** on SSH-bound projects are refused with a clear message
   (full remote IDE debug is deferred).
 
-Requires `paramiko` (`pip install -e '.[ssh]'`; included in default
-`codimension_ctl.sh install`).
-
-
-## Dependency
-
-Optional extra: `pip install -e '.[ssh]'` (pulls `paramiko` and `keyring`).
+Requires ``paramiko`` / ``keyring`` as **runtime** dependencies (installed by
+``pip install -e .`` and ``codimension_ctl.sh install``, including ``--minimal``).
+The extra ``.[ssh]`` is kept as a compatibility alias.
 
 ## Relation to R124
 
