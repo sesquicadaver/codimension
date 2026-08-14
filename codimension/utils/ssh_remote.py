@@ -293,7 +293,7 @@ def require_paramiko():
     except ImportError as exc:
         raise RuntimeError(
             "SSH remote projects require the 'paramiko' package. "
-            "Install with: pip install 'paramiko>=3.0'  (or: pip install -e '.[ssh]')"
+            "Install with: pip install 'paramiko>=3.0'  (or re-run: ./scripts/codimension_ctl.sh install --yes)"
         ) from exc
     return paramiko
 

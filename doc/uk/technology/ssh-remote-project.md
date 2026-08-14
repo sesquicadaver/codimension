@@ -49,13 +49,10 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 - **Run** — upload скрипта + `python3 <remote-script>` по SSH; вивід у Log / IO.
 - **Debug / Profile** для SSH-проєкту поки що відхиляються з повідомленням.
 
-Потрібен `paramiko` (`pip install -e '.[ssh]'`; є в звичайному
-`codimension_ctl.sh install`).
+Потрібні `paramiko` / `keyring` як **runtime**-залежності (`pip install -e .`
+і `codimension_ctl.sh install`, включно з `--minimal`). Extra `.[ssh]`
+залишено як сумісний аліас.
 
-
-## Залежність
-
-Опційно: `pip install -e '.[ssh]'` (`paramiko`, `keyring`).
 
 ## Зв’язок з R124
 

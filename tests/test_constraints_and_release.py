@@ -49,6 +49,8 @@ def test_setup_uses_runtime_requirements():
     assert "Could not find requirements-runtime.txt" in text
     runtime = (ROOT / "requirements-runtime.txt").read_text(encoding="utf-8")
     assert "PyQt5" in runtime
+    assert "paramiko" in runtime
+    assert "keyring" in runtime
     assert "pytest" not in runtime
 
 

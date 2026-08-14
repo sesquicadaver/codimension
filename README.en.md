@@ -51,7 +51,7 @@ cd codimension
 Removal: `./scripts/codimension_ctl.sh uninstall --yes`  
 (full, including config: `./scripts/codimension_ctl.sh uninstall --purge-config --yes`)
 
-Default install pulls tools/lint/test/security/**ssh**. Details: [doc/en/INSTALL.md](doc/en/INSTALL.md).
+Default install pulls tools/lint/test/security; ``paramiko``/``keyring`` are runtime. Details: [doc/en/INSTALL.md](doc/en/INSTALL.md).
 
 ## Development
 
