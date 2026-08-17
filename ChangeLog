@@ -4,6 +4,8 @@
   (auto-exclude on by default; Options toggle) **or** pip-install selected
   packages into the project venv (optional ``pip install .`` for local
   extensions such as ``native``); import-diagram warning path offers the dialog
+* Do not treat ``try/except ImportError`` imports (e.g. optional ``native``)
+  as pip install candidates; clearer Update VENV error when PyPI has no match
 
 2026 Aug 14
 

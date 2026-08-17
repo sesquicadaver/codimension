@@ -53,6 +53,10 @@ def _load_importutils():
     run_mod.getVenvSitePackages = lambda _python: None
     sys.modules["utils.run"] = run_mod
 
+    config_mod = types.ModuleType("utils.config")
+    config_mod.DEFAULT_ENCODING = "utf-8"
+    sys.modules["utils.config"] = config_mod
+
     spec = importlib.util.spec_from_file_location(
         "utils.importutils",
         os.path.join(UTILS_DIR, "importutils.py"),
@@ -67,6 +71,9 @@ _importutils = _load_importutils()
 getUnresolvedPackageNames = _importutils.getUnresolvedPackageNames
 getRequirementsHint = _importutils.getRequirementsHint
 buildDirModules = _importutils.buildDirModules
+isOptionalImportInSource = _importutils.isOptionalImportInSource
+partitionUnresolvedPackagesForInstall = _importutils.partitionUnresolvedPackagesForInstall
+getUnresolvedInstallCandidates = _importutils.getUnresolvedInstallCandidates
 
 
 def test_importutils_module_has_no_ui_qt_dependency():
@@ -110,6 +117,43 @@ def test_get_requirements_hint_returns_none_for_relative_only_errors(tmp_path):
     errors = ["Could not resolve 'from .pkg import x' at line 1"]
     unresolved = getUnresolvedPackageNames(errors)
     assert getRequirementsHint(str(tmp_path), unresolved) is None
+
+
+def test_optional_import_try_except_importerror():
+    """try/except ImportError around import native is optional."""
+    src = (
+        "try:\n"
+        "    import native as _native_mod\n"
+        "except (ImportError, AttributeError, RuntimeError, OSError):\n"
+        "    _native_mod = None\n"
+    )
+    assert isOptionalImportInSource(src, 2) is True
+    assert isOptionalImportInSource("import native\n", 1) is False
+
+
+def test_partition_excludes_optional_only_from_pip_candidates(tmp_path):
+    """Optional-only sites must not become pip install candidates."""
+    path = tmp_path / "bf_velocity_mapper.py"
+    path.write_text(
+        "try:\n"
+        "    import native\n"
+        "except ImportError:\n"
+        "    native = None\n"
+        "import requests\n",
+        encoding="utf-8",
+    )
+    errors = [
+        f"{path}:2: Could not resolve 'import native' at line 2",
+        f"{path}:5: Could not resolve 'import requests' at line 5",
+    ]
+    installable, optional = partitionUnresolvedPackagesForInstall(errors)
+    assert installable == {"requests"}
+    assert optional == {"native"}
+    assert getUnresolvedInstallCandidates(errors) == {"requests"}
+    hint = getRequirementsHint(str(tmp_path), installable, optionalPackages=optional)
+    assert "requests" in hint
+    assert "native" in hint
+    assert "Optional imports" in hint
 
 
 def test_build_dir_modules_reports_progress_without_qt(tmp_path):

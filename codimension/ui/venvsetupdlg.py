@@ -117,6 +117,19 @@ def _selected_sources(req_checks, pyproject_cb, unresolved_cb, pkg_list):
     return reqs, pkgs, pyproject_cb.isChecked()
 
 
+def _pip_failure_hint(exc: BaseException) -> str:
+    """Append guidance when pip cannot find a distribution name."""
+    detail = str(exc)
+    if "No matching distribution found" not in detail:
+        return detail
+    return (
+        detail
+        + "\n\nHint: names from optional ``try/except ImportError`` imports "
+        "(e.g. local ``native`` accelerators) are not on PyPI. Uncheck them under "
+        "Unresolved packages, or install the project/extension that provides them."
+    )
+
+
 def selectedBaseInterpreter(combo: QComboBox, *, fallback: str | None = None) -> str:
     """Resolve base Python from an editable combo (audit D01 @ 8c60ad5c).
 
@@ -275,7 +288,7 @@ class VenvSetupDialog(QDialog):
             return
         except Exception as exc:
             _LOG.exception("VENV setup failed")
-            QMessageBox.critical(self, "VENV", str(exc))
+            QMessageBox.critical(self, "VENV", _pip_failure_hint(exc))
 
 
 class VenvUpdateDialog(QDialog):
@@ -419,4 +432,4 @@ class VenvUpdateDialog(QDialog):
             return
         except Exception as exc:
             _LOG.exception("Update VENV failed")
-            QMessageBox.critical(self, "Update VENV", str(exc))
+            QMessageBox.critical(self, "Update VENV", _pip_failure_hint(exc))

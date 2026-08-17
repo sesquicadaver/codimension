@@ -39,7 +39,12 @@ from ui.qt import (
 )
 from utils.fileutils import isPythonFile
 from utils.globals import GlobalData
-from utils.importutils import getRequirementsHint, getUnresolvedPackageNames, resolveImports
+from utils.importutils import (
+    getRequirementsHint,
+    getUnresolvedPackageNames,
+    partitionUnresolvedPackagesForInstall,
+    resolveImports,
+)
 from utils.pixmapcache import getPixmap
 
 from .importsdgmgraphics import (
@@ -770,9 +775,11 @@ class ImportsDiagramProgress(QDialog):
 
         if self.__allImportErrors:
             unresolved = getUnresolvedPackageNames(self.__allImportErrors)
+            installable, optional_only = partitionUnresolvedPackagesForInstall(self.__allImportErrors)
             hint = getRequirementsHint(
                 GlobalData().project.getProjectDir() if GlobalData().project.isLoaded() else None,
-                unresolved,
+                installable,
+                optionalPackages=optional_only,
             )
             if hint:
                 logging.warning(hint)
@@ -792,7 +799,12 @@ class ImportsDiagramProgress(QDialog):
                 try:
                     from ui.unresolvedimportsdlg import offer_unresolved_import_choice
 
-                    offer_unresolved_import_choice(self, GlobalData().project, unresolved)
+                    offer_unresolved_import_choice(
+                        self,
+                        GlobalData().project,
+                        installable,
+                        optional_packages=optional_only,
+                    )
                 except Exception:
                     logging.debug("Unresolved import choice dialog skipped", exc_info=True)
 

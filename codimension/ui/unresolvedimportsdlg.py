@@ -58,11 +58,18 @@ _LOG = logging.getLogger(__name__)
 class UnresolvedImportsChoiceDialog(QDialog):
     """Mutually exclusive: exclude build artifacts, or pip-install packages."""
 
-    def __init__(self, packages: list[str], parent=None):
+    def __init__(
+        self,
+        packages: list[str],
+        parent=None,
+        *,
+        optional_packages: list[str] | None = None,
+    ):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Unresolved imports")
         self.setWindowIcon(getIcon("project.png"))
         self._packages = sorted({p for p in packages if p})
+        self._optional = sorted({p for p in (optional_packages or []) if p})
         self._action = ACTION_SKIP
         self._selected: list[str] = []
         self._install_project = False
@@ -70,14 +77,17 @@ class UnresolvedImportsChoiceDialog(QDialog):
 
     def __build(self) -> None:
         layout = QVBoxLayout(self)
-        layout.addWidget(
-            QLabel(
-                "Unresolved third-party imports detected:\n"
-                + ", ".join(self._packages)
-                + "\n\nChoose how to proceed:",
-                self,
+        lines = ["Choose how to proceed:"]
+        if self._packages:
+            lines.insert(0, "Unresolved third-party imports (pip candidates):\n" + ", ".join(self._packages))
+        if self._optional:
+            lines.insert(
+                0 if not self._packages else 1,
+                "Optional imports (try/except ImportError — not PyPI packages):\n"
+                + ", ".join(self._optional)
+                + "\nDo not pip install these names; provide the local extension or Skip.",
             )
-        )
+        layout.addWidget(QLabel("\n\n".join(lines), self))
 
         choice_box = QGroupBox("Action", self)
         choice_layout = QVBoxLayout(choice_box)
@@ -90,6 +100,11 @@ class UnresolvedImportsChoiceDialog(QDialog):
             self,
         )
         self._exclude_radio.setChecked(True)
+        if not self._packages:
+            self._install_radio.setEnabled(False)
+            self._install_radio.setToolTip(
+                "No pip-installable unresolved packages; optional imports are not on PyPI."
+            )
         group = QButtonGroup(self)
         group.addButton(self._exclude_radio)
         group.addButton(self._install_radio)
@@ -123,6 +138,7 @@ class UnresolvedImportsChoiceDialog(QDialog):
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Checked)
         self._pkg_list.setEnabled(False)
+        self._pkg_list.setVisible(bool(self._packages))
         layout.addWidget(QLabel("Packages for pip install:", self))
         layout.addWidget(self._pkg_list)
 
@@ -131,7 +147,8 @@ class UnresolvedImportsChoiceDialog(QDialog):
             project_dir and os.path.isfile(os.path.join(project_dir, "pyproject.toml"))
         )
         self._proj_check = QCheckBox("Also install project package (pip install .)", self)
-        self._proj_check.setChecked(has_pyproject and "native" in self._packages)
+        # Local accelerators like ``native`` are not shipped by haiduk-calib's pyproject.
+        self._proj_check.setChecked(False)
         self._proj_check.setEnabled(False)
         self._proj_check.setVisible(has_pyproject)
         layout.addWidget(self._proj_check)
@@ -149,7 +166,7 @@ class UnresolvedImportsChoiceDialog(QDialog):
         self.resize(560, 420)
 
     def _on_mode(self) -> None:
-        install = self._install_radio.isChecked()
+        install = self._install_radio.isChecked() and self._install_radio.isEnabled()
         self._pkg_list.setEnabled(install)
         self._proj_check.setEnabled(install and self._proj_check.isVisible())
 
@@ -237,17 +254,36 @@ def apply_unresolved_import_choice(
         )
         if reply != QMessageBox.Yes:
             return False
-        run_pip_with_progress(parent, cmd, cwd=project_dir, project_dir=project_dir)
+        try:
+            run_pip_with_progress(parent, cmd, cwd=project_dir, project_dir=project_dir)
+        except RuntimeError as exc:
+            detail = str(exc)
+            if "No matching distribution found" in detail:
+                raise RuntimeError(
+                    detail
+                    + "\n\nHint: optional/local modules (e.g. try/except ImportError) "
+                    "are not on PyPI. Uncheck them, or install the project extension "
+                    "that provides them — do not pip install the import name alone."
+                ) from exc
+            raise
         requestAnalysisEnvironmentRefresh(project)
         return True
 
     return False
 
 
-def offer_unresolved_import_choice(parent, project, unresolved_packages: Iterable[str]) -> str:
+def offer_unresolved_import_choice(
+    parent,
+    project,
+    unresolved_packages: Iterable[str],
+    *,
+    optional_packages: Iterable[str] | None = None,
+) -> str:
     """Show choice dialog when appropriate; apply result. Returns action taken."""
     packages = sorted({p for p in unresolved_packages if p})
-    if not should_offer_unresolved_import_choice(project, packages):
+    optional = sorted({p for p in (optional_packages or []) if p})
+    combined = packages + optional
+    if not should_offer_unresolved_import_choice(project, combined):
         return ACTION_SKIP
 
     from ui.qt import QApplication
@@ -255,11 +291,11 @@ def offer_unresolved_import_choice(parent, project, unresolved_packages: Iterabl
     if QApplication.instance() is None:
         return ACTION_SKIP
 
-    dlg = UnresolvedImportsChoiceDialog(packages, parent)
+    dlg = UnresolvedImportsChoiceDialog(packages, parent, optional_packages=optional)
     dlg.exec_()
     action, selected, install_proj = dlg.result_action()
     if action == ACTION_SKIP:
-        mark_unresolved_import_skipped(project.getProjectDir(), packages)
+        mark_unresolved_import_skipped(project.getProjectDir(), combined)
         return ACTION_SKIP
     try:
         apply_unresolved_import_choice(

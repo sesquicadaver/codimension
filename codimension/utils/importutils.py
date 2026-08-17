@@ -564,42 +564,192 @@ def getUnresolvedPackageNames(errors):
     Returns set of names (e.g. {'numpy', 'cryptography', 'pymavlink'}).
     Excludes known stdlib modules and relative imports.
     """
+    return {name for name, _path, _line in iterUnresolvedPackageSites(errors)}
+
+
+def iterUnresolvedPackageSites(errors):
+    """Yield ``(top_level_name, file_path_or_None, line_or_None)`` from error strings."""
     import re
 
-    names = set()
+    loc_re = re.compile(r"^(.+?):(\d+):\s+(.*)$")
     for err in errors:
-        m = re.search(r"'import ([^']+)'", err)
-        if m:
-            top = _top_level_import_name(m.group(1))
-            if top and top not in _STDLIB_MODULES:
-                names.add(top)
+        text = str(err)
+        path = None
+        line = None
+        body = text
+        mloc = loc_re.match(text)
+        if mloc:
+            path = mloc.group(1)
+            try:
+                line = int(mloc.group(2))
+            except ValueError:
+                line = None
+            body = mloc.group(3)
+        m = re.search(r"'import ([^']+)'", body)
+        if not m:
+            m = re.search(r"'from ([^']+) import", body)
+        if not m:
             continue
-        m = re.search(r"'from ([^']+) import", err)
-        if m:
-            top = _top_level_import_name(m.group(1))
-            if top and top not in _STDLIB_MODULES:
-                names.add(top)
-    return names
+        top = _top_level_import_name(m.group(1))
+        if top and top not in _STDLIB_MODULES:
+            yield top, path, line
 
 
-def getRequirementsHint(projectDir, unresolvedPackages):
+def isOptionalImportInSource(source: str, line: int) -> bool:
+    """True when the import at ``line`` sits in ``try`` that catches ImportError.
+
+    Used to avoid ``pip install <name>`` for intentional optional accelerators
+    (e.g. ``try: import native`` / ``except ImportError``).
+    """
+    import ast
+
+    if not source or line is None:
+        return False
+    try:
+        target = int(line)
+    except (TypeError, ValueError):
+        return False
+    if target < 1:
+        return False
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return False
+
+    def _types_include_import_error(exc_type) -> bool:
+        if exc_type is None:
+            return False
+        if isinstance(exc_type, ast.Name):
+            return exc_type.id in ("ImportError", "ModuleNotFoundError")
+        if isinstance(exc_type, ast.Tuple):
+            return any(_types_include_import_error(elt) for elt in exc_type.elts)
+        return False
+
+    def _handlers_catch_import_error(handlers) -> bool:
+        return any(_types_include_import_error(h.type) for h in handlers)
+
+    def _body_has_import_at_line(stmts) -> bool:
+        for stmt in stmts:
+            if isinstance(stmt, (ast.Import, ast.ImportFrom)):
+                if getattr(stmt, "lineno", None) == target:
+                    return True
+            elif isinstance(stmt, (ast.If,)):
+                if _body_has_import_at_line(stmt.body) or _body_has_import_at_line(stmt.orelse):
+                    return True
+            elif isinstance(stmt, (ast.For, ast.AsyncFor, ast.While)):
+                if _body_has_import_at_line(stmt.body) or _body_has_import_at_line(stmt.orelse):
+                    return True
+            elif isinstance(stmt, (ast.With, ast.AsyncWith)):
+                if _body_has_import_at_line(stmt.body):
+                    return True
+            elif isinstance(stmt, ast.Try):
+                if _try_is_optional(stmt):
+                    return True
+                if _body_has_import_at_line(stmt.body):
+                    return True
+                for handler in stmt.handlers:
+                    if _body_has_import_at_line(handler.body):
+                        return True
+                if _body_has_import_at_line(stmt.orelse) or _body_has_import_at_line(stmt.finalbody):
+                    return True
+            else:
+                try_star = getattr(ast, "TryStar", None)
+                if try_star is not None and isinstance(stmt, try_star):
+                    if _try_is_optional(stmt):
+                        return True
+        return False
+
+    def _try_is_optional(try_node) -> bool:
+        if not _handlers_catch_import_error(try_node.handlers):
+            return False
+        return _body_has_import_at_line(try_node.body)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Try) and _try_is_optional(node):
+            return True
+        try_star = getattr(ast, "TryStar", None)
+        if try_star is not None and isinstance(node, try_star) and _try_is_optional(node):
+            return True
+    return False
+
+
+def isOptionalImportFile(path: str, line: int) -> bool:
+    """Read ``path`` and return :func:`isOptionalImportInSource` for ``line``."""
+    if not path or not os.path.isfile(path):
+        return False
+    try:
+        from .config import DEFAULT_ENCODING
+
+        with open(path, "r", encoding=DEFAULT_ENCODING, errors="replace") as handle:
+            return isOptionalImportInSource(handle.read(), line)
+    except OSError:
+        return False
+
+
+def partitionUnresolvedPackagesForInstall(errors):
+    """Split unresolved names into pip candidates vs optional ``try/except`` imports.
+
+    A name is optional-only when every reported site is guarded by
+    ``ImportError`` / ``ModuleNotFoundError``. Mixed sites stay installable.
+    """
+    from collections import defaultdict
+
+    sites = list(iterUnresolvedPackageSites(errors))
+    by_name: dict[str, list[tuple[str | None, int | None]]] = defaultdict(list)
+    for name, path, line in sites:
+        by_name[name].append((path, line))
+
+    installable: set[str] = set()
+    optional_only: set[str] = set()
+    for name, locs in by_name.items():
+        optional_flags = []
+        for path, line in locs:
+            if path and line is not None:
+                optional_flags.append(isOptionalImportFile(path, line))
+            else:
+                optional_flags.append(False)
+        if optional_flags and all(optional_flags):
+            optional_only.add(name)
+        else:
+            installable.add(name)
+    return installable, optional_only
+
+
+def getUnresolvedInstallCandidates(errors):
+    """Package names suitable for ``pip install`` (excludes optional-only imports)."""
+    installable, _optional = partitionUnresolvedPackagesForInstall(errors)
+    return installable
+
+
+def getRequirementsHint(projectDir, unresolvedPackages, *, optionalPackages=None):
     """Return hint string for missing dependencies, or None."""
     packages = sorted({name for name in unresolvedPackages if name})
-    if not projectDir or not packages:
+    optional = sorted({name for name in (optionalPackages or []) if name})
+    if not projectDir or (not packages and not optional):
         return None
-    reqPath = os.path.join(projectDir, "requirements.txt")
-    if os.path.isfile(reqPath):
-        return (
-            "Unresolved imports (possibly missing dependencies): "
-            + ", ".join(packages)
-            + ". Consider: pip install -r requirements.txt"
+    parts = []
+    if packages:
+        reqPath = os.path.join(projectDir, "requirements.txt")
+        if os.path.isfile(reqPath):
+            parts.append(
+                "Unresolved imports (possibly missing dependencies): "
+                + ", ".join(packages)
+                + ". Consider: pip install -r requirements.txt"
+            )
+        else:
+            parts.append(
+                "Unresolved imports (possibly missing dependencies): "
+                + ", ".join(packages)
+                + ". Consider: pip install "
+                + " ".join(packages)
+            )
+    if optional:
+        parts.append(
+            "Optional imports (try/except ImportError; not pip packages): "
+            + ", ".join(optional)
+            + ". Skip pip install for these, or install the project extension that provides them."
         )
-    return (
-        "Unresolved imports (possibly missing dependencies): "
-        + ", ".join(packages)
-        + ". Consider: pip install "
-        + " ".join(packages)
-    )
+    return " ".join(parts)
 
 
 def generateRequirementsFromProject(filesList, progressCallback=None):
@@ -610,7 +760,9 @@ def generateRequirementsFromProject(filesList, progressCallback=None):
         progressCallback: Optional callable(current, total, message) for progress updates.
 
     Returns:
-        (packages_set, error_count): Set of top-level package names, count of resolved errors.
+        (packages_set, error_count): Set of top-level package names suitable for
+        ``pip install`` (optional try/except ImportError imports are omitted),
+        and count of unresolved-import errors.
     """
     from .fileutils import isPythonFile
 
@@ -633,7 +785,7 @@ def generateRequirementsFromProject(filesList, progressCallback=None):
         except Exception:
             pass
 
-    packages = getUnresolvedPackageNames(allErrors)
+    packages = getUnresolvedInstallCandidates(allErrors)
     return packages, len(allErrors)
 
 
