@@ -1,3 +1,8 @@
+2026 Aug 17
+
+* flow_ast ``_DocstringFrag`` now carries ``beginLine``/``body`` spans so Flow
+  hide-decorators / scroll restore does not crash (``AttributeError: beginLine``)
+
 2026 Aug 14
 
 * ``paramiko`` / ``keyring`` are runtime dependencies (SSH is a Project-menu

@@ -47,6 +47,34 @@ from .routines import distance, getDocComment
 from .textmixin import TextMixin
 
 
+def _docstringLineRange(docstring):
+    """Return ``(beginLine, endLine)`` for a docstring frag, or ``(None, None)``."""
+    if docstring is None:
+        return None, None
+    begin = getattr(docstring, "beginLine", None)
+    end = getattr(docstring, "endLine", None)
+    if begin is not None and end is not None:
+        return begin, end
+    body = getattr(docstring, "body", None)
+    if body is None:
+        return None, None
+    return getattr(body, "beginLine", None), getattr(body, "endLine", None)
+
+
+def _docstringAbsRange(docstring):
+    """Return ``(begin, end)`` absolute offsets for a docstring frag, or ``(None, None)``."""
+    if docstring is None:
+        return None, None
+    begin = getattr(docstring, "begin", None)
+    end = getattr(docstring, "end", None)
+    if begin is not None and end is not None:
+        return begin, end
+    body = getattr(docstring, "body", None)
+    if body is None:
+        return None, None
+    return getattr(body, "begin", None), getattr(body, "end", None)
+
+
 class ScopeHSideEdge(HSpacerCell):
     """Reserves some space for the scope horizontal edge"""
 
@@ -570,7 +598,10 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
     def getDistance(self, absPos):
         """Provides a distance between the absPos and the item"""
         if self.subKind == self.DOCSTRING:
-            return distance(absPos, self.ref.docstring.begin, self.ref.docstring.end)
+            begin, end = _docstringAbsRange(self.ref.docstring)
+            if begin is None:
+                return MAXINT_32
+            return distance(absPos, begin, end)
         if self.subKind == self.DECLARATION:
             if self.kind == CellElement.FILE_SCOPE:
                 dist = MAXINT_32
@@ -586,7 +617,10 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
     def getLineDistance(self, line):
         """Provides a distance between the line and the item"""
         if self.subKind == self.DOCSTRING:
-            return distance(line, self.ref.docstring.beginLine, self.ref.docstring.endLine)
+            begin, end = _docstringLineRange(self.ref.docstring)
+            if begin is None:
+                return MAXINT_32
+            return distance(line, begin, end)
         if self.subKind == self.DECLARATION:
             if self.kind == CellElement.FILE_SCOPE:
                 dist = MAXINT_32
@@ -608,7 +642,10 @@ class ScopeCellElement(CellElement, TextMixin, ColorMixin, QGraphicsRectItem):
             if self.ref.docstring.leadingComment:
                 if self.ref.docstring.leadingComment.parts:
                     line = min(self.ref.docstring.leadingComment.parts[0].beginLine, line)
-            return min(self.ref.docstring.beginLine, line)
+            begin, _ = _docstringLineRange(self.ref.docstring)
+            if begin is None:
+                return line if line != MAXINT_32 else CellElement.getFirstLine(self)
+            return min(begin, line)
         return CellElement.getFirstLine(self)
 
     def getTooltipSuffix(self):
