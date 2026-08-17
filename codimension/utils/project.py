@@ -454,7 +454,14 @@ class CodimensionProject(
         return result
 
     def getExcludeFromAnalysisAsAbsolutePaths(self):
-        """Provides a list of absolute paths to exclude from analysis."""
+        """Absolute paths excluded from analysis (user list + optional artifacts).
+
+        When IDE setting ``autoExcludeBuildArtifacts`` is enabled (default),
+        existing ``build/``, ``dist/``, ``.eggs/``, and ``*.egg-info`` under the
+        project root are merged in so setuptools trees do not duplicate warnings.
+        """
+        from .analysis_excludes import merge_analysis_exclude_paths
+
         result = []
         proj_dir = self.getProjectDir()
         for path in self.props.get("excludeFromAnalysis", []):
@@ -465,7 +472,7 @@ class CodimensionProject(
                 result.append(realpath(path))
             else:
                 result.append(realpath(proj_dir + path))
-        return result
+        return merge_analysis_exclude_paths(proj_dir, result)
 
     def __isExcludedFromAnalysis(self, candidate_path):
         """True if candidate_path should be excluded from analysis."""

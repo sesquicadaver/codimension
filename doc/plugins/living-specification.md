@@ -75,6 +75,8 @@
 | **Advanced metrics R136** | utils.radon_metrics_pack | MI + Halstead volume + raw LOC as MetricProvider | tests/test_radon_metrics_pack.py |
 | **Git analytics R137** | utils.git_analytics | churn/hotspot from `git log --numstat`; text formatter | tests/test_git_analytics.py |
 | **Risk score R138** | core.risk_score | `compute_risk_score` lint+metrics±git (`cdm-risk-v1`) | tests/test_risk_score.py |
+| **Auto-exclude build artifacts** | utils.analysis_excludes + project + Settings + Options | `autoExcludeBuildArtifacts` (default on); merge `build/`/`dist/`/`.eggs`/`*.egg-info` into analysis excludes; Options toggle | tests/test_analysis_excludes.py |
+| **Unresolved import choice** | ui.unresolvedimportsdlg + diagram.importsdgm | Dialog: persist artifact excludes **or** pip-install selected packages (optional `pip install .`) into project venv | tests/test_analysis_excludes.py |
 | **Branching policy R170** | docs | CONTRIBUTING(+.en): `master` + `feature/*`/`fix/*`; no direct push; `ci-gate` | GitHub branch protection + docs gate |
 | **CFG graph model R140.a** | core.cfg | `CfgNode`/`CfgEdge`/`CfgGraph`; `build_cfg_graph` from flow parse | tests/test_cfg_graph.py |
 | **CFG canvas bind R140.b** | flowui.cfg_adapter + vcanvas/flowuiwidget | `bind_cfg_graph` у `layoutModule`; `getCfgGraph`; CF-дерево = layout payload | tests/test_cfg_adapter.py |

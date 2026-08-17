@@ -517,6 +517,13 @@ class MainWindowMenuMixin:
             act.setChecked(self.settings["projectVenvPolicy"] == data)
         venvPolicyMenu.triggered.connect(self._projectVenvPolicyChanged)
 
+        self.__autoExcludeBuildAct = optionsMenu.addAction(
+            "Auto-exclude build/dist artifacts from analysis"
+        )
+        self.__autoExcludeBuildAct.setCheckable(True)
+        self.__autoExcludeBuildAct.setChecked(bool(self.settings["autoExcludeBuildArtifacts"]))
+        self.__autoExcludeBuildAct.triggered.connect(self._autoExcludeBuildArtifactsChanged)
+
         # Top-level (not a nested submenu) so the items are hard to miss.
         optionsMenu.addSeparator()
         self.__aiEnableAct = optionsMenu.addAction("Enable AI (experimental)")
@@ -1091,6 +1098,7 @@ class MainWindowMenuMixin:
         policy = self.settings["projectVenvPolicy"]
         for act in self.__venvPolicyGroup.actions():
             act.setChecked(act.data() == policy)
+        self.__autoExcludeBuildAct.setChecked(bool(self.settings["autoExcludeBuildArtifacts"]))
 
         from core.ai_ui import ai_ui_env_override_active, is_ai_ui_enabled
 

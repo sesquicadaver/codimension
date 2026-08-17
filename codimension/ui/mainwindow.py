@@ -1181,6 +1181,15 @@ class CodimensionMainWindow(
         if data:
             self.settings["projectVenvPolicy"] = data
 
+    def _autoExcludeBuildArtifactsChanged(self, checked):
+        """Options → Auto-exclude build/dist artifacts from analysis."""
+        self.settings["autoExcludeBuildArtifacts"] = bool(checked)
+        project = GlobalData().project
+        if project is not None and project.isLoaded():
+            refresh = getattr(project, "refreshAnalysisEnvironment", None)
+            if callable(refresh):
+                refresh()
+
     def _aiUiEnabledTriggered(self, checked):
         """Options → AI → Enable AI (experimental)."""
         from core.ai_ui import ai_ui_env_override_active, set_ai_ui_enabled

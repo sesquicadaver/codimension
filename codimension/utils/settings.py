@@ -231,6 +231,8 @@ _DEFAULT_SETTINGS = {
     "projectVenvPolicy": "auto_session",
     # Legacy R114 bool; kept in sync with projectVenvPolicy (True unless manual)
     "autoAttachProjectVenv": True,
+    # Auto-exclude setuptools/pip artifacts (build/, dist/, .eggs, *.egg-info)
+    "autoExcludeBuildArtifacts": True,
 }
 
 

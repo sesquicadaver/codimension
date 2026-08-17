@@ -787,6 +787,14 @@ class ImportsDiagramProgress(QDialog):
                 logging.warning(err)
             if len(self.__allImportErrors) > 10:
                 logging.warning("... and %d more", len(self.__allImportErrors) - 10)
+            # Offer: exclude build artifacts OR install packages into project venv.
+            if unresolved:
+                try:
+                    from ui.unresolvedimportsdlg import offer_unresolved_import_choice
+
+                    offer_unresolved_import_choice(self, GlobalData().project, unresolved)
+                except Exception:
+                    logging.debug("Unresolved import choice dialog skipped", exc_info=True)
 
         self.accept()
 

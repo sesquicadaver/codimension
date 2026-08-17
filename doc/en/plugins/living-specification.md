@@ -76,6 +76,8 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Git analytics R137** | utils.git_analytics | churn/hotspot from `git log --numstat`; text formatter | tests/test_git_analytics.py |
 | **Risk score R138** | core.risk_score | `compute_risk_score` lint+metrics±git (`cdm-risk-v1`) | tests/test_risk_score.py |
 | **Branching policy R170** | docs | CONTRIBUTING(+.en): `master` + `feature/*`/`fix/*`; no direct push; `ci-gate` | GitHub branch protection + docs gate |
+| **Auto-exclude build artifacts** | utils.analysis_excludes + project + Settings + Options | `autoExcludeBuildArtifacts` (default on); merge `build/`/`dist/`/`.eggs`/`*.egg-info` into analysis excludes; Options toggle | tests/test_analysis_excludes.py |
+| **Unresolved import choice** | ui.unresolvedimportsdlg + diagram.importsdgm | Dialog: persist artifact excludes **or** pip-install selected packages (optional `pip install .`) into project venv | tests/test_analysis_excludes.py |
 | **CFG graph model R140.a** | core.cfg | `CfgNode`/`CfgEdge`/`CfgGraph`; `build_cfg_graph` from flow parse | tests/test_cfg_graph.py |
 | **CFG canvas bind R140.b** | flowui.cfg_adapter + vcanvas/flowuiwidget | `bind_cfg_graph` in `layoutModule`; `getCfgGraph`; CF tree = layout payload | tests/test_cfg_adapter.py |
 | **CFG frame map R141** | core.cfg_frames + debugger.stackviewer | `map_frame_to_cfg_node` / stack; tooltip CFG id; manual: stop in debugger → stack tip shows node | tests/test_cfg_frames.py |
