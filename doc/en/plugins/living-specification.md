@@ -74,13 +74,13 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **OverlayLayer R135** | core.overlay + utils.overlay_host | Protocol + registry; flow redraw / editor update attach | tests/test_overlay.py |
 | **Advanced metrics R136** | utils.radon_metrics_pack | MI + Halstead volume + raw LOC as MetricProvider | tests/test_radon_metrics_pack.py |
 | **Git analytics R137** | utils.git_analytics | churn/hotspot from `git log --numstat`; text formatter | tests/test_git_analytics.py |
-| **Risk score R138** | core.risk_score | `compute_risk_score` lint+metrics±git (`cdm-risk-v1`) | tests/test_risk_score.py |
+| **Risk score R138** | core.risk_score | `cdm-risk-v2`; R194 confidence; missing metrics ≠ M=0 | tests/test_risk_score.py |
 | **Branching policy R170** | docs | CONTRIBUTING(+.en): `master` + `feature/*`/`fix/*`; no direct push; `ci-gate` | GitHub branch protection + docs gate |
 | **CFG graph model R140.a** | core.cfg | R188 per-scope ENTRY/EXIT; break/continue loop stack; finally routing; not security-proof | tests/test_cfg_graph.py; [cfg-graph.md](../../technology/cfg-graph.md) |
 | **CFG canvas bind R140.b** | flowui.cfg_adapter + vcanvas/flowuiwidget | `bind_cfg_graph` in `layoutModule`; `getCfgGraph`; CF tree = layout payload | tests/test_cfg_adapter.py |
 | **CFG frame map R141** | core.cfg_frames + debugger.stackviewer | `map_frame_to_cfg_node` / stack; tooltip CFG id; manual: stop in debugger → stack tip shows node | tests/test_cfg_frames.py |
 | **CFG graph diff R142** | core.cfg_diff | `diff_cfg_graphs` / `diff_cfg_sources`; stable content keys; add/remove/change | tests/test_cfg_diff.py |
-| **Taint MVP R143** | core.taint | Function-local sources→sinks; documented subset | tests/test_taint.py; [taint-mvp.md](../../technology/taint-mvp.md) |
+| **Taint MVP R143** | core.taint | Function-local sources→sinks; R194 `heuristic`+`confidence` | tests/test_taint.py; [taint-mvp.md](../../technology/taint-mvp.md) |
 | **Plugin capabilities R150** | plugins.capabilities + pluginmanager | `PluginCapabilitySpec` / negotiate; host rejects incompatible; R191 policy before import | tests/test_plugin_capabilities.py, test_plugin_policy.py |
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice for a symbol; JSON-friendly; no network | tests/test_ai_context.py |
 | **AI UI R152** | core.ai_ui + core.ai_tasks + core.ai_http + core.ai_project_context + core.ai_docstring + ui.ai* + editor/Options | Analyze; Google docstring; Chat; R192 budgeted HTTP + cancel + base_url trust | tests/test_ai_ui.py, test_ai_tasks.py, test_ai_config.py, test_ai_http.py |
@@ -151,7 +151,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R194→** (A222…); linear non-blocking.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R195→** (A223…); linear non-blocking.
 
 ### Module boundary matrix (R103)
 

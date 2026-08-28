@@ -80,7 +80,12 @@ class TaintFinding:
 
 @dataclass(frozen=True)
 class TaintReport:
-    """Taint analysis result for one function."""
+    """Taint analysis result for one function.
+
+    R194 / A222: the MVP is explicitly heuristic — absence of findings must
+    not be read as a security proof. ``confidence`` is a fixed low value for
+    the documented subset (not a measured coverage metric).
+    """
 
     function: str
     begin_line: int
@@ -88,6 +93,8 @@ class TaintReport:
     findings: tuple[TaintFinding, ...]
     parameters: tuple[str, ...]
     tainted_names: frozenset[str]
+    heuristic: bool = True
+    confidence: float = 0.4
 
     @property
     def empty(self) -> bool:

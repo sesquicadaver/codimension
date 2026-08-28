@@ -45,24 +45,42 @@ def test_omit_git_renormalizes_weights() -> None:
 
 
 def test_metrics_only_cc_or_only_mi() -> None:
-    from core.risk_score import metrics_factor
+    from core.risk_score import metrics_factor, metrics_factor_detailed
 
     cc_only = metrics_factor(10.0, None, cc_cap=20.0)
     assert abs(cc_only - 0.5) < 1e-9
     mi_only = metrics_factor(None, 0.0)
     assert abs(mi_only - 1.0) < 1e-9
-    neither = metrics_factor(None, None)
-    assert neither == 0.0
+    neither = metrics_factor_detailed(None, None)
+    assert neither.status == "unknown"
+    assert neither.factor == 0.5
+    assert neither.coverage == 0.0
+
+
+def test_r194_missing_metrics_do_not_understate_risk() -> None:
+    """A222: missing CC/MI must not score like a clean metrics profile."""
+    from core.risk_score import RiskInputs, compute_risk_score, risk_band_with_confidence
+
+    with_metrics = compute_risk_score(RiskInputs(lint_issues=0, max_cc=1.0, maintainability_index=95.0))
+    missing = compute_risk_score(RiskInputs(lint_issues=0, max_cc=None, maintainability_index=None))
+    assert missing.metrics_status == "unknown"
+    assert missing.metrics_factor == 0.5
+    assert missing.score > with_metrics.score
+    assert missing.confidence < with_metrics.confidence
+    assert risk_band_with_confidence(missing) == "unknown"
+    assert risk_band_with_confidence(with_metrics) != "unknown"
 
 
 def test_deterministic_and_documented_formula_id() -> None:
-    from core.risk_score import RiskInputs, compute_risk_score
+    from core.risk_score import FORMULA_ID, RiskInputs, compute_risk_score
 
     inputs = RiskInputs(lint_issues=5, max_cc=8.0, maintainability_index=70.0, git_churn=50)
     a = compute_risk_score(inputs)
     b = compute_risk_score(inputs)
     assert a == b
-    assert a.formula_id == "cdm-risk-v1"
+    assert a.formula_id == FORMULA_ID == "cdm-risk-v2"
+    assert a.confidence == 1.0
+    assert a.metrics_status == "full"
 
 
 def test_rejects_negative_lint() -> None:
