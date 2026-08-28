@@ -1,5 +1,6 @@
 2026 Aug 28
 
+* R198: SSH remote IDE Debug MVP — reverse tunnel + remote client_cdm_dbg; path remap
 * R197: Smoke graceful Qt teardown; wrapt via inspect_compat (no --no-deps hack) (A224)
 * R196: Invert utils→ui in versions — inject Qt version from About (A223.b)
 * R195: Utils side-effect inventory; tighten boundary gate with UTILS_LEGACY_EDGES (A223.a)

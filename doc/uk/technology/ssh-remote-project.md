@@ -63,7 +63,7 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 Пропуск каталогів: `.git`, `.hg`, `.svn`, `__pycache__`, `.venv`, `venv`,
 `node_modules`.
 
-## Edit / Run (remote IDE debug ще немає)
+## Edit / Run / Debug
 
 Якщо в корені кешу є `binding.json`:
 
@@ -74,7 +74,12 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
   (`CDM_SSH_TIMEOUT_SEC`, дефолт 120с).
 - **Run** — **асинхронний** remote `python3 <script>` (cancel, timeout,
   stdout/stderr ≤ 2 MiB / `CDM_SSH_MAX_OUTPUT_BYTES`); вивід у Log / IO.
-- **Debug / Profile** для SSH-проєкту поки що відхиляються з повідомленням.
+- **Debug (R198)** — upload `client_cdm_dbg` у
+  `<remote_root>/.codimension-dbg-client/`, **reverse** port-forward
+  (`remote 127.0.0.1:<port>` → локальний IDE `QTcpServer`), запуск з
+  `--host 127.0.0.1`. Шляхи протоколу remap remote ↔ local cache
+  (`utils.ssh_ide_debug`). Контрактні тести — `FakeReverseTunnel`.
+- **Profile** для SSH-проєкту ще відхиляється (**R199**).
 
 Потрібні `paramiko` / `keyring` як **runtime**-залежності (`pip install -e .`
 і `codimension_ctl.sh install`, включно з `--minimal`). Extra `.[ssh]`
@@ -83,6 +88,6 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 
 ## Зв’язок з R124
 
-[`ssh-execution.md`](ssh-execution.md) — headless run уже наявного remote-шляху.
-Open/Create + Save upload + IDE **Run** для SSH-проєктів реалізовані тут;
-повний remote IDE **debug** відкладено.
+[`ssh-execution.md`](ssh-execution.md) — headless run/debug уже наявного
+remote-шляху (`python -m pdb` для prepare debug). Open/Create + Save +
+IDE **Run** + IDE **Debug** (R198) реалізовані тут; IDE **Profile** — **R199**.

@@ -5,11 +5,14 @@
 # The license is described in the LICENSE file at the root directory.
 #
 
-"""Wire remote-bound projects: Save→SFTP upload and Run over SSH (no IDE debug).
+"""Wire remote-bound projects: Save→SFTP upload, Run over SSH, IDE Debug (R198).
 
 R186 / A204: Save and Run are **async jobs** (background threads) so the GUI
 thread is not blocked. Upload/run support cancel, timeout, and bounded
 stdout/stderr. Local save success is distinct from remote ``SYNCED``.
+
+R198: SSH IDE debug uses reverse port-forward + remote ``client_cdm_dbg``
+(see ``utils.ssh_ide_debug``); Profile remains deferred (R199).
 """
 
 from __future__ import annotations
@@ -343,10 +346,8 @@ def try_handle_ide_run(path: str, *, kind: str) -> bool:
         return False
 
     if kind == "debug":
-        logging.error(
-            "SSH remote debug is not available yet. Use Run for remote execution, or open a local project to debug."
-        )
-        return True
+        # R198: RunManager.debug owns SSH IDE debug (reverse tunnel + client_cdm_dbg).
+        return False
 
     if kind == "profile":
         logging.error("SSH remote profile is not available yet. Use Run for remote execution.")
