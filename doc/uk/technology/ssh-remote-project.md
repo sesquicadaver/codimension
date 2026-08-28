@@ -67,8 +67,13 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 
 Якщо в корені кешу є `binding.json`:
 
-- **Save** — upload файлу на remote (джерело правди = remote).
-- **Run** — upload скрипта + `python3 <remote-script>` по SSH; вивід у Log / IO.
+- **Save** пише локальний кеш, потім планує **асинхронний SFTP upload** (R186).
+  Успіх локального Save ≠ remote sync — стани
+  `LOCAL` → `SYNCING` → `SYNCED` / `SYNC_FAILED` / `SYNC_CANCELLED`
+  (`get_sync_state`). Upload скасовуваний і з timeout
+  (`CDM_SSH_TIMEOUT_SEC`, дефолт 120с).
+- **Run** — **асинхронний** remote `python3 <script>` (cancel, timeout,
+  stdout/stderr ≤ 2 MiB / `CDM_SSH_MAX_OUTPUT_BYTES`); вивід у Log / IO.
 - **Debug / Profile** для SSH-проєкту поки що відхиляються з повідомленням.
 
 Потрібні `paramiko` / `keyring` як **runtime**-залежності (`pip install -e .`

@@ -1,5 +1,6 @@
 2026 Aug 28
 
+* R186: SSH Run/Save async jobs — cancel/timeout/output caps; SYNC_* distinct from local save
 * R185: SSH download hardening — lstat/reject symlink, nonzero default
   caps (50k / 512 MiB), streamed reads, staging + atomic cache swap
 * R184: SSH host authenticity — RejectPolicy by default, known_hosts load,

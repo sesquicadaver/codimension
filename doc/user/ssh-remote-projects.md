@@ -37,8 +37,8 @@ When the cache root contains `binding.json`:
 
 | Action | Behaviour |
 | ------ | --------- |
-| **Save** | Uploads the file to the remote path (remote is source of truth) |
-| **Run** | Uploads the script and runs `python3 <remote-script>` over SSH; output goes to Log / redirected IO |
+| **Save** | Writes locally, then **async** SFTP upload. Local save ≠ remote sync (`SYNCING`→`SYNCED`/`SYNC_FAILED`). Cancelable; timeout via `CDM_SSH_TIMEOUT_SEC` |
+| **Run** | **Async** upload + `python3 <remote-script>` over SSH; cancel/timeout; output capped (`CDM_SSH_MAX_OUTPUT_BYTES`, default 2 MiB); output → Log / redirected IO |
 | **Debug / Profile** | Refused with a clear message (full remote IDE debug is not implemented yet) |
 
 ## Auth and profiles
