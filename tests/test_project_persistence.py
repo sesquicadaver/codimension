@@ -148,6 +148,81 @@ def test_on_project_file_updated_keeps_last_known_good(project_mod, tmp_path):
     assert proj.props["version"] == "keep-me"
 
 
+def test_r190_uuid_immutable_via_update_properties(project_mod, tmp_path):
+    """R190/A209: updateProperties cannot remount UUID after load."""
+    project, settings_dir = project_mod
+    proj = project.CodimensionProject()
+    cdm = tmp_path / "demo.cdm3"
+    uid = str(uuid.uuid4())
+    other = str(uuid.uuid4())
+    props = _minimal_props(uuid=uid, version="1.0")
+    cdm.write_text(json.dumps(props), encoding="utf-8")
+    proj.fileName = str(cdm)
+    proj.props = dict(props)
+    proj.userProjectDir = str(settings_dir / uid) + os.sep
+    os.makedirs(proj.userProjectDir, exist_ok=True)
+
+    updated = _minimal_props(uuid=other, version="2.0")
+    proj.updateProperties(updated)
+    assert proj.props["uuid"] == uid
+    assert proj.props["version"] == "2.0"
+    disk = json.loads(cdm.read_text(encoding="utf-8"))
+    assert disk["uuid"] == uid
+    assert disk["version"] == "2.0"
+
+
+def test_r190_external_reload_uses_update_properties(project_mod, tmp_path, monkeypatch):
+    """R190/A209: external .cdm3 edit goes through updateProperties (rescan path)."""
+    project, settings_dir = project_mod
+    proj = project.CodimensionProject()
+    cdm = tmp_path / "demo.cdm3"
+    uid = str(uuid.uuid4())
+    props = _minimal_props(uuid=uid, version="1.0", importdirs=[])
+    cdm.write_text(json.dumps(props), encoding="utf-8")
+    proj.fileName = str(cdm)
+    proj.props = dict(props)
+    proj.userProjectDir = str(settings_dir / uid) + os.sep
+
+    calls = []
+
+    def _spy(p, *, persist=True):
+        calls.append({"props": dict(p), "persist": persist})
+        # Minimal apply without Qt scan machinery.
+        proj.props = dict(p)
+
+    monkeypatch.setattr(proj, "updateProperties", _spy)
+
+    disk = _minimal_props(uuid=uid, version="ext", importdirs=["lib"])
+    cdm.write_text(json.dumps(disk), encoding="utf-8")
+    proj.onProjectFileUpdated()
+    assert len(calls) == 1
+    assert calls[0]["persist"] is False
+    assert calls[0]["props"]["version"] == "ext"
+    assert calls[0]["props"]["importdirs"] == ["lib"]
+    # Disk must not be rewritten by the reload path.
+    assert json.loads(cdm.read_text(encoding="utf-8"))["version"] == "ext"
+
+
+def test_r190_external_uuid_change_rejected(project_mod, tmp_path):
+    """R190/A209: external UUID change is ignored (no split-brain userProjectDir)."""
+    project, settings_dir = project_mod
+    proj = project.CodimensionProject()
+    cdm = tmp_path / "demo.cdm3"
+    uid = str(uuid.uuid4())
+    other = str(uuid.uuid4())
+    props = _minimal_props(uuid=uid, version="keep-me")
+    cdm.write_text(json.dumps(props), encoding="utf-8")
+    proj.fileName = str(cdm)
+    proj.props = dict(props)
+    proj.userProjectDir = str(settings_dir / uid) + os.sep
+
+    cdm.write_text(json.dumps(_minimal_props(uuid=other, version="hijack")), encoding="utf-8")
+    proj.onProjectFileUpdated()
+    assert proj.props["uuid"] == uid
+    assert proj.props["version"] == "keep-me"
+    assert proj.userProjectDir == str(settings_dir / uid) + os.sep
+
+
 def test_uuid_migration_persists_immediately(project_mod, tmp_path, monkeypatch):
     project, _ = project_mod
     cdm = tmp_path / "legacy.cdm3"
