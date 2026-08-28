@@ -11,6 +11,9 @@ Profiles (non-secret) live under ``~/.codimension3/ssh_hosts.json``.
 Passwords go to the OS keyring (preferred) or ``ssh_password_<id>`` mode 0600.
 Local working copies are cached under ``~/.codimension3/remote-projects/<id>/``.
 
+R183: ``profile.id`` and remote project names are basename allowlists only;
+local cache mkdir/rmtree/write is constrained with ``realpath``/``commonpath``.
+
 Paramiko is optional at import time; call :func:`require_paramiko` before live use.
 """
 
@@ -43,7 +46,10 @@ ENV_MAX_FILES = "CDM_SSH_MAX_FILES"
 ENV_MAX_BYTES = "CDM_SSH_MAX_BYTES"
 SKIP_DIR_NAMES = frozenset({".git", ".hg", ".svn", "__pycache__", ".venv", "venv", "node_modules"})
 
+# R183: path-containment — profile ids and project names are basename-only allowlists.
 _SAFE_ID = re.compile(r"[^a-zA-Z0-9._-]+")
+_PROFILE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
+_PROJECT_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 
 @dataclass(frozen=True)
@@ -59,7 +65,7 @@ class SshHostProfile:
     label: str = ""
 
     def normalized(self) -> "SshHostProfile":
-        """Validate and normalize fields."""
+        """Validate and normalize fields (R183: profile id is basename-safe)."""
         host = (self.host or "").strip()
         if not host:
             raise ValueError("host must be non-empty")
@@ -69,7 +75,11 @@ class SshHostProfile:
         port = int(self.port or 22)
         if port < 1 or port > 65535:
             raise ValueError("port out of range")
-        pid = (self.id or "").strip() or _make_profile_id(host, self.user, port)
+        raw_id = (self.id or "").strip()
+        if raw_id:
+            pid = sanitize_ssh_profile_id(raw_id)
+        else:
+            pid = sanitize_ssh_profile_id(_make_profile_id(host, self.user, port))
         return SshHostProfile(
             id=pid,
             host=host,
@@ -386,23 +396,22 @@ def upsert_host_profile(profile: SshHostProfile, settings_dir: Optional[str] = N
 
 def password_file_path(profile_id: str, settings_dir: Optional[str] = None) -> str:
     """Fallback password file path (mode 0600)."""
-    base = settings_dir or SETTINGS_DIR
-    safe = _SAFE_ID.sub("_", profile_id)[:80]
+    base = _settings_base(settings_dir)
+    safe = sanitize_ssh_profile_id(profile_id)
     return os.path.join(base, f"ssh_password_{safe}")
 
 
 def store_ssh_password(profile_id: str, password: str, settings_dir: Optional[str] = None) -> None:
     """Store password in keyring or a 0600 file."""
-    if not profile_id:
-        raise ValueError("profile_id required")
+    safe_id = sanitize_ssh_profile_id(profile_id)
     try:
         import keyring
 
-        keyring.set_password(KEYRING_SERVICE, profile_id, password or "")
+        keyring.set_password(KEYRING_SERVICE, safe_id, password or "")
         return
     except Exception:
         pass
-    path = password_file_path(profile_id, settings_dir)
+    path = password_file_path(safe_id, settings_dir)
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".ssh-pass-")
     try:
@@ -424,14 +433,18 @@ def load_ssh_password(profile_id: str, settings_dir: Optional[str] = None) -> st
     if not profile_id:
         return ""
     try:
+        safe_id = sanitize_ssh_profile_id(profile_id)
+    except ValueError:
+        return ""
+    try:
         import keyring
 
-        value = keyring.get_password(KEYRING_SERVICE, profile_id)
+        value = keyring.get_password(KEYRING_SERVICE, safe_id)
         if value is not None:
             return str(value)
     except Exception:
         pass
-    path = password_file_path(profile_id, settings_dir)
+    path = password_file_path(safe_id, settings_dir)
     if not os.path.isfile(path):
         return ""
     try:
@@ -440,12 +453,21 @@ def load_ssh_password(profile_id: str, settings_dir: Optional[str] = None) -> st
         return ""
 
 
+def remote_projects_root(settings_dir: Optional[str] = None) -> str:
+    """Absolute root of local remote-project caches (R183 container)."""
+    return os.path.join(_settings_base(settings_dir), "remote-projects")
+
+
 def remote_cache_dir(profile: SshHostProfile, remote_root: str, settings_dir: Optional[str] = None) -> str:
-    """Deterministic local cache directory for a remote project root."""
+    """Deterministic local cache directory for a remote project root.
+
+    Always under ``<settings>/remote-projects/<safe-id>/<digest>/`` (R183).
+    """
     cfg = profile.normalized()
     digest = hashlib.sha256(f"{cfg.id}:{_norm_remote(remote_root)}".encode("utf-8")).hexdigest()[:16]
-    base = settings_dir or SETTINGS_DIR
-    return os.path.join(base, "remote-projects", cfg.id, digest)
+    cache_root = remote_projects_root(settings_dir)
+    candidate = os.path.join(cache_root, cfg.id, digest)
+    return assert_local_path_under(cache_root, candidate)
 
 
 def find_remote_cdm3(session: SftpSession, remote_path: str) -> str:
@@ -582,13 +604,14 @@ def open_remote_project(
     cfg = profile.normalized()
     remote_cdm3 = find_remote_cdm3(session, remote_path)
     remote_root = _norm_remote(posixpath.dirname(remote_cdm3) or "/")
+    cache_root = remote_projects_root(settings_dir)
     local_root = remote_cache_dir(cfg, remote_root, settings_dir)
     if os.path.isdir(local_root):
         # Fresh sync: clear previous tree except we recreate.
-        _rm_tree(local_root)
+        _rm_tree(local_root, must_be_under=cache_root)
     os.makedirs(local_root, exist_ok=True)
     download_remote_tree(session, remote_root, local_root)
-    local_cdm3 = os.path.join(local_root, os.path.basename(remote_cdm3))
+    local_cdm3 = assert_local_path_under(local_root, os.path.join(local_root, os.path.basename(remote_cdm3)))
     if not os.path.isfile(local_cdm3):
         raise FileNotFoundError(f"downloaded tree is missing project file: {local_cdm3}")
     binding = RemoteProjectBinding(
@@ -618,23 +641,20 @@ def create_remote_project(
 ) -> RemoteProjectBinding:
     """Create remote dir + ``.cdm3``, seed local cache, return binding."""
     cfg = profile.normalized()
-    name = (project_name or "").strip()
-    if not name:
-        raise ValueError("project name required")
-    if name.endswith(".cdm3"):
-        name = name[: -len(".cdm3")]
+    name = sanitize_remote_project_name(project_name)
     parent = _norm_remote(remote_parent)
-    remote_root = _norm_remote(posixpath.join(parent, name))
-    remote_cdm3 = _norm_remote(posixpath.join(remote_root, f"{name}.cdm3"))
+    remote_root = assert_remote_path_under(parent, _norm_remote(posixpath.join(parent, name)))
+    remote_cdm3 = assert_remote_path_under(remote_root, _norm_remote(posixpath.join(remote_root, f"{name}.cdm3")))
     if session.isdir(remote_root) or session.isfile(remote_root):
         raise FileExistsError(f"remote path already exists: {remote_root}")
     session.makedirs(remote_root)
     session.write_bytes(remote_cdm3, cdm3_body.encode("utf-8"))
+    cache_root = remote_projects_root(settings_dir)
     local_root = remote_cache_dir(cfg, remote_root, settings_dir)
     if os.path.isdir(local_root):
-        _rm_tree(local_root)
+        _rm_tree(local_root, must_be_under=cache_root)
     os.makedirs(local_root, exist_ok=True)
-    local_cdm3 = os.path.join(local_root, f"{name}.cdm3")
+    local_cdm3 = assert_local_path_under(local_root, os.path.join(local_root, f"{name}.cdm3"))
     Path(local_cdm3).write_text(cdm3_body, encoding="utf-8")
     binding = RemoteProjectBinding(
         profile_id=cfg.id,
@@ -688,9 +708,87 @@ def remote_relpath(project_root: str, remote_path: str) -> str:
     return path
 
 
+def sanitize_ssh_profile_id(raw: str) -> str:
+    """Return a basename-safe profile id or raise ``ValueError`` (R183).
+
+    Rejects absolute paths, separators, ``.`` / ``..``, and any character
+    outside ``[A-Za-z0-9._-]``. Empty input is rejected (callers generate ids).
+    """
+    text = (raw or "").strip()
+    if not text:
+        raise ValueError("profile id required")
+    if text in (".", "..") or "/" in text or "\\" in text or os.path.isabs(text):
+        raise ValueError("invalid profile id: path components are not allowed")
+    if os.sep in text or (os.altsep and os.altsep in text):
+        raise ValueError("invalid profile id: path separators are not allowed")
+    if not _PROFILE_ID_RE.fullmatch(text):
+        raise ValueError(
+            "invalid profile id: use letters, digits, '.', '_' or '-' "
+            "(1–80 chars, must start with alphanumeric)"
+        )
+    return text
+
+
+def sanitize_remote_project_name(raw: str) -> str:
+    """Return a basename-safe project name or raise ``ValueError`` (R183)."""
+    name = (raw or "").strip()
+    if name.lower().endswith(".cdm3"):
+        name = name[: -len(".cdm3")].rstrip()
+    if not name:
+        raise ValueError("project name required")
+    if name in (".", "..") or "/" in name or "\\" in name or os.path.isabs(name):
+        raise ValueError("invalid project name: path components are not allowed")
+    if os.sep in name or (os.altsep and os.altsep in name):
+        raise ValueError("invalid project name: path separators are not allowed")
+    if not _PROJECT_NAME_RE.fullmatch(name):
+        raise ValueError(
+            "invalid project name: use letters, digits, '.', '_' or '-' "
+            "(1–128 chars, must start with alphanumeric)"
+        )
+    return name
+
+
+def assert_remote_path_under(parent: str, child: str) -> str:
+    """Ensure POSIX ``child`` is ``parent`` or a strict descendant (R183)."""
+    parent_n = _norm_remote(parent)
+    child_n = _norm_remote(child)
+    if child_n == parent_n:
+        return child_n
+    prefix = parent_n if parent_n.endswith("/") else parent_n + "/"
+    if not child_n.startswith(prefix):
+        raise ValueError(f"remote path escapes parent {parent_n!r}: {child_n}")
+    return child_n
+
+
+def assert_local_path_under(root: str, path: str) -> str:
+    """Ensure local ``path`` stays under ``root`` via ``commonpath`` (R183)."""
+    root_norm = os.path.normpath(os.path.abspath(root))
+    path_norm = os.path.normpath(os.path.abspath(path))
+    try:
+        common = os.path.commonpath([root_norm, path_norm])
+    except ValueError as exc:
+        raise ValueError(f"local path escapes container {root_norm!r}: {path_norm}") from exc
+    if common != root_norm:
+        raise ValueError(f"local path escapes container {root_norm!r}: {path_norm}")
+    return path_norm
+
+
+def _settings_base(settings_dir: Optional[str] = None) -> str:
+    """Absolute settings directory (may not exist yet)."""
+    return os.path.abspath(settings_dir or SETTINGS_DIR)
+
+
 def _make_profile_id(host: str, user: str, port: int) -> str:
     raw = f"{user or 'user'}@{host}:{port}"
-    return _SAFE_ID.sub("-", raw).strip("-").lower()[:80]
+    cleaned = _SAFE_ID.sub("-", raw).strip("-").lower()[:80]
+    if not cleaned or not cleaned[0].isalnum():
+        cleaned = "h" + (cleaned or "ost")
+        cleaned = cleaned[:80]
+    # Ensure allowlist match after generation.
+    if not _PROFILE_ID_RE.fullmatch(cleaned):
+        digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
+        cleaned = f"host-{digest}"
+    return cleaned
 
 
 def _norm_remote(path: str) -> str:
@@ -705,10 +803,16 @@ def _norm_remote(path: str) -> str:
     return posixpath.normpath(text)
 
 
-def _rm_tree(path: str) -> None:
+def _rm_tree(path: str, *, must_be_under: str) -> None:
+    """Remove a directory tree only when it is contained under ``must_be_under``."""
     import shutil
 
-    shutil.rmtree(path, ignore_errors=True)
+    target = assert_local_path_under(must_be_under, path)
+    # Extra guard: never delete the container root itself.
+    container = os.path.normpath(os.path.abspath(must_be_under))
+    if target == container:
+        raise ValueError(f"refusing to remove cache container root: {target}")
+    shutil.rmtree(target, ignore_errors=True)
 
 
 __all__ = [
@@ -717,6 +821,8 @@ __all__ = [
     "RemoteProjectBinding",
     "SftpSession",
     "SshHostProfile",
+    "assert_local_path_under",
+    "assert_remote_path_under",
     "connect_paramiko_sftp",
     "create_remote_project",
     "cdm3_json_from_props",
@@ -727,9 +833,13 @@ __all__ = [
     "load_ssh_password",
     "open_remote_project",
     "read_binding",
+    "remote_cache_dir",
+    "remote_projects_root",
     "remote_relpath",
     "require_paramiko",
     "resolve_download_limits",
+    "sanitize_remote_project_name",
+    "sanitize_ssh_profile_id",
     "save_host_profiles",
     "store_ssh_password",
     "upload_file",

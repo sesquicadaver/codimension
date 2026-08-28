@@ -120,7 +120,7 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R183 | SSH path containment (A201): UUID/hash profile id; basename allowlist project name; `realpath`/`commonpath` перед mkdir/rmtree/write | Тести на `../`, absolute, separators; fail closed | M | OPEN |
+| 1 | R183 | SSH path containment (A201): UUID/hash profile id; basename allowlist project name; `realpath`/`commonpath` перед mkdir/rmtree/write | Тести на `../`, absolute, separators; fail closed | M | DONE |
 | 2 | R184 | SSH host-key verification (A202): RejectPolicy default; known_hosts; TOFU+fingerprint pin у profile | MITM fail closed; тести FakeSSH | M | OPEN |
 | 3 | R185 | SSH download hardening (A203): lstat/reject symlink; nonzero limits; stream; staging+atomic swap | Contract tests FakeSFTP | M | OPEN |
 | 4 | R186 | SSH Run/Save async jobs (A204): cancel, timeout, bounded output, SYNC_* state | GUI не блокується; Save≠успіх без SYNCED | L | OPEN |
@@ -143,7 +143,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R183** (A201 SSH path containment). TODO_FIXME: перший 🔓 A201.
+**Наступний OPEN:** **R184** (A202 SSH host-key verification). TODO_FIXME: перший 🔓 A202.
 
 ### Поставлено поза R-чергою (запит продукту)
 

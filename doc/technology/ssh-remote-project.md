@@ -29,6 +29,15 @@ browsing (Browse will connect automatically if needed).
 
 Host profiles (no secrets) are stored in `~/.codimension3/ssh_hosts.json`.
 
+## Path containment (R183)
+
+- `profile.id` is a basename allowlist (`[A-Za-z0-9._-]`, max 80); path
+  separators, absolute paths, `.` / `..` are rejected.
+- Remote **project name** uses the same basename rules (max 128).
+- Local cache paths are always under
+  `<settings>/remote-projects/<id>/<digest>/`; `rmtree`/writes use
+  `commonpath` checks and refuse escaping the cache container.
+
 ## Download scope
 
 By default the whole remote project tree is downloaded (**no** file-count or

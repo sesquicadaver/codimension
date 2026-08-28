@@ -205,3 +205,58 @@ def test_require_paramiko_message():
             mod.require_paramiko()
     finally:
         builtins.__import__ = real_import
+
+
+def test_r183_rejects_path_like_profile_id_and_project_name(tmp_path):
+    from utils.ssh_remote import (
+        FakeSftpSession,
+        SshHostProfile,
+        create_remote_project,
+        default_cdm3_json,
+        remote_cache_dir,
+        sanitize_remote_project_name,
+        sanitize_ssh_profile_id,
+    )
+
+    for bad in ("../escape", "/abs", "a/b", "a\\b", ".", "..", ""):
+        with pytest.raises(ValueError):
+            sanitize_ssh_profile_id(bad)
+        with pytest.raises(ValueError):
+            sanitize_remote_project_name(bad)
+
+    with pytest.raises(ValueError, match="profile id"):
+        SshHostProfile(id="../evil", host="h", user="u", auth="key").normalized()
+
+    settings = str(tmp_path / "settings")
+    os.makedirs(settings)
+    profile = SshHostProfile(id="safe-host", host="h", user="u", auth="key").normalized()
+    cache = remote_cache_dir(profile, "/projects/demo", settings)
+    assert cache.startswith(os.path.join(os.path.abspath(settings), "remote-projects"))
+    assert ".." not in Path(cache).parts
+
+    session = FakeSftpSession()
+    session.makedirs("/projects")
+    with pytest.raises(ValueError, match="project name"):
+        create_remote_project(
+            session,
+            profile,
+            "/projects",
+            "../escape",
+            cdm3_body=default_cdm3_json("x"),
+            settings_dir=settings,
+        )
+
+
+def test_r183_rm_tree_refuses_outside_cache(tmp_path):
+    from utils.ssh_remote import _rm_tree, remote_projects_root
+
+    settings = str(tmp_path / "settings")
+    cache_root = remote_projects_root(settings)
+    os.makedirs(cache_root)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    marker = outside / "keep.txt"
+    marker.write_text("x", encoding="utf-8")
+    with pytest.raises(ValueError, match="escapes"):
+        _rm_tree(str(outside), must_be_under=cache_root)
+    assert marker.is_file()
