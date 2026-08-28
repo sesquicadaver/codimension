@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue: **P2 R192→** (P1 wave A201–A210 closed).
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: **R192→** (linear non-blocking: R192–R199, R180–R182).
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
@@ -22,15 +22,15 @@ No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue
 | A209 | External `.cdm3` update: split-brain; UUID mutable after load | P1 | ✅ R190 |
 | A210 | Plugin policy after importing plugin code (not fail-closed) | P1 | ✅ R191 |
 
-### P2 / hardening (second wave)
+### P2 / hardening (active ROADMAP wave R192–R197)
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
-| A220 | AI: full `response.read()` before limit; no budget/cancel; keyed `base_url` trust | P2 | 🔓 OPEN |
-| A221 | Settings: non-dict JSON breaks startup; import-time singleton | P2 | 🔓 OPEN |
-| A222 | Taint/risk heuristic; missing metrics understate risk | P2 | 🔓 OPEN |
-| A223 | Architecture: `utils` side-effects; boundary gate does not invert deps | P2 | 🔓 OPEN |
-| A224 | Smoke: `os._exit(0)` skips shutdown; constraints/wrapt drift | P2 | 🔓 OPEN |
+| A220 | AI: full `response.read()` before limit; no budget/cancel; keyed `base_url` trust | P2 | 🔓 R192 |
+| A221 | Settings: non-dict JSON breaks startup; import-time singleton | P2 | 🔓 R193 |
+| A222 | Taint/risk heuristic; missing metrics understate risk | P2 | 🔓 R194 |
+| A223 | Architecture: `utils` side-effects; boundary gate does not invert deps | P2 | 🔓 R195→R196 |
+| A224 | Smoke: `os._exit(0)` skips shutdown; constraints/wrapt drift | P2 | 🔓 R197 |
 
 ## Closed (historical audit)
 

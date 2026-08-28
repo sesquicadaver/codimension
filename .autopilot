@@ -5,16 +5,15 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 1. Do **not** ask which PR or task to pick.
 2. Resolve the work queue in this order:
    - [TODO_FIXME.md](TODO_FIXME.md) — first 🔓 OPEN or PARTIAL row (P0 before P1 before P2)
-   - If TODO has no open rows, [ROADMAP.uk.md](ROADMAP.uk.md) / [ROADMAP.md](ROADMAP.md) — first **OPEN** atomic task (`Rxxx`)
+   - If TODO has no open P0/P1, still prefer first 🔓 P2 that maps to the first **OPEN** ROADMAP row
+   - Else [ROADMAP.uk.md](ROADMAP.uk.md) / [ROADMAP.md](ROADMAP.md) — first **OPEN** atomic task (`Rxxx`)
 3. Implement that item on a feature branch, open a PR to `sesquicadaver/codimension`, drive CI green.
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **P2 R192+** (A220–A224) — deferred without explicit ask.
-R183–R191 shipped (A201–A210). P1 Alpha audit wave closed.
-Deferred without explicit ask: **R180**, **R181**, **R182**, and P2 wave **R192+** (A220–A224).
+Current pointer: **R192 / A220** — AI HTTP budget/stream/cancel + `base_url` trust.
+Active linear queue: R192→R197 (P2 A220–A224 split) → R198–R199 (SSH Debug/Profile) → R180→R182.
+R183–R191 shipped (A201–A210). No deferred gate inside this wave.
 
 User standing order (2026-08-28): `/autopilot` means execute the next queue task and
 perform commit/push/merge/PR automatically without waiting for a separate ask.
-When the pointer is deferred P2 / R180–R182 only, stop and report queue empty
-unless the user explicitly unlocks that wave.

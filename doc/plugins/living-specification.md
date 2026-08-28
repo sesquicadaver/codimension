@@ -151,7 +151,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — P1 A201–A210 закриті; deferred R180–R182 / P2 R192+ лише за явним запитом.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R192→** (A220…; потім R198–R199, R180–R182); лінійна неблокуюча.
 
 ### Матриця меж модулів (R103)
 
