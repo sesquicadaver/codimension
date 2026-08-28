@@ -59,13 +59,13 @@
 | **Recent projects prune** | utils.settings + recentprojectsviewer + ui.filedialogs | Native dir pickers; QFileSystemModel completers; prune/clear recent `.cdm3` | tests/test_recent_projects_prune.py |
 | **Local deploy ctl** | scripts/codimension_ctl.sh + run_codimension.sh | install/uninstall for `.venv`; optional desktop; `--purge-config`; launch via run script | manual smoke after install |
 | **DependencyManifest R120** | utils.dependency_manifest | `buildDependencyManifest`; lock_hint; export script; collectInstallSources delegate | tests/test_dependency_manifest.py |
-| **ExecutionTarget R121** | core.execution | Protocol `run`/`debug`/`profile`/`which_python`; ExecutionRequest/Result | tests/test_execution_target.py |
-| **LocalExecutionTarget R122** | utils.local_execution + utils.run | `LocalExecutionTarget`; `getCwdCmdEnv` via protocol | tests/test_local_execution.py, test_run_argv.py |
+| **ExecutionTarget R121** | core.execution | Protocol `run`/`debug`/`profile`/`which_python`; ExecutionRequest/Result/Plan (R187) | tests/test_execution_target.py |
+| **LocalExecutionTarget R122** | utils.local_execution + utils.run | `prepare_*` для IDE argv; `run` виконує (R187); `getCwdCmdEnv` | tests/test_local_execution.py, test_run_argv.py |
 | **DockerExecutionTarget R123** | utils.docker_execution | image + workspace mount + `docker run` argv; docker-or-skip | tests/test_docker_execution.py |
 | **SSHExecutionTarget R124** | utils.ssh_execution | `SSHTransport` + Fake/Subprocess; remote-path sync MVP | tests/test_ssh_execution.py; [ssh-execution.md](../technology/ssh-execution.md) |
 | **SSH remote project open/create** | utils.ssh_remote + ui.sshprojectdlg + ui.sshbrowse | Профілі; Paramiko/Fake SFTP; R183 path containment; R184 host-key RejectPolicy + fingerprint pin + TOFU UI; R185 lstat/reject symlink + nonzero caps + stream + staging swap; remote Browse… | tests/test_ssh_remote_project.py; [ssh-remote-project.md](../technology/ssh-remote-project.md) |
 | **SSH remote save/run** | utils.ssh_project_runtime + runmanager | R186 async Save upload + Run (cancel/timeout/output cap); SYNC_* ≠ local save; debug відкладено | tests/test_ssh_project_runtime.py |
-| **KubernetesExecutionTarget R125** | utils.k8s_execution | `K8sJobTransport` + Fake/kubectl; Job stub metadata | tests/test_k8s_execution.py; [k8s-execution.md](../technology/k8s-execution.md) |
+| **KubernetesExecutionTarget R125** | utils.k8s_execution | prepare vs run (R187); terminal Succeeded/Failed; UUID name; finally cleanup | tests/test_k8s_execution.py; [k8s-execution.md](../technology/k8s-execution.md) |
 | **SymbolIndex schema R130** | core.symbol_index | SymbolRecord/Kind/SourceSpan/SymbolIndex | tests/test_symbol_index.py |
 | **SymbolIndex ← brief_ast R131** | utils.symbol_index_brief | `index_source` / `build_symbol_index` + on_file | tests/test_symbol_index_brief.py |
 | **SymbolIndex queries R132** | core.symbol_index + search.occurrencesprovider | `find_definitions` / `find_references`; index→occurrences bridge | tests/test_symbol_index_queries.py, test_occurrencesprovider.py |

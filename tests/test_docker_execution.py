@@ -26,9 +26,8 @@ def test_docker_run_argv_mounts_workspace(tmp_path: Path):
     script = tmp_path / "hello.py"
     script.write_text("print(1)\n", encoding="utf-8")
     target = DockerExecutionTarget(str(tmp_path), image="python:3.11-slim", python="python3")
-    result = target.run(build_request(str(script), ["--x"]))
-    assert result.exit_code is None
-    argv = list(result.argv)
+    plan = target.prepare_run(build_request(str(script), ["--x"]))
+    argv = list(plan.argv)
     assert argv[0] == "docker"
     assert "run" in argv
     assert "--rm" in argv
@@ -37,14 +36,14 @@ def test_docker_run_argv_mounts_workspace(tmp_path: Path):
     assert "-w" in argv
     assert argv[argv.index("-w") + 1] == "/workspace"
     assert argv[-3:] == ["python3", "/workspace/hello.py", "--x"]
-    assert result.metadata["backend"] == "docker"
-    assert result.metadata["image"] == "python:3.11-slim"
+    assert plan.metadata["backend"] == "docker"
+    assert plan.metadata["image"] == "python:3.11-slim"
 
 
 def test_docker_rejects_script_outside_workspace(tmp_path: Path):
     target = DockerExecutionTarget(str(tmp_path))
     with pytest.raises(ValueError, match="outside workspace"):
-        target.run(build_request("/tmp/not-in-workspace.py"))
+        target.prepare_run(build_request("/tmp/not-in-workspace.py"))
 
 
 def test_docker_maps_nested_script(tmp_path: Path):
@@ -60,11 +59,11 @@ def test_docker_debug_and_profile_argv(tmp_path: Path):
     script = tmp_path / "app.py"
     script.write_text("x=1\n", encoding="utf-8")
     target = DockerExecutionTarget(str(tmp_path))
-    dbg = target.debug(build_request(str(script)))
+    dbg = target.prepare_debug(build_request(str(script)))
     assert "-m" in dbg.argv and "pdb" in dbg.argv
     assert dbg.metadata["mode"] == "debug"
 
-    prof = target.profile(build_request(str(script), profile_outfile=str(tmp_path / "out.prof")))
+    prof = target.prepare_profile(build_request(str(script), profile_outfile=str(tmp_path / "out.prof")))
     assert "cProfile" in prof.argv
     assert "/workspace/out.prof" in prof.argv
     assert prof.metadata["mode"] == "profile"
@@ -77,8 +76,8 @@ def test_docker_env_and_extra_run_args(tmp_path: Path):
         str(tmp_path),
         extra_run_args=("--network=none",),
     )
-    result = target.run(build_request(str(script), env={"FOO": "bar"}))
-    argv = list(result.argv)
+    plan = target.prepare_run(build_request(str(script), env={"FOO": "bar"}))
+    argv = list(plan.argv)
     assert "-e" in argv
     assert "FOO=bar" in argv
     assert "--network=none" in argv
@@ -101,7 +100,7 @@ def test_docker_run_wait_integration():
         script = workspace / "hello.py"
         script.write_text("print('docker-r123')\n", encoding="utf-8")
         target = DockerExecutionTarget(str(workspace), image="python:3.12-slim")
-        result = target.run(build_request(str(script)), wait=True)
+        result = target.run(build_request(str(script)))
         assert result.exit_code == 0, result.stderr
         assert "docker-r123" in result.stdout
         assert result.metadata["backend"] == "docker"

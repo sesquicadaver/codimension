@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. Нижче — **P1** у порядку виправлення. Черга ROADMAP: **R187→**.
+Підтверджених **P0** у переглянутому коді немає. Нижче — **P1** у порядку виправлення. Черга ROADMAP: **R188→**.
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
@@ -15,8 +15,8 @@
 | A202 | SSH: `AutoAddPolicy` — host authenticity вимкнена (MITM) | P1 | ✅ R184 |
 | A203 | SSH download: `stat` замість `lstat`, symlink follow, unlimited defaults, no staging swap | P1 | ✅ R185 |
 | A204 | SSH Run/Save блокують GUI; немає cancel/timeout/output cap; Save≠SYNCED | P1 | ✅ R186 |
-| A205 | `ExecutionTarget.run` = prepare argv (`exit_code=None`), не виконання | P1 | 🔓 OPEN |
-| A206 | Kubernetes: wait Ready ≠ Complete; hash argv; cleanup не в finally | P1 | 🔓 OPEN |
+| A205 | `ExecutionTarget.run` = prepare argv (`exit_code=None`), не виконання | P1 | ✅ R187 |
+| A206 | Kubernetes: wait Ready ≠ Complete; hash argv; cleanup не в finally | P1 | ✅ R187 |
 | A207 | CFG: global EXIT; break/continue без loop stack; непридатний для data-flow/security | P1 | 🔓 OPEN |
 | A208 | VENV: rename staging→final ламає shebang/activate (попереднє D02/B07 недостатнє) | P1 | 🔓 OPEN |
 | A209 | Зовнішнє оновлення `.cdm3`: split-brain; UUID mutable після load | P1 | 🔓 OPEN |

@@ -28,7 +28,13 @@ import shutil
 import subprocess
 from typing import Mapping, Optional, Protocol, Sequence, runtime_checkable
 
-from core.execution import ExecutionRequest, ExecutionResult, ExecutionTarget
+from core.execution import (
+    ExecutionPlan,
+    ExecutionRequest,
+    ExecutionResult,
+    ExecutionTarget,
+    plan_to_prepare_result,
+)
 
 
 @runtime_checkable
@@ -144,8 +150,8 @@ def ssh_cli_available(ssh_bin: str = "ssh") -> bool:
 class SSHExecutionTarget:
     """ExecutionTarget that executes via an ``SSHTransport``.
 
-    By default methods only *prepare* the remote argv (``exit_code`` is
-    ``None``). Pass ``wait=True`` to execute through the transport.
+    Use ``prepare_*`` for argv-only plans. ``run`` / ``debug`` / ``profile``
+    execute through the transport by default (R187).
     """
 
     def __init__(
@@ -175,52 +181,59 @@ class SSHExecutionTarget:
         """Return a backend-qualified remote interpreter id."""
         return f"ssh:{self._host_label}:{self._python}"
 
-    def run(self, request: ExecutionRequest, *, wait: bool = False) -> ExecutionResult:
-        """Build (and optionally execute) a remote run argv."""
+    def prepare_run(self, request: ExecutionRequest) -> ExecutionPlan:
+        """Return remote run argv without executing."""
         inner = [self._python, request.script, *request.args]
-        return self._finish("run", inner, request, wait=wait)
+        return self._plan("run", inner, request)
 
-    def debug(self, request: ExecutionRequest, *, wait: bool = False) -> ExecutionResult:
-        """MVP: remote ``python -m pdb`` (no IDE TCP redirect)."""
+    def prepare_debug(self, request: ExecutionRequest) -> ExecutionPlan:
+        """Return remote pdb argv without executing."""
         inner = [self._python, "-m", "pdb", request.script, *request.args]
-        return self._finish("debug", inner, request, wait=wait)
+        return self._plan("debug", inner, request)
 
-    def profile(self, request: ExecutionRequest, *, wait: bool = False) -> ExecutionResult:
-        """MVP: remote ``python -m cProfile``."""
+    def prepare_profile(self, request: ExecutionRequest) -> ExecutionPlan:
+        """Return remote cProfile argv without executing."""
         outfile = request.profile_outfile or "codimension-profile.out"
         inner = [self._python, "-m", "cProfile", "-o", outfile, request.script, *request.args]
-        return self._finish("profile", inner, request, wait=wait)
+        return self._plan("profile", inner, request)
 
-    def _finish(
-        self,
-        mode: str,
-        inner_argv: Sequence[str],
-        request: ExecutionRequest,
-        *,
-        wait: bool,
-    ) -> ExecutionResult:
-        """Attach metadata and optionally wait on the transport."""
+    def run(self, request: ExecutionRequest, *, wait: bool = True) -> ExecutionResult:
+        """Execute a remote run (default) or return prepare-shaped result."""
+        return self._finish(self.prepare_run(request), request, wait=wait)
+
+    def debug(self, request: ExecutionRequest, *, wait: bool = True) -> ExecutionResult:
+        """Execute remote pdb (default) or return prepare-shaped result."""
+        return self._finish(self.prepare_debug(request), request, wait=wait)
+
+    def profile(self, request: ExecutionRequest, *, wait: bool = True) -> ExecutionResult:
+        """Execute remote cProfile (default) or return prepare-shaped result."""
+        return self._finish(self.prepare_profile(request), request, wait=wait)
+
+    def _plan(self, mode: str, inner_argv: Sequence[str], request: ExecutionRequest) -> ExecutionPlan:
         meta: dict[str, str] = {
             "mode": mode,
             "backend": "ssh",
             "host": self._host_label,
             "sync": "remote-path-assumed",
         }
-        argv = tuple(inner_argv)
+        return ExecutionPlan(mode=mode, argv=tuple(inner_argv), metadata=meta)
+
+    def _finish(self, plan: ExecutionPlan, request: ExecutionRequest, *, wait: bool) -> ExecutionResult:
+        """Execute via transport or return prepare-only when ``wait=False``."""
         if not wait:
-            return ExecutionResult(exit_code=None, argv=argv, metadata=meta)
+            return plan_to_prepare_result(plan)
 
         code, stdout, stderr = self._transport.exec(
-            inner_argv,
+            plan.argv,
             cwd=request.cwd,
             env=request.env,
         )
         return ExecutionResult(
             exit_code=int(code),
-            argv=argv,
+            argv=plan.argv,
             stdout=stdout,
             stderr=stderr,
-            metadata=meta,
+            metadata=dict(plan.metadata),
         )
 
 

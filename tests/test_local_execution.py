@@ -78,11 +78,10 @@ def test_local_run_argv_matches_build_argv():
     script = "/tmp/demo.py"
     args = ["--x", "1"]
     expected = buildArgvToRun(script, args, params)
-    result = LocalExecutionTarget(params).run(build_request(script, args))
-    assert result.exit_code is None
-    assert list(result.argv) == expected
-    assert result.metadata["backend"] == "local"
-    assert result.metadata["mode"] == "run"
+    plan = LocalExecutionTarget(params).prepare_run(build_request(script, args))
+    assert list(plan.argv) == expected
+    assert plan.metadata["backend"] == "local"
+    assert plan.metadata["mode"] == "run"
 
 
 def test_local_forced_python():
@@ -90,8 +89,8 @@ def test_local_forced_python():
 
     target = LocalExecutionTarget(_params(redirected=False), python="/opt/custom/bin/python")
     assert target.which_python() == "/opt/custom/bin/python"
-    result = target.run(build_request("s.py"))
-    assert result.argv[0] == "/opt/custom/bin/python"
+    plan = target.prepare_run(build_request("s.py"))
+    assert plan.argv[0] == "/opt/custom/bin/python"
 
 
 def test_get_cwd_cmd_env_uses_local_target(monkeypatch, tmp_path):
@@ -107,9 +106,9 @@ def test_get_cwd_cmd_env_uses_local_target(monkeypatch, tmp_path):
     calls: list[str] = []
 
     class SpyTarget(LocalExecutionTarget):
-        def run(self, request, *, wait=False):
-            calls.append("run")
-            return super().run(request, wait=wait)
+        def prepare_run(self, request):
+            calls.append("prepare_run")
+            return super().prepare_run(request)
 
     import utils.local_execution as le
 
@@ -121,7 +120,7 @@ def test_get_cwd_cmd_env_uses_local_target(monkeypatch, tmp_path):
     assert argv[0] == sys.executable
     assert path in argv
     assert "a" in argv and "b" in argv
-    assert calls == ["run"]
+    assert calls == ["prepare_run"]
 
 
 def test_local_wait_executes_subprocess(tmp_path: Path):
@@ -131,7 +130,6 @@ def test_local_wait_executes_subprocess(tmp_path: Path):
 
     result = LocalExecutionTarget(_params(redirected=False, useInherited=True)).run(
         build_request(str(script)),
-        wait=True,
     )
     assert result.exit_code == 0
     assert "hi" in result.stdout

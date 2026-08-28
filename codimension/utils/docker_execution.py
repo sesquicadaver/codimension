@@ -25,7 +25,13 @@ import shutil
 import subprocess
 from typing import Sequence
 
-from core.execution import ExecutionRequest, ExecutionResult, ExecutionTarget
+from core.execution import (
+    ExecutionPlan,
+    ExecutionRequest,
+    ExecutionResult,
+    ExecutionTarget,
+    plan_to_prepare_result,
+)
 
 
 def docker_available(docker_bin: str = "docker") -> bool:
@@ -49,8 +55,8 @@ def docker_available(docker_bin: str = "docker") -> bool:
 class DockerExecutionTarget:
     """ExecutionTarget that runs Python inside a Docker container.
 
-    By default methods only *prepare* argv (``exit_code`` is ``None``). Pass
-    ``wait=True`` to execute ``docker run`` synchronously (integration tests).
+    Use ``prepare_*`` for argv-only plans. ``run`` / ``debug`` / ``profile``
+    execute ``docker run`` by default (R187).
     """
 
     def __init__(
@@ -113,20 +119,20 @@ class DockerExecutionTarget:
         rel = abs_path[len(prefix) :].replace(os.sep, "/")
         return f"{self._container_workdir}/{rel}"
 
-    def run(self, request: ExecutionRequest, *, wait: bool = False) -> ExecutionResult:
-        """Build (and optionally execute) a dockerized run argv."""
+    def prepare_run(self, request: ExecutionRequest) -> ExecutionPlan:
+        """Return dockerized run argv without executing."""
         script = self.map_to_container(request.script)
         inner = [self._python, script, *request.args]
-        return self._finish("run", inner, request, wait=wait)
+        return self._plan("run", inner, request)
 
-    def debug(self, request: ExecutionRequest, *, wait: bool = False) -> ExecutionResult:
-        """MVP: run under in-container ``pdb`` (no IDE TCP redirect)."""
+    def prepare_debug(self, request: ExecutionRequest) -> ExecutionPlan:
+        """Return in-container pdb argv without executing."""
         script = self.map_to_container(request.script)
         inner = [self._python, "-m", "pdb", script, *request.args]
-        return self._finish("debug", inner, request, wait=wait)
+        return self._plan("debug", inner, request)
 
-    def profile(self, request: ExecutionRequest, *, wait: bool = False) -> ExecutionResult:
-        """MVP: run under in-container ``cProfile``."""
+    def prepare_profile(self, request: ExecutionRequest) -> ExecutionPlan:
+        """Return in-container cProfile argv without executing."""
         script = self.map_to_container(request.script)
         outfile = request.profile_outfile
         if outfile:
@@ -137,7 +143,19 @@ class DockerExecutionTarget:
         else:
             out_mapped = f"{self._container_workdir}/.codimension-profile.out"
         inner = [self._python, "-m", "cProfile", "-o", out_mapped, script, *request.args]
-        return self._finish("profile", inner, request, wait=wait)
+        return self._plan("profile", inner, request)
+
+    def run(self, request: ExecutionRequest, *, wait: bool = True) -> ExecutionResult:
+        """Execute dockerized run (default) or return prepare-shaped result."""
+        return self._finish(self.prepare_run(request), wait=wait)
+
+    def debug(self, request: ExecutionRequest, *, wait: bool = True) -> ExecutionResult:
+        """Execute in-container pdb (default) or return prepare-shaped result."""
+        return self._finish(self.prepare_debug(request), wait=wait)
+
+    def profile(self, request: ExecutionRequest, *, wait: bool = True) -> ExecutionResult:
+        """Execute in-container cProfile (default) or return prepare-shaped result."""
+        return self._finish(self.prepare_profile(request), wait=wait)
 
     def build_docker_argv(self, inner_argv: Sequence[str], request: ExecutionRequest) -> list[str]:
         """Compose ``docker run … image <inner_argv>`` for the bound workspace."""
@@ -147,7 +165,6 @@ class DockerExecutionTarget:
             try:
                 workdir = self.map_to_container(request.cwd)
             except ValueError:
-                # Keep default workdir when cwd is outside the mounted tree.
                 pass
         argv = [
             self._docker_bin,
@@ -166,15 +183,7 @@ class DockerExecutionTarget:
         argv.extend(list(inner_argv))
         return argv
 
-    def _finish(
-        self,
-        mode: str,
-        inner_argv: Sequence[str],
-        request: ExecutionRequest,
-        *,
-        wait: bool,
-    ) -> ExecutionResult:
-        """Attach metadata and optionally wait on ``docker run``."""
+    def _plan(self, mode: str, inner_argv: Sequence[str], request: ExecutionRequest) -> ExecutionPlan:
         argv = self.build_docker_argv(inner_argv, request)
         meta: dict[str, str] = {
             "mode": mode,
@@ -182,21 +191,25 @@ class DockerExecutionTarget:
             "image": self._image,
             "workspace": self._workspace,
         }
+        return ExecutionPlan(mode=mode, argv=tuple(argv), metadata=meta)
+
+    def _finish(self, plan: ExecutionPlan, *, wait: bool) -> ExecutionResult:
+        """Execute ``docker run`` or return prepare-only when ``wait=False``."""
         if not wait:
-            return ExecutionResult(exit_code=None, argv=tuple(argv), metadata=meta)
+            return plan_to_prepare_result(plan)
 
         completed = subprocess.run(
-            argv,
+            list(plan.argv),
             capture_output=True,
             text=True,
             check=False,
         )
         return ExecutionResult(
             exit_code=int(completed.returncode),
-            argv=tuple(argv),
+            argv=plan.argv,
             stdout=completed.stdout or "",
             stderr=completed.stderr or "",
-            metadata=meta,
+            metadata=dict(plan.metadata),
         )
 
 
