@@ -18,6 +18,10 @@ R184: SSH host authenticity — ``RejectPolicy`` by default, load known_hosts,
 optional TOFU only after explicit trust, pin ``host_key_fingerprint`` in the
 profile; fingerprint mismatch fails closed.
 
+R185: Download hardening — ``lstat`` (no symlink follow), reject symlinks,
+nonzero default file/byte caps, streamed reads, staging + atomic swap into
+the local cache.
+
 Paramiko is optional at import time; call :func:`require_paramiko` before live use.
 """
 
@@ -29,10 +33,12 @@ import logging
 import os
 import posixpath
 import re
+import stat as statmod
 import tempfile
+import time
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Any, Mapping, Optional, Protocol, Sequence, runtime_checkable
+from typing import Any, Iterator, Mapping, Optional, Protocol, Sequence, runtime_checkable
 
 from utils.atomic_io import atomic_write_text
 from utils.settings import SETTINGS_DIR
@@ -43,12 +49,12 @@ KNOWN_HOSTS_FILENAME = "ssh_known_hosts"
 KEYRING_SERVICE = "codimension-ssh"
 TOKEN_FILE_MODE = 0o600
 
-# Optional safety caps: 0 means unlimited (default). Override via kwargs or
-# env ``CDM_SSH_MAX_FILES`` / ``CDM_SSH_MAX_BYTES`` (positive integers).
-MAX_REMOTE_FILES = 0
-MAX_REMOTE_BYTES = 0
+# R185: fail-closed defaults (explicit ``0`` / env ``0`` still means unlimited).
+MAX_REMOTE_FILES = 50_000
+MAX_REMOTE_BYTES = 512 * 1024 * 1024  # 512 MiB
 ENV_MAX_FILES = "CDM_SSH_MAX_FILES"
 ENV_MAX_BYTES = "CDM_SSH_MAX_BYTES"
+DOWNLOAD_CHUNK_BYTES = 256 * 1024
 SKIP_DIR_NAMES = frozenset({".git", ".hg", ".svn", "__pycache__", ".venv", "venv", "node_modules"})
 
 # R183: path-containment — profile ids and project names are basename-only allowlists.
@@ -124,6 +130,14 @@ class RemoteProjectBinding:
         return {k: str(v) for k, v in asdict(self).items()}
 
 
+@dataclass(frozen=True)
+class RemoteStat:
+    """``lstat`` result (mode + size); never follows symlinks (R185)."""
+
+    mode: int
+    size: int
+
+
 @runtime_checkable
 class SftpSession(Protocol):
     """Minimal SFTP surface for remote project sync."""
@@ -131,11 +145,14 @@ class SftpSession(Protocol):
     def listdir(self, path: str) -> list[str]:
         """List entry names (not including ``.`` / ``..``)."""
 
+    def lstat(self, path: str) -> RemoteStat:
+        """``lstat`` attrs for ``path`` (do not follow symlinks)."""
+
     def isdir(self, path: str) -> bool:
-        """True when ``path`` is a directory."""
+        """True when ``path`` is a directory (via ``lstat``, not follow)."""
 
     def isfile(self, path: str) -> bool:
-        """True when ``path`` is a regular file."""
+        """True when ``path`` is a regular file (via ``lstat``, not follow)."""
 
     def mkdir(self, path: str, *, mode: int = 0o755) -> None:
         """Create a directory (parents not required for Fake; Paramiko may need parents)."""
@@ -145,6 +162,9 @@ class SftpSession(Protocol):
 
     def read_bytes(self, path: str) -> bytes:
         """Read an entire file."""
+
+    def iter_file_chunks(self, path: str, *, chunk_size: int = DOWNLOAD_CHUNK_BYTES) -> Iterator[bytes]:
+        """Yield file contents in chunks (no full-buffer requirement)."""
 
     def write_bytes(self, path: str, data: bytes) -> None:
         """Write/replace an entire file."""
@@ -157,9 +177,10 @@ class FakeSftpSession:
     """In-memory SFTP for contract tests (POSIX paths)."""
 
     def __init__(self, tree: Optional[Mapping[str, object]] = None) -> None:
-        # path -> bytes for files; directories implied by prefixes.
+        # path -> bytes for files; directories implied by prefixes; symlinks optional.
         self.files: dict[str, bytes] = {}
         self.dirs: set[str] = {"/"}
+        self.symlinks: dict[str, str] = {}
         if tree:
             self._ingest("", tree)
 
@@ -179,6 +200,16 @@ class FakeSftpSession:
                     self._ingest(child_path, child)
         else:
             raise TypeError("FakeSftpSession tree leaves must be str/bytes or nested mappings")
+
+    def add_symlink(self, path: str, target: str) -> None:
+        """Register a symlink entry (for R185 contract tests)."""
+        path = _norm_remote(path)
+        parent = _norm_remote(posixpath.dirname(path) or "/")
+        if parent not in self.dirs:
+            self.makedirs(parent)
+        self.symlinks[path] = str(target)
+        self.files.pop(path, None)
+        self.dirs.discard(path)
 
     def listdir(self, path: str) -> list[str]:
         path = _norm_remote(path)
@@ -202,13 +233,38 @@ class FakeSftpSession:
             rest = rel[len(prefix) :] if prefix else rel
             if rest and "/" not in rest:
                 names.add(rest)
+        for link in self.symlinks:
+            rel = link.lstrip("/")
+            if prefix and not rel.startswith(prefix):
+                continue
+            rest = rel[len(prefix) :] if prefix else rel
+            if rest and "/" not in rest:
+                names.add(rest)
         return sorted(names)
 
+    def lstat(self, path: str) -> RemoteStat:
+        path = _norm_remote(path)
+        if path in self.symlinks:
+            target = self.symlinks[path]
+            return RemoteStat(mode=statmod.S_IFLNK | 0o777, size=len(target.encode("utf-8")))
+        if path in self.files:
+            data = self.files[path]
+            return RemoteStat(mode=statmod.S_IFREG | 0o644, size=len(data))
+        if path in self.dirs:
+            return RemoteStat(mode=statmod.S_IFDIR | 0o755, size=0)
+        raise FileNotFoundError(path)
+
     def isdir(self, path: str) -> bool:
-        return _norm_remote(path) in self.dirs
+        try:
+            return statmod.S_ISDIR(self.lstat(path).mode)
+        except FileNotFoundError:
+            return False
 
     def isfile(self, path: str) -> bool:
-        return _norm_remote(path) in self.files
+        try:
+            return statmod.S_ISREG(self.lstat(path).mode)
+        except FileNotFoundError:
+            return False
 
     def mkdir(self, path: str, *, mode: int = 0o755) -> None:
         del mode
@@ -217,6 +273,8 @@ class FakeSftpSession:
         if parent != "/" and parent not in self.dirs:
             raise FileNotFoundError(parent)
         self.dirs.add(path)
+        self.symlinks.pop(path, None)
+        self.files.pop(path, None)
 
     def makedirs(self, path: str, *, mode: int = 0o755) -> None:
         path = _norm_remote(path)
@@ -229,15 +287,24 @@ class FakeSftpSession:
 
     def read_bytes(self, path: str) -> bytes:
         path = _norm_remote(path)
+        if path in self.symlinks:
+            raise RuntimeError(f"refusing to read symlink: {path}")
         if path not in self.files:
             raise FileNotFoundError(path)
         return self.files[path]
+
+    def iter_file_chunks(self, path: str, *, chunk_size: int = DOWNLOAD_CHUNK_BYTES) -> Iterator[bytes]:
+        data = self.read_bytes(path)
+        size = max(1, int(chunk_size))
+        for offset in range(0, len(data), size):
+            yield data[offset : offset + size]
 
     def write_bytes(self, path: str, data: bytes) -> None:
         path = _norm_remote(path)
         parent = _norm_remote(posixpath.dirname(path) or "/")
         if parent not in self.dirs:
             self.makedirs(parent)
+        self.symlinks.pop(path, None)
         self.files[path] = data
 
     def close(self) -> None:
@@ -255,19 +322,21 @@ class ParamikoSftpSession:
     def listdir(self, path: str) -> list[str]:
         return sorted(self._sftp.listdir(_norm_remote(path)))
 
-    def isdir(self, path: str) -> bool:
-        import stat as statmod
+    def lstat(self, path: str) -> RemoteStat:
+        attrs = self._sftp.lstat(_norm_remote(path))
+        mode = int(getattr(attrs, "st_mode", 0) or 0)
+        size = int(getattr(attrs, "st_size", 0) or 0)
+        return RemoteStat(mode=mode, size=max(0, size))
 
+    def isdir(self, path: str) -> bool:
         try:
-            return statmod.S_ISDIR(self._sftp.stat(_norm_remote(path)).st_mode)
+            return statmod.S_ISDIR(self.lstat(path).mode)
         except OSError:
             return False
 
     def isfile(self, path: str) -> bool:
-        import stat as statmod
-
         try:
-            return statmod.S_ISREG(self._sftp.stat(_norm_remote(path)).st_mode)
+            return statmod.S_ISREG(self.lstat(path).mode)
         except OSError:
             return False
 
@@ -288,8 +357,16 @@ class ParamikoSftpSession:
                         raise
 
     def read_bytes(self, path: str) -> bytes:
+        return b"".join(self.iter_file_chunks(path))
+
+    def iter_file_chunks(self, path: str, *, chunk_size: int = DOWNLOAD_CHUNK_BYTES) -> Iterator[bytes]:
+        size = max(1, int(chunk_size))
         with self._sftp.open(_norm_remote(path), "rb") as handle:
-            return bytes(handle.read())
+            while True:
+                chunk = handle.read(size)
+                if not chunk:
+                    break
+                yield bytes(chunk)
 
     def write_bytes(self, path: str, data: bytes) -> None:
         path = _norm_remote(path)
@@ -662,7 +739,7 @@ def resolve_download_limits(
     """Return ``(max_files, max_bytes)``; ``0`` means unlimited.
 
     Explicit kwargs win; otherwise read ``CDM_SSH_MAX_FILES`` /
-    ``CDM_SSH_MAX_BYTES``; otherwise module defaults (unlimited).
+    ``CDM_SSH_MAX_BYTES``; otherwise module defaults (R185 nonzero caps).
     """
     files = MAX_REMOTE_FILES if max_files is None else int(max_files)
     size = MAX_REMOTE_BYTES if max_bytes is None else int(max_bytes)
@@ -677,6 +754,60 @@ def resolve_download_limits(
     return max(0, files), max(0, size)
 
 
+def make_download_staging_dir(local_root: str, *, must_be_under: str) -> str:
+    """Return a unique sibling staging path under the cache container (R185)."""
+    local_root = assert_local_path_under(must_be_under, local_root)
+    parent = os.path.dirname(local_root) or "."
+    base = os.path.basename(local_root) or "cache"
+    safe = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in base)[:64] or "cache"
+    staging = os.path.join(parent, f".cdm-ssh-stage-{safe}-{os.getpid()}-{time.time_ns()}")
+    return assert_local_path_under(must_be_under, staging)
+
+
+def discard_staged_download(staging: Optional[str], *, must_be_under: str) -> None:
+    """Best-effort removal of a download staging directory (R185)."""
+    if not staging:
+        return
+    try:
+        if os.path.lexists(staging):
+            _rm_tree(staging, must_be_under=must_be_under)
+    except (OSError, ValueError):
+        logging.debug("discard staged SSH download failed: %s", staging, exc_info=True)
+
+
+def commit_staged_download(local_root: str, staging: str, *, must_be_under: str) -> None:
+    """Atomically replace ``local_root`` with ``staging`` (same-parent rename, R185)."""
+    local_root = assert_local_path_under(must_be_under, local_root)
+    staging = assert_local_path_under(must_be_under, staging)
+    if local_root == staging:
+        raise RuntimeError("staging path must differ from final download destination")
+    if not os.path.isdir(staging):
+        raise RuntimeError(f"staged download missing: {staging}")
+
+    parent = os.path.dirname(local_root) or "."
+    os.makedirs(parent, exist_ok=True)
+
+    backup = None
+    if os.path.lexists(local_root):
+        backup = f"{local_root}.cdm-bak-{os.getpid()}-{time.time_ns()}"
+        backup = assert_local_path_under(must_be_under, backup)
+        try:
+            os.rename(local_root, backup)
+        except OSError as exc:
+            raise RuntimeError(f"cannot move existing cache aside: {local_root}: {exc}") from exc
+    try:
+        os.rename(staging, local_root)
+    except OSError as exc:
+        if backup and not os.path.lexists(local_root):
+            try:
+                os.rename(backup, local_root)
+                backup = None
+            except OSError:
+                logging.exception("failed to restore SSH cache backup after commit error")
+        raise RuntimeError(f"cannot commit staged download to {local_root}: {exc}") from exc
+    discard_staged_download(backup, must_be_under=must_be_under)
+
+
 def download_remote_tree(
     session: SftpSession,
     remote_root: str,
@@ -687,9 +818,10 @@ def download_remote_tree(
 ) -> int:
     """Recursively download ``remote_root`` into ``local_root``. Return file count.
 
-    By default there is **no** file-count or byte-size cap (large projects are
-    supported). Pass positive ``max_files`` / ``max_bytes``, or set
-    ``CDM_SSH_MAX_FILES`` / ``CDM_SSH_MAX_BYTES``, to enforce an optional safety stop.
+    R185: uses ``lstat`` (rejects symlinks), streams file bodies, and enforces
+    nonzero default caps (``MAX_REMOTE_FILES`` / ``MAX_REMOTE_BYTES``). Pass
+    ``0`` for a limit, or set ``CDM_SSH_MAX_FILES`` / ``CDM_SSH_MAX_BYTES``, to
+    override (``0`` = unlimited).
     """
     limit_files, limit_bytes = resolve_download_limits(max_files=max_files, max_bytes=max_bytes)
     remote_root = _norm_remote(remote_root)
@@ -705,21 +837,30 @@ def download_remote_tree(
             remote_item = _norm_remote(posixpath.join(current, name))
             rel = remote_item[len(remote_root) :].lstrip("/") if remote_item != remote_root else ""
             local_item = os.path.join(local_root, *rel.split("/")) if rel else local_root
-            if session.isdir(remote_item):
+            try:
+                meta = session.lstat(remote_item)
+            except (OSError, FileNotFoundError):
+                continue
+            if statmod.S_ISLNK(meta.mode):
+                raise RuntimeError(f"refusing remote symlink: {remote_item}")
+            if statmod.S_ISDIR(meta.mode):
                 os.makedirs(local_item, exist_ok=True)
                 stack.append(remote_item)
                 continue
-            if not session.isfile(remote_item):
+            if not statmod.S_ISREG(meta.mode):
                 continue
-            data = session.read_bytes(remote_item)
-            total += len(data)
-            if limit_bytes > 0 and total > limit_bytes:
+            if limit_bytes > 0 and meta.size > 0 and total + meta.size > limit_bytes:
                 raise RuntimeError(f"remote project exceeds download size limit ({limit_bytes} bytes)")
             count += 1
             if limit_files > 0 and count > limit_files:
                 raise RuntimeError(f"remote project exceeds file count limit ({limit_files})")
             os.makedirs(os.path.dirname(local_item) or ".", exist_ok=True)
-            Path(local_item).write_bytes(data)
+            with open(local_item, "wb") as handle:
+                for chunk in session.iter_file_chunks(remote_item, chunk_size=DOWNLOAD_CHUNK_BYTES):
+                    total += len(chunk)
+                    if limit_bytes > 0 and total > limit_bytes:
+                        raise RuntimeError(f"remote project exceeds download size limit ({limit_bytes} bytes)")
+                    handle.write(chunk)
     return count
 
 
@@ -768,17 +909,29 @@ def open_remote_project(
     *,
     settings_dir: Optional[str] = None,
 ) -> RemoteProjectBinding:
-    """Download a remote project into the local cache and return the binding."""
+    """Download a remote project into the local cache and return the binding.
+
+    R185: download into a sibling staging directory, then atomically rename
+    into ``local_root`` so a failed sync does not leave a partial cache.
+    """
     cfg = profile.normalized()
     remote_cdm3 = find_remote_cdm3(session, remote_path)
     remote_root = _norm_remote(posixpath.dirname(remote_cdm3) or "/")
     cache_root = remote_projects_root(settings_dir)
     local_root = remote_cache_dir(cfg, remote_root, settings_dir)
-    if os.path.isdir(local_root):
-        # Fresh sync: clear previous tree except we recreate.
-        _rm_tree(local_root, must_be_under=cache_root)
-    os.makedirs(local_root, exist_ok=True)
-    download_remote_tree(session, remote_root, local_root)
+    os.makedirs(os.path.dirname(local_root) or ".", exist_ok=True)
+    staging = make_download_staging_dir(local_root, must_be_under=cache_root)
+    try:
+        os.makedirs(staging, exist_ok=True)
+        download_remote_tree(session, remote_root, staging)
+        staged_cdm3 = assert_local_path_under(staging, os.path.join(staging, os.path.basename(remote_cdm3)))
+        if not os.path.isfile(staged_cdm3):
+            raise FileNotFoundError(f"downloaded tree is missing project file: {staged_cdm3}")
+        commit_staged_download(local_root, staging, must_be_under=cache_root)
+        staging = ""
+    except Exception:
+        discard_staged_download(staging, must_be_under=cache_root)
+        raise
     local_cdm3 = assert_local_path_under(local_root, os.path.join(local_root, os.path.basename(remote_cdm3)))
     if not os.path.isfile(local_cdm3):
         raise FileNotFoundError(f"downloaded tree is missing project file: {local_cdm3}")
@@ -982,25 +1135,32 @@ def _rm_tree(path: str, *, must_be_under: str) -> None:
 
 
 __all__ = [
+    "DOWNLOAD_CHUNK_BYTES",
     "FakeSftpSession",
     "HostKeyFingerprintMismatch",
+    "MAX_REMOTE_BYTES",
+    "MAX_REMOTE_FILES",
     "ParamikoSftpSession",
     "RemoteProjectBinding",
+    "RemoteStat",
     "SftpSession",
     "SshHostProfile",
     "UnknownHostKeyError",
     "assert_local_path_under",
     "assert_remote_path_under",
+    "commit_staged_download",
     "connect_paramiko_sftp",
     "create_remote_project",
     "cdm3_json_from_props",
     "default_cdm3_json",
+    "discard_staged_download",
     "download_remote_tree",
     "find_remote_cdm3",
     "known_hosts_paths",
     "load_host_profiles",
     "load_ssh_client_host_keys",
     "load_ssh_password",
+    "make_download_staging_dir",
     "normalize_host_key_fingerprint",
     "open_paramiko_ssh_client",
     "open_remote_project",

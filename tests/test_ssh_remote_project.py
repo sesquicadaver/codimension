@@ -162,10 +162,12 @@ def test_download_optional_limits(tmp_path):
     from utils.ssh_remote import FakeSftpSession, download_remote_tree
 
     session = FakeSftpSession({"a.txt": "x" * 100, "b.txt": "y" * 100})
-    # Default: unlimited — both files land in the cache.
+    # Default nonzero caps still allow a tiny tree.
     assert download_remote_tree(session, "/", str(tmp_path / "full")) == 2
     with pytest.raises(RuntimeError, match="size limit"):
         download_remote_tree(session, "/", str(tmp_path / "capped"), max_files=10, max_bytes=50)
+    # Explicit 0 = unlimited (override R185 defaults).
+    assert download_remote_tree(session, "/", str(tmp_path / "uncapped"), max_files=0, max_bytes=0) == 2
 
 
 def test_download_env_limits(tmp_path, monkeypatch):
@@ -175,6 +177,54 @@ def test_download_env_limits(tmp_path, monkeypatch):
     session = FakeSftpSession({"a.txt": "aa", "b.txt": "bb"})
     with pytest.raises(RuntimeError, match="file count limit"):
         download_remote_tree(session, "/", str(tmp_path / "env"))
+
+
+def test_r185_default_limits_nonzero():
+    from utils.ssh_remote import MAX_REMOTE_BYTES, MAX_REMOTE_FILES, resolve_download_limits
+
+    assert MAX_REMOTE_FILES > 0
+    assert MAX_REMOTE_BYTES > 0
+    files, size = resolve_download_limits()
+    assert files == MAX_REMOTE_FILES
+    assert size == MAX_REMOTE_BYTES
+
+
+def test_r185_reject_symlink(tmp_path):
+    from utils.ssh_remote import FakeSftpSession, download_remote_tree
+
+    session = FakeSftpSession({"ok.txt": "hi\n"})
+    session.add_symlink("/escape", "/etc/passwd")
+    with pytest.raises(RuntimeError, match="symlink"):
+        download_remote_tree(session, "/", str(tmp_path / "out"))
+
+
+def test_r185_staging_preserves_cache_on_failure(tmp_path):
+    from utils.ssh_remote import (
+        FakeSftpSession,
+        SshHostProfile,
+        default_cdm3_json,
+        open_remote_project,
+    )
+
+    settings = str(tmp_path / "settings")
+    os.makedirs(settings)
+    body = default_cdm3_json("demo")
+    session = FakeSftpSession({"home": {"alice": {"demo": {"demo.cdm3": body, "main.py": "print(1)\n"}}}})
+    profile = SshHostProfile(id="alice-dev", host="dev", user="alice", auth="key").normalized()
+    binding = open_remote_project(session, profile, "/home/alice/demo", settings_dir=settings)
+    marker = Path(binding.local_root) / "main.py"
+    assert marker.read_text(encoding="utf-8") == "print(1)\n"
+
+    # Poison the remote tree with a symlink; re-open must fail and keep the old cache.
+    session.add_symlink("/home/alice/demo/evil", "/tmp/outside")
+    with pytest.raises(RuntimeError, match="symlink"):
+        open_remote_project(session, profile, "/home/alice/demo", settings_dir=settings)
+    assert marker.is_file()
+    assert marker.read_text(encoding="utf-8") == "print(1)\n"
+    # No leftover staging dirs under the profile cache parent.
+    parent = Path(binding.local_root).parent
+    leftovers = [p for p in parent.iterdir() if p.name.startswith(".cdm-ssh-stage-")]
+    assert leftovers == []
 
 
 def test_find_remote_cdm3():

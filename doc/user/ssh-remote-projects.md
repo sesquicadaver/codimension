@@ -52,10 +52,11 @@ Host profiles (no secrets): `~/.codimension3/ssh_hosts.json`.
 
 ## Download size
 
-By default the **entire** remote project tree is downloaded (no file/byte cap).
-Optional safety stops: env `CDM_SSH_MAX_FILES` / `CDM_SSH_MAX_BYTES`, or API
-kwargs (see technology doc). Skipped dirs include `.git`, `__pycache__`,
-`.venv`, `venv`, `node_modules`.
+Default safety caps: **50 000 files** / **512 MiB** (R185). Override with env
+`CDM_SSH_MAX_FILES` / `CDM_SSH_MAX_BYTES`, or API kwargs (`0` = unlimited).
+Remote **symlinks are refused**; download uses staging + atomic swap so a
+failed sync keeps the previous local cache. Skipped dirs include `.git`,
+`__pycache__`, `.venv`, `venv`, `node_modules`.
 
 ## Tips
 

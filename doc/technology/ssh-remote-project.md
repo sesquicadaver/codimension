@@ -47,14 +47,19 @@ Host profiles (no secrets) are stored in `~/.codimension3/ssh_hosts.json`.
 - First connection to an unknown host shows the fingerprint; TOFU only after
   explicit Yes, then the pin is saved with the profile.
 
-## Download scope
+## Download hardening (R185)
 
-By default the whole remote project tree is downloaded (**no** file-count or
-byte-size cap). Optional safety stops:
+- Entries are classified with **`lstat`** (no symlink follow); remote
+  symlinks are **rejected** (fail closed).
+- File bodies are **streamed** in chunks (default 256 KiB), not fully buffered.
+- Open downloads into a sibling **staging** directory, then **atomically
+  renames** into the cache path so a failed sync keeps the previous tree.
+- Default safety caps (override with kwargs / env; `0` = unlimited):
 
-| Control | Meaning |
-| ------- | ------- |
-| `max_files` / `max_bytes` kwargs | Positive integer = hard stop; `0` / omitted = unlimited |
+| Control | Default / meaning |
+| ------- | ----------------- |
+| `MAX_REMOTE_FILES` / `max_files` | 50 000 files |
+| `MAX_REMOTE_BYTES` / `max_bytes` | 512 MiB |
 | `CDM_SSH_MAX_FILES` | Env override for file count (when kwargs omitted) |
 | `CDM_SSH_MAX_BYTES` | Env override for total bytes (when kwargs omitted) |
 
