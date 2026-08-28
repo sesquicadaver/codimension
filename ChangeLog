@@ -1,5 +1,7 @@
 2026 Aug 28
 
+* R189: VENV create/recreate at final path with backup/rollback (no staging rename
+  that bakes wrong shebang/VIRTUAL_ENV)
 * R188: Per-scope CFG ENTRY/EXIT; break/continue loop stack; finally routing; docs not security-proof
 * R187: ExecutionPlan vs Runner; K8s wait Succeeded/Failed, UUID names, finally cleanup
 * R186: SSH Run/Save async jobs — cancel/timeout/output caps; SYNC_* distinct from local save

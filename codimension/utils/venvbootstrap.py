@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Project venv create/attach/update helpers (T140)."""
+"""Project venv create/attach/update helpers (T140 / R189).
+
+R189 / A208: create and recreate build the venv **at the final path** (with
+backup/rollback). Renaming a populated staging tree into place breaks
+shebang lines and ``VIRTUAL_ENV`` in activate scripts.
+"""
 
 from __future__ import annotations
 
@@ -777,40 +782,74 @@ def validateVenvDestination(
 
 
 def makeStagingVenvDir(venv_dir: str) -> str:
-    """Return a unique sibling staging path next to ``venv_dir`` (audit D02/B07).
+    """Return a unique sibling backup/staging path next to ``venv_dir`` (R189).
 
-    Staging names use a ``.cdm-venv-stage-`` prefix so root auto-detect
+    Names use a ``.cdm-venv-bak-`` prefix (legacy ``.cdm-venv-stage-`` alias
+    kept in :func:`makeBackupVenvDir` callers). Root auto-detect
     (``.venv`` / ``venv`` / ``env``) never picks them up.
     """
+    return makeBackupVenvDir(venv_dir)
+
+
+def makeBackupVenvDir(venv_dir: str) -> str:
+    """Return a unique sibling backup path next to ``venv_dir`` (R189 / A208)."""
     import time
 
     abs_dir = os.path.abspath(venv_dir)
     parent = os.path.dirname(abs_dir) or "."
     base = os.path.basename(abs_dir) or "venv"
     safe = "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in base)[:64] or "venv"
-    return os.path.join(parent, f".cdm-venv-stage-{safe}-{os.getpid()}-{time.time_ns()}")
+    return os.path.join(parent, f".cdm-venv-bak-{safe}-{os.getpid()}-{time.time_ns()}")
 
 
 def discardStagedVenv(staged_dir: str | None) -> None:
-    """Best-effort removal of a staging (or backup) directory."""
+    """Best-effort removal of a staging or backup directory."""
     if not staged_dir:
         return
     try:
         if os.path.lexists(staged_dir):
             shutil.rmtree(staged_dir, ignore_errors=True)
     except OSError:
-        _LOG.debug("discard staged venv failed: %s", staged_dir, exc_info=True)
+        _LOG.debug("discard staged/backup venv failed: %s", staged_dir, exc_info=True)
+
+
+def moveAsideVenv(venv_dir: str) -> str | None:
+    """Rename an existing ``venv_dir`` to a sibling backup; return backup path.
+
+    Returns ``None`` when ``venv_dir`` does not exist.
+    """
+    venv_dir = os.path.abspath(venv_dir)
+    if not os.path.lexists(venv_dir):
+        return None
+    backup = makeBackupVenvDir(venv_dir)
+    try:
+        os.rename(venv_dir, backup)
+    except OSError as exc:
+        raise RuntimeError(f"cannot move existing venv aside: {venv_dir}: {exc}") from exc
+    return backup
+
+
+def restoreVenvBackup(venv_dir: str, backup: str | None) -> None:
+    """Restore ``backup`` to ``venv_dir`` after a failed create-in-final (R189)."""
+    if not backup:
+        return
+    venv_dir = os.path.abspath(venv_dir)
+    backup = os.path.abspath(backup)
+    if os.path.lexists(venv_dir):
+        discardStagedVenv(venv_dir)
+    try:
+        os.rename(backup, venv_dir)
+    except OSError:
+        _LOG.exception("failed to restore venv backup %s → %s", backup, venv_dir)
+        raise
 
 
 def commitStagedVenv(venv_dir: str, staged_dir: str) -> None:
-    """Atomically replace ``venv_dir`` with ``staged_dir`` (same-parent rename).
+    """Legacy rename commit (prefer create-in-final; kept for callers/tests).
 
-    Existing ``venv_dir`` is moved aside first and removed only after the new
-    directory is in place. On swap failure the previous tree is restored when
-    possible (audit D02/B07).
+    R189: new create/recreate paths do **not** use this — renaming a populated
+    venv breaks shebang/`VIRTUAL_ENV` paths baked at create time.
     """
-    import time
-
     venv_dir = os.path.abspath(venv_dir)
     staged_dir = os.path.abspath(staged_dir)
     if venv_dir == staged_dir:
@@ -818,22 +857,15 @@ def commitStagedVenv(venv_dir: str, staged_dir: str) -> None:
     if not os.path.isdir(staged_dir):
         raise RuntimeError(f"staged venv missing: {staged_dir}")
 
-    backup = None
-    if os.path.lexists(venv_dir):
-        backup = f"{venv_dir}.cdm-bak-{os.getpid()}-{time.time_ns()}"
-        try:
-            os.rename(venv_dir, backup)
-        except OSError as exc:
-            raise RuntimeError(f"cannot move existing venv aside: {venv_dir}: {exc}") from exc
+    backup = moveAsideVenv(venv_dir) if os.path.lexists(venv_dir) else None
     try:
         os.rename(staged_dir, venv_dir)
     except OSError as exc:
-        if backup and not os.path.lexists(venv_dir):
-            try:
-                os.rename(backup, venv_dir)
-                backup = None
-            except OSError:
-                _LOG.exception("failed to restore venv backup after commit error")
+        try:
+            restoreVenvBackup(venv_dir, backup)
+            backup = None
+        except OSError:
+            pass
         raise RuntimeError(f"cannot commit staged venv to {venv_dir}: {exc}") from exc
     discardStagedVenv(backup)
 
@@ -842,6 +874,7 @@ def createVenvInPlace(base_python: str, venv_dir: str) -> str:
     """Create a venv at ``venv_dir`` without staging (caller owns transaction).
 
     ``venv_dir`` must not already be a usable venv. Returns the new python path.
+    Paths in shebangs/activate reference ``venv_dir`` directly (R189).
     """
     base_python = base_python or sys.executable
     venv_dir = os.path.abspath(venv_dir)
@@ -860,20 +893,18 @@ def createVenvInPlace(base_python: str, venv_dir: str) -> str:
 
 
 def createVenv(base_python: str, venv_dir: str, project_dir: str | None = None) -> str:
-    """Create a venv transactionally; return path to the new python executable.
+    """Create a venv at the final destination; return the new python path.
 
-    Builds under a sibling staging directory and renames into place so a failed
-    ``python -m venv`` never leaves a half-written destination (audit D02/B07).
-    Raises ``RuntimeError`` on failure or unsafe destination.
+    R189 / A208: create **in place** at ``venv_dir`` so shebang/`VIRTUAL_ENV`
+    paths match the final location. On failure the half-written tree is
+    discarded. Raises ``RuntimeError`` on failure or unsafe destination.
     """
     base_python = base_python or sys.executable
     venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=False)
-    staged = makeStagingVenvDir(venv_dir)
     try:
-        createVenvInPlace(base_python, staged)
-        commitStagedVenv(venv_dir, staged)
+        createVenvInPlace(base_python, venv_dir)
     except Exception:
-        discardStagedVenv(staged)
+        discardStagedVenv(venv_dir)
         raise
     python = resolveVenvToPython(venv_dir)
     if not python:
@@ -933,35 +964,37 @@ def recreateVenv(
     expected_version: tuple[int, int] | None = None,
     runner_probe=None,
 ) -> str:
-    """Recreate a venv with staging so the old tree survives until commit.
+    """Recreate a venv in-place with backup/rollback (R189 / A208).
 
-    Flow (audit D02/B07 + C02): create+probe(+pip) into a sibling staging
-    directory, then rename over the final path. The previous venv is removed
-    only after the new tree is committed. ``runner_create(base, staged_path)``
-    must create *in place* at the given staging path (no nested commit to the
-    final dir).
+    Flow: move the live tree aside → ``python -m venv`` **at the final path**
+    → probe (+ optional pip) against that path → discard backup. On failure,
+    remove the failed tree and restore the backup so shebang/`VIRTUAL_ENV`
+    never point at a renamed staging directory.
 
-    ``expected_version`` (major, minor), when set, must match the staged
-    interpreter probe (audit C03).
+    ``runner_create(base, final_path)`` must create *in place* at the final
+    destination (not a sibling staging dir).
 
-    ``runner_rmtree`` is retained for tests/legacy callers; the happy path no
-    longer deletes the live venv before create.
+    ``expected_version`` (major, minor), when set, must match the interpreter
+    probe (audit C03).
 
-    Refuses unsafe destinations via :func:`validateVenvDestination` (audit P0).
+    ``runner_rmtree`` is retained for tests/legacy callers; the happy path
+    uses :func:`discardStagedVenv` / :func:`restoreVenvBackup`.
+
+    Refuses unsafe destinations via :func:`validateVenvDestination`.
     Returns new python path.
     """
     venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=True)
     create = runner_create or (lambda base, path: createVenvInPlace(base, path))
     pip = runner_pip or runPipInstall
     probe = runner_probe or probePythonInterpreter
-    # Legacy hook: some tests inject rmtree; transactional path does not need it.
     _ = runner_rmtree or shutil.rmtree
-    staged = makeStagingVenvDir(venv_dir)
+
+    backup = moveAsideVenv(venv_dir)
     try:
-        python = create(base_python, staged)
+        python = create(base_python, venv_dir)
         info = probe(python)
         if not info.get("is_venv"):
-            raise RuntimeError(f"staged interpreter is not a venv: {python}")
+            raise RuntimeError(f"recreated interpreter is not a venv: {python}")
         if expected_version is not None and tuple(info["version_info"][:2]) != tuple(expected_version):
             raise RuntimeError(
                 f"recreate base produced Python {info['version_info'][0]}.{info['version_info'][1]}, "
@@ -975,15 +1008,19 @@ def recreateVenv(
             install_project=install_project,
             project_dir=project_dir,
         )
-        # Only run pip if there is something to install beyond bare `pip install`
         if len(cmd) > 4:
             try:
                 pip(cmd, cwd=project_dir, project_dir=project_dir)
             except TypeError:
                 pip(cmd, cwd=project_dir)
-        commitStagedVenv(venv_dir, staged)
+        discardStagedVenv(backup)
+        backup = None
     except Exception:
-        discardStagedVenv(staged)
+        discardStagedVenv(venv_dir)
+        try:
+            restoreVenvBackup(venv_dir, backup)
+        except OSError:
+            _LOG.exception("venv recreate rollback failed for %s", venv_dir)
         raise
     final_python = resolveVenvToPython(venv_dir)
     if not final_python:

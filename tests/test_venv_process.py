@@ -130,11 +130,12 @@ def test_create_venv_with_progress_uses_base_in_argv(qapp_ready, tmp_path, monke
     out = vp.create_venv_with_progress(None, base, str(dest), project_dir=str(dest.parent))
     assert captured and captured[0][0] == base
     assert captured[0][1:3] == ["-m", "venv"]
-    # D02: create runs against staging; commit renames into the final destination.
-    assert Path(captured[0][-1]).name.startswith(".cdm-venv-stage-")
+    # R189: create runs at the final destination (not staging rename).
+    assert Path(captured[0][-1]).resolve() == dest.resolve()
     assert dest.is_dir()
     assert Path(out).resolve().is_relative_to(dest.resolve()) or str(dest) in str(Path(out).resolve())
     assert Path(out).name.startswith("python")
+    assert not any(dest.parent.glob(".cdm-venv-bak-*"))
     assert not any(dest.parent.glob(".cdm-venv-stage-*"))
 
 
