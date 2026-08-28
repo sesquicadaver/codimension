@@ -33,3 +33,5 @@ pytest>=9.0.3
 pytest-cov>=4.0.0
 bandit>=1.7.0
 pip-audit>=2.0.0
+
+mcp>=2.0,<3

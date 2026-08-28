@@ -141,7 +141,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 8 | R199 | SSH remote Profile MVP | Remote profile + local artifact; cancel/timeout; docs | M | DONE |
 | 9 | R180 | Auto-apply update + rollback / portable profiles | Apply from verified cache; rollback; fail-closed; tests | L | DONE |
 | 10 | R181 | Channel promotion automation (`dev`→`beta`→`stable` / tags) | Documented pipeline + script/CI; no theatre | M | DONE |
-| 11 | R182 | MCP / remote agent backend | MCP surface over headless core; auth fail-closed; smoke | L | DONE |
+| 11 | R182 | MCP / remote agent backend | MCP surface over headless core; auth fail-closed; smoke | L | DONE ([#126](https://github.com/sesquicadaver/codimension/pull/126)) |
 
 ---
 
