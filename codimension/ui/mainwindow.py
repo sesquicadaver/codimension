@@ -1485,15 +1485,13 @@ class CodimensionMainWindow(
                         QMessageBox.information(
                             self,
                             "Check for updates",
-                            (applied.message or "Update applied.")
-                            + "\nRestart Codimension to load the new version.",
+                            (applied.message or "Update applied.") + "\nRestart Codimension to load the new version.",
                         )
                     else:
                         QMessageBox.warning(
                             self,
                             "Check for updates",
-                            (applied.message or "Apply failed.")
-                            + (f"\n{applied.error}" if applied.error else ""),
+                            (applied.message or "Apply failed.") + (f"\n{applied.error}" if applied.error else ""),
                         )
                     return
                 if answer == QMessageBox.No and url:
