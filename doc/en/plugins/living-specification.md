@@ -81,7 +81,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **CFG frame map R141** | core.cfg_frames + debugger.stackviewer | `map_frame_to_cfg_node` / stack; tooltip CFG id; manual: stop in debugger → stack tip shows node | tests/test_cfg_frames.py |
 | **CFG graph diff R142** | core.cfg_diff | `diff_cfg_graphs` / `diff_cfg_sources`; stable content keys; add/remove/change | tests/test_cfg_diff.py |
 | **Taint MVP R143** | core.taint | Function-local sources→sinks; documented subset | tests/test_taint.py; [taint-mvp.md](../../technology/taint-mvp.md) |
-| **Plugin capabilities R150** | plugins.capabilities + pluginmanager | `PluginCapabilitySpec` / negotiate; host rejects incompatible | tests/test_plugin_capabilities.py |
+| **Plugin capabilities R150** | plugins.capabilities + pluginmanager | `PluginCapabilitySpec` / negotiate; host rejects incompatible; R191 policy before import | tests/test_plugin_capabilities.py, test_plugin_policy.py |
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice for a symbol; JSON-friendly; no network | tests/test_ai_context.py |
 | **AI UI R152** | core.ai_ui + core.ai_tasks + core.ai_project_context + core.ai_docstring + core.ai_docstring_context + ui.ai* + editor/Options | Analyze project/module/symbol; module analysis project-scoped; Google docstring from selection + lean context + Apply; AI Result (Save); on-demand AI Chat; live provider | tests/test_ai_ui.py, test_ai_tasks.py, test_ai_config.py, test_ai_http.py |
 | **Feature flags R174** | core.feature_flags | Persistent JSON flags; env overrides; gates AI UI | tests/test_feature_flags.py |
@@ -151,7 +151,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R191** (A210); deferred R180–R182 / P2 R192+ on explicit ask.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — P1 A201–A210 closed; deferred R180–R182 / P2 R192+ on explicit ask.
 
 ### Module boundary matrix (R103)
 

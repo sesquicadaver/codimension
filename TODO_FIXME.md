@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. Нижче — **P1** у порядку виправлення. Черга ROADMAP: **R191→**.
+Підтверджених **P0** у переглянутому коді немає. Нижче — **P1** у порядку виправлення. Черга ROADMAP: **P2 R192→** (P1 хвиля A201–A210 закрита).
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
@@ -20,7 +20,7 @@
 | A207 | CFG: global EXIT; break/continue без loop stack; непридатний для data-flow/security | P1 | ✅ R188 |
 | A208 | VENV: rename staging→final ламає shebang/activate (попереднє D02/B07 недостатнє) | P1 | ✅ R189 |
 | A209 | Зовнішнє оновлення `.cdm3`: split-brain; UUID mutable після load | P1 | ✅ R190 |
-| A210 | Plugin policy після `import` plugin code (не fail-closed) | P1 | 🔓 OPEN |
+| A210 | Plugin policy після `import` plugin code (не fail-closed) | P1 | ✅ R191 |
 
 ### P2 / hardening (не блокують першу хвилю)
 

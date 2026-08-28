@@ -104,6 +104,9 @@ class CDMPluginManager(PluginManager, QObject):
         self.inactivePlugins = {}  # Categorized inactive plugins
         self.activePlugins = {}  # Categorized active plugins
         self.unknownPlugins = []  # Unknown plugins
+        # R191/A210: candidates skipped before import (path → yapsy candidate tuple)
+        self._pendingImportByPath: dict[str, tuple] = {}
+        self._policySkippedCandidates: list[tuple] = []
 
     def load(self):
         """Loads the found plugins"""
@@ -127,7 +130,9 @@ class CDMPluginManager(PluginManager, QObject):
         ensure_imp_compat()
 
         # Now, let's check the plugins. They must be of known category.
+        # R191: disabled paths are filtered inside collectPlugins before import.
         collectedPlugins = self.__collect()
+        self.__registerPolicySkippedPlugins()
         self.__applyDisabledPlugins(collectedPlugins)
 
         self.__checkIDECompatibility(collectedPlugins)
@@ -137,6 +142,103 @@ class CDMPluginManager(PluginManager, QObject):
         self.__activatePlugins(collectedPlugins)
 
         self.saveDisabledPlugins()
+
+    def collectPlugins(self):
+        """Locate plugins, skip disabled paths, then import the rest (R191/A210).
+
+        Yapsy's default ``collectPlugins`` imports every candidate. Policy-disabled
+        plugins must never execute plugin code until the user enables them.
+        """
+        self.locatePlugins()
+        self._policySkippedCandidates = []
+        self._pendingImportByPath = {}
+        disabled_paths = self.__disabledPluginPathSet()
+        if not disabled_paths:
+            self.loadPlugins()
+            return
+
+        kept: list[tuple] = []
+        for candidate in list(getattr(self, "_candidates", []) or []):
+            _info_file, _filepath, plugin_info = candidate
+            norm = normalize_plugin_path(plugin_info.path)
+            if norm in disabled_paths:
+                logging.info(
+                    "Skipping import of disabled plugin at %s (manifest-only; R191/A210)",
+                    norm,
+                )
+                self._policySkippedCandidates.append(candidate)
+                self._pendingImportByPath[norm] = candidate
+                continue
+            kept.append(candidate)
+        self._candidates = kept
+        self.loadPlugins()
+
+    def materializePlugin(self, cdm_plugin: "CDMPluginInfo") -> None:
+        """Import a previously policy-skipped plugin module (enable path)."""
+        if cdm_plugin.getObject() is not None:
+            return
+        norm = normalize_plugin_path(cdm_plugin.getPath())
+        candidate = self._pendingImportByPath.pop(norm, None)
+        if candidate is None:
+            raise RuntimeError(f"No deferred import available for plugin at {norm}")
+        self._candidates = [candidate]
+        self.loadPlugins()
+        if cdm_plugin.getObject() is None:
+            raise RuntimeError(f"Failed to import deferred plugin at {norm}")
+        if not cdm_plugin.categoryName:
+            bases = getBaseClassNames(cdm_plugin.getObject())
+            for category in CATEGORIES:
+                if category in bases:
+                    cdm_plugin.categoryName = category
+                    break
+
+    def __disabledPluginPathSet(self) -> set[str]:
+        """Return normalized paths listed in Settings ``disabledPlugins``."""
+        paths: set[str] = set()
+        for disabledPlugin in Settings()["disabledPlugins"]:
+            try:
+                _conflict_type, path, _message = CDMPluginInfo.parseDisabledLine(disabledPlugin)
+            except Exception as exc:
+                logging.warning(str(exc))
+                continue
+            paths.add(normalize_plugin_path(path))
+        return paths
+
+    def __disabledPluginRecords(self) -> dict[str, tuple[int, str]]:
+        """Map normalized path → (conflictType, conflictMessage)."""
+        records: dict[str, tuple[int, str]] = {}
+        for disabledPlugin in Settings()["disabledPlugins"]:
+            try:
+                conflict_type, path, message = CDMPluginInfo.parseDisabledLine(disabledPlugin)
+            except Exception as exc:
+                logging.warning(str(exc))
+                continue
+            records[normalize_plugin_path(path)] = (conflict_type, message)
+        return records
+
+    def __registerPolicySkippedPlugins(self) -> None:
+        """Register manifest-only stubs for plugins skipped before import (R191)."""
+        records = self.__disabledPluginRecords()
+        for candidate in self._policySkippedCandidates:
+            _info_file, filepath, plugin_info = candidate
+            norm = normalize_plugin_path(plugin_info.path)
+            conflict_type, message = records.get(
+                norm,
+                (CDMPluginManager.USER_DISABLED, "Disabled by user policy"),
+            )
+            stub = CDMPluginInfo(plugin_info)
+            stub.isEnabled = False
+            stub.conflictType = conflict_type
+            stub.conflictMessage = message or "Disabled by user policy"
+            category = guess_plugin_category_from_source(filepath)
+            if category:
+                stub.categoryName = category
+                if category in self.inactivePlugins:
+                    self.inactivePlugins[category].append(stub)
+                else:
+                    self.inactivePlugins[category] = [stub]
+            else:
+                self.unknownPlugins.append(stub)
 
     def __collect(self):
         """Checks that the plugins belong to what is known"""
@@ -288,11 +390,12 @@ class CDMPluginManager(PluginManager, QObject):
             except Exception as excpt:
                 logging.warning(str(excpt))
                 continue
+            norm_path = normalize_plugin_path(path)
 
             found = False
             for category in collectedPlugins:
-                for plugin in collectedPlugins[category]:
-                    if plugin.getPath() == path:
+                for plugin in list(collectedPlugins[category]):
+                    if normalize_plugin_path(plugin.getPath()) == norm_path:
                         found = True
                         plugin.conflictType = conflictType
                         plugin.conflictMessage = conflictMessage
@@ -308,11 +411,16 @@ class CDMPluginManager(PluginManager, QObject):
             if not found:
                 # Second try - search through the unknown plugins
                 for plugin in self.unknownPlugins:
-                    if plugin.getPath() == path:
+                    if normalize_plugin_path(plugin.getPath()) == norm_path:
                         found = True
                         plugin.conflictType = conflictType
                         plugin.conflictMessage = conflictMessage
                         break
+
+            if not found:
+                # Already registered as a policy-skipped stub (R191) — OK.
+                if norm_path in self._pendingImportByPath:
+                    found = True
 
             if not found:
                 logging.warning(
@@ -458,6 +566,12 @@ class CDMPluginManager(PluginManager, QObject):
 
         If there is no conflict then returns None
         """
+        # R191: materialize deferred imports before touching plugin_object.
+        try:
+            self.materializePlugin(cdmPlugin)
+        except Exception as exc:
+            return f"Error importing plugin: {exc}"
+
         # First, check the base class
         baseClasses = getBaseClassNames(cdmPlugin.getObject())
         category = None
@@ -540,7 +654,7 @@ class CDMPluginInfo:
         """Used for the setting file"""
         if self.isEnabled is None or self.isEnabled:
             return None
-        return str(self.conflictType) + ":::" + self.__info.path + ":::" + self.conflictMessage
+        return str(self.conflictType) + ":::" + normalize_plugin_path(self.__info.path) + ":::" + self.conflictMessage
 
     @staticmethod
     def parseDisabledLine(configLine):
@@ -598,23 +712,72 @@ class CDMPluginInfo:
         self.conflictType = conflictType
         self.conflictMessage = conflictMessage
 
-        if self.getObject().is_activated:
+        obj = self.getObject()
+        if obj is not None and getattr(obj, "is_activated", False):
             if self.categoryName == "VersionControlSystemInterface":
                 from utils.globals import GlobalData
 
                 GlobalData().mainWindow.dismissVCSPlugin(self)
-            self.getObject().deactivate()
+            obj.deactivate()
 
     def enable(self):
         """Enables the plugin"""
-        if not self.getObject().is_activated:
-            from utils.globals import GlobalData
+        from utils.globals import GlobalData
 
+        manager = GlobalData().pluginManager
+        manager.materializePlugin(self)
+
+        if not self.getObject().is_activated:
             self.getObject().activate(Settings(), GlobalData())
 
         self.isEnabled = True
         self.conflictType = CDMPluginManager.NO_CONFLICT
         self.conflictMessage = ""
+
+
+def normalize_plugin_path(path: str) -> str:
+    """Canonical plugin path for policy matching (R191)."""
+    if not path:
+        return ""
+    normalized = os.path.normpath(os.path.abspath(str(path)))
+    # yapsy may leave a trailing ``/.`` when Module = .
+    if normalized.endswith(os.sep + "."):
+        normalized = os.path.dirname(normalized)
+    return normalized
+
+
+def guess_plugin_category_from_source(module_filepath: str) -> str | None:
+    """Infer plugin category from source text without importing (R191).
+
+    Reads ``__init__.py`` / ``.py`` and looks for known interface names.
+    """
+    candidates = []
+    base = module_filepath
+    if base.endswith("__init__"):
+        candidates.append(base + ".py")
+        candidates.append(os.path.join(os.path.dirname(base), "__init__.py"))
+    else:
+        candidates.append(base + ".py")
+        candidates.append(base)
+        candidates.append(os.path.join(base, "__init__.py"))
+
+    text = ""
+    for path in candidates:
+        if os.path.isfile(path):
+            try:
+                with open(path, "r", encoding="utf-8", errors="replace") as handle:
+                    text = handle.read()
+            except OSError:
+                continue
+            break
+    if not text:
+        return None
+    # Prefer the more specific VCS interface when both appear (unlikely).
+    if "VersionControlSystemInterface" in text:
+        return "VersionControlSystemInterface"
+    if "WizardInterface" in text:
+        return "WizardInterface"
+    return None
 
 
 def getBaseClassNames(inst):
