@@ -139,7 +139,7 @@
 | 6 | R197 | Smoke: graceful shutdown замість `os._exit(0)`; wrapt/constraints (A224) | Нормальний teardown у smoke; constraints резолвляться без ручного wrapt hack | M | DONE |
 | 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue через remote; contract Fake/інтеграція; docs | L | DONE ([#121](https://github.com/sesquicadaver/codimension/pull/121)) |
 | 8 | R199 | SSH remote Profile MVP | Profile run remote + артефакт локально; cancel/timeout; docs | M | DONE |
-| 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | OPEN |
+| 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | DONE |
 | 10 | R181 | Автоматизація promotion каналів (`dev`→`beta`→`stable` / tags) | Документований pipeline + скрипт/CI; без зайвого theatre | M | OPEN |
 | 11 | R182 | MCP / remote agent backend | MCP surface над headless core; auth fail-closed; smoke | L | OPEN |
 
@@ -147,7 +147,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R180** (Auto-apply оновлення + rollback / portable profiles).
+**Наступний OPEN:** **R181** (Автоматизація promotion каналів).
 
 Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
 

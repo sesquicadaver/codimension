@@ -12,7 +12,7 @@
 """Download a release artifact into a cache dir and verify SHA-256 (R173).
 
 Fail closed: no trusted checksum → refuse to keep the file; mismatch → delete
-partial/wrong bytes. Does not install or apply the update (R180).
+partial/wrong bytes. Writes ``manifest.json`` + ``*.sha256`` for R180 apply.
 """
 
 from __future__ import annotations
@@ -25,7 +25,6 @@ import urllib.error
 from dataclasses import dataclass
 from typing import Optional, Sequence
 
-from utils.config import CONFIG_DIR
 from utils.update_check import FetchFn, ReleaseAsset, ReleaseInfo, default_fetch
 
 #: Preferred artifact suffixes (first match wins among candidates).
@@ -52,9 +51,10 @@ class DownloadResult:
 
 
 def default_update_cache_dir(home: Optional[str] = None) -> str:
-    """Return ``~/.codimension3/updates`` (or ``home`` override)."""
-    base = os.path.expanduser(home if home is not None else "~")
-    return os.path.join(base, CONFIG_DIR, "updates")
+    """Return ``<config-home>/.codimension3/updates`` (honours ``CDM_HOME``)."""
+    from utils.portable_profile import updates_cache_dir
+
+    return updates_cache_dir(home=home)
 
 
 def is_checksum_asset_name(name: str) -> bool:
@@ -258,6 +258,26 @@ def download_and_verify(
             status="error",
             artifact_name=artifact.name,
             message="Network or I/O error during download.",
+            error=str(exc),
+        )
+
+    try:
+        from utils.update_apply import write_cache_manifest
+
+        write_cache_manifest(
+            dest_dir,
+            artifact_path=dest_path,
+            sha256=expected,
+            tag_name=release.tag_name,
+            version=release.version,
+            artifact_name=artifact.name,
+        )
+    except Exception as exc:
+        _safe_unlink(dest_path)
+        return DownloadResult(
+            status="error",
+            artifact_name=artifact.name,
+            message="Verified bytes but failed to write cache manifest.",
             error=str(exc),
         )
 

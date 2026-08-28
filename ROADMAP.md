@@ -139,7 +139,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 6 | R197 | Smoke: graceful shutdown instead of `os._exit(0)`; wrapt/constraints (A224) | Normal teardown in smoke; constraints resolve without manual wrapt hack | M | DONE |
 | 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue remote; Fake/integration contracts; docs | L | DONE ([#121](https://github.com/sesquicadaver/codimension/pull/121)) |
 | 8 | R199 | SSH remote Profile MVP | Remote profile + local artifact; cancel/timeout; docs | M | DONE |
-| 9 | R180 | Auto-apply update + rollback / portable profiles | Apply from verified cache; rollback; fail-closed; tests | L | OPEN |
+| 9 | R180 | Auto-apply update + rollback / portable profiles | Apply from verified cache; rollback; fail-closed; tests | L | DONE |
 | 10 | R181 | Channel promotion automation (`dev`→`beta`→`stable` / tags) | Documented pipeline + script/CI; no theatre | M | OPEN |
 | 11 | R182 | MCP / remote agent backend | MCP surface over headless core; auth fail-closed; smoke | L | OPEN |
 
@@ -147,7 +147,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R180** (Auto-apply update + rollback / portable profiles).
+**Next OPEN:** **R181** (Channel promotion automation).
 
 Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
 
