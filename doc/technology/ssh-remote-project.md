@@ -66,7 +66,7 @@ Host profiles (no secrets) are stored in `~/.codimension3/ssh_hosts.json`.
 Skipped directory names: `.git`, `.hg`, `.svn`, `__pycache__`, `.venv`, `venv`,
 `node_modules`.
 
-## Edit / Run (no remote IDE debug yet)
+## Edit / Run / Debug
 
 When a project has `binding.json` in its local cache root:
 
@@ -78,8 +78,13 @@ When a project has `binding.json` in its local cache root:
 - **Run** schedules an **async** remote `python3 <script>` job (cancel,
   timeout, stdout/stderr capped at 2 MiB by default /
   `CDM_SSH_MAX_OUTPUT_BYTES`); output goes to the Log / redirected IO console.
-- **Debug / Profile** on SSH-bound projects are refused with a clear message
-  (full remote IDE debug is deferred).
+- **Debug (R198)** uploads `client_cdm_dbg` under
+  `<remote_root>/.codimension-dbg-client/`, opens a **reverse** port-forward
+  (`remote 127.0.0.1:<port>` → local IDE `QTcpServer`), and runs the debuggee
+  with `--host 127.0.0.1`. Protocol pathnames are remapped remote ↔ local
+  cache (`utils.ssh_ide_debug`). Contract tests use `FakeReverseTunnel`
+  (no network).
+- **Profile** on SSH-bound projects is still refused (queued as **R199**).
 
 Requires ``paramiko`` / ``keyring`` as **runtime** dependencies (installed by
 ``pip install -e .`` and ``codimension_ctl.sh install``, including ``--minimal``).
@@ -87,10 +92,11 @@ The extra ``.[ssh]`` is kept as a compatibility alias.
 
 ## Relation to R124
 
-[`ssh-execution.md`](ssh-execution.md) covers **headless run** when the script
-path already exists on the remote host. Open/Create + Save upload + IDE **Run**
-on SSH-bound projects are implemented here; full remote IDE **debug** remains
-deferred.
+[`ssh-execution.md`](ssh-execution.md) covers **headless** run/debug when the
+script path already exists on the remote host (`python -m pdb` for debug prep).
+Open/Create + Save upload + IDE **Run** + IDE **Debug** (R198 reverse tunnel +
+`client_cdm_dbg`) on SSH-bound projects are implemented here; IDE **Profile**
+remains **R199**.
 
 ## Platforms
 

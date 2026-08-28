@@ -39,7 +39,8 @@ When the cache root contains `binding.json`:
 | ------ | --------- |
 | **Save** | Writes locally, then **async** SFTP upload. Local save ≠ remote sync (`SYNCING`→`SYNCED`/`SYNC_FAILED`). Cancelable; timeout via `CDM_SSH_TIMEOUT_SEC` |
 | **Run** | **Async** upload + `python3 <remote-script>` over SSH; cancel/timeout; output capped (`CDM_SSH_MAX_OUTPUT_BYTES`, default 2 MiB); output → Log / redirected IO |
-| **Debug / Profile** | Refused with a clear message (full remote IDE debug is not implemented yet) |
+| **Debug** | Remote IDE session (R198): reverse SSH tunnel + `client_cdm_dbg` on the host; stop-at-first-line / continue use the same IDE debugger UI; paths map to the local cache |
+| **Profile** | Still refused (remote Profile is **R199**) |
 
 ## Auth and profiles
 

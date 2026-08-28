@@ -558,10 +558,38 @@ class RunManager(QObject):
             logging.error(str(exc))
 
     def debug(self, path, needDialog):
-        """Debugs the given script regardless if it is redirected"""
+        """Debugs the given script regardless if it is redirected."""
         if needDialog:
             if not self.__updateParameters(path, DEBUG):
                 return
+
+        from utils.ssh_ide_debug import start_ssh_ide_debug_session
+        from utils.ssh_project_runtime import get_loaded_project_binding, is_under_binding
+
+        binding = get_loaded_project_binding()
+        if binding is not None and is_under_binding(binding, path):
+            remoteProc = self.__prepareRemoteProcess(path, DEBUG)
+            self.sigDebugSessionPrologueStarted.emit(
+                remoteProc.procWrapper, path, getRunParameters(path), Settings().getDebuggerSettings()
+            )
+            try:
+                # Do not Popen locally — remote client connects via reverse tunnel.
+                start_ssh_ide_debug_session(
+                    binding,
+                    path,
+                    remoteProc.procWrapper,
+                    self.__tcpServer.serverPort(),
+                )
+                if not remoteProc.procWrapper.redirected:
+                    self.__newConnectionTimer.setObjectName(remoteProc.procWrapper.procuuid)
+                    self.__newConnectionTimer.start(CONNECTION_TIMEOUT)
+                    remoteProc.procWrapper.startTime = datetime.now()
+                    if not self.__waitTimer.isActive():
+                        self.__waitTimer.start(1000)
+            except Exception as exc:
+                self.__onProcessFinished(remoteProc.procWrapper.procuuid, FAILED_TO_START)
+                logging.error(str(exc))
+            return
 
         from utils.ssh_project_runtime import try_handle_ide_run
 

@@ -137,7 +137,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 4 | R195 | Utils side-effect inventory + tighter boundary gate (A223.a) | Inventory; gate catches new matrix violations | M | DONE |
 | 5 | R196 | First hotspot: invert dependency / extract from `utils` (A223.b) | One concrete move + tests; Living Spec | M | DONE |
 | 6 | R197 | Smoke: graceful shutdown instead of `os._exit(0)`; wrapt/constraints (A224) | Normal teardown in smoke; constraints resolve without manual wrapt hack | M | DONE |
-| 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue remote; Fake/integration contracts; docs | L | OPEN |
+| 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue remote; Fake/integration contracts; docs | L | DONE |
 | 8 | R199 | SSH remote Profile MVP | Remote profile + local artifact; cancel/timeout; docs | M | OPEN |
 | 9 | R180 | Auto-apply update + rollback / portable profiles | Apply from verified cache; rollback; fail-closed; tests | L | OPEN |
 | 10 | R181 | Channel promotion automation (`dev`→`beta`→`stable` / tags) | Documented pipeline + script/CI; no theatre | M | OPEN |
@@ -147,7 +147,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R198** (SSH remote Debug session MVP). TODO_FIXME: first 🔓 after A224.
+**Next OPEN:** **R199** (SSH remote Profile MVP).
 
 Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
 
@@ -156,7 +156,7 @@ Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (20
 | Area | Status | Docs |
 |------|--------|------|
 | SSH remote project Open/Create + Browse… + Save upload + IDE Run | MVP | [ssh-remote-project.md](doc/technology/ssh-remote-project.md), [user guide](doc/user/ssh-remote-projects.md) |
-| SSH remote Debug / Profile | Queued: **R198** / **R199** | Same docs |
+| SSH remote Debug / Profile | Debug **R198** DONE; Profile **R199** OPEN | Same docs |
 
 ---
 

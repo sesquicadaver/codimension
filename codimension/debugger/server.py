@@ -195,10 +195,12 @@ class CodimensionDebugger(QObject):
 
     def __handleLine(self, params):
         """Handles METHOD_LINE"""
-        stack = params["stack"]
+        from utils.ssh_ide_debug import remap_debug_filename, remap_debug_stack
+
+        stack = remap_debug_stack(params["stack"])
         if self.__stopAtFirstLine:
             topFrame = stack[0]
-            self.sigClientLine.emit(topFrame[0], int(topFrame[1]), False)
+            self.sigClientLine.emit(remap_debug_filename(topFrame[0]), int(topFrame[1]), False)
             self.sigClientStack.emit(stack)
         else:
             self.__stopAtFirstLine = True
@@ -208,10 +210,12 @@ class CodimensionDebugger(QObject):
 
     def __handleStack(self, params):
         """Handles METHOD_STACK"""
-        stack = params["stack"]
+        from utils.ssh_ide_debug import remap_debug_filename, remap_debug_stack
+
+        stack = remap_debug_stack(params["stack"])
         if self.__stopAtFirstLine:
             topFrame = stack[0]
-            self.sigClientLine.emit(topFrame[0], int(topFrame[1]), True)
+            self.sigClientLine.emit(remap_debug_filename(topFrame[0]), int(topFrame[1]), True)
             self.sigClientStack.emit(stack)
         else:
             self.__stopAtFirstLine = True
