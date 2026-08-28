@@ -1,5 +1,6 @@
 2026 Aug 28
 
+* R181: Channel promotion ladder ``dev→beta→stable`` + tag validation (no branch theatre)
 * R180: Apply verified update from cache with rollback; portable ``CDM_HOME``
 * R199: SSH remote Profile — async cProfile + download artifact for IDE report
 * R198: SSH remote IDE Debug MVP — reverse tunnel + remote client_cdm_dbg; path remap

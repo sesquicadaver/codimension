@@ -80,11 +80,14 @@ password=<password>
 1. Update ChangeLog
 2. Make sure git clone is clean
 3. Edit `codimension/cdmverspec.py` setting the new ``version`` and, if needed,
-   ``release_channel`` (``stable`` / ``beta`` / ``dev``; R171 — one version still).
-   Publish a GitHub Release with a PEP 440 tag (``vX.Y.Z``) and a wheel/sdist
-   plus SHA-256 (API digest or ``*.sha256`` / ``SHA256SUMS``) so Help → Check for
-   updates can verify a cache download (R172–R173) and optionally apply with
-   rollback from the verified cache (R180; restart required). Portable config
+   ``release_channel`` (``stable`` / ``beta`` / ``dev``; R171). Prefer
+   ``python scripts/promote_release_channel.py --to beta|stable [--apply]``
+   for forward promotions (R181; see
+   [release-channels.md](doc/technology/release-channels.md)).
+   Publish a GitHub Release with a PEP 440 tag (``vX.Y.Z`` / pre-release shape)
+   and a wheel/sdist plus SHA-256 (API digest or ``*.sha256`` / ``SHA256SUMS``)
+   so Help → Check for updates can verify a cache download (R172–R173) and
+   optionally apply with rollback (R180; restart required). Portable config
    root: ``CDM_HOME``.
    Experimental AI UI: persistent flag ``ai_ui`` or env ``CDM_AI_UI`` (R174).
    Safe-mode IDE: ``codimension --safe-mode`` or ``CDM_SAFE_MODE=1`` (R175).
