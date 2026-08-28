@@ -84,7 +84,12 @@ When a project has `binding.json` in its local cache root:
   with `--host 127.0.0.1`. Protocol pathnames are remapped remote ↔ local
   cache (`utils.ssh_ide_debug`). Contract tests use `FakeReverseTunnel`
   (no network).
-- **Profile** on SSH-bound projects is still refused (queued as **R199**).
+- **Profile (R199)** schedules an **async** remote
+  ``python3 -m cProfile -o <remote_root>/.codimension-profile/<id>.profile.out``
+  job (same cancel/timeout/output caps as Run), then **downloads** the stats
+  file to the local profile-output path and opens the IDE profile report when
+  a main window is present. Contract tests mock SFTP/`_exec_remote`
+  (no network).
 
 Requires ``paramiko`` / ``keyring`` as **runtime** dependencies (installed by
 ``pip install -e .`` and ``codimension_ctl.sh install``, including ``--minimal``).
@@ -92,11 +97,10 @@ The extra ``.[ssh]`` is kept as a compatibility alias.
 
 ## Relation to R124
 
-[`ssh-execution.md`](ssh-execution.md) covers **headless** run/debug when the
-script path already exists on the remote host (`python -m pdb` for debug prep).
-Open/Create + Save upload + IDE **Run** + IDE **Debug** (R198 reverse tunnel +
-`client_cdm_dbg`) on SSH-bound projects are implemented here; IDE **Profile**
-remains **R199**.
+[`ssh-execution.md`](ssh-execution.md) covers **headless** run/debug/profile when
+the script path already exists on the remote host. Open/Create + Save upload +
+IDE **Run** + IDE **Debug** (R198) + IDE **Profile** (R199) on SSH-bound
+projects are implemented here.
 
 ## Platforms
 

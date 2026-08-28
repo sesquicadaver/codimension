@@ -137,8 +137,8 @@
 | 4 | R195 | Utils side-effect inventory + tighter boundary gate (A223.a) | Інвентар ефектів; gate ловить нові порушення матриці | M | DONE |
 | 5 | R196 | Перший hotspot: інверсія залежності / винесення з `utils` (A223.b) | Один конкретний перенос + тести; Living Spec | M | DONE |
 | 6 | R197 | Smoke: graceful shutdown замість `os._exit(0)`; wrapt/constraints (A224) | Нормальний teardown у smoke; constraints резолвляться без ручного wrapt hack | M | DONE |
-| 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue через remote; contract Fake/інтеграція; docs | L | DONE |
-| 8 | R199 | SSH remote Profile MVP | Profile run remote + артефакт локально; cancel/timeout; docs | M | OPEN |
+| 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue через remote; contract Fake/інтеграція; docs | L | DONE ([#121](https://github.com/sesquicadaver/codimension/pull/121)) |
+| 8 | R199 | SSH remote Profile MVP | Profile run remote + артефакт локально; cancel/timeout; docs | M | DONE |
 | 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | OPEN |
 | 10 | R181 | Автоматизація promotion каналів (`dev`→`beta`→`stable` / tags) | Документований pipeline + скрипт/CI; без зайвого theatre | M | OPEN |
 | 11 | R182 | MCP / remote agent backend | MCP surface над headless core; auth fail-closed; smoke | L | OPEN |
@@ -147,7 +147,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R199** (SSH remote Profile MVP).
+**Наступний OPEN:** **R180** (Auto-apply оновлення + rollback / portable profiles).
 
 Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
 
@@ -156,7 +156,7 @@
 | Область | Статус | Документація |
 |---------|--------|--------------|
 | SSH remote Open/Create + Browse… + Save upload + IDE Run | MVP | [ssh-remote-project.md](doc/technology/ssh-remote-project.md), [довідка](doc/user/ssh-remote-projects.md) |
-| SSH remote Debug / Profile | Debug **R198** DONE; Profile **R199** OPEN | Ті самі docs |
+| SSH remote Debug / Profile | Debug **R198** + Profile **R199** DONE | Ті самі docs |
 
 ---
 
