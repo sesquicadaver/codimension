@@ -202,14 +202,8 @@ cmd_install() {
     "$PY" -m pip install -e "$spec"
   )
 
-  # pylint/astroid pin wrapt<1.13; on 3.11+ that wrapt is broken — refresh without deps.
-  local major minor
-  major="$("$PY" -c 'import sys; print(sys.version_info.major)')"
-  minor="$("$PY" -c 'import sys; print(sys.version_info.minor)')"
-  if [[ "$major" -gt 3 || ( "$major" -eq 3 && "$minor" -ge 11 ) ]]; then
-    info "Python ${major}.${minor}: installing wrapt>=1.14 --no-deps (pylint stack)"
-    "$PY" -m pip install 'wrapt>=1.14' --no-deps || true
-  fi
+  # R197: wrapt 1.12 stays in constraints; inspect.formatargspec is restored by
+  # codimension.inspect_compat (no pip --no-deps wrapt override).
 
   [[ -x "$CDM" ]] || die "entry point missing after install: $CDM"
 

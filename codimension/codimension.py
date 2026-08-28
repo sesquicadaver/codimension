@@ -60,6 +60,11 @@ if sys.version_info >= (3, 12) and "imp" not in sys.modules:
 
     sys.modules["imp"] = _imp_shim
 
+# R197: wrapt 1.12 (pylint 2.5.3 stack) needs inspect.formatargspec on 3.11+
+import inspect_compat as _inspect_shim  # noqa: E402
+
+_inspect_shim.ensure_wrapt_compat()
+
 # Inject pkg_resources compat when unavailable (setuptools 82+ removed it)
 if "pkg_resources" not in sys.modules:
     try:
