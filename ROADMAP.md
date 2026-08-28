@@ -2,7 +2,7 @@
 
 > **Language / Мова:** English | [Українська](ROADMAP.uk.md)
 
-**Current tip (docs sync):** `master@01be812c` (2026-08-09, after R174)  
+**Current tip (docs sync):** `master@76342420` (2026-08-28, Alpha audit → R183+)  
 **Queue freeze baseline (historical):** `master@d8f2e786` (2026-08-06) — start of the linear R100+ rebuild  
 **Living Spec:** [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md)  
 **Autopilot:** first `OPEN` row in **Active queue** (after empty [TODO_FIXME.md](TODO_FIXME.md))
@@ -120,7 +120,15 @@
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| — | — | *(empty)* | — | — | — |
+| 1 | R183 | SSH path containment (A201): UUID/hash profile id; basename allowlist project name; `realpath`/`commonpath` before mkdir/rmtree/write | Tests for `../`, absolute, separators; fail closed | M | OPEN |
+| 2 | R184 | SSH host-key verification (A202): RejectPolicy default; known_hosts; TOFU+fingerprint pin in profile | MITM fail closed; FakeSSH tests | M | OPEN |
+| 3 | R185 | SSH download hardening (A203): lstat/reject symlink; nonzero limits; stream; staging+atomic swap | FakeSFTP contract tests | M | OPEN |
+| 4 | R186 | SSH Run/Save async jobs (A204): cancel, timeout, bounded output, SYNC_* state | GUI non-blocking; Save≠success without SYNCED | L | OPEN |
+| 5 | R187 | ExecutionPlan vs Runner (A205) + K8s Job Complete/Failed (A206) | `run` ≠ prepare; wait terminal condition | L | OPEN |
+| 6 | R188 | Per-scope CFG + loop/finally (A207) | Function CFG; break/continue → loop; docs: not security-proof | L | OPEN |
+| 7 | R189 | VENV create-in-final + backup/rollback (A208) | pip/activate shebang = final path; probe scripts | M | OPEN |
+| 8 | R190 | `.cdm3` external reload = updateProperties; UUID immutable (A209) | UUID change → reject or full reload | M | OPEN |
+| 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | OPEN |
 
 ### Deferred (explicit)
 
@@ -128,13 +136,14 @@
 |----|------|--------------|
 | R180 | Auto-apply update + rollback / portable profiles | High risk; after R172–R173 proven |
 | R181 | Full `develop`/`release` promotion pipeline | Overkill vs protected `master` + tags |
-| R182 | MCP / remote IDE agent backend | Not on critical path; ExecutionTarget (R121–R125) already exists — schedule only on explicit product ask |
+| R182 | MCP / remote IDE agent backend | Not on critical path — explicit product ask only |
+| R192+ | AI budget/stream (A220), settings root-type (A221), risk confidence (A222), layer move (A223), shutdown smoke (A224) | P2 after P1 wave |
 
 ---
 
 ## Next autopilot pointer
 
-**Active queue empty** (R179 shipped — PR #89 / `8c19d108`). Next work only on explicit ask for deferred **R180** / **R181** / **R182**.
+**Next OPEN:** **R183** (A201 SSH path containment). TODO_FIXME: first 🔓 A201.
 
 ### Shipped outside the R-queue (product ask)
 
