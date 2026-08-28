@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""R103: enforce the named-layer module boundary matrix in CI.
+"""R103/R195: enforce the named-layer module boundary matrix in CI.
 
 Layers: ``core``, ``infrastructure``, ``app``, ``utils``, ``ui``, ``plugins``.
 
 Static AST gate over Import/ImportFrom (incl. relative) and literal
 ``importlib.import_module`` / ``__import__`` string arguments.
 
-The ENFORCED matrix matches the current floor (including legacy
-``utils → ui|plugins`` edges). The TARGET matrix in Living Spec is stricter
-and is the direction of travel for later roadmap items.
+R195 tightens ``utils``: the open ``utils → ui|plugins`` floor is closed.
+Only grandfathered modules listed in ``UTILS_LEGACY_EDGES`` may still reach
+``ui`` / ``plugins`` / ``qt``. New utils files that import those layers fail.
+See ``doc/technology/utils-side-effect-inventory.md``.
 """
 
 from __future__ import annotations
@@ -37,8 +38,8 @@ ALLOWED_EDGES: dict[str, frozenset[str]] = {
     "core": frozenset(),
     "infrastructure": frozenset({"core", "utils"}),
     "app": frozenset({"core", "infrastructure", "utils"}),
-    # Legacy: utils still touches ui/plugins (GlobalData, Qt helpers). Tighten later.
-    "utils": frozenset({"core", "infrastructure", "app", "ui", "plugins"}),
+    # R195: utils floor excludes ui/plugins; see UTILS_LEGACY_EDGES.
+    "utils": frozenset({"core", "infrastructure", "app"}),
     "ui": frozenset({"core", "infrastructure", "app", "utils", "plugins"}),
     "plugins": frozenset({"core", "infrastructure", "app", "utils", "ui"}),
 }
@@ -46,6 +47,29 @@ ALLOWED_EDGES: dict[str, frozenset[str]] = {
 # Synthetic layer for Qt bindings — never allowed into Qt-free packages.
 QT_LAYER = "qt"
 QTFREE_LAYERS = frozenset({"core", "infrastructure", "app"})
+
+# R195: grandfathered utils → {ui, plugins, qt} edges (posix path from repo root).
+# Shrink this map in R196+ when a hotspot is extracted; do not grow it.
+UTILS_LEGACY_EDGES: dict[str, frozenset[str]] = {
+    "codimension/utils/colorfont.py": frozenset({"ui"}),
+    "codimension/utils/fileutils.py": frozenset({"ui"}),
+    "codimension/utils/globals.py": frozenset({"plugins"}),
+    "codimension/utils/pixmapcache.py": frozenset({"ui"}),
+    "codimension/utils/plantumlcache.py": frozenset({"ui"}),
+    "codimension/utils/project.py": frozenset({"ui", QT_LAYER}),
+    "codimension/utils/runmanager.py": frozenset({"ui"}),
+    "codimension/utils/settings.py": frozenset({"ui"}),
+    "codimension/utils/skin.py": frozenset({"ui"}),
+    "codimension/utils/ssh_project_runtime.py": frozenset({"ui"}),
+    "codimension/utils/versions.py": frozenset({"ui"}),
+    "codimension/utils/watcher.py": frozenset({QT_LAYER}),
+    "codimension/utils/webresourcecache.py": frozenset({"ui"}),
+}
+
+
+def _posix_rel(path: Path) -> str:
+    """Repo-relative posix path for allowlist keys."""
+    return path.resolve().relative_to(ROOT).as_posix()
 
 
 def _module_qualname(path: Path) -> str:
@@ -155,6 +179,11 @@ def _importer_layer(path: Path) -> str | None:
     return top if top in NAMED_LAYERS else None
 
 
+def _utils_legacy_allows(path: Path, dst: str) -> bool:
+    """True if ``path`` is grandfathered for destination layer ``dst``."""
+    return dst in UTILS_LEGACY_EDGES.get(_posix_rel(path), frozenset())
+
+
 def check_file(path: Path) -> list[str]:
     """Return boundary violations for one Python file."""
     importer = _importer_layer(path)
@@ -181,6 +210,11 @@ def check_file(path: Path) -> list[str]:
     for lineno, imported in names:
         dst = _layer_of_module(imported)
         if dst is None or dst == importer:
+            continue
+        if importer == "utils" and dst in {"ui", "plugins", QT_LAYER}:
+            if _utils_legacy_allows(path, dst):
+                continue
+            _fail(lineno, imported, dst)
             continue
         if dst == QT_LAYER:
             if importer in QTFREE_LAYERS:
@@ -210,12 +244,16 @@ def main() -> int:
             continue
         for path in sorted(base.rglob("*.py")):
             failures.extend(check_file(path))
+    # Stale allowlist entries must not linger after a file is removed/renamed.
+    for rel in sorted(UTILS_LEGACY_EDGES):
+        if not (ROOT / rel).is_file():
+            failures.append(f"stale UTILS_LEGACY_EDGES entry (missing file): {rel}")
     if failures:
-        print("R103 module-boundary gate FAILED:")
+        print("R103/R195 module-boundary gate FAILED:")
         for item in failures:
             print(f"  {item}")
         return 1
-    print("R103 OK: named-layer boundary matrix holds")
+    print("R103/R195 OK: named-layer boundary matrix holds")
     return 0
 
 

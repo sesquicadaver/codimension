@@ -134,7 +134,7 @@
 | 1 | R192 | AI HTTP: chunked/budgeted read + cancel + `base_url` trust allowlist (A220) | Немає unbounded `response.read()`; budget/cancel тести; чужий URL fail-closed | M | DONE |
 | 2 | R193 | Settings: відхилення non-dict JSON; lazy singleton (A221) | Поганий JSON → safe defaults + log; Settings не ламає import | M | DONE |
 | 3 | R194 | Risk/taint confidence; missing metrics ≠ штучно низький risk (A222) | Confidence/unknown у score; тести на відсутні метрики | M | DONE |
-| 4 | R195 | Utils side-effect inventory + tighter boundary gate (A223.a) | Інвентар ефектів; gate ловить нові порушення матриці | M | OPEN |
+| 4 | R195 | Utils side-effect inventory + tighter boundary gate (A223.a) | Інвентар ефектів; gate ловить нові порушення матриці | M | DONE |
 | 5 | R196 | Перший hotspot: інверсія залежності / винесення з `utils` (A223.b) | Один конкретний перенос + тести; Living Spec | M | OPEN |
 | 6 | R197 | Smoke: graceful shutdown замість `os._exit(0)`; wrapt/constraints (A224) | Нормальний teardown у smoke; constraints резолвляться без ручного wrapt hack | M | OPEN |
 | 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue через remote; contract Fake/інтеграція; docs | L | OPEN |
@@ -147,7 +147,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R195** (A223.a utils side-effect inventory + boundary gate). TODO_FIXME: перший 🔓 A223.
+**Наступний OPEN:** **R196** (A223.b перший hotspot / винесення з utils). TODO_FIXME: PARTIAL A223 → R196.
 
 Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
 
