@@ -38,8 +38,13 @@ def test_smoke_script_shutdown_before_hard_exit() -> None:
     """R197: ``_shutdown_smoke`` must run; ``os._exit`` only after cleanup."""
     text = (ROOT / "scripts" / "offscreen_gui_smoke.py").read_text(encoding="utf-8")
     assert "_shutdown_smoke" in text
-    assert "os._exit(0)" in text
-    assert text.index("_shutdown_smoke(app, main_window)") < text.index("os._exit(0)")
+    # Call sites in ``finally`` (ignore docstring mentions of os._exit).
+    finally_idx = text.index("finally:")
+    assert "_shutdown_smoke(app, main_window)" in text[finally_idx:]
+    assert "os._exit(0)" in text[finally_idx:]
+    assert text.index("_shutdown_smoke(app, main_window)", finally_idx) < text.index(
+        "os._exit(0)", finally_idx
+    )
 
 
 def test_ctl_has_no_wrapt_nodeps_hack() -> None:
