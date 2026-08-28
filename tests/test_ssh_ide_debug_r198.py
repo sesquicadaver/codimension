@@ -172,17 +172,16 @@ def test_start_ssh_ide_debug_uses_fake_tunnel(tmp_path, monkeypatch):
     monkeypatch.setattr(ide, "resolve_ssh_job_limits", lambda: (0.0, 0))
     monkeypatch.setattr(ide, "profile_from_binding", lambda b: b)
     monkeypatch.setattr(ide, "load_ssh_password", lambda _id: "")
-    monkeypatch.setattr(
-        "utils.ssh_remote.connect_paramiko_sftp",
-        lambda *a, **k: FakeSftp(),
-    )
+    import utils.ssh_remote as ssh_remote
+
+    monkeypatch.setattr(ssh_remote, "connect_paramiko_sftp", lambda *a, **k: FakeSftp())
     monkeypatch.setattr(ide, "open_paramiko_ssh_client", lambda *a, **k: (object(), binding))
     monkeypatch.setattr(ide, "_exec_argv", lambda client, argv, cwd, timeout_sec: execs.append((argv, cwd)) or 0)
-    monkeypatch.setattr(
-        "utils.diskvaluesrelay.getRunParameters",
-        lambda _p: {"arguments": "", "redirected": True},
-    )
-    monkeypatch.setattr("utils.settings.Settings", _Settings)
+    import utils.diskvaluesrelay as dvr
+    import utils.settings as settings_mod
+
+    monkeypatch.setattr(dvr, "getRunParameters", lambda _p: {"arguments": "", "redirected": True})
+    monkeypatch.setattr(settings_mod, "Settings", _Settings)
 
     fake_tunnel = ide.FakeReverseTunnel()
     wrapper = FakeWrapper()
