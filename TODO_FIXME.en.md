@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: **R192→** (linear non-blocking: R192–R199, R180–R182).
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: **R193→** (linear non-blocking: R193–R199, R180–R182).
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
@@ -26,7 +26,7 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: 
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
-| A220 | AI: full `response.read()` before limit; no budget/cancel; keyed `base_url` trust | P2 | 🔓 R192 |
+| A220 | AI: full `response.read()` before limit; no budget/cancel; keyed `base_url` trust | P2 | ✅ R192 |
 | A221 | Settings: non-dict JSON breaks startup; import-time singleton | P2 | 🔓 R193 |
 | A222 | Taint/risk heuristic; missing metrics understate risk | P2 | 🔓 R194 |
 | A223 | Architecture: `utils` side-effects; boundary gate does not invert deps | P2 | 🔓 R195→R196 |
