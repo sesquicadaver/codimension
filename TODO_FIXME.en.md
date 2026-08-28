@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue: **R191→**.
+No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue: **P2 R192→** (P1 wave A201–A210 closed).
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
@@ -20,7 +20,7 @@ No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue
 | A207 | CFG: global EXIT; break/continue without loop stack; unfit for data-flow/security | P1 | ✅ R188 |
 | A208 | VENV: staging→final rename breaks shebang/activate (prior D02/B07 insufficient) | P1 | ✅ R189 |
 | A209 | External `.cdm3` update: split-brain; UUID mutable after load | P1 | ✅ R190 |
-| A210 | Plugin policy after importing plugin code (not fail-closed) | P1 | 🔓 OPEN |
+| A210 | Plugin policy after importing plugin code (not fail-closed) | P1 | ✅ R191 |
 
 ### P2 / hardening (second wave)
 

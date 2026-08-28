@@ -128,7 +128,7 @@
 | 6 | R188 | Per-scope CFG + loop/finally (A207) | Function CFG; break/continue → loop; docs: not security-proof | L | DONE |
 | 7 | R189 | VENV create-in-final + backup/rollback (A208) | pip/activate shebang = final path; probe scripts | M | DONE |
 | 8 | R190 | `.cdm3` external reload = updateProperties; UUID immutable (A209) | UUID change → reject or full reload | M | DONE |
-| 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | OPEN |
+| 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | DONE |
 
 ### Deferred (explicit)
 
@@ -143,7 +143,7 @@
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R191** (A210 plugin policy before import). TODO_FIXME: first 🔓 A210.
+**Next OPEN:** P2 wave **R192+** (A220–A224) — only on explicit ask (see Deferred). P1 A201–A210 closed.
 
 ### Shipped outside the R-queue (product ask)
 

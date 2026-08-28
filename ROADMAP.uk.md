@@ -128,7 +128,7 @@
 | 6 | R188 | Per-scope CFG + loop/finally (A207) | Окремий CFG function; break/continue → loop; docs: не security-proof | L | DONE |
 | 7 | R189 | VENV create-in-final + backup/rollback (A208) | pip/activate shebang = final path; probe scripts | M | DONE |
 | 8 | R190 | `.cdm3` external reload = updateProperties; UUID immutable (A209) | UUID change → reject або full reload | M | DONE |
-| 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | OPEN |
+| 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | DONE |
 
 ### Відкладено (явно)
 
@@ -143,7 +143,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R191** (A210 plugin policy before import). TODO_FIXME: перший 🔓 A210.
+**Наступний OPEN:** P2 хвиля **R192+** (A220–A224) — лише за явним запитом (див. «Відкладено»). P1 A201–A210 закриті.
 
 ### Поставлено поза R-чергою (запит продукту)
 
