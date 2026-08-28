@@ -20,10 +20,13 @@ from utils.ssh_remote import (
     RemoteProjectBinding,
     SshHostProfile,
     connect_paramiko_sftp,
+    load_host_profiles,
     load_ssh_password,
+    open_paramiko_ssh_client,
     read_binding,
     require_paramiko,
     upload_file,
+    upsert_host_profile,
 )
 
 
@@ -39,7 +42,12 @@ def get_loaded_project_binding() -> Optional[RemoteProjectBinding]:
 
 
 def profile_from_binding(binding: RemoteProjectBinding) -> SshHostProfile:
-    """Rebuild a host profile from a persisted binding."""
+    """Rebuild a host profile from a persisted binding (include saved host-key pin)."""
+    pin = ""
+    for saved in load_host_profiles():
+        if saved.id == binding.profile_id:
+            pin = saved.host_key_fingerprint
+            break
     return SshHostProfile(
         id=binding.profile_id,
         host=binding.host,
@@ -48,6 +56,7 @@ def profile_from_binding(binding: RemoteProjectBinding) -> SshHostProfile:
         auth=binding.auth,
         identity_file=binding.identity_file,
         label=f"{binding.user + '@' if binding.user else ''}{binding.host}",
+        host_key_fingerprint=pin,
     ).normalized()
 
 
@@ -185,6 +194,9 @@ def _with_sftp(binding: RemoteProjectBinding, fn) -> None:
     password = load_ssh_password(profile.id) if profile.auth == "password" else ""
     session = connect_paramiko_sftp(profile, password=password)
     try:
+        if getattr(session, "profile", None) is not None and session.profile.host_key_fingerprint:
+            if session.profile.host_key_fingerprint != profile.host_key_fingerprint:
+                upsert_host_profile(session.profile)
         fn(session)
     finally:
         session.close()
@@ -198,34 +210,18 @@ def _exec_remote(
     cwd: Optional[str] = None,
 ) -> tuple[int, str, str]:
     """Run argv on the remote host via Paramiko (login-shell fragment)."""
-    paramiko = require_paramiko()
-    cfg = profile.normalized()
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    kwargs: dict = {
-        "hostname": cfg.host,
-        "port": cfg.port,
-        "username": cfg.user or None,
-        "allow_agent": True,
-        "look_for_keys": True,
-        "timeout": 30,
-    }
-    if cfg.auth == "password":
-        if not password:
-            raise ValueError("password auth selected but no stored password")
-        kwargs["password"] = password
-        kwargs["look_for_keys"] = False
-        kwargs["allow_agent"] = False
-    elif cfg.identity_file:
-        kwargs["key_filename"] = cfg.identity_file
-
     parts: list[str] = []
     if cwd:
         parts.extend(["cd", shlex.quote(cwd), "&&"])
     parts.extend(shlex.quote(part) for part in argv)
     remote = " ".join(parts)
 
-    client.connect(**kwargs)
+    client, pinned = open_paramiko_ssh_client(profile, password=password)
+    if pinned.host_key_fingerprint and pinned.host_key_fingerprint != profile.host_key_fingerprint:
+        try:
+            upsert_host_profile(pinned)
+        except Exception:
+            logging.debug("Could not persist SSH host key pin", exc_info=True)
     try:
         _stdin, stdout, stderr = client.exec_command(remote)
         out = stdout.read().decode("utf-8", errors="replace")

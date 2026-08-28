@@ -12,7 +12,7 @@
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
 | A201 | SSH: `profile.id` / project name без path-containment → `_rm_tree`/write поза cache | P1 | ✅ R183 |
-| A202 | SSH: `AutoAddPolicy` — host authenticity вимкнена (MITM) | P1 | 🔓 OPEN |
+| A202 | SSH: `AutoAddPolicy` — host authenticity вимкнена (MITM) | P1 | ✅ R184 |
 | A203 | SSH download: `stat` замість `lstat`, symlink follow, unlimited defaults, no staging swap | P1 | 🔓 OPEN |
 | A204 | SSH Run/Save блокують GUI; немає cancel/timeout/output cap; Save≠SYNCED | P1 | 🔓 OPEN |
 | A205 | `ExecutionTarget.run` = prepare argv (`exit_code=None`), не виконання | P1 | 🔓 OPEN |

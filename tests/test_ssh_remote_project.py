@@ -260,3 +260,70 @@ def test_r183_rm_tree_refuses_outside_cache(tmp_path):
     with pytest.raises(ValueError, match="escapes"):
         _rm_tree(str(outside), must_be_under=cache_root)
     assert marker.is_file()
+
+
+def test_r184_fingerprint_normalize_and_mismatch():
+    from utils.ssh_remote import (
+        HostKeyFingerprintMismatch,
+        normalize_host_key_fingerprint,
+        ssh_host_key_fingerprint,
+        verify_remote_host_key_fingerprint,
+    )
+
+    assert normalize_host_key_fingerprint("SHA256:abc+def/") == "SHA256:abc+def/"
+    assert normalize_host_key_fingerprint("abc+def/==") == "SHA256:abc+def/"
+
+    class _Key:
+        def asbytes(self):
+            return b"unit-test-key-bytes"
+
+    fp = ssh_host_key_fingerprint(_Key())
+    assert fp.startswith("SHA256:")
+
+    class _Transport:
+        def get_remote_server_key(self):
+            return _Key()
+
+    class _Client:
+        def get_transport(self):
+            return _Transport()
+
+    assert verify_remote_host_key_fingerprint(_Client(), fp, hostname="h") == fp
+    with pytest.raises(HostKeyFingerprintMismatch):
+        verify_remote_host_key_fingerprint(_Client(), "SHA256:not-the-key", hostname="h")
+
+
+def test_r184_profile_persists_host_key_fingerprint(tmp_path):
+    from utils.ssh_remote import SshHostProfile, load_host_profiles, upsert_host_profile
+
+    settings = str(tmp_path)
+    profile = SshHostProfile(
+        id="pin-host",
+        host="dev.example",
+        user="alice",
+        auth="key",
+        host_key_fingerprint="SHA256:abcdefghijklmnopqrstuvwx",
+    )
+    saved = upsert_host_profile(profile, settings)
+    assert saved.host_key_fingerprint.startswith("SHA256:")
+    loaded = load_host_profiles(settings)
+    assert loaded[0].host_key_fingerprint == saved.host_key_fingerprint
+
+
+def test_r184_reject_policy_raises_unknown_host_key():
+    from utils.ssh_remote import UnknownHostKeyError, _reject_missing_host_key_policy, require_paramiko
+
+    paramiko = require_paramiko()
+    policy = _reject_missing_host_key_policy(paramiko)
+
+    class _Key:
+        def asbytes(self):
+            return b"k"
+
+        def get_name(self):
+            return "ssh-ed25519"
+
+    with pytest.raises(UnknownHostKeyError) as raised:
+        policy.missing_host_key(None, "dev.example", _Key())
+    assert raised.value.hostname == "dev.example"
+    assert raised.value.fingerprint.startswith("SHA256:")
