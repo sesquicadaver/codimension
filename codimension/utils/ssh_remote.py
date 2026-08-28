@@ -723,8 +723,7 @@ def sanitize_ssh_profile_id(raw: str) -> str:
         raise ValueError("invalid profile id: path separators are not allowed")
     if not _PROFILE_ID_RE.fullmatch(text):
         raise ValueError(
-            "invalid profile id: use letters, digits, '.', '_' or '-' "
-            "(1–80 chars, must start with alphanumeric)"
+            "invalid profile id: use letters, digits, '.', '_' or '-' (1–80 chars, must start with alphanumeric)"
         )
     return text
 
@@ -742,8 +741,7 @@ def sanitize_remote_project_name(raw: str) -> str:
         raise ValueError("invalid project name: path separators are not allowed")
     if not _PROJECT_NAME_RE.fullmatch(name):
         raise ValueError(
-            "invalid project name: use letters, digits, '.', '_' or '-' "
-            "(1–128 chars, must start with alphanumeric)"
+            "invalid project name: use letters, digits, '.', '_' or '-' (1–128 chars, must start with alphanumeric)"
         )
     return name
 
