@@ -140,7 +140,7 @@
 | 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue через remote; contract Fake/інтеграція; docs | L | DONE ([#121](https://github.com/sesquicadaver/codimension/pull/121)) |
 | 8 | R199 | SSH remote Profile MVP | Profile run remote + артефакт локально; cancel/timeout; docs | M | DONE |
 | 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | DONE |
-| 10 | R181 | Автоматизація promotion каналів (`dev`→`beta`→`stable` / tags) | Документований pipeline + скрипт/CI; без зайвого theatre | M | OPEN |
+| 10 | R181 | Автоматизація promotion каналів (`dev`→`beta`→`stable` / tags) | Документований pipeline + скрипт/CI; без зайвого theatre | M | DONE |
 | 11 | R182 | MCP / remote agent backend | MCP surface над headless core; auth fail-closed; smoke | L | OPEN |
 
 ---
