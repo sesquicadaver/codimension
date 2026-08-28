@@ -54,7 +54,7 @@ def default_update_cache_dir(home: Optional[str] = None) -> str:
     """Return ``<config-home>/.codimension3/updates`` (honours ``CDM_HOME``)."""
     from utils.portable_profile import updates_cache_dir
 
-    return updates_cache_dir(home=home)
+    return str(updates_cache_dir(home=home))
 
 
 def is_checksum_asset_name(name: str) -> bool:
