@@ -2,7 +2,7 @@
 
 > **Мова / Language:** Українська | [English](ROADMAP.md)
 
-**Поточний tip (синхронізація docs):** `master@76342420` (2026-08-28, аудит Alpha → R183+)  
+**Поточний tip (синхронізація docs):** `master@c629dfd4` (2026-08-28, P1 A201–A210 закриті; черга R192+)  
 **Історичний baseline черги:** `master@d8f2e786` (2026-08-06) — старт лінійного R100+  
 **Living Spec:** [doc/plugins/living-specification.md](doc/plugins/living-specification.md)  
 **Autopilot:** перший рядок `OPEN` в **Активній черзі** (після порожнього [TODO_FIXME.md](TODO_FIXME.md))
@@ -51,9 +51,9 @@
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 UI explain/suggest за flag (offline/mock; без LLM) |
 | 27–29 Extended overlays | DONE | R135 + R160/R161/R162 (env, deps heat, deploy hints) |
-| 30–38 Release/update | DONE | R171–R175 (канал→safe-mode); auto-apply відкладено як R180 |
+| 30–38 Release/update | DONE + queued | R171–R175 здано; auto-apply = **R180** в активній черзі |
 
-**Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply оновлень відкладено (R180) після R173.
+**Оптимізація:** модель соло-форку — `master` + `feature/*` / `fix/*` + protected `ci-gate`. Auto-apply = задача **R180** у лінійній черзі (після R172–R173).
 
 ---
 
@@ -113,44 +113,50 @@
 | D-R177 | R177 | Log → джерело: `path:line:` помилки імпортів + double-click у Log |
 | D-R178 | R178 | Fallback host інструментів: IDE Python, якщо `-m` модуля немає в project venv |
 | D-R179 | R179 | Встановлення відсутніх `-m` інструментів у project venv (діалог; IDE — opt-in) — PR #89 / `8c19d108` |
+| D-R183 | R183 | SSH path containment (A201) — PR #106 |
+| D-R184 | R184 | SSH host-key verification (A202) — PR #107 |
+| D-R185 | R185 | SSH download hardening (A203) — PR #108 |
+| D-R186 | R186 | SSH Run/Save async (A204) — PR #109 |
+| D-R187 | R187 | ExecutionPlan vs Runner + K8s terminal (A205/A206) — PR #110 |
+| D-R188 | R188 | Per-scope CFG + loop/finally (A207) — PR #110 |
+| D-R189 | R189 | VENV create-in-final + backup/rollback (A208) — PR #111 |
+| D-R190 | R190 | `.cdm3` external reload + UUID immutable (A209) — PR #112 |
+| D-R191 | R191 | Plugin policy before import (A210) — PR #113 |
 
 ---
 
 ## Активна черга (суворий порядок — лише OPEN)
 
+Лінійна **неблокуюча** черга: кожна задача — один PR; немає штучних `BLOCKED`/`DEFERRED` усередині хвилі. Порядок = пріоритет (безпека/стабільність → продукт → експерименти). Autopilot бере **перший** рядок зі статусом `OPEN`.
+
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R183 | SSH path containment (A201): UUID/hash profile id; basename allowlist project name; `realpath`/`commonpath` перед mkdir/rmtree/write | Тести на `../`, absolute, separators; fail closed | M | DONE |
-| 2 | R184 | SSH host-key verification (A202): RejectPolicy default; known_hosts; TOFU+fingerprint pin у profile | MITM fail closed; тести FakeSSH | M | DONE |
-| 3 | R185 | SSH download hardening (A203): lstat/reject symlink; nonzero limits; stream; staging+atomic swap | Contract tests FakeSFTP | M | DONE |
-| 4 | R186 | SSH Run/Save async jobs (A204): cancel, timeout, bounded output, SYNC_* state | GUI не блокується; Save≠успіх без SYNCED | L | DONE |
-| 5 | R187 | ExecutionPlan vs Runner (A205) + K8s Job Complete/Failed (A206) | `run` не = prepare; live transport wait terminal | L | DONE |
-| 6 | R188 | Per-scope CFG + loop/finally (A207) | Окремий CFG function; break/continue → loop; docs: не security-proof | L | DONE |
-| 7 | R189 | VENV create-in-final + backup/rollback (A208) | pip/activate shebang = final path; probe scripts | M | DONE |
-| 8 | R190 | `.cdm3` external reload = updateProperties; UUID immutable (A209) | UUID change → reject або full reload | M | DONE |
-| 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | DONE |
-
-### Відкладено (явно)
-
-| ID | Задача | Чому |
-|----|--------|------|
-| R180 | Auto-apply оновлення + rollback / portable profiles | Високий ризик; після R172–R173 |
-| R181 | Повний pipeline `develop`→`release`→`stable` | Надлишково при protected `master` + tags |
-| R182 | MCP / remote agent backend | Не на критичному шляху — лише за явним запитом |
-| R192+ | AI budget/stream (A220), settings root-type (A221), risk confidence (A222), layer move (A223), shutdown smoke (A224) | P2 після P1 хвилі |
+| 1 | R192 | AI HTTP: chunked/budgeted read + cancel + `base_url` trust allowlist (A220) | Немає unbounded `response.read()`; budget/cancel тести; чужий URL fail-closed | M | OPEN |
+| 2 | R193 | Settings: відхилення non-dict JSON; lazy singleton (A221) | Поганий JSON → safe defaults + log; Settings не ламає import | M | OPEN |
+| 3 | R194 | Risk/taint confidence; missing metrics ≠ штучно низький risk (A222) | Confidence/unknown у score; тести на відсутні метрики | M | OPEN |
+| 4 | R195 | Utils side-effect inventory + tighter boundary gate (A223.a) | Інвентар ефектів; gate ловить нові порушення матриці | M | OPEN |
+| 5 | R196 | Перший hotspot: інверсія залежності / винесення з `utils` (A223.b) | Один конкретний перенос + тести; Living Spec | M | OPEN |
+| 6 | R197 | Smoke: graceful shutdown замість `os._exit(0)`; wrapt/constraints (A224) | Нормальний teardown у smoke; constraints резолвляться без ручного wrapt hack | M | OPEN |
+| 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue через remote; contract Fake/інтеграція; docs | L | OPEN |
+| 8 | R199 | SSH remote Profile MVP | Profile run remote + артефакт локально; cancel/timeout; docs | M | OPEN |
+| 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | OPEN |
+| 10 | R181 | Автоматизація promotion каналів (`dev`→`beta`→`stable` / tags) | Документований pipeline + скрипт/CI; без зайвого theatre | M | OPEN |
+| 11 | R182 | MCP / remote agent backend | MCP surface над headless core; auth fail-closed; smoke | L | OPEN |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** P2 хвиля **R192+** (A220–A224) — лише за явним запитом (див. «Відкладено»). P1 A201–A210 закриті.
+**Наступний OPEN:** **R192** (A220 AI HTTP budget/stream/trust). TODO_FIXME: перший 🔓 A220.
 
-### Поставлено поза R-чергою (запит продукту)
+Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
+
+### Поставлено поза R-чергою (вже в MVP / не дублювати)
 
 | Область | Статус | Документація |
 |---------|--------|--------------|
 | SSH remote Open/Create + Browse… + Save upload + IDE Run | MVP | [ssh-remote-project.md](doc/technology/ssh-remote-project.md), [довідка](doc/user/ssh-remote-projects.md) |
-| Повний remote IDE debug / Profile по SSH | Відкладено | Ті самі docs |
+| SSH remote Debug / Profile | У черзі: **R198** / **R199** | Ті самі docs |
 
 ---
 
@@ -160,4 +166,5 @@
 Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
+MCP / agent: після R182
 ```

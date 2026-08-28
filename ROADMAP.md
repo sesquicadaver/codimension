@@ -2,7 +2,7 @@
 
 > **Language / Мова:** English | [Українська](ROADMAP.uk.md)
 
-**Current tip (docs sync):** `master@76342420` (2026-08-28, Alpha audit → R183+)  
+**Current tip (docs sync):** `master@c629dfd4` (2026-08-28, P1 A201–A210 closed; queue R192+)  
 **Queue freeze baseline (historical):** `master@d8f2e786` (2026-08-06) — start of the linear R100+ rebuild  
 **Living Spec:** [doc/en/plugins/living-specification.md](doc/en/plugins/living-specification.md)  
 **Autopilot:** first `OPEN` row in **Active queue** (after empty [TODO_FIXME.md](TODO_FIXME.md))
@@ -51,9 +51,9 @@
 | 25 Plugins | DONE | yapsy + `cdmplugins/*` + R150 capability negotiation |
 | 26 AI | DONE (MVP) | R151 context + R152 flag-gated UI explain/suggest (offline/mock; no LLM) |
 | 27–29 Extended overlays | DONE | R135 framework + R160 env + R161 deps heat + R162 deploy hints |
-| 30–38 Release/update | DONE | R171–R175 (channel→safe-mode); auto-apply deferred as R180 |
+| 30–38 Release/update | DONE + queued | R171–R175 shipped; auto-apply = **R180** in active queue |
 
-**Optimization applied:** solo-fork model — `master` + `feature/*` / `fix/*` + protected `ci-gate` (no `stable/develop` theatre). Auto-update apply/rollback stays deferred (R180) until product asks after R173.
+**Optimization applied:** solo-fork model — `master` + `feature/*` / `fix/*` + protected `ci-gate` (no `stable/develop` theatre). Auto-update apply/rollback is **R180** in the linear queue (after R172–R173).
 
 ---
 
@@ -113,44 +113,50 @@
 | D-R177 | R177 | Log click-to-source: `path:line:` import errors + LogViewer double-click |
 | D-R178 | R178 | Tool host fallback: IDE Python when `-m` tool missing in project venv |
 | D-R179 | R179 | Install missing `-m` tools into project venv (dialog; IDE host opt-in) — PR #89 / `8c19d108` |
+| D-R183 | R183 | SSH path containment (A201) — PR #106 |
+| D-R184 | R184 | SSH host-key verification (A202) — PR #107 |
+| D-R185 | R185 | SSH download hardening (A203) — PR #108 |
+| D-R186 | R186 | SSH Run/Save async (A204) — PR #109 |
+| D-R187 | R187 | ExecutionPlan vs Runner + K8s terminal (A205/A206) — PR #110 |
+| D-R188 | R188 | Per-scope CFG + loop/finally (A207) — PR #110 |
+| D-R189 | R189 | VENV create-in-final + backup/rollback (A208) — PR #111 |
+| D-R190 | R190 | `.cdm3` external reload + UUID immutable (A209) — PR #112 |
+| D-R191 | R191 | Plugin policy before import (A210) — PR #113 |
 
 ---
 
 ## Active queue (strict order — OPEN only)
 
+Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFERRED` inside the wave. Order = priority (safety/stability → product → experiments). Autopilot takes the **first** `OPEN` row.
+
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
-| 1 | R183 | SSH path containment (A201): UUID/hash profile id; basename allowlist project name; `realpath`/`commonpath` before mkdir/rmtree/write | Tests for `../`, absolute, separators; fail closed | M | DONE |
-| 2 | R184 | SSH host-key verification (A202): RejectPolicy default; known_hosts; TOFU+fingerprint pin in profile | MITM fail closed; FakeSSH tests | M | DONE |
-| 3 | R185 | SSH download hardening (A203): lstat/reject symlink; nonzero limits; stream; staging+atomic swap | FakeSFTP contract tests | M | DONE |
-| 4 | R186 | SSH Run/Save async jobs (A204): cancel, timeout, bounded output, SYNC_* state | GUI non-blocking; Save≠success without SYNCED | L | DONE |
-| 5 | R187 | ExecutionPlan vs Runner (A205) + K8s Job Complete/Failed (A206) | `run` ≠ prepare; wait terminal condition | L | DONE |
-| 6 | R188 | Per-scope CFG + loop/finally (A207) | Function CFG; break/continue → loop; docs: not security-proof | L | DONE |
-| 7 | R189 | VENV create-in-final + backup/rollback (A208) | pip/activate shebang = final path; probe scripts | M | DONE |
-| 8 | R190 | `.cdm3` external reload = updateProperties; UUID immutable (A209) | UUID change → reject or full reload | M | DONE |
-| 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | DONE |
-
-### Deferred (explicit)
-
-| ID | Task | Why deferred |
-|----|------|--------------|
-| R180 | Auto-apply update + rollback / portable profiles | High risk; after R172–R173 proven |
-| R181 | Full `develop`/`release` promotion pipeline | Overkill vs protected `master` + tags |
-| R182 | MCP / remote IDE agent backend | Not on critical path — explicit product ask only |
-| R192+ | AI budget/stream (A220), settings root-type (A221), risk confidence (A222), layer move (A223), shutdown smoke (A224) | P2 after P1 wave |
+| 1 | R192 | AI HTTP: chunked/budgeted read + cancel + `base_url` trust allowlist (A220) | No unbounded `response.read()`; budget/cancel tests; untrusted URL fail-closed | M | OPEN |
+| 2 | R193 | Settings: reject non-dict JSON; lazy singleton (A221) | Bad JSON → safe defaults + log; Settings import-safe | M | OPEN |
+| 3 | R194 | Risk/taint confidence; missing metrics ≠ understated risk (A222) | Confidence/unknown in score; tests for missing metrics | M | OPEN |
+| 4 | R195 | Utils side-effect inventory + tighter boundary gate (A223.a) | Inventory; gate catches new matrix violations | M | OPEN |
+| 5 | R196 | First hotspot: invert dependency / extract from `utils` (A223.b) | One concrete move + tests; Living Spec | M | OPEN |
+| 6 | R197 | Smoke: graceful shutdown instead of `os._exit(0)`; wrapt/constraints (A224) | Normal teardown in smoke; constraints resolve without manual wrapt hack | M | OPEN |
+| 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue remote; Fake/integration contracts; docs | L | OPEN |
+| 8 | R199 | SSH remote Profile MVP | Remote profile + local artifact; cancel/timeout; docs | M | OPEN |
+| 9 | R180 | Auto-apply update + rollback / portable profiles | Apply from verified cache; rollback; fail-closed; tests | L | OPEN |
+| 10 | R181 | Channel promotion automation (`dev`→`beta`→`stable` / tags) | Documented pipeline + script/CI; no theatre | M | OPEN |
+| 11 | R182 | MCP / remote agent backend | MCP surface over headless core; auth fail-closed; smoke | L | OPEN |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** P2 wave **R192+** (A220–A224) — only on explicit ask (see Deferred). P1 A201–A210 closed.
+**Next OPEN:** **R192** (A220 AI HTTP budget/stream/trust). TODO_FIXME: first 🔓 A220.
 
-### Shipped outside the R-queue (product ask)
+Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
+
+### Shipped outside the R-queue (MVP — do not duplicate)
 
 | Area | Status | Docs |
 |------|--------|------|
 | SSH remote project Open/Create + Browse… + Save upload + IDE Run | MVP | [ssh-remote-project.md](doc/technology/ssh-remote-project.md), [user guide](doc/user/ssh-remote-projects.md) |
-| Full remote IDE debug / Profile over SSH | Deferred | Same docs |
+| SSH remote Debug / Profile | Queued: **R198** / **R199** | Same docs |
 
 ---
 
@@ -160,4 +166,5 @@
 Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
+MCP / agent: after R182
 ```

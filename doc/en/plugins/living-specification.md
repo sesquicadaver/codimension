@@ -151,7 +151,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — P1 A201–A210 closed; deferred R180–R182 / P2 R192+ on explicit ask.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R192→** (A220…; then R198–R199, R180–R182); linear non-blocking.
 
 ### Module boundary matrix (R103)
 
