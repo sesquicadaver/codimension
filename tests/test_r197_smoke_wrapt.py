@@ -34,11 +34,12 @@ def test_wrapt_imports_after_compat() -> None:
     assert wrapt.__version__.startswith("1.12")
 
 
-def test_smoke_script_has_no_os_exit() -> None:
-    """R197: production smoke must not hard-exit past finally/teardown."""
+def test_smoke_script_shutdown_before_hard_exit() -> None:
+    """R197: ``_shutdown_smoke`` must run; ``os._exit`` only after cleanup."""
     text = (ROOT / "scripts" / "offscreen_gui_smoke.py").read_text(encoding="utf-8")
-    assert "os._exit(" not in text
     assert "_shutdown_smoke" in text
+    assert "os._exit(0)" in text
+    assert text.index("_shutdown_smoke(app, main_window)") < text.index("os._exit(0)")
 
 
 def test_ctl_has_no_wrapt_nodeps_hack() -> None:

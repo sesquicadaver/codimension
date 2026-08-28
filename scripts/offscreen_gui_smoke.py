@@ -4,7 +4,11 @@
 
 Creates CodimensionApplication + CodimensionMainWindow and loads plugins.
 Exit 0 only when at least one bundled plugin activates.
-Uses normal Qt teardown (no hard ``os._exit`` call) so process cleanup runs.
+
+R197 runs normal Python/Qt cleanup (``_shutdown_smoke``) before process exit.
+A final ``os._exit(0)`` remains **after** that cleanup to avoid PyQt atexit
+segfaults on some CI Python builds (historically rc=-11 after a successful
+smoke). Failure paths return normally so traceback/atexit can run.
 """
 
 from __future__ import annotations
@@ -35,7 +39,7 @@ def _ensure_wrapt_shim() -> None:
 
 
 def _shutdown_smoke(app: Any, main_window: Any) -> None:
-    """Close the window and quit the QApplication without ``os._exit``."""
+    """Close the window, quit the app, and clear GlobalData (R197)."""
     from utils.globals import resetGlobalDataForTests
 
     try:
@@ -75,6 +79,7 @@ def main() -> int:
     saved_out, saved_err = sys.stdout, sys.stderr
     app = None
     main_window = None
+    rc = 1
     try:
         # Local import path mirrors tests/debugger/ide_bootstrap.py
         from ui.application import CodimensionApplication
@@ -115,10 +120,14 @@ def main() -> int:
         print(f"offscreen_gui_smoke: OK plugins_active={active} discovered={discovered}")
         sys.stdout.flush()
         sys.stderr.flush()
+        rc = 0
         return 0
     finally:
         sys.stdout, sys.stderr = saved_out, saved_err
         _shutdown_smoke(app, main_window)
+        if rc == 0:
+            # Cleanup already ran; skip fragile PyQt interpreter shutdown.
+            os._exit(0)
 
 
 if __name__ == "__main__":
