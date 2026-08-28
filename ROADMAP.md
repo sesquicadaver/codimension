@@ -132,7 +132,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
 | 1 | R192 | AI HTTP: chunked/budgeted read + cancel + `base_url` trust allowlist (A220) | No unbounded `response.read()`; budget/cancel tests; untrusted URL fail-closed | M | DONE |
-| 2 | R193 | Settings: reject non-dict JSON; lazy singleton (A221) | Bad JSON → safe defaults + log; Settings import-safe | M | OPEN |
+| 2 | R193 | Settings: reject non-dict JSON; lazy singleton (A221) | Bad JSON → safe defaults + log; Settings import-safe | M | DONE |
 | 3 | R194 | Risk/taint confidence; missing metrics ≠ understated risk (A222) | Confidence/unknown in score; tests for missing metrics | M | OPEN |
 | 4 | R195 | Utils side-effect inventory + tighter boundary gate (A223.a) | Inventory; gate catches new matrix violations | M | OPEN |
 | 5 | R196 | First hotspot: invert dependency / extract from `utils` (A223.b) | One concrete move + tests; Living Spec | M | OPEN |
@@ -147,7 +147,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R193** (A221 Settings non-dict + lazy singleton). TODO_FIXME: first 🔓 A221.
+**Next OPEN:** **R194** (A222 Risk/taint confidence). TODO_FIXME: first 🔓 A222.
 
 Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
 

@@ -1,5 +1,6 @@
 2026 Aug 28
 
+* R193: Settings reject non-dict JSON; lazy Settings() singleton (A221)
 * R192: AI HTTP budgeted chunked read, cancel callback, ``base_url`` trust allowlist (A220)
 * Docs: linear non-blocking queue R192–R199 + R180–R182 (unlock former deferred)
 * R191: Plugin policy before import — disabled paths stay manifest-only until enable

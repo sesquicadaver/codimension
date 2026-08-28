@@ -341,6 +341,23 @@ class SettingsWrapper(
             self.flush()
             return
 
+        # R193 / A221: valid JSON that is not an object must not crash startup.
+        if not isinstance(diskValues, dict):
+            self.__saveErrors(
+                "Settings file "
+                + self.__fullFileName
+                + " root must be a JSON object; got "
+                + type(diskValues).__name__
+                + ". Overwriting with the default settings..."
+            )
+            logging.error(
+                "Rejecting non-object settings JSON at %s (got %s); using defaults",
+                self.__fullFileName,
+                type(diskValues).__name__,
+            )
+            self.flush()
+            return
+
         for item, val in diskValues.items():
             if item in self.__values:
                 if type(self.__values[item]) is not type(val):
@@ -638,9 +655,29 @@ class SettingsWrapper(
         return ret
 
 
-SETTINGS_SINGLETON = SettingsWrapper()
+_SETTINGS_SINGLETON: SettingsWrapper | None = None
 
 
-def Settings():
-    """Settings singleton access"""
-    return SETTINGS_SINGLETON
+def resetSettingsSingletonForTests() -> None:
+    """Drop the lazy Settings singleton (tests only; R193)."""
+    global _SETTINGS_SINGLETON
+    _SETTINGS_SINGLETON = None
+
+
+def Settings() -> SettingsWrapper:
+    """Settings singleton access (lazy — R193 / A221).
+
+    Construction is deferred until first call so importing ``utils.settings``
+    does not instantiate Qt objects or touch the settings directory.
+    """
+    global _SETTINGS_SINGLETON
+    if _SETTINGS_SINGLETON is None:
+        _SETTINGS_SINGLETON = SettingsWrapper()
+    return _SETTINGS_SINGLETON
+
+
+def __getattr__(name: str):
+    """Module-level lazy alias for legacy ``SETTINGS_SINGLETON`` imports."""
+    if name == "SETTINGS_SINGLETON":
+        return Settings()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
