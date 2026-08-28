@@ -10,6 +10,6 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **active queue empty** (R179 done — PR #89). TODO_FIXME has no remaining 🔓 OPEN rows.
-Deferred only (do not pull forward without an explicit ask): **R180**, **R181**, **R182**.
-Active queue lists OPEN only; DONE history lives in ROADMAP Archive.
+Current pointer: **R184 / A202** — SSH host-key verification (RejectPolicy / known_hosts / fingerprint pin).
+R183 / A201 (path containment) shipped on this cycle’s branch pending merge.
+Deferred without explicit ask: **R180**, **R181**, **R182**, and P2 wave **R192+** (A220–A224).

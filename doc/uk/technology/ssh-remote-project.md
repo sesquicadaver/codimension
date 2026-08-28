@@ -27,6 +27,14 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 
 Профілі хостів (без секретів): `~/.codimension3/ssh_hosts.json`.
 
+## Path containment (R183)
+
+- `profile.id` — лише basename-allowlist (`[A-Za-z0-9._-]`, ≤80); separators,
+  absolute paths, `.` / `..` відхиляються.
+- Ім’я remote-проєкту — ті самі правила (≤128).
+- Локальний кеш завжди під `<settings>/remote-projects/<id>/<digest>/`;
+  `rmtree`/записи перевіряються через `commonpath`.
+
 ## Обсяг завантаження
 
 За замовчуванням качається **все** дерево проєкту (**без** ліміту файлів/байтів).

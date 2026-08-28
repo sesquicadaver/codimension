@@ -2,7 +2,7 @@
 
 > **Мова / Language:** Українська | [English](ROADMAP.md)
 
-**Поточний tip (синхронізація docs):** `master@01be812c` (2026-08-09, після R174)  
+**Поточний tip (синхронізація docs):** `master@76342420` (2026-08-28, аудит Alpha → R183+)  
 **Історичний baseline черги:** `master@d8f2e786` (2026-08-06) — старт лінійного R100+  
 **Living Spec:** [doc/plugins/living-specification.md](doc/plugins/living-specification.md)  
 **Autopilot:** перший рядок `OPEN` в **Активній черзі** (після порожнього [TODO_FIXME.md](TODO_FIXME.md))
@@ -120,7 +120,15 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| — | — | *(порожньо)* | — | — | — |
+| 1 | R183 | SSH path containment (A201): UUID/hash profile id; basename allowlist project name; `realpath`/`commonpath` перед mkdir/rmtree/write | Тести на `../`, absolute, separators; fail closed | M | DONE |
+| 2 | R184 | SSH host-key verification (A202): RejectPolicy default; known_hosts; TOFU+fingerprint pin у profile | MITM fail closed; тести FakeSSH | M | OPEN |
+| 3 | R185 | SSH download hardening (A203): lstat/reject symlink; nonzero limits; stream; staging+atomic swap | Contract tests FakeSFTP | M | OPEN |
+| 4 | R186 | SSH Run/Save async jobs (A204): cancel, timeout, bounded output, SYNC_* state | GUI не блокується; Save≠успіх без SYNCED | L | OPEN |
+| 5 | R187 | ExecutionPlan vs Runner (A205) + K8s Job Complete/Failed (A206) | `run` не = prepare; live transport wait terminal | L | OPEN |
+| 6 | R188 | Per-scope CFG + loop/finally (A207) | Окремий CFG function; break/continue → loop; docs: не security-proof | L | OPEN |
+| 7 | R189 | VENV create-in-final + backup/rollback (A208) | pip/activate shebang = final path; probe scripts | M | OPEN |
+| 8 | R190 | `.cdm3` external reload = updateProperties; UUID immutable (A209) | UUID change → reject або full reload | M | OPEN |
+| 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | OPEN |
 
 ### Відкладено (явно)
 
@@ -128,13 +136,14 @@
 |----|--------|------|
 | R180 | Auto-apply оновлення + rollback / portable profiles | Високий ризик; після R172–R173 |
 | R181 | Повний pipeline `develop`→`release`→`stable` | Надлишково при protected `master` + tags |
-| R182 | MCP / remote agent backend | Не на критичному шляху; ExecutionTarget (R121–R125) уже є — лише за явним запитом продукту |
+| R182 | MCP / remote agent backend | Не на критичному шляху — лише за явним запитом |
+| R192+ | AI budget/stream (A220), settings root-type (A221), risk confidence (A222), layer move (A223), shutdown smoke (A224) | P2 після P1 хвилі |
 
 ---
 
 ## Вказівник autopilot
 
-**Активна черга порожня** (R179 злито — PR #89 / `8c19d108`). Далі — лише за явним запитом на deferred **R180** / **R181** / **R182**.
+**Наступний OPEN:** **R184** (A202 SSH host-key verification). TODO_FIXME: перший 🔓 A202.
 
 ### Поставлено поза R-чергою (запит продукту)
 
