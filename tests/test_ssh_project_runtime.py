@@ -316,9 +316,10 @@ def test_r199_try_handle_profile_schedules(tmp_path, monkeypatch):
         "schedule_remote_profile",
         lambda *a, **k: called.append((a, k)) or rt.SshJobHandle(kind="profile", path=str(script)),
     )
-    monkeypatch.setattr(
-        "utils.diskvaluesrelay.getRunParameters",
-        lambda _p: {"arguments": "--n 1", "redirected": True},
-    )
+    import utils.diskvaluesrelay as dvr
+
+    monkeypatch.setattr(dvr, "getRunParameters", lambda _p: {"arguments": "--n 1", "redirected": True})
     assert rt.try_handle_ide_run(str(script), kind="profile") is True
     assert called
+    # argv args forwarded from run parameters
+    assert called[0][0][2] == ["--n", "1"]
