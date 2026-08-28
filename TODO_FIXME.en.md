@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue: **R190→**.
+No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue: **R191→**.
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
@@ -19,7 +19,7 @@ No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue
 | A206 | Kubernetes: wait Ready ≠ Complete; argv hash; cleanup not in finally | P1 | ✅ R187 |
 | A207 | CFG: global EXIT; break/continue without loop stack; unfit for data-flow/security | P1 | ✅ R188 |
 | A208 | VENV: staging→final rename breaks shebang/activate (prior D02/B07 insufficient) | P1 | ✅ R189 |
-| A209 | External `.cdm3` update: split-brain; UUID mutable after load | P1 | 🔓 OPEN |
+| A209 | External `.cdm3` update: split-brain; UUID mutable after load | P1 | ✅ R190 |
 | A210 | Plugin policy after importing plugin code (not fail-closed) | P1 | 🔓 OPEN |
 
 ### P2 / hardening (second wave)

@@ -650,21 +650,41 @@ class CodimensionProject(
             path += sep
         return path in self.topLevelDirs
 
-    def updateProperties(self, props):
-        """Updates the project properties via the same schema pipeline as load (B09)."""
+    def updateProperties(self, props, *, persist: bool = True):
+        """Updates the project properties via the same schema pipeline as load (B09).
+
+        R190 / A209: UUID is immutable after a project is loaded. Blank UUID in
+        ``props`` keeps the loaded value; any other change is rejected (forced
+        back to the loaded UUID).
+
+        ``persist=False`` applies in-memory updates (and rescans) without writing
+        ``.cdm3`` — used when the file was already updated externally.
+        """
         try:
             validated = merge_project_defaults(validate_project_props(copy.deepcopy(props)))
         except ProjectSchemaError as exc:
             logging.error("Rejecting invalid project properties update: %s", exc)
             raise
+        loaded_uuid = (self.props.get("uuid") or "").strip()
+        incoming_uuid = (validated.get("uuid") or "").strip()
         # Keep existing UUID when the dialog omits / blanks it.
-        if not validated.get("uuid") and self.props.get("uuid"):
-            validated["uuid"] = self.props["uuid"]
+        if not incoming_uuid and loaded_uuid:
+            validated["uuid"] = loaded_uuid
+            incoming_uuid = loaded_uuid
+        # R190: UUID must not change after load (userProjectDir / caches bind to it).
+        if loaded_uuid and incoming_uuid and incoming_uuid != loaded_uuid:
+            logging.warning(
+                "Project UUID is immutable after load; keeping %s (ignored %s)",
+                loaded_uuid,
+                incoming_uuid,
+            )
+            validated["uuid"] = loaded_uuid
         if self.props != validated:
             analysis_props = ("excludeFromAnalysis", "importdirs", "pythoninterpreter")
             need_rescan = any(self.props.get(p) != validated.get(p) for p in analysis_props)
             self.props = validated
-            self.saveProject()
+            if persist:
+                self.saveProject()
             if need_rescan:
                 # CompleteProject after filesList is ready
                 self.__generateFilesList(on_complete=self.__finishAnalysisRescan)
@@ -688,7 +708,12 @@ class CodimensionProject(
         self.__generateFilesList(on_complete=self.__finishAnalysisRescan)
 
     def onProjectFileUpdated(self):
-        """Reload `.cdm3` from disk; keep last-known-good props on validation failure."""
+        """Reload `.cdm3` from disk via ``updateProperties`` (R190 / A209).
+
+        Keeps last-known-good props on validation failure. Rejects a disk UUID
+        that differs from the loaded project (close/reopen required). Same-UUID
+        edits share the Properties/rescan path without rewriting the file.
+        """
         try:
             props = load_validated_project_props(self.fileName)
         except Exception as exc:
@@ -698,9 +723,19 @@ class CodimensionProject(
                 exc,
             )
             return
-        self.props = props
-        # no need to save, but signal just in case
-        self.sigProjectChanged.emit(self.Properties)
+        loaded_uuid = (self.props.get("uuid") or "").strip()
+        disk_uuid = (props.get("uuid") or "").strip()
+        if loaded_uuid and disk_uuid and disk_uuid != loaded_uuid:
+            logging.error(
+                "Ignoring external project file update (%s): UUID changed "
+                "(%s → %s); close and reopen the project to adopt a new UUID",
+                self.fileName,
+                loaded_uuid,
+                disk_uuid,
+            )
+            return
+        # Disk already has the payload — apply without rewriting (avoid churn).
+        self.updateProperties(props, persist=False)
 
     def isLoaded(self):
         """Returns True if a project is loaded"""

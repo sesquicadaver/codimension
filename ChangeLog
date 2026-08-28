@@ -1,5 +1,6 @@
 2026 Aug 28
 
+* R190: External `.cdm3` reload via ``updateProperties``; UUID immutable after load
 * R189: VENV create/recreate at final path with backup/rollback (no staging rename
   that bakes wrong shebang/VIRTUAL_ENV)
 * R188: Per-scope CFG ENTRY/EXIT; break/continue loop stack; finally routing; docs not security-proof
