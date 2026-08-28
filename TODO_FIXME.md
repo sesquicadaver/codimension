@@ -43,7 +43,7 @@
 | E04 (штатний unlink) | Launcher cleanup до execvp | P1 | ✅ |
 | E05 | Profile timeout від shell `&` евристики; orphan `.done` | P1 | ✅ |
 | E06 | noexec execute-probe; обмеження shell-safe paths | P1 | ✅ |
-| D02 / B07 | VENV staging+commit (MVP) | P1 | ✅ → reopen як A208 |
+| D02 / B07 | VENV staging+commit (MVP) | P1 | ✅ (superseded by A208) |
 | C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | ✅ |
 | B03 | Project scan cancel/join/coalescing | P1 | ✅ |
 | B04 | brief keyword/name/colon + target/alias positions | P1 | ✅ |
