@@ -75,8 +75,12 @@ ssh = [
   "paramiko>=3.0",
   "keyring>=23.0",
 ]
+# R182: optional Model Context Protocol SDK (stdio agent backend).
+mcp = [
+  "mcp>=2.0,<3",
+]
 dev = [
-  "codimension[tools,lint,test,security,ssh]",
+  "codimension[tools,lint,test,security,ssh,mcp]",
 ]
 
 [project.urls]
@@ -86,6 +90,9 @@ Issues = "https://github.com/sesquicadaver/codimension/issues"
 
 [project.gui-scripts]
 codimension = "codimension.codimension:main"
+
+[project.scripts]
+codimension-mcp = "codimension.mcp_backend.server:main"
 
 [tool.ruff]
 target-version = "py310"

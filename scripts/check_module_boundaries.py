@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """R103/R195: enforce the named-layer module boundary matrix in CI.
 
-Layers: ``core``, ``infrastructure``, ``app``, ``utils``, ``ui``, ``plugins``.
+Layers: ``core``, ``infrastructure``, ``app``, ``utils``, ``ui``, ``plugins``,
+``mcp_backend`` (R182).
 
 Static AST gate over Import/ImportFrom (incl. relative) and literal
 ``importlib.import_module`` / ``__import__`` string arguments.
@@ -29,6 +30,7 @@ NAMED_LAYERS = frozenset(
         "utils",
         "ui",
         "plugins",
+        "mcp_backend",
     }
 )
 
@@ -42,11 +44,13 @@ ALLOWED_EDGES: dict[str, frozenset[str]] = {
     "utils": frozenset({"core", "infrastructure", "app"}),
     "ui": frozenset({"core", "infrastructure", "app", "utils", "plugins"}),
     "plugins": frozenset({"core", "infrastructure", "app", "utils", "ui"}),
+    # R182: MCP process wraps headless core only (no ui/plugins/qt).
+    "mcp_backend": frozenset({"core", "infrastructure", "app", "utils"}),
 }
 
 # Synthetic layer for Qt bindings — never allowed into Qt-free packages.
 QT_LAYER = "qt"
-QTFREE_LAYERS = frozenset({"core", "infrastructure", "app"})
+QTFREE_LAYERS = frozenset({"core", "infrastructure", "app", "mcp_backend"})
 
 # R195: grandfathered utils → {ui, plugins, qt} edges (posix path from repo root).
 # Shrink this map in R196+ when a hotspot is extracted; do not grow it.
