@@ -9,11 +9,22 @@
 # (at your option) any later version.
 #
 
-"""Headless CFG graph model separated from ``flowui`` canvas (R140.a).
+"""Headless CFG graph model separated from ``flowui`` canvas (R140.a / R188).
 
 Builds an immutable-ish node/edge graph from a control-flow fragment tree
 (``core.flow`` / ``cdmcfparser``). Flow UI binds the graph via
 ``flowui.cfg_adapter`` during ``VirtualCanvas.layoutModule`` (R140.b).
+
+R188 / A207:
+- Each function/class gets nested ``ENTRY``/``EXIT`` (terminals leave the
+  **scope** exit, not a single module-global EXIT).
+- ``break`` / ``continue`` use a loop stack (join / loop header).
+- ``try``/``finally`` routes terminals through the finally entry first
+  (imprecise merge of normal vs exceptional successors).
+
+**Not security-proof / not a sound data-flow CFG:** finally merging,
+exception edges, and with/async are approximate. Do not treat this graph as
+a correctness oracle for security analysis.
 
 Spans are half-open Unicode character ranges ``[start, end)`` via
 :class:`core.symbol_index.SourceSpan`.
@@ -180,12 +191,26 @@ class CfgGraph:
         return tuple(n for n in self.nodes.values() if n.kind == kind)
 
 
+@dataclass
+class _FinallyFrame:
+    """Active ``finally`` while building a try body (R188)."""
+
+    entry_id: str
+    deferred: list[tuple[str, CfgEdgeKind]] = field(default_factory=list)
+
+
 class _Builder:
     """Mutable builder that walks a CF fragment tree into a CfgGraph."""
 
     def __init__(self) -> None:
         self.graph = CfgGraph()
         self._seq = 0
+        # Innermost loop first: (loop_header_id, loop_join_id)
+        self._loop_stack: list[tuple[str, str]] = []
+        # Innermost scope EXIT (module / function / class)
+        self._scope_exit_stack: list[str] = []
+        # Innermost finally entry for terminal routing
+        self._finally_stack: list[_FinallyFrame] = []
 
     def new_id(self, prefix: str) -> str:
         """Allocate a unique node id."""
@@ -238,6 +263,36 @@ class _Builder:
         for src in srcs:
             self.add_edge(src, dst, kind)
 
+    def _current_scope_exit(self) -> str:
+        """EXIT id for the innermost function/class/module scope."""
+        if self._scope_exit_stack:
+            return self._scope_exit_stack[-1]
+        return self.graph.exit_id
+
+    def _resolve_terminal_target(self, kind: CfgNodeKind) -> tuple[str, CfgEdgeKind]:
+        """Return ``(dst, edge_kind)`` for a terminal statement (R188)."""
+        if kind == CfgNodeKind.BREAK:
+            if self._loop_stack:
+                return self._loop_stack[-1][1], CfgEdgeKind.EXIT
+            return self._current_scope_exit(), CfgEdgeKind.EXIT
+        if kind == CfgNodeKind.CONTINUE:
+            if self._loop_stack:
+                return self._loop_stack[-1][0], CfgEdgeKind.LOOP_BACK
+            return self._current_scope_exit(), CfgEdgeKind.EXIT
+        # return / raise / sysexit → current scope exit
+        return self._current_scope_exit(), CfgEdgeKind.EXIT
+
+    def _emit_terminal(self, node_id: str, kind: CfgNodeKind) -> tuple[str, list[str]]:
+        """Wire a terminal node; honour finally then loop/scope stacks."""
+        target, edge_kind = self._resolve_terminal_target(kind)
+        if self._finally_stack:
+            frame = self._finally_stack[-1]
+            self.add_edge(node_id, frame.entry_id, CfgEdgeKind.EXIT)
+            frame.deferred.append((target, edge_kind))
+            return node_id, []
+        self.add_edge(node_id, target, edge_kind)
+        return node_id, []
+
     def build_from_control_flow(self, cf: Any) -> CfgGraph:
         """Populate the graph from a ControlFlow-compatible root."""
         errors = tuple(tuple(e) for e in (getattr(cf, "errors", None) or ()))
@@ -260,6 +315,7 @@ class _Builder:
         )
         self.graph.entry_id = entry_id
         self.graph.exit_id = exit_id
+        self._scope_exit_stack.append(exit_id)
 
         suite = list(getattr(cf, "suite", None) or [])
         first, falls = self._suite(suite, parent_id=module_id)
@@ -268,6 +324,7 @@ class _Builder:
         else:
             self.add_edge(entry_id, first, CfgEdgeKind.NEXT)
             self.link_many(falls, exit_id, CfgEdgeKind.EXIT)
+        self._scope_exit_stack.pop()
         return self.graph
 
     def _suite(self, suite: list[Any], *, parent_id: str) -> tuple[Optional[str], list[str]]:
@@ -305,19 +362,38 @@ class _Builder:
 
         node_id = self.add_node(node_kind, item, parent_id=parent_id)
         if node_kind in _TERMINAL_KINDS:
-            self.add_edge(node_id, self.graph.exit_id, CfgEdgeKind.EXIT)
-            return node_id, []
+            return self._emit_terminal(node_id, node_kind)
         return node_id, [node_id]
 
     def _scope(self, item: Any, kind: CfgNodeKind, *, parent_id: str) -> tuple[str, list[str]]:
-        """Function/class: node + BODY into nested suite, then fallthrough."""
+        """Function/class: nested ENTRY/EXIT CFG, outer fallthrough is the scope node."""
         node_id = self.add_node(kind, item, parent_id=parent_id)
+        scope_entry = self.add_node(
+            CfgNodeKind.ENTRY,
+            label=f"<{kind.value}_entry>",
+            parent_id=node_id,
+            span=_span_of(item),
+            prefix="entry",
+        )
+        scope_exit = self.add_node(
+            CfgNodeKind.EXIT,
+            label=f"<{kind.value}_exit>",
+            parent_id=node_id,
+            span=_span_of(item),
+            prefix="exit",
+        )
+        self.add_edge(node_id, scope_entry, CfgEdgeKind.BODY)
         suite = list(getattr(item, "suite", None) or [])
-        first, falls = self._suite(suite, parent_id=node_id)
-        if first is not None:
-            self.add_edge(node_id, first, CfgEdgeKind.BODY)
-            # Nested terminals already wired to global EXIT; remaining falls stay internal.
-            _ = falls
+        self._scope_exit_stack.append(scope_exit)
+        try:
+            first, falls = self._suite(suite, parent_id=node_id)
+            if first is None:
+                self.add_edge(scope_entry, scope_exit, CfgEdgeKind.NEXT)
+            else:
+                self.add_edge(scope_entry, first, CfgEdgeKind.NEXT)
+                self.link_many(falls, scope_exit, CfgEdgeKind.EXIT)
+        finally:
+            self._scope_exit_stack.pop()
         return node_id, [node_id]
 
     def _with(self, item: Any, *, parent_id: str) -> tuple[str, list[str]]:
@@ -371,7 +447,7 @@ class _Builder:
         return if_id, [join_id]
 
     def _loop(self, item: Any, *, parent_id: str) -> tuple[str, list[str]]:
-        """For/while with BODY, LOOP_BACK, optional ELSE, and join."""
+        """For/while with BODY, LOOP_BACK, optional ELSE, and join (R188 loop stack)."""
         loop_id = self.add_node(CfgNodeKind.LOOP, item, parent_id=parent_id)
         join_id = self.add_node(
             CfgNodeKind.JOIN,
@@ -380,28 +456,32 @@ class _Builder:
             span=_span_of(item),
             prefix="join",
         )
-        suite = list(getattr(item, "suite", None) or [])
-        first, falls = self._suite(suite, parent_id=loop_id)
-        if first is None:
-            self.add_edge(loop_id, join_id, CfgEdgeKind.FALSE)
-        else:
-            self.add_edge(loop_id, first, CfgEdgeKind.BODY)
-            self.link_many(falls or [first], loop_id, CfgEdgeKind.LOOP_BACK)
-            self.add_edge(loop_id, join_id, CfgEdgeKind.FALSE)
-        else_part = getattr(item, "elsePart", None)
-        if else_part is not None:
-            else_id = self.add_node(CfgNodeKind.BRANCH, else_part, parent_id=loop_id, label="else")
-            self.add_edge(loop_id, else_id, CfgEdgeKind.ELSE)
-            e_first, e_falls = self._suite(list(getattr(else_part, "suite", None) or []), parent_id=else_id)
-            if e_first is None:
-                self.add_edge(else_id, join_id, CfgEdgeKind.BODY)
+        self._loop_stack.append((loop_id, join_id))
+        try:
+            suite = list(getattr(item, "suite", None) or [])
+            first, falls = self._suite(suite, parent_id=loop_id)
+            if first is None:
+                self.add_edge(loop_id, join_id, CfgEdgeKind.FALSE)
             else:
-                self.add_edge(else_id, e_first, CfgEdgeKind.BODY)
-                self.link_many(e_falls or [e_first], join_id, CfgEdgeKind.NEXT)
+                self.add_edge(loop_id, first, CfgEdgeKind.BODY)
+                self.link_many(falls or [first], loop_id, CfgEdgeKind.LOOP_BACK)
+                self.add_edge(loop_id, join_id, CfgEdgeKind.FALSE)
+            else_part = getattr(item, "elsePart", None)
+            if else_part is not None:
+                else_id = self.add_node(CfgNodeKind.BRANCH, else_part, parent_id=loop_id, label="else")
+                self.add_edge(loop_id, else_id, CfgEdgeKind.ELSE)
+                e_first, e_falls = self._suite(list(getattr(else_part, "suite", None) or []), parent_id=else_id)
+                if e_first is None:
+                    self.add_edge(else_id, join_id, CfgEdgeKind.BODY)
+                else:
+                    self.add_edge(else_id, e_first, CfgEdgeKind.BODY)
+                    self.link_many(e_falls or [e_first], join_id, CfgEdgeKind.NEXT)
+        finally:
+            self._loop_stack.pop()
         return loop_id, [join_id]
 
     def _try(self, item: Any, *, parent_id: str) -> tuple[str, list[str]]:
-        """Try/except/else/finally with a join."""
+        """Try/except/else/finally with a join (R188 finally routing)."""
         try_id = self.add_node(CfgNodeKind.TRY, item, parent_id=parent_id)
         join_id = self.add_node(
             CfgNodeKind.JOIN,
@@ -410,50 +490,69 @@ class _Builder:
             span=_span_of(item),
             prefix="join",
         )
-        body_first, body_falls = self._suite(list(getattr(item, "suite", None) or []), parent_id=try_id)
-        if body_first is None:
-            self.add_edge(try_id, join_id, CfgEdgeKind.BODY)
-            body_exits = [try_id]
-        else:
-            self.add_edge(try_id, body_first, CfgEdgeKind.BODY)
-            body_exits = body_falls or [body_first]
-
-        handler_exits: list[str] = []
-        for part in list(getattr(item, "exceptParts", None) or []):
-            branch_id = self.add_node(CfgNodeKind.BRANCH, part, parent_id=try_id)
-            self.add_edge(try_id, branch_id, CfgEdgeKind.EXCEPT)
-            first, falls = self._suite(list(getattr(part, "suite", None) or []), parent_id=branch_id)
-            if first is None:
-                self.add_edge(branch_id, join_id, CfgEdgeKind.BODY)
-            else:
-                self.add_edge(branch_id, first, CfgEdgeKind.BODY)
-                handler_exits.extend(falls or [first])
-
-        else_part = getattr(item, "elsePart", None)
-        if else_part is not None:
-            else_id = self.add_node(CfgNodeKind.BRANCH, else_part, parent_id=try_id, label="else")
-            self.link_many(body_exits, else_id, CfgEdgeKind.ELSE)
-            first, falls = self._suite(list(getattr(else_part, "suite", None) or []), parent_id=else_id)
-            if first is None:
-                self.add_edge(else_id, join_id, CfgEdgeKind.BODY)
-            else:
-                self.add_edge(else_id, first, CfgEdgeKind.BODY)
-                handler_exits.extend(falls or [first])
-        else:
-            handler_exits.extend(body_exits)
-
         finally_part = getattr(item, "finallyPart", None)
+        fin_id: Optional[str] = None
+        frame: Optional[_FinallyFrame] = None
         if finally_part is not None:
             fin_id = self.add_node(CfgNodeKind.BRANCH, finally_part, parent_id=try_id, label="finally")
-            self.link_many(handler_exits or [try_id], fin_id, CfgEdgeKind.FINALLY)
+            frame = _FinallyFrame(entry_id=fin_id)
+            self._finally_stack.append(frame)
+
+        try:
+            body_first, body_falls = self._suite(list(getattr(item, "suite", None) or []), parent_id=try_id)
+            if body_first is None:
+                body_exits = [try_id]
+            else:
+                self.add_edge(try_id, body_first, CfgEdgeKind.BODY)
+                body_exits = body_falls or [body_first]
+
+            handler_exits: list[str] = []
+            for part in list(getattr(item, "exceptParts", None) or []):
+                branch_id = self.add_node(CfgNodeKind.BRANCH, part, parent_id=try_id)
+                self.add_edge(try_id, branch_id, CfgEdgeKind.EXCEPT)
+                first, falls = self._suite(list(getattr(part, "suite", None) or []), parent_id=branch_id)
+                if first is None:
+                    handler_exits.append(branch_id)
+                else:
+                    self.add_edge(branch_id, first, CfgEdgeKind.BODY)
+                    handler_exits.extend(falls or [first])
+
+            else_part = getattr(item, "elsePart", None)
+            if else_part is not None:
+                else_id = self.add_node(CfgNodeKind.BRANCH, else_part, parent_id=try_id, label="else")
+                self.link_many(body_exits, else_id, CfgEdgeKind.ELSE)
+                first, falls = self._suite(list(getattr(else_part, "suite", None) or []), parent_id=else_id)
+                if first is None:
+                    handler_exits.append(else_id)
+                else:
+                    self.add_edge(else_id, first, CfgEdgeKind.BODY)
+                    handler_exits.extend(falls or [first])
+            else:
+                handler_exits.extend(body_exits)
+        finally:
+            if frame is not None:
+                self._finally_stack.pop()
+
+        if fin_id is not None and finally_part is not None:
+            normal_into_finally = handler_exits or [try_id]
+            self.link_many(normal_into_finally, fin_id, CfgEdgeKind.FINALLY)
             first, falls = self._suite(list(getattr(finally_part, "suite", None) or []), parent_id=fin_id)
             if first is None:
                 self.add_edge(fin_id, join_id, CfgEdgeKind.BODY)
+                fin_exits = [fin_id]
             else:
                 self.add_edge(fin_id, first, CfgEdgeKind.BODY)
                 self.link_many(falls or [first], join_id, CfgEdgeKind.NEXT)
+                fin_exits = falls or [first]
+            # Imprecise: also wire finally exits to deferred terminal targets.
+            if frame is not None:
+                for target, edge_kind in frame.deferred:
+                    self.link_many(fin_exits, target, edge_kind)
         else:
-            self.link_many(handler_exits or [try_id], join_id, CfgEdgeKind.NEXT)
+            if body_first is None and not handler_exits:
+                self.add_edge(try_id, join_id, CfgEdgeKind.BODY)
+            else:
+                self.link_many(handler_exits or [try_id], join_id, CfgEdgeKind.NEXT)
         return try_id, [join_id]
 
     def _match(self, item: Any, *, parent_id: str) -> tuple[str, list[str]]:

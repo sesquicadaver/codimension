@@ -1,5 +1,6 @@
 2026 Aug 28
 
+* R188: Per-scope CFG ENTRY/EXIT; break/continue loop stack; finally routing; docs not security-proof
 * R187: ExecutionPlan vs Runner; K8s wait Succeeded/Failed, UUID names, finally cleanup
 * R186: SSH Run/Save async jobs — cancel/timeout/output caps; SYNC_* distinct from local save
 * R185: SSH download hardening — lstat/reject symlink, nonzero default

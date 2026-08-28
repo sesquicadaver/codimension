@@ -17,7 +17,7 @@ No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue
 | A204 | SSH Run/Save block GUI; no cancel/timeout/output cap; Save≠SYNCED | P1 | ✅ R186 |
 | A205 | `ExecutionTarget.run` = prepare argv (`exit_code=None`), not execute | P1 | ✅ R187 |
 | A206 | Kubernetes: wait Ready ≠ Complete; argv hash; cleanup not in finally | P1 | ✅ R187 |
-| A207 | CFG: global EXIT; break/continue without loop stack; unfit for data-flow/security | P1 | 🔓 OPEN |
+| A207 | CFG: global EXIT; break/continue without loop stack; unfit for data-flow/security | P1 | ✅ R188 |
 | A208 | VENV: staging→final rename breaks shebang/activate (prior D02/B07 insufficient) | P1 | 🔓 OPEN |
 | A209 | External `.cdm3` update: split-brain; UUID mutable after load | P1 | 🔓 OPEN |
 | A210 | Plugin policy after importing plugin code (not fail-closed) | P1 | 🔓 OPEN |
