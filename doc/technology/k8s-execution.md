@@ -12,14 +12,20 @@ Headless in-cluster runs go through
   inside the pod.
 - No automatic image build / ConfigMap sync in R125.
 - Metadata includes `sync=in-image-or-volume-assumed`.
-- Prepare-only results also embed a JSON Job stub (`job_stub`) for tooling.
+- **R187:** `prepare_run` / `prepare_debug` / `prepare_profile` return an
+  `ExecutionPlan` (argv + Job stub). `run` / `debug` / `profile` **execute**
+  by default (not prepare-only).
 
 ## Transport
 
 | Transport | Role |
 | --------- | ---- |
 | `FakeK8sJobTransport` | Contract tests / CI (no cluster) |
-| `SubprocessKubectlTransport` | Best-effort `kubectl run` + logs |
+| `SubprocessKubectlTransport` | Best-effort `kubectl run` + terminal wait |
+
+`SubprocessKubectlTransport` (R187 / A206): unique UUID pod names (not
+`hash(argv)`); waits for phase **Succeeded/Failed** (not Ready); always
+deletes the pod in `finally`.
 
 ## Unverified platforms
 

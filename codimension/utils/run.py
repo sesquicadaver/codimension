@@ -669,8 +669,8 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
     uses ``python -m cProfile`` (E02) and a completion marker so results are
     not tied to terminal lifetime (E05).
 
-    Argv is prepared via ``LocalExecutionTarget`` (R122) so local runs share
-    the ``ExecutionTarget`` contract with future remote backends.
+    Argv is prepared via ``LocalExecutionTarget.prepare_*`` (R122 / R187) so
+    local runs share the ``ExecutionTarget`` contract with remote backends.
     """
     if kind not in [RUN, PROFILE, DEBUG]:
         raise Exception("Unknown command requested. Supported command types are: run, profile, debug.")
@@ -683,12 +683,12 @@ def getCwdCmdEnv(kind, path, params, tcpServerPort=None, procuuid=None):
     target = LocalExecutionTarget(params)
     request = build_request(path, arguments, tcp_port=tcpServerPort, procuuid=procuuid)
     if kind == RUN:
-        result = target.run(request)
+        plan = target.prepare_run(request)
     elif kind == PROFILE:
-        result = target.profile(request)
+        plan = target.prepare_profile(request)
     else:
-        result = target.debug(request)
-    argv = list(result.argv)
+        plan = target.prepare_debug(request)
+    argv = list(plan.argv)
 
     environment = getNoArgsEnvironment(params)
 

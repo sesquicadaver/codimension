@@ -59,18 +59,17 @@ def test_ssh_target_is_execution_target():
     assert ssh_execution_target(transport) is not None
 
 
-def test_ssh_run_prepare_does_not_touch_transport():
+def test_ssh_prepare_run_does_not_touch_transport():
     from core.execution import build_request
     from utils.ssh_execution import FakeSSHTransport, SSHExecutionTarget
 
     transport = FakeSSHTransport(stdout="should-not-run")
     target = SSHExecutionTarget(transport, host_label="dev")
-    result = target.run(build_request("/remote/app.py", ["--flag"]))
-    assert result.exit_code is None
-    assert list(result.argv) == ["python3", "/remote/app.py", "--flag"]
+    plan = target.prepare_run(build_request("/remote/app.py", ["--flag"]))
+    assert list(plan.argv) == ["python3", "/remote/app.py", "--flag"]
     assert transport.calls == []
-    assert result.metadata["backend"] == "ssh"
-    assert result.metadata["sync"] == "remote-path-assumed"
+    assert plan.metadata["backend"] == "ssh"
+    assert plan.metadata["sync"] == "remote-path-assumed"
 
 
 def test_ssh_run_wait_uses_transport():
@@ -81,7 +80,6 @@ def test_ssh_run_wait_uses_transport():
     target = SSHExecutionTarget(transport, python="python3", host_label="dev")
     result = target.run(
         build_request("/remote/app.py", ["a"], cwd="/remote/proj", env={"A": "1"}),
-        wait=True,
     )
     assert result.exit_code == 0
     assert "hello-ssh" in result.stdout
@@ -98,9 +96,9 @@ def test_ssh_debug_and_profile_argv():
 
     transport = FakeSSHTransport()
     target = SSHExecutionTarget(transport)
-    dbg = target.debug(build_request("/r/x.py"))
+    dbg = target.prepare_debug(build_request("/r/x.py"))
     assert dbg.argv[:3] == ("python3", "-m", "pdb")
-    prof = target.profile(build_request("/r/x.py", profile_outfile="/r/out.prof"))
+    prof = target.prepare_profile(build_request("/r/x.py", profile_outfile="/r/out.prof"))
     assert "cProfile" in prof.argv
     assert "/r/out.prof" in prof.argv
 

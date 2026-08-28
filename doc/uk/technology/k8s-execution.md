@@ -11,14 +11,19 @@ Headless in-cluster запуски йдуть через
 - `ExecutionRequest.script` — шлях **в образі або volume**, уже доступний у поді.
 - Автоматична збірка образу / sync ConfigMap у R125 відсутня.
 - У metadata є `sync=in-image-or-volume-assumed`.
-- Prepare-only результати також містять JSON Job stub (`job_stub`).
+- **R187:** `prepare_*` повертає `ExecutionPlan` (argv + Job stub).
+  `run` / `debug` / `profile` **виконують** за замовчуванням (не prepare-only).
 
 ## Транспорт
 
 | Транспорт | Роль |
 | --------- | ---- |
 | `FakeK8sJobTransport` | Контрактні тести / CI (без кластера) |
-| `SubprocessKubectlTransport` | Best-effort `kubectl run` + logs |
+| `SubprocessKubectlTransport` | Best-effort `kubectl run` + terminal wait |
+
+`SubprocessKubectlTransport` (R187 / A206): унікальні UUID-імена подів (не
+`hash(argv)`); очікування фази **Succeeded/Failed** (не Ready); delete у
+`finally`.
 
 ## Неперевірені платформи
 
