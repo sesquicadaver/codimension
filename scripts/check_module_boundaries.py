@@ -61,7 +61,6 @@ UTILS_LEGACY_EDGES: dict[str, frozenset[str]] = {
     "codimension/utils/settings.py": frozenset({"ui"}),
     "codimension/utils/skin.py": frozenset({"ui"}),
     "codimension/utils/ssh_project_runtime.py": frozenset({"ui"}),
-    "codimension/utils/versions.py": frozenset({"ui"}),
     "codimension/utils/watcher.py": frozenset({QT_LAYER}),
     "codimension/utils/webresourcecache.py": frozenset({"ui"}),
 }

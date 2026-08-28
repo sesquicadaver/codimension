@@ -19,11 +19,14 @@
 
 """Provides versions of various components used by codimension"""
 
+from __future__ import annotations
+
 import logging
 import shutil
 import subprocess
 from importlib.metadata import PackageNotFoundError, distribution
 from os.path import abspath
+from typing import Any, Optional
 
 from .plantumlcache import JAR_PATH
 
@@ -69,11 +72,16 @@ def getPythonInterpreterVersion():
     ), sys.executable
 
 
-def getQtVersion():
-    """Provides the Qt version"""
-    from ui.qt import QT_VERSION_STR
+def getQtVersion(qt_version_str: Optional[str] = None) -> str:
+    """Return the Qt version string supplied by the UI layer (R196).
 
-    return QT_VERSION_STR
+    ``utils.versions`` stays Qt/UI-free: callers in ``ui`` pass
+    ``QT_VERSION_STR`` (or equivalent). Without an injected value the About
+    table shows ``n/a`` rather than importing ``ui.qt`` from utils.
+    """
+    if qt_version_str:
+        return qt_version_str
+    return "n/a"
 
 
 def getGraphvizVersion():
@@ -157,9 +165,14 @@ def getPlantUMLVersion():
     return "could not determine", JAR_PATH
 
 
-def getComponentInfo():
-    """Provides major codimension components information"""
-    components = []
+def getComponentInfo(qt_version: Optional[str] = None) -> list[tuple[Any, ...]]:
+    """Provides major codimension components information.
+
+    Parameters:
+        qt_version: Optional Qt runtime version from the UI layer (R196).
+            Injected so this module does not import ``ui`` / Qt.
+    """
+    components: list[tuple[Any, ...]] = []
     # Each item contains: <pretty name>, <version>,
     #                     <url>, <patched>, <license name>,
     #                     <license url>
@@ -239,7 +252,7 @@ def getComponentInfo():
     components.append(
         (
             "Qt",
-            getQtVersion(),
+            getQtVersion(qt_version),
             "http://qt-project.org/",
             None,
             "LGPL-2.1/Commercial",
