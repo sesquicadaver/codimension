@@ -5,14 +5,17 @@
 # The license is described in the LICENSE file at the root directory.
 #
 
-"""Wire remote-bound projects: Save→SFTP upload, Run over SSH, IDE Debug (R198).
+"""Wire remote-bound projects: Save→SFTP upload, Run, Debug (R198), Profile (R199).
 
 R186 / A204: Save and Run are **async jobs** (background threads) so the GUI
 thread is not blocked. Upload/run support cancel, timeout, and bounded
 stdout/stderr. Local save success is distinct from remote ``SYNCED``.
 
 R198: SSH IDE debug uses reverse port-forward + remote ``client_cdm_dbg``
-(see ``utils.ssh_ide_debug``); Profile remains deferred (R199).
+(see ``utils.ssh_ide_debug``).
+
+R199: SSH Profile runs remote ``python -m cProfile -o …`` and downloads the
+stats file into the local profile-output path for the IDE report UI.
 """
 
 from __future__ import annotations
@@ -23,6 +26,9 @@ import posixpath
 import shlex
 import threading
 import time
+import uuid
+from datetime import datetime
+from pathlib import Path
 from typing import Callable, Optional, Sequence
 
 from utils.globals import GlobalData
@@ -50,6 +56,7 @@ DEFAULT_SSH_JOB_TIMEOUT_SEC = 120
 DEFAULT_SSH_MAX_OUTPUT_BYTES = 2 * 1024 * 1024  # 2 MiB per stream
 ENV_SSH_TIMEOUT = "CDM_SSH_TIMEOUT_SEC"
 ENV_SSH_MAX_OUTPUT = "CDM_SSH_MAX_OUTPUT_BYTES"
+REMOTE_PROFILE_DIR = ".codimension-profile"
 _POLL_INTERVAL_SEC = 0.05
 _RECV_CHUNK = 65536
 
@@ -58,6 +65,7 @@ _sync_states: dict[str, str] = {}
 _jobs_lock = threading.Lock()
 _upload_jobs: dict[str, "SshJobHandle"] = {}
 _run_job: Optional["SshJobHandle"] = None
+_profile_job: Optional["SshJobHandle"] = None
 
 
 class SshRemoteJobCancelled(RuntimeError):
@@ -148,6 +156,16 @@ def cancel_ssh_run() -> bool:
     """Cancel the in-flight SSH Run job, if any."""
     with _jobs_lock:
         handle = _run_job
+    if handle is None:
+        return False
+    handle.request_cancel()
+    return True
+
+
+def cancel_ssh_profile() -> bool:
+    """Cancel the in-flight SSH Profile job, if any."""
+    with _jobs_lock:
+        handle = _profile_job
     if handle is None:
         return False
     handle.request_cancel()
@@ -338,7 +356,7 @@ def run_remote_script(
 
 
 def try_handle_ide_run(path: str, *, kind: str) -> bool:
-    """If the loaded project is SSH-bound, handle RUN async (not debug). Return True if handled."""
+    """If the loaded project is SSH-bound, handle RUN/PROFILE async. Return True if handled."""
     binding = get_loaded_project_binding()
     if binding is None:
         return False
@@ -349,17 +367,17 @@ def try_handle_ide_run(path: str, *, kind: str) -> bool:
         # R198: RunManager.debug owns SSH IDE debug (reverse tunnel + client_cdm_dbg).
         return False
 
-    if kind == "profile":
-        logging.error("SSH remote profile is not available yet. Use Run for remote execution.")
-        return True
-
     try:
-        from utils.run import getRunParameters
+        from utils.diskvaluesrelay import getRunParameters
 
         raw = getRunParameters(path)["arguments"]
         args = shlex.split(raw) if raw else []
     except Exception:
         args = []
+
+    if kind == "profile":
+        schedule_remote_profile(binding, path, args)
+        return True
 
     schedule_remote_run(binding, path, args)
     return True
@@ -435,6 +453,218 @@ def schedule_remote_run(
     handle.thread = thread
     thread.start()
     return handle
+
+
+def profile_remote_script(
+    binding: RemoteProjectBinding,
+    local_script: str,
+    args: Sequence[str] = (),
+    *,
+    local_outfile: str,
+    python: str = "python3",
+    cancel: Optional[threading.Event] = None,
+    timeout_sec: Optional[float] = None,
+    max_output_bytes: Optional[int] = None,
+    procuuid: Optional[str] = None,
+) -> tuple[int, str, str, str, str]:
+    """Upload script, run remote cProfile, download stats to ``local_outfile``.
+
+    Returns ``(exit_code, stdout, stderr, remote_script, remote_outfile)``.
+    """
+    require_paramiko()
+    remote_script = map_local_to_remote(binding, local_script)
+    job_id = procuuid or uuid.uuid4().hex
+    remote_out = posixpath.join(
+        binding.remote_root.rstrip("/"),
+        REMOTE_PROFILE_DIR,
+        f"{job_id}.profile.out",
+    )
+    profile = profile_from_binding(binding)
+    password = load_ssh_password(profile.id) if profile.auth == "password" else ""
+    timeout, out_cap = resolve_ssh_job_limits(timeout_sec=timeout_sec, max_output_bytes=max_output_bytes)
+    deadline = None if timeout <= 0 else time.monotonic() + timeout
+    cancel_event = cancel or threading.Event()
+
+    def _do_upload(session) -> None:
+        _raise_if_cancelled_or_timed_out(cancel_event, deadline, timeout, "upload")
+        parent = posixpath.dirname(remote_out)
+        if parent and parent != "/":
+            session.makedirs(parent)
+        upload_file(session, local_script, remote_script)
+
+    session = connect_paramiko_sftp(profile, password=password)
+    try:
+        _do_upload(session)
+    finally:
+        session.close()
+
+    _raise_if_cancelled_or_timed_out(cancel_event, deadline, timeout, "profile")
+    remote_cwd = _norm(posixpath.dirname(remote_script) or binding.remote_root)
+    argv = [python, "-m", "cProfile", "-o", remote_out, remote_script, *list(args)]
+    remaining = None if deadline is None else max(0.1, deadline - time.monotonic())
+    code, stdout, stderr = _exec_remote(
+        profile,
+        password,
+        argv,
+        cwd=remote_cwd,
+        cancel=cancel_event,
+        timeout_sec=remaining if remaining is not None else timeout,
+        max_output_bytes=out_cap,
+    )
+    _raise_if_cancelled_or_timed_out(cancel_event, deadline, timeout, "download")
+
+    def _do_download(session) -> None:
+        _raise_if_cancelled_or_timed_out(cancel_event, deadline, timeout, "download")
+        data = session.read_bytes(remote_out)
+        out_parent = os.path.dirname(local_outfile)
+        if out_parent:
+            os.makedirs(out_parent, exist_ok=True)
+        Path(local_outfile).write_bytes(data)
+
+    session = connect_paramiko_sftp(profile, password=password)
+    try:
+        _do_download(session)
+    finally:
+        session.close()
+
+    return int(code), stdout, stderr, remote_script, remote_out
+
+
+def schedule_remote_profile(
+    binding: RemoteProjectBinding,
+    local_script: str,
+    args: Sequence[str] = (),
+    *,
+    local_outfile: Optional[str] = None,
+    timeout_sec: Optional[float] = None,
+    max_output_bytes: Optional[int] = None,
+    on_finished: Optional[Callable[[int, str, str, str, Optional[BaseException]], None]] = None,
+) -> SshJobHandle:
+    """Start a background SSH Profile job (cancels any previous Profile)."""
+    global _profile_job
+
+    procuuid = uuid.uuid4().hex
+    if not local_outfile:
+        try:
+            local_outfile = GlobalData().getProfileOutputPath(procuuid)
+        except Exception:
+            local_outfile = os.path.join(binding.local_root, f"{procuuid}.profile.out")
+
+    handle = SshJobHandle(kind="profile", path=os.path.realpath(local_script))
+    with _jobs_lock:
+        previous = _profile_job
+        _profile_job = handle
+    if previous is not None:
+        previous.request_cancel()
+
+    logging.info("SSH profile scheduled for %s → %s …", local_script, local_outfile)
+    started = datetime.now()
+
+    def _worker() -> None:
+        global _profile_job
+        err: Optional[BaseException] = None
+        code = -1
+        stdout = ""
+        stderr = ""
+        remote_script = ""
+        try:
+            code, stdout, stderr, remote_script, _remote_out = profile_remote_script(
+                binding,
+                local_script,
+                args,
+                local_outfile=str(local_outfile),
+                cancel=handle.cancel,
+                timeout_sec=timeout_sec,
+                max_output_bytes=max_output_bytes,
+                procuuid=procuuid,
+            )
+            handle.result = (code, stdout, stderr, remote_script, local_outfile)
+        except Exception as exc:
+            err = exc
+            handle.error = exc
+            logging.error("SSH profile failed: %s", exc)
+        finally:
+            handle.done.set()
+            with _jobs_lock:
+                if _profile_job is handle:
+                    _profile_job = None
+            finished = datetime.now()
+
+            def _finish() -> None:
+                try:
+                    if err is None:
+                        _emit_profile_results(
+                            local_script,
+                            str(local_outfile),
+                            started,
+                            finished,
+                            code,
+                            stdout,
+                            stderr,
+                            remote_script,
+                        )
+                    else:
+                        logging.error("SSH profile error for %s: %s", local_script, err)
+                        try:
+                            mw = GlobalData().mainWindow
+                            console = getattr(mw, "redirectedIOConsole", None) if mw else None
+                            if console is not None:
+                                console.appendIDEMessage(f"SSH profile failed: {err}")
+                        except Exception:
+                            logging.debug("Could not write SSH profile error to console", exc_info=True)
+                finally:
+                    if on_finished is not None:
+                        on_finished(code, stdout, stderr, remote_script, err)
+
+            _call_on_gui_thread(_finish)
+
+    thread = threading.Thread(target=_worker, name="ssh-profile", daemon=True)
+    handle.thread = thread
+    thread.start()
+    return handle
+
+
+def _emit_profile_results(
+    local_script: str,
+    local_outfile: str,
+    started: datetime,
+    finished: datetime,
+    code: int,
+    stdout: str,
+    stderr: str,
+    remote_script: str,
+) -> None:
+    """Log profile completion and open IDE profile report when possible."""
+    header = f"SSH profile finished ({remote_script}) exit={code} artifact={local_outfile}"
+    logging.info(header)
+    if stdout:
+        logging.info("SSH profile stdout:\n%s", stdout.rstrip())
+    if stderr:
+        logging.error("SSH profile stderr:\n%s", stderr.rstrip())
+    try:
+        mw = GlobalData().mainWindow
+        console = getattr(mw, "redirectedIOConsole", None) if mw else None
+        if console is not None:
+            console.appendIDEMessage(header)
+            if stdout:
+                console.appendStdoutMessage(stdout)
+            if stderr:
+                console.appendStderrMessage(stderr)
+        rm = getattr(mw, "_runManager", None) if mw else None
+        if rm is not None and os.path.isfile(local_outfile) and os.path.getsize(local_outfile) > 0:
+
+            def _stamp(dt: datetime) -> str:
+                return dt.strftime("%H:%M:%S.") + f"{int(dt.microsecond / 1000):03d}"
+
+            rm.sigProfilingResults.emit(
+                local_script,
+                local_outfile,
+                _stamp(started),
+                _stamp(finished),
+                False,
+            )
+    except Exception as exc:
+        logging.debug("Could not emit SSH profile results: %s", exc)
 
 
 def _emit_run_output(remote_script: str, code: int, stdout: str, stderr: str) -> None:
@@ -616,6 +846,7 @@ def _norm(path: str) -> str:
 __all__ = [
     "DEFAULT_SSH_JOB_TIMEOUT_SEC",
     "DEFAULT_SSH_MAX_OUTPUT_BYTES",
+    "REMOTE_PROFILE_DIR",
     "SYNC_CANCELLED",
     "SYNC_FAILED",
     "SYNC_LOCAL",
@@ -625,6 +856,7 @@ __all__ = [
     "SshRemoteJobCancelled",
     "SshRemoteJobTimeout",
     "after_save_upload_remote",
+    "cancel_ssh_profile",
     "cancel_ssh_run",
     "cancel_ssh_upload",
     "clear_sync_state",
@@ -633,8 +865,10 @@ __all__ = [
     "is_under_binding",
     "map_local_to_remote",
     "profile_from_binding",
+    "profile_remote_script",
     "resolve_ssh_job_limits",
     "run_remote_script",
+    "schedule_remote_profile",
     "schedule_remote_run",
     "schedule_remote_upload",
     "set_sync_state",

@@ -50,6 +50,9 @@ def _purge_stubs():
         if rt._run_job is not None:
             rt._run_job.request_cancel()
             rt._run_job = None
+        if rt._profile_job is not None:
+            rt._profile_job.request_cancel()
+            rt._profile_job = None
 
 
 def _binding(tmp_path):
@@ -215,3 +218,108 @@ def test_r186_schedule_run_async(tmp_path, monkeypatch):
     assert results[0][0] == 0
     assert results[0][1] == "ok\n"
     assert results[0][4] is None
+
+
+def test_r199_profile_remote_script_downloads_artifact(tmp_path, monkeypatch):
+    from utils import ssh_project_runtime as rt
+    from utils.ssh_remote import FakeSftpSession
+
+    binding, local_root = _binding(tmp_path)
+    script = local_root / "main.py"
+    script.write_text("print(1)\n", encoding="utf-8")
+    local_out = tmp_path / "out.profile.out"
+    session = FakeSftpSession()
+    session.makedirs("/r")
+    # Seed remote profile outfile after "exec".
+    remote_payload = b"\x00profile-bytes"
+
+    class SessionFactory:
+        def __init__(self):
+            self.n = 0
+
+        def __call__(self, *_a, **_k):
+            self.n += 1
+            return session
+
+    factory = SessionFactory()
+
+    def fake_exec(*_a, **_k):
+        remote_out = "/r/.codimension-profile/job.profile.out"
+        session.write_bytes(remote_out, remote_payload)
+        return 0, "", ""
+
+    monkeypatch.setattr(rt, "require_paramiko", lambda: object())
+    monkeypatch.setattr(rt, "profile_from_binding", lambda b: b)
+    monkeypatch.setattr(rt, "load_ssh_password", lambda _id: "")
+    monkeypatch.setattr(rt, "connect_paramiko_sftp", factory)
+    monkeypatch.setattr(rt, "_exec_remote", fake_exec)
+
+    # Force predictable remote outfile name via procuuid
+    code, _out, _err, remote_script, remote_out = rt.profile_remote_script(
+        binding,
+        str(script),
+        local_outfile=str(local_out),
+        procuuid="job",
+    )
+    assert code == 0
+    assert remote_script == "/r/main.py"
+    assert remote_out.endswith(".codimension-profile/job.profile.out")
+    assert local_out.read_bytes() == remote_payload
+    assert factory.n == 2  # upload session + download session
+
+
+def test_r199_schedule_remote_profile_async(tmp_path, monkeypatch):
+    from utils import ssh_project_runtime as rt
+
+    binding, local_root = _binding(tmp_path)
+    script = local_root / "main.py"
+    script.write_text("print(1)\n", encoding="utf-8")
+    local_out = tmp_path / "sched.profile.out"
+    local_out.write_bytes(b"stats")
+
+    def fake_profile(*_a, **_k):
+        return 0, "", "", "/r/main.py", "/r/.codimension-profile/x.profile.out"
+
+    monkeypatch.setattr(rt, "profile_remote_script", fake_profile)
+    monkeypatch.setattr(rt, "_call_on_gui_thread", lambda fn: fn())
+    monkeypatch.setattr(rt, "_emit_profile_results", lambda *a, **k: None)
+    finished = threading.Event()
+    results: list = []
+
+    def on_finished(code, stdout, stderr, remote, err):
+        results.append((code, stdout, stderr, remote, err))
+        finished.set()
+
+    handle = rt.schedule_remote_profile(
+        binding,
+        str(script),
+        local_outfile=str(local_out),
+        on_finished=on_finished,
+    )
+    assert handle.join(5.0)
+    assert finished.wait(2.0)
+    assert results[0][0] == 0
+    assert results[0][4] is None
+
+
+def test_r199_try_handle_profile_schedules(tmp_path, monkeypatch):
+    from utils import ssh_project_runtime as rt
+
+    binding, local_root = _binding(tmp_path)
+    script = local_root / "main.py"
+    script.write_text("x=1\n", encoding="utf-8")
+    called: list = []
+
+    monkeypatch.setattr(rt, "get_loaded_project_binding", lambda: binding)
+    monkeypatch.setattr(
+        rt,
+        "schedule_remote_profile",
+        lambda *a, **k: called.append((a, k)) or rt.SshJobHandle(kind="profile", path=str(script)),
+    )
+    import utils.diskvaluesrelay as dvr
+
+    monkeypatch.setattr(dvr, "getRunParameters", lambda _p: {"arguments": "--n 1", "redirected": True})
+    assert rt.try_handle_ide_run(str(script), kind="profile") is True
+    assert called
+    # argv args forwarded from run parameters
+    assert called[0][0][2] == ["--n", "1"]

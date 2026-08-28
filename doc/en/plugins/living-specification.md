@@ -66,6 +66,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **SSH remote project open/create** | utils.ssh_remote + ui.sshprojectdlg + ui.sshbrowse | Host profiles; Paramiko/Fake SFTP; R183 path containment; R184 host-key RejectPolicy + fingerprint pin + TOFU UI; R185 lstat/reject symlink + nonzero caps + stream + staging swap; remote Browse… | tests/test_ssh_remote_project.py; [ssh-remote-project.md](../../technology/ssh-remote-project.md) |
 | **SSH remote save/run** | utils.ssh_project_runtime + runmanager | R186 async Save upload + Run (cancel/timeout/output cap); SYNC_* ≠ local save | tests/test_ssh_project_runtime.py |
 | **SSH remote IDE Debug R198** | utils.ssh_ide_debug + runmanager + debugger.server | reverse tunnel + remote `client_cdm_dbg`; path remap; FakeReverseTunnel contracts | tests/test_ssh_ide_debug_r198.py; [ssh-remote-project.md](../../technology/ssh-remote-project.md) |
+| **SSH remote Profile R199** | utils.ssh_project_runtime | remote cProfile + download artifact; cancel/timeout; IDE report emit | tests/test_ssh_project_runtime.py (r199_*) |
 | **KubernetesExecutionTarget R125** | utils.k8s_execution | prepare vs run (R187); terminal Succeeded/Failed; UUID name; finally cleanup | tests/test_k8s_execution.py; [k8s-execution.md](../../technology/k8s-execution.md) |
 | **SymbolIndex schema R130** | core.symbol_index | SymbolRecord/Kind/SourceSpan/SymbolIndex | tests/test_symbol_index.py |
 | **SymbolIndex ← brief_ast R131** | utils.symbol_index_brief | `index_source` / `build_symbol_index` + on_file | tests/test_symbol_index_brief.py |
@@ -152,7 +153,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R199→**; linear non-blocking.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R180→**; linear non-blocking.
 
 ### Module boundary matrix (R103 / R195)
 

@@ -79,7 +79,11 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
   (`remote 127.0.0.1:<port>` → локальний IDE `QTcpServer`), запуск з
   `--host 127.0.0.1`. Шляхи протоколу remap remote ↔ local cache
   (`utils.ssh_ide_debug`). Контрактні тести — `FakeReverseTunnel`.
-- **Profile** для SSH-проєкту ще відхиляється (**R199**).
+- **Profile (R199)** — **асинхронний** remote
+  ``python3 -m cProfile -o <remote_root>/.codimension-profile/<id>.profile.out``
+  (ті самі cancel/timeout/caps, що Run), потім **download** stats у локальний
+  profile-output path і відкриття IDE profile report (якщо є main window).
+  Контрактні тести мокають SFTP/`_exec_remote`.
 
 Потрібні `paramiko` / `keyring` як **runtime**-залежності (`pip install -e .`
 і `codimension_ctl.sh install`, включно з `--minimal`). Extra `.[ssh]`
@@ -88,6 +92,6 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 
 ## Зв’язок з R124
 
-[`ssh-execution.md`](ssh-execution.md) — headless run/debug уже наявного
-remote-шляху (`python -m pdb` для prepare debug). Open/Create + Save +
-IDE **Run** + IDE **Debug** (R198) реалізовані тут; IDE **Profile** — **R199**.
+[`ssh-execution.md`](ssh-execution.md) — headless run/debug/profile уже наявного
+remote-шляху. Open/Create + Save + IDE **Run** + IDE **Debug** (R198) +
+IDE **Profile** (R199) реалізовані тут.

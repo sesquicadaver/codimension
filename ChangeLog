@@ -1,5 +1,6 @@
 2026 Aug 28
 
+* R199: SSH remote Profile — async cProfile + download artifact for IDE report
 * R198: SSH remote IDE Debug MVP — reverse tunnel + remote client_cdm_dbg; path remap
 * R197: Smoke graceful Qt teardown; wrapt via inspect_compat (no --no-deps hack) (A224)
 * R196: Invert utils→ui in versions — inject Qt version from About (A223.b)
