@@ -43,7 +43,7 @@ No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue
 | E04 (routine unlink) | Launcher cleanup before execvp | P1 | ✅ |
 | E05 | Profile timeout from shell `&` heuristic; orphan `.done` | P1 | ✅ |
 | E06 | noexec execute-probe; shell-safe path limits | P1 | ✅ |
-| D02 / B07 | VENV staging+commit (MVP) | P1 | ✅ → reopen as A208 |
+| D02 / B07 | VENV staging+commit (MVP) | P1 | ✅ (superseded by A208) |
 | C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | ✅ |
 | B03 | Project scan cancel/join/coalescing | P1 | ✅ |
 | B04 | brief keyword/name/colon + target/alias positions | P1 | ✅ |
