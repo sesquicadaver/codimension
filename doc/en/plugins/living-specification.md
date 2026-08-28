@@ -92,6 +92,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Deps overlay R161** | utils.dependency_overlay + diagram.depsitems | Edge heat from DependencyGraph; nav badges; connector tint | tests/test_dependency_overlay.py |
 | **Deploy overlay R162** | utils.deployment_overlay + editor.flowuinavbar | Read-only Dockerfile/Compose hints; nav badges | tests/test_deployment_overlay.py; fixtures/deployment |
 | **Release channel R171** | cdmverspec | `release_channel` + `get_release_channel` / env override; one version | tests/test_cdmverspec.py |
+| **Channel promotion R181** | utils.channel_promotion + scripts/promote_release_channel.py + release.yml | ladder `dev→beta→stable`; tag↔channel validate; no branch theatre | tests/test_channel_promotion_r181.py; [release-channels.md](../../technology/release-channels.md) |
 | **Update check R172** | utils.update_check + ui.mainmenu/mainwindow | GitHub Releases read-only; newer tag dialog; injectable fetch | tests/test_update_check.py |
 | **Update download R173** | utils.update_download + ui.mainwindow | Cache dir download; SHA-256 fail closed; ``manifest.json`` | tests/test_update_download.py |
 | **Update apply R180** | utils.update_apply + portable_profile + ui.mainwindow | re-verify → pip install; rollback previous; ``CDM_HOME`` | tests/test_update_apply_r180.py |
@@ -154,7 +155,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R181→**; linear non-blocking.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R182→**; linear non-blocking.
 
 ### Module boundary matrix (R103 / R195)
 

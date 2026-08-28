@@ -54,6 +54,12 @@ jobs:
           pip install -c constraints.txt -e ".[test,tools,security]"
           pip check
 
+      - name: Validate tag channel shape (R181)
+        run: |
+          . .venv/bin/activate
+          TAG="${GITHUB_REF#refs/tags/}"
+          python scripts/promote_release_channel.py --validate-tag "$TAG"
+
       - name: Pytest
         run: |
           . .venv/bin/activate
