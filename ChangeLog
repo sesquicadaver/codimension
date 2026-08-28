@@ -1,5 +1,6 @@
 2026 Aug 28
 
+* R195: Utils side-effect inventory; tighten boundary gate with UTILS_LEGACY_EDGES (A223.a)
 * R194: Risk score confidence; missing metrics use unknown factor (not M=0); taint heuristic flag (A222)
 * R193: Settings reject non-dict JSON; lazy Settings() singleton (A221)
 * R192: AI HTTP budgeted chunked read, cancel callback, ``base_url`` trust allowlist (A220)

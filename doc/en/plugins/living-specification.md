@@ -33,7 +33,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Headless core T080–T082** | core / infrastructure | core/syntax.py, core/flow.py, infrastructure/* | tests/test_core_headless.py |
 | **ApplicationServices R101** | app | app/__init__.py, app/services.py | headless façade + fakes; tests/test_app_services.py; T085 covers `codimension/app` |
 | **App routing R102** | ui + globals + startup | globals.py `appServices`; mainwindow / projectviewer / recentprojectsviewer / codimension.py | UI→app→project; tests/test_r102_app_routing.py |
-| **Module boundaries R103** | CI | scripts/check_module_boundaries.py | named-layer matrix core/infra/app/utils/ui/plugins; tests/test_module_boundaries.py |
+| **Module boundaries R103/R195** | CI | scripts/check_module_boundaries.py | named-layer matrix; utils floor + `UTILS_LEGACY_EDGES`; [utils-side-effect-inventory.md](../../technology/utils-side-effect-inventory.md); tests/test_module_boundaries.py |
 | **Core import graph T085 / R100** | CI + utils | scripts/check_core_import_graph.py; utils/importutils.py | no Qt/UI in core/infrastructure/app; `importutils` Qt-free + progress callback; tests/test_importutils.py, test_t085_core_import_graph.py |
 | **MainWindow routing T083** | ui.mainwindow / mainwindow_debug | mainwindow.py, mainwindow_debug.py | MRO mixins; no extendInstance; DebuggerMixin |
 | **Lazy GlobalData T084** | utils.globals | globals.py | create-on-first-call; tests/test_globals_lazy.py |
@@ -151,22 +151,22 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R195→** (A223…); linear non-blocking.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R196→** (A223.b…); linear non-blocking.
 
-### Module boundary matrix (R103)
+### Module boundary matrix (R103 / R195)
 
-Importer → allowed **named** layers (other packages are out of matrix scope). Qt is forbidden in `core` / `infrastructure` / `app`.
+Importer → allowed **named** layers (other packages are out of matrix scope). Qt is forbidden in `core` / `infrastructure` / `app`. In `utils`, Qt/ui/plugins only via the grandfather map.
 
 | Importer | May import |
 | -------- | ---------- |
 | core | *(no named layer)* |
 | infrastructure | core, utils |
 | app | core, infrastructure, utils |
-| utils | core, infrastructure, app, ui*, plugins* |
+| utils | core, infrastructure, app (+ ui/plugins/qt only via `UTILS_LEGACY_EDGES`) |
 | ui | core, infrastructure, app, utils, plugins |
 | plugins | core, infrastructure, app, utils, ui |
 
-\*legacy: `utils → ui|plugins` temporarily allowed (GlobalData / Qt helpers); remove in later tasks.
+Legacy inventory: [utils-side-effect-inventory.md](../../technology/utils-side-effect-inventory.md). R196+ shrinks the allowlist.
 
 Gate: `python scripts/check_module_boundaries.py`
 
