@@ -74,7 +74,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **OverlayLayer R135** | core.overlay + utils.overlay_host | Protocol + registry; flow redraw / editor update attach | tests/test_overlay.py |
 | **Advanced metrics R136** | utils.radon_metrics_pack | MI + Halstead volume + raw LOC as MetricProvider | tests/test_radon_metrics_pack.py |
 | **Git analytics R137** | utils.git_analytics | churn/hotspot from `git log --numstat`; text formatter | tests/test_git_analytics.py |
-| **Risk score R138** | core.risk_score | `compute_risk_score` lint+metrics±git (`cdm-risk-v1`) | tests/test_risk_score.py |
+| **Risk score R138** | core.risk_score | `cdm-risk-v2`; R194 confidence; missing metrics ≠ M=0 | tests/test_risk_score.py |
 | **Branching policy R170** | docs | CONTRIBUTING(+.en): `master` + `feature/*`/`fix/*`; no direct push; `ci-gate` | GitHub branch protection + docs gate |
 | **CFG graph model R140.a** | core.cfg | R188 per-scope ENTRY/EXIT; break/continue loop stack; finally routing; not security-proof | tests/test_cfg_graph.py; [cfg-graph.md](../../technology/cfg-graph.md) |
 | **CFG canvas bind R140.b** | flowui.cfg_adapter + vcanvas/flowuiwidget | `bind_cfg_graph` in `layoutModule`; `getCfgGraph`; CF tree = layout payload | tests/test_cfg_adapter.py |
@@ -151,7 +151,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R194→** (A222…); linear non-blocking.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R195→** (A223…); linear non-blocking.
 
 ### Module boundary matrix (R103)
 

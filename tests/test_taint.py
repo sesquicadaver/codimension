@@ -19,6 +19,8 @@ def test_param_flows_to_eval() -> None:
         function="f",
     )
     assert not report.empty
+    assert report.heuristic is True
+    assert 0.0 < report.confidence < 1.0
     assert report.parameters == ("x",)
     finding = report.findings[0]
     assert finding.sink == "eval"
