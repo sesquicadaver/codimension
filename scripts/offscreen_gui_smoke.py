@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Headless production startup smoke (D07/B08).
+"""Headless production startup smoke (D07/B08/R197).
 
 Creates CodimensionApplication + CodimensionMainWindow and loads plugins.
 Exit 0 only when at least one bundled plugin activates.
+Uses normal Qt teardown (no hard ``os._exit`` call) so process cleanup runs.
 """
 
 from __future__ import annotations
 
 import os
 import sys
+from typing import Any
 
 
 def _ensure_imp_shim() -> None:
@@ -22,6 +24,36 @@ def _ensure_imp_shim() -> None:
     ensure_imp_compat()
 
 
+def _ensure_wrapt_shim() -> None:
+    """Restore ``inspect.formatargspec`` before any pylint/wrapt import (R197)."""
+    try:
+        from inspect_compat import ensure_wrapt_compat
+    except ImportError:
+        from codimension.inspect_compat import ensure_wrapt_compat  # type: ignore[no-redef]
+
+    ensure_wrapt_compat()
+
+
+def _shutdown_smoke(app: Any, main_window: Any) -> None:
+    """Close the window and quit the QApplication without ``os._exit``."""
+    from utils.globals import resetGlobalDataForTests
+
+    try:
+        if main_window is not None:
+            main_window.close()
+            if app is not None:
+                app.processEvents()
+    except Exception as exc:  # noqa: BLE001 — smoke must always finish teardown
+        print(f"offscreen_gui_smoke: close warning: {exc}", file=sys.stderr)
+    try:
+        if app is not None:
+            app.quit()
+            app.processEvents()
+    except Exception as exc:  # noqa: BLE001
+        print(f"offscreen_gui_smoke: quit warning: {exc}", file=sys.stderr)
+    resetGlobalDataForTests()
+
+
 def main() -> int:
     """Bootstrap MainWindow + pluginManager.load(); require one active plugin."""
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -31,6 +63,7 @@ def main() -> int:
         if path not in sys.path:
             sys.path.insert(0, path)
 
+    _ensure_wrapt_shim()
     _ensure_imp_shim()
     import parsers  # noqa: F401
     from utils.globals import GlobalData, resetGlobalDataForTests
@@ -40,6 +73,8 @@ def main() -> int:
     sys.argv = [sys.argv[0] if sys.argv else "offscreen_gui_smoke.py"]
 
     saved_out, saved_err = sys.stdout, sys.stderr
+    app = None
+    main_window = None
     try:
         # Local import path mirrors tests/debugger/ide_bootstrap.py
         from ui.application import CodimensionApplication
@@ -80,13 +115,10 @@ def main() -> int:
         print(f"offscreen_gui_smoke: OK plugins_active={active} discovered={discovered}")
         sys.stdout.flush()
         sys.stderr.flush()
-        # Avoid Qt teardown segfaults on some Python/PyQt builds (seen as rc=-11
-        # on CI 3.10 after a successful smoke). Process exit is the gate.
-        os._exit(0)
+        return 0
     finally:
         sys.stdout, sys.stderr = saved_out, saved_err
-        # Only reached on failure paths before os._exit.
-        resetGlobalDataForTests()
+        _shutdown_smoke(app, main_window)
 
 
 if __name__ == "__main__":

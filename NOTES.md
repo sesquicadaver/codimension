@@ -42,16 +42,11 @@ Help у IDE: [doc/user/index.md](doc/user/index.md).
 
 ## pylint / wrapt на Python 3.11+
 
-`cdmpylintplugin` тягне старий `pylint==2.5.3` → `astroid==2.5` → `wrapt<1.13`.
-У `constraints.txt` лишається `wrapt==1.12.1` (інакше `pip install -c`
-не резолвиться з astroid); цей wrapt імпортує видалений
-`inspect.formatargspec` і падає на 3.11+. Після install у IDE venv:
-
-```bash
-.venv/bin/pip install 'wrapt>=1.14' --no-deps
-```
-
-(конфлікт з pin astroid очікуваний; після цього `python -m pylint` працює).
+`cdmpylintplugin` тягне `pylint==2.5.3` → `astroid==2.5` → `wrapt==1.12.1`
+(pin у `constraints.txt`, щоб `pip install -c` резолвився). Wrapt 1.12
+імпортує видалений `inspect.formatargspec`. **R197:** shim
+`codimension.inspect_compat` відновлює API при `import codimension` /
+старті IDE — окремий `pip install wrapt>=1.14 --no-deps` більше не потрібен.
 
 ---
 

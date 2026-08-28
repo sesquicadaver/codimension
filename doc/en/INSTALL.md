@@ -55,10 +55,11 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[tools,lint,test,security,ssh]"
-# Python 3.11+:
-python -m pip install 'wrapt>=1.14' --no-deps
 ./scripts/run_codimension.sh
 ```
+
+On Python 3.11+, wrapt 1.12 (pylint stack) works via `codimension.inspect_compat`
+(R197) — no separate `pip install wrapt --no-deps`.
 
 Do not run the IDE from a checkout under **Trash** (the desktop launcher and
 `run_codimension.sh` refuse that). After moving the repo: `cd -P /path/to/codimension`

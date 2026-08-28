@@ -43,16 +43,11 @@ results in **AI Result** (Save); **AI Chat** is an on-demand panel.
 
 ## pylint / wrapt on Python 3.11+
 
-`cdmpylintplugin` pulls `pylint==2.5.3` → `astroid==2.5` → `wrapt<1.13`.
-`constraints.txt` keeps `wrapt==1.12.1` so `pip install -c constraints.txt`
-resolves; that build imports removed `inspect.formatargspec` and fails on 3.11+.
-After install into the IDE venv:
-
-```bash
-.venv/bin/pip install 'wrapt>=1.14' --no-deps
-```
-
-(expected conflict with the astroid pin; `python -m pylint` then works).
+`cdmpylintplugin` pulls `pylint==2.5.3` → `astroid==2.5` → `wrapt==1.12.1`
+(pinned in `constraints.txt` so `pip install -c` resolves). Wrapt 1.12 imports
+removed `inspect.formatargspec`. **R197:** `codimension.inspect_compat`
+restores the API on `import codimension` / IDE startup — no
+`pip install wrapt>=1.14 --no-deps` override.
 
 ---
 
