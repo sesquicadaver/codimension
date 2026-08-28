@@ -64,7 +64,7 @@
 | **DockerExecutionTarget R123** | utils.docker_execution | image + workspace mount + `docker run` argv; docker-or-skip | tests/test_docker_execution.py |
 | **SSHExecutionTarget R124** | utils.ssh_execution | `SSHTransport` + Fake/Subprocess; remote-path sync MVP | tests/test_ssh_execution.py; [ssh-execution.md](../technology/ssh-execution.md) |
 | **SSH remote project open/create** | utils.ssh_remote + ui.sshprojectdlg + ui.sshbrowse | Профілі; Paramiko/Fake SFTP; R183 path containment; R184 host-key RejectPolicy + fingerprint pin + TOFU UI; R185 lstat/reject symlink + nonzero caps + stream + staging swap; remote Browse… | tests/test_ssh_remote_project.py; [ssh-remote-project.md](../technology/ssh-remote-project.md) |
-| **SSH remote save/run** | utils.ssh_project_runtime + runmanager | Save→SFTP; Run через SSH exec; debug відкладено | tests/test_ssh_project_runtime.py |
+| **SSH remote save/run** | utils.ssh_project_runtime + runmanager | R186 async Save upload + Run (cancel/timeout/output cap); SYNC_* ≠ local save; debug відкладено | tests/test_ssh_project_runtime.py |
 | **KubernetesExecutionTarget R125** | utils.k8s_execution | `K8sJobTransport` + Fake/kubectl; Job stub metadata | tests/test_k8s_execution.py; [k8s-execution.md](../technology/k8s-execution.md) |
 | **SymbolIndex schema R130** | core.symbol_index | SymbolRecord/Kind/SourceSpan/SymbolIndex | tests/test_symbol_index.py |
 | **SymbolIndex ← brief_ast R131** | utils.symbol_index_brief | `index_source` / `build_symbol_index` + on_file | tests/test_symbol_index_brief.py |

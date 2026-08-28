@@ -70,9 +70,14 @@ Skipped directory names: `.git`, `.hg`, `.svn`, `__pycache__`, `.venv`, `venv`,
 
 When a project has `binding.json` in its local cache root:
 
-- **Save** uploads the file to the remote path (source of truth = remote).
-- **Run** uploads the script and executes `python3 <remote-script>` over SSH;
-  stdout/stderr go to the Log / redirected IO console.
+- **Save** writes the local cache file, then schedules an **async SFTP upload**
+  (R186). Local save success ≠ remote sync — sync state is
+  `LOCAL` → `SYNCING` → `SYNCED` / `SYNC_FAILED` / `SYNC_CANCELLED`
+  (`get_sync_state`). Uploads are cancelable and time-bounded
+  (`CDM_SSH_TIMEOUT_SEC`, default 120s).
+- **Run** schedules an **async** remote `python3 <script>` job (cancel,
+  timeout, stdout/stderr capped at 2 MiB by default /
+  `CDM_SSH_MAX_OUTPUT_BYTES`); output goes to the Log / redirected IO console.
 - **Debug / Profile** on SSH-bound projects are refused with a clear message
   (full remote IDE debug is deferred).
 
