@@ -6,7 +6,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-from utils.versions import getQtVersion
+from codimension.utils.versions import getQtVersion
 
 _ROOT = Path(__file__).resolve().parents[1]
 _SCRIPT = _ROOT / "scripts" / "check_module_boundaries.py"
@@ -33,7 +33,7 @@ def test_get_qt_version_injected() -> None:
 
 def test_get_component_info_qt_row_injected(monkeypatch) -> None:
     """About table Qt row uses the injected version string."""
-    import utils.versions as versions
+    import codimension.utils.versions as versions
 
     monkeypatch.setattr(versions, "getCodimensionVersion", lambda: ("0.0-test", "/tmp/x"))
     monkeypatch.setattr(versions, "getPackageVersionAndLocation", lambda _n: ("1.0", None))

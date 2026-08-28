@@ -19,11 +19,14 @@
 
 """Provides versions of various components used by codimension"""
 
+from __future__ import annotations
+
 import logging
 import shutil
 import subprocess
 from importlib.metadata import PackageNotFoundError, distribution
 from os.path import abspath
+from typing import Any, Optional
 
 from .plantumlcache import JAR_PATH
 
@@ -69,7 +72,7 @@ def getPythonInterpreterVersion():
     ), sys.executable
 
 
-def getQtVersion(qt_version_str: str | None = None) -> str:
+def getQtVersion(qt_version_str: Optional[str] = None) -> str:
     """Return the Qt version string supplied by the UI layer (R196).
 
     ``utils.versions`` stays Qt/UI-free: callers in ``ui`` pass
@@ -162,14 +165,14 @@ def getPlantUMLVersion():
     return "could not determine", JAR_PATH
 
 
-def getComponentInfo(qt_version: str | None = None):
+def getComponentInfo(qt_version: Optional[str] = None) -> list[tuple[Any, ...]]:
     """Provides major codimension components information.
 
     Parameters:
         qt_version: Optional Qt runtime version from the UI layer (R196).
             Injected so this module does not import ``ui`` / Qt.
     """
-    components = []
+    components: list[tuple[Any, ...]] = []
     # Each item contains: <pretty name>, <version>,
     #                     <url>, <patched>, <license name>,
     #                     <license url>
