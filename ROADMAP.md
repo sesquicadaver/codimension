@@ -125,7 +125,7 @@
 | 3 | R185 | SSH download hardening (A203): lstat/reject symlink; nonzero limits; stream; staging+atomic swap | FakeSFTP contract tests | M | DONE |
 | 4 | R186 | SSH Run/Save async jobs (A204): cancel, timeout, bounded output, SYNC_* state | GUI non-blocking; Save≠success without SYNCED | L | DONE |
 | 5 | R187 | ExecutionPlan vs Runner (A205) + K8s Job Complete/Failed (A206) | `run` ≠ prepare; wait terminal condition | L | DONE |
-| 6 | R188 | Per-scope CFG + loop/finally (A207) | Function CFG; break/continue → loop; docs: not security-proof | L | OPEN |
+| 6 | R188 | Per-scope CFG + loop/finally (A207) | Function CFG; break/continue → loop; docs: not security-proof | L | DONE |
 | 7 | R189 | VENV create-in-final + backup/rollback (A208) | pip/activate shebang = final path; probe scripts | M | OPEN |
 | 8 | R190 | `.cdm3` external reload = updateProperties; UUID immutable (A209) | UUID change → reject or full reload | M | OPEN |
 | 9 | R191 | Plugin policy before import (A210) | Manifest-first; disabled never import | M | OPEN |
@@ -143,7 +143,7 @@
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R188** (A207 CFG scopes/loops). TODO_FIXME: first 🔓 A207.
+**Next OPEN:** **R189** (A208 VENV create-in-final). TODO_FIXME: first 🔓 A208.
 
 ### Shipped outside the R-queue (product ask)
 

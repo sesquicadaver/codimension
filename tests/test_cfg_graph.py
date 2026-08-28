@@ -72,6 +72,79 @@ def test_cfg_loop_has_loop_back() -> None:
     assert any(e.kind == CfgEdgeKind.LOOP_BACK for e in graph.edges)
 
 
+def test_r188_break_targets_loop_join_not_module_exit() -> None:
+    from core.cfg import CfgEdgeKind, CfgNodeKind, build_cfg_graph
+
+    graph = build_cfg_graph("for i in range(3):\n    break\n")
+    breaks = graph.nodes_of_kind(CfgNodeKind.BREAK)
+    assert breaks
+    join_ids = {n.id for n in graph.nodes.values() if n.kind == CfgNodeKind.JOIN and n.label == "loop_join"}
+    assert join_ids
+    for br in breaks:
+        succ = set(graph.successors(br.id))
+        assert succ & join_ids
+        assert graph.exit_id not in succ
+
+
+def test_r188_continue_targets_loop_header() -> None:
+    from core.cfg import CfgEdgeKind, CfgNodeKind, build_cfg_graph
+
+    graph = build_cfg_graph("for i in range(3):\n    continue\n")
+    continues = graph.nodes_of_kind(CfgNodeKind.CONTINUE)
+    loops = graph.nodes_of_kind(CfgNodeKind.LOOP)
+    assert continues and loops
+    loop_id = loops[0].id
+    for cont in continues:
+        assert loop_id in graph.successors(cont.id)
+        assert any(
+            e.src == cont.id and e.dst == loop_id and e.kind == CfgEdgeKind.LOOP_BACK for e in graph.edges
+        )
+
+
+def test_r188_return_targets_function_exit_not_module() -> None:
+    from core.cfg import CfgNodeKind, build_cfg_graph
+
+    graph = build_cfg_graph("def f():\n    return 1\nx = 1\n")
+    returns = graph.nodes_of_kind(CfgNodeKind.RETURN)
+    assert returns
+    fn = graph.nodes_of_kind(CfgNodeKind.FUNCTION)[0]
+    scope_exits = [
+        n
+        for n in graph.nodes.values()
+        if n.kind == CfgNodeKind.EXIT and n.parent_id == fn.id
+    ]
+    assert scope_exits
+    scope_exit_id = scope_exits[0].id
+    for ret in returns:
+        succ = set(graph.successors(ret.id))
+        assert scope_exit_id in succ
+        assert graph.exit_id not in succ
+
+
+def test_r188_function_has_nested_entry_exit() -> None:
+    from core.cfg import CfgEdgeKind, CfgNodeKind, build_cfg_graph
+
+    graph = build_cfg_graph("def f():\n    x = 1\n")
+    fn = graph.nodes_of_kind(CfgNodeKind.FUNCTION)[0]
+    nested = [n for n in graph.nodes.values() if n.parent_id == fn.id]
+    kinds = {n.kind for n in nested}
+    assert CfgNodeKind.ENTRY in kinds
+    assert CfgNodeKind.EXIT in kinds
+    assert any(e.src == fn.id and e.kind == CfgEdgeKind.BODY for e in graph.edges)
+
+
+def test_r188_return_through_finally_reaches_finally() -> None:
+    from core.cfg import CfgNodeKind, build_cfg_graph
+
+    source = "def f():\n    try:\n        return 1\n    finally:\n        x = 1\n"
+    graph = build_cfg_graph(source)
+    returns = graph.nodes_of_kind(CfgNodeKind.RETURN)
+    finally_nodes = [n for n in graph.nodes.values() if n.kind == CfgNodeKind.BRANCH and n.label == "finally"]
+    assert returns and finally_nodes
+    fin_id = finally_nodes[0].id
+    assert fin_id in graph.successors(returns[0].id)
+
+
 def test_from_control_flow_matches_build() -> None:
     from core.cfg import build_cfg_graph, from_control_flow
     from core.flow import parse_control_flow_from_memory

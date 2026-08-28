@@ -76,7 +76,7 @@
 | **Git analytics R137** | utils.git_analytics | churn/hotspot from `git log --numstat`; text formatter | tests/test_git_analytics.py |
 | **Risk score R138** | core.risk_score | `compute_risk_score` lint+metrics±git (`cdm-risk-v1`) | tests/test_risk_score.py |
 | **Branching policy R170** | docs | CONTRIBUTING(+.en): `master` + `feature/*`/`fix/*`; no direct push; `ci-gate` | GitHub branch protection + docs gate |
-| **CFG graph model R140.a** | core.cfg | `CfgNode`/`CfgEdge`/`CfgGraph`; `build_cfg_graph` from flow parse | tests/test_cfg_graph.py |
+| **CFG graph model R140.a** | core.cfg | R188 per-scope ENTRY/EXIT; break/continue loop stack; finally routing; not security-proof | tests/test_cfg_graph.py; [cfg-graph.md](../technology/cfg-graph.md) |
 | **CFG canvas bind R140.b** | flowui.cfg_adapter + vcanvas/flowuiwidget | `bind_cfg_graph` у `layoutModule`; `getCfgGraph`; CF-дерево = layout payload | tests/test_cfg_adapter.py |
 | **CFG frame map R141** | core.cfg_frames + debugger.stackviewer | `map_frame_to_cfg_node` / stack; tooltip CFG id; manual: stop у debugger → tip показує node | tests/test_cfg_frames.py |
 | **CFG graph diff R142** | core.cfg_diff | `diff_cfg_graphs` / `diff_cfg_sources`; стабільні content keys; add/remove/change | tests/test_cfg_diff.py |
