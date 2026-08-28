@@ -20,7 +20,7 @@
 - Pure-Python AST-парсери під compatibility-іменами `cdmpyparser` / `cdmcfparser` (C-extension не потрібен)
 - UI плагінів у `cdmplugins/` (Ruff, Mypy, Pytest тощо потребують optional extras)
 - Debugger (breakpoints, watchpoints); debugger session tests у CI
-- Help → Check for updates (GitHub Releases; verified download у cache, без auto-apply)
+- Help → Check for updates (GitHub Releases; verified download + optional apply/rollback; ``CDM_HOME``)
 - CI на **Ubuntu**: Ruff, format, Mypy, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen bootstrap smoke, `pip-audit`
 
 ## Обмеження

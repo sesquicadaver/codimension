@@ -93,7 +93,8 @@
 | **Deploy overlay R162** | utils.deployment_overlay + editor.flowuinavbar | Read-only Dockerfile/Compose hints; nav badges | tests/test_deployment_overlay.py; fixtures/deployment |
 | **Release channel R171** | cdmverspec | `release_channel` + `get_release_channel` / env override; одна версія | tests/test_cdmverspec.py |
 | **Update check R172** | utils.update_check + ui.mainmenu/mainwindow | GitHub Releases read-only; діалог новішого тега; injectable fetch | tests/test_update_check.py |
-| **Update download R173** | utils.update_download + ui.mainwindow | Download у cache; SHA-256 fail closed; без apply | tests/test_update_download.py |
+| **Update download R173** | utils.update_download + ui.mainwindow | Download у cache; SHA-256 fail closed; ``manifest.json`` | tests/test_update_download.py |
+| **Update apply R180** | utils.update_apply + portable_profile + ui.mainwindow | re-verify → pip install; rollback previous; ``CDM_HOME`` | tests/test_update_apply_r180.py |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -153,7 +154,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R180→**; лінійна неблокуюча.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R181→**; лінійна неблокуюча.
 
 ### Матриця меж модулів (R103 / R195)
 

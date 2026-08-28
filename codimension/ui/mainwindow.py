@@ -1401,7 +1401,10 @@ class CodimensionMainWindow(
         )
 
     def _onCheckForUpdates(self):
-        """R172/R173: check GitHub Releases; optional verified download to cache."""
+        """R172/R173/R180: check Releases; verified download; optional apply."""
+        import sys
+
+        from utils.update_apply import VerifiedArtifact, apply_from_cache
         from utils.update_check import check_for_updates, format_update_message
         from utils.update_download import (
             default_update_cache_dir,
@@ -1429,7 +1432,7 @@ class CodimensionMainWindow(
                     "Check for updates",
                     text
                     + "\n\nDownload and verify the artifact into the local cache?"
-                    + "\n(Requires a trusted SHA-256; apply/install is not done.)",
+                    + "\n(Requires a trusted SHA-256. You can apply after verify.)",
                     QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
                     QMessageBox.Yes,
                 )
@@ -1439,17 +1442,56 @@ class CodimensionMainWindow(
                         dl = download_and_verify(latest, default_update_cache_dir())
                     finally:
                         QApplication.restoreOverrideCursor()
-                    if dl.status == "ok":
+                    if dl.status != "ok":
+                        QMessageBox.warning(
+                            self,
+                            "Check for updates",
+                            (dl.message or "Download failed.") + (f"\n{dl.error}" if dl.error else ""),
+                        )
+                        return
+                    apply_answer = QMessageBox.question(
+                        self,
+                        "Check for updates",
+                        (dl.message or f"Verified:\n{dl.path}")
+                        + "\n\nApply this verified update into the current IDE Python?"
+                        + "\n(Restart Codimension after a successful apply.)",
+                        QMessageBox.Yes | QMessageBox.No,
+                        QMessageBox.No,
+                    )
+                    if apply_answer != QMessageBox.Yes:
                         QMessageBox.information(
                             self,
                             "Check for updates",
-                            dl.message or f"Verified download:\n{dl.path}",
+                            dl.message or f"Verified download kept at:\n{dl.path}",
+                        )
+                        return
+                    verified = VerifiedArtifact(
+                        path=str(dl.path),
+                        sha256=str(dl.sha256 or ""),
+                        tag_name=latest.tag_name,
+                        version=latest.version,
+                        artifact_name=str(dl.artifact_name or ""),
+                    )
+                    QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+                    try:
+                        applied = apply_from_cache(
+                            verified,
+                            target_python=sys.executable,
+                            expect_version=latest.version or None,
+                        )
+                    finally:
+                        QApplication.restoreOverrideCursor()
+                    if applied.status == "ok":
+                        QMessageBox.information(
+                            self,
+                            "Check for updates",
+                            (applied.message or "Update applied.") + "\nRestart Codimension to load the new version.",
                         )
                     else:
                         QMessageBox.warning(
                             self,
                             "Check for updates",
-                            (dl.message or "Download failed.") + (f"\n{dl.error}" if dl.error else ""),
+                            (applied.message or "Apply failed.") + (f"\n{applied.error}" if applied.error else ""),
                         )
                     return
                 if answer == QMessageBox.No and url:

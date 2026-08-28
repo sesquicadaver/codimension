@@ -83,7 +83,9 @@ password=<password>
    ``release_channel`` (``stable`` / ``beta`` / ``dev``; R171 — one version still).
    Publish a GitHub Release with a PEP 440 tag (``vX.Y.Z``) and a wheel/sdist
    plus SHA-256 (API digest or ``*.sha256`` / ``SHA256SUMS``) so Help → Check for
-   updates can verify a cache download (R172–R173); apply/install remains R180.
+   updates can verify a cache download (R172–R173) and optionally apply with
+   rollback from the verified cache (R180; restart required). Portable config
+   root: ``CDM_HOME``.
    Experimental AI UI: persistent flag ``ai_ui`` or env ``CDM_AI_UI`` (R174).
    Safe-mode IDE: ``codimension --safe-mode`` or ``CDM_SAFE_MODE=1`` (R175).
 4. Build (recommended):

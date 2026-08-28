@@ -20,7 +20,7 @@ Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codi
 - Pure-Python AST parsers exposed under the compatibility names `cdmpyparser` / `cdmcfparser` (no C extension required)
 - Plugin UI in `cdmplugins/` (Ruff, Mypy, Pytest, … need optional extras)
 - Debugger (breakpoints, watchpoints); debugger session tests in CI
-- Help → Check for updates (GitHub Releases; verified cache download, no auto-apply)
+- Help → Check for updates (GitHub Releases; verified download + optional apply/rollback; ``CDM_HOME``)
 - CI on **Ubuntu**: Ruff, format, Mypy, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen bootstrap smoke, `pip-audit`
 
 ## Limitations
