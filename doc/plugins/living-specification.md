@@ -83,7 +83,7 @@
 | **Taint MVP R143** | core.taint | Function-local sources→sinks; задокументована підмножина | tests/test_taint.py; [taint-mvp.md](../uk/technology/taint-mvp.md) |
 | **Plugin capabilities R150** | plugins.capabilities + pluginmanager | `PluginCapabilitySpec` / negotiate; host відхиляє несумісні; R191 policy before import | tests/test_plugin_capabilities.py, test_plugin_policy.py |
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice для символу; JSON; без мережі | tests/test_ai_context.py |
-| **AI UI R152** | core.ai_ui + core.ai_tasks + core.ai_project_context + core.ai_docstring + core.ai_docstring_context + ui.ai* + editor/Options | Analyze project/module/symbol; module analysis project-scoped; Google docstring from selection + lean context + Apply; AI Result (Save); on-demand AI Chat; live provider | tests/test_ai_ui.py, test_ai_tasks.py, test_ai_config.py, test_ai_http.py |
+| **AI UI R152** | core.ai_ui + core.ai_tasks + core.ai_http + core.ai_project_context + … | Analyze; Google docstring; Chat; R192 budgeted HTTP + cancel + base_url trust | tests/test_ai_ui.py, test_ai_http.py, … |
 | **Feature flags R174** | core.feature_flags | Persistent JSON flags; env overrides; гейт AI UI | tests/test_feature_flags.py |
 | **Safe mode R175** | core.safe_mode + codimension/pluginmanager/overlays | `--safe-mode` / `CDM_SAFE_MODE`; без плагінів і overlays | tests/test_safe_mode.py |
 | **Env overlay R160** | utils.environment_overlay + editor.flowuinavbar | Бейджі `env:source` + path на flow nav через R135; status bar → `env` | tests/test_environment_overlay.py |
@@ -151,7 +151,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R192→** (A220…; потім R198–R199, R180–R182); лінійна неблокуюча.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R193→** (A221…; потім R198–R199, R180–R182); лінійна неблокуюча.
 
 ### Матриця меж модулів (R103)
 

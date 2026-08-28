@@ -11,9 +11,9 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **R192 / A220** — AI HTTP budget/stream/cancel + `base_url` trust.
-Active linear queue: R192→R197 (P2 A220–A224 split) → R198–R199 (SSH Debug/Profile) → R180→R182.
-R183–R191 shipped (A201–A210). No deferred gate inside this wave.
+Current pointer: **R193 / A221** — Settings reject non-dict JSON; lazy singleton.
+Active linear queue: R193→R197 (P2) → R198–R199 (SSH Debug/Profile) → R180→R182.
+R183–R192 shipped. No deferred gate inside this wave.
 
 User standing order (2026-08-28): `/autopilot` means execute the next queue task and
 perform commit/push/merge/PR automatically without waiting for a separate ask.

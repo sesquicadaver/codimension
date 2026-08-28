@@ -131,7 +131,7 @@
 
 | # | ID | Задача | Acceptance | Size | Status |
 |---|----|--------|------------|------|--------|
-| 1 | R192 | AI HTTP: chunked/budgeted read + cancel + `base_url` trust allowlist (A220) | Немає unbounded `response.read()`; budget/cancel тести; чужий URL fail-closed | M | OPEN |
+| 1 | R192 | AI HTTP: chunked/budgeted read + cancel + `base_url` trust allowlist (A220) | Немає unbounded `response.read()`; budget/cancel тести; чужий URL fail-closed | M | DONE |
 | 2 | R193 | Settings: відхилення non-dict JSON; lazy singleton (A221) | Поганий JSON → safe defaults + log; Settings не ламає import | M | OPEN |
 | 3 | R194 | Risk/taint confidence; missing metrics ≠ штучно низький risk (A222) | Confidence/unknown у score; тести на відсутні метрики | M | OPEN |
 | 4 | R195 | Utils side-effect inventory + tighter boundary gate (A223.a) | Інвентар ефектів; gate ловить нові порушення матриці | M | OPEN |
@@ -147,7 +147,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R192** (A220 AI HTTP budget/stream/trust). TODO_FIXME: перший 🔓 A220.
+**Наступний OPEN:** **R193** (A221 Settings non-dict + lazy singleton). TODO_FIXME: перший 🔓 A221.
 
 Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
 
