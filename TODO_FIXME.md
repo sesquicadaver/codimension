@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Черга ROADMAP: **R196→**.
+Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Черга ROADMAP: **R197→**.
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
@@ -29,7 +29,7 @@
 | A220 | AI: `response.read()` до limit; немає budget/cancel; keyed `base_url` без trust policy | P2 | ✅ R192 |
 | A221 | Settings: валідний JSON не-dict ламає startup; import-time singleton | P2 | ✅ R193 |
 | A222 | Taint/risk: евристика; missing metrics → штучно низький risk | P2 | ✅ R194 |
-| A223 | Архітектура: `utils` side-effects; boundary gate не інвертує залежності | P2 | PARTIAL R196 (R195 ✅) |
+| A223 | Архітектура: `utils` side-effects; boundary gate не інвертує залежності | P2 | ✅ R195–R196 |
 | A224 | Smoke: `os._exit(0)` без normal shutdown; constraints/wrapt drift | P2 | 🔓 R197 |
 
 ## Закриті (історичний аудит)

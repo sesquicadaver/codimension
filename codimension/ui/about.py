@@ -24,7 +24,18 @@ from flowui.cml import CMLVersion
 from utils.pixmapcache import getPixmap
 from utils.versions import getComponentInfo
 
-from .qt import QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QSizePolicy, Qt, QTabWidget, QTextBrowser, QVBoxLayout
+from .qt import (
+    QT_VERSION_STR,
+    QDialog,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    Qt,
+    QTabWidget,
+    QTextBrowser,
+    QVBoxLayout,
+)
 
 
 class AboutDialog(QDialog):
@@ -109,7 +120,8 @@ More information: <a href='https://github.com/sesquicadaver/codimension'>GitHub 
     @staticmethod
     def __createVersioning():
         """Creates the versioning section"""
-        components = getComponentInfo()
+        # R196: inject Qt version from ui so utils.versions stays UI-free.
+        components = getComponentInfo(qt_version=QT_VERSION_STR)
         text = "<p>The major Codimension components are listed below:</p><ul>"
         for prettyName, version, homeURL, patched, licenseName, licenseLink, localPath in components:
             if homeURL is not None:

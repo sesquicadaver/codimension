@@ -69,11 +69,16 @@ def getPythonInterpreterVersion():
     ), sys.executable
 
 
-def getQtVersion():
-    """Provides the Qt version"""
-    from ui.qt import QT_VERSION_STR
+def getQtVersion(qt_version_str: str | None = None) -> str:
+    """Return the Qt version string supplied by the UI layer (R196).
 
-    return QT_VERSION_STR
+    ``utils.versions`` stays Qt/UI-free: callers in ``ui`` pass
+    ``QT_VERSION_STR`` (or equivalent). Without an injected value the About
+    table shows ``n/a`` rather than importing ``ui.qt`` from utils.
+    """
+    if qt_version_str:
+        return qt_version_str
+    return "n/a"
 
 
 def getGraphvizVersion():
@@ -157,8 +162,13 @@ def getPlantUMLVersion():
     return "could not determine", JAR_PATH
 
 
-def getComponentInfo():
-    """Provides major codimension components information"""
+def getComponentInfo(qt_version: str | None = None):
+    """Provides major codimension components information.
+
+    Parameters:
+        qt_version: Optional Qt runtime version from the UI layer (R196).
+            Injected so this module does not import ``ui`` / Qt.
+    """
     components = []
     # Each item contains: <pretty name>, <version>,
     #                     <url>, <patched>, <license name>,
@@ -239,7 +249,7 @@ def getComponentInfo():
     components.append(
         (
             "Qt",
-            getQtVersion(),
+            getQtVersion(qt_version),
             "http://qt-project.org/",
             None,
             "LGPL-2.1/Commercial",

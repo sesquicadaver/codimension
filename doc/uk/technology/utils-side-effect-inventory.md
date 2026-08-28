@@ -34,9 +34,11 @@ Allowlist: `UTILS_LEGACY_EDGES` у `scripts/check_module_boundaries.py`
 | `utils/settings.py` | ui | `QObject` / сигнали / `QDir` |
 | `utils/skin.py` | ui | `QColor` / `QFont` у моделі скіна |
 | `utils/ssh_project_runtime.py` | ui | Lazy `QTimer` для колбеків UI-потоку |
-| `utils/versions.py` | ui | Lazy `QT_VERSION_STR` |
 | `utils/watcher.py` | qt | Прямий `PyQt5.QtCore` filesystem watcher |
 | `utils/webresourcecache.py` | ui | Завантажувач `QObject` / `QThread` |
+
+**R196:** `utils/versions.py` прибрано з legacy-мапи — версія Qt інжектиться
+з `ui.about` через `getComponentInfo(qt_version=…)`.
 
 ## Політика
 

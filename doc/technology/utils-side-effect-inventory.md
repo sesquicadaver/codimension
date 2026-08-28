@@ -34,9 +34,11 @@ Target (later roadmap): shrink the legacy map to empty (R196+ hotspots).
 | `utils/settings.py` | ui | `QObject` / signals / `QDir` |
 | `utils/skin.py` | ui | `QColor` / `QFont` in skin model |
 | `utils/ssh_project_runtime.py` | ui | Lazy `QTimer` for UI-thread callbacks |
-| `utils/versions.py` | ui | Lazy `QT_VERSION_STR` |
 | `utils/watcher.py` | qt | Direct `PyQt5.QtCore` filesystem watcher |
 | `utils/webresourcecache.py` | ui | `QObject` / `QThread` downloader |
+
+**R196:** `utils/versions.py` removed from the legacy map — Qt version is injected
+from `ui.about` via `getComponentInfo(qt_version=…)`.
 
 ## Policy
 
