@@ -141,13 +141,13 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 8 | R199 | SSH remote Profile MVP | Remote profile + local artifact; cancel/timeout; docs | M | DONE |
 | 9 | R180 | Auto-apply update + rollback / portable profiles | Apply from verified cache; rollback; fail-closed; tests | L | DONE |
 | 10 | R181 | Channel promotion automation (`dev`→`beta`→`stable` / tags) | Documented pipeline + script/CI; no theatre | M | DONE |
-| 11 | R182 | MCP / remote agent backend | MCP surface over headless core; auth fail-closed; smoke | L | OPEN |
+| 11 | R182 | MCP / remote agent backend | MCP surface over headless core; auth fail-closed; smoke | L | DONE |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R182** (MCP / remote agent backend).
+**Next OPEN:** *(empty — R182 closed the active linear queue).*
 
 Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
 
@@ -166,5 +166,5 @@ Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (20
 Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
-MCP / agent: after R182
+MCP / agent: **R182** (`mcp_backend`, stdio + ``CDM_MCP_TOKEN``)
 ```

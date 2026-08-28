@@ -141,13 +141,13 @@
 | 8 | R199 | SSH remote Profile MVP | Profile run remote + артефакт локально; cancel/timeout; docs | M | DONE |
 | 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | DONE |
 | 10 | R181 | Автоматизація promotion каналів (`dev`→`beta`→`stable` / tags) | Документований pipeline + скрипт/CI; без зайвого theatre | M | DONE |
-| 11 | R182 | MCP / remote agent backend | MCP surface над headless core; auth fail-closed; smoke | L | OPEN |
+| 11 | R182 | MCP / remote agent backend | MCP surface над headless core; auth fail-closed; smoke | L | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R182** (MCP / remote agent backend).
+**Наступний OPEN:** *(порожньо — R182 закрив активну лінійну чергу).*
 
 Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
 
@@ -166,5 +166,5 @@
 Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
-MCP / agent: після R182
+MCP / agent: **R182** (`mcp_backend`, stdio + ``CDM_MCP_TOKEN``)
 ```

@@ -3,7 +3,8 @@
 """T085/R100/R101: fail if Qt-free packages import Qt or UI packages.
 
 Covers ``codimension.core``, ``codimension.infrastructure``,
-``codimension.app``, and selected utils modules (R100: ``utils.importutils``).
+``codimension.app``, ``codimension.mcp_backend`` (R182), and selected utils
+modules (R100: ``utils.importutils``).
 
 Static AST gate: Import/ImportFrom (incl. relative) and literal
 ``importlib.import_module`` / ``__import__`` string arguments.
@@ -20,6 +21,8 @@ CORE_ROOTS = [
     ROOT / "codimension" / "core",
     ROOT / "codimension" / "infrastructure",
     ROOT / "codimension" / "app",
+    # R182: MCP backend must stay headless (no Qt/UI).
+    ROOT / "codimension" / "mcp_backend",
 ]
 # R100+: individual utils modules that must stay headless/Qt-free.
 QTFREE_UTILS_FILES = [
@@ -199,7 +202,10 @@ def main() -> int:
         for item in failures:
             print(f"  {item}")
         return 1
-    print("T085/R100/R101 OK: core/infrastructure/app/importutils have no Qt/UI import edges")
+    print(
+        "T085/R100/R101 OK: core/infrastructure/app/mcp_backend/importutils "
+        "have no Qt/UI import edges"
+    )
     return 0
 
 

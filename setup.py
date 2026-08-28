@@ -200,6 +200,7 @@ def getPackages():
             'codimension.core',
             'codimension.app',
             'codimension.infrastructure',
+            'codimension.mcp_backend',
             'codimension.parsers',
             'codimension.analysis',
             'codimension.autocomplete',
@@ -269,5 +270,9 @@ setup(name='codimension',
       package_data=getPackageData(),
       install_requires=getRequirements(),
       data_files=getDataFiles(),
-      entry_points={'gui_scripts':
-                   ['codimension = codimension.codimension:main']})
+      entry_points={
+          'gui_scripts': ['codimension = codimension.codimension:main'],
+          'console_scripts': [
+              'codimension-mcp = codimension.mcp_backend.server:main',
+          ],
+      })

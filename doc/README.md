@@ -61,6 +61,8 @@
 | [technology/parser-contract.md](technology/parser-contract.md) | [uk/technology/parser-contract.md](uk/technology/parser-contract.md) |
 | [technology/ssh-execution.md](technology/ssh-execution.md) | [uk/technology/ssh-execution.md](uk/technology/ssh-execution.md) |
 | [technology/ssh-remote-project.md](technology/ssh-remote-project.md) | [uk/technology/ssh-remote-project.md](uk/technology/ssh-remote-project.md) |
+| [technology/mcp-backend.md](technology/mcp-backend.md) | [uk/technology/mcp-backend.md](uk/technology/mcp-backend.md) |
+| [technology/release-channels.md](technology/release-channels.md) | [uk/technology/release-channels.md](uk/technology/release-channels.md) |
 | [md/mdsupport.md](md/mdsupport.md) | [uk/md/mdsupport.md](uk/md/mdsupport.md) |
 | [smartzoom/smartzoom.md](smartzoom/smartzoom.md) | [uk/smartzoom/smartzoom.md](uk/smartzoom/smartzoom.md) |
 | [dependencies/dependencies.md](dependencies/dependencies.md) | [uk/dependencies/dependencies.md](uk/dependencies/dependencies.md) |

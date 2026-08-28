@@ -11,9 +11,9 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **R182** — MCP / remote agent backend.
-Active linear queue: R182.
-R183–R199 + R180–R181 shipped.
+Current pointer: *(empty — linear R-queue through R182 is DONE).*
+Active linear queue: none (pick first OPEN from TODO_FIXME or new ROADMAP rows).
+R183–R199 + R180–R182 shipped.
 
 User standing order (2026-08-28): `/autopilot` means execute the next queue task and
 perform commit/push/merge/PR automatically without waiting for a separate ask.

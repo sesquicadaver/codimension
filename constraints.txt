@@ -38,6 +38,7 @@ license-expression==30.4.4
 mando==0.7.1
 markdown-it-py==4.2.0
 mccabe==0.6.1
+mcp==2.1.1
 mdurl==0.1.2
 mistune==3.3.4
 more-itertools==11.1.0
