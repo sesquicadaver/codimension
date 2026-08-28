@@ -154,8 +154,9 @@ def test_recreate_order_and_refuse_outside(project_dir):
 
     def create(base, path):
         calls.append(("create", base, path))
-        assert path != inside, "create must target staging, not live venv"
-        assert (Path(inside) / "old.txt").is_file(), "old venv must survive until commit"
+        assert path == inside, "R189: create must target final destination"
+        assert not (Path(inside) / "old.txt").exists(), "old tree must be moved aside first"
+        assert any(project_dir.glob(".cdm-venv-bak-*")), "backup must exist during create"
         Path(path).mkdir(parents=True)
         (Path(path) / "pyvenv.cfg").write_text("home = /usr\n", encoding="utf-8")
         bin_dir = Path(path) / "bin"
@@ -167,7 +168,7 @@ def test_recreate_order_and_refuse_outside(project_dir):
 
     def pip(cmd, cwd=None, project_dir=None):
         calls.append(("pip", cmd, cwd))
-        assert (Path(inside) / "old.txt").is_file(), "old venv must survive pip failure window"
+        assert Path(inside).is_dir()
 
     recreateVenv(
         sys.executable,
@@ -182,6 +183,7 @@ def test_recreate_order_and_refuse_outside(project_dir):
     assert kinds == ["create", "pip"]
     assert not (Path(inside) / "old.txt").exists()
     assert resolveVenvToPython(inside)
+    assert not any(project_dir.glob(".cdm-venv-bak-*"))
 
     outside = "/tmp/not-in-project-venv-t140"
     with pytest.raises(RuntimeError, match="outside"):
@@ -196,7 +198,7 @@ def test_recreate_order_and_refuse_outside(project_dir):
 
 
 def test_recreate_rolls_back_on_create_failure(project_dir):
-    """D02/B07: failed create must leave the previous venv intact."""
+    """R189: failed create restores the previous venv from backup."""
     from utils.venvbootstrap import recreateVenv
 
     inside = project_dir / ".venv"
@@ -223,11 +225,12 @@ def test_recreate_rolls_back_on_create_failure(project_dir):
             runner_probe=_fake_probe,
         )
     assert marker.read_text(encoding="utf-8") == "original"
+    assert not any(project_dir.glob(".cdm-venv-bak-*"))
     assert not any(project_dir.glob(".cdm-venv-stage-*"))
 
 
 def test_recreate_rolls_back_on_pip_failure(project_dir):
-    """D02/B07: failed pip must discard staging and keep the previous venv."""
+    """R189: failed pip restores the previous venv from backup."""
     from utils.venvbootstrap import recreateVenv
 
     inside = project_dir / ".venv"
@@ -265,7 +268,34 @@ def test_recreate_rolls_back_on_pip_failure(project_dir):
             runner_probe=_fake_probe,
         )
     assert marker.read_text(encoding="utf-8") == "original"
-    assert not any(project_dir.glob(".cdm-venv-stage-*"))
+    assert not any(project_dir.glob(".cdm-venv-bak-*"))
+
+
+def test_r189_create_venv_shebang_uses_final_path(project_dir):
+    """Real ``python -m venv`` at final path: activate VIRTUAL_ENV matches destination."""
+    from utils.venvbootstrap import createVenv
+
+    dest = project_dir / ".venv"
+    python = createVenv(sys.executable, str(dest), project_dir=str(project_dir))
+    assert os.path.lexists(python)
+    assert (dest / "bin").is_dir() or (dest / "Scripts").is_dir()
+    activate = dest / "bin" / "activate"
+    assert activate.is_file()
+    text = activate.read_text(encoding="utf-8", errors="replace")
+    final = str(dest.resolve())
+    assert f"VIRTUAL_ENV={final}" in text or f'VIRTUAL_ENV="{final}"' in text
+    assert ".cdm-venv-stage-" not in text
+    assert ".cdm-venv-bak-" not in text
+    for script in (dest / "bin").glob("pip*"):
+        if not script.is_file() or script.is_symlink():
+            continue
+        head = script.read_bytes()[:240]
+        if not head.startswith(b"#!"):
+            continue
+        line = head.split(b"\n", 1)[0].decode("utf-8", errors="replace")
+        assert ".cdm-venv-stage-" not in line
+        assert final in line
+        break
 
 
 def test_collect_install_sources(project_dir, monkeypatch):

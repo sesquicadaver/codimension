@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Non-blocking external process runner for VENV dialogs (audit A03).
+"""Non-blocking external process runner for VENV dialogs (audit A03 / R189).
 
 GUI thread must not call ``subprocess.run`` for create/pip: long installs freeze
 the IDE with no progress or cancel. This module runs argv via ``QProcess``,
 pumps the Qt event loop, shows a cancelable progress dialog, and stops with
 terminate → kill (same pattern as lint drivers).
+
+R189: create runs at the **final** destination (backup/rollback), not via
+staging rename that would bake wrong shebang paths.
 """
 
 from __future__ import annotations
@@ -14,10 +17,10 @@ import sys
 
 from utils.venvbootstrap import (
     assertSafeMutableProjectPython,
-    commitStagedVenv,
     discardStagedVenv,
-    makeStagingVenvDir,
+    moveAsideVenv,
     resolveVenvToPython,
+    restoreVenvBackup,
     validateVenvDestination,
 )
 
@@ -138,10 +141,9 @@ def create_venv_in_place_with_progress(
     base_python: str,
     venv_dir: str,
 ) -> str:
-    """Create a venv at ``venv_dir`` via QProcess (no staging/commit).
+    """Create a venv at ``venv_dir`` via QProcess (no rename).
 
-    Used by transactional :func:`utils.venvbootstrap.recreateVenv` which already
-    supplies a staging path. Returns the new python path.
+    Returns the new python path. Shebang/`VIRTUAL_ENV` use ``venv_dir``.
     """
     base_python = base_python or sys.executable
     venv_dir = os.path.abspath(venv_dir)
@@ -166,20 +168,23 @@ def create_venv_with_progress(
     venv_dir: str,
     project_dir: str | None = None,
 ) -> str:
-    """Create a venv via QProcess with staging commit; return the new python path.
+    """Create a venv via QProcess at the final path (R189).
 
-    Applies :func:`validateVenvDestination` before starting the process. Builds
-    under a sibling staging directory so a cancelled/failed create does not
-    leave a half-written destination (audit D02/B07).
+    Applies :func:`validateVenvDestination` before starting. Creates in place
+    so paths inside the venv match ``venv_dir``; on failure discards the
+    half-written tree (and restores a backup when recreating over an existing
+    destination that was moved aside — create path normally has no existing).
     """
     base_python = base_python or sys.executable
     venv_dir = validateVenvDestination(venv_dir, project_dir, for_recreate=False)
-    staged = makeStagingVenvDir(venv_dir)
+    backup = moveAsideVenv(venv_dir)
     try:
-        create_venv_in_place_with_progress(parent, base_python, staged)
-        commitStagedVenv(venv_dir, staged)
+        create_venv_in_place_with_progress(parent, base_python, venv_dir)
+        discardStagedVenv(backup)
+        backup = None
     except Exception:
-        discardStagedVenv(staged)
+        discardStagedVenv(venv_dir)
+        restoreVenvBackup(venv_dir, backup)
         raise
     python = resolveVenvToPython(venv_dir)
     if not python:

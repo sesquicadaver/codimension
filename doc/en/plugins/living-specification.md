@@ -42,7 +42,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Debugger mixin routing T110–T111** | ui.mainwindow_debug + tests/debugger | host.py `create_mixin_host`; test_mixin_routing.py | switchDebugMode chrome + `_onDbgGo`→remoteContinue |
 | **Debugger widget smoke T120** | debugger.bpwp / excpt | test_widgets_bpwp.py, test_widgets_exceptions.py; pytest-qt | offscreen panel add/clear/ignore; Skin bootstrap fixture |
 | **Debugger full-IDE T130** | ui.mainwindow + utils.skin | `ide_bootstrap.py`, `test_full_ide_smoke.py`; `PACKAGE_SKIN_DIR` package-relative; `.github/workflows/debugger-full-ide-nightly.yml` | env `CDM_FULL_IDE_SMOKE=1`; nightly (not PR-blocker); monitor workflow |
-| **Project venv bootstrap T140** | utils.venvbootstrap + ui.venvsetupdlg / venvprocess | venvbootstrap.py, venvsetupdlg.py, venvprocess.py; tests/test_venv_bootstrap.py, test_venv_process.py | explicit VENV/Update; async QProcess create/pip (A03); session overlay |
+| **Project venv bootstrap T140** | utils.venvbootstrap + ui.venvsetupdlg / venvprocess | venvbootstrap.py, venvsetupdlg.py, venvprocess.py; tests/test_venv_bootstrap.py, test_venv_process.py | explicit VENV/Update; async QProcess; R189 create-in-final + backup/rollback (no staging rename) |
 | **Analysis env refresh T141** | utils.venvbootstrap + project + status bar | `describeAnalysisPythonSource`, `requestAnalysisEnvironmentRefresh`, `Project.refreshAnalysisEnvironment`, `sbAnalysisEnv`; tests/test_venv_bootstrap.py | re-analyze after VENV/Update; Env: project/session/auto/IDE; unresolved opt-in multi-select |
 | **AnalysisEnvironment R110** | utils.analysis_environment | analysis_environment.py | frozen dataclass (path/kind/site-packages/project_id); parity with describe kinds; tests/test_analysis_environment.py |
 | **buildAnalysisEnvironment R111** | utils.venvbootstrap | `buildAnalysisEnvironment`; `getEffectiveProjectPython` / status via env | single constructor; precedence tests in test_analysis_environment.py |
@@ -141,7 +141,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | E04 / F07 | launcher unlink + symlink-safe stale cleanup (one-shot legacy `/tmp`) | ✅ |
 | E05 | profile marker + start-based timeout + `.done` cleanup | ✅ |
 | E06 | exec probe + DQ-safe paths (spaces/Unicode; shebang no whitespace) | ✅ |
-| D02 / B07 | transactional VENV create/recreate (staging + commit) | ✅ |
+| D02 / B07 | transactional VENV create/recreate (superseded by R189 create-in-final) | ✅ |
 | C02 / C03 | interpreter probe + recreate base (no silent IDE version swap) | ✅ |
 | B04 / D05 | brief header/target positions + encoding cookie line-2 | ✅ |
 | B05 / B06 / D04 / D06 | CML clustering, case token, multiline side comments | ✅ |
@@ -151,7 +151,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **active queue empty**; deferred R180–R182 on explicit ask.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R190** (A209); deferred R180–R182 / P2 R192+ on explicit ask.
 
 ### Module boundary matrix (R103)
 

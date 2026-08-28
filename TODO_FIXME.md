@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. Нижче — **P1** у порядку виправлення. Черга ROADMAP: **R189→**.
+Підтверджених **P0** у переглянутому коді немає. Нижче — **P1** у порядку виправлення. Черга ROADMAP: **R190→**.
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
@@ -18,7 +18,7 @@
 | A205 | `ExecutionTarget.run` = prepare argv (`exit_code=None`), не виконання | P1 | ✅ R187 |
 | A206 | Kubernetes: wait Ready ≠ Complete; hash argv; cleanup не в finally | P1 | ✅ R187 |
 | A207 | CFG: global EXIT; break/continue без loop stack; непридатний для data-flow/security | P1 | ✅ R188 |
-| A208 | VENV: rename staging→final ламає shebang/activate (попереднє D02/B07 недостатнє) | P1 | 🔓 OPEN |
+| A208 | VENV: rename staging→final ламає shebang/activate (попереднє D02/B07 недостатнє) | P1 | ✅ R189 |
 | A209 | Зовнішнє оновлення `.cdm3`: split-brain; UUID mutable після load | P1 | 🔓 OPEN |
 | A210 | Plugin policy після `import` plugin code (не fail-closed) | P1 | 🔓 OPEN |
 
@@ -43,7 +43,7 @@
 | E04 (штатний unlink) | Launcher cleanup до execvp | P1 | ✅ |
 | E05 | Profile timeout від shell `&` евристики; orphan `.done` | P1 | ✅ |
 | E06 | noexec execute-probe; обмеження shell-safe paths | P1 | ✅ |
-| D02 / B07 | VENV staging+commit (MVP) | P1 | ✅ (superseded by A208) |
+| D02 / B07 | VENV staging+commit (MVP) | P1 | ✅ (superseded by A208 / R189) |
 | C02 / C03 | Interpreter probe; recreate=`sys.executable` | P1 | ✅ |
 | B03 | Project scan cancel/join/coalescing | P1 | ✅ |
 | B04 | brief keyword/name/colon + target/alias positions | P1 | ✅ |
