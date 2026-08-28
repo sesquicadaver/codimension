@@ -121,7 +121,7 @@
 | # | ID | Task | Acceptance | Size | Status |
 |---|----|------|------------|------|--------|
 | 1 | R183 | SSH path containment (A201): UUID/hash profile id; basename allowlist project name; `realpath`/`commonpath` before mkdir/rmtree/write | Tests for `../`, absolute, separators; fail closed | M | DONE |
-| 2 | R184 | SSH host-key verification (A202): RejectPolicy default; known_hosts; TOFU+fingerprint pin in profile | MITM fail closed; FakeSSH tests | M | OPEN |
+| 2 | R184 | SSH host-key verification (A202): RejectPolicy default; known_hosts; TOFU+fingerprint pin in profile | MITM fail closed; FakeSSH tests | M | DONE |
 | 3 | R185 | SSH download hardening (A203): lstat/reject symlink; nonzero limits; stream; staging+atomic swap | FakeSFTP contract tests | M | OPEN |
 | 4 | R186 | SSH Run/Save async jobs (A204): cancel, timeout, bounded output, SYNC_* state | GUI non-blocking; Save≠success without SYNCED | L | OPEN |
 | 5 | R187 | ExecutionPlan vs Runner (A205) + K8s Job Complete/Failed (A206) | `run` ≠ prepare; wait terminal condition | L | OPEN |
@@ -143,7 +143,7 @@
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R184** (A202 SSH host-key verification). TODO_FIXME: first 🔓 A202.
+**Next OPEN:** **R185** (A203 SSH download hardening). TODO_FIXME: first 🔓 A203.
 
 ### Shipped outside the R-queue (product ask)
 

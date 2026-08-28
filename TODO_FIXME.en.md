@@ -12,7 +12,7 @@ No confirmed **P0** in the reviewed code. **P1** below, fix order. ROADMAP queue
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | A201 | SSH: `profile.id` / project name path-containment → `_rm_tree`/write outside cache | P1 | ✅ R183 |
-| A202 | SSH: `AutoAddPolicy` — host authenticity disabled (MITM) | P1 | 🔓 OPEN |
+| A202 | SSH: `AutoAddPolicy` — host authenticity disabled (MITM) | P1 | ✅ R184 |
 | A203 | SSH download: `stat` not `lstat`, symlink follow, unlimited defaults, no staging swap | P1 | 🔓 OPEN |
 | A204 | SSH Run/Save block GUI; no cancel/timeout/output cap; Save≠SYNCED | P1 | 🔓 OPEN |
 | A205 | `ExecutionTarget.run` = prepare argv (`exit_code=None`), not execute | P1 | 🔓 OPEN |

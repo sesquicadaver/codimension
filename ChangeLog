@@ -1,5 +1,7 @@
 2026 Aug 28
 
+* R184: SSH host authenticity — RejectPolicy by default, known_hosts load,
+  ``host_key_fingerprint`` pin, TOFU only after UI confirmation
 * R183: SSH remote path containment — basename-safe ``profile.id`` / project
   name; local cache ``commonpath`` guards before mkdir/rmtree/write
 

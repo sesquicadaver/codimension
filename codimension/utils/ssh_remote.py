@@ -14,6 +14,10 @@ Local working copies are cached under ``~/.codimension3/remote-projects/<id>/``.
 R183: ``profile.id`` and remote project names are basename allowlists only;
 local cache mkdir/rmtree/write is constrained with ``realpath``/``commonpath``.
 
+R184: SSH host authenticity — ``RejectPolicy`` by default, load known_hosts,
+optional TOFU only after explicit trust, pin ``host_key_fingerprint`` in the
+profile; fingerprint mismatch fails closed.
+
 Paramiko is optional at import time; call :func:`require_paramiko` before live use.
 """
 
@@ -26,15 +30,16 @@ import os
 import posixpath
 import re
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Mapping, Optional, Protocol, Sequence, runtime_checkable
+from typing import Any, Mapping, Optional, Protocol, Sequence, runtime_checkable
 
 from utils.atomic_io import atomic_write_text
 from utils.settings import SETTINGS_DIR
 
 HOSTS_FILENAME = "ssh_hosts.json"
 BINDING_FILENAME = "binding.json"
+KNOWN_HOSTS_FILENAME = "ssh_known_hosts"
 KEYRING_SERVICE = "codimension-ssh"
 TOKEN_FILE_MODE = 0o600
 
@@ -63,6 +68,8 @@ class SshHostProfile:
     auth: str = "key"  # key | password
     identity_file: str = ""
     label: str = ""
+    # R184: OpenSSH-style ``SHA256:…`` pin of the remote host key (empty = unset).
+    host_key_fingerprint: str = ""
 
     def normalized(self) -> "SshHostProfile":
         """Validate and normalize fields (R183: profile id is basename-safe)."""
@@ -80,6 +87,7 @@ class SshHostProfile:
             pid = sanitize_ssh_profile_id(raw_id)
         else:
             pid = sanitize_ssh_profile_id(_make_profile_id(host, self.user, port))
+        fp = normalize_host_key_fingerprint(self.host_key_fingerprint)
         return SshHostProfile(
             id=pid,
             host=host,
@@ -88,6 +96,7 @@ class SshHostProfile:
             auth=auth,
             identity_file=os.path.expanduser((self.identity_file or "").strip()),
             label=(self.label or "").strip() or f"{self.user + '@' if self.user else ''}{host}",
+            host_key_fingerprint=fp,
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -238,8 +247,9 @@ class FakeSftpSession:
 class ParamikoSftpSession:
     """SFTP session backed by Paramiko."""
 
-    def __init__(self, client) -> None:
+    def __init__(self, client, profile: Optional[SshHostProfile] = None) -> None:
         self._client = client
+        self.profile = profile
         self._sftp = client.open_sftp()
 
     def listdir(self, path: str) -> list[str]:
@@ -308,16 +318,142 @@ def require_paramiko():
     return paramiko
 
 
-def connect_paramiko_sftp(
+class UnknownHostKeyError(RuntimeError):
+    """Raised when the remote host key is not in known_hosts and TOFU was not granted."""
+
+    def __init__(self, hostname: str, fingerprint: str, key_type: str = "") -> None:
+        self.hostname = hostname
+        self.fingerprint = fingerprint
+        self.key_type = key_type
+        detail = f"Unknown SSH host key for {hostname}: {fingerprint}"
+        if key_type:
+            detail += f" ({key_type})"
+        detail += ". Confirm the fingerprint (TOFU) or add the host to known_hosts."
+        super().__init__(detail)
+
+
+class HostKeyFingerprintMismatch(RuntimeError):
+    """Raised when the live host key does not match the profile pin (fail closed)."""
+
+    def __init__(self, hostname: str, expected: str, actual: str) -> None:
+        self.hostname = hostname
+        self.expected = expected
+        self.actual = actual
+        super().__init__(
+            f"SSH host key mismatch for {hostname}: expected {expected}, got {actual}. "
+            "Connection refused (possible MITM)."
+        )
+
+
+def normalize_host_key_fingerprint(raw: str) -> str:
+    """Normalize an OpenSSH-style fingerprint to ``SHA256:…`` (no trailing ``=``)."""
+    text = (raw or "").strip()
+    if not text:
+        return ""
+    if text.lower().startswith("sha256:"):
+        body = text.split(":", 1)[1].strip().rstrip("=")
+        if not body:
+            raise ValueError("empty host key fingerprint")
+        return "SHA256:" + body
+    # Accept bare base64 body.
+    body = text.rstrip("=")
+    if not re.fullmatch(r"[A-Za-z0-9+/]+", body):
+        raise ValueError("invalid host key fingerprint")
+    return "SHA256:" + body
+
+
+def ssh_host_key_fingerprint(key: Any) -> str:
+    """Return OpenSSH ``SHA256:…`` fingerprint for a Paramiko PKey."""
+    import base64
+
+    digest = hashlib.sha256(key.asbytes()).digest()
+    return "SHA256:" + base64.b64encode(digest).decode("ascii").rstrip("=")
+
+
+def known_hosts_paths(settings_dir: Optional[str] = None) -> list[str]:
+    """Ordered known_hosts files to load (existing paths only)."""
+    paths: list[str] = []
+    user_kh = os.path.expanduser(os.path.join("~", ".ssh", "known_hosts"))
+    paths.append(user_kh)
+    base = _settings_base(settings_dir)
+    paths.append(os.path.join(base, KNOWN_HOSTS_FILENAME))
+    return [p for p in paths if os.path.isfile(p)]
+
+
+def load_ssh_client_host_keys(client: Any, settings_dir: Optional[str] = None) -> None:
+    """Load system + user + Codimension known_hosts into ``client``."""
+    try:
+        client.load_system_host_keys()
+    except Exception as exc:
+        logging.debug("load_system_host_keys skipped: %s", exc)
+    for path in known_hosts_paths(settings_dir):
+        try:
+            client.load_host_keys(path)
+        except Exception as exc:
+            logging.warning("Could not load known_hosts %s: %s", path, exc)
+
+
+def _reject_missing_host_key_policy(paramiko_mod: Any) -> Any:
+    """MissingHostKeyPolicy that raises :class:`UnknownHostKeyError` (R184)."""
+
+    class _Reject(paramiko_mod.MissingHostKeyPolicy):
+        def missing_host_key(self, client, hostname, key):  # noqa: ANN001
+            del client
+            raise UnknownHostKeyError(hostname, ssh_host_key_fingerprint(key), key.get_name())
+
+    return _Reject()
+
+
+def _trust_once_host_key_policy(paramiko_mod: Any) -> Any:
+    """Accept one unknown host key into the in-memory host key store (TOFU)."""
+
+    class _TrustOnce(paramiko_mod.MissingHostKeyPolicy):
+        def missing_host_key(self, client, hostname, key):  # noqa: ANN001
+            client.get_host_keys().add(hostname, key.get_name(), key)
+            logging.info(
+                "TOFU: accepted SSH host key for %s (%s)",
+                hostname,
+                ssh_host_key_fingerprint(key),
+            )
+
+    return _TrustOnce()
+
+
+def verify_remote_host_key_fingerprint(client: Any, expected: str, *, hostname: str) -> str:
+    """Fail closed when the live server key fingerprint ≠ ``expected`` pin."""
+    transport = client.get_transport()
+    if transport is None:
+        raise RuntimeError("SSH transport missing after connect")
+    key = transport.get_remote_server_key()
+    actual = ssh_host_key_fingerprint(key)
+    exp = normalize_host_key_fingerprint(expected)
+    if actual != exp:
+        raise HostKeyFingerprintMismatch(hostname, exp, actual)
+    return actual
+
+
+def open_paramiko_ssh_client(
     profile: SshHostProfile,
     *,
     password: str = "",
-) -> ParamikoSftpSession:
-    """Open a live SFTP session for ``profile``."""
+    trust_unknown_host: bool = False,
+    settings_dir: Optional[str] = None,
+) -> tuple[Any, SshHostProfile]:
+    """Connect an ``SSHClient`` with R184 host-key policy.
+
+    Returns ``(client, profile)`` where ``profile`` may gain a new
+    ``host_key_fingerprint`` pin when TOFU was granted.
+    """
     paramiko = require_paramiko()
     cfg = profile.normalized()
     client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    load_ssh_client_host_keys(client, settings_dir)
+    if cfg.host_key_fingerprint or trust_unknown_host:
+        # Pin present: allow handshake then verify fingerprint (fail closed).
+        # TOFU without pin: accept once after explicit caller consent.
+        client.set_missing_host_key_policy(_trust_once_host_key_policy(paramiko))
+    else:
+        client.set_missing_host_key_policy(_reject_missing_host_key_policy(paramiko))
     kwargs: dict[str, object] = {
         "hostname": cfg.host,
         "port": cfg.port,
@@ -335,7 +471,38 @@ def connect_paramiko_sftp(
     elif cfg.identity_file:
         kwargs["key_filename"] = cfg.identity_file
     client.connect(**kwargs)
-    return ParamikoSftpSession(client)
+    transport = client.get_transport()
+    if transport is None:
+        client.close()
+        raise RuntimeError("SSH transport missing after connect")
+    actual = ssh_host_key_fingerprint(transport.get_remote_server_key())
+    if cfg.host_key_fingerprint:
+        if actual != cfg.host_key_fingerprint:
+            client.close()
+            raise HostKeyFingerprintMismatch(cfg.host, cfg.host_key_fingerprint, actual)
+        return client, cfg
+    if trust_unknown_host:
+        pinned = replace(cfg, host_key_fingerprint=actual)
+        return client, pinned
+    # Connected via known_hosts without a profile pin — pin now for next time.
+    return client, replace(cfg, host_key_fingerprint=actual)
+
+
+def connect_paramiko_sftp(
+    profile: SshHostProfile,
+    *,
+    password: str = "",
+    trust_unknown_host: bool = False,
+    settings_dir: Optional[str] = None,
+) -> ParamikoSftpSession:
+    """Open a live SFTP session for ``profile`` (R184 host-key verification)."""
+    client, pinned = open_paramiko_ssh_client(
+        profile,
+        password=password,
+        trust_unknown_host=trust_unknown_host,
+        settings_dir=settings_dir,
+    )
+    return ParamikoSftpSession(client, pinned)
 
 
 def hosts_path(settings_dir: Optional[str] = None) -> str:
@@ -369,6 +536,7 @@ def load_host_profiles(settings_dir: Optional[str] = None) -> list[SshHostProfil
                     auth=str(item.get("auth", "key")),
                     identity_file=str(item.get("identity_file", "")),
                     label=str(item.get("label", "")),
+                    host_key_fingerprint=str(item.get("host_key_fingerprint", "")),
                 ).normalized()
             )
         except (TypeError, ValueError) as exc:
@@ -815,10 +983,12 @@ def _rm_tree(path: str, *, must_be_under: str) -> None:
 
 __all__ = [
     "FakeSftpSession",
+    "HostKeyFingerprintMismatch",
     "ParamikoSftpSession",
     "RemoteProjectBinding",
     "SftpSession",
     "SshHostProfile",
+    "UnknownHostKeyError",
     "assert_local_path_under",
     "assert_remote_path_under",
     "connect_paramiko_sftp",
@@ -827,8 +997,12 @@ __all__ = [
     "default_cdm3_json",
     "download_remote_tree",
     "find_remote_cdm3",
+    "known_hosts_paths",
     "load_host_profiles",
+    "load_ssh_client_host_keys",
     "load_ssh_password",
+    "normalize_host_key_fingerprint",
+    "open_paramiko_ssh_client",
     "open_remote_project",
     "read_binding",
     "remote_cache_dir",
@@ -839,8 +1013,10 @@ __all__ = [
     "sanitize_remote_project_name",
     "sanitize_ssh_profile_id",
     "save_host_profiles",
+    "ssh_host_key_fingerprint",
     "store_ssh_password",
     "upload_file",
     "upsert_host_profile",
+    "verify_remote_host_key_fingerprint",
     "write_binding",
 ]

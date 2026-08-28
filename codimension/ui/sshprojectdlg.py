@@ -23,6 +23,7 @@ from utils.misc import getLocaleDate
 from utils.ssh_remote import (
     RemoteProjectBinding,
     SshHostProfile,
+    UnknownHostKeyError,
     connect_paramiko_sftp,
     create_remote_project,
     default_cdm3_json,
@@ -350,6 +351,12 @@ class SshRemoteProjectDialog(QDialog):
 
     def __build_profile(self) -> SshHostProfile:
         existing_id = self.__profileCombo.currentData()
+        pin = ""
+        if existing_id:
+            for saved in load_host_profiles(self.__settings_dir):
+                if saved.id == existing_id:
+                    pin = saved.host_key_fingerprint
+                    break
         return SshHostProfile(
             id=str(existing_id) if existing_id else "",
             host=self.__hostEdit.text().strip(),
@@ -358,6 +365,7 @@ class SshRemoteProjectDialog(QDialog):
             auth="password" if self.__authPassRadio.isChecked() else "key",
             identity_file=self.__identityEdit.text().strip(),
             label="",
+            host_key_fingerprint=pin,
         ).normalized()
 
     def __password(self, profile: SshHostProfile) -> str:
@@ -372,6 +380,18 @@ class SshRemoteProjectDialog(QDialog):
             self.__session = None
             self.__connStatus.setText("Not connected")
 
+    def __connect_sftp(self, profile: SshHostProfile, password: str, *, trust_unknown_host: bool):
+        """Connect via inject hook or live Paramiko (R184 host-key policy)."""
+        if self.__connect_fn is not None:
+            # Test hook: (profile, password) -> session
+            return self.__connect_fn(profile, password)
+        return connect_paramiko_sftp(
+            profile,
+            password=password,
+            trust_unknown_host=trust_unknown_host,
+            settings_dir=self.__settings_dir,
+        )
+
     def __ensure_session(self):
         """Connect (or reuse) an SFTP session for browsing."""
         if self.__session is not None:
@@ -385,21 +405,47 @@ class SshRemoteProjectDialog(QDialog):
         if profile.auth == "password" and not password:
             QMessageBox.warning(self, self.windowTitle(), "Password is required for password auth.")
             return None
-        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+
+        def _do_connect(*, trust: bool):
+            QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
+            try:
+                return self.__connect_sftp(profile, password, trust_unknown_host=trust)
+            finally:
+                QApplication.restoreOverrideCursor()
+
         try:
-            if self.__connect_fn is not None:
-                self.__session = self.__connect_fn(profile, password)
-            else:
-                self.__session = connect_paramiko_sftp(profile, password=password)
+            self.__session = _do_connect(trust=False)
+        except UnknownHostKeyError as exc:
+            reply = QMessageBox.warning(
+                self,
+                self.windowTitle(),
+                (
+                    f"Unknown SSH host key for {exc.hostname}.\n\n"
+                    f"Fingerprint:\n{exc.fingerprint}\n\n"
+                    "Trust this host and pin the fingerprint in the profile? "
+                    "(Only accept if you recognize the key.)"
+                ),
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if reply != QMessageBox.Yes:
+                self.__session = None
+                return None
+            try:
+                self.__session = _do_connect(trust=True)
+            except Exception as exc2:
+                QMessageBox.warning(self, self.windowTitle(), f"SSH connect failed:\n{exc2}")
+                self.__session = None
+                return None
         except Exception as exc:
             QMessageBox.warning(self, self.windowTitle(), f"SSH connect failed:\n{exc}")
             self.__session = None
             return None
-        finally:
-            QApplication.restoreOverrideCursor()
-        self.__connStatus.setText(f"Connected: {profile.user + '@' if profile.user else ''}{profile.host}")
-        if self.__saveProfileCb.isChecked():
-            profile = upsert_host_profile(profile, self.__settings_dir)
+
+        pinned = getattr(self.__session, "profile", None) or profile
+        self.__connStatus.setText(f"Connected: {pinned.user + '@' if pinned.user else ''}{pinned.host}")
+        if self.__saveProfileCb.isChecked() or pinned.host_key_fingerprint:
+            profile = upsert_host_profile(pinned, self.__settings_dir)
             if profile.auth == "password" and self.__rememberPassCb.isChecked():
                 store_ssh_password(profile.id, password, self.__settings_dir)
         return self.__session
