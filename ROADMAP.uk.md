@@ -142,7 +142,7 @@
 | 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | DONE |
 | 10 | R181 | Автоматизація promotion каналів (`dev`→`beta`→`stable` / tags) | Документований pipeline + скрипт/CI; без зайвого theatre | M | DONE |
 | 11 | R182 | MCP / remote agent backend | MCP surface над headless core; auth fail-closed; smoke | L | DONE ([#126](https://github.com/sesquicadaver/codimension/pull/126)) |
-| 12 | R200 | Polyglot: LanguageDescriptor + Registry + PythonService stub | `core/language.py` Protocol/Registry; `FLAG_LANGUAGE_SERVICES`; Python stub над існуючим SymbolIndex/brief/flow; без LSP; Living Spec | M | DONE |
+| 12 | R200 | Polyglot: LanguageDescriptor + Registry + PythonService stub | `core/language.py` Protocol/Registry; `FLAG_LANGUAGE_SERVICES`; Python stub над існуючим SymbolIndex/brief/flow; без LSP; Living Spec | M | DONE ([#129](https://github.com/sesquicadaver/codimension/pull/129)) |
 | 13 | R201 | Polyglot: DocumentSnapshot + LspPositionCodec | Лише Unicode offsets всередині; encoding на процес; versioned edits відхиляють stale | M | OPEN |
 | 14 | R202 | Polyglot: LspProcess stdio JSON-RPC + spawn gate | Один процес на `(language_id, workspace_root, toolchain)`; cancel/backoff/shutdown; `LANGUAGE_SERVER_SPAWN` deny-by-default крім configured absolute binary | L | OPEN |
 | 15 | R203 | Polyglot: Rust/C++ descriptors + SemanticProvider (LSP) | rust-analyzer / clangd; `compile_commands.json` → READY інакше DEGRADED (без претензії на повні diagnostics) | L | OPEN |
