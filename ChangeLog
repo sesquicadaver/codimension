@@ -1,3 +1,7 @@
+2026 Aug 29
+
+* Docs: polyglot language layer wave R200–R208 (LSP + Tree-sitter + FFI + Tasks); Next OPEN R200
+
 2026 Aug 28
 
 * R182: MCP stdio backend (``mcp_backend``) over headless core; ``CDM_MCP_TOKEN`` fail-closed
