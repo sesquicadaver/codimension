@@ -132,20 +132,14 @@ class LspSemanticProvider:
         contents = _markup_to_text(result.get("contents"))
         span = None
         if "range" in result and result["range"]:
-            span = proc.codec.to_internal_span(
-                document, LspRange.from_dict(result["range"])
-            )
+            span = proc.codec.to_internal_span(document, LspRange.from_dict(result["range"]))
         return HoverInfo(contents=contents, span=span)
 
-    def definition(
-        self, document: DocumentSnapshot, offset: int
-    ) -> tuple[SymbolLocation, ...]:
+    def definition(self, document: DocumentSnapshot, offset: int) -> tuple[SymbolLocation, ...]:
         """LSP ``textDocument/definition``."""
         return self._locations(document, offset, "textDocument/definition")
 
-    def references(
-        self, document: DocumentSnapshot, offset: int
-    ) -> tuple[SymbolLocation, ...]:
+    def references(self, document: DocumentSnapshot, offset: int) -> tuple[SymbolLocation, ...]:
         """LSP ``textDocument/references``."""
         proc = self._ensure_open(document)
         pos = proc.codec.to_lsp_position(document, offset)
@@ -159,9 +153,7 @@ class LspSemanticProvider:
         )
         return _parse_locations(proc, document, result)
 
-    def document_symbols(
-        self, document: DocumentSnapshot
-    ) -> tuple[OutlineSymbol, ...]:
+    def document_symbols(self, document: DocumentSnapshot) -> tuple[OutlineSymbol, ...]:
         """LSP ``textDocument/documentSymbol``."""
         proc = self._ensure_open(document)
         result = proc.request(
@@ -261,11 +253,7 @@ def _parse_outline(
     if isinstance(sel, Mapping):
         selection = proc.codec.to_internal_span(document, LspRange.from_dict(sel))
     children_raw = item.get("children") or ()
-    children = tuple(
-        _parse_outline(proc, document, child)
-        for child in children_raw
-        if isinstance(child, Mapping)
-    )
+    children = tuple(_parse_outline(proc, document, child) for child in children_raw if isinstance(child, Mapping))
     return OutlineSymbol(
         name=name,
         kind=kind,
