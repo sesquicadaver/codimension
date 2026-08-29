@@ -1,5 +1,7 @@
 2026 Aug 29
 
+* R201: DocumentSnapshot (Unicode offsets, versioned edits reject stale) +
+  LspPositionCodec (UTF-8/16/32 per process; encoding stays out of core)
 * R200: LanguageServiceRegistry + Python headless stub; ``FLAG_LANGUAGE_SERVICES``; additive SymbolRecord
 * Docs: polyglot language layer wave R200–R208 (LSP + Tree-sitter + FFI + Tasks); Next OPEN R200
 

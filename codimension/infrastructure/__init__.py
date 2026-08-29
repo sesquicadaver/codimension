@@ -9,8 +9,8 @@
 # (at your option) any later version.
 #
 
-"""Headless infrastructure helpers (filesystem / io / process env dicts)."""
+"""Headless infrastructure helpers (filesystem / io / process / LSP codec)."""
 
-from . import filesystem, io, process
+from . import filesystem, io, lsp_position_codec, process
 
-__all__ = ["filesystem", "io", "process"]
+__all__ = ["filesystem", "io", "lsp_position_codec", "process"]

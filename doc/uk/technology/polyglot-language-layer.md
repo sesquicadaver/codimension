@@ -37,9 +37,11 @@ polyglot multi-index — пізніше (R206+), без поломки MCP/searc
 
 ## Position codec
 
-Усередині Codimension — **лише Unicode character offsets**. Encoding LSP
-залишається за `LspPositionCodec` на кожен server process. Diagnostics і edits
-несуть document version; застарілі edits відхиляються.
+Усередині Codimension — **лише Unicode character offsets**
+(`core/document_snapshot.py`). Encoding LSP (UTF-16 / UTF-8 / UTF-32)
+залишається за `infrastructure/lsp_position_codec.py` на кожен server process.
+Diagnostics і edits несуть document version; застарілі edits відхиляються
+(`StaleDocumentEditError`).
 
 ## Ключ LSP-процесу
 
