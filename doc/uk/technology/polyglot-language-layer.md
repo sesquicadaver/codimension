@@ -47,7 +47,12 @@ Diagnostics і edits несуть document version; застарілі edits в�
 
 Один процес на `(language_id, workspace_root, toolchain_configuration)` —
 наприклад кожен `Cargo.toml` workspace і кожне дерево clangd з
-`compile_commands.json`. Lazy start; bounded backoff; shutdown при unload.
+`compile_commands.json`. Реалізація: `infrastructure/lsp_process.py`
+(`LspProcess` / `LspProcessRegistry`): lazy start; Content-Length JSON-RPC;
+reader thread + serialized writer; `$/cancelRequest`; обмежені stderr ring і
+розмір повідомлення; bounded backoff; `initialize` → `shutdown` → `exit` при
+unload. Spawn через `core/language_policy.py`
+(`LANGUAGE_SERVER_SPAWN`: лише absolute binary з allowlist).
 
 ## Security policy (deny-by-default)
 

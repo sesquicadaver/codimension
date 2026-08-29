@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - language services manager (R200)
+# codimension - language services manager (R200/R202)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,10 +9,12 @@
 # (at your option) any later version.
 #
 
-"""LanguageServiceManager — lifecycle façade for polyglot services (R200).
+"""LanguageServiceManager — lifecycle façade for polyglot services (R200/R202).
 
 Headless: no Qt. When ``FLAG_LANGUAGE_SERVICES`` is off, :meth:`ensure_defaults`
 is a no-op (empty registry). When on, registers the Python headless stub.
+Owns an :class:`~infrastructure.lsp_process.LspProcessRegistry` shut down on
+workspace unload.
 """
 
 from __future__ import annotations
@@ -28,6 +30,7 @@ from core.language import (
     LanguageServiceRegistry,
     make_python_language_service,
 )
+from infrastructure.lsp_process import LspProcessRegistry
 
 
 def is_language_services_enabled(
@@ -42,14 +45,24 @@ def is_language_services_enabled(
 class LanguageServiceManager:
     """Owns a :class:`LanguageServiceRegistry` gated by feature flags."""
 
-    def __init__(self, registry: Optional[LanguageServiceRegistry] = None) -> None:
-        """Bind an optional registry (creates a fresh one when omitted)."""
+    def __init__(
+        self,
+        registry: Optional[LanguageServiceRegistry] = None,
+        lsp_processes: Optional[LspProcessRegistry] = None,
+    ) -> None:
+        """Bind optional registries (creates fresh ones when omitted)."""
         self._registry = registry if registry is not None else LanguageServiceRegistry()
+        self._lsp_processes = lsp_processes if lsp_processes is not None else LspProcessRegistry()
 
     @property
     def registry(self) -> LanguageServiceRegistry:
         """Underlying service registry."""
         return self._registry
+
+    @property
+    def lsp_processes(self) -> LspProcessRegistry:
+        """LSP stdio process registry (R202)."""
+        return self._lsp_processes
 
     def ensure_defaults(
         self,
@@ -71,7 +84,8 @@ class LanguageServiceManager:
         return True
 
     def shutdown(self) -> None:
-        """Clear registered services (workspace unload hook)."""
+        """Shut down LSP processes and clear registered services."""
+        self._lsp_processes.shutdown_all()
         self._registry.clear()
 
 
