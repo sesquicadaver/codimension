@@ -26,6 +26,7 @@ from typing import Iterable
 class PolicyCapability(str, Enum):
     """Side-effect capabilities gated before polyglot actions."""
 
+    TREE_PARSE = "tree_parse"
     LANGUAGE_SERVER_SPAWN = "language_server_spawn"
     PROJECT_METADATA_EXEC = "project_metadata_exec"
     BUILD_SCRIPT_EXEC = "build_script_exec"
@@ -35,6 +36,11 @@ class PolicyCapability(str, Enum):
     FORMATTER_EXEC = "formatter_exec"
     WORKSPACE_EDIT_APPLY = "workspace_edit_apply"
     BUILD_TASK_EXEC = "build_task_exec"
+
+
+def allow_tree_parse() -> bool:
+    """Return True — pure Tree-sitter parse has no process side effects (R205)."""
+    return True
 
 
 class LanguageServerSpawnError(PermissionError):
@@ -108,6 +114,7 @@ def require_language_server_spawn(
 __all__ = [
     "LanguageServerSpawnError",
     "PolicyCapability",
+    "allow_tree_parse",
     "normalize_absolute_binary",
     "require_language_server_spawn",
 ]

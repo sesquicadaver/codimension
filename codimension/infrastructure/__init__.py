@@ -19,6 +19,7 @@ from . import (
     lsp_process,
     lsp_semantic,
     process,
+    tree_sitter_structural,
 )
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     "lsp_process",
     "lsp_semantic",
     "process",
+    "tree_sitter_structural",
 ]

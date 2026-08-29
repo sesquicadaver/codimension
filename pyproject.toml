@@ -65,6 +65,9 @@ test = [
   "pytest>=9.0.3",
   "pytest-cov>=4.0.0",
   "pytest-qt>=4.4.0",
+  "tree-sitter>=0.23,<0.27",
+  "tree-sitter-rust>=0.23,<0.25",
+  "tree-sitter-cpp>=0.23,<0.24",
 ]
 security = [
   "bandit>=1.7.0",
@@ -79,8 +82,14 @@ ssh = [
 mcp = [
   "mcp>=2.0,<3",
 ]
+# R205: Tree-sitter structural graphs for Rust / C++.
+treesitter = [
+  "tree-sitter>=0.23,<0.27",
+  "tree-sitter-rust>=0.23,<0.25",
+  "tree-sitter-cpp>=0.23,<0.24",
+]
 dev = [
-  "codimension[tools,lint,test,security,ssh,mcp]",
+  "codimension[tools,lint,test,security,ssh,mcp,treesitter]",
 ]
 
 [project.urls]

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - polyglot language service contracts (R200/R203)
+# codimension - polyglot language service contracts (R200/R203/R205)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,11 +9,12 @@
 # (at your option) any later version.
 #
 
-"""LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200/R203).
+"""LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200–R205).
 
 Qt-free polyglot attach points. Document buffers / position codec are R201;
 LSP stdio process client is R202; Rust/C++ descriptors + SemanticProvider are
-R203. UI must query :class:`LanguageCapability`, never ``if language == …``.
+R203; Tree-sitter StructuralProvider is R205. UI must query
+:class:`LanguageCapability`, never ``if language == …``.
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ from enum import Enum
 from typing import Protocol, runtime_checkable
 
 from .semantic import SemanticProvider
+from .structural import StructuralProvider
 
 
 class LanguageCapability(str, Enum):
@@ -61,15 +63,15 @@ class LanguageDescriptor:
 class LanguageService:
     """Registered language surface: descriptor + capabilities + optional providers.
 
-    Provider slots stay ``None`` / empty until later R-tasks (Tree-sitter, FFI,
-    tasks). R203 fills ``semantic`` for Rust/C++ via LSP.
+    Provider slots stay ``None`` / empty until later R-tasks (FFI, tasks).
+    R203 fills ``semantic`` for Rust/C++ via LSP; R205 fills ``structural``.
     """
 
     descriptor: LanguageDescriptor
     capabilities: frozenset[LanguageCapability]
     service_id: str = ""
     semantic: SemanticProvider | None = None
-    structural: object | None = None
+    structural: StructuralProvider | None = None
     bindings: tuple[object, ...] = ()
     tasks: object | None = None
 
@@ -155,27 +157,41 @@ def make_python_language_service() -> LanguageService:
     )
 
 
+def _with_structural_capability(
+    base: frozenset[LanguageCapability],
+    structural: StructuralProvider | None,
+) -> frozenset[LanguageCapability]:
+    """Advertise STRUCTURAL_GRAPH only when a structural provider is bound."""
+    if structural is None:
+        return base
+    return frozenset(base | {LanguageCapability.STRUCTURAL_GRAPH})
+
+
 def make_rust_language_service(
     semantic: SemanticProvider | None = None,
+    structural: StructuralProvider | None = None,
 ) -> LanguageService:
-    """Return a Rust language service (rust-analyzer semantic when provided)."""
+    """Return a Rust language service (LSP semantic + optional Tree-sitter)."""
     return LanguageService(
         descriptor=RUST_DESCRIPTOR,
-        capabilities=LSP_EDITOR_CAPABILITIES,
+        capabilities=_with_structural_capability(LSP_EDITOR_CAPABILITIES, structural),
         service_id="rust.lsp",
         semantic=semantic,
+        structural=structural,
     )
 
 
 def make_cpp_language_service(
     semantic: SemanticProvider | None = None,
+    structural: StructuralProvider | None = None,
 ) -> LanguageService:
-    """Return a C++ language service (clangd semantic when provided)."""
+    """Return a C++ language service (LSP semantic + optional Tree-sitter)."""
     return LanguageService(
         descriptor=CPP_DESCRIPTOR,
-        capabilities=LSP_EDITOR_CAPABILITIES,
+        capabilities=_with_structural_capability(LSP_EDITOR_CAPABILITIES, structural),
         service_id="cpp.lsp",
         semantic=semantic,
+        structural=structural,
     )
 
 
