@@ -16,12 +16,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
-from core.document_snapshot import DocumentSnapshot
+from core.document_snapshot import DocumentSnapshot, TextEdit
 from core.semantic import (
     HoverInfo,
     OutlineSymbol,
     SemanticReadiness,
     SymbolLocation,
+    WorkspaceTextEdit,
 )
 from core.symbol_index import SourceSpan
 from infrastructure.lsp_position_codec import LspRange
@@ -164,6 +165,37 @@ class LspSemanticProvider:
             return ()
         return tuple(_parse_outline(proc, document, item) for item in result)
 
+    def format_document(self, document: DocumentSnapshot) -> tuple[WorkspaceTextEdit, ...]:
+        """LSP ``textDocument/formatting`` → preview edits."""
+        proc = self._ensure_open(document)
+        result = proc.request(
+            "textDocument/formatting",
+            {
+                "textDocument": {"uri": document.uri},
+                "options": {"tabSize": 4, "insertSpaces": True},
+            },
+        )
+        return _parse_text_edits(proc, document, document.uri, result)
+
+    def rename_preview(
+        self,
+        document: DocumentSnapshot,
+        offset: int,
+        new_name: str,
+    ) -> tuple[WorkspaceTextEdit, ...]:
+        """LSP ``textDocument/rename`` → preview edits (caller applies)."""
+        proc = self._ensure_open(document)
+        pos = proc.codec.to_lsp_position(document, offset)
+        result = proc.request(
+            "textDocument/rename",
+            {
+                "textDocument": {"uri": document.uri},
+                "position": pos.to_dict(),
+                "newName": new_name,
+            },
+        )
+        return _parse_workspace_edit(proc, document, result)
+
     def _locations(
         self,
         document: DocumentSnapshot,
@@ -261,6 +293,55 @@ def _parse_outline(
         selection_span=selection,
         children=children,
     )
+
+
+def _parse_text_edits(
+    proc: LspProcess,
+    document: DocumentSnapshot,
+    uri: str,
+    result: Any,
+) -> tuple[WorkspaceTextEdit, ...]:
+    if not result:
+        return ()
+    if not isinstance(result, Sequence) or isinstance(result, (str, bytes)):
+        return ()
+    out: list[WorkspaceTextEdit] = []
+    for item in result:
+        if not isinstance(item, Mapping):
+            continue
+        range_obj = item.get("range")
+        new_text = item.get("newText")
+        if not isinstance(range_obj, Mapping) or new_text is None:
+            continue
+        if uri == document.uri:
+            span = proc.codec.to_internal_span(document, LspRange.from_dict(range_obj))
+        else:
+            span = SourceSpan(0, 0)
+        out.append(WorkspaceTextEdit(uri=uri, edit=TextEdit(span=span, new_text=str(new_text))))
+    return tuple(out)
+
+
+def _parse_workspace_edit(
+    proc: LspProcess,
+    document: DocumentSnapshot,
+    result: Any,
+) -> tuple[WorkspaceTextEdit, ...]:
+    if not result or not isinstance(result, Mapping):
+        return ()
+    out: list[WorkspaceTextEdit] = []
+    changes = result.get("changes")
+    if isinstance(changes, Mapping):
+        for uri, edits in changes.items():
+            out.extend(_parse_text_edits(proc, document, str(uri), edits))
+    doc_changes = result.get("documentChanges")
+    if isinstance(doc_changes, Sequence):
+        for change in doc_changes:
+            if not isinstance(change, Mapping):
+                continue
+            if "textDocument" in change and "edits" in change:
+                uri = str((change.get("textDocument") or {}).get("uri", document.uri))
+                out.extend(_parse_text_edits(proc, document, uri, change.get("edits")))
+    return tuple(out)
 
 
 def build_rust_semantic_provider(

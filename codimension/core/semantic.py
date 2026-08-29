@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - polyglot semantic provider contracts (R203)
+# codimension - polyglot semantic provider contracts (R203/R204)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,10 +9,10 @@
 # (at your option) any later version.
 #
 
-"""SemanticProvider protocol and readiness for LSP-backed languages (R203).
+"""SemanticProvider protocol and readiness for LSP-backed languages (R203/R204).
 
-Qt-free. UI (R204+) must consult :meth:`SemanticProvider.readiness` before
-claiming full diagnostics — C++ without ``compile_commands.json`` is
+Qt-free. UI must consult :meth:`SemanticProvider.readiness` before claiming
+full diagnostics — C++ without ``compile_commands.json`` is
 :attr:`SemanticReadiness.DEGRADED`.
 """
 
@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol, runtime_checkable
 
-from .document_snapshot import DocumentSnapshot
+from .document_snapshot import DocumentSnapshot, TextEdit
 from .symbol_index import SourceSpan
 
 
@@ -61,6 +61,14 @@ class OutlineSymbol:
     children: tuple["OutlineSymbol", ...] = ()
 
 
+@dataclass(frozen=True, slots=True)
+class WorkspaceTextEdit:
+    """One text edit bound to a document URI (rename / format preview)."""
+
+    uri: str
+    edit: TextEdit
+
+
 @runtime_checkable
 class SemanticProvider(Protocol):
     """Language-neutral semantic surface (typically LSP-backed)."""
@@ -87,6 +95,17 @@ class SemanticProvider(Protocol):
     def document_symbols(self, document: DocumentSnapshot) -> tuple[OutlineSymbol, ...]:
         """Document outline symbols."""
 
+    def format_document(self, document: DocumentSnapshot) -> tuple[WorkspaceTextEdit, ...]:
+        """Format whole document → preview edits (not applied)."""
+
+    def rename_preview(
+        self,
+        document: DocumentSnapshot,
+        offset: int,
+        new_name: str,
+    ) -> tuple[WorkspaceTextEdit, ...]:
+        """Rename preview edits (not applied)."""
+
 
 __all__ = [
     "HoverInfo",
@@ -94,4 +113,5 @@ __all__ = [
     "SemanticProvider",
     "SemanticReadiness",
     "SymbolLocation",
+    "WorkspaceTextEdit",
 ]

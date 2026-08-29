@@ -24,7 +24,7 @@ clone the Python CFG pipeline per language; treat languages as VCS/Wizard plugin
 | `LanguageDescriptor`, capabilities, `LanguageService` Protocol, Registry | `codimension/core/language.py` |
 | Lifecycle manager | `codimension/app/language_services.py` |
 | LSP stdio / position codec I/O | `infrastructure` + thin `utils` |
-| UI controller | `ui/language_controller.py` (capability checks only) |
+| UI controller | `ui/language_controller.py` (R204: capability checks only; hover/definition/references/outline/format/rename-preview; diagnostics FULL vs DEGRADED) |
 
 UI must query **capabilities**, never `if language == "rust"`.
 
