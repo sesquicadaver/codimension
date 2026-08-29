@@ -11,8 +11,8 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: *(empty — linear R-queue through R182 is DONE).*
-Active linear queue: none (pick first OPEN from TODO_FIXME or new ROADMAP rows).
+Current pointer: **R200** — polyglot LanguageDescriptor + Registry + PythonService stub.
+Active linear queue: R200 → R208 (polyglot language layer).
 R183–R199 + R180–R182 shipped.
 
 User standing order (2026-08-28): `/autopilot` means execute the next queue task and

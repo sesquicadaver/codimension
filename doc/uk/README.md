@@ -50,6 +50,7 @@
 | [technology/ssh-execution.md](technology/ssh-execution.md) | [../technology/ssh-execution.md](../technology/ssh-execution.md) |
 | [technology/ssh-remote-project.md](technology/ssh-remote-project.md) | [../technology/ssh-remote-project.md](../technology/ssh-remote-project.md) |
 | [technology/mcp-backend.md](technology/mcp-backend.md) | [../technology/mcp-backend.md](../technology/mcp-backend.md) |
+| [technology/polyglot-language-layer.md](technology/polyglot-language-layer.md) | [../technology/polyglot-language-layer.md](../technology/polyglot-language-layer.md) |
 | [technology/release-channels.md](technology/release-channels.md) | [../technology/release-channels.md](../technology/release-channels.md) |
 | [md/mdsupport.md](md/mdsupport.md) | [../md/mdsupport.md](../md/mdsupport.md) |
 | [smartzoom/smartzoom.md](smartzoom/smartzoom.md) | [../smartzoom/smartzoom.md](../smartzoom/smartzoom.md) |

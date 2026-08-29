@@ -142,12 +142,25 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 9 | R180 | Auto-apply update + rollback / portable profiles | Apply from verified cache; rollback; fail-closed; tests | L | DONE |
 | 10 | R181 | Channel promotion automation (`dev`→`beta`→`stable` / tags) | Documented pipeline + script/CI; no theatre | M | DONE |
 | 11 | R182 | MCP / remote agent backend | MCP surface over headless core; auth fail-closed; smoke | L | DONE ([#126](https://github.com/sesquicadaver/codimension/pull/126)) |
+| 12 | R200 | Polyglot: LanguageDescriptor + Registry + PythonService stub | `core/language.py` Protocol/Registry; `FLAG_LANGUAGE_SERVICES`; Python stub over existing SymbolIndex/brief/flow; no LSP yet; Living Spec | M | OPEN |
+| 13 | R201 | Polyglot: DocumentSnapshot + LspPositionCodec | Internal Unicode offsets only; per-process encoding; versioned edits reject stale | M | OPEN |
+| 14 | R202 | Polyglot: LspProcess stdio JSON-RPC + spawn gate | One process per `(language_id, workspace_root, toolchain)`; cancel/backoff/shutdown; `LANGUAGE_SERVER_SPAWN` deny-by-default except configured absolute binary | L | OPEN |
+| 15 | R203 | Polyglot: Rust/C++ descriptors + SemanticProvider (LSP) | rust-analyzer / clangd; `compile_commands.json` → READY else DEGRADED (no full-diagnostics claim) | L | OPEN |
+| 16 | R204 | Polyglot: UI language controller (capability-driven) | Diagnostics / outline / hover / definition / references / format / rename-preview; no `if language == …` | L | OPEN |
+| 17 | R205 | Polyglot: Tree-sitter StructuralGraph (Rust+C++) | StructuralGraph + `semantic_role` mapping; **not** compiler CFG | L | OPEN |
+| 18 | R206 | Polyglot: BindingIndex + PyO3 / pybind11 / CPython + `.pyi` | Evidence-backed FFI edges only (no name-equality exact edges) | L | OPEN |
+| 19 | R207 | Polyglot: DependencyEdgeKind + cross-language navigation | Generalized edges incl. FFI; navigation across language boundary | M | OPEN |
+| 20 | R208 | Polyglot: Cargo / CMake / Ninja / CTest TaskProviders | Explicit tasks only (not on file open); not via clangd/rust-analyzer as build runners | M | OPEN |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** *(empty — R182 closed the active linear queue).*
+**Next OPEN:** **R200** (polyglot LanguageDescriptor + Registry + PythonService stub).
+
+Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
+
+**Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages.
 
 Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
 
@@ -157,6 +170,7 @@ Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (20
 |------|--------|------|
 | SSH remote project Open/Create + Browse… + Save upload + IDE Run | MVP | [ssh-remote-project.md](doc/technology/ssh-remote-project.md), [user guide](doc/user/ssh-remote-projects.md) |
 | SSH remote Debug / Profile | Debug **R198** + Profile **R199** DONE | Same docs |
+| MCP stdio agent backend | **R182** DONE | [mcp-backend.md](doc/technology/mcp-backend.md) |
 
 ---
 
@@ -167,4 +181,5 @@ Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
 MCP / agent: **R182** (`mcp_backend`, stdio + ``CDM_MCP_TOKEN``)
+Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208)
 ```
