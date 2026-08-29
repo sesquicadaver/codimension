@@ -1,5 +1,6 @@
 2026 Aug 30
 
+* R204: ``ui.language_controller`` — capability-driven hover/definition/references/outline/format/rename-preview + diagnostics policy (no language-id branching)
 * R203: Rust/C++ LanguageDescriptors + LspSemanticProvider;
   ``compile_commands.json`` → READY else DEGRADED (no full-diagnostics claim)
 * R202: LspProcess stdio JSON-RPC (reader thread, serialized writer, cancel,

@@ -24,7 +24,7 @@ Codimension розширюється за межі Python через **унів�
 | `LanguageDescriptor`, capabilities, Protocol, Registry | `codimension/core/language.py` |
 | Lifecycle manager | `codimension/app/language_services.py` |
 | LSP stdio / position codec I/O | `infrastructure` + тонкий `utils` |
-| UI controller | `ui/language_controller.py` (лише capability checks) |
+| UI controller | `ui/language_controller.py` (R204: лише capability checks; hover/definition/references/outline/format/rename-preview; diagnostics FULL vs DEGRADED) |
 
 UI перевіряє **capabilities**, ніколи `if language == "rust"`.
 
