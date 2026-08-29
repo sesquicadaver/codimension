@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - polyglot language service contracts (R200)
+# codimension - polyglot language service contracts (R200/R203)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,11 +9,11 @@
 # (at your option) any later version.
 #
 
-"""LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200).
+"""LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200/R203).
 
 Qt-free polyglot attach points. Document buffers / position codec are R201;
-LSP stdio process client is R202; semantic providers arrive in R203+. UI must
-query :class:`LanguageCapability`, never ``if language == …``.
+LSP stdio process client is R202; Rust/C++ descriptors + SemanticProvider are
+R203. UI must query :class:`LanguageCapability`, never ``if language == …``.
 """
 
 from __future__ import annotations
@@ -21,6 +21,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol, runtime_checkable
+
+from .semantic import SemanticProvider
 
 
 class LanguageCapability(str, Enum):
@@ -47,6 +49,7 @@ class LanguageDescriptor:
     language_id: str
     extensions: frozenset[str]
     root_markers: tuple[str, ...] = ()
+    server_name: str = ""
 
     def __post_init__(self) -> None:
         """Reject empty language_id."""
@@ -58,14 +61,14 @@ class LanguageDescriptor:
 class LanguageService:
     """Registered language surface: descriptor + capabilities + optional providers.
 
-    Provider slots stay ``None`` / empty until later R-tasks (LSP, Tree-sitter,
-    FFI, tasks). R200 ships the registry shape only.
+    Provider slots stay ``None`` / empty until later R-tasks (Tree-sitter, FFI,
+    tasks). R203 fills ``semantic`` for Rust/C++ via LSP.
     """
 
     descriptor: LanguageDescriptor
     capabilities: frozenset[LanguageCapability]
     service_id: str = ""
-    semantic: object | None = None
+    semantic: SemanticProvider | None = None
     structural: object | None = None
     bindings: tuple[object, ...] = ()
     tasks: object | None = None
@@ -98,6 +101,50 @@ PYTHON_HEADLESS_CAPABILITIES: frozenset[LanguageCapability] = frozenset(
     }
 )
 
+#: Rust descriptor (rust-analyzer).
+RUST_DESCRIPTOR = LanguageDescriptor(
+    language_id="rust",
+    extensions=frozenset({".rs"}),
+    root_markers=("Cargo.toml", "rust-project.json"),
+    server_name="rust-analyzer",
+)
+
+#: C/C++ descriptor (clangd). ``.h`` language mode still comes from compile DB.
+CPP_DESCRIPTOR = LanguageDescriptor(
+    language_id="cpp",
+    extensions=frozenset(
+        {
+            ".cc",
+            ".cpp",
+            ".cxx",
+            ".c",
+            ".hh",
+            ".hpp",
+            ".hxx",
+            ".h",
+            ".ixx",
+            ".cppm",
+        }
+    ),
+    root_markers=("compile_commands.json", "CMakeLists.txt"),
+    server_name="clangd",
+)
+
+#: LSP-backed editor capabilities shared by Rust / C++ in Stage 1.
+LSP_EDITOR_CAPABILITIES: frozenset[LanguageCapability] = frozenset(
+    {
+        LanguageCapability.OUTLINE,
+        LanguageCapability.DIAGNOSTICS,
+        LanguageCapability.HOVER,
+        LanguageCapability.DEFINITION,
+        LanguageCapability.REFERENCES,
+        LanguageCapability.COMPLETION,
+        LanguageCapability.RENAME,
+        LanguageCapability.FORMAT,
+        LanguageCapability.SEMANTIC_TOKENS,
+    }
+)
+
 
 def make_python_language_service() -> LanguageService:
     """Return the R200 Python stub service (no LSP providers)."""
@@ -105,6 +152,30 @@ def make_python_language_service() -> LanguageService:
         descriptor=PYTHON_DESCRIPTOR,
         capabilities=PYTHON_HEADLESS_CAPABILITIES,
         service_id="python.headless",
+    )
+
+
+def make_rust_language_service(
+    semantic: SemanticProvider | None = None,
+) -> LanguageService:
+    """Return a Rust language service (rust-analyzer semantic when provided)."""
+    return LanguageService(
+        descriptor=RUST_DESCRIPTOR,
+        capabilities=LSP_EDITOR_CAPABILITIES,
+        service_id="rust.lsp",
+        semantic=semantic,
+    )
+
+
+def make_cpp_language_service(
+    semantic: SemanticProvider | None = None,
+) -> LanguageService:
+    """Return a C++ language service (clangd semantic when provided)."""
+    return LanguageService(
+        descriptor=CPP_DESCRIPTOR,
+        capabilities=LSP_EDITOR_CAPABILITIES,
+        service_id="cpp.lsp",
+        semantic=semantic,
     )
 
 
@@ -167,12 +238,17 @@ class LanguageServiceRegistry:
 
 
 __all__ = [
+    "CPP_DESCRIPTOR",
     "LanguageCapability",
     "LanguageDescriptor",
     "LanguageService",
     "LanguageServiceLike",
     "LanguageServiceRegistry",
+    "LSP_EDITOR_CAPABILITIES",
     "PYTHON_DESCRIPTOR",
     "PYTHON_HEADLESS_CAPABILITIES",
+    "RUST_DESCRIPTOR",
+    "make_cpp_language_service",
     "make_python_language_service",
+    "make_rust_language_service",
 ]

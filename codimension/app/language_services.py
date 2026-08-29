@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - language services manager (R200/R202)
+# codimension - language services manager (R200–R203)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,17 +9,18 @@
 # (at your option) any later version.
 #
 
-"""LanguageServiceManager — lifecycle façade for polyglot services (R200/R202).
+"""LanguageServiceManager — lifecycle façade for polyglot services (R200–R203).
 
 Headless: no Qt. When ``FLAG_LANGUAGE_SERVICES`` is off, :meth:`ensure_defaults`
 is a no-op (empty registry). When on, registers the Python headless stub.
 Owns an :class:`~infrastructure.lsp_process.LspProcessRegistry` shut down on
-workspace unload.
+workspace unload. Rust/C++ LSP services are registered explicitly via
+:meth:`register_rust_lsp` / :meth:`register_cpp_lsp` (spawn-gated allowlist).
 """
 
 from __future__ import annotations
 
-from typing import Mapping, Optional
+from typing import Iterable, Mapping, Optional, Sequence
 
 from core.feature_flags import (
     FLAG_LANGUAGE_SERVICES,
@@ -28,9 +29,19 @@ from core.feature_flags import (
 )
 from core.language import (
     LanguageServiceRegistry,
+    make_cpp_language_service,
     make_python_language_service,
+    make_rust_language_service,
+)
+from core.language_workspace import (
+    assess_cpp_semantic_readiness,
+    assess_rust_semantic_readiness,
 )
 from infrastructure.lsp_process import LspProcessRegistry
+from infrastructure.lsp_semantic import (
+    build_clangd_semantic_provider,
+    build_rust_semantic_provider,
+)
 
 
 def is_language_services_enabled(
@@ -82,6 +93,62 @@ class LanguageServiceManager:
         if not self._registry.has(service.service_id):
             self._registry.register(service)
         return True
+
+    def register_rust_lsp(
+        self,
+        workspace_root: str,
+        *,
+        binary: str,
+        allowlist: Iterable[str],
+        extra_args: Sequence[str] = (),
+        toolchain: str = "",
+    ) -> str:
+        """Register ``rust.lsp`` with rust-analyzer semantic provider.
+
+        Readiness is READY when ``Cargo.toml`` / ``rust-project.json`` exists
+        at ``workspace_root``, else DEGRADED.
+        """
+        readiness = assess_rust_semantic_readiness(workspace_root)
+        semantic = build_rust_semantic_provider(
+            self._lsp_processes,
+            workspace_root,
+            binary=binary,
+            allowlist=allowlist,
+            readiness=readiness,
+            extra_args=extra_args,
+            toolchain=toolchain,
+        )
+        service = make_rust_language_service(semantic=semantic)
+        self._registry.register(service)
+        return str(service.service_id)
+
+    def register_cpp_lsp(
+        self,
+        workspace_root: str,
+        *,
+        binary: str,
+        allowlist: Iterable[str],
+        extra_args: Sequence[str] = (),
+        toolchain: str = "",
+    ) -> str:
+        """Register ``cpp.lsp`` with clangd semantic provider.
+
+        Readiness is READY only when ``compile_commands.json`` is found;
+        otherwise DEGRADED (no full-diagnostics claim).
+        """
+        readiness = assess_cpp_semantic_readiness(workspace_root)
+        semantic = build_clangd_semantic_provider(
+            self._lsp_processes,
+            workspace_root,
+            binary=binary,
+            allowlist=allowlist,
+            readiness=readiness,
+            extra_args=extra_args,
+            toolchain=toolchain,
+        )
+        service = make_cpp_language_service(semantic=semantic)
+        self._registry.register(service)
+        return str(service.service_id)
 
     def shutdown(self) -> None:
         """Shut down LSP processes and clear registered services."""

@@ -54,6 +54,13 @@ reader thread + serialized writer; `$/cancelRequest`; обмежені stderr ri
 unload. Spawn через `core/language_policy.py`
 (`LANGUAGE_SERVER_SPAWN`: лише absolute binary з allowlist).
 
+## SemanticProvider (R203)
+
+Rust (`rust-analyzer`) і C++ (`clangd`) реєструються через
+`LanguageServiceManager.register_rust_lsp` / `register_cpp_lsp`.
+C++ без `compile_commands.json` — **DEGRADED** (немає претензії на
+повні diagnostics).
+
 ## Security policy (deny-by-default)
 
 Перед side effects — гейти capabilities на кшталт:
