@@ -9,8 +9,15 @@
 # (at your option) any later version.
 #
 
-"""Headless infrastructure helpers (filesystem / io / process / LSP codec)."""
+"""Headless infrastructure helpers (filesystem / io / process / LSP)."""
 
-from . import filesystem, io, lsp_position_codec, process
+from . import filesystem, io, lsp_framing, lsp_position_codec, lsp_process, process
 
-__all__ = ["filesystem", "io", "lsp_position_codec", "process"]
+__all__ = [
+    "filesystem",
+    "io",
+    "lsp_framing",
+    "lsp_position_codec",
+    "lsp_process",
+    "process",
+]

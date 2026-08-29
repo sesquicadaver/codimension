@@ -1,5 +1,7 @@
-2026 Aug 29
+2026 Aug 30
 
+* R202: LspProcess stdio JSON-RPC (reader thread, serialized writer, cancel,
+  backoff, shutdown); ``LANGUAGE_SERVER_SPAWN`` deny-by-default absolute allowlist
 * R201: DocumentSnapshot (Unicode offsets, versioned edits reject stale) +
   LspPositionCodec (UTF-8/16/32 per process; encoding stays out of core)
 * R200: LanguageServiceRegistry + Python headless stub; ``FLAG_LANGUAGE_SERVICES``; additive SymbolRecord

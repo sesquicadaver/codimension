@@ -47,8 +47,12 @@ Diagnostics and edits carry document version; stale edits are rejected
 
 One process per `(language_id, workspace_root, toolchain_configuration)` —
 e.g. each `Cargo.toml` workspace and each clangd tree with
-`compile_commands.json`. Lazy start; bounded backoff restart; shutdown on
-workspace unload.
+`compile_commands.json`. Implemented as `infrastructure/lsp_process.py`
+(`LspProcess` / `LspProcessRegistry`): lazy start; Content-Length JSON-RPC;
+reader thread + serialized writer; `$/cancelRequest`; bounded stderr ring and
+message size; bounded backoff restart; `initialize` → `shutdown` → `exit` on
+unload. Spawn gated by `core/language_policy.py`
+(`LANGUAGE_SERVER_SPAWN`: absolute binary on allowlist only).
 
 ## Security policy (deny-by-default effects)
 
