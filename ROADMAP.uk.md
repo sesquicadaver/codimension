@@ -145,7 +145,7 @@
 | 12 | R200 | Polyglot: LanguageDescriptor + Registry + PythonService stub | `core/language.py` Protocol/Registry; `FLAG_LANGUAGE_SERVICES`; Python stub над існуючим SymbolIndex/brief/flow; без LSP; Living Spec | M | DONE ([#129](https://github.com/sesquicadaver/codimension/pull/129)) |
 | 13 | R201 | Polyglot: DocumentSnapshot + LspPositionCodec | Лише Unicode offsets всередині; encoding на процес; versioned edits відхиляють stale | M | DONE ([#131](https://github.com/sesquicadaver/codimension/pull/131)) |
 | 14 | R202 | Polyglot: LspProcess stdio JSON-RPC + spawn gate | Один процес на `(language_id, workspace_root, toolchain)`; cancel/backoff/shutdown; `LANGUAGE_SERVER_SPAWN` deny-by-default крім configured absolute binary | L | DONE ([#133](https://github.com/sesquicadaver/codimension/pull/133)) |
-| 15 | R203 | Polyglot: Rust/C++ descriptors + SemanticProvider (LSP) | rust-analyzer / clangd; `compile_commands.json` → READY інакше DEGRADED (без претензії на повні diagnostics) | L | DONE |
+| 15 | R203 | Polyglot: Rust/C++ descriptors + SemanticProvider (LSP) | rust-analyzer / clangd; `compile_commands.json` → READY інакше DEGRADED (без претензії на повні diagnostics) | L | DONE ([#135](https://github.com/sesquicadaver/codimension/pull/135)) |
 | 16 | R204 | Polyglot: UI language controller (capability-driven) | Diagnostics / outline / hover / definition / references / format / rename-preview; без `if language == …` | L | OPEN |
 | 17 | R205 | Polyglot: Tree-sitter StructuralGraph (Rust+C++) | StructuralGraph + `semantic_role`; **не** compiler CFG | L | OPEN |
 | 18 | R206 | Polyglot: BindingIndex + PyO3 / pybind11 / CPython + `.pyi` | Лише evidence-backed FFI edges (без exact edge за однаковістю імен) | L | OPEN |
