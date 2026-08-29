@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - language services manager (R200–R203)
+# codimension - language services manager (R200–R205)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,13 +9,15 @@
 # (at your option) any later version.
 #
 
-"""LanguageServiceManager — lifecycle façade for polyglot services (R200–R203).
+"""LanguageServiceManager — lifecycle façade for polyglot services (R200–R205).
 
 Headless: no Qt. When ``FLAG_LANGUAGE_SERVICES`` is off, :meth:`ensure_defaults`
 is a no-op (empty registry). When on, registers the Python headless stub.
 Owns an :class:`~infrastructure.lsp_process.LspProcessRegistry` shut down on
 workspace unload. Rust/C++ LSP services are registered explicitly via
 :meth:`register_rust_lsp` / :meth:`register_cpp_lsp` (spawn-gated allowlist).
+Tree-sitter structural providers attach via ``attach_structural=True`` (R205)
+when grammars are installed.
 """
 
 from __future__ import annotations
@@ -37,11 +39,13 @@ from core.language_workspace import (
     assess_cpp_semantic_readiness,
     assess_rust_semantic_readiness,
 )
+from core.structural import StructuralProvider
 from infrastructure.lsp_process import LspProcessRegistry
 from infrastructure.lsp_semantic import (
     build_clangd_semantic_provider,
     build_rust_semantic_provider,
 )
+from infrastructure.tree_sitter_structural import try_build_tree_sitter_structural_provider
 
 
 def is_language_services_enabled(
@@ -94,6 +98,13 @@ class LanguageServiceManager:
             self._registry.register(service)
         return True
 
+    @staticmethod
+    def _optional_structural(language_id: str, attach: bool) -> StructuralProvider | None:
+        """Load Tree-sitter structural provider when requested and available."""
+        if not attach:
+            return None
+        return try_build_tree_sitter_structural_provider(language_id)
+
     def register_rust_lsp(
         self,
         workspace_root: str,
@@ -102,11 +113,14 @@ class LanguageServiceManager:
         allowlist: Iterable[str],
         extra_args: Sequence[str] = (),
         toolchain: str = "",
+        attach_structural: bool = True,
     ) -> str:
         """Register ``rust.lsp`` with rust-analyzer semantic provider.
 
         Readiness is READY when ``Cargo.toml`` / ``rust-project.json`` exists
-        at ``workspace_root``, else DEGRADED.
+        at ``workspace_root``, else DEGRADED. When ``attach_structural`` is
+        True and Tree-sitter grammars are installed, also binds a structural
+        provider and advertises ``STRUCTURAL_GRAPH``.
         """
         readiness = assess_rust_semantic_readiness(workspace_root)
         semantic = build_rust_semantic_provider(
@@ -118,7 +132,8 @@ class LanguageServiceManager:
             extra_args=extra_args,
             toolchain=toolchain,
         )
-        service = make_rust_language_service(semantic=semantic)
+        structural = self._optional_structural("rust", attach_structural)
+        service = make_rust_language_service(semantic=semantic, structural=structural)
         self._registry.register(service)
         return str(service.service_id)
 
@@ -130,11 +145,13 @@ class LanguageServiceManager:
         allowlist: Iterable[str],
         extra_args: Sequence[str] = (),
         toolchain: str = "",
+        attach_structural: bool = True,
     ) -> str:
         """Register ``cpp.lsp`` with clangd semantic provider.
 
         Readiness is READY only when ``compile_commands.json`` is found;
-        otherwise DEGRADED (no full-diagnostics claim).
+        otherwise DEGRADED (no full-diagnostics claim). Optional Tree-sitter
+        structural attach mirrors :meth:`register_rust_lsp`.
         """
         readiness = assess_cpp_semantic_readiness(workspace_root)
         semantic = build_clangd_semantic_provider(
@@ -146,7 +163,8 @@ class LanguageServiceManager:
             extra_args=extra_args,
             toolchain=toolchain,
         )
-        service = make_cpp_language_service(semantic=semantic)
+        structural = self._optional_structural("cpp", attach_structural)
+        service = make_cpp_language_service(semantic=semantic, structural=structural)
         self._registry.register(service)
         return str(service.service_id)
 

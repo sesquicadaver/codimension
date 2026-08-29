@@ -25,6 +25,7 @@ Codimension розширюється за межі Python через **унів�
 | Lifecycle manager | `codimension/app/language_services.py` |
 | LSP stdio / position codec I/O | `infrastructure` + тонкий `utils` |
 | UI controller | `ui/language_controller.py` (R204: лише capability checks; hover/definition/references/outline/format/rename-preview; diagnostics FULL vs DEGRADED) |
+| Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **не** compiler CFG) |
 
 UI перевіряє **capabilities**, ніколи `if language == "rust"`.
 
@@ -78,7 +79,7 @@ C++ без `compile_commands.json` — **DEGRADED** (немає претензі
 | Етап | ID | Поставка |
 | ---- | -- | -------- |
 | 1 Editor | R200–R204 | Registry, codec, LspProcess, Rust/C++ LSP descriptors, capability UI |
-| 2 Structure | R205 | Tree-sitter StructuralGraph + semantic roles |
+| 2 Structure | R205 | Tree-sitter StructuralGraph + semantic roles (`core/structural` + `infrastructure/tree_sitter_structural`; optional `.[treesitter]`) |
 | 3 FFI | R206–R207 | BindingIndex extractors + dependency edge kinds + cross-nav |
 | 4 Tasks | R208 | Cargo / CMake / Ninja / CTest providers |
 

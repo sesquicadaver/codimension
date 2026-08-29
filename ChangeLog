@@ -1,5 +1,8 @@
 2026 Aug 30
 
+* R205: ``core.structural`` + ``infrastructure.tree_sitter_structural`` — Tree-sitter
+  StructuralGraph for Rust/C++ with ``semantic_role`` mapping (not compiler CFG);
+  optional ``.[treesitter]``; ``TREE_PARSE`` allow; ``STRUCTURAL_GRAPH`` capability
 * R204: ``ui.language_controller`` — capability-driven hover/definition/references/outline/format/rename-preview + diagnostics policy (no language-id branching)
 * R203: Rust/C++ LanguageDescriptors + LspSemanticProvider;
   ``compile_commands.json`` → READY else DEGRADED (no full-diagnostics claim)
