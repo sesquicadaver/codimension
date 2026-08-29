@@ -170,7 +170,9 @@ class LspPositionCodec:
         """Map LSP Position → absolute Unicode offset."""
         line = min(position.line, max(document.line_count - 1, 0))
         col = _encoded_to_char_index(document.line_text(line), position.character, self._encoding)
-        return document.line_col_to_offset(line, col)
+        # ``core.*`` imports resolve separately from ``codimension.core.*`` under mypy;
+        # coerce so ``warn_return_any`` stays clean (same pattern as other headless layers).
+        return int(document.line_col_to_offset(line, col))
 
     def to_lsp_range(self, document: DocumentSnapshot, span: SourceSpan) -> LspRange:
         """Map internal :class:`SourceSpan` → LSP Range."""
