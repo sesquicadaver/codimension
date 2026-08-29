@@ -1,5 +1,7 @@
 2026 Aug 30
 
+* R203: Rust/C++ LanguageDescriptors + LspSemanticProvider;
+  ``compile_commands.json`` → READY else DEGRADED (no full-diagnostics claim)
 * R202: LspProcess stdio JSON-RPC (reader thread, serialized writer, cancel,
   backoff, shutdown); ``LANGUAGE_SERVER_SPAWN`` deny-by-default absolute allowlist
 * R201: DocumentSnapshot (Unicode offsets, versioned edits reject stale) +

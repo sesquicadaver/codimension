@@ -11,7 +11,15 @@
 
 """Headless infrastructure helpers (filesystem / io / process / LSP)."""
 
-from . import filesystem, io, lsp_framing, lsp_position_codec, lsp_process, process
+from . import (
+    filesystem,
+    io,
+    lsp_framing,
+    lsp_position_codec,
+    lsp_process,
+    lsp_semantic,
+    process,
+)
 
 __all__ = [
     "filesystem",
@@ -19,5 +27,6 @@ __all__ = [
     "lsp_framing",
     "lsp_position_codec",
     "lsp_process",
+    "lsp_semantic",
     "process",
 ]
