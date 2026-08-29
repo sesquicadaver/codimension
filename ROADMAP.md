@@ -146,7 +146,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 13 | R201 | Polyglot: DocumentSnapshot + LspPositionCodec | Internal Unicode offsets only; per-process encoding; versioned edits reject stale | M | DONE ([#131](https://github.com/sesquicadaver/codimension/pull/131)) |
 | 14 | R202 | Polyglot: LspProcess stdio JSON-RPC + spawn gate | One process per `(language_id, workspace_root, toolchain)`; cancel/backoff/shutdown; `LANGUAGE_SERVER_SPAWN` deny-by-default except configured absolute binary | L | DONE ([#133](https://github.com/sesquicadaver/codimension/pull/133)) |
 | 15 | R203 | Polyglot: Rust/C++ descriptors + SemanticProvider (LSP) | rust-analyzer / clangd; `compile_commands.json` → READY else DEGRADED (no full-diagnostics claim) | L | DONE ([#135](https://github.com/sesquicadaver/codimension/pull/135)) |
-| 16 | R204 | Polyglot: UI language controller (capability-driven) | Diagnostics / outline / hover / definition / references / format / rename-preview; no `if language == …` | L | DONE |
+| 16 | R204 | Polyglot: UI language controller (capability-driven) | Diagnostics / outline / hover / definition / references / format / rename-preview; no `if language == …` | L | DONE ([#137](https://github.com/sesquicadaver/codimension/pull/137)) |
 | 17 | R205 | Polyglot: Tree-sitter StructuralGraph (Rust+C++) | StructuralGraph + `semantic_role` mapping; **not** compiler CFG | L | OPEN |
 | 18 | R206 | Polyglot: BindingIndex + PyO3 / pybind11 / CPython + `.pyi` | Evidence-backed FFI edges only (no name-equality exact edges) | L | OPEN |
 | 19 | R207 | Polyglot: DependencyEdgeKind + cross-language navigation | Generalized edges incl. FFI; navigation across language boundary | M | OPEN |
