@@ -163,17 +163,13 @@ class LspPositionCodec:
     def to_lsp_position(self, document: DocumentSnapshot, offset: int) -> LspPosition:
         """Map absolute Unicode ``offset`` → LSP Position."""
         line, col = document.offset_to_line_col(offset)
-        character = _char_index_to_encoded(
-            document.line_text(line), col, self._encoding
-        )
+        character = _char_index_to_encoded(document.line_text(line), col, self._encoding)
         return LspPosition(line=line, character=character)
 
     def to_internal_offset(self, document: DocumentSnapshot, position: LspPosition) -> int:
         """Map LSP Position → absolute Unicode offset."""
         line = min(position.line, max(document.line_count - 1, 0))
-        col = _encoded_to_char_index(
-            document.line_text(line), position.character, self._encoding
-        )
+        col = _encoded_to_char_index(document.line_text(line), position.character, self._encoding)
         return document.line_col_to_offset(line, col)
 
     def to_lsp_range(self, document: DocumentSnapshot, span: SourceSpan) -> LspRange:

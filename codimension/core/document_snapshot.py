@@ -31,10 +31,7 @@ class StaleDocumentEditError(ValueError):
         self.expected = expected
         self.actual = actual
         self.uri = uri
-        super().__init__(
-            f"stale document edit for {uri!r}: expected version {expected}, "
-            f"document is at {actual}"
-        )
+        super().__init__(f"stale document edit for {uri!r}: expected version {expected}, document is at {actual}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,9 +77,7 @@ class DocumentSnapshot:
     text: str
     version: int = 0
     language_id: str = ""
-    _line_starts: tuple[int, ...] = field(
-        init=False, repr=False, compare=False, hash=False
-    )
+    _line_starts: tuple[int, ...] = field(init=False, repr=False, compare=False, hash=False)
 
     def __post_init__(self) -> None:
         """Validate identity and version; build private line-start table."""
@@ -154,9 +149,7 @@ class DocumentSnapshot:
     def ensure_version(self, version: int) -> None:
         """Raise :class:`StaleDocumentEditError` when ``version`` is stale."""
         if version != self.version:
-            raise StaleDocumentEditError(
-                expected=version, actual=self.version, uri=self.uri
-            )
+            raise StaleDocumentEditError(expected=version, actual=self.version, uri=self.uri)
 
     def with_text(self, text: str, *, bump_version: bool = True) -> DocumentSnapshot:
         """Return a new snapshot with ``text`` (optionally bump version by 1)."""
@@ -188,13 +181,9 @@ class DocumentSnapshot:
         length = len(self.text)
         for edit in ascending:
             if edit.span.start > length or edit.span.end > length:
-                raise ValueError(
-                    f"edit span {edit.span!r} out of range for document length {length}"
-                )
+                raise ValueError(f"edit span {edit.span!r} out of range for document length {length}")
             if edit.span.start < prev_end:
-                raise ValueError(
-                    f"overlapping edits: span {edit.span!r} overlaps previous end {prev_end}"
-                )
+                raise ValueError(f"overlapping edits: span {edit.span!r} overlaps previous end {prev_end}")
             prev_end = edit.span.end
 
         text = self.text

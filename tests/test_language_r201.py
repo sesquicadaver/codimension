@@ -80,9 +80,7 @@ def test_codec_utf16_astral_plane() -> None:
     pos = codec.to_lsp_position(doc, 2)
     assert pos == LspPosition(0, 3)  # a=1 + emoji=2
     assert codec.to_internal_offset(doc, pos) == 2
-    span = codec.to_internal_span(
-        doc, LspRange(LspPosition(0, 1), LspPosition(0, 3))
-    )
+    span = codec.to_internal_span(doc, LspRange(LspPosition(0, 1), LspPosition(0, 3)))
     assert doc.slice(span) == "😀"
 
 
