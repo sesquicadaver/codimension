@@ -41,6 +41,41 @@ class SymbolKind(str, Enum):
     UNKNOWN = "unknown"
 
 
+class GenericSymbolKind(str, Enum):
+    """Language-neutral kind tags for polyglot UI (R200 additive)."""
+
+    MODULE = "module"
+    NAMESPACE = "namespace"
+    TYPE = "type"
+    ENUM = "enum"
+    TRAIT = "trait"
+    FUNCTION = "function"
+    METHOD = "method"
+    FIELD = "field"
+    VARIABLE = "variable"
+    CONSTANT = "constant"
+    MACRO = "macro"
+    IMPORT = "import"
+    UNKNOWN = "unknown"
+
+
+_SYMBOL_KIND_TO_GENERIC: dict[SymbolKind, GenericSymbolKind] = {
+    SymbolKind.MODULE: GenericSymbolKind.MODULE,
+    SymbolKind.CLASS: GenericSymbolKind.TYPE,
+    SymbolKind.FUNCTION: GenericSymbolKind.FUNCTION,
+    SymbolKind.METHOD: GenericSymbolKind.METHOD,
+    SymbolKind.VARIABLE: GenericSymbolKind.VARIABLE,
+    SymbolKind.ATTRIBUTE: GenericSymbolKind.FIELD,
+    SymbolKind.IMPORT: GenericSymbolKind.IMPORT,
+    SymbolKind.UNKNOWN: GenericSymbolKind.UNKNOWN,
+}
+
+
+def generic_kind_for_symbol_kind(kind: SymbolKind) -> GenericSymbolKind:
+    """Map a Python-oriented :class:`SymbolKind` to :class:`GenericSymbolKind`."""
+    return _SYMBOL_KIND_TO_GENERIC.get(kind, GenericSymbolKind.UNKNOWN)
+
+
 # Kinds treated as definitions by ``find_definitions`` (imports are references).
 DEFINITION_KINDS: frozenset[SymbolKind] = frozenset(
     {
@@ -93,7 +128,7 @@ class SymbolRecord:
 
     Attributes:
         name: Unqualified symbol name (e.g. ``MyClass``, ``foo``).
-        kind: Symbol classification.
+        kind: Symbol classification (Python-oriented; kept for compatibility).
         file: Project-relative or absolute path to the defining file.
         span: Half-open character span of the defining name (or header).
         container: Optional qualified parent (e.g. ``pkg.mod.MyClass``);
@@ -102,6 +137,11 @@ class SymbolRecord:
             ``container.name`` or ``name``.
         line: Optional 1-based source line (from brief_ast) for search bridges.
         extras: Immutable optional metadata bag for later tasks.
+        language_id: Polyglot language id (R200; default ``python``).
+        generic_kind: Language-neutral kind (R200; derived from ``kind``).
+        symbol_key: Stable cross-provider key (R200; derived when omitted).
+        provider_id: Indexing provider id (R200; default ``python.brief``).
+        native_kind: Language-specific kind tag (R200; e.g. ``python.class``).
     """
 
     name: str
@@ -112,9 +152,14 @@ class SymbolRecord:
     qualname: Optional[str] = None
     line: Optional[int] = None
     extras: Mapping[str, str] = field(default_factory=_empty_extras)
+    language_id: str = "python"
+    generic_kind: Optional[GenericSymbolKind] = None
+    symbol_key: Optional[str] = None
+    provider_id: str = "python.brief"
+    native_kind: Optional[str] = None
 
     def __post_init__(self) -> None:
-        """Normalize kind/extras and derive ``qualname`` when missing."""
+        """Normalize kind/extras and derive polyglot fields when missing."""
         if not self.name:
             raise ValueError("symbol name must be non-empty")
         if not self.file:
@@ -128,6 +173,22 @@ class SymbolRecord:
                 object.__setattr__(self, "qualname", f"{self.container}.{self.name}")
             else:
                 object.__setattr__(self, "qualname", self.name)
+        language_id = (self.language_id or "python").strip() or "python"
+        object.__setattr__(self, "language_id", language_id)
+        if self.generic_kind is None:
+            object.__setattr__(self, "generic_kind", generic_kind_for_symbol_kind(kind))
+        elif not isinstance(self.generic_kind, GenericSymbolKind):
+            object.__setattr__(self, "generic_kind", GenericSymbolKind(self.generic_kind))
+        if self.native_kind is None:
+            object.__setattr__(self, "native_kind", f"{language_id}.{kind.value}")
+        if self.symbol_key is None:
+            object.__setattr__(
+                self,
+                "symbol_key",
+                f"{language_id}:{self.file}:{self.qualname}:{kind.value}",
+            )
+        if not self.provider_id:
+            object.__setattr__(self, "provider_id", "python.brief")
 
 
 class SymbolIndex:
@@ -244,8 +305,20 @@ def build_symbol(
     qualname: Optional[str] = None,
     line: Optional[int] = None,
     extras: Optional[Mapping[str, str]] = None,
+    language_id: str = "python",
+    generic_kind: Optional[GenericSymbolKind | str] = None,
+    symbol_key: Optional[str] = None,
+    provider_id: str = "python.brief",
+    native_kind: Optional[str] = None,
 ) -> SymbolRecord:
     """Convenience constructor for a ``SymbolRecord`` with a half-open span."""
+    gk: Optional[GenericSymbolKind]
+    if generic_kind is None:
+        gk = None
+    elif isinstance(generic_kind, GenericSymbolKind):
+        gk = generic_kind
+    else:
+        gk = GenericSymbolKind(generic_kind)
     return SymbolRecord(
         name=name,
         kind=SymbolKind(kind) if not isinstance(kind, SymbolKind) else kind,
@@ -255,4 +328,9 @@ def build_symbol(
         qualname=qualname,
         line=line,
         extras=MappingProxyType(dict(extras) if extras else {}),
+        language_id=language_id,
+        generic_kind=gk,
+        symbol_key=symbol_key,
+        provider_id=provider_id,
+        native_kind=native_kind,
     )

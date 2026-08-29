@@ -26,12 +26,16 @@ from typing import Mapping, MutableMapping, Optional
 #: Flag id for experimental AI explain/suggest UI (R152).
 FLAG_AI_UI = "ai_ui"
 
+#: Flag id for polyglot language services manager (R200).
+FLAG_LANGUAGE_SERVICES = "language_services"
+
 #: Known flag identifiers (unknown keys are ignored on load / rejected on set).
-KNOWN_FLAGS: frozenset[str] = frozenset({FLAG_AI_UI})
+KNOWN_FLAGS: frozenset[str] = frozenset({FLAG_AI_UI, FLAG_LANGUAGE_SERVICES})
 
 #: Optional env override per flag (non-empty value wins over the store).
 FLAG_ENV_OVERRIDES: Mapping[str, str] = {
     FLAG_AI_UI: "CDM_AI_UI",
+    FLAG_LANGUAGE_SERVICES: "CDM_LANGUAGE_SERVICES",
 }
 
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
@@ -184,6 +188,7 @@ def enable_flag_in_environ(flag: str, environ: MutableMapping[str, str]) -> None
 
 __all__ = [
     "FLAG_AI_UI",
+    "FLAG_LANGUAGE_SERVICES",
     "FLAG_ENV_OVERRIDES",
     "KNOWN_FLAGS",
     "FeatureFlagsStore",
