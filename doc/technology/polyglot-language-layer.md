@@ -37,9 +37,11 @@ multi-index is deferred (R206+ / later), not a Stage 1 break of MCP/search.
 
 ## Position codec
 
-Inside Codimension: **Unicode character offsets only**. LSP encoding
-(UTF-16 / UTF-8 / negotiated) stays behind `LspPositionCodec` per server
-process. Diagnostics and edits carry document version; stale edits are rejected.
+Inside Codimension: **Unicode character offsets only**
+(`core/document_snapshot.py`). LSP encoding (UTF-16 / UTF-8 / UTF-32)
+stays behind `infrastructure/lsp_position_codec.py` per server process.
+Diagnostics and edits carry document version; stale edits are rejected
+(`StaleDocumentEditError`).
 
 ## LSP process key
 

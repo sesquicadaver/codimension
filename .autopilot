@@ -11,9 +11,9 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **R201** — DocumentSnapshot + LspPositionCodec.
-Active linear queue: R201 → R208 (polyglot language layer; R200 DONE).
-R183–R199 + R180–R182 + R200 shipped.
+Current pointer: **R202** — LspProcess stdio JSON-RPC + spawn gate.
+Active linear queue: R202 → R208 (polyglot language layer; R200–R201 DONE).
+R183–R199 + R180–R182 + R200–R201 shipped.
 
 User standing order (2026-08-28): `/autopilot` means execute the next queue task and
 perform commit/push/merge/PR automatically without waiting for a separate ask.

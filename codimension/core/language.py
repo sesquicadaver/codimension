@@ -11,9 +11,9 @@
 
 """LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200).
 
-Qt-free polyglot attach points. Concrete LSP / Tree-sitter / FFI providers
-arrive in R201+. UI must query :class:`LanguageCapability`, never
-``if language == …``.
+Qt-free polyglot attach points. Document buffers / position codec are R201;
+LSP process and semantic providers arrive in R202+. UI must query
+:class:`LanguageCapability`, never ``if language == …``.
 """
 
 from __future__ import annotations
