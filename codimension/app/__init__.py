@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["ApplicationServices"]
+__all__ = ["ApplicationServices", "LanguageServiceManager"]
 
 
 def __getattr__(name: str) -> Any:
@@ -28,4 +28,8 @@ def __getattr__(name: str) -> Any:
         from .services import ApplicationServices as _ApplicationServices
 
         return _ApplicationServices
+    if name == "LanguageServiceManager":
+        from .language_services import LanguageServiceManager as _LanguageServiceManager
+
+        return _LanguageServiceManager
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
