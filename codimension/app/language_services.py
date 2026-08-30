@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - language services manager (R200–R206)
+# codimension - language services manager (R200–R208)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LanguageServiceManager — lifecycle façade for polyglot services (R200–R206).
+"""LanguageServiceManager — lifecycle façade for polyglot services (R200–R208).
 
 Headless: no Qt. When ``FLAG_LANGUAGE_SERVICES`` is off, :meth:`ensure_defaults`
 is a no-op (empty registry). When on, registers the Python headless stub.
@@ -18,7 +18,8 @@ workspace unload. Rust/C++ LSP services are registered explicitly via
 :meth:`register_rust_lsp` / :meth:`register_cpp_lsp` (spawn-gated allowlist).
 Tree-sitter structural providers attach via ``attach_structural=True`` (R205)
 when grammars are installed. FFI binding providers attach via
-``attach_bindings=True`` (R206).
+``attach_bindings=True`` (R206). Build task providers attach via
+``attach_tasks=True`` (R208) — discovery only; execution stays explicit.
 """
 
 from __future__ import annotations
@@ -42,6 +43,8 @@ from core.language_workspace import (
     assess_rust_semantic_readiness,
 )
 from core.structural import StructuralProvider
+from core.tasks import TaskProvider
+from infrastructure.build_tasks import make_cpp_task_provider, make_rust_task_provider
 from infrastructure.ffi_bindings import (
     CPythonBindingProvider,
     Pybind11BindingProvider,
@@ -124,6 +127,18 @@ class LanguageServiceManager:
             return (Pybind11BindingProvider(), CPythonBindingProvider())
         return ()
 
+    @staticmethod
+    def _optional_tasks(language_id: str, attach: bool) -> TaskProvider | None:
+        """Return Cargo or CMake/Ninja/CTest providers when requested."""
+        if not attach:
+            return None
+        lid = language_id.strip().lower()
+        if lid == "rust":
+            return make_rust_task_provider()
+        if lid == "cpp":
+            return make_cpp_task_provider()
+        return None
+
     def register_rust_lsp(
         self,
         workspace_root: str,
@@ -134,12 +149,15 @@ class LanguageServiceManager:
         toolchain: str = "",
         attach_structural: bool = True,
         attach_bindings: bool = True,
+        attach_tasks: bool = True,
     ) -> str:
         """Register ``rust.lsp`` with rust-analyzer semantic provider.
 
         Readiness is READY when ``Cargo.toml`` / ``rust-project.json`` exists
         at ``workspace_root``, else DEGRADED. Optional Tree-sitter /
-        PyO3 binding providers advertise ``STRUCTURAL_GRAPH`` / ``FFI_BINDINGS``.
+        PyO3 binding / Cargo task providers advertise
+        ``STRUCTURAL_GRAPH`` / ``FFI_BINDINGS`` / ``BUILD_TASKS``.
+        Task providers only discover argv plans — they do not run on register.
         """
         readiness = assess_rust_semantic_readiness(workspace_root)
         semantic = build_rust_semantic_provider(
@@ -153,10 +171,12 @@ class LanguageServiceManager:
         )
         structural = self._optional_structural("rust", attach_structural)
         bindings = self._optional_bindings("rust", attach_bindings)
+        tasks = self._optional_tasks("rust", attach_tasks)
         service = make_rust_language_service(
             semantic=semantic,
             structural=structural,
             bindings=bindings,
+            tasks=tasks,
         )
         self._registry.register(service)
         return str(service.service_id)
@@ -171,12 +191,14 @@ class LanguageServiceManager:
         toolchain: str = "",
         attach_structural: bool = True,
         attach_bindings: bool = True,
+        attach_tasks: bool = True,
     ) -> str:
         """Register ``cpp.lsp`` with clangd semantic provider.
 
         Readiness is READY only when ``compile_commands.json`` is found;
         otherwise DEGRADED (no full-diagnostics claim). Optional Tree-sitter /
-        pybind11+CPython binding attach mirrors :meth:`register_rust_lsp`.
+        pybind11+CPython / CMake·Ninja·CTest attach mirrors
+        :meth:`register_rust_lsp`. clangd is never used as a build runner.
         """
         readiness = assess_cpp_semantic_readiness(workspace_root)
         semantic = build_clangd_semantic_provider(
@@ -190,10 +212,12 @@ class LanguageServiceManager:
         )
         structural = self._optional_structural("cpp", attach_structural)
         bindings = self._optional_bindings("cpp", attach_bindings)
+        tasks = self._optional_tasks("cpp", attach_tasks)
         service = make_cpp_language_service(
             semantic=semantic,
             structural=structural,
             bindings=bindings,
+            tasks=tasks,
         )
         self._registry.register(service)
         return str(service.service_id)

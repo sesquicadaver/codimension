@@ -111,10 +111,61 @@ def require_language_server_spawn(
     return resolved
 
 
+class BuildTaskExecError(PermissionError):
+    """Raised when BUILD_TASK_EXEC is denied."""
+
+    def __init__(self, message: str, *, binary: str = "") -> None:
+        self.binary = binary
+        super().__init__(message)
+
+
+def require_build_task_exec(
+    binary: str,
+    allowlist: Iterable[str],
+    *,
+    must_exist: bool = True,
+) -> str:
+    """Validate ``binary`` for :attr:`PolicyCapability.BUILD_TASK_EXEC`.
+
+    Deny-by-default: absolute path **and** present on ``allowlist``. Same path
+    rules as :func:`require_language_server_spawn` — bare names / relative
+    paths are rejected. Call this only on **explicit** user-driven task runs,
+    never on file-open discovery.
+    """
+    try:
+        resolved = normalize_absolute_binary(binary)
+    except LanguageServerSpawnError as exc:
+        raise BuildTaskExecError(str(exc), binary=binary) from exc
+    allowed: set[str] = set()
+    for entry in allowlist:
+        try:
+            allowed.add(normalize_absolute_binary(str(entry)))
+        except LanguageServerSpawnError:
+            continue
+    if resolved not in allowed:
+        raise BuildTaskExecError(
+            f"BUILD_TASK_EXEC deny: {resolved!r} is not on the configured absolute-binary allowlist",
+            binary=resolved,
+        )
+    if must_exist and not os.path.isfile(resolved):
+        raise BuildTaskExecError(
+            f"BUILD_TASK_EXEC deny: {resolved!r} is not an existing file",
+            binary=resolved,
+        )
+    if must_exist and not os.access(resolved, os.X_OK):
+        raise BuildTaskExecError(
+            f"BUILD_TASK_EXEC deny: {resolved!r} is not executable",
+            binary=resolved,
+        )
+    return resolved
+
+
 __all__ = [
+    "BuildTaskExecError",
     "LanguageServerSpawnError",
     "PolicyCapability",
     "allow_tree_parse",
     "normalize_absolute_binary",
+    "require_build_task_exec",
     "require_language_server_spawn",
 ]
