@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import importlib
+import os
 import sys
 import time
 from pathlib import Path
@@ -14,10 +15,12 @@ import pytest
 from codimension.utils.slow_scan_prompt import (
     SLOW_SCAN_PROMPT_MS,
     ScanDirectoryTracker,
-    is_prompt_seen,
+    ancestor_chain,
+    is_covered_by_excludes,
     merge_prompt_seen,
     merge_unique_paths,
     project_relative_dir,
+    prompt_ancestor_candidates,
 )
 
 _CODIM = Path(__file__).resolve().parents[1] / "codimension"
@@ -47,6 +50,19 @@ def test_project_relative_dir(tmp_path: Path) -> None:
     assert project_relative_dir(str(tmp_path), str(tmp_path)) is None
 
 
+def test_ancestor_chain_and_coverage() -> None:
+    assert ancestor_chain("workbench/tools/foo") == [
+        "workbench",
+        "workbench/tools",
+        "workbench/tools/foo",
+    ]
+    assert is_covered_by_excludes("workbench/tools", ["workbench"])
+    assert not is_covered_by_excludes("workbench", ["workbench/tools"])
+    assert prompt_ancestor_candidates("workbench/tools/foo", ["workbench"]) == []
+    assert prompt_ancestor_candidates("workbench/tools/foo", [])[0] == "workbench"
+    assert prompt_ancestor_candidates("workbench/tools/foo", ["workbench/tools"]) == ["workbench"]
+
+
 def test_scan_tracker_picks_hottest_non_root(tmp_path: Path) -> None:
     tracker = ScanDirectoryTracker(str(tmp_path))
     root = str(tmp_path) + "/"
@@ -64,8 +80,6 @@ def test_scan_tracker_picks_hottest_non_root(tmp_path: Path) -> None:
 def test_merge_and_seen() -> None:
     assert merge_unique_paths(["a"], ["a", "b", "  "]) == ["a", "b"]
     assert merge_prompt_seen(["a"], ["b", "a"]) == ["a", "b"]
-    assert is_prompt_seen("workbench/tools", ["workbench/tools"])
-    assert not is_prompt_seen("workbench", ["workbench/tools"])
 
 
 def test_on_directory_callback(tmp_path: Path) -> None:
@@ -87,8 +101,8 @@ def test_merge_project_defaults_migrates_tree_exclude() -> None:
     assert props["slowScanPromptSeen"] == []
 
 
-def test_slow_scan_timeout_applies_hot_dir(tmp_path: Path, monkeypatch) -> None:
-    """``__onSlowScanTimeout`` persists the hot directory and requests a rescan."""
+def test_slow_scan_timeout_accepts_top_level_ancestor(tmp_path: Path, monkeypatch) -> None:
+    """Accept uses the dialog selection (top-level ancestor by default)."""
     pytest.importorskip("PyQt5")
     from PyQt5.QtWidgets import QApplication, QDialog
 
@@ -98,9 +112,8 @@ def test_slow_scan_timeout_applies_hot_dir(tmp_path: Path, monkeypatch) -> None:
 
     from codimension.utils.project import CodimensionProject, merge_project_defaults
 
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
+    if QApplication.instance() is None:
+        QApplication([])
 
     hot = tmp_path / "workbench" / "tools"
     hot.mkdir(parents=True)
@@ -109,14 +122,17 @@ def test_slow_scan_timeout_applies_hot_dir(tmp_path: Path, monkeypatch) -> None:
     cdm.write_text("{}", encoding="utf-8")
 
     class _Dlg:
-        def __init__(self, relative_dir, parent=None):
-            self.relative_dir = relative_dir
+        def __init__(self, ancestors, *, hot_path="", parent=None):
+            self.ancestors = list(ancestors)
+            self.hot_path = hot_path
 
         def exec_(self):
             return QDialog.Accepted
 
         def selectedExcludes(self):
-            return [self.relative_dir], [self.relative_dir]
+            # Simulate default top-level choice.
+            top = self.ancestors[0]
+            return [top], [top]
 
     import ui.slowscanignoredlg as dlg_mod
 
@@ -139,14 +155,14 @@ def test_slow_scan_timeout_applies_hot_dir(tmp_path: Path, monkeypatch) -> None:
 
     project._CodimensionProject__onSlowScanTimeout()  # noqa: SLF001
 
-    assert "workbench/tools" in project.props["excludeFromAnalysis"]
-    assert "workbench/tools" in project.props["excludeFromProjectTree"]
-    assert "workbench/tools" in project.props["slowScanPromptSeen"]
+    assert project.props["excludeFromAnalysis"] == ["workbench"]
+    assert project.props["excludeFromProjectTree"] == ["workbench"]
+    assert "workbench" in project.props["slowScanPromptSeen"]
     assert rescans["n"] == 1
 
 
-def test_slow_scan_timeout_continue_rearms(tmp_path: Path, monkeypatch) -> None:
-    """Continue scanning records the hot dir and rearms the timer."""
+def test_slow_scan_timeout_continue_does_not_persist_seen(tmp_path: Path, monkeypatch) -> None:
+    """Continue rearms without writing slowScanPromptSeen (ancestors stay offerable)."""
     pytest.importorskip("PyQt5")
     from PyQt5.QtWidgets import QApplication, QDialog
 
@@ -165,7 +181,7 @@ def test_slow_scan_timeout_continue_rearms(tmp_path: Path, monkeypatch) -> None:
     cdm.write_text("{}", encoding="utf-8")
 
     class _Dlg:
-        def __init__(self, relative_dir, parent=None):
+        def __init__(self, ancestors, *, hot_path="", parent=None):
             pass
 
         def exec_(self):
@@ -195,7 +211,7 @@ def test_slow_scan_timeout_continue_rearms(tmp_path: Path, monkeypatch) -> None:
 
     project._CodimensionProject__onSlowScanTimeout()  # noqa: SLF001
     assert project.props["excludeFromAnalysis"] == []
-    assert "workbench/tools" in project.props["slowScanPromptSeen"]
+    assert project.props["slowScanPromptSeen"] == []
     assert armed["n"] == 1
 
 
@@ -214,7 +230,7 @@ def test_update_properties_preserves_slow_scan_seen(tmp_path: Path, monkeypatch)
         {
             "uuid": uid,
             "excludeFromAnalysis": [],
-            "slowScanPromptSeen": ["workbench/tools"],
+            "slowScanPromptSeen": ["workbench"],
         }
     )
     cdm.write_text("{}", encoding="utf-8")
@@ -226,31 +242,27 @@ def test_update_properties_preserves_slow_scan_seen(tmp_path: Path, monkeypatch)
     updated = merge_project_defaults({"uuid": uid, "version": "9.9", "excludeFromAnalysis": []})
     del updated["slowScanPromptSeen"]
     project.updateProperties(updated)
-    assert project.props["slowScanPromptSeen"] == ["workbench/tools"]
+    assert project.props["slowScanPromptSeen"] == ["workbench"]
     assert project.props["version"] == "9.9"
 
 
-def test_slow_scan_dialog_accept_requires_checkbox(qtbot) -> None:
-    """Accept stays disabled until at least one checkbox is checked."""
-    import os
-
+def test_slow_scan_dialog_defaults_to_top_level(qtbot) -> None:
+    """Combo defaults to top-level ancestor; Accept needs a checkbox."""
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     pytest.importorskip("PyQt5")
     _purge_stub_ui_for_project()
     from ui.slowscanignoredlg import SlowScanIgnoreDialog
 
-    dlg = SlowScanIgnoreDialog("workbench/tools")
+    dlg = SlowScanIgnoreDialog(
+        ["workbench", "workbench/tools"],
+        hot_path="workbench/tools",
+    )
     qtbot.addWidget(dlg)
-    assert not dlg.analysisCheck.isChecked()
-    assert not dlg.treeCheck.isChecked()
+    assert dlg.selectedDirectory() == "workbench"
     assert not dlg.isAcceptEnabled()
     dlg.analysisCheck.setChecked(True)
     assert dlg.isAcceptEnabled()
-    dlg.analysisCheck.setChecked(False)
-    assert not dlg.isAcceptEnabled()
-    dlg.treeCheck.setChecked(True)
-    assert dlg.isAcceptEnabled()
-    assert dlg.selectedExcludes() == ([], ["workbench/tools"])
+    assert dlg.selectedExcludes() == (["workbench"], [])
 
 
 def test_slow_scan_threshold_constant() -> None:

@@ -50,11 +50,11 @@ from .settings import SETTINGS_DIR, Settings
 from .slow_scan_prompt import (
     SLOW_SCAN_PROMPT_MS,
     ScanDirectoryTracker,
-    is_prompt_seen,
     merge_prompt_seen,
     merge_unique_paths,
     normalize_exclude_path,
     project_relative_dir,
+    prompt_ancestor_candidates,
 )
 from .userencodings import FileEncodings
 from .venvutils import getProjectVenvDir
@@ -128,7 +128,7 @@ _DEFAULT_PROJECT_PROPS = {
     "importdirs": [],
     "excludeFromAnalysis": [],  # Dirs/files to exclude from analysis / scan
     "excludeFromProjectTree": [],  # Dirs/files hidden in Project tree UI
-    "slowScanPromptSeen": [],  # Relative dirs already offered in slow-scan prompt
+    "slowScanPromptSeen": [],  # Paths accepted via slow-scan prompt (bookkeeping)
     "encoding": "",
     "pythoninterpreter": "",
 }  # Optional venv/python path
@@ -526,7 +526,7 @@ class CodimensionProject(
         timer.start(SLOW_SCAN_PROMPT_MS)
 
     def __onSlowScanTimeout(self) -> None:
-        """Offer to ignore the hot directory when a background scan exceeds the threshold."""
+        """Offer to ignore an ancestor of the hot directory after the threshold."""
         self.__slowScanTimer = None
         if self.__slowScanPromptOpen or not self.isLoaded():
             return
@@ -539,13 +539,17 @@ class CodimensionProject(
             # Still in the project root or no progress yet — ask again later.
             self.__armSlowScanTimer()
             return
-        relative = project_relative_dir(self.getProjectDir(), hot_abs)
-        if not relative:
+        relative_hot = project_relative_dir(self.getProjectDir(), hot_abs)
+        if not relative_hot:
             self.__armSlowScanTimer()
             return
-        relative = normalize_exclude_path(self.getProjectDir(), relative)
-        if is_prompt_seen(relative, self.props.get("slowScanPromptSeen", [])):
-            # Same hot dir already dismissed; wait for the walk to move elsewhere.
+        relative_hot = normalize_exclude_path(self.getProjectDir(), relative_hot)
+        candidates = prompt_ancestor_candidates(
+            relative_hot,
+            self.props.get("excludeFromAnalysis", []),
+        )
+        if not candidates:
+            # Hot tree already excluded from analysis — nothing to offer.
             self.__armSlowScanTimer()
             return
 
@@ -558,7 +562,7 @@ class CodimensionProject(
         self.__slowScanPromptOpen = True
         try:
             parent = QApplication.activeWindow()
-            dialog = SlowScanIgnoreDialog(relative, parent)
+            dialog = SlowScanIgnoreDialog(candidates, hot_path=relative_hot, parent=parent)
             accepted = dialog.exec_() == QDialog.Accepted
             analysis_sel: list[str] = []
             tree_sel: list[str] = []
@@ -567,10 +571,9 @@ class CodimensionProject(
         finally:
             self.__slowScanPromptOpen = False
 
-        self.props["slowScanPromptSeen"] = merge_prompt_seen(self.props.get("slowScanPromptSeen", []), [relative])
+        # Continue: do not persist "seen" for ancestors — only rearm. Accept may
+        # record the chosen path for bookkeeping after excludes are applied.
         if not accepted or (not analysis_sel and not tree_sel):
-            self.saveProject()
-            # Keep watching — a deeper / sibling directory may become hot next.
             if self.__scanThread is not None and self.__scanThread.isRunning():
                 self.__armSlowScanTimer()
             return
@@ -579,6 +582,9 @@ class CodimensionProject(
         self.props["excludeFromProjectTree"] = merge_unique_paths(
             self.props.get("excludeFromProjectTree", []), tree_sel
         )
+        chosen = analysis_sel[0] if analysis_sel else (tree_sel[0] if tree_sel else "")
+        if chosen:
+            self.props["slowScanPromptSeen"] = merge_prompt_seen(self.props.get("slowScanPromptSeen", []), [chosen])
         self.saveProject()
         # Keep the pending CompleteProject / rescan callback; coalesce a fresh scan.
         on_complete = self.__scanOnComplete

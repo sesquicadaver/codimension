@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from os.path import isabs, realpath, relpath, sep
 
 # Wall-clock threshold before offering ignore for the hot directory.
@@ -44,6 +44,43 @@ def project_relative_dir(project_dir: str, absolute_dir: str) -> str | None:
     return relative.replace("\\", "/")
 
 
+def ancestor_chain(relative_dir: str) -> list[str]:
+    """Return ancestors from top-level to ``relative_dir`` (inclusive).
+
+    ``workbench/tools/foo`` → ``["workbench", "workbench/tools", "workbench/tools/foo"]``.
+    """
+    text = relative_dir.replace("\\", "/").strip().strip("/")
+    if not text:
+        return []
+    parts = [p for p in text.split("/") if p and p != "."]
+    if not parts:
+        return []
+    return ["/".join(parts[: index + 1]) for index in range(len(parts))]
+
+
+def is_covered_by_excludes(relative_dir: str, excludes: Sequence[str]) -> bool:
+    """True if ``relative_dir`` equals or is under an already excluded relative path."""
+    rel = relative_dir.replace("\\", "/").strip().strip("/")
+    if not rel:
+        return False
+    for raw in excludes:
+        ex = str(raw).replace("\\", "/").strip().strip("/")
+        if not ex:
+            continue
+        if rel == ex or rel.startswith(ex + "/"):
+            return True
+    return False
+
+
+def prompt_ancestor_candidates(hot_relative: str, analysis_excludes: Sequence[str]) -> list[str]:
+    """Ancestors of the hot dir that are not already covered by analysis excludes.
+
+    Top-level comes first so the dialog can default to excluding the whole tree
+    that contains the hot leaf (e.g. ``workbench``), not a random nested folder.
+    """
+    return [path for path in ancestor_chain(hot_relative) if not is_covered_by_excludes(path, analysis_excludes)]
+
+
 def merge_unique_paths(existing: Sequence[str], additions: Sequence[str]) -> list[str]:
     """Append new relative/absolute path strings without duplicates (order preserved)."""
     result: list[str] = []
@@ -58,16 +95,19 @@ def merge_unique_paths(existing: Sequence[str], additions: Sequence[str]) -> lis
 
 
 def merge_prompt_seen(existing: Sequence[str], offered: Sequence[str]) -> list[str]:
-    """Union of previously seen names and names offered in the latest prompt."""
+    """Union of previously recorded prompt paths and newly accepted ones."""
     return merge_unique_paths(existing, offered)
 
 
-def is_prompt_seen(path: str, seen: Iterable[str]) -> bool:
-    """True if ``path`` was already offered in a slow-scan prompt."""
-    text = str(path).strip()
+def normalize_exclude_path(project_dir: str, path: str) -> str:
+    """Prefer project-relative form for persistence when ``path`` is under the project."""
+    text = path.strip()
     if not text:
-        return True
-    return text in {str(item).strip() for item in seen if str(item).strip()}
+        return text
+    if isabs(text):
+        relative = project_relative_dir(project_dir, text)
+        return relative if relative is not None else realpath(text)
+    return text.replace("\\", "/")
 
 
 class ScanDirectoryTracker:
@@ -113,14 +153,3 @@ class ScanDirectoryTracker:
                 best_s = seconds
                 best_path = path if path.endswith(sep) else path + sep
         return best_path or None
-
-
-def normalize_exclude_path(project_dir: str, path: str) -> str:
-    """Prefer project-relative form for persistence when ``path`` is under the project."""
-    text = path.strip()
-    if not text:
-        return text
-    if isabs(text):
-        relative = project_relative_dir(project_dir, text)
-        return relative if relative is not None else realpath(text)
-    return text.replace("\\", "/")

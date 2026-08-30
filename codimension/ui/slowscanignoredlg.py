@@ -9,12 +9,13 @@
 # (at your option) any later version.
 #
 
-"""Dialog: optionally exclude the directory that is delaying a slow project scan."""
+"""Dialog: optionally exclude an ancestor of the directory delaying a slow scan."""
 
 from __future__ import annotations
 
 from .qt import (
     QCheckBox,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
@@ -25,20 +26,22 @@ from .qt import (
 
 
 class SlowScanIgnoreDialog(QDialog):
-    """Offer optional excludes for the hot directory delaying the project scan.
+    """Offer optional excludes for an ancestor of the hot scan directory.
 
-    Checkboxes start unchecked (no recommendation applied yet). **Accept** is
-    enabled only after at least one checkbox is checked and applies those
-    excludes then rescans. **Continue** always dismisses without applying
-    changes (scan keeps going).
+    Candidates are ordered top-level → hot leaf. The top-level entry is selected
+    by default. Checkboxes start unchecked; **Accept** enables only after at
+    least one checkbox is checked. **Continue** dismisses without applying
+    excludes (and does not permanently suppress the top-level ancestor).
     """
 
-    def __init__(self, relative_dir: str, parent=None):
+    def __init__(self, ancestors: list[str], *, hot_path: str = "", parent=None):
         QDialog.__init__(self, parent)
+        if not ancestors:
+            raise ValueError("ancestors must be non-empty")
         self.setWindowTitle("Slow project scan")
         self.setModal(True)
-        self.resize(520, 220)
-        self.__relative_dir = relative_dir
+        self.resize(560, 260)
+        self.__ancestors = list(ancestors)
 
         layout = QVBoxLayout(self)
         layout.addWidget(
@@ -47,9 +50,21 @@ class SlowScanIgnoreDialog(QDialog):
                 self,
             )
         )
-        path_label = QLabel(relative_dir, self)
-        path_label.setWordWrap(True)
-        layout.addWidget(path_label)
+        hot_label = QLabel(hot_path or ancestors[-1], self)
+        hot_label.setWordWrap(True)
+        layout.addWidget(hot_label)
+
+        layout.addWidget(
+            QLabel(
+                "Choose which directory to exclude (top-level is recommended):",
+                self,
+            )
+        )
+        self.pathCombo = QComboBox(self)
+        for path in self.__ancestors:
+            self.pathCombo.addItem(path)
+        self.pathCombo.setCurrentIndex(0)
+        layout.addWidget(self.pathCombo)
 
         checks = QHBoxLayout()
         self.analysisCheck = QCheckBox("Exclude from analysis", self)
@@ -95,12 +110,19 @@ class SlowScanIgnoreDialog(QDialog):
         """True when Accept can apply at least one selected exclude option."""
         return self.__acceptButton.isEnabled()
 
+    def selectedDirectory(self) -> str:
+        """Relative directory currently chosen in the ancestor combo."""
+        return self.pathCombo.currentText().strip()
+
     def selectedExcludes(self) -> tuple[list[str], list[str]]:
-        """Return ``(excludeFromAnalysis, excludeFromProjectTree)`` for this directory."""
+        """Return ``(excludeFromAnalysis, excludeFromProjectTree)`` for the choice."""
+        relative_dir = self.selectedDirectory()
         analysis: list[str] = []
         tree: list[str] = []
+        if not relative_dir:
+            return analysis, tree
         if self.analysisCheck.isChecked():
-            analysis.append(self.__relative_dir)
+            analysis.append(relative_dir)
         if self.treeCheck.isChecked():
-            tree.append(self.__relative_dir)
+            tree.append(relative_dir)
         return analysis, tree
