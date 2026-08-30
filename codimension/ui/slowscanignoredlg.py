@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Dialog: ignore the directory that is delaying a slow project scan."""
+"""Dialog: optionally exclude the directory that is delaying a slow project scan."""
 
 from __future__ import annotations
 
@@ -19,18 +19,25 @@ from .qt import (
     QDialogButtonBox,
     QHBoxLayout,
     QLabel,
+    QPushButton,
     QVBoxLayout,
 )
 
 
 class SlowScanIgnoreDialog(QDialog):
-    """Offer to ignore the hot directory delaying the project scan."""
+    """Offer optional excludes for the hot directory delaying the project scan.
+
+    Checkboxes start unchecked (no recommendation applied yet). **Accept** is
+    enabled only after at least one checkbox is checked and applies those
+    excludes then rescans. **Continue** always dismisses without applying
+    changes (scan keeps going).
+    """
 
     def __init__(self, relative_dir: str, parent=None):
         QDialog.__init__(self, parent)
         self.setWindowTitle("Slow project scan")
         self.setModal(True)
-        self.resize(520, 200)
+        self.resize(520, 220)
         self.__relative_dir = relative_dir
 
         layout = QVBoxLayout(self)
@@ -46,10 +53,10 @@ class SlowScanIgnoreDialog(QDialog):
 
         checks = QHBoxLayout()
         self.analysisCheck = QCheckBox("Exclude from analysis", self)
-        self.analysisCheck.setChecked(True)
+        self.analysisCheck.setChecked(False)
         self.analysisCheck.setToolTip("Exclude from analysis / filesList / watcher")
         self.treeCheck = QCheckBox("Hide from project tree", self)
-        self.treeCheck.setChecked(True)
+        self.treeCheck.setChecked(False)
         self.treeCheck.setToolTip("Hide from Project tree UI")
         checks.addWidget(self.analysisCheck)
         checks.addWidget(self.treeCheck)
@@ -58,19 +65,35 @@ class SlowScanIgnoreDialog(QDialog):
 
         layout.addWidget(
             QLabel(
-                "You can change excludes later in Project Properties.",
+                "Accept applies the selected options and rescans. "
+                "Continue leaves excludes unchanged and keeps scanning. "
+                "You can edit excludes later in Project Properties.",
                 self,
             )
         )
 
         buttons = QDialogButtonBox(self)
-        ignore_btn = buttons.addButton("Ignore and rescan", QDialogButtonBox.AcceptRole)
-        continue_btn = buttons.addButton("Continue scanning", QDialogButtonBox.RejectRole)
-        assert ignore_btn is not None
-        assert continue_btn is not None
-        ignore_btn.clicked.connect(self.accept)
-        continue_btn.clicked.connect(self.reject)
+        accept_btn = buttons.addButton("Accept", QDialogButtonBox.AcceptRole)
+        continue_btn = buttons.addButton("Continue", QDialogButtonBox.RejectRole)
+        assert isinstance(accept_btn, QPushButton)
+        assert isinstance(continue_btn, QPushButton)
+        self.__acceptButton: QPushButton = accept_btn
+        self.__continueButton: QPushButton = continue_btn
+        self.__acceptButton.setEnabled(False)
+        self.__acceptButton.clicked.connect(self.accept)
+        self.__continueButton.clicked.connect(self.reject)
         layout.addWidget(buttons)
+
+        self.analysisCheck.toggled.connect(self.__onCheckboxToggled)
+        self.treeCheck.toggled.connect(self.__onCheckboxToggled)
+
+    def __onCheckboxToggled(self, _checked: bool = False) -> None:
+        """Enable Accept only when at least one exclude option is selected."""
+        self.__acceptButton.setEnabled(self.analysisCheck.isChecked() or self.treeCheck.isChecked())
+
+    def isAcceptEnabled(self) -> bool:
+        """True when Accept can apply at least one selected exclude option."""
+        return self.__acceptButton.isEnabled()
 
     def selectedExcludes(self) -> tuple[list[str], list[str]]:
         """Return ``(excludeFromAnalysis, excludeFromProjectTree)`` for this directory."""
