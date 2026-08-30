@@ -19,7 +19,7 @@
 
 """Compatibility shim for pkg_resources (removed in setuptools 82+).
 
-Provides get_distribution() and DistributionNotFound for plugins (cdmpylintplugin)
+Provides get_distribution() and DistributionNotFound for plugins (pylint wizard)
 that still rely on pkg_resources.
 """
 

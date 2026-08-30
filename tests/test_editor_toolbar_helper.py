@@ -50,3 +50,14 @@ def test_stale_current_when_tab_missing_toolbar() -> None:
 
 def test_toolbar_action_none_without_toolbar() -> None:
     assert toolbar_action(_FakeWelcome(), "coverage") is None
+
+
+def test_import_diagram_current_returns_none() -> None:
+    """Import diagram tabs expose no editor toolbar (pylint crash regression)."""
+
+    class _FakeImportDgm:
+        def getType(self):
+            return MainWindowTabWidgetBase.GeneratedDiagram
+
+    assert plain_text_editor_with_toolbar(None, current_widget=_FakeImportDgm()) is None
+    assert toolbar_action(_FakeImportDgm(), "pylint") is None

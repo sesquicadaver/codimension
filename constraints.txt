@@ -11,7 +11,6 @@ bcrypt==5.0.0
 boolean.py==5.0
 CacheControl==0.14.4
 cdmgcplugin==1.0.4
-cdmpylintplugin==1.0.4
 cdmsysinfoplugin==1.0.0
 certifi==2026.7.22
 cffi==2.1.1

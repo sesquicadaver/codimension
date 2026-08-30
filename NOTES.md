@@ -42,7 +42,7 @@ Help у IDE: [doc/user/index.md](doc/user/index.md).
 
 ## pylint / wrapt на Python 3.11+
 
-`cdmpylintplugin` тягне `pylint==2.5.3` → `astroid==2.5` → `wrapt==1.12.1`
+Bundled ``cdmplugins.pylint`` pulls ``pylint==2.5.3`` → `astroid==2.5` → `wrapt==1.12.1`
 (pin у `constraints.txt`, щоб `pip install -c` резолвився). Wrapt 1.12
 імпортує видалений `inspect.formatargspec`. **R197:** shim
 `codimension.inspect_compat` відновлює API при `import codimension` /

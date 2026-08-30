@@ -2,7 +2,7 @@
 # Used by setup.py install_requires. Full local/CI convenience: requirements.txt
 setuptools>=65.0; python_version >= '3.12'
 cdmgcplugin>=1.0.4
-cdmpylintplugin>=1.0.4
+pylint==2.5.3
 cdmsysinfoplugin>=1.0.0
 pyflakes>=2.1.1
 flake8>=3.7.7

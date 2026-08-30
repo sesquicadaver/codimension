@@ -38,7 +38,7 @@ import traceback
 import warnings
 from optparse import OptionParser
 
-# Suppress pkg_resources deprecation from external plugins (cdmpylintplugin, etc.)
+# Suppress pkg_resources deprecation from plugins (pylint wizard, etc.)
 warnings.filterwarnings("ignore", message=".*pkg_resources.*deprecated.*", category=UserWarning)
 
 # Workaround if link is used

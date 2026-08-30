@@ -1,5 +1,8 @@
 2026 Aug 30
 
+* Fix: bundle pylint wizard as ``cdmplugins.pylint`` 1.0.5 — skip toolbar
+  updates when current tab is Import diagram / non-editor (same
+  ``editor_toolbar`` guard as coverage/ruff); drop ``cdmpylintplugin`` dep
 * Fix: qutepart whitespace paint ``drawLine`` TypeError (float mid-Y on
   Python 3 / PyQt5) — coerce coords in ``QutepartWrapper``
 * Fix: ``ImportResolution.getVisibleName`` used ``ImportWhat`` objects in

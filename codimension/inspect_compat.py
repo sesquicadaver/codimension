@@ -7,7 +7,7 @@
 
 """Restore ``inspect.formatargspec`` so wrapt 1.12 (astroid 2.5) imports on 3.11+.
 
-``cdmpylintplugin`` pins ``pylint==2.5.3`` → ``astroid==2.5`` → ``wrapt<1.13``.
+``pylint==2.5.3`` (bundled ``cdmplugins.pylint``) → ``astroid==2.5`` → ``wrapt<1.13``.
 That wrapt release does ``from inspect import formatargspec``, which was removed
 in Python 3.11. R197 keeps ``wrapt==1.12.1`` in ``constraints.txt`` (so
 ``pip install -c`` resolves) and applies this shim instead of a manual
