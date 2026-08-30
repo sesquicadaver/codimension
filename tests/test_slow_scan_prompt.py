@@ -230,5 +230,28 @@ def test_update_properties_preserves_slow_scan_seen(tmp_path: Path, monkeypatch)
     assert project.props["version"] == "9.9"
 
 
+def test_slow_scan_dialog_accept_requires_checkbox(qtbot) -> None:
+    """Accept stays disabled until at least one checkbox is checked."""
+    import os
+
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    pytest.importorskip("PyQt5")
+    _purge_stub_ui_for_project()
+    from ui.slowscanignoredlg import SlowScanIgnoreDialog
+
+    dlg = SlowScanIgnoreDialog("workbench/tools")
+    qtbot.addWidget(dlg)
+    assert not dlg.analysisCheck.isChecked()
+    assert not dlg.treeCheck.isChecked()
+    assert not dlg.isAcceptEnabled()
+    dlg.analysisCheck.setChecked(True)
+    assert dlg.isAcceptEnabled()
+    dlg.analysisCheck.setChecked(False)
+    assert not dlg.isAcceptEnabled()
+    dlg.treeCheck.setChecked(True)
+    assert dlg.isAcceptEnabled()
+    assert dlg.selectedExcludes() == ([], ["workbench/tools"])
+
+
 def test_slow_scan_threshold_constant() -> None:
     assert SLOW_SCAN_PROMPT_MS == 30_000
