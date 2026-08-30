@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - polyglot language service contracts (R200/R203/R205)
+# codimension - polyglot language service contracts (R200–R206)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,20 +9,21 @@
 # (at your option) any later version.
 #
 
-"""LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200–R205).
+"""LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200–R206).
 
 Qt-free polyglot attach points. Document buffers / position codec are R201;
 LSP stdio process client is R202; Rust/C++ descriptors + SemanticProvider are
-R203; Tree-sitter StructuralProvider is R205. UI must query
-:class:`LanguageCapability`, never ``if language == …``.
+R203; Tree-sitter StructuralProvider is R205; BindingProvider / FFI_BINDINGS
+are R206. UI must query :class:`LanguageCapability`, never ``if language == …``.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Protocol, runtime_checkable
+from typing import Protocol, Sequence, runtime_checkable
 
+from .bindings import BindingProvider
 from .semantic import SemanticProvider
 from .structural import StructuralProvider
 
@@ -63,8 +64,8 @@ class LanguageDescriptor:
 class LanguageService:
     """Registered language surface: descriptor + capabilities + optional providers.
 
-    Provider slots stay ``None`` / empty until later R-tasks (FFI, tasks).
-    R203 fills ``semantic`` for Rust/C++ via LSP; R205 fills ``structural``.
+    Provider slots stay ``None`` / empty until later R-tasks (tasks).
+    R203 fills ``semantic``; R205 fills ``structural``; R206 fills ``bindings``.
     """
 
     descriptor: LanguageDescriptor
@@ -72,7 +73,7 @@ class LanguageService:
     service_id: str = ""
     semantic: SemanticProvider | None = None
     structural: StructuralProvider | None = None
-    bindings: tuple[object, ...] = ()
+    bindings: tuple[BindingProvider, ...] = ()
     tasks: object | None = None
 
     def __post_init__(self) -> None:
@@ -157,41 +158,60 @@ def make_python_language_service() -> LanguageService:
     )
 
 
-def _with_structural_capability(
+def _with_provider_capabilities(
     base: frozenset[LanguageCapability],
-    structural: StructuralProvider | None,
+    *,
+    structural: StructuralProvider | None = None,
+    bindings: Sequence[BindingProvider] = (),
 ) -> frozenset[LanguageCapability]:
-    """Advertise STRUCTURAL_GRAPH only when a structural provider is bound."""
-    if structural is None:
-        return base
-    return frozenset(base | {LanguageCapability.STRUCTURAL_GRAPH})
+    """Advertise STRUCTURAL_GRAPH / FFI_BINDINGS when providers are bound."""
+    caps = set(base)
+    if structural is not None:
+        caps.add(LanguageCapability.STRUCTURAL_GRAPH)
+    if bindings:
+        caps.add(LanguageCapability.FFI_BINDINGS)
+    return frozenset(caps)
 
 
 def make_rust_language_service(
     semantic: SemanticProvider | None = None,
     structural: StructuralProvider | None = None,
+    bindings: Sequence[BindingProvider] = (),
 ) -> LanguageService:
-    """Return a Rust language service (LSP semantic + optional Tree-sitter)."""
+    """Return a Rust language service (LSP + optional Tree-sitter / FFI)."""
+    bound = tuple(bindings)
     return LanguageService(
         descriptor=RUST_DESCRIPTOR,
-        capabilities=_with_structural_capability(LSP_EDITOR_CAPABILITIES, structural),
+        capabilities=_with_provider_capabilities(
+            LSP_EDITOR_CAPABILITIES,
+            structural=structural,
+            bindings=bound,
+        ),
         service_id="rust.lsp",
         semantic=semantic,
         structural=structural,
+        bindings=bound,
     )
 
 
 def make_cpp_language_service(
     semantic: SemanticProvider | None = None,
     structural: StructuralProvider | None = None,
+    bindings: Sequence[BindingProvider] = (),
 ) -> LanguageService:
-    """Return a C++ language service (LSP semantic + optional Tree-sitter)."""
+    """Return a C++ language service (LSP + optional Tree-sitter / FFI)."""
+    bound = tuple(bindings)
     return LanguageService(
         descriptor=CPP_DESCRIPTOR,
-        capabilities=_with_structural_capability(LSP_EDITOR_CAPABILITIES, structural),
+        capabilities=_with_provider_capabilities(
+            LSP_EDITOR_CAPABILITIES,
+            structural=structural,
+            bindings=bound,
+        ),
         service_id="cpp.lsp",
         semantic=semantic,
         structural=structural,
+        bindings=bound,
     )
 
 

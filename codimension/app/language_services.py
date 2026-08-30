@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - language services manager (R200–R205)
+# codimension - language services manager (R200–R206)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LanguageServiceManager — lifecycle façade for polyglot services (R200–R205).
+"""LanguageServiceManager — lifecycle façade for polyglot services (R200–R206).
 
 Headless: no Qt. When ``FLAG_LANGUAGE_SERVICES`` is off, :meth:`ensure_defaults`
 is a no-op (empty registry). When on, registers the Python headless stub.
@@ -17,13 +17,15 @@ Owns an :class:`~infrastructure.lsp_process.LspProcessRegistry` shut down on
 workspace unload. Rust/C++ LSP services are registered explicitly via
 :meth:`register_rust_lsp` / :meth:`register_cpp_lsp` (spawn-gated allowlist).
 Tree-sitter structural providers attach via ``attach_structural=True`` (R205)
-when grammars are installed.
+when grammars are installed. FFI binding providers attach via
+``attach_bindings=True`` (R206).
 """
 
 from __future__ import annotations
 
 from typing import Iterable, Mapping, Optional, Sequence
 
+from core.bindings import BindingProvider
 from core.feature_flags import (
     FLAG_LANGUAGE_SERVICES,
     FeatureFlagsStore,
@@ -40,6 +42,11 @@ from core.language_workspace import (
     assess_rust_semantic_readiness,
 )
 from core.structural import StructuralProvider
+from infrastructure.ffi_bindings import (
+    CPythonBindingProvider,
+    Pybind11BindingProvider,
+    PyO3BindingProvider,
+)
 from infrastructure.lsp_process import LspProcessRegistry
 from infrastructure.lsp_semantic import (
     build_clangd_semantic_provider,
@@ -105,6 +112,18 @@ class LanguageServiceManager:
             return None
         return try_build_tree_sitter_structural_provider(language_id)
 
+    @staticmethod
+    def _optional_bindings(language_id: str, attach: bool) -> tuple[BindingProvider, ...]:
+        """Return framework extractors for ``language_id`` when requested."""
+        if not attach:
+            return ()
+        lid = language_id.strip().lower()
+        if lid == "rust":
+            return (PyO3BindingProvider(),)
+        if lid == "cpp":
+            return (Pybind11BindingProvider(), CPythonBindingProvider())
+        return ()
+
     def register_rust_lsp(
         self,
         workspace_root: str,
@@ -114,13 +133,13 @@ class LanguageServiceManager:
         extra_args: Sequence[str] = (),
         toolchain: str = "",
         attach_structural: bool = True,
+        attach_bindings: bool = True,
     ) -> str:
         """Register ``rust.lsp`` with rust-analyzer semantic provider.
 
         Readiness is READY when ``Cargo.toml`` / ``rust-project.json`` exists
-        at ``workspace_root``, else DEGRADED. When ``attach_structural`` is
-        True and Tree-sitter grammars are installed, also binds a structural
-        provider and advertises ``STRUCTURAL_GRAPH``.
+        at ``workspace_root``, else DEGRADED. Optional Tree-sitter /
+        PyO3 binding providers advertise ``STRUCTURAL_GRAPH`` / ``FFI_BINDINGS``.
         """
         readiness = assess_rust_semantic_readiness(workspace_root)
         semantic = build_rust_semantic_provider(
@@ -133,7 +152,12 @@ class LanguageServiceManager:
             toolchain=toolchain,
         )
         structural = self._optional_structural("rust", attach_structural)
-        service = make_rust_language_service(semantic=semantic, structural=structural)
+        bindings = self._optional_bindings("rust", attach_bindings)
+        service = make_rust_language_service(
+            semantic=semantic,
+            structural=structural,
+            bindings=bindings,
+        )
         self._registry.register(service)
         return str(service.service_id)
 
@@ -146,12 +170,13 @@ class LanguageServiceManager:
         extra_args: Sequence[str] = (),
         toolchain: str = "",
         attach_structural: bool = True,
+        attach_bindings: bool = True,
     ) -> str:
         """Register ``cpp.lsp`` with clangd semantic provider.
 
         Readiness is READY only when ``compile_commands.json`` is found;
-        otherwise DEGRADED (no full-diagnostics claim). Optional Tree-sitter
-        structural attach mirrors :meth:`register_rust_lsp`.
+        otherwise DEGRADED (no full-diagnostics claim). Optional Tree-sitter /
+        pybind11+CPython binding attach mirrors :meth:`register_rust_lsp`.
         """
         readiness = assess_cpp_semantic_readiness(workspace_root)
         semantic = build_clangd_semantic_provider(
@@ -164,7 +189,12 @@ class LanguageServiceManager:
             toolchain=toolchain,
         )
         structural = self._optional_structural("cpp", attach_structural)
-        service = make_cpp_language_service(semantic=semantic, structural=structural)
+        bindings = self._optional_bindings("cpp", attach_bindings)
+        service = make_cpp_language_service(
+            semantic=semantic,
+            structural=structural,
+            bindings=bindings,
+        )
         self._registry.register(service)
         return str(service.service_id)
 

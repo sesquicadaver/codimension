@@ -148,7 +148,7 @@
 | 15 | R203 | Polyglot: Rust/C++ descriptors + SemanticProvider (LSP) | rust-analyzer / clangd; `compile_commands.json` → READY інакше DEGRADED (без претензії на повні diagnostics) | L | DONE ([#135](https://github.com/sesquicadaver/codimension/pull/135)) |
 | 16 | R204 | Polyglot: UI language controller (capability-driven) | Diagnostics / outline / hover / definition / references / format / rename-preview; без `if language == …` | L | DONE ([#137](https://github.com/sesquicadaver/codimension/pull/137)) |
 | 17 | R205 | Polyglot: Tree-sitter StructuralGraph (Rust+C++) | StructuralGraph + `semantic_role`; **не** compiler CFG | L | DONE ([#139](https://github.com/sesquicadaver/codimension/pull/139)) |
-| 18 | R206 | Polyglot: BindingIndex + PyO3 / pybind11 / CPython + `.pyi` | Лише evidence-backed FFI edges (без exact edge за однаковістю імен) | L | OPEN |
+| 18 | R206 | Polyglot: BindingIndex + PyO3 / pybind11 / CPython + `.pyi` | Лише evidence-backed FFI edges (без exact edge за однаковістю імен) | L | DONE |
 | 19 | R207 | Polyglot: DependencyEdgeKind + cross-language navigation | Узагальнені edges включно з FFI; навігація через мовну межу | M | OPEN |
 | 20 | R208 | Polyglot: Cargo / CMake / Ninja / CTest TaskProviders | Лише explicit tasks (не при відкритті файла); не через clangd/rust-analyzer як build runners | M | OPEN |
 
@@ -156,7 +156,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R206** (BindingIndex + PyO3 / pybind11 / CPython + `.pyi`).
+**Наступний OPEN:** **R207** (DependencyEdgeKind + cross-language navigation).
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
