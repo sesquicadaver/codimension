@@ -1,5 +1,7 @@
 2026 Aug 30
 
+* Slow-scan: offer ancestor chain (top-level default); Continue no longer
+  permanently suppresses paths via ``slowScanPromptSeen``
 * Slow-scan dialog UX: English Accept/Continue; checkboxes off by default;
   Accept enabled only after a checkbox change; Continue never applies excludes
 * Slow-scan prompt: offer the **hot** directory (where walk dwell time is highest),
