@@ -25,9 +25,23 @@ import re
 import socket
 import urllib.request
 
-from editor.qutepart_compat import int_draw_line_args
-from qutepart import Qutepart
-from ui.qt import QApplication, QCursor, QDesktopServices, QPainter, QPalette, Qt, QTextCursor, QUrl, pyqtSignal
+from editor.qutepart_compat import int_coords
+from qutepart import Qutepart, iterateBlocksFrom
+from ui.qt import (
+    QApplication,
+    QBrush,
+    QColor,
+    QCursor,
+    QDesktopServices,
+    QPainter,
+    QPalette,
+    QPen,
+    QRect,
+    Qt,
+    QTextCursor,
+    QUrl,
+    pyqtSignal,
+)
 from utils.colorfont import getZoomedMonoFont
 from utils.encoding import decodeURLContent
 from utils.globals import GlobalData
@@ -59,20 +73,102 @@ class QutepartWrapper(Qutepart):
         self.textChanged.connect(self.__resetMatchCache)
 
     def _drawIndentMarkersAndEdge(self, paintEventRect):
-        """Draw indent markers; harden qutepart against float drawLine coords."""
-        # At termination the indenter is cleared; paint may still arrive.
+        """Draw indent markers; cast float mid-Y to int (no QPainter.drawLine patch).
+
+        Upstream qutepart uses ``(top+bottom)/2`` → float on Python 3. Patching
+        ``QPainter.drawLine`` to coerce ints permanently breaks PyQt5 sip
+        overloads for ``QLineF`` (flow UI), so we override this method instead.
+        """
         if getattr(self, "_indenter", None) is None:
             return
-        original = QPainter.drawLine
 
-        def _safe_draw_line(painter, *args):
-            return original(painter, *int_draw_line_args(args))
+        painter = QPainter(self.viewport())
+        # Name-mangled private on the Qutepart base class.
+        cursor_rect = self._Qutepart__cursorRect
 
-        QPainter.drawLine = _safe_draw_line
-        try:
-            Qutepart._drawIndentMarkersAndEdge(self, paintEventRect)
-        finally:
-            QPainter.drawLine = original
+        def drawWhiteSpace(block, column, char):
+            leftCursorRect = cursor_rect(block, column, 0)
+            rightCursorRect = cursor_rect(block, column + 1, 0)
+            if leftCursorRect.top() == rightCursorRect.top():
+                middleHeight = int((leftCursorRect.top() + leftCursorRect.bottom()) / 2)
+                if char == " ":
+                    painter.setPen(Qt.transparent)
+                    painter.setBrush(QBrush(Qt.gray))
+                    xPos = int((leftCursorRect.x() + rightCursorRect.x()) / 2)
+                    painter.drawRect(QRect(xPos, middleHeight, 2, 2))
+                else:
+                    painter.setPen(QColor(Qt.gray).lighter(factor=120))
+                    x1, y1, x2, y2 = int_coords(
+                        leftCursorRect.x() + 3,
+                        middleHeight,
+                        rightCursorRect.x() - 3,
+                        middleHeight,
+                    )
+                    painter.drawLine(x1, y1, x2, y2)
+
+        def effectiveEdgePos(text):
+            if self._lineLengthEdge is None:
+                return -1
+
+            tabExtraWidth = self.indentWidth - 1
+            fullWidth = len(text) + (text.count("\t") * tabExtraWidth)
+            if fullWidth <= self._lineLengthEdge:
+                return -1
+
+            currentWidth = 0
+            for pos, char in enumerate(text):
+                if char == "\t":
+                    currentWidth += self.indentWidth - (currentWidth % self.indentWidth)
+                else:
+                    currentWidth += 1
+                if currentWidth > self._lineLengthEdge:
+                    return pos
+            return -1
+
+        def drawEdgeLine(block, edgePos):
+            painter.setPen(QPen(QBrush(self._lineLengthEdgeColor), 0))
+            rect = cursor_rect(block, edgePos, 0)
+            painter.drawLine(rect.topLeft(), rect.bottomLeft())
+
+        def drawIndentMarker(block, column):
+            painter.setPen(QColor(Qt.blue).lighter())
+            rect = cursor_rect(block, column, offset=0)
+            painter.drawLine(rect.topLeft(), rect.bottomLeft())
+
+        indentWidthChars = len(self._indenter.text())
+        cursorPos = self.cursorPosition
+
+        for block in iterateBlocksFrom(self.firstVisibleBlock()):
+            blockGeometry = self.blockBoundingGeometry(block).translated(self.contentOffset())
+            if blockGeometry.top() > paintEventRect.bottom():
+                break
+
+            if block.isVisible() and blockGeometry.toRect().intersects(paintEventRect):
+                if self._drawIndentations:
+                    text = block.text()
+                    if not self.drawAnyWhitespace:
+                        column = indentWidthChars
+                        while (
+                            text.startswith(self._indenter.text())
+                            and len(text) > indentWidthChars
+                            and text[indentWidthChars].isspace()
+                        ):
+                            if column != self._lineLengthEdge and (block.blockNumber(), column) != cursorPos:
+                                drawIndentMarker(block, column)
+
+                            text = text[indentWidthChars:]
+                            column += indentWidthChars
+
+                if not self._drawSolidEdge:
+                    edgePos = effectiveEdgePos(block.text())
+                    if edgePos != -1 and edgePos != cursorPos[1]:
+                        drawEdgeLine(block, edgePos)
+
+                if self.drawAnyWhitespace or self.drawIncorrectIndentation:
+                    text = block.text()
+                    for column, draw in enumerate(self._chooseVisibleWhitespace(text)):
+                        if draw:
+                            drawWhiteSpace(block, column, text[column])
 
     def _dropUserExtraSelections(self):
         """Suppressing highlight removal when the text is changed"""

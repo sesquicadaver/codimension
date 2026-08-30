@@ -1,5 +1,8 @@
 2026 Aug 30
 
+* Fix: stop monkeypatching ``QPainter.drawLine`` (sip ``QLineF`` overloads
+  stay broken after restore → flow UI ``scopeitems``/``items`` paint crash);
+  override qutepart indent paint with ``int`` coords instead
 * Fix: bundle pylint wizard as ``cdmplugins.pylint`` 1.0.5 — skip toolbar
   updates when current tab is Import diagram / non-editor (same
   ``editor_toolbar`` guard as coverage/ruff); drop ``cdmpylintplugin`` dep

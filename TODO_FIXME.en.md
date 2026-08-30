@@ -14,7 +14,8 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | UX-SCAN | Slow scan of huge trees with no ignore offer | P2 | ✅ 30s prompt + `excludeFromProjectTree` |
-| UX-DRAWLINE | qutepart whitespace paint: `drawLine` float mid-Y → TypeError (PyQt5) | P1 | ✅ `int_draw_line_args` + `QutepartWrapper` patch |
+| UX-DRAWLINE | qutepart whitespace paint: `drawLine` float mid-Y → TypeError (PyQt5) | P1 | ✅ override paint (no QPainter monkeypatch; sip QLineF safe) |
+| UX-DRAWLINE2 | After #152 monkeypatch, flow UI `painter.drawLine(QLineF)` → unbound TypeError | P0 | ✅ remove monkeypatch; int coords in override |
 | UX-PYLINT-TB | pylint `sigFileTypeChanged` → `ImportDgmTabWidget` has no `toolbar` | P1 | ✅ bundled pylint 1.0.5 + `editor_toolbar` |
 
 | ID | Issue | Priority | Status |
