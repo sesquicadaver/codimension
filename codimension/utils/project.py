@@ -49,10 +49,12 @@ from .searchenv import SearchEnvironment
 from .settings import SETTINGS_DIR, Settings
 from .slow_scan_prompt import (
     SLOW_SCAN_PROMPT_MS,
-    filter_unseen_dir_names,
-    list_top_level_dir_names,
+    ScanDirectoryTracker,
+    is_prompt_seen,
     merge_prompt_seen,
     merge_unique_paths,
+    normalize_exclude_path,
+    project_relative_dir,
 )
 from .userencodings import FileEncodings
 from .venvutils import getProjectVenvDir
@@ -83,6 +85,11 @@ class _ProjectScanThread(QThread):
         self._exclude_paths = exclude_paths
         self._venv_dir = venv_dir
         self._generation = generation
+        self._tracker = ScanDirectoryTracker(project_dir)
+
+    def hotDirectory(self) -> str | None:
+        """Absolute hot directory delaying the scan (thread-safe read under GIL)."""
+        return self._tracker.hot_directory()
 
     def run(self):
         """Scan project tree off the GUI thread with cooperative cancel (B03)."""
@@ -93,6 +100,7 @@ class _ProjectScanThread(QThread):
                 exclude_absolute_paths=self._exclude_paths,
                 venv_dir=self._venv_dir,
                 should_cancel=self.isInterruptionRequested,
+                on_directory=self._tracker.note,
             )
         except ScanCancelled:
             return
@@ -120,7 +128,7 @@ _DEFAULT_PROJECT_PROPS = {
     "importdirs": [],
     "excludeFromAnalysis": [],  # Dirs/files to exclude from analysis / scan
     "excludeFromProjectTree": [],  # Dirs/files hidden in Project tree UI
-    "slowScanPromptSeen": [],  # Top-level dirs already offered in slow-scan prompt
+    "slowScanPromptSeen": [],  # Relative dirs already offered in slow-scan prompt
     "encoding": "",
     "pythoninterpreter": "",
 }  # Optional venv/python path
@@ -518,19 +526,29 @@ class CodimensionProject(
         timer.start(SLOW_SCAN_PROMPT_MS)
 
     def __onSlowScanTimeout(self) -> None:
-        """Offer top-level ignore choices when a background scan exceeds the threshold."""
+        """Offer to ignore the hot directory when a background scan exceeds the threshold."""
         self.__slowScanTimer = None
         if self.__slowScanPromptOpen or not self.isLoaded():
             return
         thread = self.__scanThread
         if thread is None or not thread.isRunning():
             return
-        offered = filter_unseen_dir_names(
-            list_top_level_dir_names(self.getProjectDir(), should_exclude_name=self.shouldExclude),
-            self.props.get("slowScanPromptSeen", []),
-        )
-        if not offered:
+
+        hot_abs = thread.hotDirectory() if hasattr(thread, "hotDirectory") else None
+        if not hot_abs:
+            # Still in the project root or no progress yet — ask again later.
+            self.__armSlowScanTimer()
             return
+        relative = project_relative_dir(self.getProjectDir(), hot_abs)
+        if not relative:
+            self.__armSlowScanTimer()
+            return
+        relative = normalize_exclude_path(self.getProjectDir(), relative)
+        if is_prompt_seen(relative, self.props.get("slowScanPromptSeen", [])):
+            # Same hot dir already dismissed; wait for the walk to move elsewhere.
+            self.__armSlowScanTimer()
+            return
+
         try:
             from ui.slowscanignoredlg import SlowScanIgnoreDialog
         except Exception:
@@ -540,7 +558,7 @@ class CodimensionProject(
         self.__slowScanPromptOpen = True
         try:
             parent = QApplication.activeWindow()
-            dialog = SlowScanIgnoreDialog(offered, parent)
+            dialog = SlowScanIgnoreDialog(relative, parent)
             accepted = dialog.exec_() == QDialog.Accepted
             analysis_sel: list[str] = []
             tree_sel: list[str] = []
@@ -549,9 +567,12 @@ class CodimensionProject(
         finally:
             self.__slowScanPromptOpen = False
 
-        self.props["slowScanPromptSeen"] = merge_prompt_seen(self.props.get("slowScanPromptSeen", []), offered)
+        self.props["slowScanPromptSeen"] = merge_prompt_seen(self.props.get("slowScanPromptSeen", []), [relative])
         if not accepted or (not analysis_sel and not tree_sel):
             self.saveProject()
+            # Keep watching — a deeper / sibling directory may become hot next.
+            if self.__scanThread is not None and self.__scanThread.isRunning():
+                self.__armSlowScanTimer()
             return
 
         self.props["excludeFromAnalysis"] = merge_unique_paths(self.props.get("excludeFromAnalysis", []), analysis_sel)

@@ -1,5 +1,7 @@
 2026 Aug 30
 
+* Slow-scan prompt: offer the **hot** directory (where walk dwell time is highest),
+  not a top-level menu; Continue rearms the 30s timer for the next hot path
 * Slow project scan: after 30s offer top-level ignore dialog (Analysis and/or
   Project tree); persist ``excludeFromProjectTree`` + ``slowScanPromptSeen``;
   migrate tree hide from legacy ``excludeFromAnalysis``

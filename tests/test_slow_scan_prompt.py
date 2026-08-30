@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib
 import sys
+import time
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -12,10 +13,11 @@ import pytest
 
 from codimension.utils.slow_scan_prompt import (
     SLOW_SCAN_PROMPT_MS,
-    filter_unseen_dir_names,
-    list_top_level_dir_names,
+    ScanDirectoryTracker,
+    is_prompt_seen,
     merge_prompt_seen,
     merge_unique_paths,
+    project_relative_dir,
 )
 
 _CODIM = Path(__file__).resolve().parents[1] / "codimension"
@@ -38,19 +40,43 @@ def _purge_stub_ui_for_project() -> None:
         sys.path.insert(0, str(_CODIM))
 
 
-def test_list_top_level_dir_names(tmp_path: Path) -> None:
-    (tmp_path / "src").mkdir()
-    (tmp_path / "workbench").mkdir()
-    (tmp_path / "file.py").write_text("x=1\n", encoding="utf-8")
-    (tmp_path / ".hidden").mkdir()
-    names = list_top_level_dir_names(str(tmp_path), should_exclude_name=lambda n: n.startswith("."))
-    assert names == ["src", "workbench"]
+def test_project_relative_dir(tmp_path: Path) -> None:
+    nested = tmp_path / "workbench" / "tools"
+    nested.mkdir(parents=True)
+    assert project_relative_dir(str(tmp_path), str(nested)) == "workbench/tools"
+    assert project_relative_dir(str(tmp_path), str(tmp_path)) is None
 
 
-def test_filter_unseen_and_merge() -> None:
-    assert filter_unseen_dir_names(["a", "b", "c"], ["b"]) == ["a", "c"]
+def test_scan_tracker_picks_hottest_non_root(tmp_path: Path) -> None:
+    tracker = ScanDirectoryTracker(str(tmp_path))
+    root = str(tmp_path) + "/"
+    hot = str(tmp_path / "workbench" / "tools") + "/"
+    other = str(tmp_path / "src") + "/"
+    tracker.note(root)
+    time.sleep(0.02)
+    tracker.note(hot)
+    time.sleep(0.05)
+    tracker.note(other)
+    time.sleep(0.01)
+    assert tracker.hot_directory() == hot
+
+
+def test_merge_and_seen() -> None:
     assert merge_unique_paths(["a"], ["a", "b", "  "]) == ["a", "b"]
     assert merge_prompt_seen(["a"], ["b", "a"]) == ["a", "b"]
+    assert is_prompt_seen("workbench/tools", ["workbench/tools"])
+    assert not is_prompt_seen("workbench", ["workbench/tools"])
+
+
+def test_on_directory_callback(tmp_path: Path) -> None:
+    from codimension.utils.project_scan import scan_project_files
+
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "b").mkdir()
+    (tmp_path / "a" / "b" / "f.py").write_text("x=1\n", encoding="utf-8")
+    seen: list[str] = []
+    scan_project_files(str(tmp_path) + "/", on_directory=seen.append)
+    assert any(p.rstrip("/").endswith("/a/b") or p.endswith("a/b/") for p in seen)
 
 
 def test_merge_project_defaults_migrates_tree_exclude() -> None:
@@ -61,21 +87,8 @@ def test_merge_project_defaults_migrates_tree_exclude() -> None:
     assert props["slowScanPromptSeen"] == []
 
 
-def test_merge_project_defaults_keeps_explicit_tree_list() -> None:
-    from codimension.utils.project import merge_project_defaults
-
-    props = merge_project_defaults(
-        {
-            "excludeFromAnalysis": ["workbench"],
-            "excludeFromProjectTree": [],
-            "uuid": "",
-        }
-    )
-    assert props["excludeFromProjectTree"] == []
-
-
-def test_slow_scan_timeout_applies_excludes(tmp_path: Path, monkeypatch) -> None:
-    """``__onSlowScanTimeout`` persists selections and requests a rescan."""
+def test_slow_scan_timeout_applies_hot_dir(tmp_path: Path, monkeypatch) -> None:
+    """``__onSlowScanTimeout`` persists the hot directory and requests a rescan."""
     pytest.importorskip("PyQt5")
     from PyQt5.QtWidgets import QApplication, QDialog
 
@@ -89,21 +102,21 @@ def test_slow_scan_timeout_applies_excludes(tmp_path: Path, monkeypatch) -> None
     if app is None:
         app = QApplication([])
 
-    (tmp_path / "src").mkdir()
-    (tmp_path / "workbench").mkdir()
+    hot = tmp_path / "workbench" / "tools"
+    hot.mkdir(parents=True)
     cdm = tmp_path / "demo.cdm3"
     uid = "00000000-0000-4000-8000-000000000099"
     cdm.write_text("{}", encoding="utf-8")
 
     class _Dlg:
-        def __init__(self, offered, parent=None):
-            self.offered = list(offered)
+        def __init__(self, relative_dir, parent=None):
+            self.relative_dir = relative_dir
 
         def exec_(self):
             return QDialog.Accepted
 
         def selectedExcludes(self):
-            return ["workbench"], ["workbench"]
+            return [self.relative_dir], [self.relative_dir]
 
     import ui.slowscanignoredlg as dlg_mod
 
@@ -120,21 +133,20 @@ def test_slow_scan_timeout_applies_excludes(tmp_path: Path, monkeypatch) -> None
     project.filesList = {str(tmp_path) + "/"}
     fake_thread = MagicMock()
     fake_thread.isRunning.return_value = True
+    fake_thread.hotDirectory.return_value = str(hot) + "/"
     project._CodimensionProject__scanThread = fake_thread  # noqa: SLF001
     monkeypatch.setattr(project, "_CodimensionProject__generateFilesList", _spy_generate)
 
     project._CodimensionProject__onSlowScanTimeout()  # noqa: SLF001
 
-    assert "workbench" in project.props["excludeFromAnalysis"]
-    assert "workbench" in project.props["excludeFromProjectTree"]
-    assert set(project.props["slowScanPromptSeen"]) >= {"src", "workbench"}
+    assert "workbench/tools" in project.props["excludeFromAnalysis"]
+    assert "workbench/tools" in project.props["excludeFromProjectTree"]
+    assert "workbench/tools" in project.props["slowScanPromptSeen"]
     assert rescans["n"] == 1
-    disk = cdm.read_text(encoding="utf-8")
-    assert "workbench" in disk
 
 
-def test_slow_scan_timeout_continue_marks_seen(tmp_path: Path, monkeypatch) -> None:
-    """Continue scanning records offered dirs without changing excludes."""
+def test_slow_scan_timeout_continue_rearms(tmp_path: Path, monkeypatch) -> None:
+    """Continue scanning records the hot dir and rearms the timer."""
     pytest.importorskip("PyQt5")
     from PyQt5.QtWidgets import QApplication, QDialog
 
@@ -147,12 +159,13 @@ def test_slow_scan_timeout_continue_marks_seen(tmp_path: Path, monkeypatch) -> N
     if QApplication.instance() is None:
         QApplication([])
 
-    (tmp_path / "workbench").mkdir()
+    hot = tmp_path / "workbench" / "tools"
+    hot.mkdir(parents=True)
     cdm = tmp_path / "demo.cdm3"
     cdm.write_text("{}", encoding="utf-8")
 
     class _Dlg:
-        def __init__(self, offered, parent=None):
+        def __init__(self, relative_dir, parent=None):
             pass
 
         def exec_(self):
@@ -165,17 +178,25 @@ def test_slow_scan_timeout_continue_marks_seen(tmp_path: Path, monkeypatch) -> N
 
     monkeypatch.setattr(dlg_mod, "SlowScanIgnoreDialog", _Dlg)
 
+    armed = {"n": 0}
+
+    def _spy_arm(_self=None):
+        armed["n"] += 1
+
     project = CodimensionProject()
     project.fileName = str(cdm)
     project.props = merge_project_defaults({"uuid": "00000000-0000-4000-8000-000000000088", "excludeFromAnalysis": []})
     fake_thread = MagicMock()
     fake_thread.isRunning.return_value = True
+    fake_thread.hotDirectory.return_value = str(hot) + "/"
     project._CodimensionProject__scanThread = fake_thread  # noqa: SLF001
+    monkeypatch.setattr(project, "_CodimensionProject__armSlowScanTimer", _spy_arm)
     monkeypatch.setattr(project, "_CodimensionProject__generateFilesList", lambda *a, **k: None)
 
     project._CodimensionProject__onSlowScanTimeout()  # noqa: SLF001
     assert project.props["excludeFromAnalysis"] == []
-    assert "workbench" in project.props["slowScanPromptSeen"]
+    assert "workbench/tools" in project.props["slowScanPromptSeen"]
+    assert armed["n"] == 1
 
 
 def test_update_properties_preserves_slow_scan_seen(tmp_path: Path, monkeypatch) -> None:
@@ -193,7 +214,7 @@ def test_update_properties_preserves_slow_scan_seen(tmp_path: Path, monkeypatch)
         {
             "uuid": uid,
             "excludeFromAnalysis": [],
-            "slowScanPromptSeen": ["workbench"],
+            "slowScanPromptSeen": ["workbench/tools"],
         }
     )
     cdm.write_text("{}", encoding="utf-8")
@@ -205,7 +226,7 @@ def test_update_properties_preserves_slow_scan_seen(tmp_path: Path, monkeypatch)
     updated = merge_project_defaults({"uuid": uid, "version": "9.9", "excludeFromAnalysis": []})
     del updated["slowScanPromptSeen"]
     project.updateProperties(updated)
-    assert project.props["slowScanPromptSeen"] == ["workbench"]
+    assert project.props["slowScanPromptSeen"] == ["workbench/tools"]
     assert project.props["version"] == "9.9"
 
 

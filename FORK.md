@@ -27,7 +27,7 @@
 
 - `excludeFromAnalysis` — виключення шляхів з аналізу
 - `excludeFromProjectTree` — приховування в Project tree (окремо від analysis)
-- Slow-scan prompt (30 с): діалог вибору top-level тек для ignore
+- Slow-scan prompt (30 с): діалог з **гарячою** текою (де затримується walk), не меню top-level
 - Автоматичне виключення venv з аналізу
 - Lazy load для Classes/Functions/Globals
 - Tools → Project utilities → Generate requirements file
