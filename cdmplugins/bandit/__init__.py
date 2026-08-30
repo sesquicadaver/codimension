@@ -229,9 +229,7 @@ class BanditPlugin(WizardInterface):
 
     def __modificationChanged(self):
         """Triggered when editor modification state changed."""
-        widget = plain_text_editor_with_toolbar(
-            self.ide.editorsManager, current_widget=self.ide.currentEditorWidget
-        )
+        widget = plain_text_editor_with_toolbar(self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
         if widget is None:
             return
         banditAction = toolbar_action(widget, "bandit")
@@ -251,9 +249,7 @@ class BanditPlugin(WizardInterface):
     def __fileTypeChanged(self, shortFileName, uuid, mime):
         """Triggered when a file changed its type."""
         del shortFileName, uuid, mime
-        widget = plain_text_editor_with_toolbar(
-            self.ide.editorsManager, current_widget=self.ide.currentEditorWidget
-        )
+        widget = plain_text_editor_with_toolbar(self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
         if widget is None:
             return
         banditAction = toolbar_action(widget, "bandit")
