@@ -15,7 +15,7 @@ Help у IDE: [doc/user/index.md](doc/user/index.md).
 
 ## Розширення форку
 
-- `excludeFromAnalysis`, `excludeFromProjectTree`, slow-scan ignore prompt (30s), venv auto-exclusion з аналізу
+- `excludeFromAnalysis`, `excludeFromProjectTree`, slow-scan hot-dir ignore prompt (30s), venv auto-exclusion з аналізу
 - Generate requirements file; **VENV… / Update VENV…** (T140); status bar **Env:** (T141)
 - Плагіни: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke

@@ -14,49 +14,34 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Iterable, Sequence
-from os.path import isdir, join, realpath, sep
+import time
+from collections.abc import Iterable, Sequence
+from os.path import isabs, realpath, relpath, sep
 
-# Wall-clock threshold before offering top-level ignore choices.
+# Wall-clock threshold before offering ignore for the hot directory.
 SLOW_SCAN_PROMPT_MS = 30_000
 
 
-def list_top_level_dir_names(
-    project_dir: str,
-    *,
-    should_exclude_name: Callable[[str], bool] | None = None,
-) -> list[str]:
-    """Return sorted top-level directory basenames under ``project_dir``.
+def project_relative_dir(project_dir: str, absolute_dir: str) -> str | None:
+    """Return a project-relative directory path, or ``None`` for the project root.
 
-    Basename filters (dot-dirs, ``__pycache__``, …) are applied when
-    ``should_exclude_name`` is provided. No size / entry-count heuristics.
+    The result uses ``/`` separators without a trailing slash (``.cdm3`` style).
     """
     root = realpath(project_dir)
     if not root.endswith(sep):
         root_sep = root + sep
     else:
         root_sep = root
-    try:
-        entries = os.listdir(root_sep)
-    except OSError:
-        return []
-    names: list[str] = []
-    for name in entries:
-        if should_exclude_name is not None and should_exclude_name(name):
-            continue
-        candidate = join(root_sep, name)
-        try:
-            if isdir(candidate):
-                names.append(name)
-        except OSError:
-            continue
-    return sorted(names)
-
-
-def filter_unseen_dir_names(candidates: Sequence[str], seen: Iterable[str]) -> list[str]:
-    """Return candidates not yet recorded in ``slowScanPromptSeen``."""
-    seen_set = {str(item).strip() for item in seen if str(item).strip()}
-    return [name for name in candidates if name not in seen_set]
+        root = root.rstrip(sep)
+    cand = realpath(absolute_dir)
+    if cand == root:
+        return None
+    if not (cand + sep).startswith(root_sep) and not cand.startswith(root_sep):
+        return None
+    relative = relpath(cand, root)
+    if relative in (".", os.curdir):
+        return None
+    return relative.replace("\\", "/")
 
 
 def merge_unique_paths(existing: Sequence[str], additions: Sequence[str]) -> list[str]:
@@ -75,3 +60,67 @@ def merge_unique_paths(existing: Sequence[str], additions: Sequence[str]) -> lis
 def merge_prompt_seen(existing: Sequence[str], offered: Sequence[str]) -> list[str]:
     """Union of previously seen names and names offered in the latest prompt."""
     return merge_unique_paths(existing, offered)
+
+
+def is_prompt_seen(path: str, seen: Iterable[str]) -> bool:
+    """True if ``path`` was already offered in a slow-scan prompt."""
+    text = str(path).strip()
+    if not text:
+        return True
+    return text in {str(item).strip() for item in seen if str(item).strip()}
+
+
+class ScanDirectoryTracker:
+    """Accumulate wall time per directory while it is the active walk target.
+
+    The directory with the largest dwell time (excluding the project root) is
+    treated as the hot path that is delaying the scan.
+    """
+
+    def __init__(self, project_dir: str) -> None:
+        self._root = realpath(project_dir)
+        self._current = ""
+        self._switched_at = time.monotonic()
+        self._dwell_s: dict[str, float] = {}
+
+    def note(self, absolute_dir: str) -> None:
+        """Record that the walk entered ``absolute_dir``."""
+        now = time.monotonic()
+        if self._current:
+            self._dwell_s[self._current] = self._dwell_s.get(self._current, 0.0) + (now - self._switched_at)
+        self._current = absolute_dir
+        self._switched_at = now
+
+    def current_path(self) -> str:
+        """Absolute directory currently being walked (may be empty)."""
+        return self._current
+
+    def hot_directory(self) -> str | None:
+        """Absolute path of the hottest non-root directory, or ``None``."""
+        now = time.monotonic()
+        dwell = dict(self._dwell_s)
+        if self._current:
+            dwell[self._current] = dwell.get(self._current, 0.0) + (now - self._switched_at)
+        root = self._root
+        root_sep = root if root.endswith(sep) else root + sep
+        best_path = ""
+        best_s = -1.0
+        for path, seconds in dwell.items():
+            cand = realpath(path)
+            if cand == root or cand + sep == root_sep:
+                continue
+            if seconds > best_s or (seconds == best_s and len(cand) > len(best_path)):
+                best_s = seconds
+                best_path = path if path.endswith(sep) else path + sep
+        return best_path or None
+
+
+def normalize_exclude_path(project_dir: str, path: str) -> str:
+    """Prefer project-relative form for persistence when ``path`` is under the project."""
+    text = path.strip()
+    if not text:
+        return text
+    if isabs(text):
+        relative = project_relative_dir(project_dir, text)
+        return relative if relative is not None else realpath(text)
+    return text.replace("\\", "/")

@@ -79,6 +79,7 @@ def scan_project_files(
     venv_dir: str | None = None,
     should_exclude: Callable[[str], bool] | None = None,
     should_cancel: Callable[[], bool] | None = None,
+    on_directory: Callable[[str], None] | None = None,
 ) -> set[str]:
     """Scan ``project_dir`` into a set of absolute file/dir paths (dirs end with sep).
 
@@ -87,6 +88,8 @@ def scan_project_files(
     - Symlink cycles / out-of-tree links are bounded via visited realpaths (T051).
     - ``should_cancel`` is checked cooperatively during the walk (audit B03);
       raises :class:`ScanCancelled` when it returns true.
+    - ``on_directory`` is invoked with the absolute dir path (trailing sep) when
+      the walk enters that directory — used for slow-scan progress prompts.
     """
     root = realpath(project_dir)
     if not root.endswith(sep):
@@ -116,6 +119,8 @@ def scan_project_files(
 
     def _walk(path: str) -> None:
         _check_cancel()
+        if on_directory is not None:
+            on_directory(path)
         try:
             entries = os.listdir(path)
         except OSError:
