@@ -33,6 +33,8 @@ from ui.qt import (
 from utils.fileutils import isPythonMime
 from utils.pixmapcache import getIcon
 
+from cdmplugins.editor_toolbar import plain_text_editor_with_toolbar, toolbar_action
+
 from .banditdriver import BanditDriver
 from .banditresultviewer import BanditResultViewer
 
@@ -207,6 +209,8 @@ class BanditPlugin(WizardInterface):
 
     def __addButton(self, tabWidget):
         """Adds a button to the editor toolbar."""
+        if plain_text_editor_with_toolbar(None, current_widget=tabWidget) is None:
+            return
         banditButton = QAction(
             getIcon("run.png"),
             "Run bandit (Ctrl+Shift+B)",
@@ -225,21 +229,32 @@ class BanditPlugin(WizardInterface):
 
     def __modificationChanged(self):
         """Triggered when editor modification state changed."""
-        banditAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "bandit")
+        widget = plain_text_editor_with_toolbar(self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
+        if widget is None:
+            return
+        banditAction = toolbar_action(widget, "bandit")
         if banditAction is not None:
-            banditAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
+            banditAction.setEnabled(self.__canRun(widget)[0])
 
     def __textEditorTabAdded(self, tabIndex):
         """Triggered when a new tab is added."""
-        del tabIndex
-        self.__addButton(self.ide.currentEditorWidget)
+        widget = plain_text_editor_with_toolbar(
+            self.ide.editorsManager,
+            tabIndex,
+            current_widget=self.ide.currentEditorWidget,
+        )
+        if widget is not None:
+            self.__addButton(widget)
 
     def __fileTypeChanged(self, shortFileName, uuid, mime):
         """Triggered when a file changed its type."""
         del shortFileName, uuid, mime
-        banditAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "bandit")
+        widget = plain_text_editor_with_toolbar(self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
+        if widget is None:
+            return
+        banditAction = toolbar_action(widget, "bandit")
         if banditAction is not None:
-            banditAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
+            banditAction.setEnabled(self.__canRun(widget)[0])
 
     def __bufferMenuAboutToShow(self):
         """The buffer context menu is about to show."""

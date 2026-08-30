@@ -22,6 +22,8 @@ from ui.qt import QAction, QApplication, QCursor, QKeySequence, QMenu, QShortcut
 from utils.fileutils import isPythonMime
 from utils.pixmapcache import getIcon
 
+from cdmplugins.editor_toolbar import plain_text_editor_with_toolbar, toolbar_action
+
 from .ruffdriver import RuffDriver
 from .ruffresultviewer import RuffResultViewer
 
@@ -210,6 +212,8 @@ class RuffPlugin(WizardInterface):
 
     def __addButton(self, tabWidget):
         """Adds a button to the editor toolbar."""
+        if plain_text_editor_with_toolbar(None, current_widget=tabWidget) is None:
+            return
         ruffButton = QAction(getIcon("run.png"), "Run ruff (Ctrl+Shift+R)", tabWidget.toolbar)
         ruffButton.setEnabled(self.__canRun(tabWidget)[0])
         ruffButton.triggered.connect(self.__run)
@@ -224,21 +228,32 @@ class RuffPlugin(WizardInterface):
 
     def __modificationChanged(self):
         """Triggered when editor modification state changed."""
-        ruffAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "ruff")
+        widget = plain_text_editor_with_toolbar(self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
+        if widget is None:
+            return
+        ruffAction = toolbar_action(widget, "ruff")
         if ruffAction is not None:
-            ruffAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
+            ruffAction.setEnabled(self.__canRun(widget)[0])
 
     def __textEditorTabAdded(self, tabIndex):
         """Triggered when a new tab is added."""
-        del tabIndex
-        self.__addButton(self.ide.currentEditorWidget)
+        widget = plain_text_editor_with_toolbar(
+            self.ide.editorsManager,
+            tabIndex,
+            current_widget=self.ide.currentEditorWidget,
+        )
+        if widget is not None:
+            self.__addButton(widget)
 
     def __fileTypeChanged(self, shortFileName, uuid, mime):
         """Triggered when a file changed its type."""
         del shortFileName, uuid, mime
-        ruffAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "ruff")
+        widget = plain_text_editor_with_toolbar(self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
+        if widget is None:
+            return
+        ruffAction = toolbar_action(widget, "ruff")
         if ruffAction is not None:
-            ruffAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
+            ruffAction.setEnabled(self.__canRun(widget)[0])
 
     def __bufferMenuAboutToShow(self):
         """The buffer context menu is about to show."""
