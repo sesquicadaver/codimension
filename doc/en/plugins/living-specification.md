@@ -30,6 +30,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Project scan T050–T052** | utils.project_scan / project / watcher | project_scan.py, project.py, watcher.py | path-aware exclude; symlink visited; async scan; tests/test_project_scan.py |
 | **Slow-scan ignore prompt** | utils.slow_scan_prompt / ui.slowscanignoredlg / project | 30s → hot dir + ancestor combo (top-level default); Continue does not persist seen; Accept applies; tests/test_slow_scan_prompt.py |
 | **qutepart drawLine float** | editor.qutepart_compat / qpartwrap / texteditor | Override indent paint with int coords (never monkeypatch ``QPainter.drawLine`` — breaks ``QLineF``); tests/test_qutepart_compat.py |
+| **flow_ast docstring spans** | parsers.flow_ast | `_DocstringFrag` body/beginLine for hide-comments scroll; tests/conformance/test_flow_docstrings.py |
 | **Pylint toolbar (Import DGM)** | cdmplugins.pylint + editor_toolbar | Bundled 1.0.5; skip non-PlainTextEditor; tests/test_editor_toolbar_helper.py |
 | Packaging / CI T060–T067 | pyproject / CI | pyproject.toml, requirements.txt, requirements-runtime.txt, constraints.txt, ci.yml, release.yml, scripts/offscreen_gui_smoke.py | deps groups; matrix 3.10–3.13; constraints gate; wheel; offscreen smoke; release verify |
 | **Shim identity T071–T073** | parsers / bootstrap | parsers/__init__.py, check_package_relative_imports.py | unified cdmpyparser/cdmcfparser aliases; T072 CI gate |

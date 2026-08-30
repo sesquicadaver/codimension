@@ -24,6 +24,22 @@ def test_docstrings_case_snapshot_semantics() -> None:
     assert data["nsuite"][1]["docstring"] == "Class docstring."
 
 
+def test_docstring_frag_exposes_line_spans_for_flow_ui() -> None:
+    """flow UI scroll restore needs beginLine/endLine/body on docstring frags."""
+    source = (Path(__file__).parent / "cases" / "docstrings.py").read_text(encoding="utf-8")
+    cf = getControlFlowFromMemory(source)
+    assert cf.docstring is not None
+    assert cf.docstring.beginLine == 1
+    assert cf.docstring.endLine >= 1
+    assert cf.docstring.body.getLineRange() == (cf.docstring.beginLine, cf.docstring.endLine)
+    assert cf.docstring.body.getAbsPosRange() == (cf.docstring.begin, cf.docstring.end)
+
+    func = cf.nsuite[0]
+    assert func.docstring is not None
+    assert func.docstring.beginLine >= 2
+    assert func.docstring.body.beginLine == func.docstring.beginLine
+
+
 def test_match_kinds() -> None:
     match_src = (Path(__file__).parent / "cases" / "match_case.py").read_text(encoding="utf-8")
     data = serialize_control_flow(match_src)

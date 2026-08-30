@@ -522,19 +522,38 @@ _KIND_NAMES = {
 
 
 class _DocstringFrag:
-    """Docstring fragment for getDisplayValue().
+    """Docstring fragment compatible with cdmcfparser / flow UI expectations.
 
     CML validation expects leadingCMLComments and sideCMLComments;
     flow_ast docstrings have none, so these are empty lists.
+
+    Flow UI also needs ``body`` / ``beginLine`` / ``end`` spans for scroll
+    restore and selection (hide comments/docstrings).
     """
 
-    def __init__(self, text: str | None) -> None:
+    def __init__(self, text: str | None, body: _Body | None = None) -> None:
         self._text = text or ""
         self.leadingCMLComments: list = []
         self.sideCMLComments: list = []
+        self.leadingComment: Any = None
+        if body is None:
+            body = _Body(0, 0, 1, 1, 1, 1)
+        self.body = body
+        self.begin = body.begin
+        self.end = body.end
+        self.beginLine = body.beginLine
+        self.endLine = body.endLine
+        self.beginPos = body.beginPos
+        self.endPos = body.endPos
 
     def getDisplayValue(self) -> str:
         return self._text
+
+    def getLineRange(self) -> tuple[int, int]:
+        return self.body.getLineRange()
+
+    def getAbsPosRange(self) -> tuple[int, int]:
+        return self.body.getAbsPosRange()
 
 
 class _FlowBuilder(ast.NodeVisitor):
@@ -565,8 +584,9 @@ class _FlowBuilder(ast.NodeVisitor):
     def _extract_module_docstring(self, node: ast.Module) -> None:
         """Extract module docstring from first Expr(Constant(str))."""
         doc = ast.get_docstring(node)
-        if doc:
-            self.control_flow.docstring = _DocstringFrag(doc)
+        body = list(node.body)
+        if doc and body and self._is_docstring_stmt(body[0]):
+            self.control_flow.docstring = _DocstringFrag(doc, self._make_body(body[0]))
 
     @staticmethod
     def _is_docstring_stmt(stmt: ast.AST) -> bool:
@@ -578,7 +598,7 @@ class _FlowBuilder(ast.NodeVisitor):
         doc = ast.get_docstring(node)  # type: ignore[arg-type]
         body = list(getattr(node, "body", []) or [])
         if doc and body and self._is_docstring_stmt(body[0]):
-            frag.docstring = _DocstringFrag(doc)
+            frag.docstring = _DocstringFrag(doc, self._make_body(body[0]))
             return body[1:]
         return body
 

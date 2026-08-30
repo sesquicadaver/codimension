@@ -1,5 +1,7 @@
 2026 Aug 30
 
+* Fix: flow_ast ``_DocstringFrag`` missing ``beginLine``/``body`` spans → crash
+  on hide-comments scroll restore (``getLineDistance``)
 * Fix: stop monkeypatching ``QPainter.drawLine`` (sip ``QLineF`` overloads
   stay broken after restore → flow UI ``scopeitems``/``items`` paint crash);
   override qutepart indent paint with ``int`` coords instead
