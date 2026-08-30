@@ -165,7 +165,10 @@ class ImportResolution:
         """If it was a submodule then the name is combined"""
         name = self.importObj.name
         if self.itemIndex is not None:
-            name += "." + self.importObj.what[self.itemIndex]
+            # ``Import.what`` holds ``ImportWhat`` objects (brief model), not bare strings.
+            what_item = self.importObj.what[self.itemIndex]
+            what_name = what_item if isinstance(what_item, str) else what_item.name
+            name += "." + what_name
         return name
 
 

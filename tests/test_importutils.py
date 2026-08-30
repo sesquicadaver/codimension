@@ -143,3 +143,15 @@ def test_resolve_frozen_stdlib_import_os(tmp_path):
     names = {item[0] for item in resolved}
     assert "os" in names
     assert "io" in names
+
+
+def test_import_resolution_visible_name_with_import_what():
+    """getVisibleName must use ImportWhat.name (not concatenate the object)."""
+    import cdmpyparser
+
+    ImportResolution = _importutils.ImportResolution
+    imp = cdmpyparser.Import("pkg", 1, 0, 0)
+    what = cdmpyparser.ImportWhat("sub", 1, 5, 5)
+    imp.what.append(what)
+    resolution = ImportResolution(imp, 0, False, "/tmp/pkg/sub.py", None)
+    assert resolution.getVisibleName() == "pkg.sub"
