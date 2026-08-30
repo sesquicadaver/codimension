@@ -16,6 +16,7 @@
 | UX-SCAN | Повільний скан великих дерев без пропозиції ignore | P2 | ✅ 30s prompt + `excludeFromProjectTree` |
 | UX-DRAWLINE | qutepart `paintEvent` / whitespace: `drawLine` float mid-Y → TypeError (PyQt5) | P1 | ✅ override paint (no QPainter monkeypatch; sip QLineF safe) |
 | UX-DRAWLINE2 | After #152 monkeypatch, flow UI `painter.drawLine(QLineF)` → unbound TypeError | P0 | ✅ remove monkeypatch; int coords in override |
+| UX-DOCSPAN | flow_ast `_DocstringFrag` без `beginLine`/`body` → crash hide-comments | P0 | ✅ spans з AST stmt |
 | UX-PYLINT-TB | pylint `sigFileTypeChanged` → `ImportDgmTabWidget` без `toolbar` | P1 | ✅ bundled pylint 1.0.5 + `editor_toolbar` |
 
 | ID | Проблема | Пріоритет | Статус |
