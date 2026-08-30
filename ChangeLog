@@ -1,5 +1,8 @@
 2026 Aug 30
 
+* R208: ``core.tasks`` + ``infrastructure.build_tasks`` — Cargo / CMake / Ninja /
+  CTest TaskProviders (explicit discovery only; ``BUILD_TASK_EXEC`` gate; not via
+  clangd/rust-analyzer); ``BUILD_TASKS`` capability; polyglot wave R200–R208 closed
 * R207: ``DependencyEdgeKind`` + ``PolyglotDependencyGraph`` + cross-language
   navigation (``.pyi`` → FFI → native); Python import edges typed in utils graph
 * R206: ``core.bindings`` + ``infrastructure.ffi_bindings`` — BindingIndex with

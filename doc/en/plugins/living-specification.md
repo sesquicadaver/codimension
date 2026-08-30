@@ -97,7 +97,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Update download R173** | utils.update_download + ui.mainwindow | Cache dir download; SHA-256 fail closed; ``manifest.json`` | tests/test_update_download.py |
 | **Update apply R180** | utils.update_apply + portable_profile + ui.mainwindow | re-verify → pip install; rollback previous; ``CDM_HOME`` | tests/test_update_apply_r180.py |
 | **MCP backend R182** | mcp_backend + optional ``mcp`` SDK | stdio MCP over headless core; ``CDM_MCP_TOKEN`` fail-closed; 7 MVP tools | tests/test_mcp_r182.py; [mcp-backend.md](../../technology/mcp-backend.md) |
-| **Polyglot layer R200+** | core.language/semantic/structural/bindings/dependency_edges/cross_language_nav/…; infrastructure.lsp_* + tree_sitter_structural + ffi_bindings; app.language_services; ui.language_controller | Registry→…→BindingIndex→typed deps/cross-nav; Stage 1–4 = R200–R208 | tests/test_language_r200.py … r207.py; [polyglot-language-layer.md](../../technology/polyglot-language-layer.md); R200–R207 DONE |
+| **Polyglot layer R200+** | core.language/semantic/structural/bindings/dependency_edges/cross_language_nav/tasks/…; infrastructure.lsp_* + tree_sitter_structural + ffi_bindings + build_tasks; app.language_services; ui.language_controller | Registry→…→BindingIndex→typed deps/cross-nav→TaskProviders; Stage 1–4 = R200–R208 | tests/test_language_r200.py … r208.py; [polyglot-language-layer.md](../../technology/polyglot-language-layer.md); R200–R208 DONE |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../../technology/parser-contract.md), [uk](../../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -157,7 +157,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R208→**; linear non-blocking.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — *(empty after R208)*; linear non-blocking.
 
 ### Module boundary matrix (R103 / R195)
 

@@ -150,13 +150,13 @@
 | 17 | R205 | Polyglot: Tree-sitter StructuralGraph (Rust+C++) | StructuralGraph + `semantic_role`; **не** compiler CFG | L | DONE ([#139](https://github.com/sesquicadaver/codimension/pull/139)) |
 | 18 | R206 | Polyglot: BindingIndex + PyO3 / pybind11 / CPython + `.pyi` | Лише evidence-backed FFI edges (без exact edge за однаковістю імен) | L | DONE ([#141](https://github.com/sesquicadaver/codimension/pull/141)) |
 | 19 | R207 | Polyglot: DependencyEdgeKind + cross-language navigation | Узагальнені edges включно з FFI; навігація через мовну межу | M | DONE ([#143](https://github.com/sesquicadaver/codimension/pull/143)) |
-| 20 | R208 | Polyglot: Cargo / CMake / Ninja / CTest TaskProviders | Лише explicit tasks (не при відкритті файла); не через clangd/rust-analyzer як build runners | M | OPEN |
+| 20 | R208 | Polyglot: Cargo / CMake / Ninja / CTest TaskProviders | Лише explicit tasks (не при відкритті файла); не через clangd/rust-analyzer як build runners | M | DONE ([#145](https://github.com/sesquicadaver/codimension/pull/145)) |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R208** (Cargo / CMake / Ninja / CTest TaskProviders).
+**Наступний OPEN:** *(порожньо — R208 закрив хвилю polyglot language layer R200–R208).*
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
