@@ -14,6 +14,7 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | UX-SCAN | Slow scan of huge trees with no ignore offer | P2 | ✅ 30s prompt + `excludeFromProjectTree` |
+| UX-DRAWLINE | qutepart whitespace paint: `drawLine` float mid-Y → TypeError (PyQt5) | P1 | ✅ `int_draw_line_args` + `QutepartWrapper` patch |
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
