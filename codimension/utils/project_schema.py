@@ -31,6 +31,8 @@ _KEY_TYPES: dict[str, type | tuple[type, ...]] = {
     "uuid": str,
     "importdirs": list,
     "excludeFromAnalysis": list,
+    "excludeFromProjectTree": list,
+    "slowScanPromptSeen": list,
     "encoding": str,
     "pythoninterpreter": str,
 }

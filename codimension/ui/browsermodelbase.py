@@ -285,12 +285,12 @@ class BrowserModelBase(QAbstractItemModel):
             project = GlobalData().project
             excludeFunctor = project.shouldExclude
             items = [itm for itm in items if not excludeFunctor(itm)]
-            # Also exclude venv and excludeFromAnalysis paths
+            # Also exclude venv and excludeFromProjectTree paths
             path_real = os.path.realpath(path)
             if not path_real.endswith(os.path.sep):
                 path_real += os.path.sep
             venv_dir = getProjectVenvDir(project)
-            exclude_paths = project.getExcludeFromAnalysisAsAbsolutePaths()
+            exclude_paths = project.getExcludeFromProjectTreeAsAbsolutePaths()
             exclude_paths_real = (
                 {os.path.realpath(p).rstrip(os.path.sep) for p in exclude_paths} if exclude_paths else set()
             )

@@ -16,7 +16,7 @@ IDE Help: [doc/user/index.md](doc/user/index.md).
 
 ## Fork Extensions
 
-- `excludeFromAnalysis`, venv auto-exclusion from analysis
+- `excludeFromAnalysis`, `excludeFromProjectTree`, slow-scan ignore prompt (30s), venv auto-exclusion from analysis
 - Generate requirements file; **VENV… / Update VENV…** (T140); status-bar **Env:** (T141)
 - Plugins: ruff, mypy, pytest, coverage, bandit, pip-audit, git
 - Debugger watchpoints, greenlet trace; offscreen e2e + nightly full-IDE smoke

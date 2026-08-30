@@ -32,8 +32,8 @@ import shutil
 import uuid
 from os.path import basename, dirname, exists, isabs, isfile, join, realpath, relpath, sep
 
-from PyQt5.QtCore import QThread
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThread, QTimer
+from PyQt5.QtWidgets import QApplication, QDialog
 from ui.qt import QObject, pyqtSignal
 
 from .atomic_io import atomic_write_text
@@ -47,6 +47,13 @@ from .project_schema import ProjectSchemaError, safe_user_project_dir, validate_
 from .runparamscache import RunParametersCache
 from .searchenv import SearchEnvironment
 from .settings import SETTINGS_DIR, Settings
+from .slow_scan_prompt import (
+    SLOW_SCAN_PROMPT_MS,
+    filter_unseen_dir_names,
+    list_top_level_dir_names,
+    merge_prompt_seen,
+    merge_unique_paths,
+)
 from .userencodings import FileEncodings
 from .venvutils import getProjectVenvDir
 from .watcher import Watcher
@@ -111,7 +118,9 @@ _DEFAULT_PROJECT_PROPS = {
     "description": "",
     "uuid": "",
     "importdirs": [],
-    "excludeFromAnalysis": [],  # Dirs/files to exclude from analysis
+    "excludeFromAnalysis": [],  # Dirs/files to exclude from analysis / scan
+    "excludeFromProjectTree": [],  # Dirs/files hidden in Project tree UI
+    "slowScanPromptSeen": [],  # Top-level dirs already offered in slow-scan prompt
     "encoding": "",
     "pythoninterpreter": "",
 }  # Optional venv/python path
@@ -123,10 +132,17 @@ def new_project_uuid() -> str:
 
 
 def merge_project_defaults(props: dict) -> dict:
-    """Fill missing `.cdm3` keys from defaults (mutates and returns ``props``)."""
+    """Fill missing `.cdm3` keys from defaults (mutates and returns ``props``).
+
+    Before ``excludeFromProjectTree`` existed, analysis excludes also hid paths
+    from the Project tree — migrate by copying when the new key is absent.
+    """
+    had_tree_key = "excludeFromProjectTree" in props
     for key, value in _DEFAULT_PROJECT_PROPS.items():
         if key not in props:
             props[key] = copy.deepcopy(value)
+    if not had_tree_key and props.get("excludeFromAnalysis"):
+        props["excludeFromProjectTree"] = list(props["excludeFromAnalysis"])
     return props
 
 
@@ -184,6 +200,8 @@ class CodimensionProject(
         self.__scanOnComplete = None
         self.__scanCoalesce = False
         self.__pendingRestoreExpanded = False
+        self.__slowScanTimer = None
+        self.__slowScanPromptOpen = False
 
         # Avoid pylint complains
         self.fileName = ""
@@ -236,6 +254,7 @@ class CodimensionProject(
         # Reset the dir watchers if so
         self.__cancelScan()
         self.__pendingRestoreExpanded = False
+        self.__slowScanPromptOpen = False
         if self.__dirWatcher is not None:
             del self.__dirWatcher
             self.__dirWatcher = None
@@ -455,9 +474,17 @@ class CodimensionProject(
 
     def getExcludeFromAnalysisAsAbsolutePaths(self):
         """Provides a list of absolute paths to exclude from analysis."""
+        return self.__propsPathsAsAbsolute("excludeFromAnalysis")
+
+    def getExcludeFromProjectTreeAsAbsolutePaths(self):
+        """Absolute paths hidden in the Project tree UI (independent of analysis)."""
+        return self.__propsPathsAsAbsolute("excludeFromProjectTree")
+
+    def __propsPathsAsAbsolute(self, key: str):
+        """Resolve relative/absolute project prop path list under the project dir."""
         result = []
         proj_dir = self.getProjectDir()
-        for path in self.props.get("excludeFromAnalysis", []):
+        for path in self.props.get(key, []):
             path = path.strip()
             if not path:
                 continue
@@ -470,6 +497,75 @@ class CodimensionProject(
     def __isExcludedFromAnalysis(self, candidate_path):
         """True if candidate_path should be excluded from analysis."""
         return is_excluded_by_absolute_paths(candidate_path, self.getExcludeFromAnalysisAsAbsolutePaths())
+
+    def __stopSlowScanTimer(self) -> None:
+        """Stop the slow-scan prompt timer if running."""
+        timer = self.__slowScanTimer
+        self.__slowScanTimer = None
+        if timer is not None:
+            timer.stop()
+            timer.deleteLater()
+
+    def __armSlowScanTimer(self) -> None:
+        """Start a single-shot timer that offers ignore choices after a long scan."""
+        self.__stopSlowScanTimer()
+        if QApplication.instance() is None:
+            return
+        timer = QTimer(self)
+        timer.setSingleShot(True)
+        timer.timeout.connect(self.__onSlowScanTimeout)
+        self.__slowScanTimer = timer
+        timer.start(SLOW_SCAN_PROMPT_MS)
+
+    def __onSlowScanTimeout(self) -> None:
+        """Offer top-level ignore choices when a background scan exceeds the threshold."""
+        self.__slowScanTimer = None
+        if self.__slowScanPromptOpen or not self.isLoaded():
+            return
+        thread = self.__scanThread
+        if thread is None or not thread.isRunning():
+            return
+        offered = filter_unseen_dir_names(
+            list_top_level_dir_names(self.getProjectDir(), should_exclude_name=self.shouldExclude),
+            self.props.get("slowScanPromptSeen", []),
+        )
+        if not offered:
+            return
+        try:
+            from ui.slowscanignoredlg import SlowScanIgnoreDialog
+        except Exception:
+            logging.debug("slow-scan ignore dialog unavailable", exc_info=True)
+            return
+
+        self.__slowScanPromptOpen = True
+        try:
+            parent = QApplication.activeWindow()
+            dialog = SlowScanIgnoreDialog(offered, parent)
+            accepted = dialog.exec_() == QDialog.Accepted
+            analysis_sel: list[str] = []
+            tree_sel: list[str] = []
+            if accepted:
+                analysis_sel, tree_sel = dialog.selectedExcludes()
+        finally:
+            self.__slowScanPromptOpen = False
+
+        self.props["slowScanPromptSeen"] = merge_prompt_seen(
+            self.props.get("slowScanPromptSeen", []), offered
+        )
+        if not accepted or (not analysis_sel and not tree_sel):
+            self.saveProject()
+            return
+
+        self.props["excludeFromAnalysis"] = merge_unique_paths(
+            self.props.get("excludeFromAnalysis", []), analysis_sel
+        )
+        self.props["excludeFromProjectTree"] = merge_unique_paths(
+            self.props.get("excludeFromProjectTree", []), tree_sel
+        )
+        self.saveProject()
+        # Keep the pending CompleteProject / rescan callback; coalesce a fresh scan.
+        on_complete = self.__scanOnComplete
+        self.__generateFilesList(on_complete=on_complete)
 
     def onFSChanged(self, items):
         """Triggered when the watcher detects changes"""
@@ -518,6 +614,7 @@ class CodimensionProject(
         cooperative interruption, and optionally waits a bounded time. The
         thread is cleaned via ``finished`` → ``deleteLater``.
         """
+        self.__stopSlowScanTimer()
         self.__scanGeneration += 1
         self.__scanOnComplete = None
         self.__scanCoalesce = False
@@ -567,6 +664,7 @@ class CodimensionProject(
         thread.sigFailed.connect(self.__onScanFailed)
         thread.finished.connect(thread.deleteLater)
         thread.finished.connect(self.__onScanThreadFinished)
+        self.__armSlowScanTimer()
         thread.start()
 
     def __onScanThreadFinished(self) -> None:
@@ -602,6 +700,7 @@ class CodimensionProject(
         # Latest callback wins when scans are coalesced.
         self.__scanOnComplete = on_complete
         if self.__scanThread is not None and self.__scanThread.isRunning():
+            self.__stopSlowScanTimer()
             self.__scanGeneration += 1
             self.__scanCoalesce = True
             self.__scanThread.requestInterruption()
@@ -615,6 +714,7 @@ class CodimensionProject(
         """Apply background scan results if still current."""
         if generation != self.__scanGeneration:
             return
+        self.__stopSlowScanTimer()
         self.filesList = result if isinstance(result, set) else set(result)
         self.__scanThread = None
         self.sigFilesListReady.emit()
@@ -624,6 +724,7 @@ class CodimensionProject(
         """Log scan failure without blocking the GUI on a sync rescan (B03)."""
         if generation != self.__scanGeneration:
             return
+        self.__stopSlowScanTimer()
         logging.error("Project scan failed: %s", message)
         self.__scanThread = None
         # Keep the last known filesList; never fall back to sync I/O on the GUI thread.
@@ -660,8 +761,13 @@ class CodimensionProject(
         ``persist=False`` applies in-memory updates (and rescans) without writing
         ``.cdm3`` — used when the file was already updated externally.
         """
+        # Properties dialogs omit internal keys; keep them unless explicitly provided.
+        incoming = copy.deepcopy(props)
+        for key in ("slowScanPromptSeen",):
+            if key not in incoming and key in self.props:
+                incoming[key] = copy.deepcopy(self.props[key])
         try:
-            validated = merge_project_defaults(validate_project_props(copy.deepcopy(props)))
+            validated = merge_project_defaults(validate_project_props(incoming))
         except ProjectSchemaError as exc:
             logging.error("Rejecting invalid project properties update: %s", exc)
             raise

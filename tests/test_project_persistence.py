@@ -58,6 +58,8 @@ def _minimal_props(**overrides):
         "uuid": "",
         "importdirs": [],
         "excludeFromAnalysis": [],
+        "excludeFromProjectTree": [],
+        "slowScanPromptSeen": [],
         "encoding": "",
         "pythoninterpreter": "",
     }

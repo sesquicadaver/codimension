@@ -1,5 +1,8 @@
 2026 Aug 30
 
+* Slow project scan: after 30s offer top-level ignore dialog (Analysis and/or
+  Project tree); persist ``excludeFromProjectTree`` + ``slowScanPromptSeen``;
+  migrate tree hide from legacy ``excludeFromAnalysis``
 * Fix: wizard plugins (coverage/pytest/ruff/bandit/mypy/ruffformat) no longer
   crash on ``WelcomeWidget`` when adding toolbar actions — resolve editor via
   ``tabIndex`` + PlainTextEditor guard (``cdmplugins.editor_toolbar``)
