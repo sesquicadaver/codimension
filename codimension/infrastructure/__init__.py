@@ -12,6 +12,7 @@
 """Headless infrastructure helpers (filesystem / io / process / LSP)."""
 
 from . import (
+    ffi_bindings,
     filesystem,
     io,
     lsp_framing,
@@ -23,6 +24,7 @@ from . import (
 )
 
 __all__ = [
+    "ffi_bindings",
     "filesystem",
     "io",
     "lsp_framing",

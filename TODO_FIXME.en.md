@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: **R206→** (polyglot; R200–R205 DONE).
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: **R207→** (polyglot; R200–R206 DONE).
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
