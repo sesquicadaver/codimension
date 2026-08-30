@@ -19,7 +19,6 @@ from .qt import (
     QDialogButtonBox,
     QHBoxLayout,
     QLabel,
-    Qt,
     QVBoxLayout,
 )
 
