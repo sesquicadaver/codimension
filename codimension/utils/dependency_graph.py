@@ -9,12 +9,16 @@
 # (at your option) any later version.
 #
 
-"""Headless DependencyGraph from Python imports (R133).
+"""Headless DependencyGraph from Python imports (R133 / R207).
 
 Builds a Qt-free graph of modules and import edges using ``brief_ast``.
 Resolution is limited to the provided file set (project-local modules);
 everything else becomes an ``external`` node. Full ``resolveImports`` /
 GlobalData path stays in the UI diagram code.
+
+R207: edges carry :class:`~core.dependency_edges.DependencyEdgeKind`
+(default ``PYTHON_IMPORT``). Polyglot FFI / cross-nav live in
+``core.dependency_edges`` / ``core.cross_language_nav``.
 """
 
 from __future__ import annotations
@@ -25,6 +29,7 @@ from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
+from core.dependency_edges import DependencyEdgeKind
 from parsers.brief_ast import getBriefModuleInfoFromFile, getBriefModuleInfoFromMemory
 
 
@@ -55,6 +60,7 @@ class DependencyEdge:
     target: str
     labels: tuple[str, ...] = ()
     line: Optional[int] = None
+    kind: DependencyEdgeKind = DependencyEdgeKind.PYTHON_IMPORT
 
     def to_dict(self) -> dict[str, Any]:
         """JSON-serializable edge dict."""
@@ -62,6 +68,7 @@ class DependencyEdge:
             "source": self.source,
             "target": self.target,
             "labels": list(self.labels),
+            "kind": self.kind.value,
         }
         if self.line is not None:
             data["line"] = self.line
@@ -84,12 +91,18 @@ class DependencyGraph:
         return node
 
     def add_edge(self, edge: DependencyEdge) -> None:
-        """Append an edge, merging labels when source/target already exist."""
+        """Append an edge, merging labels when source/target/kind already exist."""
         for idx, current in enumerate(self.edges):
-            if current.source == edge.source and current.target == edge.target:
+            if current.source == edge.source and current.target == edge.target and current.kind is edge.kind:
                 merged = tuple(dict.fromkeys(current.labels + edge.labels))
                 line = current.line if current.line is not None else edge.line
-                self.edges[idx] = DependencyEdge(edge.source, edge.target, merged, line)
+                self.edges[idx] = DependencyEdge(
+                    edge.source,
+                    edge.target,
+                    merged,
+                    line,
+                    kind=edge.kind,
+                )
                 return
         self.edges.append(edge)
 
@@ -262,11 +275,53 @@ def _add_imports(
         )
 
 
+def to_polyglot_graph(python_graph: DependencyGraph) -> Any:
+    """Lift a Python import :class:`DependencyGraph` into a polyglot graph (R207).
+
+    Returns a :class:`~core.dependency_edges.PolyglotDependencyGraph`.
+    """
+    from core.dependency_edges import (
+        PolyglotDependencyGraph,
+        TypedDependencyEdge,
+        TypedDependencyNode,
+        ingest_python_import_edges,
+    )
+
+    poly = PolyglotDependencyGraph()
+    for node in python_graph.nodes.values():
+        poly.add_node(
+            TypedDependencyNode(
+                id=node.id,
+                language_id="python",
+                kind=node.kind,
+                path=node.path,
+                label=node.label,
+            )
+        )
+    ingest_python_import_edges(
+        poly,
+        edges=((e.source, e.target, e.labels) for e in python_graph.edges),
+    )
+    for edge in python_graph.edges:
+        if edge.kind is not DependencyEdgeKind.PYTHON_IMPORT:
+            poly.add_edge(
+                TypedDependencyEdge(
+                    source=edge.source,
+                    target=edge.target,
+                    kind=edge.kind,
+                    labels=edge.labels,
+                )
+            )
+    return poly
+
+
 __all__ = [
     "DependencyEdge",
+    "DependencyEdgeKind",
     "DependencyGraph",
     "DependencyNode",
     "build_dependency_graph",
     "build_dependency_graph_from_sources",
     "module_name_for_path",
+    "to_polyglot_graph",
 ]

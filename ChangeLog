@@ -1,5 +1,7 @@
 2026 Aug 30
 
+* R207: ``DependencyEdgeKind`` + ``PolyglotDependencyGraph`` + cross-language
+  navigation (``.pyi`` → FFI → native); Python import edges typed in utils graph
 * R206: ``core.bindings`` + ``infrastructure.ffi_bindings`` — BindingIndex with
   evidence-backed PyO3 / pybind11 / CPython extractors and ``.pyi`` bridge stubs
   (no exact edges from name equality alone); ``FFI_BINDINGS`` capability

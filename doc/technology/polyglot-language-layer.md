@@ -27,6 +27,7 @@ clone the Python CFG pipeline per language; treat languages as VCS/Wizard plugin
 | UI controller | `ui/language_controller.py` (R204: capability checks only; hover/definition/references/outline/format/rename-preview; diagnostics FULL vs DEGRADED) |
 | Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **not** compiler CFG) |
 | FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206: PyO3 / pybind11 / CPython / `.pyi`; evidence-backed only) |
+| Typed deps + cross-nav | `core/dependency_edges.py` + `core/cross_language_nav.py` (R207: `DependencyEdgeKind`, FFI hops; utils graph keeps `PYTHON_IMPORT`) |
 
 UI must query **capabilities**, never `if language == "rust"`.
 
@@ -81,7 +82,7 @@ Before side effects, gate concrete capabilities such as:
 | ----- | --- | ----------- |
 | 1 Editor | R200–R204 | Registry, codec, LspProcess, Rust/C++ LSP descriptors, capability UI |
 | 2 Structure | R205 | Tree-sitter StructuralGraph + semantic roles (`core/structural` + `infrastructure/tree_sitter_structural`; optional `.[treesitter]`) |
-| 3 FFI | R206–R207 | BindingIndex extractors (R206 DONE) + dependency edge kinds + cross-nav (R207) |
+| 3 FFI | R206–R207 | BindingIndex (R206 DONE) + DependencyEdgeKind / cross-nav (R207 DONE) |
 | 4 Tasks | R208 | Cargo / CMake / Ninja / CTest providers |
 
 **Out of wave:** DAP/native debug; own compilers/parsers; Yapsy language plugins.
