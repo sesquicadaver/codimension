@@ -170,6 +170,12 @@ class ProjectPropertiesDialog(QDialog):
                 self.excludeDirList.setCurrentRow(0)
                 self.delExcludeButton.setEnabled(True)
 
+            for item in project.props.get("excludeFromProjectTree", []):
+                self.excludeTreeDirList.addItem(item)
+            if self.excludeTreeDirList.count() > 0:
+                self.excludeTreeDirList.setCurrentRow(0)
+                self.delExcludeTreeButton.setEnabled(True)
+
             # The project could be the one belonging to another user
             # so there might be no write permissions.
             if not os.access(project.fileName, os.W_OK):
@@ -289,66 +295,92 @@ class ProjectPropertiesDialog(QDialog):
         vLayoutExcl.addStretch(0)
         gridLayout.addLayout(vLayoutExcl, 6, 2, 1, 1)
 
+        # Hide from project tree
+        excludeTreeLabel = QLabel("Hide from project tree:", self)
+        excludeTreeLabel.setAlignment(Qt.AlignTop)
+        gridLayout.addWidget(excludeTreeLabel, 7, 0, 1, 1)
+        self.excludeTreeDirList = QListWidget(self)
+        self.excludeTreeDirList.setAlternatingRowColors(True)
+        self.excludeTreeDirList.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.excludeTreeDirList.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.excludeTreeDirList.setItemDelegate(NoOutlineHeightDelegate(4))
+        self.excludeTreeDirList.setToolTip(
+            "Directories or files hidden in the Project tree UI. "
+            "Independent from analysis excludes. Relative or absolute path."
+        )
+        gridLayout.addWidget(self.excludeTreeDirList, 7, 1, 1, 1)
+
+        self.addExcludeTreeButton = QPushButton(self)
+        self.addExcludeTreeButton.setText("Add")
+        self.delExcludeTreeButton = QPushButton(self)
+        self.delExcludeTreeButton.setText("Delete")
+        self.delExcludeTreeButton.setEnabled(False)
+        vLayoutTree = QVBoxLayout()
+        vLayoutTree.addWidget(self.addExcludeTreeButton)
+        vLayoutTree.addWidget(self.delExcludeTreeButton)
+        vLayoutTree.addStretch(0)
+        gridLayout.addLayout(vLayoutTree, 7, 2, 1, 1)
+
         # Version
         versionLabel = QLabel("Version:", self)
-        gridLayout.addWidget(versionLabel, 7, 0, 1, 1)
+        gridLayout.addWidget(versionLabel, 8, 0, 1, 1)
         self.versionEdit = QLineEdit(self)
-        gridLayout.addWidget(self.versionEdit, 6, 1, 1, 1)
+        gridLayout.addWidget(self.versionEdit, 8, 1, 1, 1)
 
         # Author
         authorLabel = QLabel("Author:", self)
-        gridLayout.addWidget(authorLabel, 8, 0, 1, 1)
+        gridLayout.addWidget(authorLabel, 9, 0, 1, 1)
         self.authorEdit = QLineEdit(self)
-        gridLayout.addWidget(self.authorEdit, 8, 1, 1, 1)
+        gridLayout.addWidget(self.authorEdit, 9, 1, 1, 1)
 
         # E-mail
         emailLabel = QLabel("E-mail:", self)
-        gridLayout.addWidget(emailLabel, 9, 0, 1, 1)
+        gridLayout.addWidget(emailLabel, 10, 0, 1, 1)
         self.emailEdit = QLineEdit(self)
-        gridLayout.addWidget(self.emailEdit, 9, 1, 1, 1)
+        gridLayout.addWidget(self.emailEdit, 10, 1, 1, 1)
 
         # License
         licenseLabel = QLabel("License:", self)
-        gridLayout.addWidget(licenseLabel, 10, 0, 1, 1)
+        gridLayout.addWidget(licenseLabel, 11, 0, 1, 1)
         self.licenseEdit = QLineEdit(self)
-        gridLayout.addWidget(self.licenseEdit, 10, 1, 1, 1)
+        gridLayout.addWidget(self.licenseEdit, 11, 1, 1, 1)
 
         # Copyright
         copyrightLabel = QLabel("Copyright:", self)
-        gridLayout.addWidget(copyrightLabel, 11, 0, 1, 1)
+        gridLayout.addWidget(copyrightLabel, 12, 0, 1, 1)
         self.copyrightEdit = QLineEdit(self)
-        gridLayout.addWidget(self.copyrightEdit, 11, 1, 1, 1)
+        gridLayout.addWidget(self.copyrightEdit, 12, 1, 1, 1)
 
         # Description
         descriptionLabel = QLabel("Description:", self)
         descriptionLabel.setAlignment(Qt.AlignTop)
-        gridLayout.addWidget(descriptionLabel, 12, 0, 1, 1)
+        gridLayout.addWidget(descriptionLabel, 13, 0, 1, 1)
         self.descriptionEdit = QTextEdit(self)
         self.descriptionEdit.setTabChangesFocus(True)
         self.descriptionEdit.setAcceptRichText(False)
-        gridLayout.addWidget(self.descriptionEdit, 12, 1, 1, 1)
+        gridLayout.addWidget(self.descriptionEdit, 13, 1, 1, 1)
 
         # Default encoding
         encodingLabel = QLabel("Default encoding:", self)
-        gridLayout.addWidget(encodingLabel, 13, 0, 1, 1)
+        gridLayout.addWidget(encodingLabel, 14, 0, 1, 1)
         self.encodingCombo = QComboBox(self)
         self.encodingCombo.addItem("")
         self.encodingCombo.addItems(sorted(SUPPORTED_CODECS))
         self.encodingCombo.setEditable(True)
-        gridLayout.addWidget(self.encodingCombo, 13, 1, 1, 1)
+        gridLayout.addWidget(self.encodingCombo, 14, 1, 1, 1)
 
         # Creation date
         creationDateLabel = QLabel("Creation date:", self)
-        gridLayout.addWidget(creationDateLabel, 14, 0, 1, 1)
+        gridLayout.addWidget(creationDateLabel, 15, 0, 1, 1)
         self.creationDateEdit = FramedLabel(parent=self)
         self.creationDateEdit.setToolTip("Double click to copy")
-        gridLayout.addWidget(self.creationDateEdit, 14, 1, 1, 1)
+        gridLayout.addWidget(self.creationDateEdit, 15, 1, 1, 1)
 
         # Project UUID
         uuidLabel = QLabel("UUID:", self)
-        gridLayout.addWidget(uuidLabel, 15, 0, 1, 1)
+        gridLayout.addWidget(uuidLabel, 16, 0, 1, 1)
         self.uuidEdit = FramedLabel(text="", callback=self.__copyProjectPath, parent=self)
-        gridLayout.addWidget(self.uuidEdit, 15, 1, 1, 1)
+        gridLayout.addWidget(self.uuidEdit, 16, 1, 1, 1)
 
         verticalLayout.addLayout(gridLayout)
 
@@ -379,6 +411,9 @@ class ProjectPropertiesDialog(QDialog):
         self.excludeDirList.currentRowChanged.connect(self.onExcludeRowChanged)
         self.addExcludeButton.clicked.connect(self.onAddExclude)
         self.delExcludeButton.clicked.connect(self.onDelExclude)
+        self.excludeTreeDirList.currentRowChanged.connect(self.onExcludeTreeRowChanged)
+        self.addExcludeTreeButton.clicked.connect(self.onAddExcludeTree)
+        self.delExcludeTreeButton.clicked.connect(self.onDelExcludeTree)
         self.nameEdit.textEdited.connect(self.onProjectNameChanged)
 
         self.setTabOrder(self.nameEdit, self.dirEdit)
@@ -395,7 +430,10 @@ class ProjectPropertiesDialog(QDialog):
         self.setTabOrder(self.delImportDirButton, self.excludeDirList)
         self.setTabOrder(self.excludeDirList, self.addExcludeButton)
         self.setTabOrder(self.addExcludeButton, self.delExcludeButton)
-        self.setTabOrder(self.delExcludeButton, self.versionEdit)
+        self.setTabOrder(self.delExcludeButton, self.excludeTreeDirList)
+        self.setTabOrder(self.excludeTreeDirList, self.addExcludeTreeButton)
+        self.setTabOrder(self.addExcludeTreeButton, self.delExcludeTreeButton)
+        self.setTabOrder(self.delExcludeTreeButton, self.versionEdit)
         self.setTabOrder(self.versionEdit, self.authorEdit)
         self.setTabOrder(self.authorEdit, self.emailEdit)
         self.setTabOrder(self.emailEdit, self.licenseEdit)
@@ -538,8 +576,39 @@ class ProjectPropertiesDialog(QDialog):
         self.excludeDirList.takeItem(rowToDelete)
         if self.excludeDirList.count() == 0:
             self.delExcludeButton.setEnabled(False)
-        else:
-            self.importDirList.setCurrentRow(self.importDirList.count() - 1)
+
+    def onExcludeTreeRowChanged(self, row):
+        """Triggered when a current row in the project-tree exclude list changes."""
+        self.delExcludeTreeButton.setEnabled(row != -1)
+
+    def onAddExcludeTree(self):
+        """Add a directory or file to hide from the Project tree."""
+        startDir = self.dirEdit.text()
+        pathToAdd = select_existing_directory(self, "Select directory to hide from project tree", startDir)
+        if not pathToAdd:
+            pathToAdd = select_open_file(self, "Or select file to hide", startDir, "All Files (*)")
+        if not pathToAdd:
+            return
+
+        if self.__project and self.__project.isProjectDir(pathToAdd):
+            pathToAdd = relpath(pathToAdd, self.dirEdit.text())
+
+        for i in range(self.excludeTreeDirList.count()):
+            if self.excludeTreeDirList.item(i).text() == pathToAdd:
+                return
+        self.excludeTreeDirList.addItem(pathToAdd)
+        self.excludeTreeDirList.setCurrentRow(self.excludeTreeDirList.count() - 1)
+
+    def onDelExcludeTree(self):
+        """Triggered when a project-tree exclude path should be deleted."""
+        rowToDelete = self.excludeTreeDirList.currentRow()
+        if rowToDelete == -1:
+            self.delExcludeTreeButton.setEnabled(False)
+            return
+
+        self.excludeTreeDirList.takeItem(rowToDelete)
+        if self.excludeTreeDirList.count() == 0:
+            self.delExcludeTreeButton.setEnabled(False)
 
     def onOKButton(self):
         """Checks that the mandatory fields are filled properly"""
@@ -659,6 +728,9 @@ class ProjectPropertiesDialog(QDialog):
         self.excludeDirList.setDisabled(True)
         self.addExcludeButton.setDisabled(True)
         self.delExcludeButton.setDisabled(True)
+        self.excludeTreeDirList.setDisabled(True)
+        self.addExcludeTreeButton.setDisabled(True)
+        self.delExcludeTreeButton.setDisabled(True)
         self.versionEdit.setDisabled(True)
         self.authorEdit.setDisabled(True)
         self.emailEdit.setDisabled(True)

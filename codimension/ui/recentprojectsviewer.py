@@ -526,6 +526,10 @@ class RecentProjectsViewer(QWidget):
                 for index in range(dlg.excludeDirList.count()):
                     excludeFromAnalysis.append(dlg.excludeDirList.item(index).text())
 
+                excludeFromProjectTree = []
+                for index in range(dlg.excludeTreeDirList.count()):
+                    excludeFromProjectTree.append(dlg.excludeTreeDirList.item(index).text())
+
                 scriptName = dlg.scriptEdit.text().strip()
                 relativePath = os.path.relpath(scriptName, project.getProjectDir())
                 if not relativePath.startswith(".."):
@@ -550,6 +554,7 @@ class RecentProjectsViewer(QWidget):
                         "uuid": dlg.uuidEdit.text().strip(),
                         "importdirs": importDirs,
                         "excludeFromAnalysis": excludeFromAnalysis,
+                        "excludeFromProjectTree": excludeFromProjectTree,
                         "encoding": dlg.encodingCombo.currentText().strip(),
                         "pythoninterpreter": dlg.venvEdit.text().strip(),
                     }

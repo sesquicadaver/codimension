@@ -9,6 +9,12 @@
 
 No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: **empty** (polyglot R200–R208 DONE).
 
+### UX hardening (outside ROADMAP queue)
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| UX-SCAN | Slow scan of huge trees with no ignore offer | P2 | ✅ 30s prompt + `excludeFromProjectTree` |
+
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | A201 | SSH: `profile.id` / project name path-containment → `_rm_tree`/write outside cache | P1 | ✅ R183 |

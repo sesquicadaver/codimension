@@ -490,6 +490,10 @@ class ProjectViewer(QWidget):
             for index in range(dialog.excludeDirList.count()):
                 excludeFromAnalysis.append(dialog.excludeDirList.item(index).text())
 
+            excludeFromProjectTree = []
+            for index in range(dialog.excludeTreeDirList.count()):
+                excludeFromProjectTree.append(dialog.excludeTreeDirList.item(index).text())
+
             scriptName = dialog.scriptEdit.text().strip()
             if scriptName != "":
                 relativePath = os.path.relpath(scriptName, project.getProjectDir())
@@ -517,6 +521,7 @@ class ProjectViewer(QWidget):
                     "uuid": dialog.uuidEdit.text().strip(),
                     "importdirs": importDirs,
                     "excludeFromAnalysis": excludeFromAnalysis,
+                    "excludeFromProjectTree": excludeFromProjectTree,
                     "encoding": dialog.encodingCombo.currentText().strip(),
                     "pythoninterpreter": venvPath,
                 }

@@ -9,6 +9,12 @@
 
 Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Черга ROADMAP: **порожня** (polyglot R200–R208 DONE).
 
+### UX hardening (поза ROADMAP-чергою)
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| UX-SCAN | Повільний скан великих дерев без пропозиції ignore | P2 | ✅ 30s prompt + `excludeFromProjectTree` |
+
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
 | A201 | SSH: `profile.id` / project name без path-containment → `_rm_tree`/write поза cache | P1 | ✅ R183 |

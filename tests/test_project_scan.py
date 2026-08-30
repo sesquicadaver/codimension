@@ -38,6 +38,21 @@ def _purge_stub_ui_for_project() -> None:
         sys.path.insert(0, str(_CODIM))
 
 
+def _reload_project_module():
+    """Drop both ``utils.project`` and ``codimension.utils.project`` bindings."""
+    for name in ("utils.project", "codimension.utils.project"):
+        sys.modules.pop(name, None)
+    for pkg_name in ("utils", "codimension.utils"):
+        pkg = sys.modules.get(pkg_name)
+        if pkg is not None and hasattr(pkg, "project"):
+            delattr(pkg, "project")
+    importlib.invalidate_caches()
+    from codimension.utils import project as project_mod
+    from codimension.utils.project import CodimensionProject
+
+    return project_mod, CodimensionProject
+
+
 def _mk_tree(root: Path) -> None:
     (root / "package" / "cache").mkdir(parents=True)
     (root / "package" / "cache" / "x.py").write_text("x = 1\n", encoding="utf-8")
@@ -182,11 +197,7 @@ def test_b03_project_scan_coalesce_and_interrupt(tmp_path: Path, monkeypatch) ->
     from PyQt5.QtWidgets import QApplication
 
     _purge_stub_ui_for_project()
-    sys.modules.pop("utils.project", None)
-    sys.modules.pop("codimension.utils.project", None)
-
-    from codimension.utils import project as project_mod
-    from codimension.utils.project import CodimensionProject
+    project_mod, CodimensionProject = _reload_project_module()
     from codimension.utils.project_scan import ScanCancelled
 
     app = QApplication.instance()
@@ -257,10 +268,7 @@ def test_b03_scan_failed_does_not_sync_on_gui(tmp_path: Path, monkeypatch) -> No
     from PyQt5.QtWidgets import QApplication
 
     _purge_stub_ui_for_project()
-    sys.modules.pop("utils.project", None)
-    sys.modules.pop("codimension.utils.project", None)
-
-    from codimension.utils.project import CodimensionProject
+    _, CodimensionProject = _reload_project_module()
 
     app = QApplication.instance()
     if app is None:

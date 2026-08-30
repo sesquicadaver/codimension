@@ -26,6 +26,8 @@ The upstream repository has been unmaintained for over 4 years. The codimension.
 ### Project analysis
 
 - `excludeFromAnalysis` — exclude paths from analysis
+- `excludeFromProjectTree` — hide from Project tree (independent of analysis)
+- Slow-scan prompt (30s): top-level ignore dialog
 - Automatic venv exclusion from analysis
 - Lazy load for Classes/Functions/Globals
 - Tools → Project utilities → Generate requirements file
