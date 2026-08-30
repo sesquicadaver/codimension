@@ -12,9 +12,10 @@
 """Resolve plain-text editor tabs that expose a toolbar.
 
 ``sigTextEditorTabAdded`` historically ignored ``tabIndex`` and used
-``currentEditorWidget``, which can still be :class:`WelcomeWidget` (no
-``toolbar``) when tabs are restored / after ``processEvents``. Always prefer
-the widget at ``tabIndex`` and require ``PlainTextEditor``.
+``currentEditorWidget``, which can still be :class:`WelcomeWidget` or
+:class:`ImportDgmTabWidget` (no ``toolbar``) when tabs are restored / after
+``processEvents`` / when the active tab is a diagram. Always prefer the widget
+at ``tabIndex`` and require ``PlainTextEditor``.
 """
 
 from __future__ import annotations

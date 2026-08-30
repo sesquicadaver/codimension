@@ -27,8 +27,8 @@ classifiers = [
 ]
 dependencies = [
   "setuptools>=65.0; python_version >= '3.12'",
+  "pylint==2.5.3",
   "cdmgcplugin>=1.0.4",
-  "cdmpylintplugin>=1.0.4",
   "cdmsysinfoplugin>=1.0.0",
   "pyflakes>=2.1.1",
   "flake8>=3.7.7",
@@ -117,6 +117,8 @@ ignore = []
 "codimension/flowui/everything.py" = ["E402", "E401", "F811", "F821", "E722", "F841"]
 # HTML strings in help - long lines acceptable
 "codimension/ui/helpwidget.py" = ["E501"]
+# Vendored upstream pylint wizard (toolbar-hardened); keep import/except style stable
+"cdmplugins/pylint/**" = ["I001", "E722", "E501"]
 
 [tool.mypy]
 python_version = "3.10"

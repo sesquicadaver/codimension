@@ -15,6 +15,7 @@
 |----|----------|-----------|--------|
 | UX-SCAN | Повільний скан великих дерев без пропозиції ignore | P2 | ✅ 30s prompt + `excludeFromProjectTree` |
 | UX-DRAWLINE | qutepart `paintEvent` / whitespace: `drawLine` float mid-Y → TypeError (PyQt5) | P1 | ✅ `int_draw_line_args` + `QutepartWrapper` patch |
+| UX-PYLINT-TB | pylint `sigFileTypeChanged` → `ImportDgmTabWidget` без `toolbar` | P1 | ✅ bundled pylint 1.0.5 + `editor_toolbar` |
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
