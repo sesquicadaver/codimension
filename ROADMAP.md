@@ -148,7 +148,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 15 | R203 | Polyglot: Rust/C++ descriptors + SemanticProvider (LSP) | rust-analyzer / clangd; `compile_commands.json` → READY else DEGRADED (no full-diagnostics claim) | L | DONE ([#135](https://github.com/sesquicadaver/codimension/pull/135)) |
 | 16 | R204 | Polyglot: UI language controller (capability-driven) | Diagnostics / outline / hover / definition / references / format / rename-preview; no `if language == …` | L | DONE ([#137](https://github.com/sesquicadaver/codimension/pull/137)) |
 | 17 | R205 | Polyglot: Tree-sitter StructuralGraph (Rust+C++) | StructuralGraph + `semantic_role` mapping; **not** compiler CFG | L | DONE ([#139](https://github.com/sesquicadaver/codimension/pull/139)) |
-| 18 | R206 | Polyglot: BindingIndex + PyO3 / pybind11 / CPython + `.pyi` | Evidence-backed FFI edges only (no name-equality exact edges) | L | DONE |
+| 18 | R206 | Polyglot: BindingIndex + PyO3 / pybind11 / CPython + `.pyi` | Evidence-backed FFI edges only (no name-equality exact edges) | L | DONE ([#141](https://github.com/sesquicadaver/codimension/pull/141)) |
 | 19 | R207 | Polyglot: DependencyEdgeKind + cross-language navigation | Generalized edges incl. FFI; navigation across language boundary | M | OPEN |
 | 20 | R208 | Polyglot: Cargo / CMake / Ninja / CTest TaskProviders | Explicit tasks only (not on file open); not via clangd/rust-analyzer as build runners | M | OPEN |
 
