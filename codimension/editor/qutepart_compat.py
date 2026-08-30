@@ -17,7 +17,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""PyQt5 / qutepart compatibility helpers for the editor."""
+"""PyQt5 / qutepart compatibility helpers for the editor.
+
+Do **not** monkeypatch ``QPainter.drawLine``: assigning a Python function then
+restoring the sip method permanently breaks ``painter.drawLine(QLineF)``
+overload binding (flow UI / scope painting).
+"""
+
+from __future__ import annotations
+
+from typing import Tuple, Union
+
+
+def int_coords(*values: Union[float, int]) -> Tuple[int, ...]:
+    """Cast numeric paint coordinates to ``int`` for PyQt5."""
+    return tuple(int(value) for value in values)
 
 
 def int_draw_line_args(args: tuple) -> tuple:
@@ -25,7 +39,8 @@ def int_draw_line_args(args: tuple) -> tuple:
 
     Upstream qutepart uses ``(top + bottom) / 2`` which yields ``float`` on
     Python 3; ``QPainter.drawLine(int, int, int, int)`` then TypeErrors.
+    Prefer :func:`int_coords` at the call site — never patch ``QPainter``.
     """
     if len(args) == 4 and all(isinstance(value, (int, float)) for value in args):
-        return tuple(int(value) for value in args)
+        return int_coords(*args)
     return args
