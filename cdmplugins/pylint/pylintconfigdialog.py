@@ -19,36 +19,32 @@
 
 """Codimension pylint plugin configuration dialog.
 
-   It is rather an 'about' type dialog at the moment.
+It is rather an 'about' type dialog at the moment.
 """
 
 import pkg_resources
-from ui.qt import (QDialog, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy,
-                   QPixmap, Qt, QDialogButtonBox)
-
+from ui.qt import QDialog, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPixmap, Qt, QDialogButtonBox
 
 
 def getPluginVersionAndPath(pluginHomeDir):
     """Provides the plugin version"""
-    with open(pluginHomeDir + 'pylint.cdmp') as dec_file:
+    with open(pluginHomeDir + "pylint.cdmp") as dec_file:
         for line in dec_file:
             line = line.strip()
-            if line.startswith('Version'):
-                return line.split('=')[1].strip()
-    return 'Unknown'
+            if line.startswith("Version"):
+                return line.split("=")[1].strip()
+    return "Unknown"
 
 
 def getPylintVersionAndPath():
     """Provides the pylint version"""
     try:
-        return pkg_resources.get_distribution('pylint').version, \
-               pkg_resources.get_distribution('pylint').location
+        return pkg_resources.get_distribution("pylint").version, pkg_resources.get_distribution("pylint").location
     except pkg_resources.DistributionNotFound:
-        return 'Unknown', 'Unknown'
+        return "Unknown", "Unknown"
 
 
 class PylintPluginConfigDialog(QDialog):
-
     """Pyling plugin config dialog"""
 
     def __init__(self, pluginHomeDir, parent):
@@ -56,7 +52,7 @@ class PylintPluginConfigDialog(QDialog):
 
         self.__pluginHomeDir = pluginHomeDir
         self.__createLayout()
-        self.setWindowTitle('Pylint plugin information')
+        self.setWindowTitle("Pylint plugin information")
 
     def __createLayout(self):
         """Creates the dialog layout"""
@@ -69,25 +65,25 @@ class PylintPluginConfigDialog(QDialog):
         vboxLayout = QVBoxLayout(self)
         hboxLayout = QHBoxLayout()
         iconLabel = QLabel()
-        iconLabel.setPixmap(QPixmap(self.__pluginHomeDir + 'pylint.png'))
+        iconLabel.setPixmap(QPixmap(self.__pluginHomeDir + "pylint.png"))
         iconLabel.setScaledContents(True)
         iconLabel.setFixedSize(48, 48)
         hboxLayout.addWidget(iconLabel)
-        titleLabel = QLabel('<b>Codimension pylint plugin</b>')
-        titleLabel.setSizePolicy(QSizePolicy.Expanding,
-                                 QSizePolicy.Expanding)
+        titleLabel = QLabel("<b>Codimension pylint plugin</b>")
+        titleLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         titleLabel.setFixedHeight(48)
         titleLabel.setAlignment(Qt.AlignCenter)
 
-        infoLabel = QLabel('<hr><br>More info:'
-                           '<ul>'
-                           '<li>Plugin<br>'
-                           'Version: ' + pluginVersion + '<br>'
-                           'Location: ' + self.__pluginHomeDir + '</li>'
-                           '<li>Pylint<br>'
-                           'Version: ' + pylintVersion + '<br>' +
-                           'Location: ' + pylintPath + '</li>'
-                           '</ul><br>')
+        infoLabel = QLabel(
+            "<hr><br>More info:"
+            "<ul>"
+            "<li>Plugin<br>"
+            "Version: " + pluginVersion + "<br>"
+            "Location: " + self.__pluginHomeDir + "</li>"
+            "<li>Pylint<br>"
+            "Version: " + pylintVersion + "<br>" + "Location: " + pylintPath + "</li>"
+            "</ul><br>"
+        )
         hboxLayout.addWidget(titleLabel)
         vboxLayout.addLayout(hboxLayout)
         vboxLayout.addWidget(infoLabel)
@@ -98,4 +94,3 @@ class PylintPluginConfigDialog(QDialog):
         self.__buttonBox.accepted.connect(self.close)
         self.__buttonBox.rejected.connect(self.close)
         vboxLayout.addWidget(self.__buttonBox)
-

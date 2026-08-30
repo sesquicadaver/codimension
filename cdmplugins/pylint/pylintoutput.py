@@ -19,29 +19,27 @@
 
 """Codimension pylint stdout/stderr viewer"""
 
-from ui.qt import (QDialog, QVBoxLayout, QHBoxLayout, Qt, QProcess,
-                   QSizePolicy, QLabel, QDialogButtonBox, QTextEdit)
+from ui.qt import QDialog, QVBoxLayout, QHBoxLayout, Qt, QProcess, QSizePolicy, QLabel, QDialogButtonBox, QTextEdit
 from ui.labels import HeaderFitLabel
 from utils.colorfont import getZoomedMonoFont
 
 
 class PylintStdoutStderrViewer(QDialog):
-
     """Shows the standard output and error if so"""
 
     def __init__(self, parent, results):
         QDialog.__init__(self, parent)
 
-        title = 'pylint raw'
-        stdout = results.get('StdOut', None)
-        stderr = results.get('StdErr', None)
+        title = "pylint raw"
+        stdout = results.get("StdOut", None)
+        stderr = results.get("StdErr", None)
 
         if stdout is not None and stderr is not None:
-            title += ' standard output and standard error'
+            title += " standard output and standard error"
         elif stdout is not None:
-            title += ' standard output'
+            title += " standard output"
         else:
-            title += ' standard error'
+            title += " standard error"
         self.setWindowTitle(title)
         self.__createLayout(results)
 
@@ -57,44 +55,41 @@ class PylintStdoutStderrViewer(QDialog):
 
         statusLabel = HeaderFitLabel(self)
         statusLabel.setAlignment(Qt.AlignLeft)
-        statusLabel.setSizePolicy(QSizePolicy.Expanding,
-                                  QSizePolicy.Fixed)
+        statusLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         statusLabel.setMinimumWidth(10)
-        if 'ExitStatus' in results:
-            if results['ExitStatus'] == QProcess.NormalExit:
-                statusLabel.setText('Exit status: normal exit')
+        if "ExitStatus" in results:
+            if results["ExitStatus"] == QProcess.NormalExit:
+                statusLabel.setText("Exit status: normal exit")
             else:
-                statusLabel.setText('Exit status: crash exit')
+                statusLabel.setText("Exit status: crash exit")
         else:
-            statusLabel.setText('Exit status: not available')
+            statusLabel.setText("Exit status: not available")
 
         exitCodeLabel = HeaderFitLabel(self)
         exitCodeLabel.setAlignment(Qt.AlignLeft)
-        exitCodeLabel.setSizePolicy(QSizePolicy.Expanding,
-                                    QSizePolicy.Fixed)
+        exitCodeLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         exitCodeLabel.setMinimumWidth(10)
-        if 'ExitCode' in results:
-            if 'ExitStatus' in results:
-                if results['ExitStatus'] == QProcess.NormalExit:
-                    exitCodeLabel.setText('Exit code: ' +
-                                          str(results['ExitCode']))
+        if "ExitCode" in results:
+            if "ExitStatus" in results:
+                if results["ExitStatus"] == QProcess.NormalExit:
+                    exitCodeLabel.setText("Exit code: " + str(results["ExitCode"]))
                 else:
-                    exitCodeLabel.setText('Exit code: not available')
+                    exitCodeLabel.setText("Exit code: not available")
             else:
-                exitCodeLabel.setText('Exit code: not available')
+                exitCodeLabel.setText("Exit code: not available")
         else:
-            exitCodeLabel.setText('Exit code: not available')
+            exitCodeLabel.setText("Exit code: not available")
 
         headerLayout.addWidget(statusLabel)
         headerLayout.addWidget(exitCodeLabel)
         layout.addLayout(headerLayout)
 
-        stdout = results.get('StdOut', None)
+        stdout = results.get("StdOut", None)
         if stdout is None:
-            stdoutLabel = QLabel('Standard output: not available', self)
+            stdoutLabel = QLabel("Standard output: not available", self)
             layout.addWidget(stdoutLabel)
         else:
-            stdoutLabel = QLabel('Standard output:', self)
+            stdoutLabel = QLabel("Standard output:", self)
             layout.addWidget(stdoutLabel)
 
             stdoutEditor = QTextEdit()
@@ -104,12 +99,12 @@ class PylintStdoutStderrViewer(QDialog):
             stdoutEditor.setPlainText(stdout)
             layout.addWidget(stdoutEditor)
 
-        stderr = results.get('StdErr', None)
+        stderr = results.get("StdErr", None)
         if stderr is None:
-            stderrLabel = QLabel('Standard error: not available', self)
+            stderrLabel = QLabel("Standard error: not available", self)
             layout.addWidget(stderrLabel)
         else:
-            stderrLabel = QLabel('Standard error:', self)
+            stderrLabel = QLabel("Standard error:", self)
             layout.addWidget(stderrLabel)
 
             stderrEditor = QTextEdit()
@@ -128,4 +123,3 @@ class PylintStdoutStderrViewer(QDialog):
         buttonBox.accepted.connect(self.close)
         buttonBox.rejected.connect(self.close)
         layout.addWidget(buttonBox)
-

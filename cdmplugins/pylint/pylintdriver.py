@@ -19,18 +19,16 @@
 
 """Codimension pylint driver implementation"""
 
-
 import sys
 import re
 import os.path
 from ui.qt import QWidget, pyqtSignal, QProcess, QProcessEnvironment, QByteArray
 from utils.misc import getLocaleDateTime
 
-MSG_REGEXP = re.compile(r'^[CRWE]+([0-9]{4})?:')
+MSG_REGEXP = re.compile(r"^[CRWE]+([0-9]{4})?:")
 
 
 class PylintDriver(QWidget):
-
     """Pylint driver which runs pylint in the background"""
 
     sigFinished = pyqtSignal(dict)
@@ -42,8 +40,8 @@ class PylintDriver(QWidget):
         self.__process = None
         self.__args = None
 
-        self.__stdout = ''
-        self.__stderr = ''
+        self.__stdout = ""
+        self.__stderr = ""
 
     def isInProcess(self):
         """True if pylint is still running"""
@@ -52,10 +50,10 @@ class PylintDriver(QWidget):
     def start(self, fileName, encoding):
         """Runs the analysis process"""
         if self.__process is not None:
-            return 'Another pylint analysis is in progress'
+            return "Another pylint analysis is in progress"
 
         self.__fileName = fileName
-        self.__encoding = 'utf-8' if encoding is None else encoding
+        self.__encoding = "utf-8" if encoding is None else encoding
 
         self.__process = QProcess(self)
         self.__process.setProcessChannelMode(QProcess.SeparateChannels)
@@ -64,14 +62,18 @@ class PylintDriver(QWidget):
         self.__process.readyReadStandardError.connect(self.__readStdError)
         self.__process.finished.connect(self.__finished)
 
-        self.__stdout = ''
-        self.__stderr = ''
+        self.__stdout = ""
+        self.__stderr = ""
 
-        self.__args = ['-m', 'pylint',
-                       '--output-format', 'text',
-                       '--msg-template',
-                       '{msg_id}:{line:3d},{column}: {obj}: {msg}',
-                       os.path.basename(self.__fileName)]
+        self.__args = [
+            "-m",
+            "pylint",
+            "--output-format",
+            "text",
+            "--msg-template",
+            "{msg_id}:{line:3d},{column}: {obj}: {msg}",
+            os.path.basename(self.__fileName),
+        ]
         rcfile = PylintDriver.getPylintrc(self.__ide, self.__fileName)
         if rcfile:
             self.__args.append("--rcfile")
@@ -82,14 +84,14 @@ class PylintDriver(QWidget):
             self.__args.append(initHook)
 
         processEnvironment = QProcessEnvironment()
-        processEnvironment.insert('PYTHONIOENCODING', self.__encoding)
+        processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
         self.__process.setProcessEnvironment(processEnvironment)
         self.__process.start(sys.executable, self.__args)
 
         running = self.__process.waitForStarted()
         if not running:
             self.__process = None
-            return 'pylint analysis failed to start'
+            return "pylint analysis failed to start"
         return None
 
     def stop(self):
@@ -104,20 +106,20 @@ class PylintDriver(QWidget):
     def generateRCFile(self, ide, fileName):
         """Generates the pylintrc file"""
         if ide.project.isLoaded():
-            rcfile = ide.project.getProjectDir() + 'pylintrc'
+            rcfile = ide.project.getProjectDir() + "pylintrc"
         else:
-            rcfile = os.path.dirname(fileName) + os.path.sep + 'pylintrc'
+            rcfile = os.path.dirname(fileName) + os.path.sep + "pylintrc"
 
         process = QProcess(self)
         process.setStandardOutputFile(rcfile)
-        process.start(sys.executable, ['-m', 'pylint', '--generate-rcfile'])
+        process.start(sys.executable, ["-m", "pylint", "--generate-rcfile"])
         process.waitForFinished()
         return rcfile
 
     @staticmethod
     def getPylintrc(ide, fileName):
         """Provides the pylintrc path"""
-        names = ['pylintrc', '.pylintrc']
+        names = ["pylintrc", ".pylintrc"]
         dirs = []
         if fileName:
             dirs = [os.path.dirname(fileName) + os.path.sep]
@@ -140,7 +142,7 @@ class PylintDriver(QWidget):
             return None
 
         importDirs.reverse()
-        code = 'import sys'
+        code = "import sys"
         for importDir in importDirs:
             code += ';sys.path.insert(0,"' + importDir + '")'
         return code
@@ -165,71 +167,67 @@ class PylintDriver(QWidget):
         """Handles the process finish"""
         self.__process = None
 
-        results = {'ExitCode': exitCode,
-                   'ExitStatus': exitStatus,
-                   'FileName': self.__fileName,
-                   'Timestamp': getLocaleDateTime(),
-                   'CommandLine': [sys.executable] + self.__args}
+        results = {
+            "ExitCode": exitCode,
+            "ExitStatus": exitStatus,
+            "FileName": self.__fileName,
+            "Timestamp": getLocaleDateTime(),
+            "CommandLine": [sys.executable] + self.__args,
+        }
 
         if not self.__stdout:
             if self.__stderr:
-                results['ProcessError'] = 'pylint error:\n' + self.__stderr
+                results["ProcessError"] = "pylint error:\n" + self.__stderr
             else:
-                results['ProcessError'] = 'pylint produced no output ' \
-                                          '(finished abruptly) for ' + \
-                                          self.__fileName
+                results["ProcessError"] = "pylint produced no output (finished abruptly) for " + self.__fileName
             self.sigFinished.emit(results)
             self.__args = None
             return
 
         # Convention, Refactor, Warning, Error
-        results.update({'C': [], 'R': [], 'W': [], 'E': [],
-                        'StdOut': self.__stdout,
-                        'StdErr': self.__stderr})
-        modulePattern = '************* Module '
+        results.update({"C": [], "R": [], "W": [], "E": [], "StdOut": self.__stdout, "StdErr": self.__stderr})
+        modulePattern = "************* Module "
 
-        module = ''
+        module = ""
         for line in self.__stdout.splitlines():
             if line.startswith(modulePattern):
-                module = line[len(modulePattern):]
+                module = line[len(modulePattern) :]
                 continue
-            if not re.match(r'^[CRWE]+([0-9]{4})?:', line):
+            if not re.match(r"^[CRWE]+([0-9]{4})?:", line):
                 continue
-            colonPos1 = line.find(':')
+            colonPos1 = line.find(":")
             if colonPos1 == -1:
                 continue
             msgId = line[:colonPos1]
-            colonPos2 = line.find(':', colonPos1 + 1)
+            colonPos2 = line.find(":", colonPos1 + 1)
             if colonPos2 == -1:
                 continue
-            lineNo = line[colonPos1 + 1:colonPos2].strip()
+            lineNo = line[colonPos1 + 1 : colonPos2].strip()
             if not lineNo:
                 continue
-            lineNo = int(lineNo.split(',')[0])
-            message = line[colonPos2 + 1:].strip()
-            if message.startswith(':'):
+            lineNo = int(lineNo.split(",")[0])
+            message = line[colonPos2 + 1 :].strip()
+            if message.startswith(":"):
                 message = message[1:].strip()
             item = (module, lineNo, message, msgId)
             results[line[0]].append(item)
 
         # Rate and previous run
-        ratePattern = 'Your code has been rated at '
+        ratePattern = "Your code has been rated at "
         ratePos = self.__stdout.find(ratePattern)
         if ratePos > 0:
-            rateEndPos = self.__stdout.find('/10', ratePos)
+            rateEndPos = self.__stdout.find("/10", ratePos)
             if rateEndPos > 0:
-                rate = self.__stdout[ratePos + len(ratePattern):rateEndPos]
-                results['Rate'] = rate
+                rate = self.__stdout[ratePos + len(ratePattern) : rateEndPos]
+                results["Rate"] = rate
 
                 # Previous run
-                prevRunPattern = 'previous run: '
+                prevRunPattern = "previous run: "
                 prevRunPos = self.__stdout.find(prevRunPattern, rateEndPos)
                 if prevRunPos > 0:
-                    prevRunEndPos = self.__stdout.find('/10', prevRunPos)
-                    previous = self.__stdout[prevRunPos +
-                                             len(prevRunPattern):prevRunEndPos]
-                    results['PreviousRunRate'] = previous
+                    prevRunEndPos = self.__stdout.find("/10", prevRunPos)
+                    previous = self.__stdout[prevRunPos + len(prevRunPattern) : prevRunEndPos]
+                    results["PreviousRunRate"] = previous
 
         self.sigFinished.emit(results)
         self.__args = None
-

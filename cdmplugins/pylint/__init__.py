@@ -19,7 +19,6 @@
 
 """Codimension pylint plugin implementation"""
 
-
 import logging
 import os.path
 from distutils.version import StrictVersion
@@ -39,7 +38,6 @@ PLUGIN_HOME_DIR = os.path.dirname(os.path.abspath(__file__)) + os.path.sep
 
 
 class PylintPlugin(WizardInterface):
-
     """Codimension pylint plugin"""
 
     def __init__(self):
@@ -64,7 +62,7 @@ class PylintPlugin(WizardInterface):
         the current IDE version.
         True should be returned if the plugin is compatible with the IDE.
         """
-        return StrictVersion(ideVersion) >= StrictVersion('4.7.1')
+        return StrictVersion(ideVersion) >= StrictVersion("4.7.1")
 
     def activate(self, ideSettings, ideGlobalData):
         """Activates the plugin.
@@ -83,11 +81,10 @@ class PylintPlugin(WizardInterface):
         WizardInterface.activate(self, ideSettings, ideGlobalData)
 
         self.__resultViewer = PylintResultViewer(self.ide, PLUGIN_HOME_DIR)
-        self.ide.sideBars['bottom'].addTab(
-            self.__resultViewer, QIcon(PLUGIN_HOME_DIR + 'pylint.png'),
-            'Pylint', 'pylint', 2)
-        self.ide.sideBars['bottom'].tabButton(
-            'pylint', QTabBar.RightSide).resize(0, 0)
+        self.ide.sideBars["bottom"].addTab(
+            self.__resultViewer, QIcon(PLUGIN_HOME_DIR + "pylint.png"), "Pylint", "pylint", 2
+        )
+        self.ide.sideBars["bottom"].tabButton("pylint", QTabBar.RightSide).resize(0, 0)
 
         # The clear call must be here, not in the results viewer __init__()
         # This is because the viewer has not been inserted into the side bar at
@@ -98,31 +95,28 @@ class PylintPlugin(WizardInterface):
         self.__pylintDriver.sigFinished.connect(self.__pylintFinished)
 
         if self.__globalShortcut is None:
-            self.__globalShortcut = QShortcut(QKeySequence('Ctrl+L'),
-                                              self.ide.mainWindow, self.__run)
+            self.__globalShortcut = QShortcut(QKeySequence("Ctrl+L"), self.ide.mainWindow, self.__run)
         else:
-            self.__globalShortcut.setKey('Ctrl+L')
+            self.__globalShortcut.setKey("Ctrl+L")
 
         # Add buttons
         for _, _, tabWidget in self.ide.editorsManager.getTextEditors():
             self.__addButton(tabWidget)
 
         # File type changed & new tab
-        self.ide.editorsManager.sigTextEditorTabAdded.connect(
-            self.__textEditorTabAdded)
-        self.ide.editorsManager.sigFileTypeChanged.connect(
-            self.__fileTypeChanged)
+        self.ide.editorsManager.sigTextEditorTabAdded.connect(self.__textEditorTabAdded)
+        self.ide.editorsManager.sigFileTypeChanged.connect(self.__fileTypeChanged)
 
         # Add main menu
-        self.__mainMenu = QMenu('Pylint', self.ide.mainWindow)
-        self.__mainMenu.setIcon(QIcon(PLUGIN_HOME_DIR + 'pylint.png'))
+        self.__mainMenu = QMenu("Pylint", self.ide.mainWindow)
+        self.__mainMenu.setIcon(QIcon(PLUGIN_HOME_DIR + "pylint.png"))
         self.__mainRunAction = self.__mainMenu.addAction(
-            QIcon(PLUGIN_HOME_DIR + 'pylint.png'),
-            'Run pylint\t(Ctrl+L)', self.__run)
+            QIcon(PLUGIN_HOME_DIR + "pylint.png"), "Run pylint\t(Ctrl+L)", self.__run
+        )
         self.__mainGenerateAction = self.__mainMenu.addAction(
-            QIcon(PLUGIN_HOME_DIR + 'generate.png'),
-            'Generate/open pylintrc file', self.__generate)
-        toolsMenu = self.ide.mainWindow.menuBar().findChild(QMenu, 'tools')
+            QIcon(PLUGIN_HOME_DIR + "generate.png"), "Generate/open pylintrc file", self.__generate
+        )
+        toolsMenu = self.ide.mainWindow.menuBar().findChild(QMenu, "tools")
         self.__mainMenuSeparator = toolsMenu.addSeparator()
         toolsMenu.addMenu(self.__mainMenu)
         self.__mainMenu.aboutToShow.connect(self.__mainMenuAboutToShow)
@@ -138,12 +132,12 @@ class PylintPlugin(WizardInterface):
         self.__globalShortcut.setKey(0)
 
         self.__resultViewer = None
-        self.ide.sideBars['bottom'].removeTab('pylint')
+        self.ide.sideBars["bottom"].removeTab("pylint")
         self.__pylintDriver = None
 
         # Remove buttons
         for _, _, tabWidget in self.ide.editorsManager.getTextEditors():
-            pylintAction = toolbar_action(tabWidget, 'pylint')
+            pylintAction = toolbar_action(tabWidget, "pylint")
             if pylintAction is None:
                 continue
             tabWidget.toolbar.removeAction(pylintAction)
@@ -152,13 +146,10 @@ class PylintPlugin(WizardInterface):
             # really from the list of children
             pylintAction.deleteLater()
 
-            tabWidget.getEditor().modificationChanged.disconnect(
-                self.__modificationChanged)
+            tabWidget.getEditor().modificationChanged.disconnect(self.__modificationChanged)
 
-        self.ide.editorsManager.sigTextEditorTabAdded.disconnect(
-            self.__textEditorTabAdded)
-        self.ide.editorsManager.sigFileTypeChanged.disconnect(
-            self.__fileTypeChanged)
+        self.ide.editorsManager.sigTextEditorTabAdded.disconnect(self.__textEditorTabAdded)
+        self.ide.editorsManager.sigFileTypeChanged.disconnect(self.__fileTypeChanged)
 
         # Remove main menu items
         self.__mainRunAction.deleteLater()
@@ -196,7 +187,7 @@ class PylintPlugin(WizardInterface):
         <Plugin #N name> menu item shown.
         It is suggested to insert plugin configuration item here if so.
         """
-        del parentMenu      # unused argument
+        del parentMenu  # unused argument
 
     def populateFileContextMenu(self, parentMenu):
         """Populates the file context menu.
@@ -209,7 +200,7 @@ class PylintPlugin(WizardInterface):
         When a callback is called the corresponding menu item will have
         attached data with an absolute path to the item.
         """
-        del parentMenu      # unused argument
+        del parentMenu  # unused argument
 
     def populateDirectoryContextMenu(self, parentMenu):
         """Populates the directory context menu.
@@ -222,7 +213,7 @@ class PylintPlugin(WizardInterface):
         When a callback is called the corresponding menu item will have
         attached data with an absolute path to the directory.
         """
-        del parentMenu      # unused argument
+        del parentMenu  # unused argument
 
     def populateBufferContextMenu(self, parentMenu):
         """Populates the editing buffer context menu.
@@ -244,13 +235,13 @@ class PylintPlugin(WizardInterface):
               Having the current widget reference the plugin is able to
               retrieve the information it needs.
         """
-        parentMenu.setIcon(QIcon(PLUGIN_HOME_DIR + 'pylint.png'))
+        parentMenu.setIcon(QIcon(PLUGIN_HOME_DIR + "pylint.png"))
         self.__bufferRunAction = parentMenu.addAction(
-            QIcon(PLUGIN_HOME_DIR + 'pylint.png'),
-            'Run pylint\t(Ctrl+L)', self.__run)
+            QIcon(PLUGIN_HOME_DIR + "pylint.png"), "Run pylint\t(Ctrl+L)", self.__run
+        )
         self.__bufferGenerateAction = parentMenu.addAction(
-            QIcon(PLUGIN_HOME_DIR + 'generate.png'),
-            'Generate/open pylintrc file', self.__generate)
+            QIcon(PLUGIN_HOME_DIR + "generate.png"), "Generate/open pylintrc file", self.__generate
+        )
         parentMenu.aboutToShow.connect(self.__bufferMenuAboutToShow)
 
     def configure(self):
@@ -266,10 +257,9 @@ class PylintPlugin(WizardInterface):
         if not isPythonMime(editorWidget.getMime()):
             return False, None
         if editorWidget.isModified():
-            return False, 'Save changes before running pylint'
+            return False, "Save changes before running pylint"
         if not os.path.isabs(editorWidget.getFileName()):
-            return False, 'The new file has never been saved yet. ' \
-                          'Save it before running pylint'
+            return False, "The new file has never been saved yet. Save it before running pylint"
         return True, None
 
     def __run(self):
@@ -297,9 +287,9 @@ class PylintPlugin(WizardInterface):
         rcfile = self.__pylintDriver.getPylintrc(self.ide, fileName)
         if not rcfile:
             if fileName is None and not self.ide.project.isLoaded():
-                logging.error('Cannot generate pylintrc. '
-                              'The current buffer file has not been saved yet '
-                              'and there is no project')
+                logging.error(
+                    "Cannot generate pylintrc. The current buffer file has not been saved yet and there is no project"
+                )
                 return
 
             QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
@@ -312,24 +302,24 @@ class PylintPlugin(WizardInterface):
                 return
 
         # It really could be only the rc generating error
-        logging.error('Error generating pylintrc file ' + str(rcfile))
+        logging.error("Error generating pylintrc file " + str(rcfile))
 
     def __pylintFinished(self, results):
         """Pylint has finished"""
         self.__switchToIdle()
-        error = results.get('ProcessError', None)
+        error = results.get("ProcessError", None)
         if error:
             logging.error(error)
         else:
             self.__resultViewer.showResults(results)
-            self.ide.mainWindow.activateBottomTab('pylint')
+            self.ide.mainWindow.activateBottomTab("pylint")
 
     def __switchToRunning(self):
         """Switching to the running mode"""
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         # disable buttons
         for _, _, tabWidget in self.ide.editorsManager.getTextEditors():
-            pylintAction = toolbar_action(tabWidget, 'pylint')
+            pylintAction = toolbar_action(tabWidget, "pylint")
             if pylintAction is not None:
                 pylintAction.setEnabled(False)
         # disable menu
@@ -339,7 +329,7 @@ class PylintPlugin(WizardInterface):
         QApplication.restoreOverrideCursor()
         # enable buttons
         for _, _, tabWidget in self.ide.editorsManager.getTextEditors():
-            pylintAction = toolbar_action(tabWidget, 'pylint')
+            pylintAction = toolbar_action(tabWidget, "pylint")
             if pylintAction is not None:
                 pylintAction.setEnabled(self.__canRun(tabWidget)[0])
         # enable menu
@@ -348,28 +338,24 @@ class PylintPlugin(WizardInterface):
         """Adds a button to the editor toolbar"""
         if plain_text_editor_with_toolbar(None, current_widget=tabWidget) is None:
             return
-        pylintButton = QAction(QIcon(PLUGIN_HOME_DIR + 'pylint.png'),
-                               'Run pylint (Ctrl+L)', tabWidget.toolbar)
+        pylintButton = QAction(QIcon(PLUGIN_HOME_DIR + "pylint.png"), "Run pylint (Ctrl+L)", tabWidget.toolbar)
         pylintButton.setEnabled(self.__canRun(tabWidget)[0])
         pylintButton.triggered.connect(self.__run)
-        pylintButton.setObjectName('pylint')
+        pylintButton.setObjectName("pylint")
 
-        beforeWidget = tabWidget.toolbar.findChild(QAction,
-                                                   'deadCodeScriptButton')
+        beforeWidget = tabWidget.toolbar.findChild(QAction, "deadCodeScriptButton")
         if beforeWidget is not None:
             tabWidget.toolbar.insertAction(beforeWidget, pylintButton)
         else:
             tabWidget.toolbar.addAction(pylintButton)
-        tabWidget.getEditor().modificationChanged.connect(
-            self.__modificationChanged)
+        tabWidget.getEditor().modificationChanged.connect(self.__modificationChanged)
 
     def __modificationChanged(self):
         """Triggered when one of the text editors changed their mod state"""
-        widget = plain_text_editor_with_toolbar(
-            self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
+        widget = plain_text_editor_with_toolbar(self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
         if widget is None:
             return
-        pylintAction = toolbar_action(widget, 'pylint')
+        pylintAction = toolbar_action(widget, "pylint")
         if pylintAction is not None:
             pylintAction.setEnabled(self.__canRun(widget)[0])
 
@@ -385,16 +371,15 @@ class PylintPlugin(WizardInterface):
 
     def __fileTypeChanged(self, shortFileName, uuid, mime):
         """Triggered when a file changed its type"""
-        del shortFileName   # unused argument
-        del uuid            # unused argument
-        del mime            # unused argument
+        del shortFileName  # unused argument
+        del uuid  # unused argument
+        del mime  # unused argument
 
         # Import diagram / Welcome / other non-editors have no toolbar.
-        widget = plain_text_editor_with_toolbar(
-            self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
+        widget = plain_text_editor_with_toolbar(self.ide.editorsManager, current_widget=self.ide.currentEditorWidget)
         if widget is None:
             return
-        pylintAction = toolbar_action(widget, 'pylint')
+        pylintAction = toolbar_action(widget, "pylint")
         if pylintAction is not None:
             pylintAction.setEnabled(self.__canRun(widget)[0])
 
@@ -415,7 +400,7 @@ class PylintPlugin(WizardInterface):
     def __calcRunGenerateState(self):
         """Calculates the enable/disable state of the run/generate menu items"""
         editorWidget = self.ide.currentEditorWidget
-        defaultGenerateText = 'Open pylintrc file'
+        defaultGenerateText = "Open pylintrc file"
         if editorWidget.getType() != MainWindowTabWidgetBase.PlainTextEditor:
             return False, (False, defaultGenerateText)
         if not isPythonMime(editorWidget.getMime()):
@@ -431,10 +416,9 @@ class PylintPlugin(WizardInterface):
         if editorWidget.isModified():
             if rcfile:
                 return False, (True, defaultGenerateText)
-            return False, (True, 'Generate and open pylintrc file')
+            return False, (True, "Generate and open pylintrc file")
 
         # Saved python file and no pylint running
         if rcfile:
             return fileName is not None, (True, defaultGenerateText)
-        return fileName is not None, (True, 'Generate and open pylintrc file')
-
+        return fileName is not None, (True, "Generate and open pylintrc file")
