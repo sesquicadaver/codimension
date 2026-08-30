@@ -549,16 +549,12 @@ class CodimensionProject(
         finally:
             self.__slowScanPromptOpen = False
 
-        self.props["slowScanPromptSeen"] = merge_prompt_seen(
-            self.props.get("slowScanPromptSeen", []), offered
-        )
+        self.props["slowScanPromptSeen"] = merge_prompt_seen(self.props.get("slowScanPromptSeen", []), offered)
         if not accepted or (not analysis_sel and not tree_sel):
             self.saveProject()
             return
 
-        self.props["excludeFromAnalysis"] = merge_unique_paths(
-            self.props.get("excludeFromAnalysis", []), analysis_sel
-        )
+        self.props["excludeFromAnalysis"] = merge_unique_paths(self.props.get("excludeFromAnalysis", []), analysis_sel)
         self.props["excludeFromProjectTree"] = merge_unique_paths(
             self.props.get("excludeFromProjectTree", []), tree_sel
         )

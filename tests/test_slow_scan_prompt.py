@@ -167,9 +167,7 @@ def test_slow_scan_timeout_continue_marks_seen(tmp_path: Path, monkeypatch) -> N
 
     project = CodimensionProject()
     project.fileName = str(cdm)
-    project.props = merge_project_defaults(
-        {"uuid": "00000000-0000-4000-8000-000000000088", "excludeFromAnalysis": []}
-    )
+    project.props = merge_project_defaults({"uuid": "00000000-0000-4000-8000-000000000088", "excludeFromAnalysis": []})
     fake_thread = MagicMock()
     fake_thread.isRunning.return_value = True
     project._CodimensionProject__scanThread = fake_thread  # noqa: SLF001

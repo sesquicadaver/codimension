@@ -20,7 +20,6 @@ from .qt import (
     QHBoxLayout,
     QLabel,
     QScrollArea,
-    Qt,
     QVBoxLayout,
     QWidget,
 )
@@ -86,9 +85,10 @@ class SlowScanIgnoreDialog(QDialog):
         layout.addWidget(scroll)
 
         buttons = QDialogButtonBox(self)
-        buttons.setOrientation(Qt.Horizontal)
         apply_btn = buttons.addButton("Apply and rescan", QDialogButtonBox.AcceptRole)
         continue_btn = buttons.addButton("Continue scanning", QDialogButtonBox.RejectRole)
+        assert apply_btn is not None
+        assert continue_btn is not None
         apply_btn.clicked.connect(self.accept)
         continue_btn.clicked.connect(self.reject)
         layout.addWidget(buttons)
