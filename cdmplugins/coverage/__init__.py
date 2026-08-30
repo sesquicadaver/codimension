@@ -24,6 +24,8 @@ from ui.qt import QAction, QApplication, QCursor, QKeySequence, QMenu, QShortcut
 from utils.fileutils import isPythonMime
 from utils.pixmapcache import getIcon
 
+from cdmplugins.editor_toolbar import plain_text_editor_with_toolbar, toolbar_action
+
 from .coveragedriver import CoverageDriver
 from .coverageresultviewer import CoverageResultViewer
 
@@ -198,6 +200,8 @@ class CoveragePlugin(WizardInterface):
 
     def __addButton(self, tabWidget):
         """Adds a button to the editor toolbar."""
+        if plain_text_editor_with_toolbar(None, current_widget=tabWidget) is None:
+            return
         covButton = QAction(getIcon("run.png"), "Run with coverage (Ctrl+Shift+C)", tabWidget.toolbar)
         covButton.setEnabled(self.__canRun(tabWidget)[0])
         covButton.triggered.connect(self.__run)
@@ -212,21 +216,36 @@ class CoveragePlugin(WizardInterface):
 
     def __modificationChanged(self):
         """Triggered when editor modification state changed."""
-        covAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "coverage")
+        widget = plain_text_editor_with_toolbar(
+            self.ide.editorsManager, current_widget=self.ide.currentEditorWidget
+        )
+        if widget is None:
+            return
+        covAction = toolbar_action(widget, "coverage")
         if covAction is not None:
-            covAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
+            covAction.setEnabled(self.__canRun(widget)[0])
 
     def __textEditorTabAdded(self, tabIndex):
         """Triggered when a new tab is added."""
-        del tabIndex
-        self.__addButton(self.ide.currentEditorWidget)
+        widget = plain_text_editor_with_toolbar(
+            self.ide.editorsManager,
+            tabIndex,
+            current_widget=self.ide.currentEditorWidget,
+        )
+        if widget is not None:
+            self.__addButton(widget)
 
     def __fileTypeChanged(self, shortFileName, uuid, mime):
         """Triggered when a file changed its type."""
         del shortFileName, uuid, mime
-        covAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "coverage")
+        widget = plain_text_editor_with_toolbar(
+            self.ide.editorsManager, current_widget=self.ide.currentEditorWidget
+        )
+        if widget is None:
+            return
+        covAction = toolbar_action(widget, "coverage")
         if covAction is not None:
-            covAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
+            covAction.setEnabled(self.__canRun(widget)[0])
 
     def __bufferMenuAboutToShow(self):
         """The buffer context menu is about to show."""

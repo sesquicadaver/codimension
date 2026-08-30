@@ -1,5 +1,8 @@
 2026 Aug 30
 
+* Fix: wizard plugins (coverage/pytest/ruff/bandit/mypy/ruffformat) no longer
+  crash on ``WelcomeWidget`` when adding toolbar actions — resolve editor via
+  ``tabIndex`` + PlainTextEditor guard (``cdmplugins.editor_toolbar``)
 * R208: ``core.tasks`` + ``infrastructure.build_tasks`` — Cargo / CMake / Ninja /
   CTest TaskProviders (explicit discovery only; ``BUILD_TASK_EXEC`` gate; not via
   clangd/rust-analyzer); ``BUILD_TASKS`` capability; polyglot wave R200–R208 closed

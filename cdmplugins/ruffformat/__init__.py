@@ -37,6 +37,8 @@ from utils.globals import GlobalData
 from utils.pixmapcache import getIcon
 from utils.venvbootstrap import buildAnalysisEnvironment
 
+from cdmplugins.editor_toolbar import plain_text_editor_with_toolbar, toolbar_action
+
 from .ruffformatconfig import loadFormatOnSave, saveFormatOnSave
 from .ruffformatdriver import RuffFormatDriver
 
@@ -270,6 +272,8 @@ class RuffFormatPlugin(WizardInterface):
 
     def __addButton(self, tabWidget):
         """Adds a format button to the editor toolbar."""
+        if plain_text_editor_with_toolbar(None, current_widget=tabWidget) is None:
+            return
         fmtButton = QAction(
             getIcon("run.png"),
             "Format with ruff (Ctrl+Shift+F)",
@@ -288,21 +292,36 @@ class RuffFormatPlugin(WizardInterface):
 
     def __modificationChanged(self):
         """Triggered when editor modification state changed."""
-        fmtAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "ruffformat")
+        widget = plain_text_editor_with_toolbar(
+            self.ide.editorsManager, current_widget=self.ide.currentEditorWidget
+        )
+        if widget is None:
+            return
+        fmtAction = toolbar_action(widget, "ruffformat")
         if fmtAction is not None:
-            fmtAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
+            fmtAction.setEnabled(self.__canRun(widget)[0])
 
     def __textEditorTabAdded(self, tabIndex):
         """Triggered when a new tab is added."""
-        del tabIndex
-        self.__addButton(self.ide.currentEditorWidget)
+        widget = plain_text_editor_with_toolbar(
+            self.ide.editorsManager,
+            tabIndex,
+            current_widget=self.ide.currentEditorWidget,
+        )
+        if widget is not None:
+            self.__addButton(widget)
 
     def __fileTypeChanged(self, shortFileName, uuid, mime):
         """Triggered when a file changed its type."""
         del shortFileName, uuid, mime
-        fmtAction = self.ide.currentEditorWidget.toolbar.findChild(QAction, "ruffformat")
+        widget = plain_text_editor_with_toolbar(
+            self.ide.editorsManager, current_widget=self.ide.currentEditorWidget
+        )
+        if widget is None:
+            return
+        fmtAction = toolbar_action(widget, "ruffformat")
         if fmtAction is not None:
-            fmtAction.setEnabled(self.__canRun(self.ide.currentEditorWidget)[0])
+            fmtAction.setEnabled(self.__canRun(widget)[0])
 
     def __bufferMenuAboutToShow(self):
         """The buffer context menu is about to show."""
