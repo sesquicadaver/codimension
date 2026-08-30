@@ -1,5 +1,7 @@
 2026 Aug 30
 
+* Fix: qutepart whitespace paint ``drawLine`` TypeError (float mid-Y on
+  Python 3 / PyQt5) — coerce coords in ``QutepartWrapper``
 * Fix: ``ImportResolution.getVisibleName`` used ``ImportWhat`` objects in
   string concat (``can only concatenate str (not "ImportWhat") to str``)
 * Slow-scan: offer ancestor chain (top-level default); Continue no longer

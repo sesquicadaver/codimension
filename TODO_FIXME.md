@@ -14,6 +14,7 @@
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
 | UX-SCAN | Повільний скан великих дерев без пропозиції ignore | P2 | ✅ 30s prompt + `excludeFromProjectTree` |
+| UX-DRAWLINE | qutepart `paintEvent` / whitespace: `drawLine` float mid-Y → TypeError (PyQt5) | P1 | ✅ `int_draw_line_args` + `QutepartWrapper` patch |
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|

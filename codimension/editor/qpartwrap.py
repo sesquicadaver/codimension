@@ -25,8 +25,9 @@ import re
 import socket
 import urllib.request
 
+from editor.qutepart_compat import int_draw_line_args
 from qutepart import Qutepart
-from ui.qt import QApplication, QCursor, QDesktopServices, QPalette, Qt, QTextCursor, QUrl, pyqtSignal
+from ui.qt import QApplication, QCursor, QDesktopServices, QPainter, QPalette, Qt, QTextCursor, QUrl, pyqtSignal
 from utils.colorfont import getZoomedMonoFont
 from utils.encoding import decodeURLContent
 from utils.globals import GlobalData
@@ -56,6 +57,22 @@ class QutepartWrapper(Qutepart):
         # Search/replace support
         self.__matchesCache = None
         self.textChanged.connect(self.__resetMatchCache)
+
+    def _drawIndentMarkersAndEdge(self, paintEventRect):
+        """Draw indent markers; harden qutepart against float drawLine coords."""
+        # At termination the indenter is cleared; paint may still arrive.
+        if getattr(self, "_indenter", None) is None:
+            return
+        original = QPainter.drawLine
+
+        def _safe_draw_line(painter, *args):
+            return original(painter, *int_draw_line_args(args))
+
+        QPainter.drawLine = _safe_draw_line
+        try:
+            Qutepart._drawIndentMarkersAndEdge(self, paintEventRect)
+        finally:
+            QPainter.drawLine = original
 
     def _dropUserExtraSelections(self):
         """Suppressing highlight removal when the text is changed"""
