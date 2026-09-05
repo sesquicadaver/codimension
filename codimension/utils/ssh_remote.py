@@ -561,9 +561,7 @@ def open_paramiko_ssh_client(
     load_ssh_client_host_keys(client, settings_dir)
     if cfg.host_key_fingerprint:
         # R211: verify pin during handshake — never TrustOnce+post-check.
-        client.set_missing_host_key_policy(
-            _pinned_host_key_policy(paramiko, cfg.host_key_fingerprint)
-        )
+        client.set_missing_host_key_policy(_pinned_host_key_policy(paramiko, cfg.host_key_fingerprint))
     elif trust_unknown_host:
         client.set_missing_host_key_policy(_trust_once_host_key_policy(paramiko))
     else:

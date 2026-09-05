@@ -439,9 +439,7 @@ def test_r211_pinned_policy_rejects_mismatch_before_auth():
         def get_host_keys(self):
             return _HostKeys()
 
-    expected = ssh_host_key_fingerprint(
-        type("K", (), {"asbytes": staticmethod(lambda: b"legitimate-key")})()
-    )
+    expected = ssh_host_key_fingerprint(type("K", (), {"asbytes": staticmethod(lambda: b"legitimate-key")})())
     policy = _pinned_host_key_policy(paramiko, expected)
     with pytest.raises(HostKeyFingerprintMismatch) as raised:
         policy.missing_host_key(_Client(), "dev.example", _Key())
@@ -507,9 +505,7 @@ def test_r211_open_client_uses_pinned_policy_not_trust_once(monkeypatch):
         class SSHClient(_FakeClient):
             pass
 
-    pin = mod.ssh_host_key_fingerprint(
-        type("K", (), {"asbytes": staticmethod(lambda: b"live-server-key")})()
-    )
+    pin = mod.ssh_host_key_fingerprint(type("K", (), {"asbytes": staticmethod(lambda: b"live-server-key")})())
     monkeypatch.setattr(mod, "require_paramiko", lambda: _FakeParamiko)
     monkeypatch.setattr(mod, "load_ssh_client_host_keys", lambda *_a, **_k: None)
 
