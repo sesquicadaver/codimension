@@ -47,7 +47,7 @@ class WorkspaceSession:
     @property
     def allowed_root(self) -> str:
         """Immutable filesystem authority for this MCP process."""
-        return self.policy.allowed_root
+        return str(self.policy.allowed_root)
 
     def clear(self) -> None:
         """Drop the open workspace (policy / allowed root stay fixed)."""
