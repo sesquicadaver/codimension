@@ -156,7 +156,7 @@
 
 | # | ID | Задача | Acceptance | Size | Статус |
 |---|-----|--------|------------|------|--------|
-| 21 | R209 | LSP document lifecycle: didChange / didClose / restart re-open | Versioned sync у `LspSemanticProvider`; тести `test_language_r209.py` | M | DONE |
+| 21 | R209 | LSP document lifecycle: didChange / didClose / restart re-open | Versioned sync у `LspSemanticProvider`; тести `test_language_r209.py` | M | DONE ([#156](https://github.com/sesquicadaver/codimension/pull/156)) |
 | 22 | R210 | LSP server→client requests | `workspace/configuration`, progress, dynamic registration; applyEdit refuse/preview | L | OPEN |
 | 23 | R211 | SSH host-key pin before auth | Перевірка presented key до authentication | M | OPEN |
 | 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | OPEN |
