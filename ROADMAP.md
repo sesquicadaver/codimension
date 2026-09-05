@@ -159,7 +159,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 21 | R209 | LSP document lifecycle: didChange / didClose / restart re-open | Versioned sync in `LspSemanticProvider`; `test_language_r209.py` | M | DONE ([#156](https://github.com/sesquicadaver/codimension/pull/156)) |
 | 22 | R210 | LSP server→client requests | `workspace/configuration`, progress, dynamic registration; applyEdit refuse/preview | L | DONE ([#158](https://github.com/sesquicadaver/codimension/pull/158)) |
 | 23 | R211 | SSH host-key pin before auth | Verify presented key before authentication | M | DONE ([#159](https://github.com/sesquicadaver/codimension/pull/159)) |
-| 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | OPEN |
+| 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | DONE ([#160](https://github.com/sesquicadaver/codimension/pull/160)) |
 | 25 | R213 | Binding validation vs project cache | Only bindings matching current project cache + saved profile | M | OPEN |
 | 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | OPEN |
 | 27 | R215 | Updater provenance hardening | Trusted provenance, HTTPS/host policy, streaming limits, version probe | M | OPEN |
@@ -173,7 +173,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R212** — SSH Debug bind/containment.
+**Next OPEN:** **R213** — Binding validation vs project cache.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

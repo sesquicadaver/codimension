@@ -5,12 +5,13 @@
 # The license is described in the LICENSE file at the root directory.
 #
 
-"""SSH remote IDE debug: reverse tunnel + remote ``client_cdm_dbg`` (R198).
+"""SSH remote IDE debug: reverse tunnel + remote ``client_cdm_dbg`` (R198 / R212).
 
 Local IDE listens on ``127.0.0.1:<port>``. The debuggee runs on the SSH host and
-connects to ``127.0.0.1:<port>`` there; a reverse port-forward bridges the two.
-Pathnames in the debug protocol are remapped remote ↔ local cache via the
-project ``binding.json``.
+connects to ``127.0.0.1:<port>`` there; a reverse port-forward bridges the two
+(remote bind is loopback-only — R212). Pathnames in the debug protocol are
+remapped remote ↔ local cache via the project ``binding.json`` with
+``normpath`` + ``commonpath`` containment (R212).
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ import os
 import posixpath
 import socket
 import threading
+import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional, Protocol, Sequence
 
@@ -31,6 +33,7 @@ from utils.ssh_project_runtime import (
 )
 from utils.ssh_remote import (
     RemoteProjectBinding,
+    assert_local_path_under,
     load_ssh_password,
     open_paramiko_ssh_client,
     require_paramiko,
@@ -38,6 +41,9 @@ from utils.ssh_remote import (
 )
 
 REMOTE_CLIENT_DIR = ".codimension-dbg-client"
+# Remote side of the reverse forward must stay loopback-only (R212 / audit P1-08).
+REMOTE_TUNNEL_BIND = "127.0.0.1"
+_EXEC_POLL_INTERVAL_SEC = 0.05
 _CLIENT_SCRIPTS = (
     "client_cdm_dbg.py",
     "clientbase_cdm_dbg.py",
@@ -65,6 +71,7 @@ class ReverseTunnelSpec:
     remote_port: int
     local_port: int
     local_host: str = "127.0.0.1"
+    remote_bind: str = REMOTE_TUNNEL_BIND
 
 
 @dataclass
@@ -80,6 +87,7 @@ class SshIdeDebugPlan:
     procuuid: str
     upload_pairs: tuple[tuple[str, str], ...] = ()
     metadata: dict[str, str] = field(default_factory=dict)
+    cancel: threading.Event = field(default_factory=threading.Event)
 
 
 class ReverseTunnel(Protocol):
@@ -122,7 +130,8 @@ class ParamikoReverseTunnel:
         self._transport = self._client.get_transport()
         if self._transport is None:
             raise RuntimeError("SSH transport is not available for reverse forward")
-        self._transport.request_port_forward("", int(spec.remote_port))
+        bind = spec.remote_bind or REMOTE_TUNNEL_BIND
+        self._transport.request_port_forward(bind, int(spec.remote_port))
         self._stop.clear()
         self._thread = threading.Thread(target=self._serve, name="ssh-rforward", daemon=True)
         self._thread.start()
@@ -132,7 +141,8 @@ class ParamikoReverseTunnel:
         self._stop.set()
         try:
             if self._transport is not None and self._spec is not None:
-                self._transport.cancel_port_forward("", int(self._spec.remote_port))
+                bind = self._spec.remote_bind or REMOTE_TUNNEL_BIND
+                self._transport.cancel_port_forward(bind, int(self._spec.remote_port))
         except Exception:
             logging.debug("cancel_port_forward failed", exc_info=True)
         if self._thread is not None:
@@ -225,16 +235,26 @@ def remap_debug_stack(stack: list) -> list:
 
 
 def map_remote_to_local(binding: RemoteProjectBinding, remote_path: str) -> str:
-    """Map a remote POSIX path under ``remote_root`` to the local cache path."""
-    remote = remote_path.replace("\\", "/")
-    root = binding.remote_root.rstrip("/")
-    if remote == root or remote == root + "/":
-        return str(os.path.realpath(binding.local_root))
+    """Map a remote POSIX path under ``remote_root`` to the local cache path.
+
+    R212: normalize the remote path before the prefix check (reject ``..``
+    escapes) and enforce local containment with ``commonpath`` after
+    ``realpath``.
+    """
+    remote = posixpath.normpath(remote_path.replace("\\", "/"))
+    root = posixpath.normpath(binding.remote_root.rstrip("/") or "/")
+    if remote == root:
+        candidate = os.path.realpath(binding.local_root)
+        return assert_local_path_under(binding.local_root, candidate)
     prefix = root + "/"
     if not remote.startswith(prefix):
         raise ValueError(f"remote path outside project root: {remote_path}")
     rel = remote[len(prefix) :]
-    return str(os.path.realpath(os.path.join(binding.local_root, *rel.split("/"))))
+    parts = [part for part in rel.split("/") if part not in ("", ".")]
+    if any(part == ".." for part in parts):
+        raise ValueError(f"remote path escapes project root: {remote_path}")
+    candidate = os.path.realpath(os.path.join(binding.local_root, *parts))
+    return assert_local_path_under(binding.local_root, candidate)
 
 
 def make_binding_path_mapper(binding: RemoteProjectBinding) -> Callable[[str], str]:
@@ -408,11 +428,18 @@ def start_ssh_ide_debug_session(
             tunnel = factory(client)
             tunnel.open(plan.tunnel)
             remote_cwd = posixpath.dirname(plan.remote_script) or binding.remote_root
-            exit_code = _exec_argv(client, plan.argv, cwd=remote_cwd, timeout_sec=timeout or 0)
+            exit_code = _exec_argv(
+                client,
+                plan.argv,
+                cwd=remote_cwd,
+                timeout_sec=timeout or 0,
+                cancel=plan.cancel,
+            )
         except Exception as exc:
             logging.error("SSH IDE debug failed: %s", exc)
             exit_code = -1
         finally:
+            plan.cancel.set()
             if tunnel is not None:
                 try:
                     tunnel.close()
@@ -436,8 +463,20 @@ def start_ssh_ide_debug_session(
     return plan
 
 
-def _exec_argv(client, argv: Sequence[str], *, cwd: str, timeout_sec: float) -> int:
-    """Run argv on the remote host; return exit code."""
+def _exec_argv(
+    client,
+    argv: Sequence[str],
+    *,
+    cwd: str,
+    timeout_sec: float,
+    cancel: Optional[threading.Event] = None,
+    poll_interval: float = _EXEC_POLL_INTERVAL_SEC,
+) -> int:
+    """Run argv on the remote host; return exit code.
+
+    R212: poll with ``sleep`` and honour cooperative ``cancel`` / wall-clock
+    timeout so the worker thread cannot busy-spin.
+    """
     import shlex
 
     cmd = " ".join(shlex.quote(part) for part in argv)
@@ -447,14 +486,42 @@ def _exec_argv(client, argv: Sequence[str], *, cwd: str, timeout_sec: float) -> 
     if transport is None:
         raise RuntimeError("SSH transport missing")
     channel = transport.open_session()
-    if timeout_sec > 0:
-        channel.settimeout(float(timeout_sec))
+    channel_timeout = float(timeout_sec) if timeout_sec > 0 else None
+    if channel_timeout is not None:
+        channel.settimeout(channel_timeout)
     channel.exec_command(cmd)
-    while True:
-        if channel.recv_ready():
-            channel.recv(65536)
-        if channel.recv_stderr_ready():
-            channel.recv_stderr(65536)
-        if channel.exit_status_ready():
-            break
-    return int(channel.recv_exit_status())
+    deadline = time.monotonic() + channel_timeout if channel_timeout is not None else None
+    interval = max(0.01, float(poll_interval))
+    try:
+        while True:
+            if cancel is not None and cancel.is_set():
+                try:
+                    channel.close()
+                except Exception:
+                    logging.debug("SSH debug channel close on cancel failed", exc_info=True)
+                return -1
+            if deadline is not None and time.monotonic() >= deadline:
+                try:
+                    channel.close()
+                except Exception:
+                    logging.debug("SSH debug channel close on timeout failed", exc_info=True)
+                return -1
+            if channel.recv_ready():
+                channel.recv(65536)
+            if channel.recv_stderr_ready():
+                channel.recv_stderr(65536)
+            if channel.exit_status_ready():
+                break
+            time.sleep(interval)
+        return int(channel.recv_exit_status())
+    except Exception:
+        try:
+            channel.close()
+        except Exception:
+            pass
+        raise
+
+
+def cancel_ssh_ide_debug(plan: SshIdeDebugPlan) -> None:
+    """Request cooperative cancellation of an in-flight SSH IDE debug session."""
+    plan.cancel.set()

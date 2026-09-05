@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -111,7 +112,7 @@ def test_path_map_roundtrip(tmp_path):
 
 
 def test_fake_reverse_tunnel_records_open():
-    from utils.ssh_ide_debug import FakeReverseTunnel, ReverseTunnelSpec
+    from utils.ssh_ide_debug import REMOTE_TUNNEL_BIND, FakeReverseTunnel, ReverseTunnelSpec
 
     tunnel = FakeReverseTunnel()
     spec = ReverseTunnelSpec(remote_port=9, local_port=9)
@@ -119,6 +120,147 @@ def test_fake_reverse_tunnel_records_open():
     tunnel.close()
     assert tunnel.opened == [spec]
     assert tunnel.closed == 1
+    assert spec.remote_bind == REMOTE_TUNNEL_BIND
+
+
+def test_r212_map_remote_rejects_dotdot_escape(tmp_path):
+    """R212: ``..`` in remote path must not escape the local cache."""
+    from utils.ssh_ide_debug import map_remote_to_local
+
+    binding, _script = _binding(tmp_path)
+    with pytest.raises(ValueError, match="outside project root|escapes"):
+        map_remote_to_local(binding, "/remote/proj/../../etc/passwd")
+    with pytest.raises(ValueError, match="outside project root|escapes"):
+        map_remote_to_local(binding, "/remote/proj/foo/../../../etc/passwd")
+
+
+def test_r212_map_remote_containment_after_realpath(tmp_path):
+    from utils.ssh_ide_debug import map_remote_to_local
+
+    binding, script = _binding(tmp_path)
+    mapped = map_remote_to_local(binding, "/remote/proj/app.py")
+    assert mapped == os.path.realpath(script)
+    # Nested path under root still contained.
+    nested = tmp_path / "cache" / "pkg"
+    nested.mkdir()
+    (nested / "mod.py").write_text("y=2\n", encoding="utf-8")
+    mapped2 = map_remote_to_local(binding, "/remote/proj/pkg/mod.py")
+    assert mapped2 == os.path.realpath(nested / "mod.py")
+    assert os.path.commonpath([os.path.realpath(binding.local_root), mapped2]) == os.path.realpath(binding.local_root)
+
+
+def test_r212_paramiko_tunnel_binds_loopback(monkeypatch):
+    """R212: request/cancel_port_forward must use 127.0.0.1, not \"\"."""
+    from utils.ssh_ide_debug import REMOTE_TUNNEL_BIND, ParamikoReverseTunnel, ReverseTunnelSpec
+
+    calls: list[tuple] = []
+
+    class _Transport:
+        def request_port_forward(self, address, port):
+            calls.append(("request", address, port))
+
+        def cancel_port_forward(self, address, port):
+            calls.append(("cancel", address, port))
+
+        def accept(self, _timeout):
+            return None
+
+    class _Client:
+        def get_transport(self):
+            return _Transport()
+
+    tunnel = ParamikoReverseTunnel(_Client())
+    # Avoid starting a long-lived acceptor: open then close quickly.
+    original_thread = threading.Thread
+
+    class _InstantThread:
+        def __init__(self, *a, **k):
+            del a, k
+
+        def start(self):
+            return None
+
+        def join(self, timeout=None):
+            del timeout
+
+    import utils.ssh_ide_debug as ide
+
+    monkeypatch.setattr(ide.threading, "Thread", _InstantThread)
+    tunnel.open(ReverseTunnelSpec(remote_port=4242, local_port=4242))
+    tunnel.close()
+    assert ("request", REMOTE_TUNNEL_BIND, 4242) in calls
+    assert ("cancel", REMOTE_TUNNEL_BIND, 4242) in calls
+    monkeypatch.setattr(ide.threading, "Thread", original_thread)
+
+
+def test_r212_exec_argv_honours_cancel_and_sleeps():
+    """R212: poll loop sleeps and exits promptly when cancel is set."""
+    import threading
+    import time
+
+    from utils.ssh_ide_debug import _exec_argv
+
+    sleeps: list[float] = []
+
+    class _Channel:
+        def __init__(self):
+            self._n = 0
+
+        def settimeout(self, _t):
+            return None
+
+        def exec_command(self, _cmd):
+            return None
+
+        def recv_ready(self):
+            return False
+
+        def recv_stderr_ready(self):
+            return False
+
+        def exit_status_ready(self):
+            return False
+
+        def recv(self, _n):
+            return b""
+
+        def recv_stderr(self, _n):
+            return b""
+
+        def recv_exit_status(self):
+            return 0
+
+        def close(self):
+            return None
+
+    class _Transport:
+        def open_session(self):
+            return _Channel()
+
+    class _Client:
+        def get_transport(self):
+            return _Transport()
+
+    cancel = threading.Event()
+
+    def _sleep(dt):
+        sleeps.append(dt)
+        if len(sleeps) >= 2:
+            cancel.set()
+
+    import utils.ssh_ide_debug as ide
+
+    real_sleep = ide.time.sleep
+    ide.time.sleep = _sleep
+    try:
+        t0 = time.monotonic()
+        code = _exec_argv(_Client(), ["true"], cwd="/tmp", timeout_sec=0, cancel=cancel)
+        elapsed = time.monotonic() - t0
+    finally:
+        ide.time.sleep = real_sleep
+    assert code == -1
+    assert sleeps, "expected poll sleep"
+    assert elapsed < 1.0
 
 
 def test_try_handle_ide_run_debug_defers_to_runmanager(tmp_path, monkeypatch):
@@ -176,7 +318,11 @@ def test_start_ssh_ide_debug_uses_fake_tunnel(tmp_path, monkeypatch):
 
     monkeypatch.setattr(ssh_remote, "connect_paramiko_sftp", lambda *a, **k: FakeSftp())
     monkeypatch.setattr(ide, "open_paramiko_ssh_client", lambda *a, **k: (object(), binding))
-    monkeypatch.setattr(ide, "_exec_argv", lambda client, argv, cwd, timeout_sec: execs.append((argv, cwd)) or 0)
+    monkeypatch.setattr(
+        ide,
+        "_exec_argv",
+        lambda client, argv, cwd, timeout_sec, cancel=None: execs.append((argv, cwd)) or 0,
+    )
     import utils.diskvaluesrelay as dvr
     import utils.settings as settings_mod
 

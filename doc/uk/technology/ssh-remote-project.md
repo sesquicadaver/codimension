@@ -78,11 +78,12 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
   (`CDM_SSH_TIMEOUT_SEC`, дефолт 120с).
 - **Run** — **асинхронний** remote `python3 <script>` (cancel, timeout,
   stdout/stderr ≤ 2 MiB / `CDM_SSH_MAX_OUTPUT_BYTES`); вивід у Log / IO.
-- **Debug (R198)** — upload `client_cdm_dbg` у
+- **Debug (R198 / R212)** — upload `client_cdm_dbg` у
   `<remote_root>/.codimension-dbg-client/`, **reverse** port-forward
-  (`remote 127.0.0.1:<port>` → локальний IDE `QTcpServer`), запуск з
-  `--host 127.0.0.1`. Шляхи протоколу remap remote ↔ local cache
-  (`utils.ssh_ide_debug`). Контрактні тести — `FakeReverseTunnel`.
+  (`remote 127.0.0.1:<port>` → локальний IDE `QTcpServer`; Paramiko bind лише
+  loopback), запуск з `--host 127.0.0.1`. Шляхи протоколу remap remote ↔ local
+  cache з `normpath` + `commonpath`; remote exec polling зі sleep і cooperative
+  cancel (`utils.ssh_ide_debug`). Контрактні тести — `FakeReverseTunnel`.
 - **Profile (R199)** — **асинхронний** remote
   ``python3 -m cProfile -o <remote_root>/.codimension-profile/<id>.profile.out``
   (ті самі cancel/timeout/caps, що Run), потім **download** stats у локальний
