@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LspProcess: one language-server subprocess per process key (R202).
+"""LspProcess: one language-server subprocess per process key (R202 / R210).
 
 Key: ``(language_id, workspace_root, toolchain)``. Spawn is gated by
 :func:`core.language_policy.require_language_server_spawn` (absolute binary on
@@ -17,6 +17,10 @@ allowlist only). Transport: JSON-RPC over stdio with Content-Length framing,
 reader thread, serialized writer, cancel, timeouts, bounded stderr ring,
 bounded message size, lazy start, bounded backoff restart, and
 initialize → shutdown → exit on unload.
+
+R210: server→client requests (``workspace/configuration``, progress create,
+dynamic registration, ``workspace/applyEdit`` refuse+preview) are answered on
+the reader thread so the language server does not hang waiting for a response.
 """
 
 from __future__ import annotations
@@ -41,6 +45,10 @@ from infrastructure.lsp_framing import (
 from infrastructure.lsp_position_codec import LspPositionCodec, LspPositionEncoding
 
 PopenFactory = Callable[..., subprocess.Popen]
+
+# JSON-RPC / LSP error codes used when refusing unknown server requests.
+_JSONRPC_METHOD_NOT_FOUND = -32601
+_APPLY_EDIT_REFUSE_REASON = "Codimension does not auto-apply workspace/applyEdit; preview only (R210)"
 
 
 class LspProcessState(str, Enum):
@@ -136,6 +144,9 @@ class LspProcess:
         self._closing = False
         self._initialized = False
         self._notifications: deque[dict[str, Any]] = deque(maxlen=256)
+        self._apply_edit_previews: deque[dict[str, Any]] = deque(maxlen=64)
+        self._dynamic_registrations: dict[str, Mapping[str, Any]] = {}
+        self._registrations_lock = threading.Lock()
 
     @property
     def state(self) -> LspProcessState:
@@ -157,6 +168,18 @@ class LspProcess:
         while self._notifications:
             items.append(self._notifications.popleft())
         return items
+
+    def drain_apply_edit_previews(self) -> list[dict[str, Any]]:
+        """Pop refused ``workspace/applyEdit`` payloads queued for UI preview."""
+        items: list[dict[str, Any]] = []
+        while self._apply_edit_previews:
+            items.append(self._apply_edit_previews.popleft())
+        return items
+
+    def dynamic_registrations(self) -> tuple[Mapping[str, Any], ...]:
+        """Return a snapshot of accepted ``client/registerCapability`` entries."""
+        with self._registrations_lock:
+            return tuple(dict(v) for v in self._dynamic_registrations.values())
 
     def ensure_started(self) -> None:
         """Lazy-start the subprocess (spawn-gated); no-op when already running."""
@@ -188,15 +211,22 @@ class LspProcess:
         capabilities: Mapping[str, Any] | None = None,
         timeout: float | None = None,
     ) -> dict[str, Any]:
-        """Run ``initialize`` then notify ``initialized``."""
+        """Run ``initialize`` then notify ``initialized``.
+
+        Advertises default client capabilities (R210) merged with any caller
+        overrides, then negotiates ``positionEncoding`` from the server result.
+        """
         self.ensure_started()
+        client_caps = _merge_client_capabilities(default_client_capabilities(), capabilities)
         params: dict[str, Any] = {
             "processId": os.getpid() if process_id is None else process_id,
             "rootUri": root_uri or _path_to_uri(self.key.workspace_root),
-            "capabilities": dict(capabilities or {}),
+            "capabilities": client_caps,
             "clientInfo": dict(client_info or {"name": "codimension", "version": "0"}),
         }
         result = self.request("initialize", params, timeout=timeout)
+        if isinstance(result, dict):
+            self._apply_negotiated_position_encoding(result)
         self.notify("initialized", {})
         self._initialized = True
         return result if isinstance(result, dict) else {}
@@ -450,8 +480,133 @@ class LspProcess:
             else:
                 future.set_result(message.get("result"))
             return
+        if "method" in message and "id" in message:
+            # Server → client request: must answer or the server may stall.
+            self._handle_server_request(message)
+            return
         if "method" in message:
             self._notifications.append(dict(message))
+
+    def _handle_server_request(self, message: Mapping[str, Any]) -> None:
+        """Answer a JSON-RPC request originating from the language server."""
+        request_id = message["id"]
+        method = str(message.get("method") or "")
+        params = message.get("params")
+        try:
+            result = self._server_request_result(method, params)
+        except Exception as exc:  # noqa: BLE001 — map to JSON-RPC error response
+            self._reply_error(
+                request_id,
+                code=-32603,
+                message=f"internal error handling {method}: {exc}",
+            )
+            return
+        if result is _METHOD_NOT_FOUND:
+            self._reply_error(
+                request_id,
+                code=_JSONRPC_METHOD_NOT_FOUND,
+                message=f"Method not found: {method}",
+            )
+            return
+        self._reply_result(request_id, result)
+
+    def _server_request_result(self, method: str, params: Any) -> Any:
+        """Compute the JSON-RPC ``result`` for a known server→client method."""
+        if method == "workspace/configuration":
+            items = ()
+            if isinstance(params, Mapping):
+                raw = params.get("items")
+                if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
+                    items = tuple(raw)
+            # No IDE settings bridge yet — null per item keeps servers alive.
+            return [None] * len(items)
+
+        if method == "window/workDoneProgress/create":
+            return None
+
+        if method == "client/registerCapability":
+            registrations: list[Mapping[str, Any]] = []
+            if isinstance(params, Mapping):
+                raw = params.get("registrations")
+                if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
+                    registrations = [r for r in raw if isinstance(r, Mapping)]
+            with self._registrations_lock:
+                for reg in registrations:
+                    reg_id = str(reg.get("id", ""))
+                    if reg_id:
+                        self._dynamic_registrations[reg_id] = dict(reg)
+            return None
+
+        if method == "client/unregisterCapability":
+            unregister: list[Mapping[str, Any]] = []
+            if isinstance(params, Mapping):
+                raw = params.get("unregisterations") or params.get("unregistrations")
+                if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
+                    unregister = [r for r in raw if isinstance(r, Mapping)]
+            with self._registrations_lock:
+                for reg in unregister:
+                    reg_id = str(reg.get("id", ""))
+                    if reg_id:
+                        self._dynamic_registrations.pop(reg_id, None)
+            return None
+
+        if method == "workspace/applyEdit":
+            preview: dict[str, Any] = {}
+            if isinstance(params, Mapping):
+                preview = dict(params)
+            self._apply_edit_previews.append(preview)
+            return {
+                "applied": False,
+                "failureReason": _APPLY_EDIT_REFUSE_REASON,
+            }
+
+        if method == "window/showMessageRequest":
+            # Pick no action — UI bridge is out of R210 scope.
+            return None
+
+        return _METHOD_NOT_FOUND
+
+    def _reply_result(self, request_id: int | str, result: Any) -> None:
+        """Send a successful JSON-RPC response for a server request."""
+        try:
+            self._write({"jsonrpc": "2.0", "id": request_id, "result": result})
+        except (LspProtocolError, OSError, LspFramingError, BrokenPipeError):
+            return
+
+    def _reply_error(
+        self,
+        request_id: int | str,
+        *,
+        code: int,
+        message: str,
+    ) -> None:
+        """Send a JSON-RPC error response for a server request."""
+        try:
+            self._write(
+                {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {"code": code, "message": message},
+                }
+            )
+        except (LspProtocolError, OSError, LspFramingError, BrokenPipeError):
+            return
+
+    def _apply_negotiated_position_encoding(self, initialize_result: Mapping[str, Any]) -> None:
+        """Update :attr:`codec` when the server selects a ``positionEncoding``."""
+        caps = initialize_result.get("capabilities")
+        if not isinstance(caps, Mapping):
+            return
+        raw = caps.get("positionEncoding")
+        if not isinstance(raw, str) or not raw:
+            return
+        try:
+            encoding = LspPositionEncoding(raw)
+        except ValueError:
+            return
+        if encoding is self.codec.encoding:
+            return
+        self.codec = LspPositionCodec(encoding)
 
     def _fail_pending(self, reason: str) -> None:
         pending = list(self._pending.items())
@@ -519,10 +674,63 @@ def _path_to_uri(path: str) -> str:
     return "file://" + abs_path
 
 
+# Sentinel returned by ``_server_request_result`` for unknown methods.
+_METHOD_NOT_FOUND = object()
+
+
+def default_client_capabilities() -> dict[str, Any]:
+    """Client capabilities advertised on ``initialize`` (R210).
+
+    Declares support for answering the server→client requests we handle, and
+    the position encodings :class:`LspPositionCodec` can negotiate.
+    """
+    return {
+        "general": {
+            "positionEncodings": [
+                LspPositionEncoding.UTF16.value,
+                LspPositionEncoding.UTF8.value,
+                LspPositionEncoding.UTF32.value,
+            ],
+        },
+        "workspace": {
+            "applyEdit": True,
+            "configuration": True,
+            "workspaceEdit": {
+                "documentChanges": True,
+            },
+        },
+        "window": {
+            "workDoneProgress": True,
+            "showMessage": {
+                "messageActionItem": {"additionalPropertiesSupport": False},
+            },
+        },
+    }
+
+
+def _merge_client_capabilities(
+    base: Mapping[str, Any],
+    overrides: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    """Shallow-merge top-level capability groups; nested maps are updated."""
+    merged: dict[str, Any] = {k: (dict(v) if isinstance(v, Mapping) else v) for k, v in base.items()}
+    if not overrides:
+        return merged
+    for key, value in overrides.items():
+        if isinstance(value, Mapping) and isinstance(merged.get(key), dict):
+            nested = dict(merged[key])
+            nested.update(dict(value))
+            merged[key] = nested
+        else:
+            merged[key] = value
+    return merged
+
+
 __all__ = [
     "LspProcess",
     "LspProcessKey",
     "LspProcessRegistry",
     "LspProcessState",
     "LspProtocolError",
+    "default_client_capabilities",
 ]

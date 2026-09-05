@@ -1,5 +1,9 @@
 2026 Sep 05
 
+* R210: answer LSP server→client requests (``workspace/configuration``,
+  ``window/workDoneProgress/create``, ``client/registerCapability``,
+  ``workspace/applyEdit`` refuse+preview); advertise client capabilities and
+  negotiate ``positionEncoding`` (audit P1-03)
 * R209: LSP document lifecycle — ``didChange`` on version bump, ``didClose``,
   clear ``_opened`` and re-``didOpen`` after language-server restart
   (``LspSemanticProvider``; audit P1-02 / ``codi-last.md``)

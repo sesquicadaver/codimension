@@ -7,14 +7,14 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Аудит 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02 → **R209** ✅; наступний OPEN — **R210**.
+Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Аудит 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02 → **R209** ✅; P1-03 → **R210** ✅; наступний OPEN — **R211**.
 
 ### Аудит 2026-09-05 (`codi-last.md`) — P1 черга
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
 | P1-02 | LSP: немає didChange/didClose; stale `_opened` після restart | P1 | ✅ R209 |
-| P1-03 | LSP: немає обробки server→client requests | P1 | 🔓 R210 |
+| P1-03 | LSP: немає обробки server→client requests | P1 | ✅ R210 |
 | P1-04+ | SSH pin / Debug / bindings / MCP / updater / CFG / FFI / AI / reload / plugins | P1 | 🔓 R211–R220 |
 
 ### UX hardening (поза ROADMAP-чергою)
