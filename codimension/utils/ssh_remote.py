@@ -22,6 +22,9 @@ R211: with a profile pin, compare the presented key inside
 ``MissingHostKeyPolicy.missing_host_key()`` so mismatch raises *before*
 authentication (credentials are never sent on a wrong host key).
 
+R213: ``binding.json`` is accepted only after :func:`validate_binding`
+(open project dir, remote-projects cache, saved host profile match).
+
 R185: Download hardening — ``lstat`` (no symlink follow), reject symlinks,
 nonzero default file/byte caps, streamed reads, staging + atomic swap into
 the local cache.
@@ -424,6 +427,10 @@ class HostKeyFingerprintMismatch(RuntimeError):
             f"SSH host key mismatch for {hostname}: expected {expected}, got {actual}. "
             "Connection refused (possible MITM)."
         )
+
+
+class BindingValidationError(ValueError):
+    """Raised when ``binding.json`` fails trust checks (R213 / audit P1-07)."""
 
 
 def normalize_host_key_fingerprint(raw: str) -> str:
@@ -913,7 +920,7 @@ def write_binding(binding: RemoteProjectBinding) -> None:
 
 
 def read_binding(local_root: str) -> Optional[RemoteProjectBinding]:
-    """Load binding from a local cache directory."""
+    """Load binding from a local cache directory (unchecked — use ``validate_binding``)."""
     path = os.path.join(local_root, BINDING_FILENAME)
     if not os.path.isfile(path):
         return None
@@ -936,6 +943,93 @@ def read_binding(local_root: str) -> Optional[RemoteProjectBinding]:
         )
     except (KeyError, TypeError, ValueError):
         return None
+
+
+def validate_binding(
+    binding: RemoteProjectBinding,
+    *,
+    project_dir: str,
+    project_file: str = "",
+    settings_dir: Optional[str] = None,
+) -> RemoteProjectBinding:
+    """Fail closed unless ``binding`` matches the open project + saved profile (R213).
+
+    Checks:
+
+    * ``local_root`` realpath equals the open project directory;
+    * ``local_root`` lives under ``<settings>/remote-projects/<profile_id>/``;
+    * ``local_cdm3`` is under ``local_root`` and matches the open ``.cdm3`` when given;
+    * ``profile_id`` exists in saved host profiles;
+    * ``host`` / ``port`` / ``user`` / ``auth`` match that profile;
+    * ``remote_root`` / ``remote_cdm3`` are absolute POSIX paths under the root.
+    """
+    if not project_dir:
+        raise BindingValidationError("project directory is empty")
+    project_real = os.path.realpath(project_dir.rstrip(os.sep))
+    local_real = os.path.realpath(binding.local_root)
+    if local_real != project_real:
+        raise BindingValidationError(f"binding local_root {local_real!r} != open project dir {project_real!r}")
+
+    cache_root = os.path.realpath(remote_projects_root(settings_dir))
+    try:
+        assert_local_path_under(cache_root, local_real)
+    except ValueError as exc:
+        raise BindingValidationError(f"binding local_root outside remote-projects cache: {exc}") from exc
+
+    profile_cache = os.path.join(cache_root, binding.profile_id)
+    try:
+        assert_local_path_under(profile_cache, local_real)
+    except ValueError as exc:
+        raise BindingValidationError(
+            f"binding local_root outside profile cache for {binding.profile_id!r}: {exc}"
+        ) from exc
+
+    try:
+        local_cdm3 = assert_local_path_under(local_real, os.path.realpath(binding.local_cdm3))
+    except ValueError as exc:
+        raise BindingValidationError(f"binding local_cdm3 escapes local_root: {exc}") from exc
+    if not os.path.isfile(local_cdm3):
+        raise BindingValidationError(f"binding local_cdm3 is not a file: {local_cdm3}")
+    if project_file:
+        open_cdm3 = os.path.realpath(project_file)
+        if open_cdm3 != local_cdm3:
+            raise BindingValidationError(f"binding local_cdm3 {local_cdm3!r} != open project file {open_cdm3!r}")
+
+    profiles = {p.id: p.normalized() for p in load_host_profiles(settings_dir)}
+    profile = profiles.get(binding.profile_id)
+    if profile is None:
+        raise BindingValidationError(f"unknown SSH profile_id: {binding.profile_id!r}")
+
+    auth = (binding.auth or "key").strip().lower()
+    if (
+        binding.host != profile.host
+        or int(binding.port) != int(profile.port)
+        or (binding.user or "") != (profile.user or "")
+        or auth != profile.auth
+    ):
+        raise BindingValidationError(f"binding host/port/user/auth does not match saved profile {profile.id!r}")
+
+    remote_root = _norm_remote(binding.remote_root)
+    if not remote_root.startswith("/"):
+        raise BindingValidationError(f"binding remote_root must be absolute: {binding.remote_root!r}")
+    try:
+        remote_cdm3 = assert_remote_path_under(remote_root, _norm_remote(binding.remote_cdm3))
+    except ValueError as exc:
+        raise BindingValidationError(f"binding remote_cdm3 outside remote_root: {exc}") from exc
+
+    # Return a binding reconciled to trusted profile identity + normalized paths.
+    return RemoteProjectBinding(
+        profile_id=profile.id,
+        host=profile.host,
+        port=profile.port,
+        user=profile.user,
+        auth=profile.auth,
+        identity_file=profile.identity_file,
+        remote_root=remote_root,
+        remote_cdm3=remote_cdm3,
+        local_root=local_real,
+        local_cdm3=local_cdm3,
+    )
 
 
 def open_remote_project(
@@ -1171,6 +1265,8 @@ def _rm_tree(path: str, *, must_be_under: str) -> None:
 
 
 __all__ = [
+    "BINDING_FILENAME",
+    "BindingValidationError",
     "DOWNLOAD_CHUNK_BYTES",
     "FakeSftpSession",
     "HostKeyFingerprintMismatch",
@@ -1213,6 +1309,7 @@ __all__ = [
     "store_ssh_password",
     "upload_file",
     "upsert_host_profile",
+    "validate_binding",
     "verify_remote_host_key_fingerprint",
     "write_binding",
 ]
