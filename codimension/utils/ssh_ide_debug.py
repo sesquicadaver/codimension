@@ -245,7 +245,7 @@ def map_remote_to_local(binding: RemoteProjectBinding, remote_path: str) -> str:
     root = posixpath.normpath(binding.remote_root.rstrip("/") or "/")
     if remote == root:
         candidate = os.path.realpath(binding.local_root)
-        return assert_local_path_under(binding.local_root, candidate)
+        return str(assert_local_path_under(binding.local_root, candidate))
     prefix = root + "/"
     if not remote.startswith(prefix):
         raise ValueError(f"remote path outside project root: {remote_path}")
@@ -254,7 +254,7 @@ def map_remote_to_local(binding: RemoteProjectBinding, remote_path: str) -> str:
     if any(part == ".." for part in parts):
         raise ValueError(f"remote path escapes project root: {remote_path}")
     candidate = os.path.realpath(os.path.join(binding.local_root, *parts))
-    return assert_local_path_under(binding.local_root, candidate)
+    return str(assert_local_path_under(binding.local_root, candidate))
 
 
 def make_binding_path_mapper(binding: RemoteProjectBinding) -> Callable[[str], str]:
