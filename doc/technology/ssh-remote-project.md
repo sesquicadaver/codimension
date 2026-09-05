@@ -38,14 +38,18 @@ Host profiles (no secrets) are stored in `~/.codimension3/ssh_hosts.json`.
   `<settings>/remote-projects/<id>/<digest>/`; `rmtree`/writes use
   `commonpath` checks and refuse escaping the cache container.
 
-## Host authenticity (R184)
+## Host authenticity (R184 / R211)
 
 - Default policy is **reject** unknown host keys (no `AutoAddPolicy`).
 - Codimension loads system/`~/.ssh/known_hosts` and optional
   `<settings>/ssh_known_hosts`.
 - Profiles store `host_key_fingerprint` (`SHA256:…`). Mismatch → fail closed.
-- First connection to an unknown host shows the fingerprint; TOFU only after
-  explicit Yes, then the pin is saved with the profile.
+- **R211:** when a pin is set, the presented key is checked inside
+  `MissingHostKeyPolicy.missing_host_key()` *before* authentication — a wrong
+  key never receives password/agent credentials. A post-connect pin check
+  remains for keys already present in `known_hosts`.
+- First connection to an unknown host (no pin) shows the fingerprint; TOFU
+  only after explicit Yes, then the pin is saved with the profile.
 
 ## Download hardening (R185)
 

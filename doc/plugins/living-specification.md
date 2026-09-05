@@ -67,7 +67,7 @@
 | **LocalExecutionTarget R122** | utils.local_execution + utils.run | `prepare_*` для IDE argv; `run` виконує (R187); `getCwdCmdEnv` | tests/test_local_execution.py, test_run_argv.py |
 | **DockerExecutionTarget R123** | utils.docker_execution | image + workspace mount + `docker run` argv; docker-or-skip | tests/test_docker_execution.py |
 | **SSHExecutionTarget R124** | utils.ssh_execution | `SSHTransport` + Fake/Subprocess; remote-path sync MVP | tests/test_ssh_execution.py; [ssh-execution.md](../technology/ssh-execution.md) |
-| **SSH remote project open/create** | utils.ssh_remote + ui.sshprojectdlg + ui.sshbrowse | Профілі; Paramiko/Fake SFTP; R183 path containment; R184 host-key RejectPolicy + fingerprint pin + TOFU UI; R185 lstat/reject symlink + nonzero caps + stream + staging swap; remote Browse… | tests/test_ssh_remote_project.py; [ssh-remote-project.md](../technology/ssh-remote-project.md) |
+| **SSH remote project open/create** | utils.ssh_remote + ui.sshprojectdlg + ui.sshbrowse | Профілі; Paramiko/Fake SFTP; R183 path containment; R184 host-key RejectPolicy + fingerprint pin + TOFU UI; R211 pin у `missing_host_key` до auth; R185 lstat/reject symlink + nonzero caps + stream + staging swap; remote Browse… | tests/test_ssh_remote_project.py; [ssh-remote-project.md](../technology/ssh-remote-project.md) |
 | **SSH remote save/run** | utils.ssh_project_runtime + runmanager | R186 async Save upload + Run (cancel/timeout/output cap); SYNC_* ≠ local save | tests/test_ssh_project_runtime.py |
 | **SSH remote IDE Debug R198** | utils.ssh_ide_debug + runmanager + debugger.server | reverse tunnel + remote `client_cdm_dbg`; path remap; FakeReverseTunnel contracts | tests/test_ssh_ide_debug_r198.py; [ssh-remote-project.md](../technology/ssh-remote-project.md) |
 | **SSH remote Profile R199** | utils.ssh_project_runtime | remote cProfile + download artifact; cancel/timeout; IDE report emit | tests/test_ssh_project_runtime.py (r199_*) |
@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R211** (SSH host-key pin); хвиля R209–R220.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R212** (SSH Debug bind/containment); хвиля R209–R220.
 
 ### Матриця меж модулів (R103 / R195)
 

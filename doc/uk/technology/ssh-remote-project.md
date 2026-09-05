@@ -35,13 +35,17 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 - Локальний кеш завжди під `<settings>/remote-projects/<id>/<digest>/`;
   `rmtree`/записи перевіряються через `commonpath`.
 
-## Host authenticity (R184)
+## Host authenticity (R184 / R211)
 
 - За замовчуванням **reject** невідомих host keys (без `AutoAddPolicy`).
 - Завантажуються system/`~/.ssh/known_hosts` і опційно
   `<settings>/ssh_known_hosts`.
 - У профілі зберігається `host_key_fingerprint` (`SHA256:…`); mismatch → fail closed.
-- Перше з’єднання з невідомим хостом показує fingerprint; TOFU лише після
+- **R211:** за наявності pin перевірка presented key виконується всередині
+  `MissingHostKeyPolicy.missing_host_key()` *до* authentication — неправильний
+  ключ ніколи не отримує password/agent credentials. Post-connect pin check
+  залишається для ключів уже в `known_hosts`.
+- Перше з’єднання з невідомим хостом (без pin) показує fingerprint; TOFU лише після
   явного Yes, потім pin зберігається в профілі.
 
 ## Download hardening (R185)
