@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""R172: read-only GitHub Releases update check (mocked HTTP)."""
+"""R172 / R215: read-only GitHub Releases update check (mocked HTTP)."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ import parsers  # noqa: E402,F401
 import pytest
 
 _CODIM = Path(__file__).resolve().parents[1] / "codimension"
+_API = "https://api.github.com/repos/sesquicadaver/codimension/releases"
 
 
 @pytest.fixture(autouse=True)
@@ -56,9 +57,11 @@ def test_select_newer_release_stable_skips_prerelease() -> None:
     from utils.update_check import ReleaseInfo, select_newer_release
 
     releases = [
-        ReleaseInfo("v4.12.0-rc1", "4.12.0rc1", True, "https://example/rc"),
-        ReleaseInfo("v4.11.1", "4.11.1", False, "https://example/4111"),
-        ReleaseInfo("v4.10.0", "4.10.0", False, "https://example/410"),
+        ReleaseInfo(
+            "v4.12.0-rc1", "4.12.0rc1", True, "https://github.com/sesquicadaver/codimension/releases/tag/v4.12.0-rc1"
+        ),
+        ReleaseInfo("v4.11.1", "4.11.1", False, "https://github.com/sesquicadaver/codimension/releases/tag/v4.11.1"),
+        ReleaseInfo("v4.10.0", "4.10.0", False, "https://github.com/sesquicadaver/codimension/releases/tag/v4.10.0"),
     ]
     newer = select_newer_release(releases, "4.11.0", "stable")
     assert newer is not None
@@ -70,8 +73,8 @@ def test_select_newer_release_beta_allows_prerelease() -> None:
     from utils.update_check import ReleaseInfo, select_newer_release
 
     releases = [
-        ReleaseInfo("v4.12.0-rc1", "4.12.0rc1", True, "https://example/rc"),
-        ReleaseInfo("v4.11.1", "4.11.1", False, "https://example/4111"),
+        ReleaseInfo("v4.12.0-rc1", "4.12.0rc1", True, "https://github.com/x/y/releases/tag/rc"),
+        ReleaseInfo("v4.11.1", "4.11.1", False, "https://github.com/x/y/releases/tag/4111"),
     ]
     newer = select_newer_release(releases, "4.11.0", "beta")
     assert newer is not None
@@ -108,9 +111,9 @@ def test_check_for_updates_available_with_mock_fetch() -> None:
         current_version="4.11.0",
         channel="stable",
         fetch=fetch,
-        releases_url="https://example.test/releases",
+        releases_url=_API,
     )
-    assert seen == ["https://example.test/releases"]
+    assert seen == [_API]
     assert result.status == "update_available"
     assert result.latest is not None
     assert result.latest.tag_name == "v4.12.0"
@@ -128,13 +131,13 @@ def test_check_for_updates_up_to_date() -> None:
                 "tag_name": "v4.11.0",
                 "prerelease": False,
                 "draft": False,
-                "html_url": "https://github.com/x/y/releases/tag/v4.11.0",
+                "html_url": "https://github.com/sesquicadaver/codimension/releases/tag/v4.11.0",
             },
             {
                 "tag_name": "v4.10.0",
                 "prerelease": False,
                 "draft": False,
-                "html_url": "https://github.com/x/y/releases/tag/v4.10.0",
+                "html_url": "https://github.com/sesquicadaver/codimension/releases/tag/v4.10.0",
             },
         ]
     )
@@ -156,19 +159,19 @@ def test_check_for_updates_skips_drafts_and_bad_tags() -> None:
                 "tag_name": "v9.9.9",
                 "prerelease": False,
                 "draft": True,
-                "html_url": "https://example/draft",
+                "html_url": "https://github.com/sesquicadaver/codimension/releases/tag/draft",
             },
             {
                 "tag_name": "nightly",
                 "prerelease": False,
                 "draft": False,
-                "html_url": "https://example/nightly",
+                "html_url": "https://github.com/sesquicadaver/codimension/releases/tag/nightly",
             },
             {
                 "tag_name": "v4.11.0",
                 "prerelease": False,
                 "draft": False,
-                "html_url": "https://example/411",
+                "html_url": "https://github.com/sesquicadaver/codimension/releases/tag/v4.11.0",
             },
         ]
     )
@@ -205,6 +208,24 @@ def test_check_for_updates_invalid_json() -> None:
 
 def test_resolve_releases_url_env() -> None:
     from utils.update_check import DEFAULT_RELEASES_URL, RELEASES_URL_ENV, resolve_releases_url
+    from utils.update_provenance import UpdateProvenanceError
 
     assert resolve_releases_url(environ={}) == DEFAULT_RELEASES_URL
-    assert resolve_releases_url(environ={RELEASES_URL_ENV: " https://mirror/r "}) == "https://mirror/r"
+    trusted = "https://api.github.com/repos/sesquicadaver/codimension/releases?per_page=5"
+    assert resolve_releases_url(environ={RELEASES_URL_ENV: f" {trusted} "}) == trusted
+    with pytest.raises(UpdateProvenanceError):
+        resolve_releases_url(environ={RELEASES_URL_ENV: "https://evil.example/releases"})
+
+
+def test_check_rejects_untrusted_releases_url() -> None:
+    from utils.update_check import check_for_updates
+
+    result = check_for_updates(
+        current_version="4.11.0",
+        channel="stable",
+        fetch=lambda _u: b"[]",
+        releases_url="https://evil.example/repos/x/y/releases",
+    )
+    assert result.status == "error"
+    assert result.error is not None
+    assert "trusted" in result.error or "https" in result.error

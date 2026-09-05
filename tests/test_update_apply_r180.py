@@ -214,8 +214,15 @@ def test_download_writes_manifest(tmp_path):
         "v4.12.0",
         "4.12.0",
         False,
-        "https://example/r",
-        assets=(ReleaseAsset("pkg.whl", "https://example/w", 1, digest=digest),),
+        "https://github.com/sesquicadaver/codimension/releases/tag/v4.12.0",
+        assets=(
+            ReleaseAsset(
+                "pkg.whl",
+                "https://github.com/sesquicadaver/codimension/releases/download/v4.12.0/pkg.whl",
+                1,
+                digest=digest,
+            ),
+        ),
     )
     result = download_and_verify(release, str(tmp_path), fetch=lambda _u: payload)
     assert result.status == "ok"

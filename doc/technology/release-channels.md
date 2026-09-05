@@ -19,6 +19,25 @@ Baked defaults live in [`cdmverspec.py`](../../codimension/cdmverspec.py)
 Update checks (`utils.update_check`): `stable` hides GitHub prereleases;
 `beta` / `dev` include them.
 
+## Updater provenance (R215)
+
+In-app update check / download / apply (`utils.update_check`,
+`update_download`, `update_apply`, `update_provenance`):
+
+| Rule | Behaviour |
+| ---- | --------- |
+| Releases API URL | HTTPS only; host `api.github.com`; path under `/repos/sesquicadaver/codimension/releases` (override via `CDM_UPDATE_OWNER_REPO`) |
+| `CDM_UPDATE_RELEASES_URL` | Still subject to the same host/path policy (no arbitrary mirrors) |
+| Extra hosts | `CDM_UPDATE_TRUSTED_HOSTS` (comma-separated) for API/download allowlist |
+| Asset URLs | HTTPS on `github.com` / `objects.githubusercontent.com` / `release-assets.githubusercontent.com` |
+| Size budgets | Releases JSON ≤ 2 MiB; checksum ≤ 64 KiB; artifact ≤ 256 MiB (`CDM_UPDATE_MAX_BYTES`) |
+| Streaming | Production artifact download streams to disk; `ReleaseAsset.size` is a hard pre-check |
+| Version probe | `importlib.metadata.version("codimension")` with `codimension.cdmverspec` fallback |
+
+SHA-256 still proves integrity of bytes vs declared digest; provenance comes from
+the trusted GitHub host/path policy above (digest alone is not enough if the
+mirror is untrusted).
+
 ## Promotion ladder (R181)
 
 Forward-only: **`dev` → `beta` → `stable`**.

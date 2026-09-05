@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - verified update artifact download (R173)
+# codimension - verified update artifact download (R173 / R215)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,10 +9,14 @@
 # (at your option) any later version.
 #
 
-"""Download a release artifact into a cache dir and verify SHA-256 (R173).
+"""Download a release artifact into a cache dir and verify SHA-256 (R173 / R215).
 
 Fail closed: no trusted checksum → refuse to keep the file; mismatch → delete
 partial/wrong bytes. Writes ``manifest.json`` + ``*.sha256`` for R180 apply.
+
+R215: download / checksum URLs must pass HTTPS host policy; declared
+``ReleaseAsset.size`` and streamed bytes are hard-capped; production downloads
+stream to disk (no unbounded ``response.read()``).
 """
 
 from __future__ import annotations
@@ -23,9 +27,19 @@ import re
 import tempfile
 import urllib.error
 from dataclasses import dataclass
-from typing import Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
-from utils.update_check import FetchFn, ReleaseAsset, ReleaseInfo, default_fetch
+from utils.update_check import FetchFn, ReleaseAsset, ReleaseInfo
+from utils.update_provenance import (
+    MAX_CHECKSUM_BYTES,
+    UpdateProvenanceError,
+    assert_trusted_update_url,
+    enforce_declared_size,
+    enforce_payload_budget,
+    fetch_budgeted,
+    max_artifact_bytes,
+    stream_url_to_file,
+)
 
 #: Preferred artifact suffixes (first match wins among candidates).
 ARTIFACT_SUFFIXES: tuple[str, ...] = (".whl", ".tar.gz", ".tgz", ".zip")
@@ -150,10 +164,13 @@ def resolve_expected_sha256(
     assets: Sequence[ReleaseAsset],
     *,
     fetch: Optional[FetchFn] = None,
+    environ: Optional[Mapping[str, str]] = None,
 ) -> Optional[str]:
     """Resolve a trusted SHA-256 for ``artifact`` (API digest or sidecar).
 
-    Returns ``None`` when no trusted source exists (caller must fail closed).
+    Digests are only as trustworthy as the Releases API / download hosts that
+    provided them (R215 provenance policy). Returns ``None`` when no source
+    exists (caller must fail closed).
     """
     from_digest = expected_sha256_from_digest(artifact.digest)
     if from_digest is not None:
@@ -162,10 +179,28 @@ def resolve_expected_sha256(
     sidecar = find_checksum_asset(artifact, assets)
     if sidecar is None:
         return None
-    fetch_fn = fetch if fetch is not None else default_fetch
     try:
-        raw = fetch_fn(sidecar.browser_download_url)
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError):
+        assert_trusted_update_url(
+            sidecar.browser_download_url,
+            purpose="checksum",
+            environ=environ,
+        )
+        enforce_declared_size(sidecar.size, max_bytes=MAX_CHECKSUM_BYTES, label="checksum asset")
+        if fetch is not None:
+            raw = enforce_payload_budget(
+                fetch(sidecar.browser_download_url),
+                max_bytes=MAX_CHECKSUM_BYTES,
+                label="checksum sidecar",
+            )
+        else:
+            raw = fetch_budgeted(
+                sidecar.browser_download_url,
+                purpose="checksum",
+                max_bytes=MAX_CHECKSUM_BYTES,
+                environ=environ,
+                user_agent="codimension-update-download/r215",
+            )
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError, UpdateProvenanceError):
         return None
     try:
         text = raw.decode("utf-8")
@@ -187,13 +222,13 @@ def download_and_verify(
     cache_dir: str,
     *,
     fetch: Optional[FetchFn] = None,
+    environ: Optional[Mapping[str, str]] = None,
 ) -> DownloadResult:
     """Download the primary artifact for ``release`` into ``cache_dir`` and verify.
 
-    Fail closed: missing checksum, network errors, or digest mismatch leave no
-    kept artifact (partial files are removed).
+    Fail closed: missing checksum, network errors, provenance violations, or
+    digest mismatch leave no kept artifact (partial files are removed).
     """
-    fetch_fn = fetch if fetch is not None else default_fetch
     artifact = select_primary_artifact(release.assets)
     if artifact is None:
         return DownloadResult(
@@ -202,7 +237,23 @@ def download_and_verify(
             error="no artifact (.whl/.tar.gz/.zip)",
         )
 
-    expected = resolve_expected_sha256(artifact, release.assets, fetch=fetch_fn)
+    try:
+        budget = max_artifact_bytes(environ)
+        assert_trusted_update_url(
+            artifact.browser_download_url,
+            purpose="download",
+            environ=environ,
+        )
+        enforce_declared_size(artifact.size, max_bytes=budget, label="artifact")
+    except UpdateProvenanceError as exc:
+        return DownloadResult(
+            status="error",
+            artifact_name=artifact.name,
+            message="Refusing download: untrusted URL or size budget.",
+            error=str(exc),
+        )
+
+    expected = resolve_expected_sha256(artifact, release.assets, fetch=fetch, environ=environ)
     if expected is None:
         return DownloadResult(
             status="error",
@@ -225,16 +276,36 @@ def download_and_verify(
     dest_path = os.path.join(dest_dir, os.path.basename(artifact.name))
     tmp_path: Optional[str] = None
     try:
-        raw = fetch_fn(artifact.browser_download_url)
-        if not raw:
-            return DownloadResult(
-                status="error",
-                artifact_name=artifact.name,
-                message="Downloaded artifact is empty.",
-                error="empty body",
+        fd, tmp_path = tempfile.mkstemp(prefix=".cdm-upd-", dir=dest_dir)
+        os.close(fd)
+        if fetch is not None:
+            raw = enforce_payload_budget(
+                fetch(artifact.browser_download_url),
+                max_bytes=budget,
+                label="artifact",
             )
-        actual = sha256_hex(raw)
+            if not raw:
+                _safe_unlink(tmp_path)
+                return DownloadResult(
+                    status="error",
+                    artifact_name=artifact.name,
+                    message="Downloaded artifact is empty.",
+                    error="empty body",
+                )
+            actual = sha256_hex(raw)
+            with open(tmp_path, "wb") as handle:
+                handle.write(raw)
+        else:
+            actual = stream_url_to_file(
+                artifact.browser_download_url,
+                tmp_path,
+                max_bytes=budget,
+                purpose="download",
+                environ=environ,
+                user_agent="codimension-update-download/r215",
+            )
         if actual != expected:
+            _safe_unlink(tmp_path)
             return DownloadResult(
                 status="error",
                 artifact_name=artifact.name,
@@ -242,24 +313,21 @@ def download_and_verify(
                 message="Checksum mismatch; artifact discarded.",
                 error=f"expected {expected}, got {actual}",
             )
-
-        fd, tmp_path = tempfile.mkstemp(prefix=".cdm-upd-", dir=dest_dir)
-        try:
-            with os.fdopen(fd, "wb") as handle:
-                handle.write(raw)
-            os.replace(tmp_path, dest_path)
-            tmp_path = None
-        finally:
-            if tmp_path is not None:
-                _safe_unlink(tmp_path)
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as exc:
+        os.replace(tmp_path, dest_path)
+        tmp_path = None
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError, UpdateProvenanceError) as exc:
+        if tmp_path is not None:
+            _safe_unlink(tmp_path)
         _safe_unlink(dest_path)
         return DownloadResult(
             status="error",
             artifact_name=artifact.name,
-            message="Network or I/O error during download.",
+            message="Network, provenance, or I/O error during download.",
             error=str(exc),
         )
+    finally:
+        if tmp_path is not None:
+            _safe_unlink(tmp_path)
 
     try:
         from utils.update_apply import write_cache_manifest

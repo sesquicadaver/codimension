@@ -97,9 +97,9 @@
 | **Deploy overlay R162** | utils.deployment_overlay + editor.flowuinavbar | Read-only Dockerfile/Compose hints; nav badges | tests/test_deployment_overlay.py; fixtures/deployment |
 | **Release channel R171** | cdmverspec | `release_channel` + `get_release_channel` / env override; одна версія | tests/test_cdmverspec.py |
 | **Channel promotion R181** | utils.channel_promotion + scripts/promote_release_channel.py + release.yml | ladder `dev→beta→stable`; tag↔channel validate; no branch theatre | tests/test_channel_promotion_r181.py; [release-channels.md](../technology/release-channels.md) |
-| **Update check R172** | utils.update_check + ui.mainmenu/mainwindow | GitHub Releases read-only; діалог новішого тега; injectable fetch | tests/test_update_check.py |
-| **Update download R173** | utils.update_download + ui.mainwindow | Download у cache; SHA-256 fail closed; ``manifest.json`` | tests/test_update_download.py |
-| **Update apply R180** | utils.update_apply + portable_profile + ui.mainwindow | re-verify → pip install; rollback previous; ``CDM_HOME`` | tests/test_update_apply_r180.py |
+| **Update check R172 / R215** | utils.update_check + update_provenance + ui.mainmenu/mainwindow | GitHub Releases read-only; trusted HTTPS host/path; size-capped JSON; діалог новішого тега | tests/test_update_check.py; tests/test_update_provenance_r215.py; [release-channels.md](../technology/release-channels.md) |
+| **Update download R173 / R215** | utils.update_download + update_provenance + ui.mainwindow | Download у cache; SHA-256 fail closed; trusted download hosts; stream + size budgets; ``manifest.json`` | tests/test_update_download.py; [release-channels.md](../technology/release-channels.md) |
+| **Update apply R180 / R215** | utils.update_apply + portable_profile + ui.mainwindow | re-verify (stream hash) → pip install; rollback previous; ``importlib.metadata`` version probe; ``CDM_HOME`` | tests/test_update_apply_r180.py |
 | **MCP backend R182 / R214** | mcp_backend + optional ``mcp`` SDK | stdio MCP над headless core; ``CDM_MCP_TOKEN`` fail-closed; immutable ``--workspace`` / ``CDM_MCP_WORKSPACE`` + file/byte/depth budgets; 7 MVP tools | tests/test_mcp_r182.py; [mcp-backend.md](../technology/mcp-backend.md) |
 | **Polyglot layer R200+** | core.language/semantic/structural/bindings/dependency_edges/cross_language_nav/tasks/…; infrastructure.lsp_* + tree_sitter_structural + ffi_bindings + build_tasks; app.language_services; ui.language_controller | Registry→…→BindingIndex→typed deps/cross-nav→TaskProviders; Stage 1–4 = R200–R208; R209 lifecycle; R210 server→client requests | tests/test_language_r200.py … r210.py; [polyglot-language-layer.md](../technology/polyglot-language-layer.md); R200–R210 DONE; next R211 |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R215** (Updater provenance hardening); хвиля R209–R220.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R216** (CFG loop-else / match paths); хвиля R209–R220.
 
 ### Матриця меж модулів (R103 / R195)
 

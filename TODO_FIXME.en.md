@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-08 → R209–R213 ✅; P1-09 → **R214** ✅; next OPEN — **R215**.
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-09 → R209–R214 ✅; P1-10 → **R215** ✅; next OPEN — **R216**.
 
 ### Audit 2026-09-05 (`codi-last.md`) — P1 queue
 
@@ -19,7 +19,8 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-0
 | P1-08 | SSH Debug: empty reverse-bind; path `..` escape; busy poll | P1 | ✅ R212 |
 | P1-07 | SSH: `binding.json` trusted without cache/profile checks | P1 | ✅ R213 |
 | P1-09 | MCP: arbitrary local directory without immutable root / budgets | P1 | ✅ R214 |
-| P1-04+ | updater / CFG / FFI / AI / reload / plugins | P1 | 🔓 R215–R220 |
+| P1-10 | Updater: SHA-256 without provenance; unbounded read; broken version probe | P1 | ✅ R215 |
+| P1-04+ | CFG / FFI / AI / reload / plugins | P1 | 🔓 R216–R220 |
 
 ### UX hardening (outside ROADMAP queue)
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""R173: verified update artifact download (fail closed; mocked HTTP)."""
+"""R173 / R215: verified update artifact download (fail closed; mocked HTTP)."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ import parsers  # noqa: E402,F401
 import pytest
 
 _CODIM = Path(__file__).resolve().parents[1] / "codimension"
+_DL = "https://github.com/sesquicadaver/codimension/releases/download/v4.12.0"
 
 
 @pytest.fixture(autouse=True)
@@ -39,25 +40,31 @@ def _purge_stubs():
     yield
 
 
-def _asset(name: str, url: str, digest: str | None = None):
+def _asset(name: str, url: str, digest: str | None = None, size: int = 1):
     from utils.update_check import ReleaseAsset
 
-    return ReleaseAsset(name=name, browser_download_url=url, size=1, digest=digest)
+    return ReleaseAsset(name=name, browser_download_url=url, size=size, digest=digest)
 
 
 def _release(assets, tag: str = "v4.12.0"):
     from utils.update_check import ReleaseInfo
 
-    return ReleaseInfo(tag, "4.12.0", False, "https://example/rel", assets=tuple(assets))
+    return ReleaseInfo(
+        tag,
+        "4.12.0",
+        False,
+        "https://github.com/sesquicadaver/codimension/releases/tag/v4.12.0",
+        assets=tuple(assets),
+    )
 
 
 def test_select_primary_prefers_wheel() -> None:
     from utils.update_download import select_primary_artifact
 
     assets = [
-        _asset("pkg.zip", "https://example/z"),
-        _asset("pkg-4.12.0-py3-none-any.whl", "https://example/w"),
-        _asset("pkg-4.12.0.tar.gz", "https://example/t"),
+        _asset("pkg.zip", f"{_DL}/pkg.zip"),
+        _asset("pkg-4.12.0-py3-none-any.whl", f"{_DL}/pkg-4.12.0-py3-none-any.whl"),
+        _asset("pkg-4.12.0.tar.gz", f"{_DL}/pkg-4.12.0.tar.gz"),
     ]
     picked = select_primary_artifact(assets)
     assert picked is not None
@@ -76,7 +83,7 @@ def test_parse_sha256_sidecar_named_and_bare() -> None:
 def test_fail_closed_without_checksum(tmp_path: Path) -> None:
     from utils.update_download import download_and_verify
 
-    release = _release([_asset("pkg-4.12.0-py3-none-any.whl", "https://example/w")])
+    release = _release([_asset("pkg-4.12.0-py3-none-any.whl", f"{_DL}/pkg.whl")])
     result = download_and_verify(release, str(tmp_path), fetch=lambda _u: b"payload")
     assert result.status == "error"
     assert result.error is not None
@@ -89,7 +96,7 @@ def test_download_ok_with_api_digest(tmp_path: Path) -> None:
 
     payload = b"codimension-wheel-bytes"
     digest = "sha256:" + sha256_hex(payload)
-    release = _release([_asset("pkg-4.12.0-py3-none-any.whl", "https://example/w", digest)])
+    release = _release([_asset("pkg-4.12.0-py3-none-any.whl", f"{_DL}/pkg.whl", digest)])
     result = download_and_verify(release, str(tmp_path), fetch=lambda _u: payload)
     assert result.status == "ok"
     assert result.path is not None
@@ -105,12 +112,12 @@ def test_download_ok_with_sidecar(tmp_path: Path) -> None:
     hex_d = sha256_hex(payload)
     whl = "codimension-4.12.0.tar.gz"
     assets = [
-        _asset(whl, "https://example/t"),
-        _asset(whl + ".sha256", "https://example/t.sha256"),
+        _asset(whl, f"{_DL}/{whl}"),
+        _asset(whl + ".sha256", f"{_DL}/{whl}.sha256"),
     ]
     blobs = {
-        "https://example/t": payload,
-        "https://example/t.sha256": f"{hex_d}  {whl}\n".encode(),
+        f"{_DL}/{whl}": payload,
+        f"{_DL}/{whl}.sha256": f"{hex_d}  {whl}\n".encode(),
     }
     result = download_and_verify(_release(assets), str(tmp_path), fetch=lambda u: blobs[u])
     assert result.status == "ok"
@@ -121,12 +128,44 @@ def test_download_ok_with_sidecar(tmp_path: Path) -> None:
 def test_checksum_mismatch_discards_file(tmp_path: Path) -> None:
     from utils.update_download import download_and_verify
 
-    release = _release([_asset("pkg-4.12.0-py3-none-any.whl", "https://example/w", "sha256:" + ("b" * 64))])
+    release = _release([_asset("pkg-4.12.0-py3-none-any.whl", f"{_DL}/pkg.whl", "sha256:" + ("b" * 64))])
     result = download_and_verify(release, str(tmp_path), fetch=lambda _u: b"wrong-bytes")
     assert result.status == "error"
     assert result.error is not None
     assert "expected" in result.error
     assert list(tmp_path.rglob("*.whl")) == []
+
+
+def test_download_rejects_untrusted_host(tmp_path: Path) -> None:
+    from utils.update_download import download_and_verify, sha256_hex
+
+    payload = b"x"
+    digest = "sha256:" + sha256_hex(payload)
+    release = _release([_asset("pkg.whl", "https://evil.example/pkg.whl", digest)])
+    result = download_and_verify(release, str(tmp_path), fetch=lambda _u: payload)
+    assert result.status == "error"
+    assert result.error is not None
+    assert "trusted" in result.error
+
+
+def test_download_rejects_oversized_declared_size(tmp_path: Path) -> None:
+    from utils.update_download import download_and_verify, sha256_hex
+    from utils.update_provenance import MAX_ARTIFACT_BYTES_ENV
+
+    payload = b"x"
+    digest = "sha256:" + sha256_hex(payload)
+    release = _release(
+        [_asset("pkg.whl", f"{_DL}/pkg.whl", digest, size=10_000)],
+    )
+    result = download_and_verify(
+        release,
+        str(tmp_path),
+        fetch=lambda _u: payload,
+        environ={MAX_ARTIFACT_BYTES_ENV: "100"},
+    )
+    assert result.status == "error"
+    assert result.error is not None
+    assert "budget" in result.error
 
 
 def test_parse_release_assets_attached() -> None:
@@ -137,11 +176,11 @@ def test_parse_release_assets_attached() -> None:
             "tag_name": "v4.12.0",
             "prerelease": False,
             "draft": False,
-            "html_url": "https://example/r",
+            "html_url": "https://github.com/sesquicadaver/codimension/releases/tag/v4.12.0",
             "assets": [
                 {
                     "name": "pkg.whl",
-                    "browser_download_url": "https://example/pkg.whl",
+                    "browser_download_url": f"{_DL}/pkg.whl",
                     "size": 12,
                     "digest": "sha256:" + ("c" * 64),
                 }
