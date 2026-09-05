@@ -161,7 +161,7 @@
 | 23 | R211 | SSH host-key pin before auth | Перевірка presented key до authentication | M | DONE ([#159](https://github.com/sesquicadaver/codimension/pull/159)) |
 | 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | DONE ([#160](https://github.com/sesquicadaver/codimension/pull/160)) |
 | 25 | R213 | Binding validation vs project cache | Лише binding, узгоджений з current project cache + saved profile | M | DONE ([#161](https://github.com/sesquicadaver/codimension/pull/161)) |
-| 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | DONE |
+| 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | DONE ([#162](https://github.com/sesquicadaver/codimension/pull/162)) |
 | 27 | R215 | Updater provenance hardening | Trusted provenance, HTTPS/host policy, streaming limits, version probe | M | OPEN |
 | 28 | R216 | CFG loop-else / match paths | Коректні loop-else та no-match шляхи | M | OPEN |
 | 29 | R217 | FFI: no EXACT without registration chain | Не ставити `EXACT` без повного registration evidence | M | OPEN |
