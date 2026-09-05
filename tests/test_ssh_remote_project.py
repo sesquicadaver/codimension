@@ -377,3 +377,162 @@ def test_r184_reject_policy_raises_unknown_host_key():
         policy.missing_host_key(None, "dev.example", _Key())
     assert raised.value.hostname == "dev.example"
     assert raised.value.fingerprint.startswith("SHA256:")
+
+
+def test_r211_pinned_policy_accepts_matching_key_before_auth():
+    """Pin match in missing_host_key accepts without waiting for connect()."""
+    from utils.ssh_remote import (
+        _pinned_host_key_policy,
+        require_paramiko,
+        ssh_host_key_fingerprint,
+    )
+
+    paramiko = require_paramiko()
+
+    class _Key:
+        def asbytes(self):
+            return b"pinned-key-material"
+
+        def get_name(self):
+            return "ssh-ed25519"
+
+    key = _Key()
+    pin = ssh_host_key_fingerprint(key)
+    added: list[tuple] = []
+
+    class _HostKeys:
+        def add(self, hostname, keytype, pkey):
+            added.append((hostname, keytype, pkey))
+
+    class _Client:
+        def get_host_keys(self):
+            return _HostKeys()
+
+    policy = _pinned_host_key_policy(paramiko, pin)
+    policy.missing_host_key(_Client(), "dev.example", key)
+    assert added == [("dev.example", "ssh-ed25519", key)]
+
+
+def test_r211_pinned_policy_rejects_mismatch_before_auth():
+    """Wrong presented key raises HostKeyFingerprintMismatch in the policy."""
+    from utils.ssh_remote import (
+        HostKeyFingerprintMismatch,
+        _pinned_host_key_policy,
+        require_paramiko,
+        ssh_host_key_fingerprint,
+    )
+
+    paramiko = require_paramiko()
+
+    class _Key:
+        def asbytes(self):
+            return b"attacker-key"
+
+        def get_name(self):
+            return "ssh-ed25519"
+
+    class _HostKeys:
+        def add(self, *_a, **_k):
+            raise AssertionError("mismatched key must not be added")
+
+    class _Client:
+        def get_host_keys(self):
+            return _HostKeys()
+
+    expected = ssh_host_key_fingerprint(
+        type("K", (), {"asbytes": staticmethod(lambda: b"legitimate-key")})()
+    )
+    policy = _pinned_host_key_policy(paramiko, expected)
+    with pytest.raises(HostKeyFingerprintMismatch) as raised:
+        policy.missing_host_key(_Client(), "dev.example", _Key())
+    assert raised.value.hostname == "dev.example"
+    assert raised.value.expected == expected
+    assert raised.value.actual.startswith("SHA256:")
+
+
+def test_r211_open_client_uses_pinned_policy_not_trust_once(monkeypatch):
+    """open_paramiko_ssh_client must install pinned policy when pin is set."""
+    from utils import ssh_remote as mod
+    from utils.ssh_remote import SshHostProfile
+
+    installed: list[object] = []
+
+    class _FakeTransport:
+        def get_remote_server_key(self):
+            class _Key:
+                def asbytes(self):
+                    return b"live-server-key"
+
+                def get_name(self):
+                    return "ssh-ed25519"
+
+            return _Key()
+
+    class _FakeClient:
+        def __init__(self):
+            self._policy = None
+
+        def load_system_host_keys(self):
+            return None
+
+        def load_host_keys(self, _path):
+            return None
+
+        def set_missing_host_key_policy(self, policy):
+            installed.append(policy)
+
+        def connect(self, **_kwargs):
+            # Simulate Paramiko invoking the policy for an unknown host.
+            key = self.get_transport().get_remote_server_key()
+            self._policy = installed[-1]
+            self._policy.missing_host_key(self, "dev.example", key)
+
+        def get_transport(self):
+            return _FakeTransport()
+
+        def get_host_keys(self):
+            class _HK:
+                def add(self, *_a, **_k):
+                    return None
+
+            return _HK()
+
+        def close(self):
+            return None
+
+    class _FakeParamiko:
+        class MissingHostKeyPolicy:
+            pass
+
+        class SSHClient(_FakeClient):
+            pass
+
+    pin = mod.ssh_host_key_fingerprint(
+        type("K", (), {"asbytes": staticmethod(lambda: b"live-server-key")})()
+    )
+    monkeypatch.setattr(mod, "require_paramiko", lambda: _FakeParamiko)
+    monkeypatch.setattr(mod, "load_ssh_client_host_keys", lambda *_a, **_k: None)
+
+    profile = SshHostProfile(
+        id="p1",
+        host="dev.example",
+        user="alice",
+        auth="key",
+        host_key_fingerprint=pin,
+    )
+    client, pinned = mod.open_paramiko_ssh_client(profile)
+    assert pinned.host_key_fingerprint == pin
+    assert installed, "expected a missing-host-key policy"
+    assert type(installed[0]).__name__ == "_Pinned"
+    client.close()
+
+    # Mismatch must raise from the policy during connect (before auth returns).
+    bad = SshHostProfile(
+        id="p2",
+        host="dev.example",
+        user="alice",
+        auth="password",
+        host_key_fingerprint="SHA256:not-the-live-key",
+    )
+    with pytest.raises(mod.HostKeyFingerprintMismatch):
+        mod.open_paramiko_ssh_client(bad, password="secret")

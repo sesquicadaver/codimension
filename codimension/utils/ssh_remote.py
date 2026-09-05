@@ -18,6 +18,10 @@ R184: SSH host authenticity — ``RejectPolicy`` by default, load known_hosts,
 optional TOFU only after explicit trust, pin ``host_key_fingerprint`` in the
 profile; fingerprint mismatch fails closed.
 
+R211: with a profile pin, compare the presented key inside
+``MissingHostKeyPolicy.missing_host_key()`` so mismatch raises *before*
+authentication (credentials are never sent on a wrong host key).
+
 R185: Download hardening — ``lstat`` (no symlink follow), reject symlinks,
 nonzero default file/byte caps, streamed reads, staging + atomic swap into
 the local cache.
@@ -496,6 +500,31 @@ def _trust_once_host_key_policy(paramiko_mod: Any) -> Any:
     return _TrustOnce()
 
 
+def _pinned_host_key_policy(paramiko_mod: Any, expected_fingerprint: str) -> Any:
+    """Accept an unknown host key only when its fingerprint matches the pin (R211).
+
+    Runs during the SSH handshake inside ``missing_host_key``, *before*
+    authentication — so a wrong key never receives password/agent credentials.
+    """
+    expected = normalize_host_key_fingerprint(expected_fingerprint)
+    if not expected:
+        raise ValueError("pinned host key fingerprint must be non-empty")
+
+    class _Pinned(paramiko_mod.MissingHostKeyPolicy):
+        def missing_host_key(self, client, hostname, key):  # noqa: ANN001
+            actual = ssh_host_key_fingerprint(key)
+            if actual != expected:
+                raise HostKeyFingerprintMismatch(hostname, expected, actual)
+            client.get_host_keys().add(hostname, key.get_name(), key)
+            logging.info(
+                "Pinned SSH host key accepted for %s (%s)",
+                hostname,
+                actual,
+            )
+
+    return _Pinned()
+
+
 def verify_remote_host_key_fingerprint(client: Any, expected: str, *, hostname: str) -> str:
     """Fail closed when the live server key fingerprint ≠ ``expected`` pin."""
     transport = client.get_transport()
@@ -516,18 +545,26 @@ def open_paramiko_ssh_client(
     trust_unknown_host: bool = False,
     settings_dir: Optional[str] = None,
 ) -> tuple[Any, SshHostProfile]:
-    """Connect an ``SSHClient`` with R184 host-key policy.
+    """Connect an ``SSHClient`` with R184/R211 host-key policy.
 
     Returns ``(client, profile)`` where ``profile`` may gain a new
     ``host_key_fingerprint`` pin when TOFU was granted.
+
+    When ``host_key_fingerprint`` is set, the pin is enforced inside
+    ``MissingHostKeyPolicy`` (R211) so authentication does not run against a
+    mismatched unknown host key. A post-connect check remains as defense in
+    depth for keys already present in ``known_hosts``.
     """
     paramiko = require_paramiko()
     cfg = profile.normalized()
     client = paramiko.SSHClient()
     load_ssh_client_host_keys(client, settings_dir)
-    if cfg.host_key_fingerprint or trust_unknown_host:
-        # Pin present: allow handshake then verify fingerprint (fail closed).
-        # TOFU without pin: accept once after explicit caller consent.
+    if cfg.host_key_fingerprint:
+        # R211: verify pin during handshake — never TrustOnce+post-check.
+        client.set_missing_host_key_policy(
+            _pinned_host_key_policy(paramiko, cfg.host_key_fingerprint)
+        )
+    elif trust_unknown_host:
         client.set_missing_host_key_policy(_trust_once_host_key_policy(paramiko))
     else:
         client.set_missing_host_key_policy(_reject_missing_host_key_policy(paramiko))
@@ -554,6 +591,7 @@ def open_paramiko_ssh_client(
         raise RuntimeError("SSH transport missing after connect")
     actual = ssh_host_key_fingerprint(transport.get_remote_server_key())
     if cfg.host_key_fingerprint:
+        # known_hosts path may skip missing_host_key — still fail closed on pin.
         if actual != cfg.host_key_fingerprint:
             client.close()
             raise HostKeyFingerprintMismatch(cfg.host, cfg.host_key_fingerprint, actual)
