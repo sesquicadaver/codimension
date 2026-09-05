@@ -48,6 +48,21 @@ Remote-first: канонічне дерево на SSH-хості; Codimension �
 - Перше з’єднання з невідомим хостом (без pin) показує fingerprint; TOFU лише після
   явного Yes, потім pin зберігається в профілі.
 
+## Довіра до binding (R213)
+
+`binding.json` **не** довіряється «як є». `get_loaded_project_binding()`
+приймає його лише коли:
+
+- `local_root` збігається з відкритим project dir і лежить під
+  `<settings>/remote-projects/<profile_id>/`;
+- `local_cdm3` збігається з відкритим `.cdm3` і не виходить за `local_root`;
+- `profile_id` є в saved host profiles і `host`/`port`/`user`/`auth`
+  збігаються з профілем;
+- remote paths абсолютні й містяться під `remote_root`.
+
+Ідентичність з’єднання береться зі **збереженого профілю**, не з crafted
+полів binding. Недовірені binding ігноруються (fail closed).
+
 ## Download hardening (R185)
 
 - Класифікація через **`lstat`** (без follow symlink); remote symlink —

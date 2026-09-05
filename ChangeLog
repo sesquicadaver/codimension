@@ -1,5 +1,7 @@
 2026 Sep 05
 
+* R213: validate ``binding.json`` against open project dir, remote-projects
+  cache, and saved host profile before enabling remote Save/Run (audit P1-07)
 * R212: SSH IDE Debug — reverse tunnel binds ``127.0.0.1`` only; remote→local
   path remap uses ``normpath`` + ``commonpath``; exec poll sleeps and honours
   cancel (audit P1-08)

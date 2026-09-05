@@ -51,6 +51,21 @@ Host profiles (no secrets) are stored in `~/.codimension3/ssh_hosts.json`.
 - First connection to an unknown host (no pin) shows the fingerprint; TOFU
   only after explicit Yes, then the pin is saved with the profile.
 
+## Binding trust (R213)
+
+`binding.json` is **not** trusted on sight. `get_loaded_project_binding()`
+accepts it only when:
+
+- `local_root` matches the open project directory and lies under
+  `<settings>/remote-projects/<profile_id>/`;
+- `local_cdm3` matches the open `.cdm3` and stays under `local_root`;
+- `profile_id` exists in saved host profiles and `host`/`port`/`user`/`auth`
+  match that profile;
+- remote paths are absolute and contained under `remote_root`.
+
+Connection identity is taken from the **saved profile**, not from crafted
+binding fields. Untrusted bindings are ignored (fail closed).
+
 ## Download hardening (R185)
 
 - Entries are classified with **`lstat`** (no symlink follow); remote

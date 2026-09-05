@@ -16,6 +16,9 @@ R198: SSH IDE debug uses reverse port-forward + remote ``client_cdm_dbg``
 
 R199: SSH Profile runs remote ``python -m cProfile -o …`` and downloads the
 stats file into the local profile-output path for the IDE report UI.
+
+R213: ``binding.json`` is trusted only after validation against the open
+project directory, remote-projects cache container, and a saved host profile.
 """
 
 from __future__ import annotations
@@ -33,6 +36,7 @@ from typing import Callable, Optional, Sequence
 
 from utils.globals import GlobalData
 from utils.ssh_remote import (
+    BindingValidationError,
     RemoteProjectBinding,
     SshHostProfile,
     connect_paramiko_sftp,
@@ -43,6 +47,7 @@ from utils.ssh_remote import (
     require_paramiko,
     upload_file,
     upsert_host_profile,
+    validate_binding,
 )
 
 # Remote sync state for a local cache path (R186). Local disk save ≠ SYNCED.
@@ -173,33 +178,42 @@ def cancel_ssh_profile() -> bool:
 
 
 def get_loaded_project_binding() -> Optional[RemoteProjectBinding]:
-    """Return ``binding.json`` for the currently loaded project, if any."""
+    """Return a *validated* ``binding.json`` for the loaded project, if any.
+
+    R213: untrusted / mismatched bindings are ignored (fail closed) so a
+    crafted file in a normal local project cannot enable remote Save/Run.
+    """
     project = GlobalData().project
     if project is None or not project.isLoaded():
         return None
     project_dir = project.getProjectDir()
     if not project_dir:
         return None
-    return read_binding(project_dir.rstrip(os.sep))
+    project_dir = project_dir.rstrip(os.sep)
+    binding = read_binding(project_dir)
+    if binding is None:
+        return None
+    try:
+        return validate_binding(
+            binding,
+            project_dir=project_dir,
+            project_file=str(project.fileName or ""),
+        )
+    except BindingValidationError as exc:
+        logging.warning("Ignoring untrusted SSH binding.json: %s", exc)
+        return None
 
 
 def profile_from_binding(binding: RemoteProjectBinding) -> SshHostProfile:
-    """Rebuild a host profile from a persisted binding (include saved host-key pin)."""
-    pin = ""
+    """Rebuild connection identity from the *saved* host profile (R213).
+
+    Host/port/user/auth come from the trusted profile store, not from
+    ``binding.json`` fields (those are only used after :func:`validate_binding`).
+    """
     for saved in load_host_profiles():
         if saved.id == binding.profile_id:
-            pin = saved.host_key_fingerprint
-            break
-    return SshHostProfile(
-        id=binding.profile_id,
-        host=binding.host,
-        port=binding.port,
-        user=binding.user,
-        auth=binding.auth,
-        identity_file=binding.identity_file,
-        label=f"{binding.user + '@' if binding.user else ''}{binding.host}",
-        host_key_fingerprint=pin,
-    ).normalized()
+            return saved.normalized()
+    raise BindingValidationError(f"unknown SSH profile_id in binding: {binding.profile_id!r}")
 
 
 def map_local_to_remote(binding: RemoteProjectBinding, local_path: str) -> str:

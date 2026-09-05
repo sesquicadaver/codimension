@@ -379,6 +379,164 @@ def test_r184_reject_policy_raises_unknown_host_key():
     assert raised.value.fingerprint.startswith("SHA256:")
 
 
+def test_r213_validate_binding_accepts_trusted_cache(tmp_path):
+    from utils.ssh_remote import (
+        RemoteProjectBinding,
+        SshHostProfile,
+        remote_projects_root,
+        upsert_host_profile,
+        validate_binding,
+    )
+
+    settings = str(tmp_path / "settings")
+    upsert_host_profile(
+        SshHostProfile(id="p1", host="dev.example", port=22, user="alice", auth="key"),
+        settings,
+    )
+    cache = Path(remote_projects_root(settings)) / "p1" / "abcd1234"
+    cache.mkdir(parents=True)
+    cdm3 = cache / "proj.cdm3"
+    cdm3.write_text("{}\n", encoding="utf-8")
+    binding = RemoteProjectBinding(
+        profile_id="p1",
+        host="dev.example",
+        port=22,
+        user="alice",
+        auth="key",
+        identity_file="",
+        remote_root="/srv/proj",
+        remote_cdm3="/srv/proj/proj.cdm3",
+        local_root=str(cache),
+        local_cdm3=str(cdm3),
+    )
+    trusted = validate_binding(
+        binding,
+        project_dir=str(cache),
+        project_file=str(cdm3),
+        settings_dir=settings,
+    )
+    assert trusted.local_root == os.path.realpath(cache)
+    assert trusted.host == "dev.example"
+
+
+def test_r213_validate_binding_rejects_crafted_local_project(tmp_path):
+    from utils.ssh_remote import (
+        BindingValidationError,
+        RemoteProjectBinding,
+        SshHostProfile,
+        upsert_host_profile,
+        validate_binding,
+    )
+
+    settings = str(tmp_path / "settings")
+    upsert_host_profile(
+        SshHostProfile(id="p1", host="dev.example", port=22, user="alice", auth="key"),
+        settings,
+    )
+    local = tmp_path / "normal-project"
+    local.mkdir()
+    cdm3 = local / "app.cdm3"
+    cdm3.write_text("{}\n", encoding="utf-8")
+    crafted = RemoteProjectBinding(
+        profile_id="p1",
+        host="dev.example",
+        port=22,
+        user="alice",
+        auth="key",
+        identity_file="",
+        remote_root="/srv/proj",
+        remote_cdm3="/srv/proj/proj.cdm3",
+        local_root=str(local),
+        local_cdm3=str(cdm3),
+    )
+    with pytest.raises(BindingValidationError, match="remote-projects cache"):
+        validate_binding(
+            crafted,
+            project_dir=str(local),
+            project_file=str(cdm3),
+            settings_dir=settings,
+        )
+
+
+def test_r213_validate_binding_rejects_profile_field_mismatch(tmp_path):
+    from utils.ssh_remote import (
+        BindingValidationError,
+        RemoteProjectBinding,
+        SshHostProfile,
+        remote_projects_root,
+        upsert_host_profile,
+        validate_binding,
+    )
+
+    settings = str(tmp_path / "settings")
+    upsert_host_profile(
+        SshHostProfile(id="p1", host="dev.example", port=22, user="alice", auth="key"),
+        settings,
+    )
+    cache = Path(remote_projects_root(settings)) / "p1" / "abcd1234"
+    cache.mkdir(parents=True)
+    cdm3 = cache / "proj.cdm3"
+    cdm3.write_text("{}\n", encoding="utf-8")
+    binding = RemoteProjectBinding(
+        profile_id="p1",
+        host="evil.example",
+        port=22,
+        user="alice",
+        auth="key",
+        identity_file="",
+        remote_root="/srv/proj",
+        remote_cdm3="/srv/proj/proj.cdm3",
+        local_root=str(cache),
+        local_cdm3=str(cdm3),
+    )
+    with pytest.raises(BindingValidationError, match="does not match saved profile"):
+        validate_binding(
+            binding,
+            project_dir=str(cache),
+            project_file=str(cdm3),
+            settings_dir=settings,
+        )
+
+
+def test_r213_get_loaded_project_binding_ignores_untrusted(tmp_path, monkeypatch):
+    from utils import ssh_project_runtime as rt
+    from utils.ssh_remote import RemoteProjectBinding, write_binding
+
+    local = tmp_path / "local"
+    local.mkdir()
+    cdm3 = local / "x.cdm3"
+    cdm3.write_text("{}\n", encoding="utf-8")
+    write_binding(
+        RemoteProjectBinding(
+            profile_id="missing",
+            host="h",
+            port=22,
+            user="u",
+            auth="key",
+            identity_file="",
+            remote_root="/r",
+            remote_cdm3="/r/r.cdm3",
+            local_root=str(local),
+            local_cdm3=str(cdm3),
+        )
+    )
+
+    class _Project:
+        fileName = str(cdm3)
+
+        def isLoaded(self):
+            return True
+
+        def getProjectDir(self):
+            return str(local) + os.sep
+
+    class _GD:
+        project = _Project()
+
+    monkeypatch.setattr(rt, "GlobalData", lambda: _GD())
+    assert rt.get_loaded_project_binding() is None
+
+
 def test_r211_pinned_policy_accepts_matching_key_before_auth():
     """Pin match in missing_host_key accepts without waiting for connect()."""
     from utils.ssh_remote import (

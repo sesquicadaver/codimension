@@ -160,7 +160,7 @@
 | 22 | R210 | LSP server→client requests | `workspace/configuration`, progress, dynamic registration; applyEdit refuse/preview | L | DONE ([#158](https://github.com/sesquicadaver/codimension/pull/158)) |
 | 23 | R211 | SSH host-key pin before auth | Перевірка presented key до authentication | M | DONE ([#159](https://github.com/sesquicadaver/codimension/pull/159)) |
 | 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | DONE ([#160](https://github.com/sesquicadaver/codimension/pull/160)) |
-| 25 | R213 | Binding validation vs project cache | Лише binding, узгоджений з current project cache + saved profile | M | OPEN |
+| 25 | R213 | Binding validation vs project cache | Лише binding, узгоджений з current project cache + saved profile | M | DONE ([#161](https://github.com/sesquicadaver/codimension/pull/161)) |
 | 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | OPEN |
 | 27 | R215 | Updater provenance hardening | Trusted provenance, HTTPS/host policy, streaming limits, version probe | M | OPEN |
 | 28 | R216 | CFG loop-else / match paths | Коректні loop-else та no-match шляхи | M | OPEN |
@@ -173,7 +173,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R213** — Binding validation vs project cache.
+**Наступний OPEN:** **R214** — MCP workspace policy.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
