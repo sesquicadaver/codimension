@@ -152,15 +152,34 @@
 | 19 | R207 | Polyglot: DependencyEdgeKind + cross-language navigation | Узагальнені edges включно з FFI; навігація через мовну межу | M | DONE ([#143](https://github.com/sesquicadaver/codimension/pull/143)) |
 | 20 | R208 | Polyglot: Cargo / CMake / Ninja / CTest TaskProviders | Лише explicit tasks (не при відкритті файла); не через clangd/rust-analyzer як build runners | M | DONE ([#145](https://github.com/sesquicadaver/codimension/pull/145)) |
 
+### Хвиля hardening після аудиту 2026-09-05 (`codi-last.md` @ 340e97dc)
+
+| # | ID | Задача | Acceptance | Size | Статус |
+|---|-----|--------|------------|------|--------|
+| 21 | R209 | LSP document lifecycle: didChange / didClose / restart re-open | Versioned sync у `LspSemanticProvider`; тести `test_language_r209.py` | M | DONE |
+| 22 | R210 | LSP server→client requests | `workspace/configuration`, progress, dynamic registration; applyEdit refuse/preview | L | OPEN |
+| 23 | R211 | SSH host-key pin before auth | Перевірка presented key до authentication | M | OPEN |
+| 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | OPEN |
+| 25 | R213 | Binding validation vs project cache | Лише binding, узгоджений з current project cache + saved profile | M | OPEN |
+| 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | OPEN |
+| 27 | R215 | Updater provenance hardening | Trusted provenance, HTTPS/host policy, streaming limits, version probe | M | OPEN |
+| 28 | R216 | CFG loop-else / match paths | Коректні loop-else та no-match шляхи | M | OPEN |
+| 29 | R217 | FFI: no EXACT without registration chain | Не ставити `EXACT` без повного registration evidence | M | OPEN |
+| 30 | R218 | AI docstring: versioned target + post-patch validate | Identity на versioned snapshot; validate після apply | M | OPEN |
+| 31 | R219 | Project reload: immutable UUID + diff/rebuild | Єдиний pipeline; UUID immutable | M | OPEN |
+| 32 | R220 | Plugin policy before import | Fail-closed policy до `import` plugin code | M | OPEN |
+
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** *(порожньо — R208 закрив хвилю polyglot language layer R200–R208).*
+**Наступний OPEN:** **R210** — LSP server→client requests.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
-**Поза цією хвилею:** DAP/native debug; власні Rust/C++ parsers; Yapsy language plugins; копіювання Python CFG pipeline на інші мови.
+Хвиля **R209–R220** = hardening за аудитом `codi-last.md` (P1-02…P1-related).
+
+**Поза цією хвилею:** DAP/native debug; власні Rust/C++ parsers; Yapsy language plugins; копіювання Python CFG pipeline на інші мови; production editor wiring Rust/C++ (після R209–R220).
 
 Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
 
@@ -181,5 +200,5 @@ Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
 MCP / agent: **R182** (`mcp_backend`, stdio + ``CDM_MCP_TOKEN``)
-Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208)
+Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220
 ```

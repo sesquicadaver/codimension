@@ -1,3 +1,9 @@
+2026 Sep 05
+
+* R209: LSP document lifecycle — ``didChange`` on version bump, ``didClose``,
+  clear ``_opened`` and re-``didOpen`` after language-server restart
+  (``LspSemanticProvider``; audit P1-02 / ``codi-last.md``)
+
 2026 Aug 30
 
 * Fix: flow_ast ``_DocstringFrag`` missing ``beginLine``/``body`` spans → crash
