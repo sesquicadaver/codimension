@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - apply verified update from cache (R180)
+# codimension - apply verified update from cache (R180 / R215)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,12 +9,16 @@
 # (at your option) any later version.
 #
 
-"""Apply a verified update artifact from the local cache (R180).
+"""Apply a verified update artifact from the local cache (R180 / R215).
 
 Flow: re-verify SHA-256 → optional backup of previous verified wheel →
 ``pip install`` via injectable runner → probe installed version → rollback on
 failure. Fail closed: no trusted digest / mismatch / missing file → refuse.
 Does not restart the IDE.
+
+R215: version probe uses ``importlib.metadata.version("codimension")`` with a
+``codimension.cdmverspec`` fallback (top-level ``cdmverspec`` is not guaranteed
+in a clean install). Re-verify streams the file instead of reading it wholesale.
 """
 
 from __future__ import annotations
@@ -30,7 +34,7 @@ from pathlib import Path
 from typing import Callable, Optional, Sequence
 
 from utils.portable_profile import updates_cache_dir
-from utils.update_download import sha256_hex
+from utils.update_provenance import sha256_file
 
 InstallFn = Callable[[Sequence[str]], None]
 ProbeFn = Callable[[str], str]
@@ -76,8 +80,7 @@ def reverify_file(path: str, expected_sha256: str) -> str:
     expected = expected_sha256.strip().lower()
     if not os.path.isfile(path):
         raise FileNotFoundError(f"artifact missing: {path}")
-    with open(path, "rb") as handle:
-        actual = str(sha256_hex(handle.read()))
+    actual = str(sha256_file(path))
     if actual != expected:
         raise ValueError(f"checksum mismatch: expected {expected}, got {actual}")
     return actual
@@ -162,10 +165,25 @@ def default_install(argv: Sequence[str]) -> None:
         raise RuntimeError(f"pip install failed: {err}")
 
 
+#: Probe installed package version without relying on a top-level ``cdmverspec``.
+_VERSION_PROBE_CODE = (
+    "import importlib.metadata as _m\n"
+    "try:\n"
+    "    print(_m.version('codimension'))\n"
+    "except _m.PackageNotFoundError:\n"
+    "    from codimension import cdmverspec as _v\n"
+    "    print(_v.version)\n"
+)
+
+
 def default_probe_version(python: str) -> str:
-    """Return ``cdmverspec.version`` from ``python``."""
+    """Return installed Codimension version from ``python`` (R215).
+
+    Prefer ``importlib.metadata.version('codimension')``; fall back to
+    ``codimension.cdmverspec`` when distribution metadata is missing.
+    """
     completed = subprocess.run(
-        [python, "-c", "import cdmverspec; print(cdmverspec.version)"],
+        [python, "-c", _VERSION_PROBE_CODE],
         capture_output=True,
         text=True,
         check=False,

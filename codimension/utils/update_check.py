@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - GitHub Releases update check (R172)
+# codimension - GitHub Releases update check (R172 / R215)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,11 +9,14 @@
 # (at your option) any later version.
 #
 
-"""Read-only check for newer GitHub Releases (R172).
+"""Read-only check for newer GitHub Releases (R172 / R215).
 
 Fetches the public Releases API for the fork repo, compares tags to the
 installed ``cdmverspec.version``, and reports whether a newer release exists.
 Asset metadata is attached for R173 download+verify. Apply/install is R180+.
+
+R215: Releases URL must be HTTPS on a trusted host with the expected
+``/repos/<owner>/<repo>/releases`` path; responses are size-capped.
 Network access is injectable for tests.
 """
 
@@ -22,23 +25,25 @@ from __future__ import annotations
 import json
 import os
 import urllib.error
-import urllib.request
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping, Optional, Sequence
+from typing import Any, Callable, Mapping, Optional, Sequence, cast
 
 import cdmverspec
 from packaging.version import InvalidVersion, Version
-
-#: Default GitHub owner/repo for this fork.
-DEFAULT_OWNER_REPO = "sesquicadaver/codimension"
+from utils.update_provenance import (
+    DEFAULT_OWNER_REPO,
+    DEFAULT_TIMEOUT,
+    MAX_RELEASES_JSON_BYTES,
+    UpdateProvenanceError,
+    assert_trusted_update_url,
+    enforce_payload_budget,
+    fetch_budgeted,
+)
 
 #: Releases list endpoint (paginated by GitHub; first page is enough for tip).
 DEFAULT_RELEASES_URL = f"https://api.github.com/repos/{DEFAULT_OWNER_REPO}/releases"
 
-#: HTTP timeout for the read-only check (seconds).
-DEFAULT_TIMEOUT = 10
-
-#: Env override for the Releases API URL (tests / mirrors).
+#: Env override for the Releases API URL (must still pass provenance policy).
 RELEASES_URL_ENV = "CDM_UPDATE_RELEASES_URL"
 
 FetchFn = Callable[[str], bytes]
@@ -200,29 +205,30 @@ def select_newer_release(
     return best
 
 
-def default_fetch(url: str, *, timeout: float = DEFAULT_TIMEOUT) -> bytes:
-    """Fetch ``url`` with urllib and a Codimension User-Agent."""
-    req = urllib.request.Request(
+def default_fetch(url: str, *, timeout: float = DEFAULT_TIMEOUT, environ: Optional[Mapping[str, str]] = None) -> bytes:
+    """Fetch Releases API ``url`` with provenance checks and a byte budget."""
+    body = fetch_budgeted(
         url,
-        headers={
-            "Accept": "application/vnd.github+json",
-            "User-Agent": f"codimension-update-check/{cdmverspec.version}",
-            "X-GitHub-Api-Version": "2022-11-28",
-        },
-        method="GET",
+        purpose="releases_api",
+        max_bytes=MAX_RELEASES_JSON_BYTES,
+        timeout=timeout,
+        environ=environ,
+        user_agent=f"codimension-update-check/{cdmverspec.version}",
+        accept="application/vnd.github+json",
+        extra_headers={"X-GitHub-Api-Version": "2022-11-28"},
     )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        body = resp.read()
-        return body if isinstance(body, bytes) else bytes(body)
+    return bytes(body)
 
 
 def resolve_releases_url(environ: Optional[Mapping[str, str]] = None) -> str:
-    """Resolve the Releases API URL (env override or default)."""
+    """Resolve and validate the Releases API URL (env override or default)."""
     env: Mapping[str, str] = environ if environ is not None else os.environ
     override = env.get(RELEASES_URL_ENV)
     if override is not None and str(override).strip():
-        return str(override).strip()
-    return DEFAULT_RELEASES_URL
+        url = str(override).strip()
+    else:
+        url = DEFAULT_RELEASES_URL
+    return cast(str, assert_trusted_update_url(url, purpose="releases_api", environ=env))
 
 
 def format_update_message(result: UpdateCheckResult) -> str:
@@ -257,11 +263,12 @@ def check_for_updates(
     channel:
         Release channel; defaults to ``cdmverspec.get_release_channel``.
     fetch:
-        Injectable ``url -> bytes`` (mocked in tests). Defaults to HTTPS GET.
+        Injectable ``url -> bytes`` (mocked in tests). Defaults to HTTPS GET
+        with provenance + size budget.
     environ:
-        Optional env mapping for channel / URL overrides.
+        Optional env mapping for channel / URL / trust overrides.
     releases_url:
-        Explicit Releases API URL; else env / default.
+        Explicit Releases API URL; else env / default. Always validated.
     """
     ver = (current_version if current_version is not None else cdmverspec.version).strip()
     ch = (
@@ -269,50 +276,62 @@ def check_for_updates(
         if channel is not None
         else cdmverspec.get_release_channel(environ=environ)
     )
-    url = releases_url if releases_url is not None else resolve_releases_url(environ)
-    fetch_fn = fetch if fetch is not None else default_fetch
+    env: Mapping[str, str] = environ if environ is not None else os.environ
 
     try:
-        raw = fetch_fn(url)
+        if releases_url is not None:
+            url = assert_trusted_update_url(releases_url, purpose="releases_api", environ=env)
+        else:
+            url = resolve_releases_url(env)
+        if fetch is not None:
+            raw = enforce_payload_budget(
+                fetch(url),
+                max_bytes=MAX_RELEASES_JSON_BYTES,
+                label="releases JSON",
+            )
+        else:
+            raw = default_fetch(url, environ=env)
         payload = json.loads(raw.decode("utf-8"))
         releases = parse_releases_payload(payload)
         newer = select_newer_release(releases, ver, ch)
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError) as exc:
-        result = UpdateCheckResult(
+    except (
+        urllib.error.URLError,
+        urllib.error.HTTPError,
+        TimeoutError,
+        OSError,
+        UpdateProvenanceError,
+    ) as exc:
+        return UpdateCheckResult(
             status="error",
             current_version=ver,
             channel=ch,
-            message="Network error during update check.",
+            message="Network or provenance error during update check.",
             error=str(exc),
         )
-        return result
     except (ValueError, json.JSONDecodeError, UnicodeDecodeError) as exc:
-        result = UpdateCheckResult(
+        return UpdateCheckResult(
             status="error",
             current_version=ver,
             channel=ch,
             message="Invalid update-check response.",
             error=str(exc),
         )
-        return result
 
     if newer is None:
-        result = UpdateCheckResult(
+        return UpdateCheckResult(
             status="up_to_date",
             current_version=ver,
             channel=ch,
             message=f"Up to date: {ver} ({ch}).",
         )
-        return result
 
-    result = UpdateCheckResult(
+    return UpdateCheckResult(
         status="update_available",
         current_version=ver,
         channel=ch,
         latest=newer,
         message=f"Update available: {newer.tag_name}",
     )
-    return result
 
 
 __all__ = [
