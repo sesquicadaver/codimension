@@ -68,7 +68,8 @@ class LspSemanticProvider:
         self._registry = registry
         self._config = config
         self._readiness = readiness
-        self._opened: set[str] = set()
+        # uri → last version synced to the language server (didOpen / didChange).
+        self._opened: dict[str, int] = {}
 
     @property
     def provider_id(self) -> str:
@@ -99,26 +100,69 @@ class LspSemanticProvider:
             allowlist=self._config.allowlist,
         )
         if not proc.initialized:
+            # Server restart / first start: previous document state is gone.
+            self._opened.clear()
             proc.initialize()
         return proc
 
     def _ensure_open(self, document: DocumentSnapshot) -> LspProcess:
+        """Ensure the server has the current document text (didOpen or didChange)."""
         proc = self._process()
-        if document.uri not in self._opened:
+        uri = document.uri
+        if uri not in self._opened:
             lang = document.language_id or self._config.language_id_for_did_open
             proc.notify(
                 "textDocument/didOpen",
                 {
                     "textDocument": {
-                        "uri": document.uri,
+                        "uri": uri,
                         "languageId": lang,
                         "version": document.version,
                         "text": document.text,
                     }
                 },
             )
-            self._opened.add(document.uri)
+            self._opened[uri] = document.version
+            return proc
+
+        if self._opened[uri] != document.version:
+            proc.notify(
+                "textDocument/didChange",
+                {
+                    "textDocument": {"uri": uri, "version": document.version},
+                    "contentChanges": [{"text": document.text}],
+                },
+            )
+            self._opened[uri] = document.version
         return proc
+
+    def sync_document(self, document: DocumentSnapshot) -> None:
+        """Push buffer text to the language server (didOpen or full didChange)."""
+        self._ensure_open(document)
+
+    def close_document(self, document: DocumentSnapshot) -> None:
+        """Notify ``textDocument/didClose`` and drop local open tracking."""
+        uri = document.uri
+        if uri not in self._opened:
+            return
+        # Pop before touching the process so a restart clear cannot resurrect
+        # tracking, and so we can skip didClose on a virgin post-restart server.
+        self._opened.pop(uri, None)
+        key = LspProcessKey(
+            self._config.language_id,
+            self._config.workspace_root,
+            self._config.toolchain,
+        )
+        proc = self._registry.get_or_create(
+            key,
+            self._config.command,
+            allowlist=self._config.allowlist,
+        )
+        if not proc.initialized:
+            self._opened.clear()
+            proc.initialize()
+            return
+        proc.notify("textDocument/didClose", {"textDocument": {"uri": uri}})
 
     def hover(self, document: DocumentSnapshot, offset: int) -> HoverInfo | None:
         """LSP ``textDocument/hover`` → :class:`HoverInfo`."""

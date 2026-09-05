@@ -152,15 +152,34 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 19 | R207 | Polyglot: DependencyEdgeKind + cross-language navigation | Generalized edges incl. FFI; navigation across language boundary | M | DONE ([#143](https://github.com/sesquicadaver/codimension/pull/143)) |
 | 20 | R208 | Polyglot: Cargo / CMake / Ninja / CTest TaskProviders | Explicit tasks only (not on file open); not via clangd/rust-analyzer as build runners | M | DONE ([#145](https://github.com/sesquicadaver/codimension/pull/145)) |
 
+### Hardening wave after 2026-09-05 audit (`codi-last.md` @ 340e97dc)
+
+| # | ID | Task | Acceptance | Size | Status |
+|---|-----|------|------------|------|--------|
+| 21 | R209 | LSP document lifecycle: didChange / didClose / restart re-open | Versioned sync in `LspSemanticProvider`; `test_language_r209.py` | M | DONE |
+| 22 | R210 | LSP server→client requests | `workspace/configuration`, progress, dynamic registration; applyEdit refuse/preview | L | OPEN |
+| 23 | R211 | SSH host-key pin before auth | Verify presented key before authentication | M | OPEN |
+| 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | OPEN |
+| 25 | R213 | Binding validation vs project cache | Only bindings matching current project cache + saved profile | M | OPEN |
+| 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | OPEN |
+| 27 | R215 | Updater provenance hardening | Trusted provenance, HTTPS/host policy, streaming limits, version probe | M | OPEN |
+| 28 | R216 | CFG loop-else / match paths | Correct loop-else and no-match paths | M | OPEN |
+| 29 | R217 | FFI: no EXACT without registration chain | Do not claim `EXACT` without full registration evidence | M | OPEN |
+| 30 | R218 | AI docstring: versioned target + post-patch validate | Identity on versioned snapshot; validate after apply | M | OPEN |
+| 31 | R219 | Project reload: immutable UUID + diff/rebuild | Single pipeline; UUID immutable | M | OPEN |
+| 32 | R220 | Plugin policy before import | Fail-closed policy before importing plugin code | M | OPEN |
+
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** *(empty — R208 closed the polyglot language-layer wave R200–R208).*
+**Next OPEN:** **R210** — LSP server→client requests.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
-**Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages.
+Wave **R209–R220** = hardening from audit `codi-last.md`.
+
+**Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages; production editor wiring for Rust/C++ (after R209–R220).
 
 Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
 
@@ -181,5 +200,5 @@ Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
 MCP / agent: **R182** (`mcp_backend`, stdio + ``CDM_MCP_TOKEN``)
-Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208)
+Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220
 ```

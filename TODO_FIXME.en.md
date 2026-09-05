@@ -7,7 +7,15 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. ROADMAP queue: **empty** (polyglot R200–R208 DONE).
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02 → **R209** ✅; next OPEN — **R210**.
+
+### Audit 2026-09-05 (`codi-last.md`) — P1 queue
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P1-02 | LSP: no didChange/didClose; stale `_opened` after restart | P1 | ✅ R209 |
+| P1-03 | LSP: no server→client request handling | P1 | 🔓 R210 |
+| P1-04+ | SSH pin / Debug / bindings / MCP / updater / CFG / FFI / AI / reload / plugins | P1 | 🔓 R211–R220 |
 
 ### UX hardening (outside ROADMAP queue)
 
