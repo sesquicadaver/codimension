@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from core.symbol_index import SymbolIndex
 from mcp_backend.policy import (
@@ -117,7 +117,8 @@ class WorkspaceSession:
         assert self.root is not None
         # Open root is already under allowed_root; also reject escapes from both.
         under_open = resolve_under_allowed_root(self.root, path)
-        return resolve_under_allowed_root(self.policy.allowed_root, under_open)
+        resolved = resolve_under_allowed_root(self.policy.allowed_root, under_open)
+        return cast(str, resolved)
 
 
 __all__ = ["WorkspaceSession"]
