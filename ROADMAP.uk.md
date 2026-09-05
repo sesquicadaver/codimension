@@ -161,7 +161,7 @@
 | 23 | R211 | SSH host-key pin before auth | Перевірка presented key до authentication | M | DONE ([#159](https://github.com/sesquicadaver/codimension/pull/159)) |
 | 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | DONE ([#160](https://github.com/sesquicadaver/codimension/pull/160)) |
 | 25 | R213 | Binding validation vs project cache | Лише binding, узгоджений з current project cache + saved profile | M | DONE ([#161](https://github.com/sesquicadaver/codimension/pull/161)) |
-| 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | OPEN |
+| 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | DONE |
 | 27 | R215 | Updater provenance hardening | Trusted provenance, HTTPS/host policy, streaming limits, version probe | M | OPEN |
 | 28 | R216 | CFG loop-else / match paths | Коректні loop-else та no-match шляхи | M | OPEN |
 | 29 | R217 | FFI: no EXACT without registration chain | Не ставити `EXACT` без повного registration evidence | M | OPEN |
@@ -173,7 +173,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R214** — MCP workspace policy.
+**Наступний OPEN:** **R215** — Updater provenance hardening.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
@@ -189,7 +189,7 @@
 |---------|--------|--------------|
 | SSH remote Open/Create + Browse… + Save upload + IDE Run | MVP | [ssh-remote-project.md](doc/technology/ssh-remote-project.md), [довідка](doc/user/ssh-remote-projects.md) |
 | SSH remote Debug / Profile | Debug **R198** + Profile **R199** DONE | Ті самі docs |
-| MCP stdio agent backend | **R182** DONE | [mcp-backend.md](doc/technology/mcp-backend.md) |
+| MCP stdio agent backend | **R182** + **R214** DONE | [mcp-backend.md](doc/technology/mcp-backend.md) |
 
 ---
 
@@ -199,6 +199,6 @@
 Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
-MCP / agent: **R182** (`mcp_backend`, stdio + ``CDM_MCP_TOKEN``)
+MCP / agent: **R182** + **R214** (`mcp_backend`, stdio + token + workspace policy)
 Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220
 ```
