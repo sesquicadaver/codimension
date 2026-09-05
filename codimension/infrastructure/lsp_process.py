@@ -525,11 +525,11 @@ class LspProcess:
             return None
 
         if method == "client/registerCapability":
-            registrations = ()
+            registrations: list[Mapping[str, Any]] = []
             if isinstance(params, Mapping):
                 raw = params.get("registrations")
                 if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
-                    registrations = tuple(r for r in raw if isinstance(r, Mapping))
+                    registrations = [r for r in raw if isinstance(r, Mapping)]
             with self._registrations_lock:
                 for reg in registrations:
                     reg_id = str(reg.get("id", ""))
@@ -538,11 +538,11 @@ class LspProcess:
             return None
 
         if method == "client/unregisterCapability":
-            unregister = ()
+            unregister: list[Mapping[str, Any]] = []
             if isinstance(params, Mapping):
                 raw = params.get("unregisterations") or params.get("unregistrations")
                 if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
-                    unregister = tuple(r for r in raw if isinstance(r, Mapping))
+                    unregister = [r for r in raw if isinstance(r, Mapping)]
             with self._registrations_lock:
                 for reg in unregister:
                     reg_id = str(reg.get("id", ""))
