@@ -1,5 +1,8 @@
 2026 Sep 05
 
+* R212: SSH IDE Debug — reverse tunnel binds ``127.0.0.1`` only; remote→local
+  path remap uses ``normpath`` + ``commonpath``; exec poll sleeps and honours
+  cancel (audit P1-08)
 * R211: SSH host-key pin checked inside ``MissingHostKeyPolicy`` before
   authentication (no TrustOnce+post-check when pin is set; audit P1-06)
 * R210: answer LSP server→client requests (``workspace/configuration``,

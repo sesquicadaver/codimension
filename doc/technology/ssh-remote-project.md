@@ -82,11 +82,13 @@ When a project has `binding.json` in its local cache root:
 - **Run** schedules an **async** remote `python3 <script>` job (cancel,
   timeout, stdout/stderr capped at 2 MiB by default /
   `CDM_SSH_MAX_OUTPUT_BYTES`); output goes to the Log / redirected IO console.
-- **Debug (R198)** uploads `client_cdm_dbg` under
+- **Debug (R198 / R212)** uploads `client_cdm_dbg` under
   `<remote_root>/.codimension-dbg-client/`, opens a **reverse** port-forward
-  (`remote 127.0.0.1:<port>` → local IDE `QTcpServer`), and runs the debuggee
-  with `--host 127.0.0.1`. Protocol pathnames are remapped remote ↔ local
-  cache (`utils.ssh_ide_debug`). Contract tests use `FakeReverseTunnel`
+  (`remote 127.0.0.1:<port>` → local IDE `QTcpServer`; Paramiko bind is
+  loopback-only), and runs the debuggee with `--host 127.0.0.1`. Protocol
+  pathnames are remapped remote ↔ local cache with `normpath` + `commonpath`
+  containment; remote exec polling sleeps and honours cooperative cancel
+  (`utils.ssh_ide_debug`). Contract tests use `FakeReverseTunnel`
   (no network).
 - **Profile (R199)** schedules an **async** remote
   ``python3 -m cProfile -o <remote_root>/.codimension-profile/<id>.profile.out``
