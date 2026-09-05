@@ -157,7 +157,7 @@
 | # | ID | Задача | Acceptance | Size | Статус |
 |---|-----|--------|------------|------|--------|
 | 21 | R209 | LSP document lifecycle: didChange / didClose / restart re-open | Versioned sync у `LspSemanticProvider`; тести `test_language_r209.py` | M | DONE ([#156](https://github.com/sesquicadaver/codimension/pull/156)) |
-| 22 | R210 | LSP server→client requests | `workspace/configuration`, progress, dynamic registration; applyEdit refuse/preview | L | OPEN |
+| 22 | R210 | LSP server→client requests | `workspace/configuration`, progress, dynamic registration; applyEdit refuse/preview | L | DONE |
 | 23 | R211 | SSH host-key pin before auth | Перевірка presented key до authentication | M | OPEN |
 | 24 | R212 | SSH Debug bind/containment | Bind `127.0.0.1`; remote→local containment; cancellable polling | M | OPEN |
 | 25 | R213 | Binding validation vs project cache | Лише binding, узгоджений з current project cache + saved profile | M | OPEN |
@@ -173,7 +173,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R210** — LSP server→client requests.
+**Наступний OPEN:** **R211** — SSH host-key pin before auth.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
