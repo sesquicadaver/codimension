@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Аудит 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-08 → R209–R212 ✅; P1-07 → **R213** ✅; наступний OPEN — **R214**.
+Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Аудит 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-08 → R209–R213 ✅; P1-09 → **R214** ✅; наступний OPEN — **R215**.
 
 ### Аудит 2026-09-05 (`codi-last.md`) — P1 черга
 
@@ -18,7 +18,8 @@
 | P1-06 | SSH: host-key pin перевіряється після authentication | P1 | ✅ R211 |
 | P1-08 | SSH Debug: empty reverse-bind; path `..` escape; busy poll | P1 | ✅ R212 |
 | P1-07 | SSH: `binding.json` без перевірки vs cache/profile | P1 | ✅ R213 |
-| P1-04+ | MCP / updater / CFG / FFI / AI / reload / plugins | P1 | 🔓 R214–R220 |
+| P1-09 | MCP: довільний локальний каталог без immutable root / budgets | P1 | ✅ R214 |
+| P1-04+ | updater / CFG / FFI / AI / reload / plugins | P1 | 🔓 R215–R220 |
 
 ### UX hardening (поза ROADMAP-чергою)
 

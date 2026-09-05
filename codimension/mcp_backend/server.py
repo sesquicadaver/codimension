@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - MCP stdio server entry (R182)
+# codimension - MCP stdio server entry (R182 / R214)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,17 +9,19 @@
 # (at your option) any later version.
 #
 
-"""Stdio MCP server wrapping headless tool handlers (R182).
+"""Stdio MCP server wrapping headless tool handlers (R182 / R214).
 
-Requires optional dependency ``mcp`` (``pip install 'codimension[mcp]'``) and a
-non-empty ``CDM_MCP_TOKEN`` environment variable (fail-closed).
+Requires optional dependency ``mcp`` (``pip install 'codimension[mcp]'``), a
+non-empty ``CDM_MCP_TOKEN``, and an immutable workspace root via ``--workspace``
+or ``CDM_MCP_WORKSPACE`` (fail-closed).
 """
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
-from typing import Any, Optional, cast
+from typing import Any, Optional, Sequence, cast
 
 # Make ``core`` / ``utils`` / ``mcp_backend`` importable when launched via
 # console_scripts (same layout bootstrap as ``codimension.codimension``).
@@ -29,6 +31,10 @@ if _PKG_DIR not in sys.path:
 
 from mcp_backend import tools as tool_handlers  # noqa: E402
 from mcp_backend.auth import require_startup_token_or_exit  # noqa: E402
+from mcp_backend.policy import (  # noqa: E402
+    WorkspacePolicy,
+    require_workspace_policy_or_exit,
+)
 from mcp_backend.session import WorkspaceSession  # noqa: E402
 
 
@@ -45,14 +51,22 @@ def _load_mcp_server_class() -> Any:
 
 
 def build_server(session: Optional[WorkspaceSession] = None) -> Any:
-    """Construct an :class:`MCPServer` bound to ``session`` (or a fresh one)."""
+    """Construct an :class:`MCPServer` bound to ``session`` (or a fresh one).
+
+    When ``session`` is omitted, policy is taken from the environment
+    (``CDM_MCP_WORKSPACE`` required).
+    """
     MCPServer = _load_mcp_server_class()
-    workspace = session if session is not None else WorkspaceSession()
+    if session is not None:
+        workspace = session
+    else:
+        policy = require_workspace_policy_or_exit()
+        workspace = WorkspaceSession(policy=policy)
     server = MCPServer("codimension")
 
     @server.tool()
     def open_workspace(path: str) -> dict[str, Any]:
-        """Open a local project directory and index Python sources."""
+        """Open a project directory under the allowed workspace root and index Python sources."""
         return cast(dict[str, Any], tool_handlers.open_workspace(workspace, path))
 
     @server.tool()
@@ -114,10 +128,22 @@ def build_server(session: Optional[WorkspaceSession] = None) -> Any:
     return server
 
 
-def main() -> None:
-    """Fail-closed auth, then serve MCP tools over stdio."""
+def _parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="codimension-mcp")
+    parser.add_argument(
+        "--workspace",
+        default=None,
+        help="Immutable allowed project root (or set CDM_MCP_WORKSPACE)",
+    )
+    return parser.parse_args(list(argv) if argv is not None else None)
+
+
+def main(argv: Optional[Sequence[str]] = None) -> None:
+    """Fail-closed auth + workspace policy, then serve MCP tools over stdio."""
+    args = _parse_args(argv)
     require_startup_token_or_exit()
-    server = build_server()
+    policy: WorkspacePolicy = require_workspace_policy_or_exit(workspace_cli=args.workspace)
+    server = build_server(WorkspaceSession(policy=policy))
     server.run(transport="stdio")
 
 

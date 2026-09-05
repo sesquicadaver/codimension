@@ -1,5 +1,7 @@
 2026 Sep 05
 
+* R214: MCP immutable workspace root (``--workspace`` / ``CDM_MCP_WORKSPACE``)
+  + file/byte/depth budgets; reject path escape (audit P1-09)
 * R213: validate ``binding.json`` against open project dir, remote-projects
   cache, and saved host profile before enabling remote Save/Run (audit P1-07)
 * R212: SSH IDE Debug — reverse tunnel binds ``127.0.0.1`` only; remote→local
