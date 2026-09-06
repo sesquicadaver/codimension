@@ -163,7 +163,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 25 | R213 | Binding validation vs project cache | Only bindings matching current project cache + saved profile | M | DONE ([#161](https://github.com/sesquicadaver/codimension/pull/161)) |
 | 26 | R214 | MCP workspace policy | Immutable allowed root + resource budgets | M | DONE ([#162](https://github.com/sesquicadaver/codimension/pull/162)) |
 | 27 | R215 | Updater provenance hardening | Trusted provenance, HTTPS/host policy, streaming limits, version probe | M | DONE ([#164](https://github.com/sesquicadaver/codimension/pull/164)) |
-| 28 | R216 | CFG loop-else / match paths | Correct loop-else and no-match paths | M | OPEN |
+| 28 | R216 | CFG loop-else / match paths | Correct loop-else and no-match paths | M | DONE |
 | 29 | R217 | FFI: no EXACT without registration chain | Do not claim `EXACT` without full registration evidence | M | OPEN |
 | 30 | R218 | AI docstring: versioned target + post-patch validate | Identity on versioned snapshot; validate after apply | M | OPEN |
 | 31 | R219 | Project reload: immutable UUID + diff/rebuild | Single pipeline; UUID immutable | M | OPEN |
@@ -173,7 +173,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R216** — CFG loop-else / match paths.
+**Next OPEN:** **R217** — FFI: no EXACT without registration chain.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
