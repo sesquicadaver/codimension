@@ -8,3 +8,10 @@ Version = 1.0.0
 Website = https://github.com/sesquicadaver/codimension
 Description = Git VCS plugin: status, commit, push, pull, branch
 License = GPL v.3
+
+[Codimension]
+Category = VersionControlSystemInterface
+MinIDEVersion = 4.7.1
+MinPluginAPI = 1
+RequiredCapabilities = vcs
+Entrypoint = .

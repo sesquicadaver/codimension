@@ -14,13 +14,13 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_bundled_plugin_search_paths_include_cdmplugins_package():
     """Plugin manager must locate installed ``cdmplugins`` without argv heuristics."""
     from plugins.manager.pluginmanager import bundledPluginSearchPaths
+    from plugins.policy import cdmplugins_package_roots
 
-    import cdmplugins
-
-    bundled = os.path.dirname(os.path.abspath(cdmplugins.__file__))
+    roots = cdmplugins_package_roots()
+    assert roots
     paths = bundledPluginSearchPaths()
-    assert bundled in paths
-    assert os.path.isfile(os.path.join(bundled, "git", "git.cdmp"))
+    assert any(root in paths for root in roots)
+    assert any(os.path.isfile(os.path.join(root, "git", "git.cdmp")) for root in roots)
 
 
 def test_mainwindow_bootstrap_loads_at_least_one_plugin():

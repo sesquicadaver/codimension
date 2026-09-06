@@ -87,7 +87,15 @@ def main() -> int:
         from utils.skin import Skin, populateSampleSkin
 
         gd = GlobalData()
-        gd.version = "smoke"
+        try:
+            from importlib.metadata import version as pkg_version
+
+            gd.version = pkg_version("codimension")
+        except Exception:
+            # Valid packaging.Version required for static MinIDEVersion checks
+            # (R220/R225). The literal "smoke" is not a version and rejects
+            # every plugin that declares a floor.
+            gd.version = "4.11.0"
         settings = Settings()
         populateSampleSkin()
         skin = Skin()

@@ -103,19 +103,46 @@ def resolve_plugin_source_path(module_filepath: str) -> str:
     return ""
 
 
+def cdmplugins_package_roots() -> list[str]:
+    """Real filesystem roots for the installed ``cdmplugins`` package.
+
+    Tolerates namespace packages and test stubs that omit ``__file__`` but
+    still expose ``__path__`` (full-suite pollution must not raise).
+    """
+    try:
+        import cdmplugins
+    except Exception:
+        return []
+    roots: list[str] = []
+    file_attr = getattr(cdmplugins, "__file__", None)
+    if file_attr:
+        roots.append(os.path.realpath(os.path.dirname(os.path.abspath(str(file_attr)))))
+    for entry in getattr(cdmplugins, "__path__", None) or []:
+        if not entry:
+            continue
+        roots.append(os.path.realpath(os.path.abspath(str(entry))))
+    # Preserve order, drop duplicates.
+    unique: list[str] = []
+    seen: set[str] = set()
+    for root in roots:
+        if root in seen:
+            continue
+        seen.add(root)
+        unique.append(root)
+    return unique
+
+
 def is_trusted_bundled_plugin_path(path: str) -> bool:
     """True when ``path`` lives under the shipped ``cdmplugins`` package tree."""
     text = (path or "").strip()
     if not text:
         return False
-    try:
-        import cdmplugins
-    except Exception:
-        return False
-    root = os.path.realpath(os.path.dirname(os.path.abspath(cdmplugins.__file__)))
     real = os.path.realpath(os.path.expanduser(text))
-    root_sep = root if root.endswith(os.sep) else root + os.sep
-    return real == root or real.startswith(root_sep)
+    for root in cdmplugins_package_roots():
+        root_sep = root if root.endswith(os.sep) else root + os.sep
+        if real == root or real.startswith(root_sep):
+            return True
+    return False
 
 
 def guess_category_from_text(text: str) -> Optional[str]:
@@ -551,6 +578,7 @@ __all__ = [
     "StaticPluginPolicy",
     "StaticPolicyDecision",
     "build_static_plugin_policy",
+    "cdmplugins_package_roots",
     "evaluate_static_plugin_policy",
     "extract_capability_spec_from_source",
     "extract_min_ide_version_from_source",

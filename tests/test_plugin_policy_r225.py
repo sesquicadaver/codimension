@@ -148,3 +148,22 @@ def test_r225_unrecognized_source_capabilities_not_legacy_ok(tmp_path: Path) -> 
     )
     decision = evaluate_static_plugin_policy(policy, ide_version="5.0.0")
     assert not decision.ok
+
+
+def test_r225_trusted_path_tolerates_stub_without_file(monkeypatch, tmp_path: Path) -> None:
+    """Full-suite stubs without ``__file__`` must not raise during trust checks."""
+    import sys
+    import types
+
+    from plugins.policy import is_trusted_bundled_plugin_path
+
+    root = tmp_path / "cdmplugins"
+    root.mkdir()
+    stub = types.ModuleType("cdmplugins")
+    stub.__path__ = [str(root)]
+    monkeypatch.setitem(sys.modules, "cdmplugins", stub)
+    assert is_trusted_bundled_plugin_path(str(root / "git")) is True
+
+    bare = types.ModuleType("cdmplugins")
+    monkeypatch.setitem(sys.modules, "cdmplugins", bare)
+    assert is_trusted_bundled_plugin_path(str(root / "git")) is False

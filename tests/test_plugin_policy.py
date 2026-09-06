@@ -40,7 +40,7 @@ def plugin_manager_mod(monkeypatch, tmp_path):
     """Import pluginmanager with SETTINGS_DIR under tmp and empty search paths."""
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     pytest.importorskip("PyQt5.QtWidgets")
-    _purge_incomplete_stubs("utils", "ui", "plugins", "yapsy")
+    _purge_incomplete_stubs("utils", "ui", "plugins", "yapsy", "cdmplugins")
     codim = str(ROOT / "codimension")
     if codim not in sys.path:
         sys.path.insert(0, codim)

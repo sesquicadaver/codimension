@@ -27,6 +27,7 @@ from packaging.version import Version
 from plugins.capabilities import negotiate_plugin_capabilities
 from plugins.policy import (
     build_static_plugin_policy,
+    cdmplugins_package_roots,
     evaluate_static_plugin_policy,
     is_trusted_bundled_plugin_path,
 )
@@ -50,14 +51,9 @@ def bundledPluginSearchPaths() -> list[str]:
     paths break under pytest, wheel entry points, and many launcher layouts.
     """
     paths: list[str] = []
-    try:
-        import cdmplugins
-
-        bundled = os.path.dirname(os.path.abspath(cdmplugins.__file__))
-        if os.path.isdir(bundled):
+    for bundled in cdmplugins_package_roots():
+        if os.path.isdir(bundled) and bundled not in paths:
             paths.append(bundled)
-    except ImportError:
-        pass
 
     if isVirtualEnvironment():
         argv_candidate = os.path.normpath(os.path.dirname(sys.argv[0]) + "/../cdmplugins")
