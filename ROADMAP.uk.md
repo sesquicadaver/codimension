@@ -173,7 +173,7 @@
 
 | # | ID | Задача | Acceptance | Size | Статус |
 |---|-----|--------|------------|------|--------|
-| 33 | R221 | SSH binding: cache path == `remote_cache_dir(profile, remote_root)` | Відхилити binding, якщо `local_root` ≠ очікуваний cache для `remote_root` | M | OPEN |
+| 33 | R221 | SSH binding: cache path == `remote_cache_dir(profile, remote_root)` | Відхилити binding, якщо `local_root` ≠ очікуваний cache для `remote_root` | M | DONE |
 | 34 | R222 | Updater: validate every redirect hop + final URL | Власний `HTTPRedirectHandler`; `geturl()` знову через trust policy | M | OPEN |
 | 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits під час обходу; chunked reads; stop on exceed | M | OPEN |
 | 36 | R224 | LSP DocumentStore для foreign URI spans | Cross-file definition/refs/rename з реальними ranges (не `SourceSpan(0,0)`) | L | OPEN |
@@ -189,7 +189,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R221** — SSH binding: cache path == `remote_cache_dir(profile, remote_root)`.
+**Наступний OPEN:** **R222** — Updater: validate every redirect hop + final URL.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

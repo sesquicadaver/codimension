@@ -383,17 +383,15 @@ def test_r213_validate_binding_accepts_trusted_cache(tmp_path):
     from utils.ssh_remote import (
         RemoteProjectBinding,
         SshHostProfile,
-        remote_projects_root,
+        remote_cache_dir,
         upsert_host_profile,
         validate_binding,
     )
 
     settings = str(tmp_path / "settings")
-    upsert_host_profile(
-        SshHostProfile(id="p1", host="dev.example", port=22, user="alice", auth="key"),
-        settings,
-    )
-    cache = Path(remote_projects_root(settings)) / "p1" / "abcd1234"
+    profile = SshHostProfile(id="p1", host="dev.example", port=22, user="alice", auth="key")
+    upsert_host_profile(profile, settings)
+    cache = Path(remote_cache_dir(profile.normalized(), "/srv/proj", settings))
     cache.mkdir(parents=True)
     cdm3 = cache / "proj.cdm3"
     cdm3.write_text("{}\n", encoding="utf-8")
@@ -463,17 +461,15 @@ def test_r213_validate_binding_rejects_profile_field_mismatch(tmp_path):
         BindingValidationError,
         RemoteProjectBinding,
         SshHostProfile,
-        remote_projects_root,
+        remote_cache_dir,
         upsert_host_profile,
         validate_binding,
     )
 
     settings = str(tmp_path / "settings")
-    upsert_host_profile(
-        SshHostProfile(id="p1", host="dev.example", port=22, user="alice", auth="key"),
-        settings,
-    )
-    cache = Path(remote_projects_root(settings)) / "p1" / "abcd1234"
+    profile = SshHostProfile(id="p1", host="dev.example", port=22, user="alice", auth="key")
+    upsert_host_profile(profile, settings)
+    cache = Path(remote_cache_dir(profile.normalized(), "/srv/proj", settings))
     cache.mkdir(parents=True)
     cdm3 = cache / "proj.cdm3"
     cdm3.write_text("{}\n", encoding="utf-8")
@@ -490,6 +486,47 @@ def test_r213_validate_binding_rejects_profile_field_mismatch(tmp_path):
         local_cdm3=str(cdm3),
     )
     with pytest.raises(BindingValidationError, match="does not match saved profile"):
+        validate_binding(
+            binding,
+            project_dir=str(cache),
+            project_file=str(cdm3),
+            settings_dir=settings,
+        )
+
+
+def test_r221_validate_binding_rejects_remote_root_cache_mismatch(tmp_path):
+    """R221: same profile cache dir cannot retarget a different remote_root."""
+    from utils.ssh_remote import (
+        BindingValidationError,
+        RemoteProjectBinding,
+        SshHostProfile,
+        remote_cache_dir,
+        upsert_host_profile,
+        validate_binding,
+    )
+
+    settings = str(tmp_path / "settings")
+    profile = SshHostProfile(id="p1", host="dev.example", port=22, user="alice", auth="key")
+    upsert_host_profile(profile, settings)
+    # Legitimate cache for /srv/proj …
+    cache = Path(remote_cache_dir(profile.normalized(), "/srv/proj", settings))
+    cache.mkdir(parents=True)
+    cdm3 = cache / "proj.cdm3"
+    cdm3.write_text("{}\n", encoding="utf-8")
+    # … but binding claims another remote_root (would have a different digest).
+    binding = RemoteProjectBinding(
+        profile_id="p1",
+        host="dev.example",
+        port=22,
+        user="alice",
+        auth="key",
+        identity_file="",
+        remote_root="/srv/other",
+        remote_cdm3="/srv/other/proj.cdm3",
+        local_root=str(cache),
+        local_cdm3=str(cdm3),
+    )
+    with pytest.raises(BindingValidationError, match="remote_root/cache identity mismatch"):
         validate_binding(
             binding,
             project_dir=str(cache),

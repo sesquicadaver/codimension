@@ -1,5 +1,9 @@
 2026 Sep 06
 
+* R221: ``validate_binding`` requires ``local_root`` ==
+  ``remote_cache_dir(profile, remote_root)`` so crafted ``remote_root``
+  cannot retarget Save/Run/Debug under the same profile cache
+  (re-audit P1-01 @ 8824ff3c)
 * Queue seed: re-audit ``codi-last.md`` @ 8824ff3c → ROADMAP **R221–R231**
   (SSH cache identity, updater redirects, MCP walker, LSP DocumentStore,
   plugin fail-closed, FFI structural EXACT, taint lattice, blank UUID,
