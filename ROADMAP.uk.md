@@ -167,7 +167,7 @@
 | 29 | R217 | FFI: no EXACT without registration chain | Не ставити `EXACT` без повного registration evidence | M | DONE ([#168](https://github.com/sesquicadaver/codimension/pull/168)) |
 | 30 | R218 | AI docstring: versioned target + post-patch validate | Identity на versioned snapshot; validate після apply | M | DONE ([#170](https://github.com/sesquicadaver/codimension/pull/170)) |
 | 31 | R219 | Project reload: immutable UUID + diff/rebuild | Єдиний pipeline; UUID immutable | M | DONE ([#172](https://github.com/sesquicadaver/codimension/pull/172)) |
-| 32 | R220 | Plugin policy before import | Fail-closed policy до `import` plugin code | M | DONE |
+| 32 | R220 | Plugin policy before import | Fail-closed policy до `import` plugin code | M | DONE ([#174](https://github.com/sesquicadaver/codimension/pull/174)) |
 
 ---
 
