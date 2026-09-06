@@ -73,10 +73,26 @@ def _write_plugin(
     marker_module: str,
     body: str,
     cdmp_extra: str = "",
+    codimension: str | None = None,
 ) -> Path:
     pkg = root / name
     pkg.mkdir(parents=True)
     (pkg / "__init__.py").write_text(body, encoding="utf-8")
+    if codimension is None:
+        codimension_block = textwrap.dedent(
+            """\
+            [Codimension]
+            Category = WizardInterface
+            MinIDEVersion = 4.0.0
+            MinPluginAPI = 1
+            RequiredCapabilities = wizard
+            Entrypoint = .
+            """
+        )
+    elif codimension == "":
+        codimension_block = ""
+    else:
+        codimension_block = codimension
     (pkg / f"{name}.cdmp").write_text(
         textwrap.dedent(
             f"""\
@@ -87,10 +103,11 @@ def _write_plugin(
             [Documentation]
             Author = Test
             Version = 1.0.0
-            Description = R220 test plugin
+            Description = R220/R225 test plugin
             {cdmp_extra}
             """
-        ),
+        )
+        + codimension_block,
         encoding="utf-8",
     )
     return pkg
@@ -194,7 +211,22 @@ def test_r220_missing_capability_never_imported(plugin_manager_mod, tmp_path, mo
                 return PluginCapabilitySpec(required=frozenset({{"telepathy"}}))
         """
     )
-    _write_plugin(plugins_root, "capfail", marker_module=marker_name, body=body)
+    _write_plugin(
+        plugins_root,
+        "capfail",
+        marker_module=marker_name,
+        body=body,
+        codimension=textwrap.dedent(
+            """\
+            [Codimension]
+            Category = WizardInterface
+            MinIDEVersion = 4.0.0
+            MinPluginAPI = 1
+            RequiredCapabilities = telepathy
+            Entrypoint = .
+            """
+        ),
+    )
     mgr = _make_manager(pm, plugins_root)
     mgr.collectPlugins()
     assert marker_name not in sys.modules
@@ -219,7 +251,7 @@ def test_r220_unknown_category_never_imported(plugin_manager_mod, tmp_path, monk
             pass
         """
     )
-    _write_plugin(plugins_root, "nocat", marker_module=marker_name, body=body)
+    _write_plugin(plugins_root, "nocat", marker_module=marker_name, body=body, codimension="")
     mgr = _make_manager(pm, plugins_root)
     mgr.collectPlugins()
     assert marker_name not in sys.modules

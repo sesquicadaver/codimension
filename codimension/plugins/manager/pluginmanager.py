@@ -28,6 +28,7 @@ from plugins.capabilities import negotiate_plugin_capabilities
 from plugins.policy import (
     build_static_plugin_policy,
     evaluate_static_plugin_policy,
+    is_trusted_bundled_plugin_path,
 )
 from ui.qt import QObject, pyqtSignal
 from utils.settings import SETTINGS_DIR, Settings
@@ -185,6 +186,8 @@ class CDMPluginManager(PluginManager, QObject):
                 module_filepath=str(filepath or ""),
                 name=str(getattr(plugin_info, "name", "") or ""),
                 version=version,
+                plugin_path=norm,
+                require_manifest=not is_trusted_bundled_plugin_path(norm),
             )
             decision = evaluate_static_plugin_policy(
                 policy,
@@ -195,7 +198,7 @@ class CDMPluginManager(PluginManager, QObject):
             )
             if not decision.ok:
                 logging.info(
-                    "Skipping import of plugin at %s: %s (static policy; R220)",
+                    "Skipping import of plugin at %s: %s (static policy; R220/R225)",
                     norm,
                     decision.reason,
                 )
@@ -341,6 +344,8 @@ class CDMPluginManager(PluginManager, QObject):
                     module_filepath=str(filepath or ""),
                     name=str(getattr(plugin_info, "name", "") or ""),
                     version=version,
+                    plugin_path=norm,
+                    require_manifest=not is_trusted_bundled_plugin_path(norm),
                 )
                 category = policy.category
             if category:

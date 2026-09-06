@@ -44,6 +44,11 @@ resolved.
 
 Each plugin must provide information at least about its name and its version
 (goes into a .cdmp file).
+
+Third-party / user plugins (R225) must also include a ``[Codimension]`` section
+with ``Category``, ``MinIDEVersion``, ``MinPluginAPI``, ``RequiredCapabilities``,
+and ``Entrypoint`` (or ``[Core] Module``). Missing or invalid values deny import
+before plugin code runs. Bundled ``cdmplugins`` may still use source heuristics.
 In case if the same name plugin is found both in the system wide location and in
 the user directory then the priority is given to the user plugin and the system one is
 automatically disabled. If the same name plugins are located in the system wide

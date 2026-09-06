@@ -177,7 +177,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 34 | R222 | Updater: validate every redirect hop + final URL | Custom `HTTPRedirectHandler`; `geturl()` re-checked via trust policy | M | DONE ([#179](https://github.com/sesquicadaver/codimension/pull/179)) |
 | 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits during traversal; chunked reads; stop on exceed | M | DONE ([#181](https://github.com/sesquicadaver/codimension/pull/181)) |
 | 36 | R224 | LSP DocumentStore for foreign URI spans | Cross-file definition/refs/rename use real ranges (no `SourceSpan(0,0)`) | L | DONE ([#183](https://github.com/sesquicadaver/codimension/pull/183)) |
-| 37 | R225 | Plugin manifest policy fail-closed | Third-party: required `.cdmp` Codimension block; unknown/invalid → deny (no legacy import) | M | OPEN |
+| 37 | R225 | Plugin manifest policy fail-closed | Third-party: required `.cdmp` Codimension block; unknown/invalid → deny (no legacy import) | M | DONE |
 | 38 | R226 | FFI EXACT via structural parse | Tree-sitter/LSP evidence for registration chain; else BRIDGE/INFERRED | L | OPEN |
 | 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env per branch; may-taint join; cover positional-only params | M | OPEN |
 | 40 | R228 | Blank UUID after load | Reject empty disk UUID or atomically restore loaded UUID to `.cdm3` | S | OPEN |
@@ -189,7 +189,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R225** — Plugin manifest policy fail-closed.
+**Next OPEN:** **R226** — FFI EXACT via structural parse.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
