@@ -1,6 +1,6 @@
 > **Мова / Language:** Українська | [English](../../technology/mcp-backend.md)
 
-# MCP / remote agent backend (R182 / R214)
+# MCP / remote agent backend (R182 / R214 / R223)
 
 Codimension надає **headless** поверхню Model Context Protocol (MCP) над
 існуючими core-API аналізу. IDE **не** залежить від MCP SDK.
@@ -28,7 +28,7 @@ codimension-mcp --workspace /path/to/project   # транспорт stdio
 
 Тихий старт без токена навмисно заборонений.
 
-## Політика workspace (R214)
+## Політика workspace (R214 / R223)
 
 | Правило | Поведінка |
 | ------- | --------- |
@@ -36,7 +36,8 @@ codimension-mcp --workspace /path/to/project   # транспорт stdio
 | `open_workspace` | Лише каталоги під allowed root |
 | Path tools | CFG / taint / фільтри файлів — під open root **і** allowed root |
 | Бюджети | `CDM_MCP_MAX_FILES` (10000), `CDM_MCP_MAX_BYTES` (64 MiB), `CDM_MCP_MAX_DEPTH` (32); перевищення → `ResourceBudgetError` |
-| Глибина | Шляхи глибше `max_depth` пропускаються (не помилка) |
+| Walker (R223) | Depth / file / byte checks **під час** обходу (`mcp_backend.walker`); без повної матеріалізації `scan_project_files`; pre-check `st_size` + chunked reads |
+| Глибина | Шляхи глибше `max_depth` пропускаються; каталоги на ліміті не обходяться |
 | Модуль | `mcp_backend.policy.WorkspacePolicy` |
 
 `0` для бюджету = без ліміту (небажано в production).
@@ -45,7 +46,7 @@ codimension-mcp --workspace /path/to/project   # транспорт stdio
 
 | Tool | Headless backend |
 | ---- | ---------------- |
-| `open_workspace` | `utils.project_scan` + `utils.symbol_index_brief` (з бюджетами) |
+| `open_workspace` | `mcp_backend.walker` + `utils.symbol_index_brief` (budgeted in-walk) |
 | `list_project_files` | Список файлів сесії |
 | `get_symbols` | `core.symbol_index` |
 | `lookup_symbol` | `find_definitions` / `find_references` |
@@ -64,4 +65,4 @@ codimension-mcp --workspace /path/to/project   # транспорт stdio
 
 - Qt-free: `scripts/check_core_import_graph.py` включає `mcp_backend`
 - Матриця шарів: `mcp_backend` → лише `core|infrastructure|app|utils`
-- Тести: `tests/test_mcp_r182.py` (R182 auth + R214 policy)
+- Тести: `tests/test_mcp_r182.py`, `tests/test_mcp_walker_r223.py`

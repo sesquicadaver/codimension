@@ -175,7 +175,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 |---|-----|------|------------|------|--------|
 | 33 | R221 | SSH binding: cache path == `remote_cache_dir(profile, remote_root)` | Reject binding when `local_root` ≠ expected cache for `remote_root` | M | DONE ([#177](https://github.com/sesquicadaver/codimension/pull/177)) |
 | 34 | R222 | Updater: validate every redirect hop + final URL | Custom `HTTPRedirectHandler`; `geturl()` re-checked via trust policy | M | DONE ([#179](https://github.com/sesquicadaver/codimension/pull/179)) |
-| 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits during traversal; chunked reads; stop on exceed | M | OPEN |
+| 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits during traversal; chunked reads; stop on exceed | M | DONE |
 | 36 | R224 | LSP DocumentStore for foreign URI spans | Cross-file definition/refs/rename use real ranges (no `SourceSpan(0,0)`) | L | OPEN |
 | 37 | R225 | Plugin manifest policy fail-closed | Third-party: required `.cdmp` Codimension block; unknown/invalid → deny (no legacy import) | M | OPEN |
 | 38 | R226 | FFI EXACT via structural parse | Tree-sitter/LSP evidence for registration chain; else BRIDGE/INFERRED | L | OPEN |
@@ -189,7 +189,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R223** — MCP: budget-aware workspace walker.
+**Next OPEN:** **R224** — LSP DocumentStore for foreign URI spans.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

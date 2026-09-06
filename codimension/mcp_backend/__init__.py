@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Headless MCP surface over Codimension core (R182 / R214).
+"""Headless MCP surface over Codimension core (R182 / R214 / R223).
 
 Package name is ``mcp_backend`` (not ``mcp``) so it does not shadow the
 optional Model Context Protocol SDK package on ``sys.path``.
@@ -24,4 +24,4 @@ from __future__ import annotations
 __all__ = ["__version_note__"]
 
 #: Marker for Living Spec / diagnostics (not PEP 440 package version).
-__version_note__ = "r214"
+__version_note__ = "r223"
