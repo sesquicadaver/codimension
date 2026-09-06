@@ -166,14 +166,14 @@
 | 28 | R216 | CFG loop-else / match paths | Коректні loop-else та no-match шляхи | M | DONE ([#166](https://github.com/sesquicadaver/codimension/pull/166)) |
 | 29 | R217 | FFI: no EXACT without registration chain | Не ставити `EXACT` без повного registration evidence | M | DONE ([#168](https://github.com/sesquicadaver/codimension/pull/168)) |
 | 30 | R218 | AI docstring: versioned target + post-patch validate | Identity на versioned snapshot; validate після apply | M | DONE ([#170](https://github.com/sesquicadaver/codimension/pull/170)) |
-| 31 | R219 | Project reload: immutable UUID + diff/rebuild | Єдиний pipeline; UUID immutable | M | OPEN |
+| 31 | R219 | Project reload: immutable UUID + diff/rebuild | Єдиний pipeline; UUID immutable | M | DONE |
 | 32 | R220 | Plugin policy before import | Fail-closed policy до `import` plugin code | M | OPEN |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R219** — Project reload: immutable UUID + diff/rebuild.
+**Наступний OPEN:** **R220** — Plugin policy before import.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

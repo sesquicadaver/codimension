@@ -450,6 +450,52 @@ class CodimensionProject(
         self.__dirWatcher.sigFSChanged.connect(self.onFSChanged)
         self.sigProjectChanged.emit(self.CompleteProject)
 
+    # Props that affect filesList / watcher / import resolution / venv binding.
+    # Dialog ``updateProperties`` and external ``onProjectFileUpdated`` share this set.
+    _REBUILD_PROP_KEYS = (
+        "excludeFromAnalysis",
+        "excludeFromProjectTree",
+        "importdirs",
+        "pythoninterpreter",
+    )
+
+    def __ensureUserProjectDirMatchesUuid(self) -> None:
+        """Log if ``userProjectDir`` drifts from the loaded UUID (never remount mid-session)."""
+        uid = (self.props.get("uuid") or "").strip()
+        if not uid or not self.userProjectDir:
+            return
+        try:
+            expected = safe_user_project_dir(SETTINGS_DIR, uid)
+        except ProjectSchemaError:
+            return
+        if realpath(self.userProjectDir.rstrip(sep) + sep) != realpath(expected.rstrip(sep) + sep):
+            logging.error(
+                "userProjectDir %s does not match loaded UUID %s; "
+                "keeping the load-time directory (close/reopen to remount)",
+                self.userProjectDir,
+                uid,
+            )
+
+    def __rebuildAfterPropertyChange(self, *, reattach_venv: bool = False) -> None:
+        """Single diff/rebuild pipeline for property edits and external `.cdm3` reload (R219).
+
+        Invalidates analysis caches, rescans ``filesList``, recreates the watcher,
+        and optionally re-applies project venv policy when the interpreter changed.
+        """
+        try:
+            from .analysis_cache import invalidate_analysis_caches
+
+            invalidate_analysis_caches("project")
+        except Exception:
+            pass
+
+        def _complete() -> None:
+            self.__finishAnalysisRescan()
+            if reattach_venv:
+                self.__maybeAutoAttachProjectVenv()
+
+        self.__generateFilesList(on_complete=_complete)
+
     def __getWatcherExcludeFilters(self):
         """Basename regex filters only (Settings). Path excludes are absolute (T050)."""
         return list(Settings()["projectFilesFilters"])
@@ -624,11 +670,11 @@ class CodimensionProject(
             self.sigProjectChanged.emit(self.CompleteProject)
 
     def setImportDirs(self, paths):
-        """Sets a new set of the project import dirs"""
+        """Sets a new set of the project import dirs via the shared rebuild pipeline."""
         if self.props["importdirs"] != paths:
-            self.props["importdirs"] = paths
-            self.saveProject()
-            self.sigProjectChanged.emit(self.Properties)
+            updated = copy.deepcopy(self.props)
+            updated["importdirs"] = list(paths)
+            self.updateProperties(updated)
 
     def __cancelScan(self, *, join_ms: int = _SCAN_JOIN_TIMEOUT_MS):
         """Interrupt any in-flight background scan (audit B03).
@@ -777,11 +823,14 @@ class CodimensionProject(
     def updateProperties(self, props, *, persist: bool = True):
         """Updates the project properties via the same schema pipeline as load (B09).
 
-        R190 / A209: UUID is immutable after a project is loaded. Blank UUID in
+        R190 / R219: UUID is immutable after a project is loaded. Blank UUID in
         ``props`` keeps the loaded value; any other change is rejected (forced
-        back to the loaded UUID).
+        back to the loaded UUID). ``userProjectDir`` is never remounted here.
 
-        ``persist=False`` applies in-memory updates (and rescans) without writing
+        Rebuild-affecting keys (excludes, importdirs, interpreter) go through
+        :meth:`__rebuildAfterPropertyChange` — shared with external `.cdm3` reload.
+
+        ``persist=False`` applies in-memory updates (and rebuilds) without writing
         ``.cdm3`` — used when the file was already updated externally.
         """
         # Properties dialogs omit internal keys; keep them unless explicitly provided.
@@ -800,7 +849,7 @@ class CodimensionProject(
         if not incoming_uuid and loaded_uuid:
             validated["uuid"] = loaded_uuid
             incoming_uuid = loaded_uuid
-        # R190: UUID must not change after load (userProjectDir / caches bind to it).
+        # R190/R219: UUID must not change after load (userProjectDir / caches bind to it).
         if loaded_uuid and incoming_uuid and incoming_uuid != loaded_uuid:
             logging.warning(
                 "Project UUID is immutable after load; keeping %s (ignored %s)",
@@ -809,14 +858,17 @@ class CodimensionProject(
             )
             validated["uuid"] = loaded_uuid
         if self.props != validated:
-            analysis_props = ("excludeFromAnalysis", "importdirs", "pythoninterpreter")
-            need_rescan = any(self.props.get(p) != validated.get(p) for p in analysis_props)
+            need_rebuild = any(self.props.get(p) != validated.get(p) for p in self._REBUILD_PROP_KEYS)
+            interpreter_changed = self.props.get("pythoninterpreter") != validated.get("pythoninterpreter")
+            # Never remount userProjectDir on property updates (split-brain guard).
+            kept_user_dir = self.userProjectDir
             self.props = validated
+            self.userProjectDir = kept_user_dir
+            self.__ensureUserProjectDirMatchesUuid()
             if persist:
                 self.saveProject()
-            if need_rescan:
-                # CompleteProject after filesList is ready
-                self.__generateFilesList(on_complete=self.__finishAnalysisRescan)
+            if need_rebuild:
+                self.__rebuildAfterPropertyChange(reattach_venv=interpreter_changed)
             else:
                 self.sigProjectChanged.emit(self.Properties)
 
@@ -825,23 +877,19 @@ class CodimensionProject(
 
         Used when props did not change (session overlay, pip sync into the same
         interpreter) but import resolution must pick up a new environment.
+        Shares the R219 rebuild pipeline with ``updateProperties``.
         """
         if not self.isLoaded():
             return
-        try:
-            from .analysis_cache import invalidate_analysis_caches
-
-            invalidate_analysis_caches("project")
-        except Exception:
-            pass
-        self.__generateFilesList(on_complete=self.__finishAnalysisRescan)
+        self.__rebuildAfterPropertyChange(reattach_venv=False)
 
     def onProjectFileUpdated(self):
-        """Reload `.cdm3` from disk via ``updateProperties`` (R190 / A209).
+        """Reload `.cdm3` from disk via ``updateProperties`` (R190 / R219).
 
         Keeps last-known-good props on validation failure. Rejects a disk UUID
         that differs from the loaded project (close/reopen required). Same-UUID
-        edits share the Properties/rescan path without rewriting the file.
+        edits share the single Properties/rebuild pipeline without rewriting
+        the file or remounting ``userProjectDir``.
         """
         try:
             props = load_validated_project_props(self.fileName)

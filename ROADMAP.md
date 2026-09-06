@@ -166,14 +166,14 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 28 | R216 | CFG loop-else / match paths | Correct loop-else and no-match paths | M | DONE ([#166](https://github.com/sesquicadaver/codimension/pull/166)) |
 | 29 | R217 | FFI: no EXACT without registration chain | Do not claim `EXACT` without full registration evidence | M | DONE ([#168](https://github.com/sesquicadaver/codimension/pull/168)) |
 | 30 | R218 | AI docstring: versioned target + post-patch validate | Identity on versioned snapshot; validate after apply | M | DONE ([#170](https://github.com/sesquicadaver/codimension/pull/170)) |
-| 31 | R219 | Project reload: immutable UUID + diff/rebuild | Single pipeline; UUID immutable | M | OPEN |
+| 31 | R219 | Project reload: immutable UUID + diff/rebuild | Single pipeline; UUID immutable | M | DONE |
 | 32 | R220 | Plugin policy before import | Fail-closed policy before importing plugin code | M | OPEN |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R219** — Project reload: immutable UUID + diff/rebuild.
+**Next OPEN:** **R220** — Plugin policy before import.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
