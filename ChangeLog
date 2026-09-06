@@ -1,5 +1,8 @@
 2026 Sep 06
 
+* R217: FFI ``EXACT`` only with full registration chain (PyO3 wrap+pymodule;
+  pybind11 ``var.def``; CPython ``PyModuleDef.m_methods``→``PyInit``); else
+  ``BRIDGE``; ``.pyi`` name spans (audit P1-05)
 * R216: CFG loop ``else`` no longer bypassed by ``loop→join FALSE``; non-exhaustive
   ``match`` gains ``match→join FALSE`` (audit P1-11)
 
