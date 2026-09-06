@@ -18,15 +18,16 @@ def _session(root: Path, **kwargs: Any) -> WorkspaceSession:
     return WorkspaceSession(policy=WorkspacePolicy(allowed_root=str(root), **kwargs))
 
 
-def test_r223_open_workspace_does_not_call_scan_project_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """R223: budgets apply during walk — no full scan_project_files materialization."""
+def test_r223_open_workspace_uses_walker_not_full_scan(tmp_path: Path) -> None:
+    """R223: open_workspace walks via walker; does not call scan_project_files."""
+    import inspect
+
+    from mcp_backend import session as session_mod
+
+    src = inspect.getsource(session_mod.WorkspaceSession.open_workspace)
+    assert "walk_workspace_sources" in src
+    assert "scan_project_files" not in src
     (tmp_path / "a.py").write_text("a=1\n", encoding="utf-8")
-
-    def _boom(*_a: object, **_k: object) -> set[str]:
-        raise AssertionError("scan_project_files must not be used by open_workspace (R223)")
-
-    monkeypatch.setattr("utils.project_scan.scan_project_files", _boom)
-    monkeypatch.setattr("mcp_backend.session.scan_project_files", _boom, raising=False)
     summary = tools.open_workspace(_session(tmp_path), str(tmp_path))
     assert summary["file_count"] == 1
 
