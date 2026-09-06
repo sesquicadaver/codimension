@@ -175,7 +175,7 @@
 |---|-----|--------|------------|------|--------|
 | 33 | R221 | SSH binding: cache path == `remote_cache_dir(profile, remote_root)` | Відхилити binding, якщо `local_root` ≠ очікуваний cache для `remote_root` | M | DONE ([#177](https://github.com/sesquicadaver/codimension/pull/177)) |
 | 34 | R222 | Updater: validate every redirect hop + final URL | Власний `HTTPRedirectHandler`; `geturl()` знову через trust policy | M | DONE ([#179](https://github.com/sesquicadaver/codimension/pull/179)) |
-| 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits під час обходу; chunked reads; stop on exceed | M | DONE |
+| 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits під час обходу; chunked reads; stop on exceed | M | DONE ([#181](https://github.com/sesquicadaver/codimension/pull/181)) |
 | 36 | R224 | LSP DocumentStore для foreign URI spans | Cross-file definition/refs/rename з реальними ranges (не `SourceSpan(0,0)`) | L | OPEN |
 | 37 | R225 | Plugin manifest policy fail-closed | Third-party: обов’язковий `.cdmp` Codimension block; unknown/invalid → deny | M | OPEN |
 | 38 | R226 | FFI EXACT через structural parse | Tree-sitter/LSP evidence для registration chain; інакше BRIDGE/INFERRED | L | OPEN |
