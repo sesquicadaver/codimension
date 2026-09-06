@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - MCP workspace session (R182 / R214)
+# codimension - MCP workspace session (R182 / R214 / R223)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""In-process workspace state for MCP tool handlers (R182 / R214)."""
+"""In-process workspace state for MCP tool handlers (R182 / R214 / R223)."""
 
 from __future__ import annotations
 
@@ -19,13 +19,10 @@ from typing import Any, Optional, cast
 
 from core.symbol_index import SymbolIndex
 from mcp_backend.policy import (
-    ResourceBudgetError,
     WorkspacePolicy,
-    WorkspacePolicyError,
-    depth_under_root,
     resolve_under_allowed_root,
 )
-from utils.project_scan import scan_project_files
+from mcp_backend.walker import walk_workspace_sources
 from utils.symbol_index_brief import build_symbol_index
 
 
@@ -57,44 +54,23 @@ class WorkspaceSession:
         self.file_paths = ()
 
     def open_workspace(self, project_dir: str) -> dict[str, Any]:
-        """Scan ``project_dir`` under the allowed root with resource budgets."""
+        """Scan ``project_dir`` under the allowed root with in-walk resource budgets (R223)."""
         root = resolve_under_allowed_root(self.policy.allowed_root, project_dir)
         if not os.path.isdir(root):
             raise FileNotFoundError(f"workspace directory not found: {root}")
 
-        scanned = scan_project_files(root)
-        py_files = sorted(p for p in scanned if not p.endswith(os.sep) and p.endswith(".py") and os.path.isfile(p))
-
-        sources: dict[str, str] = {}
-        total_bytes = 0
+        walked = walk_workspace_sources(root, self.policy, allowed_root=self.policy.allowed_root)
+        sources = walked.sources
+        total_bytes = walked.bytes_loaded
         max_files = self.policy.max_files
         max_bytes = self.policy.max_bytes
         max_depth = self.policy.max_depth
-        for path in py_files:
-            try:
-                resolve_under_allowed_root(self.policy.allowed_root, path)
-            except WorkspacePolicyError:
-                continue
-            if max_depth > 0 and depth_under_root(root, path) > max_depth:
-                continue
-            try:
-                with open(path, encoding="utf-8") as handle:
-                    text = handle.read()
-            except OSError:
-                continue
-            encoded = len(text.encode("utf-8"))
-            if max_files > 0 and len(sources) + 1 > max_files:
-                raise ResourceBudgetError(f"workspace exceeds max_files={max_files} (CDM_MCP_MAX_FILES)")
-            if max_bytes > 0 and total_bytes + encoded > max_bytes:
-                raise ResourceBudgetError(f"workspace exceeds max_bytes={max_bytes} (CDM_MCP_MAX_BYTES)")
-            sources[path] = text
-            total_bytes += encoded
 
         index = build_symbol_index(list(sources.keys()))
         self.root = root
         self.index = index
         self.sources = sources
-        self.file_paths = tuple(sources.keys())
+        self.file_paths = tuple(sorted(sources.keys()))
         return {
             "root": root,
             "allowed_root": self.policy.allowed_root,

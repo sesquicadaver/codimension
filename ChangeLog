@@ -1,5 +1,8 @@
 2026 Sep 06
 
+* R223: MCP ``walk_workspace_sources`` applies depth/file/byte budgets
+  during traversal with declared-size pre-check and chunked reads
+  (re-audit P1-03 @ 8824ff3c)
 * R222: updater ``TrustedUpdateRedirectHandler`` re-validates every
   redirect hop and final ``response.geturl()`` against the R215 trust
   policy (re-audit P1-02 @ 8824ff3c)

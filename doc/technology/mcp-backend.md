@@ -1,6 +1,6 @@
 > **Language / Мова:** English | [Українська](../uk/technology/mcp-backend.md)
 
-# MCP / remote agent backend (R182 / R214)
+# MCP / remote agent backend (R182 / R214 / R223)
 
 Codimension exposes a **headless** Model Context Protocol (MCP) surface over
 existing core analysis APIs. The IDE itself does **not** depend on the MCP SDK.
@@ -28,7 +28,7 @@ PyPI package `mcp` on `sys.path`).
 
 Silent open without a token is intentionally unsupported.
 
-## Workspace policy (R214)
+## Workspace policy (R214 / R223)
 
 | Rule | Behaviour |
 | ---- | --------- |
@@ -36,7 +36,8 @@ Silent open without a token is intentionally unsupported.
 | `open_workspace` | May only open directories under the allowed root |
 | Path tools | CFG / taint / file filters resolve under open root **and** allowed root |
 | Budgets | `CDM_MCP_MAX_FILES` (default 10000), `CDM_MCP_MAX_BYTES` (default 64 MiB), `CDM_MCP_MAX_DEPTH` (default 32); exceed → `ResourceBudgetError` |
-| Depth | Paths deeper than `max_depth` are skipped (not an error) |
+| Walker (R223) | Depth / file / byte checks run **during** traversal (`mcp_backend.walker`); no full `scan_project_files` materialization; declared `st_size` pre-check + chunked reads |
+| Depth | Paths deeper than `max_depth` are skipped; directories at the limit are not descended |
 | Module | `mcp_backend.policy.WorkspacePolicy` |
 
 `0` for a budget means unlimited (discouraged for production).
@@ -45,7 +46,7 @@ Silent open without a token is intentionally unsupported.
 
 | Tool | Headless backend |
 | ---- | ---------------- |
-| `open_workspace` | `utils.project_scan` + `utils.symbol_index_brief` (budgeted) |
+| `open_workspace` | `mcp_backend.walker` + `utils.symbol_index_brief` (budgeted in-walk) |
 | `list_project_files` | Session file list |
 | `get_symbols` | `core.symbol_index` |
 | `lookup_symbol` | `find_definitions` / `find_references` |
@@ -64,4 +65,4 @@ Silent open without a token is intentionally unsupported.
 
 - Qt-free: `scripts/check_core_import_graph.py` includes `mcp_backend`
 - Layer matrix: `mcp_backend` → `core|infrastructure|app|utils` only
-- Tests: `tests/test_mcp_r182.py` (R182 auth + R214 policy)
+- Tests: `tests/test_mcp_r182.py`, `tests/test_mcp_walker_r223.py`

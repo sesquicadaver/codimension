@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Хвиля R209–R220 ✅. Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01 → **R221** ✅; P1-02 → **R222** ✅; наступний OPEN — **R223**.
+Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Хвиля R209–R220 ✅. Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01 → **R221** ✅; P1-02 → **R222** ✅; P1-03 → **R223** ✅; наступний OPEN — **R224**.
 
 ### Аудит 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 черга (закрита)
 
@@ -32,7 +32,7 @@
 |----|----------|-----------|--------|
 | P1-01 | SSH binding: `local_root` ≠ `remote_cache_dir(profile, remote_root)` | P1 | ✅ R221 |
 | P1-02 | Updater: redirect chain без re-validate trust | P1 | ✅ R222 |
-| P1-03 | MCP budgets після необмеженого traversal | P1 | 🔓 R223 |
+| P1-03 | MCP budgets після необмеженого traversal | P1 | ✅ R223 |
 | P1-04 | Cross-file LSP locations → `SourceSpan(0,0)` | P1 | 🔓 R224 |
 | P1-07 | Plugin pre-import policy ще fail-open (legacy fallback) | P1 | 🔓 R225 |
 | P1-06 | FFI `EXACT` без structural registration proof | P1 | 🔓 R226 |
