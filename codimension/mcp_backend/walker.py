@@ -100,7 +100,7 @@ def walk_workspace_sources(
     def _remaining() -> Optional[int]:
         if max_bytes <= 0:
             return None
-        return max_bytes - total_bytes
+        return int(max_bytes) - int(total_bytes)
 
     def _walk(dir_path: str) -> None:
         nonlocal total_bytes
