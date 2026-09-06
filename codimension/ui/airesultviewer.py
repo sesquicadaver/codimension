@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from typing import Optional
 
+from core.ai_docstring import DocstringTarget
 from utils.colorfont import getZoomedMonoFont
 from utils.pixmapcache import getIcon
 
@@ -40,6 +42,7 @@ class AiResultViewer(QWidget):
         self.__last_kind = ""
         self.__last_symbol = ""
         self.__last_file = ""
+        self.__last_doc_target: Optional[DocstringTarget] = None
         self.__createLayout()
         self.onTextZoomChanged()
         self.__updateButtons()
@@ -104,19 +107,22 @@ class AiResultViewer(QWidget):
         file_path: str = "",
         symbol_name: str = "",
         backend_name: str = "",
+        docstring_target: Optional[DocstringTarget] = None,
     ) -> None:
         """Replace panel content with a new AI result."""
         self.__title = title or "AI result"
         self.__last_kind = kind
         self.__last_file = file_path
         self.__last_symbol = symbol_name
+        self.__last_doc_target = docstring_target
         stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         meta = f"{self.__title} — {stamp}"
         if backend_name:
             meta += f" [{backend_name}]"
         self.__status.setText(meta)
         self.__text.setPlainText(text or "")
-        self.__applyDocAct.setEnabled(kind == "docstring" and bool(symbol_name))
+        can_apply = kind == "docstring" and (docstring_target is not None or bool(symbol_name))
+        self.__applyDocAct.setEnabled(can_apply)
         self.__updateButtons()
 
     def appendStatus(self, message: str) -> None:
@@ -129,6 +135,7 @@ class AiResultViewer(QWidget):
         self.__last_kind = ""
         self.__last_file = ""
         self.__last_symbol = ""
+        self.__last_doc_target = None
         self.__status.setText("No AI results yet")
         self.__text.clear()
         self.__applyDocAct.setEnabled(False)
@@ -141,6 +148,10 @@ class AiResultViewer(QWidget):
     def lastDocstringTarget(self) -> tuple[str, str, str]:
         """Return ``(kind, file_path, symbol_name)`` for Apply."""
         return self.__last_kind, self.__last_file, self.__last_symbol
+
+    def lastDocstringIdentity(self) -> Optional[DocstringTarget]:
+        """Return the versioned docstring apply target (R218), if any."""
+        return self.__last_doc_target
 
     def __updateButtons(self) -> None:
         has = bool(self.__text.toPlainText().strip())

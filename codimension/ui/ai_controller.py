@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import os
 
-from core.ai_docstring import apply_google_docstring
+from core.ai_docstring import DocstringTarget, apply_google_docstring
 from core.ai_docstring_context import (
     infer_symbol_name,
     normalize_editor_selection,
@@ -239,27 +239,87 @@ class AiWorkspaceController:
         )
         self._start(request)
 
+    def _editorForPath(self, file_path: str):
+        """Return an open editor for ``file_path``, else the current editor for buffers."""
+        path = (file_path or "").strip()
+        if path and path != "<buffer>" and os.path.isabs(path):
+            try:
+                em = self._mw.em
+                for index in range(em.count()):
+                    widget = em.widget(index)
+                    if widget is None:
+                        continue
+                    try:
+                        wpath = widget.getFileName() or ""
+                    except Exception:
+                        continue
+                    if wpath and os.path.abspath(wpath) == os.path.abspath(path):
+                        if hasattr(widget, "getEditor"):
+                            try:
+                                return widget.getEditor()
+                            except Exception:
+                                return None
+                        return None
+            except Exception:
+                pass
+        return self._currentEditor()
+
     def applyLastDocstring(self) -> None:
-        """Apply the last docstring result into the current editor buffer."""
+        """Apply the last docstring result into the matching versioned editor buffer."""
         viewer = getattr(self._mw, "aiResultViewer", None)
         if viewer is None:
             return
-        kind, _file_path, symbol = viewer.lastDocstringTarget()
-        if kind != "docstring" or not symbol:
+        kind, file_path, symbol = viewer.lastDocstringTarget()
+        identity: DocstringTarget | None = None
+        if hasattr(viewer, "lastDocstringIdentity"):
+            identity = viewer.lastDocstringIdentity()
+        if kind != "docstring" or (not symbol and identity is None):
             QMessageBox.information(self._mw, "AI", "No docstring result to apply.")
             return
-        editor = self._currentEditor()
+        target_path = (identity.file_path if identity is not None else "") or file_path
+        editor = self._editorForPath(target_path)
         if editor is None:
             QMessageBox.warning(self._mw, "AI", "No editor to apply the docstring.")
             return
-        body = viewer.getText().strip()
+        current_path = ""
         try:
-            new_source = apply_google_docstring(editor.text or "", symbol, body)
+            current_path = editor.getFileName() or ""
+        except Exception:
+            current_path = ""
+        if (
+            target_path
+            and target_path != "<buffer>"
+            and current_path
+            and os.path.isabs(target_path)
+            and os.path.isabs(current_path)
+            and os.path.abspath(target_path) != os.path.abspath(current_path)
+        ):
+            QMessageBox.warning(
+                self._mw,
+                "AI",
+                f"Open the original file before applying:\n{target_path}",
+            )
+            return
+        body = viewer.getText().strip()
+        source = editor.text or ""
+        try:
+            if identity is not None:
+                new_source = apply_google_docstring(
+                    source,
+                    identity.symbol_name,
+                    body,
+                    target=identity,
+                    require_version_match=True,
+                )
+                label = identity.qualname or identity.symbol_name
+            else:
+                new_source = apply_google_docstring(source, symbol, body)
+                label = symbol
         except ValueError as exc:
             QMessageBox.warning(self._mw, "AI", str(exc))
             return
         editor.setText(new_source)
-        QMessageBox.information(self._mw, "AI", f"Docstring applied to {symbol}.")
+        QMessageBox.information(self._mw, "AI", f"Docstring applied to {label}.")
 
     def _start(self, request: AiTaskRequest) -> None:
         self.ensureResultTab()
@@ -285,6 +345,7 @@ class AiWorkspaceController:
             file_path=result.file_path,
             symbol_name=result.symbol_name,
             backend_name=result.backend_name,
+            docstring_target=getattr(result, "docstring_target", None),
         )
         self.ensureResultTab()
 

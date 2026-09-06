@@ -20,6 +20,7 @@ from enum import Enum
 from typing import Callable, Iterable, Optional, Sequence
 
 from core.ai_context import AiContextPack, build_ai_context_from_source
+from core.ai_docstring import DocstringTarget, build_docstring_target
 from core.ai_docstring_context import (
     build_docstring_support_context,
     resolve_docstring_fragment,
@@ -76,6 +77,7 @@ class AiTaskResult:
     backend_name: str
     file_path: str = ""
     symbol_name: str = ""
+    docstring_target: Optional[DocstringTarget] = None
 
 
 def list_project_py_files(files_list: Iterable[str], project_dir: str) -> tuple[str, ...]:
@@ -342,6 +344,18 @@ def execute_ai_task(
                 if text.startswith(q) and text.endswith(q) and len(text) >= 6:
                     text = text[len(q) : -len(q)].strip()
                     break
+        doc_target: Optional[DocstringTarget] = None
+        if symbol_name or request.cursor_line:
+            try:
+                doc_target = build_docstring_target(
+                    request.source,
+                    file_path=request.file_path,
+                    symbol_name=symbol_name,
+                    cursor_line=request.cursor_line,
+                )
+                symbol_name = doc_target.symbol_name or symbol_name
+            except ValueError:
+                doc_target = None
         return AiTaskResult(
             kind=kind,
             title=request.title,
@@ -349,6 +363,7 @@ def execute_ai_task(
             backend_name=backend_name,
             file_path=request.file_path,
             symbol_name=symbol_name,
+            docstring_target=doc_target,
         )
 
     if kind is AiTaskKind.CHAT:

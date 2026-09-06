@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-11 → R209–R216 ✅; P1-05 → **R217** ✅; next OPEN — **R218**.
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-11 → R209–R216 ✅; P1-05 → **R217** ✅; P1-13 → **R218** ✅; next OPEN — **R219**.
 
 ### Audit 2026-09-05 (`codi-last.md`) — P1 queue
 
@@ -22,7 +22,8 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-0
 | P1-10 | Updater: SHA-256 without provenance; unbounded read; broken version probe | P1 | ✅ R215 |
 | P1-11 | CFG: loop-else bypass + non-exhaustive match missing no-match edge | P1 | ✅ R216 |
 | P1-05 | FFI: `EXACT` without full registration chain | P1 | ✅ R217 |
-| P1-04+ | AI / reload / plugins | P1 | 🔓 R218–R220 |
+| P1-13 | AI docstring apply: wrong symbol / corrupt code | P1 | ✅ R218 |
+| P1-04+ | AI / reload / plugins | P1 | 🔓 R219–R220 |
 
 ### UX hardening (outside ROADMAP queue)
 

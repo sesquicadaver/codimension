@@ -1,5 +1,9 @@
 2026 Sep 06
 
+* R218: AI docstring apply uses versioned ``DocstringTarget`` (file path,
+  document CRC version, qualname, source span, fingerprint); rejects stale
+  buffers / ambiguous bare names; same-line suite rewrite; mandatory
+  post-patch ``ast.parse`` (audit P1-13)
 * R217: FFI ``EXACT`` only with full registration chain (PyO3 wrap+pymodule;
   pybind11 ``var.def``; CPython ``PyModuleDef.m_methods``→``PyInit``); else
   ``BRIDGE``; ``.pyi`` name spans (audit P1-05)
