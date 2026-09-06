@@ -58,12 +58,16 @@ reader thread + serialized writer; `$/cancelRequest`; обмежені stderr ri
 unload. Spawn через `core/language_policy.py`
 (`LANGUAGE_SERVER_SPAWN`: лише absolute binary з allowlist).
 
-## SemanticProvider (R203)
+## SemanticProvider (R203 / R224)
 
 Rust (`rust-analyzer`) і C++ (`clangd`) реєструються через
 `LanguageServiceManager.register_rust_lsp` / `register_cpp_lsp`.
 C++ без `compile_commands.json` — **DEGRADED** (немає претензії на
 повні diagnostics).
+
+Cross-file definition / references / rename декодують LSP ranges через
+`core.document_store.DocumentStore` (відкриті буфери + `file://` load). Foreign
+URI більше не згортаються в `SourceSpan(0, 0)`, коли текст цілі доступний.
 
 ## Security policy (deny-by-default)
 

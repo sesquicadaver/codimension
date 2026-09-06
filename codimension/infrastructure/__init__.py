@@ -13,6 +13,7 @@
 
 from . import (
     ffi_bindings,
+    file_uri,
     filesystem,
     io,
     lsp_framing,
@@ -26,6 +27,7 @@ from . import (
 __all__ = [
     "ffi_bindings",
     "filesystem",
+    "file_uri",
     "io",
     "lsp_framing",
     "lsp_position_codec",

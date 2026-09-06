@@ -58,12 +58,17 @@ message size; bounded backoff restart; `initialize` → `shutdown` → `exit` on
 unload. Spawn gated by `core/language_policy.py`
 (`LANGUAGE_SERVER_SPAWN`: absolute binary on allowlist only).
 
-## SemanticProvider (R203)
+## SemanticProvider (R203 / R224)
 
 Rust (`rust-analyzer`) and C++ (`clangd`) register via
 `LanguageServiceManager.register_rust_lsp` / `register_cpp_lsp`.
 C++ without `compile_commands.json` is **DEGRADED** — UI must not claim
 full diagnostics (`claims_full_diagnostics()` is False).
+
+Cross-file definition / references / rename decode LSP ranges via
+`core.document_store.DocumentStore` (open buffers + `file://` load). Foreign
+URI targets no longer collapse to `SourceSpan(0, 0)` when the target text is
+available.
 
 ## Security policy (deny-by-default effects)
 
