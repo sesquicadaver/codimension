@@ -25,6 +25,10 @@ authentication (credentials are never sent on a wrong host key).
 R213: ``binding.json`` is accepted only after :func:`validate_binding`
 (open project dir, remote-projects cache, saved host profile match).
 
+R221: ``validate_binding`` also requires ``local_root`` to equal
+``remote_cache_dir(profile, remote_root)`` so a crafted ``remote_root``
+cannot retarget Save/Run/Debug while staying under the same profile cache.
+
 R185: Download hardening — ``lstat`` (no symlink follow), reject symlinks,
 nonzero default file/byte caps, streamed reads, staging + atomic swap into
 the local cache.
@@ -952,12 +956,13 @@ def validate_binding(
     project_file: str = "",
     settings_dir: Optional[str] = None,
 ) -> RemoteProjectBinding:
-    """Fail closed unless ``binding`` matches the open project + saved profile (R213).
+    """Fail closed unless ``binding`` matches the open project + saved profile (R213/R221).
 
     Checks:
 
     * ``local_root`` realpath equals the open project directory;
     * ``local_root`` lives under ``<settings>/remote-projects/<profile_id>/``;
+    * ``local_root`` equals ``remote_cache_dir(profile, remote_root)`` (R221);
     * ``local_cdm3`` is under ``local_root`` and matches the open ``.cdm3`` when given;
     * ``profile_id`` exists in saved host profiles;
     * ``host`` / ``port`` / ``user`` / ``auth`` match that profile;
@@ -1016,6 +1021,13 @@ def validate_binding(
         remote_cdm3 = assert_remote_path_under(remote_root, _norm_remote(binding.remote_cdm3))
     except ValueError as exc:
         raise BindingValidationError(f"binding remote_cdm3 outside remote_root: {exc}") from exc
+
+    # R221: local cache digest must be derived from this profile + remote_root.
+    expected_root = os.path.realpath(remote_cache_dir(profile, remote_root, settings_dir))
+    if local_real != expected_root:
+        raise BindingValidationError(
+            f"remote_root/cache identity mismatch: local_root {local_real!r} != expected {expected_root!r}"
+        )
 
     # Return a binding reconciled to trusted profile identity + normalized paths.
     return RemoteProjectBinding(

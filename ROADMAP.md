@@ -173,7 +173,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 | # | ID | Task | Acceptance | Size | Status |
 |---|-----|------|------------|------|--------|
-| 33 | R221 | SSH binding: cache path == `remote_cache_dir(profile, remote_root)` | Reject binding when `local_root` ≠ expected cache for `remote_root` | M | OPEN |
+| 33 | R221 | SSH binding: cache path == `remote_cache_dir(profile, remote_root)` | Reject binding when `local_root` ≠ expected cache for `remote_root` | M | DONE |
 | 34 | R222 | Updater: validate every redirect hop + final URL | Custom `HTTPRedirectHandler`; `geturl()` re-checked via trust policy | M | OPEN |
 | 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits during traversal; chunked reads; stop on exceed | M | OPEN |
 | 36 | R224 | LSP DocumentStore for foreign URI spans | Cross-file definition/refs/rename use real ranges (no `SourceSpan(0,0)`) | L | OPEN |
@@ -189,7 +189,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R221** — SSH binding: cache path == `remote_cache_dir(profile, remote_root)`.
+**Next OPEN:** **R222** — Updater: validate every redirect hop + final URL.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
