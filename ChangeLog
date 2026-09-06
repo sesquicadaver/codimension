@@ -1,5 +1,8 @@
 2026 Sep 06
 
+* R222: updater ``TrustedUpdateRedirectHandler`` re-validates every
+  redirect hop and final ``response.geturl()`` against the R215 trust
+  policy (re-audit P1-02 @ 8824ff3c)
 * R221: ``validate_binding`` requires ``local_root`` ==
   ``remote_cache_dir(profile, remote_root)`` so crafted ``remote_root``
   cannot retarget Save/Run/Debug under the same profile cache

@@ -19,7 +19,7 @@ Baked defaults live in [`cdmverspec.py`](../../codimension/cdmverspec.py)
 Update checks (`utils.update_check`): `stable` hides GitHub prereleases;
 `beta` / `dev` include them.
 
-## Updater provenance (R215)
+## Updater provenance (R215 / R222)
 
 In-app update check / download / apply (`utils.update_check`,
 `update_download`, `update_apply`, `update_provenance`):
@@ -30,6 +30,7 @@ In-app update check / download / apply (`utils.update_check`,
 | `CDM_UPDATE_RELEASES_URL` | Still subject to the same host/path policy (no arbitrary mirrors) |
 | Extra hosts | `CDM_UPDATE_TRUSTED_HOSTS` (comma-separated) for API/download allowlist |
 | Asset URLs | HTTPS on `github.com` / `objects.githubusercontent.com` / `release-assets.githubusercontent.com` |
+| Redirects (R222) | Custom `HTTPRedirectHandler` re-validates every hop; final `response.geturl()` re-checked |
 | Size budgets | Releases JSON ≤ 2 MiB; checksum ≤ 64 KiB; artifact ≤ 256 MiB (`CDM_UPDATE_MAX_BYTES`) |
 | Streaming | Production artifact download streams to disk; `ReleaseAsset.size` is a hard pre-check |
 | Version probe | `importlib.metadata.version("codimension")` with `codimension.cdmverspec` fallback |

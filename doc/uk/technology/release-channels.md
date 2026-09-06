@@ -19,7 +19,7 @@ Codimension тримає **одну** лінію `master` (solo-fork). Кана�
 Перевірка оновлень (`utils.update_check`): `stable` ховає prerelease;
 `beta` / `dev` — показують.
 
-## Provenance updater (R215)
+## Provenance updater (R215 / R222)
 
 In-app update check / download / apply (`utils.update_check`,
 `update_download`, `update_apply`, `update_provenance`):
@@ -30,6 +30,7 @@ In-app update check / download / apply (`utils.update_check`,
 | `CDM_UPDATE_RELEASES_URL` | Та сама host/path policy (довільні дзеркала заборонені) |
 | Додаткові hosts | `CDM_UPDATE_TRUSTED_HOSTS` (comma-separated) |
 | Asset URLs | HTTPS на `github.com` / `objects.githubusercontent.com` / `release-assets.githubusercontent.com` |
+| Redirects (R222) | Власний `HTTPRedirectHandler` re-validate кожного hop; фінальний `response.geturl()` знову через trust |
 | Бюджети | Releases JSON ≤ 2 MiB; checksum ≤ 64 KiB; artifact ≤ 256 MiB (`CDM_UPDATE_MAX_BYTES`) |
 | Streaming | Production download артефакту — stream на диск; `ReleaseAsset.size` — hard pre-check |
 | Version probe | `importlib.metadata.version("codimension")` + fallback `codimension.cdmverspec` |
