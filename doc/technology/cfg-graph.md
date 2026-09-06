@@ -1,6 +1,6 @@
 > **Language / Мова:** English | [Українська](../uk/technology/cfg-graph.md)
 
-# CFG graph model (R140.a / R188)
+# CFG graph model (R140.a / R188 / R216)
 
 Headless control-flow graphs live in `core.cfg` (`CfgNode` / `CfgEdge` /
 `CfgGraph`). Flow UI binds them via `flowui.cfg_adapter`.
@@ -14,6 +14,17 @@ Headless control-flow graphs live in `core.cfg` (`CfgNode` / `CfgEdge` /
 - **`try`/`finally`**: terminals enter the finally node first; after the
   finally suite, edges also reach deferred targets (imprecise merge with the
   normal join path).
+
+## Loop else and match paths (R216)
+
+- **Loop `else`:** when `elsePart` is present, normal exhaustion is only
+  `loop → else [ELSE] → … → join`. There is **no** concurrent
+  `loop → join [FALSE]` (that path would bypass `else`). `break` still goes
+  directly to `join` via the loop stack.
+- **Non-exhaustive `match`:** if no irrefutable catch-all case exists
+  (`case _:` or a bare capture without `if` guard), the graph adds
+  `match → join [FALSE]` for the no-match fallthrough. Exhaustive matches
+  (e.g. trailing `case _:`) omit that edge.
 
 ## Limits (not security-proof)
 

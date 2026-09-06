@@ -1,3 +1,8 @@
+2026 Sep 06
+
+* R216: CFG loop ``else`` no longer bypassed by ``loop→join FALSE``; non-exhaustive
+  ``match`` gains ``match→join FALSE`` (audit P1-11)
+
 2026 Sep 05
 
 * R215: updater provenance — HTTPS/host/path policy for Releases API and

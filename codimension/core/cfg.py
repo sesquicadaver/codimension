@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Headless CFG graph model separated from ``flowui`` canvas (R140.a / R188).
+"""Headless CFG graph model separated from ``flowui`` canvas (R140.a / R188 / R216).
 
 Builds an immutable-ish node/edge graph from a control-flow fragment tree
 (``core.flow`` / ``cdmcfparser``). Flow UI binds the graph via
@@ -21,6 +21,12 @@ R188 / A207:
 - ``break`` / ``continue`` use a loop stack (join / loop header).
 - ``try``/``finally`` routes terminals through the finally entry first
   (imprecise merge of normal vs exceptional successors).
+
+R216 / P1-11:
+- Loop ``else``: exhaustion goes ``loop → else`` only (no bypass
+  ``loop → join [FALSE]`` while ``else`` exists); ``break`` still joins.
+- Non-exhaustive ``match``: add ``match → join [FALSE]`` when no irrefutable
+  catch-all case is present.
 
 **Not security-proof / not a sound data-flow CFG:** finally merging,
 exception edges, and with/async are approximate. Do not treat this graph as
@@ -447,7 +453,13 @@ class _Builder:
         return if_id, [join_id]
 
     def _loop(self, item: Any, *, parent_id: str) -> tuple[str, list[str]]:
-        """For/while with BODY, LOOP_BACK, optional ELSE, and join (R188 loop stack)."""
+        """For/while with BODY, LOOP_BACK, optional ELSE, and join (R188 / R216).
+
+        Python semantics: normal loop exhaustion runs ``else`` when present.
+        ``break`` already jumps to ``join`` via the loop stack. Therefore a
+        direct ``loop → join [FALSE]`` edge must **not** coexist with ``else``
+        (that path would incorrectly bypass ``else``; audit P1-11 / R216).
+        """
         loop_id = self.add_node(CfgNodeKind.LOOP, item, parent_id=parent_id)
         join_id = self.add_node(
             CfgNodeKind.JOIN,
@@ -456,21 +468,27 @@ class _Builder:
             span=_span_of(item),
             prefix="join",
         )
+        else_part = getattr(item, "elsePart", None)
         self._loop_stack.append((loop_id, join_id))
         try:
             suite = list(getattr(item, "suite", None) or [])
             first, falls = self._suite(suite, parent_id=loop_id)
             if first is None:
-                self.add_edge(loop_id, join_id, CfgEdgeKind.FALSE)
+                if else_part is None:
+                    self.add_edge(loop_id, join_id, CfgEdgeKind.FALSE)
             else:
                 self.add_edge(loop_id, first, CfgEdgeKind.BODY)
                 self.link_many(falls or [first], loop_id, CfgEdgeKind.LOOP_BACK)
-                self.add_edge(loop_id, join_id, CfgEdgeKind.FALSE)
-            else_part = getattr(item, "elsePart", None)
+                if else_part is None:
+                    self.add_edge(loop_id, join_id, CfgEdgeKind.FALSE)
             if else_part is not None:
                 else_id = self.add_node(CfgNodeKind.BRANCH, else_part, parent_id=loop_id, label="else")
+                # Exhaustion / false condition → else (not join).
                 self.add_edge(loop_id, else_id, CfgEdgeKind.ELSE)
-                e_first, e_falls = self._suite(list(getattr(else_part, "suite", None) or []), parent_id=else_id)
+                e_first, e_falls = self._suite(
+                    list(getattr(else_part, "suite", None) or []),
+                    parent_id=else_id,
+                )
                 if e_first is None:
                     self.add_edge(else_id, join_id, CfgEdgeKind.BODY)
                 else:
@@ -556,7 +574,7 @@ class _Builder:
         return try_id, [join_id]
 
     def _match(self, item: Any, *, parent_id: str) -> tuple[str, list[str]]:
-        """Match/case with a join."""
+        """Match/case with a join (R216: no-match fallthrough when non-exhaustive)."""
         match_id = self.add_node(CfgNodeKind.MATCH, item, parent_id=parent_id)
         join_id = self.add_node(
             CfgNodeKind.JOIN,
@@ -578,7 +596,50 @@ class _Builder:
             else:
                 self.add_edge(case_id, first, CfgEdgeKind.BODY)
                 self.link_many(falls or [first], join_id, CfgEdgeKind.NEXT)
+        if not _match_parts_are_exhaustive(parts):
+            # Valid path when no case pattern matches (audit P1-11 / R216).
+            self.add_edge(match_id, join_id, CfgEdgeKind.FALSE)
         return match_id, [join_id]
+
+
+def _case_display(part: Any) -> str:
+    """Return the ``case …:`` display string for a case fragment."""
+    if hasattr(part, "getDisplayValue"):
+        try:
+            return str(part.getDisplayValue() or "").strip()
+        except Exception:
+            return ""
+    return str(getattr(part, "_display_value", "") or "").strip()
+
+
+def _case_pattern_body(display: str) -> str:
+    """Strip ``case`` / trailing ``:`` from a case display label."""
+    text = (display or "").strip()
+    if text.startswith("case "):
+        text = text[5:].strip()
+    if text.endswith(":"):
+        text = text[:-1].rstrip()
+    return text
+
+
+def _case_is_irrefutable_catchall(part: Any) -> bool:
+    """Whether ``part`` is an irrefutable catch-all (no guard).
+
+    Heuristic on the flow fragment display value: bare ``_`` or a capture
+    name (identifier) without ``if`` guard. Structural / value patterns are
+    treated as refutable.
+    """
+    body = _case_pattern_body(_case_display(part))
+    if not body or " if " in body:
+        return False
+    if body == "_":
+        return True
+    return body.isidentifier()
+
+
+def _match_parts_are_exhaustive(parts: list[Any]) -> bool:
+    """True when at least one case is an irrefutable catch-all without a guard."""
+    return any(_case_is_irrefutable_catchall(part) for part in parts)
 
 
 def _span_of(frag: Any) -> SourceSpan:

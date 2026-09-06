@@ -82,7 +82,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Git analytics R137** | utils.git_analytics | churn/hotspot from `git log --numstat`; text formatter | tests/test_git_analytics.py |
 | **Risk score R138** | core.risk_score | `cdm-risk-v2`; R194 confidence; missing metrics ≠ M=0 | tests/test_risk_score.py |
 | **Branching policy R170** | docs | CONTRIBUTING(+.en): `master` + `feature/*`/`fix/*`; no direct push; `ci-gate` | GitHub branch protection + docs gate |
-| **CFG graph model R140.a** | core.cfg | R188 per-scope ENTRY/EXIT; break/continue loop stack; finally routing; not security-proof | tests/test_cfg_graph.py; [cfg-graph.md](../../technology/cfg-graph.md) |
+| **CFG graph model R140.a / R216** | core.cfg | R188 per-scope ENTRY/EXIT; break/continue loop stack; finally routing; R216 loop-else + non-exhaustive match→join; not security-proof | tests/test_cfg_graph.py; tests/test_cfg_r216.py; [cfg-graph.md](../../technology/cfg-graph.md) |
 | **CFG canvas bind R140.b** | flowui.cfg_adapter + vcanvas/flowuiwidget | `bind_cfg_graph` in `layoutModule`; `getCfgGraph`; CF tree = layout payload | tests/test_cfg_adapter.py |
 | **CFG frame map R141** | core.cfg_frames + debugger.stackviewer | `map_frame_to_cfg_node` / stack; tooltip CFG id; manual: stop in debugger → stack tip shows node | tests/test_cfg_frames.py |
 | **CFG graph diff R142** | core.cfg_diff | `diff_cfg_graphs` / `diff_cfg_sources`; stable content keys; add/remove/change | tests/test_cfg_diff.py |
@@ -161,7 +161,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R216** (CFG loop-else / match paths); wave R209–R220.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R217** (FFI: no EXACT without registration chain); wave R209–R220.
 
 ### Module boundary matrix (R103 / R195)
 
