@@ -8,3 +8,9 @@ Version = 1.0.0
 Website = https://github.com/SergeySatskiy/codimension
 Description = Codimension IDE ruff linter plugin
 License = GPL v.3
+
+[Codimension]
+Category = WizardInterface
+MinIDEVersion = 4.7.1
+MinPluginAPI = 1
+RequiredCapabilities = wizard,side_bars,editors_manager

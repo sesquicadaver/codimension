@@ -140,6 +140,7 @@ def test_r191_disabled_plugin_never_imported(plugin_manager_mod, tmp_path, monke
     mgr.unknownPlugins = []
     mgr._pendingImportByPath = {}
     mgr._policySkippedCandidates = []
+    mgr._preImportRejects = {}
 
     mgr.collectPlugins()
     assert marker_name not in sys.modules
@@ -182,6 +183,7 @@ def test_r191_enabled_plugin_still_imports(plugin_manager_mod, tmp_path):
     mgr.unknownPlugins = []
     mgr._pendingImportByPath = {}
     mgr._policySkippedCandidates = []
+    mgr._preImportRejects = {}
 
     mgr.collectPlugins()
     assert marker_name in sys.modules

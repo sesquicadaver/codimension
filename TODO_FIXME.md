@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Аудит 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-11 → R209–R216 ✅; P1-05 → **R217** ✅; P1-13 → **R218** ✅; P1-15 → **R219** ✅; наступний OPEN — **R220**.
+Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Аудит 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-11 → R209–R216 ✅; P1-05 → **R217** ✅; P1-13 → **R218** ✅; P1-15 → **R219** ✅; P1-16 → **R220** ✅; черга R209–R220 закрита.
 
 ### Аудит 2026-09-05 (`codi-last.md`) — P1 черга
 
@@ -24,7 +24,8 @@
 | P1-05 | FFI: `EXACT` без повного registration chain | P1 | ✅ R217 |
 | P1-13 | AI docstring apply: wrong symbol / corrupt code | P1 | ✅ R218 |
 | P1-15 | External `.cdm3` reload split-brain / UUID | P1 | ✅ R219 |
-| P1-04+ | AI / reload / plugins | P1 | 🔓 R220 |
+| P1-16 | Plugin capability policy після import | P1 | ✅ R220 |
+| P1-04+ | AI / reload / plugins | P1 | ✅ R218–R220 |
 
 ### UX hardening (поза ROADMAP-чергою)
 

@@ -1,5 +1,9 @@
 2026 Sep 06
 
+* R220: fail-closed plugin policy before import — static ``.cdmp`` /
+  AST category+IDE+capability gate in ``plugins.policy``; pre-import
+  name/version conflicts; incompatible plugins never execute module code
+  (audit P1-16)
 * R219: project external `.cdm3` reload shares ``__rebuildAfterPropertyChange``
   with ``updateProperties`` (cache invalidate, rescan, watcher, optional venv
   reattach); UUID/`userProjectDir` immutable mid-session; tree excludes trigger
