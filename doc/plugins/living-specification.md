@@ -26,7 +26,7 @@
 | **Референс: Pytest** | cdmplugins.pytest | pytest.cdmp, __init__.py, pytestdriver.py, pytestresultviewer.py | Smoke: Run pytest (Ctrl+Shift+T) |
 | **Базовий клас** | cdmplugins.lintdriverbase | lintdriverbase.py, process_env.py | systemEnvironment + non-blocking stop |
 | **Git VCS / PAT** | cdmplugins.git | gitconfig.py, credentials.py, githubapi.py | gh→keyring→0600; tests/test_credentials_and_atomic.py |
-| **Atomic `.cdm3`** | utils.atomic_io / project_schema | atomic_io.py, project_schema.py, project.py | atomic save; schema on load/update/reload; R190 external reload=`updateProperties`; UUID immutable after load |
+| **Atomic `.cdm3`** | utils.atomic_io / project_schema | atomic_io.py, project_schema.py, project.py | atomic save; schema on load/update/reload; R190/R219 external reload=`updateProperties` + `__rebuildAfterPropertyChange`; UUID immutable; `userProjectDir` never remounted mid-session |
 | **Project scan T050–T052** | utils.project_scan / project / watcher | project_scan.py, project.py, watcher.py | path-aware exclude; symlink visited; async scan; tests/test_project_scan.py |
 | **Slow-scan ignore prompt** | utils.slow_scan_prompt / ui.slowscanignoredlg / project | 30s → hot dir + ancestor combo (top-level default); Continue does not persist seen; Accept applies; tests/test_slow_scan_prompt.py |
 | **qutepart drawLine float** | editor.qutepart_compat / qpartwrap / texteditor | Override indent paint with int coords (never monkeypatch ``QPainter.drawLine`` — breaks ``QLineF``); tests/test_qutepart_compat.py |
@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R219** (Project reload: immutable UUID + diff/rebuild); хвиля R209–R220.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R220** (Plugin policy before import); хвиля R209–R220.
 
 ### Матриця меж модулів (R103 / R195)
 
