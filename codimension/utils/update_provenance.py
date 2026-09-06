@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - updater provenance + HTTP budgets (R215)
+# codimension - updater provenance + HTTP budgets (R215 / R222)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,12 +9,15 @@
 # (at your option) any later version.
 #
 
-"""Trusted URL policy and budgeted HTTP reads for the in-app updater (R215).
+"""Trusted URL policy and budgeted HTTP reads for the in-app updater (R215/R222).
 
 Integrity (SHA-256) alone does not prove provenance: a hostile mirror that
 serves both the artifact and its checksum passes digest checks. This module
 fail-closes on cleartext / untrusted hosts and caps response sizes so release
 JSON, sidecars, and artifacts cannot exhaust memory.
+
+R222: every HTTP redirect hop and the final ``response.geturl()`` are
+re-checked against the same trust policy (custom ``HTTPRedirectHandler``).
 """
 
 from __future__ import annotations
@@ -23,7 +26,7 @@ import hashlib
 import os
 from typing import Any, Literal, Mapping, Optional
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 #: Default GitHub owner/repo for this fork (API path must match).
 DEFAULT_OWNER_REPO = "sesquicadaver/codimension"
@@ -60,6 +63,59 @@ UrlPurpose = Literal["releases_api", "download", "checksum"]
 
 class UpdateProvenanceError(ValueError):
     """Raised when an update URL or response violates provenance / budget policy."""
+
+
+class TrustedUpdateRedirectHandler(HTTPRedirectHandler):
+    """Fail closed on each redirect hop unless the new URL passes trust policy (R222)."""
+
+    def __init__(
+        self,
+        *,
+        purpose: UrlPurpose,
+        environ: Optional[Mapping[str, str]] = None,
+    ) -> None:
+        """Bind the hop validator to ``purpose`` / optional env overrides."""
+        super().__init__()
+        self._purpose = purpose
+        self._environ = environ
+
+    def redirect_request(
+        self,
+        req: Request,
+        fp: Any,
+        code: int,
+        msg: str,
+        headers: Any,
+        newurl: str,
+    ) -> Optional[Request]:
+        """Validate ``newurl`` then defer to :class:`HTTPRedirectHandler`."""
+        assert_trusted_update_url(newurl, purpose=self._purpose, environ=self._environ)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def trusted_urlopen(
+    req: Request,
+    *,
+    purpose: UrlPurpose,
+    timeout: float = DEFAULT_TIMEOUT,
+    environ: Optional[Mapping[str, str]] = None,
+) -> Any:
+    """``urlopen`` that re-validates every redirect hop and the final URL (R222)."""
+    opener = build_opener(TrustedUpdateRedirectHandler(purpose=purpose, environ=environ))
+    resp = opener.open(req, timeout=timeout)
+    geturl = getattr(resp, "geturl", None)
+    final_url = str(geturl()) if callable(geturl) else ""
+    if not final_url:
+        # Some test doubles omit geturl; fall back to the request URL already validated.
+        final_url = str(getattr(req, "full_url", None) or req.get_full_url())
+    try:
+        assert_trusted_update_url(final_url, purpose=purpose, environ=environ)
+    except UpdateProvenanceError:
+        close = getattr(resp, "close", None)
+        if callable(close):
+            close()
+        raise
+    return resp
 
 
 def _host_key(netloc: str) -> str:
@@ -233,7 +289,7 @@ def stream_url_to_file(
     )
     digest = hashlib.sha256()
     total = 0
-    with urlopen(req, timeout=timeout) as resp:
+    with trusted_urlopen(req, purpose=purpose, timeout=timeout, environ=environ) as resp:
         with open(dest_path, "wb") as handle:
             while True:
                 piece = resp.read(_READ_CHUNK_BYTES)
@@ -271,7 +327,7 @@ def fetch_budgeted(
     if extra_headers:
         headers.update(dict(extra_headers))
     req = Request(trusted, headers=headers, method="GET")
-    with urlopen(req, timeout=timeout) as resp:
+    with trusted_urlopen(req, purpose=purpose, timeout=timeout, environ=environ) as resp:
         return read_budgeted(resp, max_bytes=max_bytes)
 
 
@@ -299,6 +355,7 @@ __all__ = [
     "TRUSTED_API_HOSTS",
     "TRUSTED_DOWNLOAD_HOSTS",
     "TRUSTED_HOSTS_ENV",
+    "TrustedUpdateRedirectHandler",
     "UpdateProvenanceError",
     "UrlPurpose",
     "assert_trusted_update_url",
@@ -311,4 +368,5 @@ __all__ = [
     "sha256_file",
     "stream_url_to_file",
     "trusted_hosts",
+    "trusted_urlopen",
 ]

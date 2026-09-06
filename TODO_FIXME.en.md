@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R220 ✅. Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01 → **R221** ✅; next OPEN — **R222**.
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R220 ✅. Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01 → **R221** ✅; P1-02 → **R222** ✅; next OPEN — **R223**.
 
 ### Audit 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 queue (closed)
 
@@ -31,7 +31,7 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R22
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | P1-01 | SSH binding: `local_root` ≠ `remote_cache_dir(profile, remote_root)` | P1 | ✅ R221 |
-| P1-02 | Updater: redirect chain without re-validate trust | P1 | 🔓 R222 |
+| P1-02 | Updater: redirect chain without re-validate trust | P1 | ✅ R222 |
 | P1-03 | MCP budgets after unbounded traversal | P1 | 🔓 R223 |
 | P1-04 | Cross-file LSP locations → `SourceSpan(0,0)` | P1 | 🔓 R224 |
 | P1-07 | Plugin pre-import policy still fail-open (legacy fallback) | P1 | 🔓 R225 |
