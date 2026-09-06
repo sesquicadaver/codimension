@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - LSP-backed SemanticProvider (R203)
+# codimension - LSP-backed SemanticProvider (R203 / R224)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,14 +9,19 @@
 # (at your option) any later version.
 #
 
-"""LspSemanticProvider: hover / definition / references / outline over LspProcess."""
+"""LspSemanticProvider: hover / definition / references / outline over LspProcess.
+
+R224: foreign-URI locations and workspace edits decode spans via
+:class:`~core.document_store.DocumentStore` (open buffers + ``file://`` load).
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Optional, Sequence
 
 from core.document_snapshot import DocumentSnapshot, TextEdit
+from core.document_store import DocumentStore
 from core.semantic import (
     HoverInfo,
     OutlineSymbol,
@@ -25,7 +30,8 @@ from core.semantic import (
     WorkspaceTextEdit,
 )
 from core.symbol_index import SourceSpan
-from infrastructure.lsp_position_codec import LspRange
+from infrastructure.file_uri import load_document_from_uri
+from infrastructure.lsp_position_codec import LspPosition, LspRange
 from infrastructure.lsp_process import LspProcess, LspProcessKey, LspProcessRegistry
 
 
@@ -64,12 +70,19 @@ class LspSemanticProvider:
         config: LspSemanticConfig,
         *,
         readiness: SemanticReadiness = SemanticReadiness.READY,
+        document_store: DocumentStore | None = None,
     ) -> None:
         self._registry = registry
         self._config = config
         self._readiness = readiness
         # uri → last version synced to the language server (didOpen / didChange).
         self._opened: dict[str, int] = {}
+        self._documents = document_store or DocumentStore(loader=load_document_from_uri)
+
+    @property
+    def document_store(self) -> DocumentStore:
+        """Store used to resolve foreign URIs for span decoding (R224)."""
+        return self._documents
 
     @property
     def provider_id(self) -> str:
@@ -107,6 +120,7 @@ class LspSemanticProvider:
 
     def _ensure_open(self, document: DocumentSnapshot) -> LspProcess:
         """Ensure the server has the current document text (didOpen or didChange)."""
+        self._documents.put(document)
         proc = self._process()
         uri = document.uri
         if uri not in self._opened:
@@ -148,6 +162,7 @@ class LspSemanticProvider:
         # Pop before touching the process so a restart clear cannot resurrect
         # tracking, and so we can skip didClose on a virgin post-restart server.
         self._opened.pop(uri, None)
+        self._documents.discard(uri)
         key = LspProcessKey(
             self._config.language_id,
             self._config.workspace_root,
@@ -196,7 +211,7 @@ class LspSemanticProvider:
                 "context": {"includeDeclaration": True},
             },
         )
-        return _parse_locations(proc, document, result)
+        return _parse_locations(proc, document, result, store=self._documents)
 
     def document_symbols(self, document: DocumentSnapshot) -> tuple[OutlineSymbol, ...]:
         """LSP ``textDocument/documentSymbol``."""
@@ -219,7 +234,7 @@ class LspSemanticProvider:
                 "options": {"tabSize": 4, "insertSpaces": True},
             },
         )
-        return _parse_text_edits(proc, document, document.uri, result)
+        return _parse_text_edits(proc, document, document.uri, result, store=self._documents)
 
     def rename_preview(
         self,
@@ -238,7 +253,7 @@ class LspSemanticProvider:
                 "newName": new_name,
             },
         )
-        return _parse_workspace_edit(proc, document, result)
+        return _parse_workspace_edit(proc, document, result, store=self._documents)
 
     def _locations(
         self,
@@ -252,7 +267,7 @@ class LspSemanticProvider:
             method,
             {"textDocument": {"uri": document.uri}, "position": pos.to_dict()},
         )
-        return _parse_locations(proc, document, result)
+        return _parse_locations(proc, document, result, store=self._documents)
 
 
 def _markup_to_text(contents: Any) -> str:
@@ -271,10 +286,40 @@ def _markup_to_text(contents: Any) -> str:
     return str(contents)
 
 
+def _span_for_uri(
+    proc: LspProcess,
+    document: DocumentSnapshot,
+    uri: str,
+    range_obj: Mapping[str, Any],
+    *,
+    store: DocumentStore | None,
+) -> SourceSpan:
+    """Decode ``range_obj`` against ``document`` or a resolved foreign snapshot (R224)."""
+    start_raw = range_obj.get("start")
+    end_raw = range_obj.get("end")
+    if not isinstance(start_raw, Mapping) or not isinstance(end_raw, Mapping):
+        return SourceSpan(0, 0)
+    lsp_range = LspRange(
+        start=LspPosition(line=int(start_raw["line"]), character=int(start_raw["character"])),
+        end=LspPosition(line=int(end_raw["line"]), character=int(end_raw["character"])),
+    )
+    if uri == document.uri:
+        return proc.codec.to_internal_span(document, lsp_range)
+    target: Optional[DocumentSnapshot] = None
+    if store is not None:
+        target = store.resolve(uri)
+    if target is not None:
+        return proc.codec.to_internal_span(target, lsp_range)
+    # Unresolvable foreign URI: keep a safe placeholder rather than wrong offsets.
+    return SourceSpan(0, 0)
+
+
 def _parse_locations(
     proc: LspProcess,
     document: DocumentSnapshot,
     result: Any,
+    *,
+    store: DocumentStore | None = None,
 ) -> tuple[SymbolLocation, ...]:
     if not result:
         return ()
@@ -296,14 +341,9 @@ def _parse_locations(
         else:
             uri = str(item.get("uri", document.uri))
             range_obj = item.get("range")
-        if not range_obj:
+        if not isinstance(range_obj, Mapping):
             continue
-        # Spans are decoded against the *current* document only when URI matches.
-        if uri == document.uri:
-            span = proc.codec.to_internal_span(document, LspRange.from_dict(range_obj))
-        else:
-            # Foreign file: store zero span; R204+ can open the other snapshot.
-            span = SourceSpan(0, 0)
+        span = _span_for_uri(proc, document, uri, range_obj, store=store)
         out.append(SymbolLocation(uri=uri, span=span))
     return tuple(out)
 
@@ -344,6 +384,8 @@ def _parse_text_edits(
     document: DocumentSnapshot,
     uri: str,
     result: Any,
+    *,
+    store: DocumentStore | None = None,
 ) -> tuple[WorkspaceTextEdit, ...]:
     if not result:
         return ()
@@ -357,10 +399,7 @@ def _parse_text_edits(
         new_text = item.get("newText")
         if not isinstance(range_obj, Mapping) or new_text is None:
             continue
-        if uri == document.uri:
-            span = proc.codec.to_internal_span(document, LspRange.from_dict(range_obj))
-        else:
-            span = SourceSpan(0, 0)
+        span = _span_for_uri(proc, document, uri, range_obj, store=store)
         out.append(WorkspaceTextEdit(uri=uri, edit=TextEdit(span=span, new_text=str(new_text))))
     return tuple(out)
 
@@ -369,6 +408,8 @@ def _parse_workspace_edit(
     proc: LspProcess,
     document: DocumentSnapshot,
     result: Any,
+    *,
+    store: DocumentStore | None = None,
 ) -> tuple[WorkspaceTextEdit, ...]:
     if not result or not isinstance(result, Mapping):
         return ()
@@ -376,7 +417,7 @@ def _parse_workspace_edit(
     changes = result.get("changes")
     if isinstance(changes, Mapping):
         for uri, edits in changes.items():
-            out.extend(_parse_text_edits(proc, document, str(uri), edits))
+            out.extend(_parse_text_edits(proc, document, str(uri), edits, store=store))
     doc_changes = result.get("documentChanges")
     if isinstance(doc_changes, Sequence):
         for change in doc_changes:
@@ -384,7 +425,7 @@ def _parse_workspace_edit(
                 continue
             if "textDocument" in change and "edits" in change:
                 uri = str((change.get("textDocument") or {}).get("uri", document.uri))
-                out.extend(_parse_text_edits(proc, document, uri, change.get("edits")))
+                out.extend(_parse_text_edits(proc, document, uri, change.get("edits"), store=store))
     return tuple(out)
 
 

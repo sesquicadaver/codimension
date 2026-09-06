@@ -101,7 +101,7 @@
 | **Update download R173 / R215 / R222** | utils.update_download + update_provenance + ui.mainwindow | Download у cache; SHA-256 fail closed; trusted download hosts; stream + size budgets; redirect hop trust; ``manifest.json`` | tests/test_update_download.py; tests/test_update_redirect_r222.py; [release-channels.md](../technology/release-channels.md) |
 | **Update apply R180 / R215** | utils.update_apply + portable_profile + ui.mainwindow | re-verify (stream hash) → pip install; rollback previous; ``importlib.metadata`` version probe; ``CDM_HOME`` | tests/test_update_apply_r180.py |
 | **MCP backend R182 / R214 / R223** | mcp_backend + optional ``mcp`` SDK | stdio MCP над headless core; ``CDM_MCP_TOKEN`` fail-closed; immutable ``--workspace`` / ``CDM_MCP_WORKSPACE``; in-walk file/byte/depth budgets (``walker``); 7 MVP tools | tests/test_mcp_r182.py; tests/test_mcp_walker_r223.py; [mcp-backend.md](../technology/mcp-backend.md) |
-| **Polyglot layer R200+** | core.language/semantic/structural/bindings/dependency_edges/cross_language_nav/tasks/…; infrastructure.lsp_* + tree_sitter_structural + ffi_bindings + build_tasks; app.language_services; ui.language_controller | Registry→…→BindingIndex→typed deps/cross-nav→TaskProviders; Stage 1–4 = R200–R208; R209 lifecycle; R210 server→client; R217 FFI EXACT=registration chain | tests/test_language_r200.py … r210.py; test_language_r206.py; [polyglot-language-layer.md](../technology/polyglot-language-layer.md); R200–R210 + R217 DONE |
+| **Polyglot layer R200+** | core.language/semantic/structural/bindings/dependency_edges/cross_language_nav/tasks/document_store/…; infrastructure.lsp_* + file_uri + tree_sitter_structural + ffi_bindings + build_tasks; app.language_services; ui.language_controller | Registry→…→BindingIndex→typed deps/cross-nav→TaskProviders; Stage 1–4 = R200–R208; R209 lifecycle; R210 server→client; R217 FFI EXACT; **R224** DocumentStore foreign URI spans | tests/test_language_r200.py … r210.py; test_language_r224.py; test_language_r206.py; [polyglot-language-layer.md](../technology/polyglot-language-layer.md); R200–R210 + R217 + R224 DONE |
 | **Flow AST fallback** | codimension.parsers.flow_ast | flow_ast.py | unit: tests/test_flow_ast.py; conformance: tests/conformance/ (T004–T028.1); comment binder: parsers/comment_binder.py; UI coupling: test_flow_ui_coupling.py |
 | **Brief AST fallback** | codimension.parsers.brief_ast | brief_ast.py | unit: tests/test_brief_ast.py; conformance: tests/conformance/ (T006–T018) |
 | **Parser contract** | docs | [technology/parser-contract.md](../technology/parser-contract.md), [uk](../uk/technology/parser-contract.md) | Living Spec + conformance gates |
@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R224** (LSP DocumentStore foreign URI spans); хвиля R221–R231 (`codi-last.md` @ 8824ff3c).
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R225** (plugin manifest fail-closed); хвиля R221–R231 (`codi-last.md` @ 8824ff3c).
 
 ### Матриця меж модулів (R103 / R195)
 

@@ -1,5 +1,8 @@
 2026 Sep 06
 
+* R224: ``DocumentStore`` resolves foreign LSP URIs so definition /
+  references / rename decode real ``SourceSpan`` ranges (re-audit P1-04
+  @ 8824ff3c)
 * R223: MCP ``walk_workspace_sources`` applies depth/file/byte budgets
   during traversal with declared-size pre-check and chunked reads
   (re-audit P1-03 @ 8824ff3c)
