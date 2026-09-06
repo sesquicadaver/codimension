@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""R206: BindingIndex + PyO3 / pybind11 / CPython / .pyi evidence-backed edges."""
+"""R206 / R217: BindingIndex + PyO3 / pybind11 / CPython / .pyi evidence-backed edges."""
 
 from __future__ import annotations
 
@@ -41,6 +41,24 @@ def test_reject_name_only_exact_edge() -> None:
         )
 
 
+def test_exact_requires_registration_chain_evidence() -> None:
+    """R217: EXACT PyO3 edge without wrap/pymodule evidence is rejected."""
+    with pytest.raises(ValueError, match="registration"):
+        BindingEdge(
+            python_symbol="python:_native.x",
+            native_symbol="rust:x",
+            framework=BindingFramework.PYO3,
+            precision=BindingPrecision.EXACT,
+            evidence=(
+                BindingEvidence(
+                    kind=BindingEvidenceKind.PYFUNCTION_ATTR,
+                    uri="u",
+                    span=SourceSpan(0, 1),
+                ),
+            ),
+        )
+
+
 def test_pyo3_extractor_with_rename_and_wrap() -> None:
     src = """
 use pyo3::prelude::*;
@@ -71,6 +89,22 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     assert BindingEvidenceKind.PYMODULE_ATTR in kinds
 
 
+def test_r217_pyo3_without_wrap_is_bridge() -> None:
+    src = """
+#[pyfunction]
+fn internal_helper() {}
+
+#[pymodule]
+fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    Ok(())
+}
+"""
+    edges = PyO3BindingProvider().extract("file:///lib.rs", src)
+    assert len(edges) == 1
+    assert edges[0].precision is BindingPrecision.BRIDGE
+    assert BindingEvidenceKind.WRAP_PYFUNCTION not in {e.kind for e in edges[0].evidence}
+
+
 def test_pybind11_exact_and_inline() -> None:
     src = """
 #include <pybind11/pybind11.h>
@@ -90,11 +124,28 @@ PYBIND11_MODULE(_native, m) {
     assert "<lambda@" in by_name["add"].native_symbol
 
 
-def test_cpython_pymethoddef() -> None:
+def test_r217_pybind11_arbitrary_module_var() -> None:
+    src = """
+PYBIND11_MODULE(_native, module) {
+    module.def("solve", &engine::solve);
+}
+"""
+    edges = Pybind11BindingProvider().extract("file:///bindings.cpp", src)
+    assert len(edges) == 1
+    assert edges[0].python_name == "solve"
+    assert edges[0].precision is BindingPrecision.EXACT
+
+
+def test_cpython_pymethoddef_registered_chain() -> None:
     src = """
 static PyMethodDef methods[] = {
     {"solve", py_solve, METH_VARARGS, nullptr},
     {nullptr, nullptr, 0, nullptr},
+};
+static PyModuleDef module = {
+    PyModuleDef_HEAD_INIT,
+    .m_name = "_native",
+    .m_methods = methods,
 };
 PyMODINIT_FUNC PyInit__native(void) {
     return PyModule_Create(&module);
@@ -106,8 +157,27 @@ PyMODINIT_FUNC PyInit__native(void) {
     assert edge.python_symbol == "python:_native.solve"
     assert edge.native_symbol == "cpp:py_solve"
     assert edge.framework is BindingFramework.CPYTHON
-    assert BindingEvidenceKind.PYMETHODDEF in {e.kind for e in edge.evidence}
-    assert BindingEvidenceKind.PYINIT in {e.kind for e in edge.evidence}
+    assert edge.precision is BindingPrecision.EXACT
+    kinds = {e.kind for e in edge.evidence}
+    assert BindingEvidenceKind.PYMETHODDEF in kinds
+    assert BindingEvidenceKind.PYMODULEDEF in kinds
+    assert BindingEvidenceKind.PYINIT in kinds
+
+
+def test_r217_cpython_unlinked_init_is_bridge() -> None:
+    """PyMethodDef + unrelated PyInit without m_methods chain → BRIDGE."""
+    src = """
+static PyMethodDef methods[] = {
+    {"solve", py_solve, METH_VARARGS, nullptr},
+    {nullptr, nullptr, 0, nullptr},
+};
+PyMODINIT_FUNC PyInit__native(void) {
+    return PyModule_Create(&other);
+}
+"""
+    edges = CPythonBindingProvider().extract("file:///ext.c", src)
+    assert len(edges) == 1
+    assert edges[0].precision is BindingPrecision.BRIDGE
 
 
 def test_pyi_bridge_and_index_chain() -> None:
@@ -117,6 +187,8 @@ def fast_sum(a: int, b: int) -> int: ...
     stubs = PyiBridgeProvider().extract_stubs("file:///_native.pyi", stub_src, module="_native")
     assert len(stubs) == 1
     assert stubs[0].python_symbol == "python:_native.fast_sum"
+    # R217: span starts at identifier, not at ``def``.
+    assert stub_src[stubs[0].span.start : stubs[0].span.end] == "fast_sum"
 
     rust = """
 #[pyfunction]

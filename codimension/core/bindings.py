@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - evidence-backed FFI BindingIndex (R206)
+# codimension - evidence-backed FFI BindingIndex (R206 / R217)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,10 +9,14 @@
 # (at your option) any later version.
 #
 
-"""BindingIndex + BindingProvider contracts (R206).
+"""BindingIndex + BindingProvider contracts (R206 / R217).
 
 Edges require **evidence** (attribute / ``m.def`` / ``PyMethodDef`` / stub span).
 Exact edges must never be invented from name equality alone.
+
+R217: ``BindingPrecision.EXACT`` is reserved for a **full registration chain**
+(declaration + module registration evidence). Declaration-only exports use
+``BRIDGE`` (or ``INLINE`` for pybind11 lambdas).
 """
 
 from __future__ import annotations
@@ -34,11 +38,18 @@ class BindingFramework(str, Enum):
 
 
 class BindingPrecision(str, Enum):
-    """How precise the native target is."""
+    """How precise the native target is.
+
+    ``EXACT`` — full registration chain proven (R217).
+    ``BRIDGE`` — declaration present; registration not proven.
+    ``INLINE`` — inline/lambda body at the bind site.
+    ``INFERRED`` — name/signature heuristic only (never preferred over evidence).
+    """
 
     EXACT = "exact"
     INLINE = "inline"
     BRIDGE = "bridge"
+    INFERRED = "inferred"
 
 
 class BindingEvidenceKind(str, Enum):
@@ -53,8 +64,34 @@ class BindingEvidenceKind(str, Enum):
     PYBIND11_INLINE = "pybind11_inline"
     PYMETHODDEF = "pymethoddef"
     PYINIT = "pyinit"
+    PYMODULEDEF = "pymoduledef"
     PYI_DECL = "pyi_decl"
     PYTHON_IMPORT = "python_import"
+
+
+#: Evidence kinds required for EXACT edges per framework (R217).
+_EXACT_REQUIRED_KINDS: dict[BindingFramework, frozenset[BindingEvidenceKind]] = {
+    BindingFramework.PYO3: frozenset(
+        {
+            BindingEvidenceKind.PYFUNCTION_ATTR,
+            BindingEvidenceKind.WRAP_PYFUNCTION,
+            BindingEvidenceKind.PYMODULE_ATTR,
+        }
+    ),
+    BindingFramework.PYBIND11: frozenset(
+        {
+            BindingEvidenceKind.PYBIND11_DEF,
+            BindingEvidenceKind.PYBIND11_MODULE,
+        }
+    ),
+    BindingFramework.CPYTHON: frozenset(
+        {
+            BindingEvidenceKind.PYMETHODDEF,
+            BindingEvidenceKind.PYMODULEDEF,
+            BindingEvidenceKind.PYINIT,
+        }
+    ),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,15 +119,23 @@ class BindingEdge:
     provider_id: str = ""
 
     def __post_init__(self) -> None:
-        """Reject empty symbols or exact edges without evidence."""
+        """Reject empty symbols or exact edges without a registration chain."""
         if not self.python_symbol.strip():
             raise ValueError("python_symbol must be non-empty")
         if not self.native_symbol.strip():
             raise ValueError("native_symbol must be non-empty")
         if not self.evidence:
             raise ValueError("BindingEdge requires at least one evidence item")
-        if self.precision is BindingPrecision.EXACT and not self.evidence:
-            raise ValueError("exact BindingEdge requires evidence")
+        if self.precision is BindingPrecision.EXACT:
+            required = _EXACT_REQUIRED_KINDS.get(self.framework)
+            if required is not None:
+                kinds = {item.kind for item in self.evidence}
+                missing = required - kinds
+                if missing:
+                    raise ValueError(
+                        f"exact {self.framework.value} BindingEdge missing registration "
+                        f"evidence: {sorted(k.value for k in missing)}"
+                    )
 
 
 @dataclass(frozen=True, slots=True)
