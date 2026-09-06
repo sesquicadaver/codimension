@@ -860,6 +860,8 @@ def normalize_plugin_path(path: str) -> str:
 
 def guess_plugin_category_from_source(module_filepath: str) -> str | None:
     """Infer plugin category from source text without importing (R191/R220)."""
+    from typing import cast
+
     from plugins.policy import guess_category_from_text, resolve_plugin_source_path
 
     path = resolve_plugin_source_path(module_filepath)
@@ -870,7 +872,7 @@ def guess_plugin_category_from_source(module_filepath: str) -> str | None:
             text = handle.read()
     except OSError:
         return None
-    return guess_category_from_text(text)
+    return cast(str | None, guess_category_from_text(text))
 
 
 def getBaseClassNames(inst):
