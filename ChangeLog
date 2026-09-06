@@ -1,5 +1,9 @@
 2026 Sep 06
 
+* Queue seed: re-audit ``codi-last.md`` @ 8824ff3c → ROADMAP **R221–R231**
+  (SSH cache identity, updater redirects, MCP walker, LSP DocumentStore,
+  plugin fail-closed, FFI structural EXACT, taint lattice, blank UUID,
+  polyglot capabilities/lifecycle, AI findings)
 * R220: fail-closed plugin policy before import — static ``.cdmp`` /
   AST category+IDE+capability gate in ``plugins.policy``; pre-import
   name/version conflicts; incompatible plugins never execute module code

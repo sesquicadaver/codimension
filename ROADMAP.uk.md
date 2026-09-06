@@ -169,17 +169,35 @@
 | 31 | R219 | Project reload: immutable UUID + diff/rebuild | Єдиний pipeline; UUID immutable | M | DONE ([#172](https://github.com/sesquicadaver/codimension/pull/172)) |
 | 32 | R220 | Plugin policy before import | Fail-closed policy до `import` plugin code | M | DONE ([#174](https://github.com/sesquicadaver/codimension/pull/174)) |
 
+### Хвиля hardening після повторного аудиту 2026-09-06 (`codi-last.md` @ 8824ff3c)
+
+| # | ID | Задача | Acceptance | Size | Статус |
+|---|-----|--------|------------|------|--------|
+| 33 | R221 | SSH binding: cache path == `remote_cache_dir(profile, remote_root)` | Відхилити binding, якщо `local_root` ≠ очікуваний cache для `remote_root` | M | OPEN |
+| 34 | R222 | Updater: validate every redirect hop + final URL | Власний `HTTPRedirectHandler`; `geturl()` знову через trust policy | M | OPEN |
+| 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits під час обходу; chunked reads; stop on exceed | M | OPEN |
+| 36 | R224 | LSP DocumentStore для foreign URI spans | Cross-file definition/refs/rename з реальними ranges (не `SourceSpan(0,0)`) | L | OPEN |
+| 37 | R225 | Plugin manifest policy fail-closed | Third-party: обов’язковий `.cdmp` Codimension block; unknown/invalid → deny | M | OPEN |
+| 38 | R226 | FFI EXACT через structural parse | Tree-sitter/LSP evidence для registration chain; інакше BRIDGE/INFERRED | L | OPEN |
+| 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env на гілку; may-taint join; покрити positional-only | M | OPEN |
+| 40 | R228 | Blank UUID після load | Reject порожній disk UUID або атомарно відновити loaded UUID у `.cdm3` | S | OPEN |
+| 41 | R229 | Polyglot capabilities = providers | Рекламувати лише реалізовані diagnostics/completion/tokens API | M | OPEN |
+| 42 | R230 | Wire LanguageServiceManager в IDE lifecycle | Composition у GlobalData/MainWindow open/close | L | OPEN |
+| 43 | R231 | AI structured findings + global budgets | Finding model + total token/cost budget | L | OPEN |
+
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** хвиля **R209–R220** завершена. Далі — новий рядок ROADMAP або triage TODO/P2.
+**Наступний OPEN:** **R221** — SSH binding: cache path == `remote_cache_dir(profile, remote_root)`.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
-Хвиля **R209–R220** = hardening за аудитом `codi-last.md` (P1-02…P1-related).
+Хвиля **R209–R220** = hardening за аудитом `codi-last.md` @ 340e97dc (DONE).
 
-**Поза цією хвилею:** DAP/native debug; власні Rust/C++ parsers; Yapsy language plugins; копіювання Python CFG pipeline на інші мови; production editor wiring Rust/C++ (після R209–R220).
+Хвиля **R221–R231** = hardening за повторним аудитом `codi-last.md` @ 8824ff3c (таблиця пріоритетів §1–11).
+
+**Поза цією хвилею:** DAP/native debug; власні Rust/C++ parsers; Yapsy language plugins; копіювання Python CFG pipeline на інші мови; HMAC-підпис binding (stretch після R221).
 
 Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
 
@@ -200,5 +218,5 @@ Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
 MCP / agent: **R182** + **R214** (`mcp_backend`, stdio + token + workspace policy)
-Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220
+Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220 DONE; R221–R231 re-audit wave
 ```

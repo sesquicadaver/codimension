@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: хвиля **R209–R220** завершена ([ROADMAP.uk.md](../../ROADMAP.uk.md)).
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R221** (SSH binding cache/`remote_root` identity); хвиля R221–R231 (`codi-last.md` @ 8824ff3c).
 
 ### Матриця меж модулів (R103 / R195)
 

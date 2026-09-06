@@ -7,9 +7,9 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-11 → R209–R216 ✅; P1-05 → **R217** ✅; P1-13 → **R218** ✅; P1-15 → **R219** ✅; P1-16 → **R220** ✅; wave R209–R220 complete.
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R220 ✅. Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c): next OPEN — **R221**.
 
-### Audit 2026-09-05 (`codi-last.md`) — P1 queue
+### Audit 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 queue (closed)
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
@@ -25,7 +25,21 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Audit 2026-09-0
 | P1-13 | AI docstring apply: wrong symbol / corrupt code | P1 | ✅ R218 |
 | P1-15 | External `.cdm3` reload split-brain / UUID | P1 | ✅ R219 |
 | P1-16 | Plugin capability policy after import | P1 | ✅ R220 |
-| P1-04+ | AI / reload / plugins | P1 | ✅ R218–R220 |
+
+### Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c) — P1 queue
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P1-01 | SSH binding: `local_root` ≠ `remote_cache_dir(profile, remote_root)` | P1 | 🔓 R221 |
+| P1-02 | Updater: redirect chain without re-validate trust | P1 | 🔓 R222 |
+| P1-03 | MCP budgets after unbounded traversal | P1 | 🔓 R223 |
+| P1-04 | Cross-file LSP locations → `SourceSpan(0,0)` | P1 | 🔓 R224 |
+| P1-07 | Plugin pre-import policy still fail-open (legacy fallback) | P1 | 🔓 R225 |
+| P1-06 | FFI `EXACT` without structural registration proof | P1 | 🔓 R226 |
+| P1-08 | Taint: missing `posonlyargs`; branch env overwrite | P1 | 🔓 R227 |
+| P1-09 | Blank UUID after load → identity drift | P1 | 🔓 R228 |
+| P1-05 | Polyglot capabilities ≠ provider API | P1 | 🔓 R229–R230 |
+| P1-AI | AI prose synthesis without Finding/budgets | P1 | 🔓 R231 |
 
 ### UX hardening (outside ROADMAP queue)
 
