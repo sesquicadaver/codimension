@@ -7,9 +7,9 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Аудит 2026-09-05 (`codi-last.md` @ 340e97dc): P1-02…P1-11 → R209–R216 ✅; P1-05 → **R217** ✅; P1-13 → **R218** ✅; P1-15 → **R219** ✅; P1-16 → **R220** ✅; черга R209–R220 закрита.
+Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Хвиля R209–R220 ✅. Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c): наступний OPEN — **R221**.
 
-### Аудит 2026-09-05 (`codi-last.md`) — P1 черга
+### Аудит 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 черга (закрита)
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
@@ -25,7 +25,21 @@
 | P1-13 | AI docstring apply: wrong symbol / corrupt code | P1 | ✅ R218 |
 | P1-15 | External `.cdm3` reload split-brain / UUID | P1 | ✅ R219 |
 | P1-16 | Plugin capability policy після import | P1 | ✅ R220 |
-| P1-04+ | AI / reload / plugins | P1 | ✅ R218–R220 |
+
+### Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c) — P1 черга
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P1-01 | SSH binding: `local_root` ≠ `remote_cache_dir(profile, remote_root)` | P1 | 🔓 R221 |
+| P1-02 | Updater: redirect chain без re-validate trust | P1 | 🔓 R222 |
+| P1-03 | MCP budgets після необмеженого traversal | P1 | 🔓 R223 |
+| P1-04 | Cross-file LSP locations → `SourceSpan(0,0)` | P1 | 🔓 R224 |
+| P1-07 | Plugin pre-import policy ще fail-open (legacy fallback) | P1 | 🔓 R225 |
+| P1-06 | FFI `EXACT` без structural registration proof | P1 | 🔓 R226 |
+| P1-08 | Taint: немає `posonlyargs`; branch env overwrite | P1 | 🔓 R227 |
+| P1-09 | Blank UUID після load → identity drift | P1 | 🔓 R228 |
+| P1-05 | Polyglot capabilities ≠ provider API | P1 | 🔓 R229–R230 |
+| P1-AI | AI prose synthesis без Finding/budgets | P1 | 🔓 R231 |
 
 ### UX hardening (поза ROADMAP-чергою)
 

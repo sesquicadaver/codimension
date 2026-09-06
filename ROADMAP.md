@@ -169,17 +169,35 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 31 | R219 | Project reload: immutable UUID + diff/rebuild | Single pipeline; UUID immutable | M | DONE ([#172](https://github.com/sesquicadaver/codimension/pull/172)) |
 | 32 | R220 | Plugin policy before import | Fail-closed policy before importing plugin code | M | DONE ([#174](https://github.com/sesquicadaver/codimension/pull/174)) |
 
+### Hardening wave after 2026-09-06 re-audit (`codi-last.md` @ 8824ff3c)
+
+| # | ID | Task | Acceptance | Size | Status |
+|---|-----|------|------------|------|--------|
+| 33 | R221 | SSH binding: cache path == `remote_cache_dir(profile, remote_root)` | Reject binding when `local_root` ≠ expected cache for `remote_root` | M | OPEN |
+| 34 | R222 | Updater: validate every redirect hop + final URL | Custom `HTTPRedirectHandler`; `geturl()` re-checked via trust policy | M | OPEN |
+| 35 | R223 | MCP: budget-aware workspace walker | Depth/file/byte limits during traversal; chunked reads; stop on exceed | M | OPEN |
+| 36 | R224 | LSP DocumentStore for foreign URI spans | Cross-file definition/refs/rename use real ranges (no `SourceSpan(0,0)`) | L | OPEN |
+| 37 | R225 | Plugin manifest policy fail-closed | Third-party: required `.cdmp` Codimension block; unknown/invalid → deny (no legacy import) | M | OPEN |
+| 38 | R226 | FFI EXACT via structural parse | Tree-sitter/LSP evidence for registration chain; else BRIDGE/INFERRED | L | OPEN |
+| 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env per branch; may-taint join; cover positional-only params | M | OPEN |
+| 40 | R228 | Blank UUID after load | Reject empty disk UUID or atomically restore loaded UUID to `.cdm3` | S | OPEN |
+| 41 | R229 | Polyglot capabilities match providers | Advertise only implemented diagnostics/completion/tokens APIs | M | OPEN |
+| 42 | R230 | Wire LanguageServiceManager into IDE lifecycle | Compose into GlobalData/MainWindow workspace open/close | L | OPEN |
+| 43 | R231 | AI structured findings + global budgets | Finding model + total token/cost budget (beyond per-file truncate) | L | OPEN |
+
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** wave **R209–R220** complete. Pick the next ROADMAP item when added; else triage TODO/P2.
+**Next OPEN:** **R221** — SSH binding: cache path == `remote_cache_dir(profile, remote_root)`.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
-Wave **R209–R220** = hardening from audit `codi-last.md`.
+Wave **R209–R220** = hardening from audit `codi-last.md` @ 340e97dc (DONE).
 
-**Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages; production editor wiring for Rust/C++ (after R209–R220).
+Wave **R221–R231** = hardening from re-audit `codi-last.md` @ 8824ff3c (priority table §1–11).
+
+**Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages; HMAC-signed bindings (optional stretch after R221).
 
 Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
 
@@ -200,5 +218,5 @@ Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
 MCP / agent: **R182** + **R214** (`mcp_backend`, stdio + token + workspace policy)
-Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220
+Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220 DONE; R221–R231 re-audit wave
 ```
