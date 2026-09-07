@@ -7,8 +7,9 @@ import sys
 import textwrap
 from pathlib import Path
 
-from core.document_snapshot import DocumentSnapshot
-from core.document_store import DocumentStore
+from core.document_snapshot import DocumentSnapshot, TextEdit
+from core.document_store import DocumentStore, ResolutionStatus
+from core.semantic import WorkspaceTextEdit
 from core.symbol_index import SourceSpan
 from infrastructure.file_uri import load_document_from_uri, path_to_file_uri
 from infrastructure.lsp_position_codec import LspPositionCodec
@@ -80,7 +81,7 @@ def test_parse_locations_foreign_uri_uses_store() -> None:
     assert locs[0].span != SourceSpan(0, 0)
 
 
-def test_parse_locations_foreign_without_store_stays_zero() -> None:
+def test_parse_locations_foreign_without_store_is_unresolved() -> None:
     from types import SimpleNamespace
 
     codec = LspPositionCodec()
@@ -99,7 +100,14 @@ def test_parse_locations_foreign_without_store_stays_zero() -> None:
         },
         store=DocumentStore(),
     )
+    assert locs[0].resolution_status is ResolutionStatus.UNRESOLVED
     assert locs[0].span == SourceSpan(0, 0)
+    edit = WorkspaceTextEdit(
+        uri=locs[0].uri,
+        edit=TextEdit(span=locs[0].span, new_text="x"),
+        resolution_status=locs[0].resolution_status,
+    )
+    assert edit.is_applicable() is False
 
 
 def test_parse_text_edits_foreign_uri(tmp_path: Path) -> None:

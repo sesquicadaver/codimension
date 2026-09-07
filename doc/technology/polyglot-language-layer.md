@@ -58,17 +58,21 @@ message size; bounded backoff restart; `initialize` → `shutdown` → `exit` on
 unload. Spawn gated by `core/language_policy.py`
 (`LANGUAGE_SERVER_SPAWN`: absolute binary on allowlist only).
 
-## SemanticProvider (R203 / R224)
+## SemanticProvider (R203 / R224 / R235)
 
 Rust (`rust-analyzer`) and C++ (`clangd`) register via
 `LanguageServiceManager.register_rust_lsp` / `register_cpp_lsp`.
 C++ without `compile_commands.json` is **DEGRADED** — UI must not claim
 full diagnostics (`claims_full_diagnostics()` is False).
 
-Cross-file definition / references / rename decode LSP ranges via
-`core.document_store.DocumentStore` (open buffers + `file://` load). Foreign
-URI targets no longer collapse to `SourceSpan(0, 0)` when the target text is
-available.
+Cross-file definition / references / rename decode LSP ranges via a
+workspace-shared `core.document_store.DocumentStore` (open buffers beat
+disk; disk entries revalidate mtime/size/inode). Empty stores stay truthy
+so they are never replaced via `or`. Foreign URI targets no longer collapse
+to trusted `SourceSpan(0, 0)` when unresolved; `WorkspaceTextEdit` carries
+`expected_version` / `resolution_status` and `is_applicable()` denies
+unresolved apply. Workspace `file://` loads are authority-, containment-,
+and size-bounded.
 
 ## Security policy (deny-by-default effects)
 

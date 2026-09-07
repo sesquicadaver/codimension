@@ -23,6 +23,7 @@ from enum import Enum
 from typing import Protocol, runtime_checkable
 
 from .document_snapshot import DocumentSnapshot, TextEdit
+from .document_store import ResolutionStatus
 from .symbol_index import SourceSpan
 
 
@@ -48,6 +49,7 @@ class SymbolLocation:
 
     uri: str
     span: SourceSpan
+    resolution_status: ResolutionStatus = ResolutionStatus.RESOLVED
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,10 +65,20 @@ class OutlineSymbol:
 
 @dataclass(frozen=True, slots=True)
 class WorkspaceTextEdit:
-    """One text edit bound to a document URI (rename / format preview)."""
+    """One text edit bound to a document URI (rename / format preview).
+
+    R235: ``expected_version`` and ``resolution_status`` gate apply; unresolved
+    or stale edits must not be applied as if they were trusted ``(0, 0)`` spans.
+    """
 
     uri: str
     edit: TextEdit
+    expected_version: int | None = None
+    resolution_status: ResolutionStatus = ResolutionStatus.RESOLVED
+
+    def is_applicable(self) -> bool:
+        """True when this edit is resolved and safe to consider for apply (R235)."""
+        return self.resolution_status is ResolutionStatus.RESOLVED
 
 
 @runtime_checkable

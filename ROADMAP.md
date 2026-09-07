@@ -192,7 +192,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 44 | R232 | Plugin re-enable pre-import gate | Every `loadPlugins()` (incl. `materializePlugin`) re-checks manifest + file identity | M | DONE ([#196](https://github.com/sesquicadaver/codimension/pull/196)) |
 | 45 | R233 | LSP generation-safe lifecycle | Atomic restart+initialize; no requests before handshake; clear `_opened` on generation bump | M | DONE ([#197](https://github.com/sesquicadaver/codimension/pull/197)) |
 | 46 | R234 | LSP pending synchronization | `_pending_lock`; `(generation, id)` keys; timeout/shutdown/old-reader race tests | L | DONE ([#198](https://github.com/sesquicadaver/codimension/pull/198)) |
-| 47 | R235 | Workspace DocumentStore | Single editor-backed store; versioned edits; deny unresolved/`(0,0)` apply; bounded loader | L | OPEN |
+| 47 | R235 | Workspace DocumentStore | Single editor-backed store; versioned edits; deny unresolved/`(0,0)` apply; bounded loader | L | DONE (PR pending) |
 | 48 | R236 | Project lifecycle façade | create/load/switch/unload only via `ApplicationServices` (fix `createNew` bypass) | M | OPEN |
 | 49 | R237 | AI redirect trust | Every redirect hop + final URL pass provider scheme/host policy | M | OPEN |
 | 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | OPEN |
@@ -206,7 +206,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R235** — Workspace DocumentStore.
+**Next OPEN:** **R236** — Project lifecycle façade.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

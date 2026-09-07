@@ -1,5 +1,11 @@
 2026 Sep 07
 
+* R235: workspace ``DocumentStore`` stays truthy when empty; open-buffer vs
+  disk provenance with mtime/size/inode invalidation; shared store on
+  ``LanguageServiceManager.attach_workspace``; ``WorkspaceTextEdit`` carries
+  ``expected_version`` / ``resolution_status`` (deny unresolved apply);
+  bounded ``file://`` loader (authority, realpath containment, size cap)
+  (re-audit P1-04 @ 45e33f6)
 * R234: ``LspProcess`` pending map uses ``_pending_lock`` and
   ``(transport_generation, request_id)`` keys; atomic ``pop`` transfers
   Future ownership; old readers only fail their generation; race tests
