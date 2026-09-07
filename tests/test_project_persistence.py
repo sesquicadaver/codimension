@@ -225,6 +225,53 @@ def test_r190_external_uuid_change_rejected(project_mod, tmp_path):
     assert proj.userProjectDir == str(settings_dir / uid) + os.sep
 
 
+def test_r228_blank_uuid_on_disk_restored_atomically(project_mod, tmp_path):
+    """R228/P1-09: blank disk UUID after load is restored; other props still apply."""
+    project, settings_dir = project_mod
+    proj = project.CodimensionProject()
+    cdm = tmp_path / "demo.cdm3"
+    uid = str(uuid.uuid4())
+    props = _minimal_props(uuid=uid, version="1.0", importdirs=[])
+    cdm.write_text(json.dumps(props), encoding="utf-8")
+    proj.fileName = str(cdm)
+    proj.props = dict(props)
+    proj.userProjectDir = str(settings_dir / uid) + os.sep
+    os.makedirs(proj.userProjectDir, exist_ok=True)
+
+    wiped = _minimal_props(uuid="", version="ext", importdirs=["lib"])
+    cdm.write_text(json.dumps(wiped), encoding="utf-8")
+    proj.onProjectFileUpdated()
+
+    assert proj.props["uuid"] == uid
+    assert proj.props["version"] == "ext"
+    assert proj.props["importdirs"] == ["lib"]
+    assert proj.userProjectDir == str(settings_dir / uid) + os.sep
+    disk = json.loads(cdm.read_text(encoding="utf-8"))
+    assert disk["uuid"] == uid
+    assert disk["version"] == "ext"
+    assert disk["importdirs"] == ["lib"]
+
+
+def test_r228_blank_uuid_only_still_rewrites_disk(project_mod, tmp_path):
+    """R228: blank UUID alone must rewrite `.cdm3` even if other props match."""
+    project, settings_dir = project_mod
+    proj = project.CodimensionProject()
+    cdm = tmp_path / "demo.cdm3"
+    uid = str(uuid.uuid4())
+    props = _minimal_props(uuid=uid, version="1.0")
+    cdm.write_text(json.dumps(props), encoding="utf-8")
+    proj.fileName = str(cdm)
+    proj.props = dict(props)
+    proj.userProjectDir = str(settings_dir / uid) + os.sep
+    os.makedirs(proj.userProjectDir, exist_ok=True)
+
+    cdm.write_text(json.dumps(_minimal_props(uuid="", version="1.0")), encoding="utf-8")
+    proj.onProjectFileUpdated()
+    disk = json.loads(cdm.read_text(encoding="utf-8"))
+    assert disk["uuid"] == uid
+    assert proj.props["uuid"] == uid
+
+
 def test_uuid_migration_persists_immediately(project_mod, tmp_path, monkeypatch):
     project, _ = project_mod
     cdm = tmp_path / "legacy.cdm3"

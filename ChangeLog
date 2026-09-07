@@ -1,5 +1,6 @@
 2026 Sep 06
 
+* R228: blank UUID in an external `.cdm3` edit after load is atomically restored to the loaded UUID (re-audit P1-09 @ 8824ff3c)
 * R227: taint covers ``posonlyargs`` and may-taint-joins branch envs (``if``/``try``/``match``) so a clean arm cannot erase taint from another (re-audit P1-08 @ 8824ff3c)
 * R226: FFI ``EXACT`` requires Tree-sitter CST registration proof (``STRUCTURAL_REGISTRATION``); regex co-location alone → ``BRIDGE`` (re-audit P1-06 @ 8824ff3c)
 * R225: third-party plugins require a complete ``[Codimension]`` block in
