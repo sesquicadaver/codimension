@@ -9,18 +9,18 @@
 # (at your option) any later version.
 #
 
-"""ApplicationServices — project load/unload façade without Qt widgets."""
+"""ApplicationServices — project create/load/switch/unload façade (R101 / R236)."""
 
 from __future__ import annotations
 
-from typing import Callable, Optional, Protocol
+from typing import Any, Callable, Mapping, Optional, Protocol
 
 
 class ProjectPort(Protocol):
     """Minimal project surface used by the application façade.
 
     Matches ``CodimensionProject`` method names so the real project object can
-    be injected later (R102) without adapters.
+    be injected without adapters (R102 / R236).
     """
 
     def loadProject(self, projectFile: str) -> None:
@@ -28,6 +28,9 @@ class ProjectPort(Protocol):
 
     def unloadProject(self, emitSignal: bool = True) -> None:
         """Unload the current project; optionally emit change notifications."""
+
+    def createNew(self, fileName: str, props: Mapping[str, Any]) -> None:
+        """Create a new project at ``fileName`` with ``props``."""
 
     def isLoaded(self) -> bool:
         """True when a project is currently loaded."""
@@ -45,6 +48,10 @@ class ApplicationServices:
     Owns no widgets. Callers that need Qt (cursor, tab close confirmation)
     inject behaviour via the optional hooks; the façade only sequences
     hooks around the project port.
+
+    R236: create / load / switch / unload all go through this façade so
+    ``before_unload`` / ``after_load`` (e.g. LanguageServiceManager detach /
+    attach) always run when replacing a project.
     """
 
     def __init__(
@@ -80,15 +87,45 @@ class ApplicationServices:
     def load_project(self, project_file: str) -> bool:
         """Load ``project_file`` via the project port.
 
+        If a project is already loaded, it is unloaded first (R236) so
+        ``before_unload`` / language detach run before the new attach.
+
         Returns:
             ``False`` if ``before_load`` aborted; ``True`` after a successful
             ``loadProject`` call (and ``after_load`` when set).
         """
+        if self._project.isLoaded():
+            self.unload_project()
         if self._before_load is not None:
             decision = self._before_load(project_file)
             if decision is False:
                 return False
         self._project.loadProject(project_file)
+        if self._after_load is not None:
+            self._after_load(project_file)
+        return True
+
+    def switch_project(self, project_file: str) -> bool:
+        """Replace the current project with ``project_file`` (R236).
+
+        Equivalent to :meth:`load_project` after the unload-first sequencing;
+        kept as an explicit API for UI / callers that mean “switch”.
+        """
+        return self.load_project(project_file)
+
+    def create_project(self, project_file: str, props: Mapping[str, Any]) -> bool:
+        """Create a new project and run the same load lifecycle hooks (R236).
+
+        Unloads any current project first so language workspace detach runs,
+        then calls ``createNew`` and ``after_load`` for the new workspace.
+        """
+        if self._project.isLoaded():
+            self.unload_project()
+        if self._before_load is not None:
+            decision = self._before_load(project_file)
+            if decision is False:
+                return False
+        self._project.createNew(project_file, props)
         if self._after_load is not None:
             self._after_load(project_file)
         return True

@@ -35,8 +35,8 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | Packaging / CI T060–T067 | pyproject / CI | pyproject.toml, requirements.txt, requirements-runtime.txt, constraints.txt, ci.yml, release.yml, scripts/offscreen_gui_smoke.py | deps groups; matrix 3.10–3.13; constraints gate; wheel; offscreen smoke; release verify |
 | **Shim identity T071–T073** | parsers / bootstrap | parsers/__init__.py, check_package_relative_imports.py | unified cdmpyparser/cdmcfparser aliases; T072 CI gate |
 | **Headless core T080–T082** | core / infrastructure | core/syntax.py, core/flow.py, infrastructure/* | tests/test_core_headless.py |
-| **ApplicationServices R101** | app | app/__init__.py, app/services.py | headless façade + fakes; tests/test_app_services.py; T085 covers `codimension/app` |
-| **App routing R102** | ui + globals + startup | globals.py `appServices`; mainwindow / projectviewer / recentprojectsviewer / codimension.py | UI→app→project; tests/test_r102_app_routing.py |
+| **ApplicationServices R101 / R236** | app | app/__init__.py, app/services.py | headless façade + fakes; create/load/switch/unload; tests/test_app_services.py; test_app_services_r236.py; T085 covers `codimension/app` |
+| **App routing R102 / R236** | ui + globals + startup | globals.py `appServices`; mainwindow / mainmenu / projectviewer / recentprojectsviewer / codimension.py | UI→app→project (no direct createNew/load/unload); tests/test_r102_app_routing.py |
 | **Smoke + wrapt R197** | scripts/offscreen_gui_smoke + inspect_compat | graceful Qt teardown; formatargspec for wrapt 1.12 | tests/test_r197_smoke_wrapt.py |
 | **Core import graph T085 / R100** | CI + utils | scripts/check_core_import_graph.py; utils/importutils.py | no Qt/UI in core/infrastructure/app; `importutils` Qt-free + progress callback; tests/test_importutils.py, test_t085_core_import_graph.py |
 | **MainWindow routing T083** | ui.mainwindow / mainwindow_debug | mainwindow.py, mainwindow_debug.py | MRO mixins; no extendInstance; DebuggerMixin |
@@ -161,7 +161,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — wave R221–R231 ✅; active **R232–R243** (`codi-last.md` @ 45e33f6); Next = **R236** (R232–R235 ✅).
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — wave R221–R231 ✅; active **R232–R243** (`codi-last.md` @ 45e33f6); Next = **R237** (R232–R236 ✅).
 
 ### Module boundary matrix (R103 / R195)
 
