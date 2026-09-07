@@ -196,7 +196,7 @@
 | 48 | R236 | Project lifecycle façade | create/load/switch/unload лише через `ApplicationServices` (fix bypass `createNew`) | M | DONE ([#201](https://github.com/sesquicadaver/codimension/pull/201)) |
 | 49 | R237 | AI redirect trust | Кожен redirect hop + final URL проходять provider scheme/host policy | M | DONE ([#203](https://github.com/sesquicadaver/codimension/pull/203)) |
 | 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | DONE ([#205](https://github.com/sesquicadaver/codimension/pull/205)) |
-| 51 | R239 | Taint CFG worklist | Forward per-node lattice; без whole-list re-exec; exception/no-match/loop-else | L | DONE |
+| 51 | R239 | Taint CFG worklist | Forward per-node lattice; без whole-list re-exec; exception/no-match/loop-else | L | DONE (PR pending) |
 | 52 | R240 | FFI edge-specific structural proof | `EXACT` лише з повною identity registration chain | L | OPEN |
 | 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | OPEN |
 | 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | OPEN |
