@@ -1,5 +1,9 @@
 2026 Sep 07
 
+* R237: AI HTTP transport re-validates every redirect hop and final
+  ``geturl()`` against the provider scheme/host allowlist (same model as
+  updater R222); host change / HTTPS downgrade deny-by-default
+  (re-audit P1-09 @ 45e33f6)
 * R236: ``ApplicationServices`` owns create/load/switch/unload; UI no longer
   calls ``project.createNew`` directly; loading over an open project unloads
   first so R230 language detach/attach always runs (re-audit P1-05 @ 45e33f6)

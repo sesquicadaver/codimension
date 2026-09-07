@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-07 audit)
 
-No confirmed **P0**. **P1: 5** open (🔓 → R237–R241; P1-01…P1-05 ✅). **P2 groups: 7** (R242–R243 + backlog). Wave R221–R231 ✅ as happy-path; re-audit finds remaining lifecycle/concurrency/stale-state/fail-closed gaps.
+No confirmed **P0**. **P1: 4** open (🔓 → R238–R241; P1-01…P1-05 + P1-09 ✅). **P2 groups: 7** (R242–R243 + backlog). Wave R221–R231 ✅ as happy-path; re-audit finds remaining lifecycle/concurrency/stale-state/fail-closed gaps.
 
 ### Re-audit 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 queue
 
@@ -18,7 +18,7 @@ No confirmed **P0**. **P1: 5** open (🔓 → R237–R241; P1-01…P1-05 ✅). *
 | P1-03 | LSP: race/`InvalidStateError` in `_pending` without lock + generation | P1 | ✅ R234 |
 | P1-04 | DocumentStore: falsy empty store, stale disk, `(0,0)`, unversioned edits, unbounded loader | P1 | ✅ R235 |
 | P1-05 | Create Project bypasses R230 lifecycle (`createNew` without ApplicationServices) | P1 | ✅ R236 |
-| P1-09 | AI HTTP: redirects without re-validate trust (mirror Updater R222) | P1 | 🔓 OPEN → **R237** |
+| P1-09 | AI HTTP: redirects without re-validate trust (mirror Updater R222) | P1 | ✅ R237 |
 | P1-08 | MCP walker: unbounded `listdir` + TOCTOU path escape | P1 | 🔓 OPEN → **R238** |
 | P1-07 | Taint: whole-list re-exec → sink-before-source; exception/match/loop-else gaps | P1 | 🔓 OPEN → **R239** |
 | P1-06 | FFI `EXACT`: structural proof not always edge-specific identity | P1 | 🔓 OPEN → **R240** |

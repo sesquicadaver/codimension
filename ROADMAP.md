@@ -194,7 +194,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 46 | R234 | LSP pending synchronization | `_pending_lock`; `(generation, id)` keys; timeout/shutdown/old-reader race tests | L | DONE ([#198](https://github.com/sesquicadaver/codimension/pull/198)) |
 | 47 | R235 | Workspace DocumentStore | Single editor-backed store; versioned edits; deny unresolved/`(0,0)` apply; bounded loader | L | DONE ([#199](https://github.com/sesquicadaver/codimension/pull/199)) |
 | 48 | R236 | Project lifecycle façade | create/load/switch/unload only via `ApplicationServices` (fix `createNew` bypass) | M | DONE ([#201](https://github.com/sesquicadaver/codimension/pull/201)) |
-| 49 | R237 | AI redirect trust | Every redirect hop + final URL pass provider scheme/host policy | M | OPEN |
+| 49 | R237 | AI redirect trust | Every redirect hop + final URL pass provider scheme/host policy | M | DONE (PR pending) |
 | 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | OPEN |
 | 51 | R239 | Taint CFG worklist | Forward per-node lattice; no whole-list re-exec; exception/no-match/loop-else | L | OPEN |
 | 52 | R240 | FFI edge-specific structural proof | `EXACT` only with full registration-chain identity (module/binder/export/native) | L | OPEN |
@@ -206,7 +206,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R237** — AI redirect trust.
+**Next OPEN:** **R238** — MCP fd-safe bounded traversal.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
