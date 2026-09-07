@@ -87,7 +87,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **CFG frame map R141** | core.cfg_frames + debugger.stackviewer | `map_frame_to_cfg_node` / stack; tooltip CFG id; manual: stop in debugger → stack tip shows node | tests/test_cfg_frames.py |
 | **CFG graph diff R142** | core.cfg_diff | `diff_cfg_graphs` / `diff_cfg_sources`; stable content keys; add/remove/change | tests/test_cfg_diff.py |
 | **Taint MVP R143** | core.taint | Function-local sources→sinks; R194 `heuristic`+`confidence` | tests/test_taint.py; [taint-mvp.md](../../technology/taint-mvp.md) |
-| **Plugin capabilities R150** | plugins.capabilities + plugins.policy + pluginmanager | `PluginCapabilitySpec` / negotiate; **R220** fail-closed static policy before import; **R225** third-party requires complete ``[Codimension]`` (no legacy fallback); R191 user-disabled before import | tests/test_plugin_capabilities.py, test_plugin_policy.py, test_plugin_policy_r220.py, test_plugin_policy_r225.py |
+| **Plugin capabilities R150** | plugins.capabilities + plugins.policy + pluginmanager | `PluginCapabilitySpec` / negotiate; **R220** fail-closed static policy before import; **R225** third-party requires complete ``[Codimension]`` (no legacy fallback); **R232** re-check manifest + file identity before every import / re-enable; R191 user-disabled before import | tests/test_plugin_capabilities.py, test_plugin_policy.py, test_plugin_policy_r220.py, test_plugin_policy_r225.py, test_plugin_policy_r232.py |
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice for a symbol; JSON-friendly; no network | tests/test_ai_context.py |
 | **AI UI R152** | core.ai_ui + core.ai_tasks + core.ai_http + core.ai_project_context + core.ai_docstring + core.ai_findings + core.ai_budget + ui.ai* + editor/Options | Analyze; Google docstring; Chat; R192 budgeted HTTP + cancel + base_url trust; **R218** versioned `DocstringTarget`; **R231** structured `AiFinding` + global token/cost budget on `ANALYZE_PROJECT` + SARIF-like export | tests/test_ai_ui.py, test_ai_tasks.py, test_ai_config.py, test_ai_http.py, test_ai_docstring_r218.py, test_ai_findings_r231.py |
 | **Feature flags R174** | core.feature_flags | Persistent JSON flags; env overrides; gates AI UI | tests/test_feature_flags.py |
@@ -161,7 +161,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — wave R221–R231 ✅ (`codi-last.md` @ 8824ff3c); see ROADMAP Next.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — wave R221–R231 ✅; active **R232–R243** (`codi-last.md` @ 45e33f6); Next = **R233** (R232 ✅).
 
 ### Module boundary matrix (R103 / R195)
 

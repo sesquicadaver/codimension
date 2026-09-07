@@ -26,10 +26,13 @@ import sys
 from packaging.version import Version
 from plugins.capabilities import negotiate_plugin_capabilities
 from plugins.policy import (
+    PluginFileIdentity,
     build_static_plugin_policy,
+    capture_plugin_file_identity,
     cdmplugins_package_roots,
     evaluate_static_plugin_policy,
     is_trusted_bundled_plugin_path,
+    validate_candidate_before_import,
 )
 from ui.qt import QObject, pyqtSignal
 from utils.settings import SETTINGS_DIR, Settings
@@ -107,6 +110,8 @@ class CDMPluginManager(PluginManager, QObject):
         self.unknownPlugins = []  # Unknown plugins
         # R191/A210: candidates skipped before import (path → yapsy candidate tuple)
         self._pendingImportByPath: dict[str, tuple] = {}
+        # R232: file identity captured when deferring / accepting candidates
+        self._pendingIdentityByPath: dict[str, PluginFileIdentity] = {}
         self._policySkippedCandidates: list[tuple] = []
         # R220: path → (conflictType, message) for fail-closed pre-import rejects
         self._preImportRejects: dict[str, tuple[int, str]] = {}
@@ -156,14 +161,20 @@ class CDMPluginManager(PluginManager, QObject):
         self.locatePlugins()
         self._policySkippedCandidates = []
         self._pendingImportByPath = {}
+        self._pendingIdentityByPath = {}
         self._preImportRejects = {}
         disabled_paths = self.__disabledPluginPathSet()
         ide_version = self.__hostIdeVersion()
 
         kept: list[tuple] = []
+        kept_identities: dict[str, PluginFileIdentity] = {}
         for candidate in list(getattr(self, "_candidates", []) or []):
             info_file, filepath, plugin_info = candidate
             norm = normalize_plugin_path(plugin_info.path)
+            identity = capture_plugin_file_identity(
+                info_path=str(info_file or ""),
+                module_filepath=str(filepath or ""),
+            )
             if norm in disabled_paths:
                 logging.info(
                     "Skipping import of disabled plugin at %s (manifest-only; R191/A210)",
@@ -171,6 +182,7 @@ class CDMPluginManager(PluginManager, QObject):
                 )
                 self._policySkippedCandidates.append(candidate)
                 self._pendingImportByPath[norm] = candidate
+                self._pendingIdentityByPath[norm] = identity
                 continue
 
             try:
@@ -202,8 +214,14 @@ class CDMPluginManager(PluginManager, QObject):
                 self._preImportRejects[norm] = (decision.conflict_code, decision.reason)
                 continue
             kept.append(candidate)
+            kept_identities[norm] = identity
 
         self._candidates = self.__filterPreImportConflicts(kept)
+        self._candidates = self.__validateCandidatesBeforeImport(
+            self._candidates,
+            kept_identities,
+            ide_version=ide_version,
+        )
         self.loadPlugins()
 
     @staticmethod
@@ -269,14 +287,82 @@ class CDMPluginManager(PluginManager, QObject):
                 self._preImportRejects[norm] = (conflict, message)
         return kept
 
+    def __validateCandidatesBeforeImport(
+        self,
+        candidates: list[tuple],
+        identities: dict[str, PluginFileIdentity],
+        *,
+        ide_version: str,
+    ) -> list[tuple]:
+        """Re-check file identity + static policy immediately before import (R232)."""
+        accepted: list[tuple] = []
+        for candidate in candidates:
+            info_file, filepath, plugin_info = candidate
+            norm = normalize_plugin_path(plugin_info.path)
+            try:
+                version = str(plugin_info.details.get("Documentation", "Version") or "0")
+            except Exception:
+                version = "0"
+            decision = validate_candidate_before_import(
+                info_path=str(info_file or ""),
+                module_filepath=str(filepath or ""),
+                name=str(getattr(plugin_info, "name", "") or ""),
+                version=version,
+                plugin_path=norm,
+                expected_identity=identities.get(norm),
+                ide_version=ide_version,
+                require_manifest=not is_trusted_bundled_plugin_path(norm),
+                bad_base_class=CDMPluginManager.BAD_BASE_CLASS,
+                incompatible_ide=CDMPluginManager.INCOMPATIBLE_IDE_VERSION_CONFLICT,
+                incompatible_capabilities=CDMPluginManager.INCOMPATIBLE_CAPABILITIES,
+            )
+            if not decision.ok:
+                logging.info(
+                    "Skipping import of plugin at %s: %s (pre-import gate; R232)",
+                    norm,
+                    decision.reason,
+                )
+                self._policySkippedCandidates.append(candidate)
+                self._preImportRejects[norm] = (decision.conflict_code, decision.reason)
+                continue
+            accepted.append(candidate)
+        return accepted
+
     def materializePlugin(self, cdm_plugin: "CDMPluginInfo") -> None:
-        """Import a previously policy-skipped plugin module (enable path)."""
+        """Import a previously policy-skipped plugin module (enable path).
+
+        R232: re-validate manifest and on-disk identity before ``loadPlugins()``.
+        """
         if cdm_plugin.getObject() is not None:
             return
         norm = normalize_plugin_path(cdm_plugin.getPath())
         candidate = self._pendingImportByPath.pop(norm, None)
+        expected = self._pendingIdentityByPath.pop(norm, None)
         if candidate is None:
             raise RuntimeError(f"No deferred import available for plugin at {norm}")
+        info_file, filepath, plugin_info = candidate
+        try:
+            version = str(plugin_info.details.get("Documentation", "Version") or "0")
+        except Exception:
+            version = "0"
+        decision = validate_candidate_before_import(
+            info_path=str(info_file or ""),
+            module_filepath=str(filepath or ""),
+            name=str(getattr(plugin_info, "name", "") or ""),
+            version=version,
+            plugin_path=norm,
+            expected_identity=expected,
+            ide_version=self.__hostIdeVersion(),
+            require_manifest=not is_trusted_bundled_plugin_path(norm),
+            bad_base_class=CDMPluginManager.BAD_BASE_CLASS,
+            incompatible_ide=CDMPluginManager.INCOMPATIBLE_IDE_VERSION_CONFLICT,
+            incompatible_capabilities=CDMPluginManager.INCOMPATIBLE_CAPABILITIES,
+        )
+        if not decision.ok:
+            self._preImportRejects[norm] = (decision.conflict_code, decision.reason)
+            cdm_plugin.conflictType = decision.conflict_code
+            cdm_plugin.conflictMessage = decision.reason
+            raise RuntimeError(f"Deferred plugin at {norm} failed pre-import gate: {decision.reason}")
         self._candidates = [candidate]
         self.loadPlugins()
         if cdm_plugin.getObject() is None:

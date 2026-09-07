@@ -124,6 +124,7 @@ def _make_manager(pm, plugins_root: Path):
     mgr.activePlugins = {}
     mgr.unknownPlugins = []
     mgr._pendingImportByPath = {}
+    mgr._pendingIdentityByPath = {}
     mgr._policySkippedCandidates = []
     mgr._preImportRejects = {}
     return mgr

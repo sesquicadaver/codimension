@@ -2,12 +2,34 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-08-28 (static Alpha audit @ `master@76342420`; prior P0–P2 audit closed @ d8f2e786 / PR #40)  
+**Last review:** 2026-09-07 (static audit @ `master@4ff0207b` / `codi-last.md` @ 45e33f6; prior waves R209–R231 closed)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Open blockers (2026-08-28 audit)
+## Open blockers (2026-09-07 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R220 ✅. Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01…P1-04 → **R221–R224** ✅; P1-07 → **R225** ✅; P1-06 → **R226** ✅; P1-08 → **R227** ✅; P1-09 → **R228** ✅; P1-05 → **R229–R230** ✅; P1-AI → **R231** ✅; wave R221–R231 closed.
+No confirmed **P0**. **P1: 9** open (🔓 → R233–R241; P1-01 ✅ R232). **P2 groups: 7** (R242–R243 + backlog). Wave R221–R231 ✅ as happy-path; re-audit finds remaining lifecycle/concurrency/stale-state/fail-closed gaps.
+
+### Re-audit 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 queue
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P1-01 | Plugin re-enable: `materializePlugin` → `loadPlugins()` without re-check of manifest/file identity | P1 | ✅ R232 |
+| P1-02 | LSP: after crash, request may run before new `initialize` | P1 | 🔓 OPEN → **R233** |
+| P1-03 | LSP: race/`InvalidStateError` in `_pending` without lock + generation | P1 | 🔓 OPEN → **R234** |
+| P1-04 | DocumentStore: falsy empty store, stale disk, `(0,0)`, unversioned edits, unbounded loader | P1 | 🔓 OPEN → **R235** |
+| P1-05 | Create Project bypasses R230 lifecycle (`createNew` without ApplicationServices) | P1 | 🔓 OPEN → **R236** |
+| P1-09 | AI HTTP: redirects without re-validate trust (mirror Updater R222) | P1 | 🔓 OPEN → **R237** |
+| P1-08 | MCP walker: unbounded `listdir` + TOCTOU path escape | P1 | 🔓 OPEN → **R238** |
+| P1-07 | Taint: whole-list re-exec → sink-before-source; exception/match/loop-else gaps | P1 | 🔓 OPEN → **R239** |
+| P1-06 | FFI `EXACT`: structural proof not always edge-specific identity | P1 | 🔓 OPEN → **R240** |
+| P1-10 | AI budgets soft; no cancel/deadline/evidence hard validation | P1 | 🔓 OPEN → **R241** |
+
+### P2 / tech debt (2026-09-07 audit)
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P2-01 | Polyglot controller not wired to editor actions; Python stub vs `supports()` | P2 | 🔓 OPEN → **R242** |
+| P2-02…07 | File URI encoding; risk confidence vs custom weights; SSH upload unbounded; CI coverage/Bandit; Actions pins; docs drift | P2 | 🔓 OPEN → **R243** (+ backlog) |
 
 ### Audit 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 queue (closed)
 
@@ -26,7 +48,7 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R22
 | P1-15 | External `.cdm3` reload split-brain / UUID | P1 | ✅ R219 |
 | P1-16 | Plugin capability policy after import | P1 | ✅ R220 |
 
-### Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c) — P1 queue
+### Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c) — P1 queue (closed)
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|

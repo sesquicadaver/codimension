@@ -146,6 +146,7 @@ def test_r191_disabled_plugin_never_imported(plugin_manager_mod, tmp_path, monke
     mgr.activePlugins = {}
     mgr.unknownPlugins = []
     mgr._pendingImportByPath = {}
+    mgr._pendingIdentityByPath = {}
     mgr._policySkippedCandidates = []
     mgr._preImportRejects = {}
 
@@ -154,6 +155,7 @@ def test_r191_disabled_plugin_never_imported(plugin_manager_mod, tmp_path, monke
 
     assert len(mgr._policySkippedCandidates) == 1
     assert pm.normalize_plugin_path(pkg) in mgr._pendingImportByPath
+    assert pm.normalize_plugin_path(pkg) in mgr._pendingIdentityByPath
 
     mgr._CDMPluginManager__registerPolicySkippedPlugins()
     inactive = [p for plugs in mgr.inactivePlugins.values() for p in plugs]
@@ -190,6 +192,7 @@ def test_r191_enabled_plugin_still_imports(plugin_manager_mod, tmp_path, monkeyp
     mgr.activePlugins = {}
     mgr.unknownPlugins = []
     mgr._pendingImportByPath = {}
+    mgr._pendingIdentityByPath = {}
     mgr._policySkippedCandidates = []
     mgr._preImportRejects = {}
 

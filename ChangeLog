@@ -1,5 +1,13 @@
 2026 Sep 07
 
+* R232: re-validate ``.cdmp`` policy + on-disk file identity
+  (mtime/size/sha256) immediately before every ``loadPlugins()``,
+  including ``materializePlugin`` enable — deferred plugins cannot
+  bypass trust after mutation (re-audit P1-01 @ 45e33f6)
+* Queue seed: re-audit ``codi-last.md`` @ 45e33f6 (master@4ff0207b) → ROADMAP
+  **R232–R243** (plugin re-enable gate, LSP lifecycle/pending, DocumentStore,
+  project façade, AI redirect + hard budgets, MCP fd-safe walk, taint CFG,
+  FFI edge proof, polyglot editor, CI/docs)
 * R231: structured ``AiFinding`` model (severity/confidence/evidence/spans),
   validated parse + dedupe + SARIF-like export; global token/cost budget
   (``CDM_AI_MAX_TOKENS`` / ``CDM_AI_MAX_COST_USD``) gates ``ANALYZE_PROJECT``

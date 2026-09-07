@@ -2,12 +2,34 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-08-28 (статичний аудит Alpha @ `master@76342420`; попередній аудит P0–P2 закритий @ d8f2e786 / PR #40)  
+**Дата перевірки:** 2026-09-07 (статичний аудит @ `master@4ff0207b` / `codi-last.md` @ 45e33f6; попередні хвилі R209–R231 закриті)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
-## Відкриті блокери (аудит 2026-08-28)
+## Відкриті блокери (аудит 2026-09-07)
 
-Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Хвиля R209–R220 ✅. Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01…P1-04 → **R221–R224** ✅; P1-07 → **R225** ✅; P1-06 → **R226** ✅; P1-08 → **R227** ✅; P1-09 → **R228** ✅; P1-05 → **R229–R230** ✅; P1-AI → **R231** ✅; хвиля R221–R231 закрита.
+Підтверджених **P0** немає. **P1: 9** відкритих (🔓 → R233–R241; P1-01 ✅ R232). **P2 групи: 7** (R242–R243 + backlog). Хвиля R221–R231 ✅ як happy-path; повторний аудит фіксує lifecycle/concurrency/stale-state/fail-closed залишки.
+
+### Повторний аудит 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 черга
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P1-01 | Plugin re-enable: `materializePlugin` → `loadPlugins()` без повторної manifest/file-identity перевірки | P1 | ✅ R232 |
+| P1-02 | LSP: після crash request може піти до нового `initialize` | P1 | 🔓 OPEN → **R233** |
+| P1-03 | LSP: race/`InvalidStateError` у `_pending` без lock + generation | P1 | 🔓 OPEN → **R234** |
+| P1-04 | DocumentStore: falsy empty store, stale disk, `(0,0)`, unversioned edits, unbounded loader | P1 | 🔓 OPEN → **R235** |
+| P1-05 | Create Project обходить R230 lifecycle (`createNew` без ApplicationServices) | P1 | 🔓 OPEN → **R236** |
+| P1-09 | AI HTTP: redirects без re-validate trust (як Updater R222) | P1 | 🔓 OPEN → **R237** |
+| P1-08 | MCP walker: unbounded `listdir` + TOCTOU path escape | P1 | 🔓 OPEN → **R238** |
+| P1-07 | Taint: whole-list re-exec → sink-before-source; exception/match/loop-else gaps | P1 | 🔓 OPEN → **R239** |
+| P1-06 | FFI `EXACT`: structural proof не завжди edge-specific identity | P1 | 🔓 OPEN → **R240** |
+| P1-10 | AI budgets soft; немає cancel/deadline/evidence hard validation | P1 | 🔓 OPEN → **R241** |
+
+### P2 / технічний борг (аудит 2026-09-07)
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P2-01 | Polyglot controller не підключений до editor actions; Python stub vs `supports()` | P2 | 🔓 OPEN → **R242** |
+| P2-02…07 | File URI encoding; risk confidence vs custom weights; SSH upload unbounded; CI coverage/Bandit; Actions pins; docs drift | P2 | 🔓 OPEN → **R243** (+ backlog) |
 
 ### Аудит 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 черга (закрита)
 
@@ -26,7 +48,7 @@
 | P1-15 | External `.cdm3` reload split-brain / UUID | P1 | ✅ R219 |
 | P1-16 | Plugin capability policy після import | P1 | ✅ R220 |
 
-### Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c) — P1 черга
+### Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c) — P1 черга (закрита)
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
