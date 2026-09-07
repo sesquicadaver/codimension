@@ -168,9 +168,7 @@ def load_ai_budget_limits(
     """
     env = environ if environ is not None else os.environ
     tokens = _env_int_strict(env, ENV_AI_MAX_TOKENS, DEFAULT_MAX_TOKENS) if max_tokens is None else max_tokens
-    cost = (
-        _env_float_strict(env, ENV_AI_MAX_COST_USD, DEFAULT_MAX_COST_USD) if max_cost_usd is None else max_cost_usd
-    )
+    cost = _env_float_strict(env, ENV_AI_MAX_COST_USD, DEFAULT_MAX_COST_USD) if max_cost_usd is None else max_cost_usd
     rate = (
         _env_float_strict(env, ENV_AI_USD_PER_1K_TOKENS, DEFAULT_USD_PER_1K)
         if usd_per_1k_tokens is None
@@ -256,9 +254,7 @@ class AiBudgetTracker:
         spent = spent_prompt + spent_completion
         new_tokens = self.tokens_used + spent
         new_cost = self.cost_usd + self.cost_for_tokens(spent)
-        if hard and (
-            new_tokens > self.limits.max_tokens or new_cost > self.limits.max_cost_usd + 1e-12
-        ):
+        if hard and (new_tokens > self.limits.max_tokens or new_cost > self.limits.max_cost_usd + 1e-12):
             raise AiBudgetExceeded(
                 f"AI budget exceeded after response "
                 f"(tokens {new_tokens}/{self.limits.max_tokens}, "

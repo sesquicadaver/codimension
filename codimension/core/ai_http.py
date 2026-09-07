@@ -462,9 +462,7 @@ class HttpChatBackend:
             return self._call_anthropic(user, system=system, max_output_tokens=out_cap)
         return self._call_openai_compatible(user, system=system, max_output_tokens=out_cap)
 
-    def _call_openai_compatible(
-        self, prompt: str, *, system: str = "", max_output_tokens: int | None = None
-    ) -> str:
+    def _call_openai_compatible(self, prompt: str, *, system: str = "", max_output_tokens: int | None = None) -> str:
         url = _join_url(self._trusted_base, "chat/completions")
         headers = {
             "Content-Type": "application/json",
@@ -495,9 +493,7 @@ class HttpChatBackend:
         )
         return _openai_text(parsed)
 
-    def _call_anthropic(
-        self, prompt: str, *, system: str = "", max_output_tokens: int | None = None
-    ) -> str:
+    def _call_anthropic(self, prompt: str, *, system: str = "", max_output_tokens: int | None = None) -> str:
         url = _join_url(self._trusted_base, "v1/messages")
         headers = {
             "Content-Type": "application/json",
