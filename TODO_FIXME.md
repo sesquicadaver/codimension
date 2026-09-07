@@ -28,7 +28,7 @@
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
-| P2-01 | Polyglot controller не підключений до editor actions; Python stub vs `supports()` | P2 | 🔓 OPEN → **R242** |
+| P2-01 | Polyglot controller не підключений до editor actions; Python stub vs `supports()` | P2 | ✅ R242 |
 | P2-02…07 | File URI encoding; risk confidence vs custom weights; SSH upload unbounded; CI coverage/Bandit; Actions pins; docs drift | P2 | 🔓 OPEN → **R243** (+ backlog) |
 
 ### Аудит 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 черга (закрита)

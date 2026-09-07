@@ -1,5 +1,11 @@
 2026 Sep 07
 
+* R242: polyglot editor integration — Python headless binds brief
+  ``SemanticProvider`` so ``supports(OUTLINE/DEFINITION/REFERENCES)`` matches
+  advertised caps; EditorsManager syncs open/change/close into workspace
+  ``DocumentStore``; goto-def / occurrences route through
+  ``LanguageController`` (jedi fallback for Python); ``path_to_file_uri``
+  uses ``Path.as_uri`` (re-audit P2-01 @ 45e33f6)
 * R241: AI job contract hard-enforces token/cost post-checks, fail-closed
   env parsing, file/request/source/output/deadline caps, cooperative
   cancel via ``AiTaskDriver.cancel``, provider ``max_tokens`` from remaining

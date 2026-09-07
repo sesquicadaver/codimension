@@ -1149,6 +1149,32 @@ class CodimensionMainWindow(
             MainWindowTabWidgetBase.VCSAnnotateViewer,
         ] and isPythonMime(currentWidget.getMime())
 
+    def _supportsLanguageCapability(self, capability):
+        """True when the current absolute buffer advertises ``capability`` (R242)."""
+        currentWidget = self.em.currentWidget()
+        if currentWidget is None:
+            return False
+        if currentWidget.getType() not in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+        ]:
+            return False
+        path = currentWidget.getFileName()
+        if not path or not os.path.isabs(path):
+            return False
+        try:
+            ctrl = self.languageController
+            document = ctrl.snapshot_for_buffer(
+                path=path,
+                text=currentWidget.getEditor().text,
+                version=0,
+            )
+        except Exception:
+            return False
+        if document is None:
+            return False
+        return ctrl.supports(document, capability)
+
     def _verticalEdgeChanged(self):
         """Editor setting changed"""
         self.settings["verticalEdge"] = not self.settings["verticalEdge"]

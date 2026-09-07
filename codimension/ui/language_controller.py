@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LanguageController: polyglot editor actions via capabilities only (R204 / R229).
+"""LanguageController: polyglot editor actions via capabilities only (R204 / R229 / R242).
 
 No language-id branching in control flow. Actions resolve a
 :class:`~core.language.LanguageService` by ``language_id`` or file extension,
@@ -19,6 +19,10 @@ then gate on :class:`~core.language.LanguageCapability` and an optional
 R229: ``supports()`` requires a bound semantic provider for every
 semantic-backed capability (including ``DIAGNOSTICS``) — advertising alone
 is not enough when the provider cannot serve the API.
+
+R242: buffer open/change/close sync into the workspace
+:class:`~core.document_store.DocumentStore` and optional
+``sync_document`` / ``close_document`` on the bound provider.
 """
 
 from __future__ import annotations
@@ -40,6 +44,7 @@ from core.semantic import (
     SymbolLocation,
     WorkspaceTextEdit,
 )
+from infrastructure.file_uri import path_to_file_uri
 
 
 class CapabilityDenied(RuntimeError):
@@ -189,6 +194,76 @@ class LanguageController:
             tuple[WorkspaceTextEdit, ...],
             tuple(semantic.rename_preview(document, offset, new_name)),
         )
+
+    def language_id_for_uri(self, uri: str) -> str:
+        """Return a registered ``language_id`` for ``uri``'s extension, or ``\"\"``."""
+        ext = _extension_from_uri(uri)
+        if not ext:
+            return ""
+        for service in self._manager.registry.list_services():
+            if ext in service.descriptor.extensions:
+                return str(service.descriptor.language_id)
+        return ""
+
+    def snapshot_for_buffer(
+        self,
+        *,
+        path: str,
+        text: str,
+        version: int | None = None,
+        language_id: str = "",
+    ) -> DocumentSnapshot | None:
+        """Build a :class:`DocumentSnapshot` for an absolute editor path."""
+        if not path or not os.path.isabs(path):
+            return None
+        uri = path_to_file_uri(path)
+        lid = (language_id or "").strip() or self.language_id_for_uri(uri)
+        if version is None:
+            store = self._manager.document_store
+            prev = store.get(uri) if store is not None else None
+            version = (prev.version + 1) if prev is not None else 0
+        return DocumentSnapshot(uri=uri, text=text, version=int(version), language_id=lid)
+
+    def notify_buffer_opened(self, document: DocumentSnapshot) -> None:
+        """Publish an open buffer into the workspace store and sync the provider."""
+        store = self._manager.document_store
+        if store is not None:
+            store.put_buffer(document)
+        self._notify_semantic_sync(document)
+
+    def notify_buffer_changed(self, document: DocumentSnapshot) -> None:
+        """Publish a changed buffer (versioned) into the workspace store."""
+        store = self._manager.document_store
+        if store is not None:
+            store.put_buffer(document)
+        self._notify_semantic_sync(document)
+
+    def notify_buffer_closed(self, uri: str) -> None:
+        """Drop an open buffer and notify the semantic provider of close."""
+        store = self._manager.document_store
+        prev = store.get(uri) if store is not None else None
+        if store is not None:
+            store.discard(uri)
+            if prev is not None and prev.uri != uri:
+                store.discard(prev.uri)
+        if prev is not None:
+            self._notify_semantic_close(prev)
+
+    def _notify_semantic_sync(self, document: DocumentSnapshot) -> None:
+        service = self.service_for_document(document)
+        if service is None or service.semantic is None:
+            return
+        sync = getattr(service.semantic, "sync_document", None)
+        if callable(sync):
+            sync(document)
+
+    def _notify_semantic_close(self, document: DocumentSnapshot) -> None:
+        service = self.service_for_document(document)
+        if service is None or service.semantic is None:
+            return
+        close = getattr(service.semantic, "close_document", None)
+        if callable(close):
+            close(document)
 
     def _require_semantic(
         self,

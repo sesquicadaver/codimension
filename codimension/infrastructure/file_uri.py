@@ -27,9 +27,15 @@ DEFAULT_MAX_DOCUMENT_BYTES = 2 * 1024 * 1024
 
 
 def path_to_file_uri(path: str) -> str:
-    """Return a minimal ``file://`` URI for a local absolute path."""
+    """Return a canonical ``file://`` URI for a local absolute path.
+
+    Uses :meth:`pathlib.Path.as_uri` so spaces and special characters are
+    percent-encoded (R242; full URI policy hardening continues in R243).
+    """
+    from pathlib import Path
+
     abs_path = os.path.abspath(os.path.expanduser(path))
-    return "file://" + abs_path
+    return Path(abs_path).as_uri()
 
 
 def file_uri_to_path(uri: str) -> str | None:
