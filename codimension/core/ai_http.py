@@ -405,6 +405,7 @@ class HttpChatBackend:
         should_cancel: Optional[CancelCheck] = None,
         extra_allowlist: Sequence[str] | None = None,
         environ: Mapping[str, str] | None = None,
+        max_output_tokens: int | None = None,
     ) -> None:
         self._config = config.normalized()
         self._api_key = (api_key or "").strip() or None
@@ -412,6 +413,7 @@ class HttpChatBackend:
         self._opener = opener
         self._max_response_bytes = int(max_response_bytes)
         self._should_cancel = should_cancel
+        self._max_output_tokens = int(max_output_tokens) if max_output_tokens is not None else None
         provider = self._config.provider
         if provider not in (PROVIDER_OPENAI, PROVIDER_ANTHROPIC, PROVIDER_OLLAMA):
             raise AiBackendConfigError(f"HttpChatBackend does not support provider {provider!r}; use offline")
@@ -448,16 +450,19 @@ class HttpChatBackend:
             _pack_prompt("suggest", pack),
         )
 
-    def complete(self, system: str, user: str) -> str:
-        """Run a single chat completion with explicit system/user messages."""
-        provider = self._config.provider
-        if provider == PROVIDER_ANTHROPIC:
-            # Anthropic: fold system into the API system field when supported;
-            # messages API accepts top-level ``system``.
-            return self._call_anthropic(user, system=system)
-        return self._call_openai_compatible(user, system=system)
+    def complete(self, system: str, user: str, *, max_output_tokens: int | None = None) -> str:
+        """Run a single chat completion with explicit system/user messages.
 
-    def _call_openai_compatible(self, prompt: str, *, system: str = "") -> str:
+        ``max_output_tokens`` (R241) is forwarded to the provider as a hard
+        generation cap when set; otherwise the backend default is used.
+        """
+        provider = self._config.provider
+        out_cap = max_output_tokens if max_output_tokens is not None else self._max_output_tokens
+        if provider == PROVIDER_ANTHROPIC:
+            return self._call_anthropic(user, system=system, max_output_tokens=out_cap)
+        return self._call_openai_compatible(user, system=system, max_output_tokens=out_cap)
+
+    def _call_openai_compatible(self, prompt: str, *, system: str = "", max_output_tokens: int | None = None) -> str:
         url = _join_url(self._trusted_base, "chat/completions")
         headers = {
             "Content-Type": "application/json",
@@ -469,11 +474,13 @@ class HttpChatBackend:
         if (system or "").strip():
             messages.append({"role": "system", "content": system.strip()})
         messages.append({"role": "user", "content": prompt})
-        payload = {
+        payload: dict[str, object] = {
             "model": self._config.model,
             "messages": messages,
             "temperature": 0.2,
         }
+        if max_output_tokens is not None and max_output_tokens > 0:
+            payload["max_tokens"] = int(max_output_tokens)
         parsed = _http_json(
             url,
             payload,
@@ -486,7 +493,7 @@ class HttpChatBackend:
         )
         return _openai_text(parsed)
 
-    def _call_anthropic(self, prompt: str, *, system: str = "") -> str:
+    def _call_anthropic(self, prompt: str, *, system: str = "", max_output_tokens: int | None = None) -> str:
         url = _join_url(self._trusted_base, "v1/messages")
         headers = {
             "Content-Type": "application/json",
@@ -494,9 +501,10 @@ class HttpChatBackend:
             "x-api-key": self._api_key or "",
             "anthropic-version": "2023-06-01",
         }
+        out_tokens = int(max_output_tokens) if max_output_tokens is not None and max_output_tokens > 0 else 4096
         payload: dict[str, object] = {
             "model": self._config.model,
-            "max_tokens": 4096,
+            "max_tokens": out_tokens,
             "messages": [{"role": "user", "content": prompt}],
         }
         if (system or "").strip():

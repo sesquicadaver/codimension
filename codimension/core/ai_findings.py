@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - structured AI findings (R231)
+# codimension - structured AI findings (R231 / R241)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,21 +9,29 @@
 # (at your option) any later version.
 #
 
-"""Structured AI finding model, validation, dedupe, and SARIF-like export (R231).
+"""Structured AI finding model, validation, dedupe, and SARIF-like export (R231 / R241).
 
 Findings are evidence-oriented records (severity, confidence, optional spans).
 LLM prose is accepted only after deterministic schema validation — invalid
 entries are dropped, not silently trusted.
+
+R241: audit-level findings require a project-contained path, a valid line
+range against source, and evidence text that actually appears in that source.
+Duplicate ``finding_id`` values with different content are re-keyed instead of
+silently collapsing distinct issues.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any, Iterable, Mapping, Sequence
+
+from core.ai_project_context import assert_path_in_project
 
 
 class AiFindingSeverity(str, Enum):
@@ -236,20 +244,101 @@ def parse_findings_payload(text: str, *, default_file: str = "") -> tuple[AiFind
 
 
 def dedupe_findings(findings: Iterable[AiFinding]) -> tuple[AiFinding, ...]:
-    """Drop duplicate findings by id, then by (file, lines, title, message)."""
+    """Drop duplicate findings by content; re-key colliding ids (R241).
+
+    Identical ``finding_id`` values that describe different issues no longer
+    cause the later finding to disappear — a stable content-derived id is
+    assigned instead.
+    """
     seen_ids: set[str] = set()
     seen_keys: set[tuple[str, int, int, str, str]] = set()
     out: list[AiFinding] = []
     for item in findings:
-        if item.finding_id in seen_ids:
-            continue
         key = (item.file_path, item.begin_line, item.end_line, item.title, item.message)
         if key in seen_keys:
             continue
-        seen_ids.add(item.finding_id)
+        finding = item
+        if finding.finding_id in seen_ids:
+            finding = replace(
+                finding,
+                finding_id=_stable_id(
+                    finding.file_path,
+                    str(finding.begin_line),
+                    finding.severity.value,
+                    finding.title,
+                    finding.message[:80],
+                    finding.evidence[:80],
+                ),
+            )
+            # Extremely unlikely, but keep uniqueness if the regenerated id collides.
+            while finding.finding_id in seen_ids:
+                finding = replace(finding, finding_id=_stable_id(finding.finding_id, "x"))
+        seen_ids.add(finding.finding_id)
         seen_keys.add(key)
-        out.append(item)
+        out.append(finding)
     return tuple(out)
+
+
+def validate_audit_finding(
+    finding: AiFinding,
+    *,
+    source: str,
+    default_file: str,
+    project_dir: str,
+    project_files: Sequence[str],
+) -> AiFinding | None:
+    """Return ``finding`` when path/lines/evidence match project source (R241).
+
+    Audit-level findings must:
+    * resolve to a project-contained file;
+    * use a line range within the source (when lines are set);
+    * include non-empty ``evidence`` that occurs in the source text.
+    """
+    candidate_path = (finding.file_path or default_file or "").strip()
+    if not candidate_path or not (project_dir or "").strip():
+        return None
+    try:
+        abs_path = assert_path_in_project(candidate_path, project_dir, project_files)
+    except ValueError:
+        return None
+    text = source or ""
+    lines = text.splitlines()
+    begin = int(finding.begin_line or 0)
+    end = int(finding.end_line or 0)
+    if begin < 0 or end < 0:
+        return None
+    if begin > 0:
+        if begin > len(lines):
+            return None
+        if end == 0:
+            end = begin
+        if end < begin or end > len(lines):
+            return None
+    evidence = (finding.evidence or "").strip()
+    if not evidence:
+        return None
+    if evidence not in text:
+        return None
+    display = abs_path
+    if project_dir:
+        try:
+            display = os.path.relpath(abs_path, os.path.abspath(project_dir))
+        except ValueError:
+            display = abs_path
+    if (
+        finding.file_path == display
+        and finding.begin_line == begin
+        and finding.end_line == end
+        and finding.evidence == evidence
+    ):
+        return finding
+    return replace(
+        finding,
+        file_path=display,
+        begin_line=begin,
+        end_line=end,
+        evidence=evidence,
+    )
 
 
 def findings_to_sarif(report: AiFindingsReport, *, tool_name: str = "codimension-ai") -> dict[str, Any]:
@@ -314,5 +403,6 @@ __all__ = [
     "merge_finding_sequences",
     "normalize_severity",
     "parse_findings_payload",
+    "validate_audit_finding",
     "validate_finding_dict",
 ]

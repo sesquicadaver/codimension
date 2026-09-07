@@ -83,6 +83,9 @@ def resolve_default_backend(
     settings_path: Optional[str] = None,
     token_path: Optional[str] = None,
     require_live: bool = False,
+    should_cancel: Optional[Callable[[], bool]] = None,
+    max_output_tokens: int | None = None,
+    environ: Optional[Mapping[str, str]] = None,
 ) -> AiBackend:
     """Build the configured backend (offline by default).
 
@@ -109,7 +112,13 @@ def resolve_default_backend(
         )
     if cfg.provider == PROVIDER_OLLAMA and not (cfg.base_url or "").strip():
         raise AiBackendConfigError("Ollama base URL is empty. Set it in AI settings…")
-    backend: AiBackend = HttpChatBackend(cfg, api_key=api_key)
+    backend: AiBackend = HttpChatBackend(
+        cfg,
+        api_key=api_key,
+        should_cancel=should_cancel,
+        max_output_tokens=max_output_tokens,
+        environ=environ,
+    )
     return backend
 
 
@@ -122,30 +131,41 @@ def run_ai_task(
     settings_path: Optional[str] = None,
     token_path: Optional[str] = None,
     progress: Optional[Callable[[str], None]] = None,
+    should_cancel: Optional[Callable[[], bool]] = None,
 ) -> AiTaskResult:
     """Execute an analysis / docstring / chat task on a live backend."""
+    from core.ai_budget import load_ai_job_contract
     from core.ai_tasks import execute_ai_task
 
     if not is_ai_ui_enabled(environ, store=store):
         raise AiUiDisabledError(f"AI UI disabled (set {AI_UI_ENV}=1 or enable feature flag {FLAG_AI_UI!r})")
+    contract = load_ai_job_contract(environ=environ)
     backend = resolve_default_backend(
         home=home,
         settings_path=settings_path,
         token_path=token_path,
         require_live=True,
+        should_cancel=should_cancel,
+        max_output_tokens=contract.max_output_tokens,
+        environ=environ,
     )
     complete = getattr(backend, "complete", None)
     if complete is None:
         raise AiBackendConfigError("Configured backend cannot run live completions")
 
-    def _complete(system: str, user: str) -> str:
-        return str(complete(system, user))
+    def _complete(system: str, user: str, *, max_output_tokens: int | None = None) -> str:
+        if max_output_tokens is None:
+            return str(complete(system, user))
+        return str(complete(system, user, max_output_tokens=max_output_tokens))
 
     return execute_ai_task(
         request,
         _complete,
         progress=progress,
         backend_name=str(getattr(backend, "name", "live")),
+        job_contract=contract,
+        should_cancel=should_cancel,
+        budget_environ=environ,
     )
 
 

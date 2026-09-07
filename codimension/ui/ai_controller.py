@@ -107,6 +107,7 @@ class AiWorkspaceController:
             kind=AiTaskKind.ANALYZE_PROJECT,
             title=f"Project analysis ({len(files)} modules)",
             project_files=files,
+            project_dir=project.getProjectDir(),
         )
         self._start(request)
 

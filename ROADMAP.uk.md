@@ -198,7 +198,7 @@
 | 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | DONE ([#205](https://github.com/sesquicadaver/codimension/pull/205)) |
 | 51 | R239 | Taint CFG worklist | Forward per-node lattice; без whole-list re-exec; exception/no-match/loop-else | L | DONE ([#207](https://github.com/sesquicadaver/codimension/pull/207)) |
 | 52 | R240 | FFI edge-specific structural proof | `EXACT` лише з повною identity registration chain | L | DONE ([#209](https://github.com/sesquicadaver/codimension/pull/209)) |
-| 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | OPEN |
+| 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | DONE (PR pending) |
 | 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | OPEN |
 | 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | OPEN |
 
@@ -206,7 +206,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R241** — AI hard budgets + cancellation.
+**Наступний OPEN:** **R242** — Polyglot editor integration.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
