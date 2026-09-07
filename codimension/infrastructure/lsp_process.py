@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LspProcess: one language-server subprocess per process key (R202 / R210).
+"""LspProcess: one language-server subprocess per process key (R202 / R210 / R233).
 
 Key: ``(language_id, workspace_root, toolchain)``. Spawn is gated by
 :func:`core.language_policy.require_language_server_spawn` (absolute binary on
@@ -21,6 +21,10 @@ initialize → shutdown → exit on unload.
 R210: server→client requests (``workspace/configuration``, progress create,
 dynamic registration, ``workspace/applyEdit`` refuse+preview) are answered on
 the reader thread so the language server does not hang waiting for a response.
+
+R233: :meth:`ensure_initialized` atomically restarts a dead subprocess, runs
+the LSP handshake, and bumps a process generation so callers can drop stale
+document sync state. ``request`` / ``notify`` never proceed before handshake.
 """
 
 from __future__ import annotations
@@ -143,6 +147,9 @@ class LspProcess:
         self._restart_count = 0
         self._closing = False
         self._initialized = False
+        # Bumped after each successful initialize handshake (R233).
+        self._generation = 0
+        self._last_initialize_result: dict[str, Any] = {}
         self._notifications: deque[dict[str, Any]] = deque(maxlen=256)
         self._apply_edit_previews: deque[dict[str, Any]] = deque(maxlen=64)
         self._dynamic_registrations: dict[str, Mapping[str, Any]] = {}
@@ -157,6 +164,11 @@ class LspProcess:
     def initialized(self) -> bool:
         """True after a successful ``initialize`` / ``initialized`` handshake."""
         return self._initialized
+
+    @property
+    def generation(self) -> int:
+        """Monotonic process generation; increments on each successful handshake."""
+        return self._generation
 
     def stderr_text(self) -> str:
         """Return the bounded stderr ring as UTF-8 (lossy)."""
@@ -184,19 +196,40 @@ class LspProcess:
     def ensure_started(self) -> None:
         """Lazy-start the subprocess (spawn-gated); no-op when already running."""
         with self._lifecycle_lock:
-            if self._closing or self._state in (
-                LspProcessState.STOPPING,
-                LspProcessState.STOPPED,
-            ):
-                raise LspProtocolError("LspProcess is closing")
-            if self._state is LspProcessState.RUNNING and self._proc is not None:
-                if self._proc.poll() is None:
-                    return
-                self._fail_pending("language server exited unexpectedly")
-                self._cleanup_proc_unlocked()
-                self._restart_unlocked()
-                return
-            self._start_unlocked()
+            self._ensure_alive_unlocked()
+
+    def ensure_initialized(
+        self,
+        *,
+        root_uri: str | None = None,
+        process_id: int | None = None,
+        client_info: Mapping[str, str] | None = None,
+        capabilities: Mapping[str, Any] | None = None,
+        timeout: float | None = None,
+    ) -> int:
+        """Ensure a live subprocess and completed LSP handshake (R233).
+
+        Under the lifecycle lock this method:
+
+        1. checks the subprocess (restarting if it exited);
+        2. runs ``initialize`` / ``initialized`` when needed;
+        3. bumps :attr:`generation` after a successful handshake;
+        4. returns the current generation for callers to invalidate sync state.
+
+        Handshake I/O uses :meth:`_request_while_running` / :meth:`_write` so it
+        does not re-enter :meth:`ensure_started` while the lock is held.
+        """
+        with self._lifecycle_lock:
+            self._ensure_alive_unlocked()
+            if not self._initialized:
+                self._handshake_unlocked(
+                    root_uri=root_uri,
+                    process_id=process_id,
+                    client_info=client_info,
+                    capabilities=capabilities,
+                    timeout=timeout,
+                )
+            return self._generation
 
     def start(self) -> None:
         """Explicit start (same as :meth:`ensure_started`)."""
@@ -215,21 +248,18 @@ class LspProcess:
 
         Advertises default client capabilities (R210) merged with any caller
         overrides, then negotiates ``positionEncoding`` from the server result.
+        Equivalent to :meth:`ensure_initialized` with a forced handshake when
+        already initialized (explicit re-init for tests / recovery).
         """
-        self.ensure_started()
-        client_caps = _merge_client_capabilities(default_client_capabilities(), capabilities)
-        params: dict[str, Any] = {
-            "processId": os.getpid() if process_id is None else process_id,
-            "rootUri": root_uri or _path_to_uri(self.key.workspace_root),
-            "capabilities": client_caps,
-            "clientInfo": dict(client_info or {"name": "codimension", "version": "0"}),
-        }
-        result = self.request("initialize", params, timeout=timeout)
-        if isinstance(result, dict):
-            self._apply_negotiated_position_encoding(result)
-        self.notify("initialized", {})
-        self._initialized = True
-        return result if isinstance(result, dict) else {}
+        with self._lifecycle_lock:
+            self._ensure_alive_unlocked()
+            return self._handshake_unlocked(
+                root_uri=root_uri,
+                process_id=process_id,
+                client_info=client_info,
+                capabilities=capabilities,
+                timeout=timeout,
+            )
 
     def request(
         self,
@@ -239,7 +269,12 @@ class LspProcess:
         timeout: float | None = None,
     ) -> Any:
         """Send a JSON-RPC request and wait for the matching response."""
-        self.ensure_started()
+        # R233: never send app-level requests before handshake (except initialize
+        # itself, which goes through :meth:`_handshake_unlocked`).
+        if method != "initialize":
+            self.ensure_initialized()
+        else:
+            self.ensure_started()
         request_id = self._allocate_id()
         future: Future = Future()
         self._pending[request_id] = future
@@ -264,7 +299,10 @@ class LspProcess:
 
     def notify(self, method: str, params: Any = None) -> None:
         """Send a JSON-RPC notification (no response expected)."""
-        self.ensure_started()
+        if method != "initialized":
+            self.ensure_initialized()
+        else:
+            self.ensure_started()
         message: dict[str, Any] = {"jsonrpc": "2.0", "method": method}
         if params is not None:
             message["params"] = params
@@ -305,6 +343,52 @@ class LspProcess:
                 self._fail_pending("LspProcess shut down")
 
     # --- internals ---------------------------------------------------------
+
+    def _ensure_alive_unlocked(self) -> None:
+        """Start or restart the subprocess; does not run the LSP handshake."""
+        if self._closing or self._state in (
+            LspProcessState.STOPPING,
+            LspProcessState.STOPPED,
+        ):
+            raise LspProtocolError("LspProcess is closing")
+        if self._state is LspProcessState.RUNNING and self._proc is not None:
+            if self._proc.poll() is None:
+                return
+            self._fail_pending("language server exited unexpectedly")
+            self._cleanup_proc_unlocked()
+            self._restart_unlocked()
+            return
+        self._start_unlocked()
+
+    def _handshake_unlocked(
+        self,
+        *,
+        root_uri: str | None = None,
+        process_id: int | None = None,
+        client_info: Mapping[str, str] | None = None,
+        capabilities: Mapping[str, Any] | None = None,
+        timeout: float | None = None,
+    ) -> dict[str, Any]:
+        """Run initialize handshake while holding :attr:`_lifecycle_lock` (R233)."""
+        client_caps = _merge_client_capabilities(default_client_capabilities(), capabilities)
+        params: dict[str, Any] = {
+            "processId": os.getpid() if process_id is None else process_id,
+            "rootUri": root_uri or _path_to_uri(self.key.workspace_root),
+            "capabilities": client_caps,
+            "clientInfo": dict(client_info or {"name": "codimension", "version": "0"}),
+        }
+        wait = self._request_timeout if timeout is None else timeout
+        result = self._request_while_running("initialize", params, timeout=wait)
+        if isinstance(result, dict):
+            self._apply_negotiated_position_encoding(result)
+            self._last_initialize_result = dict(result)
+        else:
+            self._last_initialize_result = {}
+        # Notification must not call ensure_initialized (would re-enter lock).
+        self._write({"jsonrpc": "2.0", "method": "initialized", "params": {}})
+        self._initialized = True
+        self._generation += 1
+        return self._last_initialize_result
 
     def _allocate_id(self) -> int:
         with self._id_lock:

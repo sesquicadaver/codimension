@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""R209: LSP document lifecycle — didChange / didClose / restart re-open."""
+"""R233: LSP generation-safe lifecycle — crash restart must handshake before requests."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 from core.document_snapshot import DocumentSnapshot
-from infrastructure.lsp_process import LspProcessRegistry
+from infrastructure.lsp_process import LspProcess, LspProcessKey, LspProcessRegistry
 from infrastructure.lsp_semantic import LspSemanticConfig, LspSemanticProvider
 
 _RECORDING_LSP = textwrap.dedent(
@@ -59,19 +59,24 @@ _RECORDING_LSP = textwrap.dedent(
         if method in ("textDocument/didOpen", "textDocument/didChange", "textDocument/didClose"):
             log_event("notify", {"method": method, "params": params})
             continue
-        if method == "initialized" or method == "$/cancelRequest":
+        if method == "initialized":
+            log_event("notify", {"method": method, "params": params})
+            continue
+        if method == "$/cancelRequest":
             continue
         if mid is None:
             continue
         if method == "initialize":
+            log_event("request", {"method": method})
             write_msg({
                 "jsonrpc": "2.0",
                 "id": mid,
-                "result": {"capabilities": {}, "serverInfo": {"name": "fake-lifecycle"}},
+                "result": {"capabilities": {}, "serverInfo": {"name": "fake-r233"}},
             })
         elif method == "shutdown":
             write_msg({"jsonrpc": "2.0", "id": mid, "result": None})
         elif method == "textDocument/hover":
+            log_event("request", {"method": method})
             write_msg({
                 "jsonrpc": "2.0",
                 "id": mid,
@@ -102,7 +107,6 @@ def _read_events(log: Path) -> list[dict]:
 
 
 def _wait_events(log: Path, count: int, *, timeout: float = 5.0) -> list[dict]:
-    """Poll JSONL until ``count`` notifies are visible (did* are fire-and-forget)."""
     deadline = time.monotonic() + timeout
     events: list[dict] = []
     while time.monotonic() < deadline:
@@ -120,69 +124,89 @@ def _provider(tmp_path: Path, script: Path, log: Path) -> LspSemanticProvider:
         workspace_root=str(tmp_path),
         command=(sys.executable, str(script), str(log)),
         allowlist=(sys.executable,),
-        provider_id="lsp.test-lifecycle",
+        provider_id="lsp.test-r233",
     )
     return LspSemanticProvider(registry, config)
 
 
-def test_did_open_then_did_change_on_version_bump(tmp_path: Path, recording_lsp: tuple[Path, Path]) -> None:
+def test_ensure_initialized_bumps_generation(tmp_path: Path, recording_lsp: tuple[Path, Path]) -> None:
+    script, log = recording_lsp
+    key = LspProcessKey("rust", str(tmp_path), "")
+    proc = LspProcess(
+        key,
+        (sys.executable, str(script), str(log)),
+        allowlist=(sys.executable,),
+        backoff_initial=0.01,
+    )
+    assert proc.generation == 0
+    gen1 = proc.ensure_initialized()
+    assert gen1 == 1
+    assert proc.initialized
+    assert proc.ensure_initialized() == 1  # idempotent
+    proc.shutdown()
+
+
+def test_crash_with_stale_initialized_flag_rehandshakes(tmp_path: Path, recording_lsp: tuple[Path, Path]) -> None:
+    """Production bug: process dies while ``_initialized`` remains True.
+
+    Must restart + initialize before any didOpen / hover (do not clear the flag
+    manually — that masked the defect in the R209 test).
+    """
     script, log = recording_lsp
     provider = _provider(tmp_path, script, log)
-    doc = DocumentSnapshot(uri="file:///tmp/a.rs", text="fn a() {}\n", version=1, language_id="rust")
-    provider.sync_document(doc)
-    events = _wait_events(log, 1)
-    assert [e["method"] for e in events] == ["textDocument/didOpen"]
-    assert events[0]["params"]["textDocument"]["version"] == 1
-
-    updated = doc.with_text("fn a() { 1 }\n", bump_version=True)
-    assert updated.version == 2
-    provider.sync_document(updated)
-    events = _wait_events(log, 2)
-    assert [e["method"] for e in events] == ["textDocument/didOpen", "textDocument/didChange"]
-    change = events[1]["params"]
-    assert change["textDocument"]["version"] == 2
-    assert change["contentChanges"] == [{"text": updated.text}]
-
-    # Same version → no extra notify
-    provider.sync_document(updated)
-    time.sleep(0.05)
-    assert len(_read_events(log)) == 2
-    provider._registry.shutdown_all()
-
-
-def test_did_close_drops_tracking(tmp_path: Path, recording_lsp: tuple[Path, Path]) -> None:
-    script, log = recording_lsp
-    provider = _provider(tmp_path, script, log)
-    doc = DocumentSnapshot(uri="file:///tmp/b.rs", text="fn b() {}\n", version=0, language_id="rust")
-    provider.sync_document(doc)
-    _wait_events(log, 1)
-    provider.close_document(doc)
-    events = _wait_events(log, 2)
-    assert [e["method"] for e in events] == ["textDocument/didOpen", "textDocument/didClose"]
-    assert doc.uri not in provider._opened
-
-    # Re-open after close uses didOpen again
-    provider.sync_document(doc)
-    events = _wait_events(log, 3)
-    assert [e["method"] for e in events][-1] == "textDocument/didOpen"
-    provider._registry.shutdown_all()
-
-
-def test_restart_clears_opened_and_reopens(tmp_path: Path, recording_lsp: tuple[Path, Path]) -> None:
-    script, log = recording_lsp
-    provider = _provider(tmp_path, script, log)
-    doc = DocumentSnapshot(uri="file:///tmp/c.rs", text="fn c() {}\n", version=3, language_id="rust")
+    doc = DocumentSnapshot(uri="file:///tmp/r233.rs", text="fn x() {}\n", version=1, language_id="rust")
     provider.hover(doc, 0)
-    assert _wait_events(log, 1)[0]["method"] == "textDocument/didOpen"
+    events = _wait_events(log, 3)  # initialize + initialized + didOpen (+ hover request)
+    methods = [e["method"] for e in events]
+    assert methods.count("initialize") >= 1
+    assert "textDocument/didOpen" in methods
 
-    # Simulate language-server death without clearing ``_initialized`` (R233).
-    # Manually forcing ``_initialized = False`` masked the production bug.
     proc = provider._process()
+    gen_before = proc.generation
     assert proc._proc is not None
     proc._proc.kill()
     proc._proc.wait(timeout=5)
+    # Leave ``_initialized`` True — the real crash residue.
+    assert proc._initialized is True
 
+    log.write_text("", encoding="utf-8")  # focus on post-crash traffic
     provider.hover(doc, 0)
-    methods = [e["method"] for e in _wait_events(log, 2)]
-    assert methods.count("textDocument/didOpen") >= 2
+    events = _wait_events(log, 3)
+    methods = [e["method"] for e in events]
+    # Handshake must precede document traffic on the new process.
+    assert "initialize" in methods
+    init_idx = methods.index("initialize")
+    open_idx = methods.index("textDocument/didOpen")
+    assert init_idx < open_idx
+    assert proc.generation > gen_before
+    assert provider._server_generation == proc.generation
     provider._registry.shutdown_all()
+
+
+def test_request_after_crash_does_not_skip_initialize(tmp_path: Path, recording_lsp: tuple[Path, Path]) -> None:
+    script, log = recording_lsp
+    key = LspProcessKey("rust", str(tmp_path), "")
+    proc = LspProcess(
+        key,
+        (sys.executable, str(script), str(log)),
+        allowlist=(sys.executable,),
+        backoff_initial=0.01,
+        max_restarts=3,
+    )
+    proc.ensure_initialized()
+    assert proc._proc is not None
+    proc._proc.kill()
+    proc._proc.wait(timeout=5)
+    assert proc._initialized is True
+
+    log.write_text("", encoding="utf-8")
+    # Direct request path (no provider) must still handshake first.
+    proc.request(
+        "textDocument/hover",
+        {"textDocument": {"uri": "file:///tmp/z.rs"}, "position": {"line": 0, "character": 0}},
+    )
+    events = _wait_events(log, 2)
+    methods = [e["method"] for e in events]
+    assert methods[0] == "initialize"
+    assert "textDocument/hover" in methods
+    proc.shutdown()

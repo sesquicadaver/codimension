@@ -190,7 +190,7 @@
 | # | ID | Задача | Acceptance | Size | Статус |
 |---|-----|--------|------------|------|--------|
 | 44 | R232 | Plugin re-enable pre-import gate | Кожен `loadPlugins()` (вкл. `materializePlugin`) повторно перевіряє manifest + file identity | M | DONE ([#196](https://github.com/sesquicadaver/codimension/pull/196)) |
-| 45 | R233 | LSP generation-safe lifecycle | Atomic restart+initialize; жодних requests до handshake; clear `_opened` на generation bump | M | OPEN |
+| 45 | R233 | LSP generation-safe lifecycle | Atomic restart+initialize; жодних requests до handshake; clear `_opened` на generation bump | M | DONE ([#197](https://github.com/sesquicadaver/codimension/pull/197)) |
 | 46 | R234 | LSP pending synchronization | `_pending_lock`; ключі `(generation, id)`; race tests timeout/shutdown/old-reader | L | OPEN |
 | 47 | R235 | Workspace DocumentStore | Єдиний editor-backed store; versioned edits; deny unresolved/`(0,0)` apply; bounded loader | L | OPEN |
 | 48 | R236 | Project lifecycle façade | create/load/switch/unload лише через `ApplicationServices` (fix bypass `createNew`) | M | OPEN |
@@ -206,7 +206,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R233** — LSP generation-safe lifecycle.
+**Наступний OPEN:** **R234** — LSP pending synchronization.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
