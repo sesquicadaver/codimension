@@ -181,7 +181,7 @@
 | 38 | R226 | FFI EXACT через structural parse | Tree-sitter/LSP evidence для registration chain; інакше BRIDGE/INFERRED | L | DONE ([#187](https://github.com/sesquicadaver/codimension/pull/187)) |
 | 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env на гілку; may-taint join; покрити positional-only | M | DONE ([#189](https://github.com/sesquicadaver/codimension/pull/189)) |
 | 40 | R228 | Blank UUID після load | Reject порожній disk UUID або атомарно відновити loaded UUID у `.cdm3` | S | DONE ([#191](https://github.com/sesquicadaver/codimension/pull/191)) |
-| 41 | R229 | Polyglot capabilities = providers | Рекламувати лише реалізовані diagnostics/completion/tokens API | M | OPEN |
+| 41 | R229 | Polyglot capabilities = providers | Рекламувати лише реалізовані diagnostics/completion/tokens API | M | DONE ([#193](https://github.com/sesquicadaver/codimension/pull/193)) |
 | 42 | R230 | Wire LanguageServiceManager в IDE lifecycle | Composition у GlobalData/MainWindow open/close | L | OPEN |
 | 43 | R231 | AI structured findings + global budgets | Finding model + total token/cost budget | L | OPEN |
 
@@ -189,7 +189,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R229** — Polyglot capabilities match providers.
+**Наступний OPEN:** **R230** — Wire LanguageServiceManager в IDE lifecycle.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

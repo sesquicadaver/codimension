@@ -155,7 +155,8 @@ def test_rust_cpp_descriptors() -> None:
     assert ".cpp" in CPP_DESCRIPTOR.extensions
     svc = make_rust_language_service()
     assert svc.service_id == "rust.lsp"
-    assert svc.has_capability(LanguageCapability.HOVER)
+    # R229: semantic caps only when a SemanticProvider is bound.
+    assert not svc.has_capability(LanguageCapability.HOVER)
     assert svc.semantic is None
     assert make_cpp_language_service().service_id == "cpp.lsp"
 

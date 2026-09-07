@@ -24,7 +24,7 @@ clone the Python CFG pipeline per language; treat languages as VCS/Wizard plugin
 | `LanguageDescriptor`, capabilities, `LanguageService` Protocol, Registry | `codimension/core/language.py` |
 | Lifecycle manager | `codimension/app/language_services.py` |
 | LSP stdio / position codec I/O | `infrastructure` + thin `utils` |
-| UI controller | `ui/language_controller.py` (R204: capability checks only; hover/definition/references/outline/format/rename-preview; diagnostics FULL vs DEGRADED) |
+| UI controller | `ui/language_controller.py` (R204 + **R229**: capability checks only; advertise only APIs on `SemanticProvider` — no DIAGNOSTICS/COMPLETION/SEMANTIC_TOKENS until implemented; diagnostics policy stays UNAVAILABLE without the cap) |
 | Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **not** compiler CFG) |
 | FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206 + **R217** + **R226**: PyO3 / pybind11 / CPython / `.pyi`; `EXACT` only with Tree-sitter CST registration proof; else `BRIDGE`/`INLINE`) |
 | Typed deps + cross-nav | `core/dependency_edges.py` + `core/cross_language_nav.py` (R207: `DependencyEdgeKind`, FFI hops; utils graph keeps `PYTHON_IMPORT`) |

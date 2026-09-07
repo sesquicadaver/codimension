@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - polyglot language service contracts (R200–R208)
+# codimension - polyglot language service contracts (R200–R208 / R229)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,13 +9,17 @@
 # (at your option) any later version.
 #
 
-"""LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200–R208).
+"""LanguageDescriptor, capabilities, and LanguageServiceRegistry (R200–R208 / R229).
 
 Qt-free polyglot attach points. Document buffers / position codec are R201;
 LSP stdio process client is R202; Rust/C++ descriptors + SemanticProvider are
 R203; Tree-sitter StructuralProvider is R205; BindingProvider / FFI_BINDINGS
 are R206; TaskProvider / BUILD_TASKS are R208. UI must query
 :class:`LanguageCapability`, never ``if language == …``.
+
+R229: advertised capabilities must match bound provider APIs
+(``DIAGNOSTICS`` / ``COMPLETION`` / ``SEMANTIC_TOKENS`` are not claimed until
+a provider implements them).
 """
 
 from __future__ import annotations
@@ -135,20 +139,23 @@ CPP_DESCRIPTOR = LanguageDescriptor(
     server_name="clangd",
 )
 
-#: LSP-backed editor capabilities shared by Rust / C++ in Stage 1.
-LSP_EDITOR_CAPABILITIES: frozenset[LanguageCapability] = frozenset(
+#: Capabilities backed by :class:`~core.semantic.SemanticProvider` methods
+#: that exist today (hover / definition / references / outline / format / rename).
+#: R229: do **not** advertise ``DIAGNOSTICS``, ``COMPLETION``, or
+#: ``SEMANTIC_TOKENS`` until a provider implements those APIs.
+SEMANTIC_PROVIDER_CAPABILITIES: frozenset[LanguageCapability] = frozenset(
     {
         LanguageCapability.OUTLINE,
-        LanguageCapability.DIAGNOSTICS,
         LanguageCapability.HOVER,
         LanguageCapability.DEFINITION,
         LanguageCapability.REFERENCES,
-        LanguageCapability.COMPLETION,
         LanguageCapability.RENAME,
         LanguageCapability.FORMAT,
-        LanguageCapability.SEMANTIC_TOKENS,
     }
 )
+
+#: Historical alias used by callers/tests (same as :data:`SEMANTIC_PROVIDER_CAPABILITIES`).
+LSP_EDITOR_CAPABILITIES: frozenset[LanguageCapability] = SEMANTIC_PROVIDER_CAPABILITIES
 
 
 def make_python_language_service() -> LanguageService:
@@ -178,6 +185,13 @@ def _with_provider_capabilities(
     return frozenset(caps)
 
 
+def _semantic_capabilities(semantic: SemanticProvider | None) -> frozenset[LanguageCapability]:
+    """Return semantic caps only when a :class:`SemanticProvider` is bound (R229)."""
+    if semantic is None:
+        return frozenset()
+    return SEMANTIC_PROVIDER_CAPABILITIES
+
+
 def make_rust_language_service(
     semantic: SemanticProvider | None = None,
     structural: StructuralProvider | None = None,
@@ -189,7 +203,7 @@ def make_rust_language_service(
     return LanguageService(
         descriptor=RUST_DESCRIPTOR,
         capabilities=_with_provider_capabilities(
-            LSP_EDITOR_CAPABILITIES,
+            _semantic_capabilities(semantic),
             structural=structural,
             bindings=bound,
             tasks=tasks,
@@ -213,7 +227,7 @@ def make_cpp_language_service(
     return LanguageService(
         descriptor=CPP_DESCRIPTOR,
         capabilities=_with_provider_capabilities(
-            LSP_EDITOR_CAPABILITIES,
+            _semantic_capabilities(semantic),
             structural=structural,
             bindings=bound,
             tasks=tasks,
@@ -295,6 +309,7 @@ __all__ = [
     "PYTHON_DESCRIPTOR",
     "PYTHON_HEADLESS_CAPABILITIES",
     "RUST_DESCRIPTOR",
+    "SEMANTIC_PROVIDER_CAPABILITIES",
     "make_cpp_language_service",
     "make_python_language_service",
     "make_rust_language_service",

@@ -24,7 +24,7 @@ Codimension розширюється за межі Python через **унів�
 | `LanguageDescriptor`, capabilities, Protocol, Registry | `codimension/core/language.py` |
 | Lifecycle manager | `codimension/app/language_services.py` |
 | LSP stdio / position codec I/O | `infrastructure` + тонкий `utils` |
-| UI controller | `ui/language_controller.py` (R204: лише capability checks; hover/definition/references/outline/format/rename-preview; diagnostics FULL vs DEGRADED) |
+| UI controller | `ui/language_controller.py` (R204 + **R229**: лише capability checks; рекламувати лише API з `SemanticProvider` — без DIAGNOSTICS/COMPLETION/SEMANTIC_TOKENS до реалізації; diagnostics policy = UNAVAILABLE без cap) |
 | Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **не** compiler CFG) |
 | FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206 + **R217** + **R226**: PyO3 / pybind11 / CPython / `.pyi`; `EXACT` лише з Tree-sitter CST registration proof; інакше `BRIDGE`/`INLINE`) |
 | Typed deps + cross-nav | `core/dependency_edges.py` + `core/cross_language_nav.py` (R207: `DependencyEdgeKind`, FFI hops; utils graph лишає `PYTHON_IMPORT`) |

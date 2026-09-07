@@ -194,9 +194,10 @@ def test_resolve_by_extension_and_capability_gate(tmp_path: Path, fake_lsp: Path
     assert fmt and fmt[0].edit.new_text == "fmt()"
     ren = ctrl.rename_preview(doc, 3, "yy")
     assert ren and ren[0].edit.new_text == "yy"
+    # R229: DIAGNOSTICS is not advertised until a provider implements it.
     policy = ctrl.diagnostics_policy(doc)
-    assert policy.claim is DiagnosticsClaim.FULL
-    assert policy.readiness is SemanticReadiness.READY
+    assert policy.claim is DiagnosticsClaim.UNAVAILABLE
+    assert "DIAGNOSTICS" in policy.reason
     mgr.shutdown()
 
 
@@ -211,7 +212,8 @@ def test_python_headless_no_semantic_denies_hover() -> None:
         ctrl.hover(doc, 0)
 
 
-def test_cpp_degraded_diagnostics_policy(tmp_path: Path, fake_lsp: Path) -> None:
+def test_cpp_diagnostics_unavailable_without_cap(tmp_path: Path, fake_lsp: Path) -> None:
+    """R229: clangd readiness alone does not claim diagnostics without the cap."""
     mgr = LanguageServiceManager()
     mgr.register_cpp_lsp(
         str(tmp_path),
@@ -221,9 +223,11 @@ def test_cpp_degraded_diagnostics_policy(tmp_path: Path, fake_lsp: Path) -> None
     )
     ctrl = LanguageController(mgr)
     doc = DocumentSnapshot(uri="file:///a.cpp", text="int x;\n", language_id="cpp")
+    assert ctrl.supports(doc, LanguageCapability.HOVER) is True
+    assert ctrl.supports(doc, LanguageCapability.DIAGNOSTICS) is False
     policy = ctrl.diagnostics_policy(doc)
-    assert policy.claim is DiagnosticsClaim.DEGRADED
-    assert policy.readiness is SemanticReadiness.DEGRADED
+    assert policy.claim is DiagnosticsClaim.UNAVAILABLE
+    assert policy.readiness is None
     mgr.shutdown()
 
 
