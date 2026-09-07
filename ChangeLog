@@ -1,5 +1,10 @@
 2026 Sep 07
 
+* R241: AI job contract hard-enforces token/cost post-checks, fail-closed
+  env parsing, file/request/source/output/deadline caps, cooperative
+  cancel via ``AiTaskDriver.cancel``, provider ``max_tokens`` from remaining
+  budget, and audit findings that require project path + evidence in source
+  (re-audit P1-10 @ 45e33f6)
 * R240: FFI ``EXACT`` edges require edge-specific structural identity —
   PyO3 ``add_function(wrap_pyfunction!(…))`` inside the owning
   ``#[pymodule]``; CPython proofs keyed by method table + native; module

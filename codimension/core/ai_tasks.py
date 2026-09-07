@@ -13,10 +13,15 @@ for these tasks.
 
 R231: ``ANALYZE_PROJECT`` emits validated :class:`~core.ai_findings.AiFinding`
 records and enforces a global token/cost budget beyond per-file truncation.
+
+R241: immutable :class:`~core.ai_budget.AiJobContract` (files/requests/source
+bytes/output tokens/deadline), cancellation token, provider output caps,
+post-response hard budget checks, and audit-level finding validation.
 """
 
 from __future__ import annotations
 
+import inspect
 import os
 from dataclasses import dataclass
 from enum import Enum
@@ -24,10 +29,13 @@ from typing import Callable, Iterable, Mapping, Optional, Sequence
 
 from core.ai_budget import (
     DEFAULT_COMPLETION_RESERVE,
+    AiBudgetExceeded,
     AiBudgetLimits,
     AiBudgetTracker,
+    AiJobContract,
     estimate_tokens,
     load_ai_budget_limits,
+    load_ai_job_contract,
 )
 from core.ai_context import AiContextPack, build_ai_context_from_source
 from core.ai_docstring import DocstringTarget, build_docstring_target
@@ -40,6 +48,7 @@ from core.ai_findings import (
     AiFindingsReport,
     dedupe_findings,
     parse_findings_payload,
+    validate_audit_finding,
 )
 from core.ai_project_context import (
     assert_path_in_project,
@@ -47,12 +56,21 @@ from core.ai_project_context import (
 )
 from core.symbol_index import SymbolKind
 
-CompleteFn = Callable[[str, str], str]
+CompleteFn = Callable[..., str]
 ProgressFn = Callable[[str], None]
+CancelCheck = Callable[[], bool]
 
 MAX_MODULE_CHARS = 12000
 MAX_CHUNK_REPORT_CHARS = 6000
 DOCSTRING_STYLE = "Google"
+
+
+class AiTaskCancelled(RuntimeError):
+    """Raised when an AI job observes a cancellation request (R241)."""
+
+
+class AiTaskDeadlineExceeded(RuntimeError):
+    """Raised when an AI job exceeds its wall-clock deadline (R241)."""
 
 
 class AiTaskKind(str, Enum):
@@ -236,8 +254,9 @@ def build_project_chunk_prompt(path: str, source: str, index: int, total: int) -
         f"File: {path}\n\n"
         "Return a JSON object with a `findings` array. Each finding must include:\n"
         "`title`, `message`, `severity` (error|warning|note|info), `confidence` (0..1),\n"
-        "`file_path`, optional `begin_line`/`end_line`, optional `evidence`, optional `rule_id`.\n"
-        "Only report issues evidenced in the source. If none, return "
+        "`file_path`, `begin_line`/`end_line`, and required `evidence` (verbatim "
+        "substring from the source). Optional `rule_id`. Only report issues "
+        "evidenced in the source. If none, return "
         '`"findings": []`. You may include a short `summary` string, but findings '
         "are authoritative.\n\n"
         f"Source:\n{_truncate(source, MAX_MODULE_CHARS)}"
@@ -281,6 +300,53 @@ def build_chat_prompt(
     return system, "\n".join(lines)
 
 
+def _read_text_bounded(path: str, max_bytes: int) -> str:
+    """Read at most ``max_bytes`` from ``path`` (UTF-8, replace errors)."""
+    if max_bytes <= 0:
+        return ""
+    with open(path, "rb") as handle:
+        raw = handle.read(max_bytes + 1)
+    truncated = len(raw) > max_bytes
+    if truncated:
+        raw = raw[:max_bytes]
+    text = raw.decode("utf-8", errors="replace")
+    if truncated:
+        text = text + "\n\n...[truncated: source byte budget]...\n"
+    return text
+
+
+def _invoke_complete(
+    complete_fn: CompleteFn,
+    system: str,
+    user: str,
+    *,
+    max_output_tokens: int | None = None,
+) -> str:
+    """Call ``complete_fn``, passing ``max_output_tokens`` when supported."""
+    if max_output_tokens is None:
+        return str(complete_fn(system, user))
+    try:
+        signature = inspect.signature(complete_fn)
+    except (TypeError, ValueError):
+        signature = None
+    if signature is not None:
+        params = signature.parameters
+        if "max_output_tokens" in params or any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values()):
+            return str(complete_fn(system, user, max_output_tokens=max_output_tokens))
+    return str(complete_fn(system, user))
+
+
+def _check_cancel_deadline(
+    contract: AiJobContract,
+    should_cancel: Optional[CancelCheck],
+) -> None:
+    """Raise when cancelled or past the job deadline."""
+    if should_cancel is not None and should_cancel():
+        raise AiTaskCancelled("AI task cancelled")
+    if contract.deadline_exceeded():
+        raise AiTaskDeadlineExceeded("AI task deadline exceeded")
+
+
 def execute_ai_task(
     request: AiTaskRequest,
     complete_fn: CompleteFn,
@@ -289,11 +355,14 @@ def execute_ai_task(
     backend_name: str = "http",
     budget_limits: Optional[AiBudgetLimits] = None,
     budget_environ: Optional[Mapping[str, str]] = None,
+    job_contract: Optional[AiJobContract] = None,
+    should_cancel: Optional[CancelCheck] = None,
 ) -> AiTaskResult:
     """Run ``request`` via ``complete_fn(system, user)`` and return text.
 
-    ``budget_limits`` / ``budget_environ`` apply to ``ANALYZE_PROJECT`` (R231):
-    estimated tokens/cost gate further LLM calls after the global ceiling.
+    ``budget_limits`` / ``budget_environ`` / ``job_contract`` apply to
+    ``ANALYZE_PROJECT`` (R231 / R241). ``should_cancel`` is checked between
+    provider calls.
     """
 
     def _progress(msg: str) -> None:
@@ -322,7 +391,7 @@ def execute_ai_task(
             project_context_block=ctx.to_prompt_block(),
         )
         _progress(f"Analyzing module in project context: {ctx.module_relpath}…")
-        text = complete_fn(system, user)
+        text = _invoke_complete(complete_fn, system, user)
         return AiTaskResult(
             kind=kind,
             title=request.title,
@@ -340,7 +409,7 @@ def execute_ai_task(
         )
         system, user = build_symbol_analysis_prompt(pack)
         _progress(f"Analyzing symbol {request.symbol_name}…")
-        text = complete_fn(system, user)
+        text = _invoke_complete(complete_fn, system, user)
         return AiTaskResult(
             kind=kind,
             title=request.title,
@@ -374,7 +443,7 @@ def execute_ai_task(
             support_context=support,
         )
         _progress(f"Generating docstring for {symbol_name or 'selection'}…")
-        text = complete_fn(system, user).strip()
+        text = _invoke_complete(complete_fn, system, user).strip()
         if text.startswith('"""') or text.startswith("'''"):
             # Model sometimes wraps quotes — strip outer fences lightly.
             for q in ('"""', "'''"):
@@ -410,7 +479,7 @@ def execute_ai_task(
             context_note=request.source,
         )
         _progress("Chat…")
-        text = complete_fn(system, user)
+        text = _invoke_complete(complete_fn, system, user)
         return AiTaskResult(
             kind=kind,
             title=request.title or "AI Chat",
@@ -427,6 +496,8 @@ def execute_ai_task(
             backend_name=backend_name,
             budget_limits=budget_limits,
             budget_environ=budget_environ,
+            job_contract=job_contract,
+            should_cancel=should_cancel,
         )
 
     raise ValueError(f"unsupported AI task: {kind!r}")
@@ -440,30 +511,53 @@ def _execute_analyze_project(
     backend_name: str,
     budget_limits: Optional[AiBudgetLimits],
     budget_environ: Optional[Mapping[str, str]],
+    job_contract: Optional[AiJobContract],
+    should_cancel: Optional[CancelCheck],
 ) -> AiTaskResult:
-    """Run project analysis with structured findings + global budget (R231)."""
+    """Run project analysis with hard budgets, cancel, and audit findings (R241)."""
     files = list(request.project_files)
     if not files:
         raise ValueError("No Python files found in the project")
 
-    limits = budget_limits if budget_limits is not None else load_ai_budget_limits(environ=budget_environ)
-    tracker = AiBudgetTracker(limits=limits)
+    if job_contract is not None:
+        contract = job_contract
+    else:
+        limits = budget_limits if budget_limits is not None else load_ai_budget_limits(environ=budget_environ)
+        contract = load_ai_job_contract(environ=budget_environ, limits=limits)
+
+    if contract.max_files and len(files) > contract.max_files:
+        files = files[: contract.max_files]
+        progress(f"Capped project analysis to {contract.max_files} files (job contract)")
+
+    tracker = AiBudgetTracker(limits=contract.limits)
     chunk_reports: list[tuple[str, str]] = []
     collected: list[AiFinding] = []
     total = len(files)
     analyzed = 0
     skipped = 0
     stopped = False
+    requests_used = 0
+    project_dir = (request.project_dir or "").strip()
+    if not project_dir and files:
+        project_dir = os.path.commonpath([os.path.abspath(p) for p in files])
 
     for index, path in enumerate(files, start=1):
+        _check_cancel_deadline(contract, should_cancel)
         progress(f"Project analysis {index}/{total}: {path}")
+        if contract.max_requests and requests_used >= contract.max_requests:
+            stopped = True
+            skipped = total - index + 1
+            progress(f"AI request budget exhausted after {requests_used} requests")
+            break
         try:
-            source = _read_text(path)
+            source = _read_text_bounded(path, contract.max_source_bytes)
         except OSError as exc:
             chunk_reports.append((path, f"(unreadable: {exc})"))
             continue
         system, user = build_project_chunk_prompt(path, source, index, total)
         prompt_tokens = estimate_tokens(system) + estimate_tokens(user)
+        # Preflight uses a conservative completion reserve; the provider still
+        # receives the tighter remaining/output cap (R231 + R241).
         if not tracker.can_afford(prompt_tokens, DEFAULT_COMPLETION_RESERVE):
             stopped = True
             skipped = total - index + 1
@@ -472,23 +566,61 @@ def _execute_analyze_project(
                 f"(tokens≈{tracker.tokens_used}, cost≈${tracker.cost_usd:.4f})"
             )
             break
-        report = complete_fn(system, user)
-        tracker.record_texts(system + "\n" + user, report)
+        out_cap = tracker.remaining_output_tokens(prompt_tokens, cap=contract.max_output_tokens)
+        if out_cap <= 0:
+            stopped = True
+            skipped = total - index + 1
+            progress("AI output budget exhausted before next request")
+            break
+        report = _invoke_complete(complete_fn, system, user, max_output_tokens=out_cap)
+        requests_used += 1
+        try:
+            tracker.record_texts(system + "\n" + user, report, hard=True)
+        except AiBudgetExceeded:
+            stopped = True
+            skipped = total - index + 1
+            progress("AI budget exceeded by provider response; discarding over-budget chunk")
+            break
         chunk_reports.append((path, report))
-        collected.extend(parse_findings_payload(report, default_file=path))
+        for finding in parse_findings_payload(report, default_file=path):
+            audited = validate_audit_finding(
+                finding,
+                source=source,
+                default_file=path,
+                project_dir=project_dir,
+                project_files=tuple(files) if not request.project_files else request.project_files,
+            )
+            if audited is not None:
+                collected.append(audited)
         analyzed += 1
 
     synthesis = ""
     if chunk_reports and not stopped:
-        progress("Synthesizing project-wide report…")
-        system, user = build_project_synthesis_prompt(chunk_reports)
-        prompt_tokens = estimate_tokens(system) + estimate_tokens(user)
-        if tracker.can_afford(prompt_tokens, DEFAULT_COMPLETION_RESERVE):
-            synthesis = complete_fn(system, user)
-            tracker.record_texts(system + "\n" + user, synthesis)
-        else:
+        _check_cancel_deadline(contract, should_cancel)
+        if contract.max_requests and requests_used >= contract.max_requests:
             stopped = True
-            progress("Skipping synthesis: remaining AI budget insufficient")
+            progress("Skipping synthesis: request budget exhausted")
+        else:
+            progress("Synthesizing project-wide report…")
+            system, user = build_project_synthesis_prompt(chunk_reports)
+            prompt_tokens = estimate_tokens(system) + estimate_tokens(user)
+            if not tracker.can_afford(prompt_tokens, DEFAULT_COMPLETION_RESERVE):
+                stopped = True
+                progress("Skipping synthesis: remaining AI budget insufficient")
+            else:
+                out_cap = tracker.remaining_output_tokens(prompt_tokens, cap=contract.max_output_tokens)
+                if out_cap <= 0:
+                    stopped = True
+                    progress("Skipping synthesis: remaining AI output budget insufficient")
+                else:
+                    synthesis = _invoke_complete(complete_fn, system, user, max_output_tokens=out_cap)
+                    requests_used += 1
+                    try:
+                        tracker.record_texts(system + "\n" + user, synthesis, hard=True)
+                    except AiBudgetExceeded:
+                        synthesis = ""
+                        stopped = True
+                        progress("AI budget exceeded by synthesis response; discarding")
 
     findings = dedupe_findings(collected)
     findings_report = AiFindingsReport(
@@ -518,6 +650,8 @@ def _execute_analyze_project(
 
 
 __all__ = [
+    "AiTaskCancelled",
+    "AiTaskDeadlineExceeded",
     "AiTaskKind",
     "AiTaskRequest",
     "AiTaskResult",

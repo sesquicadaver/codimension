@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-07 audit)
 
-No confirmed **P0**. **P1: 1** open (🔓 → R241; P1-01…P1-09 ✅). **P2 groups: 7** (R242–R243 + backlog). Wave R221–R231 ✅ as happy-path; re-audit finds remaining lifecycle/concurrency/stale-state/fail-closed gaps.
+No confirmed **P0**. **P1: 0** open (P1-01…P1-10 ✅). **P2 groups: 7** (R242–R243 + backlog). Wave R221–R231 ✅ as happy-path; re-audit finds remaining lifecycle/concurrency/stale-state/fail-closed gaps.
 
 ### Re-audit 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 queue
 
@@ -22,7 +22,7 @@ No confirmed **P0**. **P1: 1** open (🔓 → R241; P1-01…P1-09 ✅). **P2 gro
 | P1-08 | MCP walker: unbounded `listdir` + TOCTOU path escape | P1 | ✅ R238 |
 | P1-07 | Taint: whole-list re-exec → sink-before-source; exception/match/loop-else gaps | P1 | ✅ R239 |
 | P1-06 | FFI `EXACT`: structural proof not always edge-specific identity | P1 | ✅ R240 |
-| P1-10 | AI budgets soft; no cancel/deadline/evidence hard validation | P1 | 🔓 OPEN → **R241** |
+| P1-10 | AI budgets soft; no cancel/deadline/evidence hard validation | P1 | ✅ R241 |
 
 ### P2 / tech debt (2026-09-07 audit)
 
