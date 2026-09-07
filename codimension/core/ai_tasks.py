@@ -499,17 +499,11 @@ def _execute_analyze_project(
         files_analyzed=analyzed,
         files_skipped=skipped,
     )
-    header = (
-        f"# Project analysis ({analyzed}/{total} Python modules analyzed)\n\n"
-        f"{findings_report.to_markdown()}\n"
-    )
+    header = f"# Project analysis ({analyzed}/{total} Python modules analyzed)\n\n{findings_report.to_markdown()}\n"
     if synthesis:
         body = header + "## Narrative synthesis\n\n" + synthesis
     else:
-        body = header + (
-            "## Narrative synthesis\n\n"
-            "_(skipped or empty — see structured findings above)_\n"
-        )
+        body = header + ("## Narrative synthesis\n\n_(skipped or empty — see structured findings above)_\n")
     return AiTaskResult(
         kind=AiTaskKind.ANALYZE_PROJECT,
         title=request.title,

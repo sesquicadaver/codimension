@@ -280,7 +280,9 @@ def findings_to_sarif(report: AiFindingsReport, *, tool_name: str = "codimension
         "version": "2.1.0",
         "runs": [
             {
-                "tool": {"driver": {"name": tool_name, "informationUri": "https://github.com/sesquicadaver/codimension"}},
+                "tool": {
+                    "driver": {"name": tool_name, "informationUri": "https://github.com/sesquicadaver/codimension"}
+                },
                 "results": results,
                 "properties": {
                     "tokensUsed": report.tokens_used,
