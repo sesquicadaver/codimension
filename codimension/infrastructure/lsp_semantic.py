@@ -86,9 +86,7 @@ class LspSemanticProvider:
         if document_store is not None:
             self._documents = document_store
         else:
-            self._documents = DocumentStore(
-                loader=make_workspace_document_loader(config.workspace_root)
-            )
+            self._documents = DocumentStore(loader=make_workspace_document_loader(config.workspace_root))
 
     @property
     def document_store(self) -> DocumentStore:
