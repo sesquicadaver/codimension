@@ -1,5 +1,9 @@
 2026 Sep 07
 
+* R234: ``LspProcess`` pending map uses ``_pending_lock`` and
+  ``(transport_generation, request_id)`` keys; atomic ``pop`` transfers
+  Future ownership; old readers only fail their generation; race tests
+  for timeout/shutdown/restart (re-audit P1-03 @ 45e33f6)
 * R233: ``LspProcess.ensure_initialized()`` atomically restarts a dead
   subprocess, runs initialize handshake under the lifecycle lock, and
   bumps process generation; ``request``/``notify`` never skip handshake;

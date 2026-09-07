@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-07)
 
-Підтверджених **P0** немає. **P1: 8** відкритих (🔓 → R234–R241; P1-01…P1-02 ✅). **P2 групи: 7** (R242–R243 + backlog). Хвиля R221–R231 ✅ як happy-path; повторний аудит фіксує lifecycle/concurrency/stale-state/fail-closed залишки.
+Підтверджених **P0** немає. **P1: 7** відкритих (🔓 → R235–R241; P1-01…P1-03 ✅). **P2 групи: 7** (R242–R243 + backlog). Хвиля R221–R231 ✅ як happy-path; повторний аудит фіксує lifecycle/concurrency/stale-state/fail-closed залишки.
 
 ### Повторний аудит 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 черга
 
@@ -15,7 +15,7 @@
 |----|----------|-----------|--------|
 | P1-01 | Plugin re-enable: `materializePlugin` → `loadPlugins()` без повторної manifest/file-identity перевірки | P1 | ✅ R232 |
 | P1-02 | LSP: після crash request може піти до нового `initialize` | P1 | ✅ R233 |
-| P1-03 | LSP: race/`InvalidStateError` у `_pending` без lock + generation | P1 | 🔓 OPEN → **R234** |
+| P1-03 | LSP: race/`InvalidStateError` у `_pending` без lock + generation | P1 | ✅ R234 |
 | P1-04 | DocumentStore: falsy empty store, stale disk, `(0,0)`, unversioned edits, unbounded loader | P1 | 🔓 OPEN → **R235** |
 | P1-05 | Create Project обходить R230 lifecycle (`createNew` без ApplicationServices) | P1 | 🔓 OPEN → **R236** |
 | P1-09 | AI HTTP: redirects без re-validate trust (як Updater R222) | P1 | 🔓 OPEN → **R237** |
