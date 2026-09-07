@@ -35,8 +35,8 @@ codimension-mcp --workspace /path/to/project   # транспорт stdio
 | Allowed root | Обовʼязково через `--workspace` або `CDM_MCP_WORKSPACE`; realpath; незмінний на час процесу |
 | `open_workspace` | Лише каталоги під allowed root |
 | Path tools | CFG / taint / фільтри файлів — під open root **і** allowed root |
-| Бюджети | `CDM_MCP_MAX_FILES` (10000), `CDM_MCP_MAX_BYTES` (64 MiB), `CDM_MCP_MAX_DEPTH` (32); перевищення → `ResourceBudgetError` |
-| Walker (R223) | Depth / file / byte checks **під час** обходу (`mcp_backend.walker`); без повної матеріалізації `scan_project_files`; pre-check `st_size` + chunked reads |
+| Бюджети | `CDM_MCP_MAX_FILES` (10000), `CDM_MCP_MAX_BYTES` (64 MiB), `CDM_MCP_MAX_DEPTH` (32), `CDM_MCP_MAX_ENTRIES` (100000), `CDM_MCP_MAX_DIRECTORIES` (10000); перевищення → `ResourceBudgetError` |
+| Walker (R223 / R238) | Depth / file / byte / entry / directory checks **під час** обходу (`mcp_backend.walker`); `scandir` (сортування імен); fd-relative `openat` + `O_NOFOLLOW` + `fstat` inode; symlink пропускаються; без повної матеріалізації `scan_project_files` |
 | Глибина | Шляхи глибше `max_depth` пропускаються; каталоги на ліміті не обходяться |
 | Модуль | `mcp_backend.policy.WorkspacePolicy` |
 
@@ -65,4 +65,4 @@ codimension-mcp --workspace /path/to/project   # транспорт stdio
 
 - Qt-free: `scripts/check_core_import_graph.py` включає `mcp_backend`
 - Матриця шарів: `mcp_backend` → лише `core|infrastructure|app|utils`
-- Тести: `tests/test_mcp_r182.py`, `tests/test_mcp_walker_r223.py`
+- Тести: `tests/test_mcp_r182.py`, `tests/test_mcp_walker_r223.py`, `tests/test_mcp_walker_r238.py`

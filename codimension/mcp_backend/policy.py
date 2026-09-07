@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - MCP workspace policy (R214)
+# codimension - MCP workspace policy (R214 / R238)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,10 +9,13 @@
 # (at your option) any later version.
 #
 
-"""Immutable allowed workspace root + scan resource budgets (R214).
+"""Immutable allowed workspace root + scan resource budgets (R214 / R238).
 
 Production startup must fix the filesystem authority via ``--workspace`` or
 ``CDM_MCP_WORKSPACE``. Clients cannot open arbitrary paths outside that root.
+
+R238 adds entry/directory traversal budgets so non-``.py`` noise cannot
+exhaust RAM/CPU before file/byte limits fire.
 """
 
 from __future__ import annotations
@@ -29,10 +32,16 @@ MCP_MAX_FILES_ENV = "CDM_MCP_MAX_FILES"
 MCP_MAX_BYTES_ENV = "CDM_MCP_MAX_BYTES"
 #: Max path depth under the open root (``0`` = unlimited — discouraged).
 MCP_MAX_DEPTH_ENV = "CDM_MCP_MAX_DEPTH"
+#: Max directory entries examined during walk (``0`` = unlimited — discouraged).
+MCP_MAX_ENTRIES_ENV = "CDM_MCP_MAX_ENTRIES"
+#: Max directories descended into (``0`` = unlimited — discouraged).
+MCP_MAX_DIRECTORIES_ENV = "CDM_MCP_MAX_DIRECTORIES"
 
 DEFAULT_MAX_FILES = 10_000
 DEFAULT_MAX_BYTES = 64 * 1024 * 1024
 DEFAULT_MAX_DEPTH = 32
+DEFAULT_MAX_ENTRIES = 100_000
+DEFAULT_MAX_DIRECTORIES = 10_000
 
 
 class WorkspacePolicyError(PermissionError):
@@ -51,6 +60,8 @@ class WorkspacePolicy:
     max_files: int = DEFAULT_MAX_FILES
     max_bytes: int = DEFAULT_MAX_BYTES
     max_depth: int = DEFAULT_MAX_DEPTH
+    max_entries: int = DEFAULT_MAX_ENTRIES
+    max_directories: int = DEFAULT_MAX_DIRECTORIES
 
     def __post_init__(self) -> None:
         """Normalize and validate the allowed root / budgets."""
@@ -64,6 +75,8 @@ class WorkspacePolicy:
             ("max_files", self.max_files),
             ("max_bytes", self.max_bytes),
             ("max_depth", self.max_depth),
+            ("max_entries", self.max_entries),
+            ("max_directories", self.max_directories),
         ):
             if int(value) < 0:
                 raise WorkspacePolicyError(f"{name} must be >= 0, got {value}")
@@ -132,6 +145,16 @@ def policy_from_environ(
             default=DEFAULT_MAX_DEPTH,
             label=MCP_MAX_DEPTH_ENV,
         ),
+        max_entries=_parse_nonneg_int(
+            str(env.get(MCP_MAX_ENTRIES_ENV, "")),
+            default=DEFAULT_MAX_ENTRIES,
+            label=MCP_MAX_ENTRIES_ENV,
+        ),
+        max_directories=_parse_nonneg_int(
+            str(env.get(MCP_MAX_DIRECTORIES_ENV, "")),
+            default=DEFAULT_MAX_DIRECTORIES,
+            label=MCP_MAX_DIRECTORIES_ENV,
+        ),
     )
 
 
@@ -153,9 +176,13 @@ def require_workspace_policy_or_exit(
 __all__ = [
     "DEFAULT_MAX_BYTES",
     "DEFAULT_MAX_DEPTH",
+    "DEFAULT_MAX_DIRECTORIES",
+    "DEFAULT_MAX_ENTRIES",
     "DEFAULT_MAX_FILES",
     "MCP_MAX_BYTES_ENV",
     "MCP_MAX_DEPTH_ENV",
+    "MCP_MAX_DIRECTORIES_ENV",
+    "MCP_MAX_ENTRIES_ENV",
     "MCP_MAX_FILES_ENV",
     "MCP_WORKSPACE_ENV",
     "ResourceBudgetError",

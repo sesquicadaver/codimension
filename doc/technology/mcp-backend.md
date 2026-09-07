@@ -35,8 +35,8 @@ Silent open without a token is intentionally unsupported.
 | Allowed root | Required via `--workspace` or `CDM_MCP_WORKSPACE`; realpath'd; immutable for the process |
 | `open_workspace` | May only open directories under the allowed root |
 | Path tools | CFG / taint / file filters resolve under open root **and** allowed root |
-| Budgets | `CDM_MCP_MAX_FILES` (default 10000), `CDM_MCP_MAX_BYTES` (default 64 MiB), `CDM_MCP_MAX_DEPTH` (default 32); exceed → `ResourceBudgetError` |
-| Walker (R223) | Depth / file / byte checks run **during** traversal (`mcp_backend.walker`); no full `scan_project_files` materialization; declared `st_size` pre-check + chunked reads |
+| Budgets | `CDM_MCP_MAX_FILES` (default 10000), `CDM_MCP_MAX_BYTES` (default 64 MiB), `CDM_MCP_MAX_DEPTH` (default 32), `CDM_MCP_MAX_ENTRIES` (default 100000), `CDM_MCP_MAX_DIRECTORIES` (default 10000); exceed → `ResourceBudgetError` |
+| Walker (R223 / R238) | Depth / file / byte / entry / directory checks run **during** traversal (`mcp_backend.walker`); `scandir` name-sorted; fd-relative `openat` + `O_NOFOLLOW` + `fstat` inode match; symlinks skipped; no full `scan_project_files` materialization |
 | Depth | Paths deeper than `max_depth` are skipped; directories at the limit are not descended |
 | Module | `mcp_backend.policy.WorkspacePolicy` |
 
@@ -65,4 +65,4 @@ Silent open without a token is intentionally unsupported.
 
 - Qt-free: `scripts/check_core_import_graph.py` includes `mcp_backend`
 - Layer matrix: `mcp_backend` → `core|infrastructure|app|utils` only
-- Tests: `tests/test_mcp_r182.py`, `tests/test_mcp_walker_r223.py`
+- Tests: `tests/test_mcp_r182.py`, `tests/test_mcp_walker_r223.py`, `tests/test_mcp_walker_r238.py`
