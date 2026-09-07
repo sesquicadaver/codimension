@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - evidence-backed FFI BindingIndex (R206 / R217 / R226)
+# codimension - evidence-backed FFI BindingIndex (R206 / R217 / R226 / R240)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""BindingIndex + BindingProvider contracts (R206 / R217 / R226).
+"""BindingIndex + BindingProvider contracts (R206 / R217 / R226 / R240).
 
 Edges require **evidence** (attribute / ``m.def`` / ``PyMethodDef`` / stub span).
 Exact edges must never be invented from name equality alone.
@@ -20,6 +20,10 @@ R217: ``BindingPrecision.EXACT`` requires a **full registration chain**
 
 R226: ``EXACT`` additionally requires :attr:`BindingEvidenceKind.STRUCTURAL_REGISTRATION`
 (Tree-sitter CST containment). Regex co-location alone is insufficient.
+
+R240: structural proofs carry edge-specific identity (module / binder / export /
+native / registration call). ``EXACT`` edges must be built from that proof —
+regex may nominate candidates but must not choose module identity for ``EXACT``.
 """
 
 from __future__ import annotations
@@ -43,7 +47,8 @@ class BindingFramework(str, Enum):
 class BindingPrecision(str, Enum):
     """How precise the native target is.
 
-    ``EXACT`` — full registration chain **structurally** proven (R217 + R226).
+    ``EXACT`` — full registration chain **structurally** proven with
+    edge-specific identity (R217 + R226 + R240).
     ``BRIDGE`` — declaration present; registration not structurally proven.
     ``INLINE`` — inline/lambda body at the bind site.
     ``INFERRED`` — name/signature heuristic only (never preferred over evidence).

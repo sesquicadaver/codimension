@@ -26,7 +26,7 @@ Codimension розширюється за межі Python через **унів�
 | LSP stdio / position codec I/O | `infrastructure` + тонкий `utils` |
 | UI controller | `ui/language_controller.py` (R204 + **R229**: лише capability checks; рекламувати лише API з `SemanticProvider` — без DIAGNOSTICS/COMPLETION/SEMANTIC_TOKENS до реалізації; diagnostics policy = UNAVAILABLE без cap) |
 | Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **не** compiler CFG) |
-| FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206 + **R217** + **R226**: PyO3 / pybind11 / CPython / `.pyi`; `EXACT` лише з Tree-sitter CST registration proof; інакше `BRIDGE`/`INLINE`) |
+| FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206 + **R217** + **R226** + **R240**: PyO3 / pybind11 / CPython / `.pyi`; `EXACT` лише з edge-specific Tree-sitter registration identity; інакше `BRIDGE`/`INLINE`) |
 | Typed deps + cross-nav | `core/dependency_edges.py` + `core/cross_language_nav.py` (R207: `DependencyEdgeKind`, FFI hops; utils graph лишає `PYTHON_IMPORT`) |
 | Build tasks | `core/tasks.py` + `infrastructure/build_tasks.py` (R208: Cargo / CMake / Ninja / CTest; лише explicit discovery; `BUILD_TASK_EXEC`) |
 

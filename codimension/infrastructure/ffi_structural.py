@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - FFI structural registration proofs (R226)
+# codimension - FFI structural registration proofs (R226 / R240)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,17 +9,27 @@
 # (at your option) any later version.
 #
 
-"""Tree-sitter CST proofs for FFI registration chains (R226).
+"""Tree-sitter CST proofs for FFI registration chains (R226 / R240).
 
 Regex/text discovery (R206/R217) still finds candidates. ``EXACT`` precision
-requires a **structural** containment proof from this module:
+requires a **structural** containment proof from this module that carries
+**edge-specific identity** (R240):
 
-* PyO3 — ``wrap_pyfunction!(fn, …)`` is a descendant of a ``#[pymodule]``
-  function body (attribute is a preceding sibling of ``function_item``).
+* module / init function
+* binder or method table
+* Python export name (when known from CST)
+* native function
+* concrete registration call
+* source span of the registration site
+
+Framework rules:
+
+* PyO3 — ``wrap_pyfunction!(fn, …)`` is an argument of ``*.add_function(…)``
+  inside a ``#[pymodule]`` function body (not merely co-located).
 * pybind11 — ``var.def("name", …)`` lies inside the ``compound_statement`` of
   the matching ``PYBIND11_MODULE(mod, var)``.
-* CPython — ``PyMethodDef`` row ↔ ``PyModuleDef.m_methods`` ↔
-  ``PyInit_*`` / ``PyModule_Create`` via AST fields (no char windows).
+* CPython — ``PyMethodDef`` row for a **specific** method table ↔ that table
+  on ``PyModuleDef.m_methods`` ↔ ``PyInit_*`` / ``PyModule_Create``.
 
 When Tree-sitter / grammars are unavailable, proofs return ``None`` and
 extractors must emit ``BRIDGE`` (fail-closed).
@@ -40,10 +50,15 @@ from infrastructure.tree_sitter_structural import (
 
 @dataclass(frozen=True, slots=True)
 class StructuralRegistrationProof:
-    """Located CST proof that a registration chain is structurally valid."""
+    """Located CST proof with full registration-chain identity (R240)."""
 
     span: SourceSpan
     detail: str
+    module: str = ""
+    binder: str = ""
+    python_name: str = ""
+    native_name: str = ""
+    registration: str = ""
 
 
 def try_parse_root(language_id: str, text: str) -> Any | None:
@@ -112,8 +127,70 @@ def _leading_rust_attrs(parent: Any, function_item: Any) -> list[Any]:
     return attrs
 
 
+def _function_item_name(source_bytes: bytes, function_item: Any) -> str:
+    """Return the identifier name of a Rust ``function_item``."""
+    name = function_item.child_by_field_name("name")
+    if name is not None:
+        return _node_text(source_bytes, name)
+    for child in function_item.children:
+        if child.type == "identifier":
+            return _node_text(source_bytes, child)
+    return ""
+
+
+def _is_pymodule_function(source_bytes: bytes, function_item: Any) -> bool:
+    """True when ``function_item`` has a directly preceding ``#[pymodule]``."""
+    parent = function_item.parent
+    if parent is None:
+        return False
+    for sib in _leading_rust_attrs(parent, function_item):
+        if "pymodule" in _attr_names(source_bytes, sib):
+            return True
+    return False
+
+
+def _call_callee_name(source_bytes: bytes, call_node: Any) -> str:
+    """Return the method/function name of a Rust ``call_expression``."""
+    if not call_node.children:
+        return ""
+    head = call_node.children[0]
+    if head.type == "field_expression":
+        for child in reversed(list(head.children)):
+            if child.type in {"field_identifier", "identifier"}:
+                return _node_text(source_bytes, child)
+        return ""
+    if head.type == "identifier":
+        return _node_text(source_bytes, head)
+    return ""
+
+
+def _ancestor_add_function_call(source_bytes: bytes, node: Any) -> Any | None:
+    """Nearest ancestor ``call_expression`` whose callee is ``add_function``."""
+    parent = node.parent
+    while parent is not None:
+        if parent.type == "call_expression" and _call_callee_name(source_bytes, parent) == "add_function":
+            return parent
+        parent = parent.parent
+    return None
+
+
+def _enclosing_function_item(node: Any) -> Any | None:
+    """Nearest ancestor ``function_item``."""
+    parent = node.parent
+    while parent is not None:
+        if parent.type == "function_item":
+            return parent
+        parent = parent.parent
+    return None
+
+
 def pyo3_registration_proof(text: str, rust_fn: str) -> Optional[StructuralRegistrationProof]:
-    """Prove ``wrap_pyfunction!(rust_fn, …)`` sits inside a ``#[pymodule]`` body."""
+    """Prove ``add_function(wrap_pyfunction!(rust_fn, …))`` inside a ``#[pymodule]``.
+
+    R240: wrap alone inside a pymodule body is insufficient — the wrap must be
+    an argument of a concrete ``add_function`` registration call, and the
+    enclosing pymodule function name becomes the proof's module identity.
+    """
     root = try_parse_root("rust", text)
     if root is None:
         return None
@@ -123,44 +200,44 @@ def pyo3_registration_proof(text: str, rust_fn: str) -> Optional[StructuralRegis
         return None
 
     for node in _walk(root):
-        if node.type != "function_item":
+        if node.type != "macro_invocation":
             continue
-        parent = node.parent
-        if parent is None:
-            continue
-        has_pymodule = False
-        for sib in _leading_rust_attrs(parent, node):
-            names = _attr_names(source_bytes, sib)
-            if "pymodule" in names:
-                has_pymodule = True
+        macro_name = None
+        for child in node.children:
+            if child.type == "identifier":
+                macro_name = _node_text(source_bytes, child)
                 break
-        if not has_pymodule:
+        if macro_name != "wrap_pyfunction":
             continue
-        body = node.child_by_field_name("body")
-        if body is None:
+        matched = False
+        for child in node.children:
+            if child.type != "token_tree":
+                continue
+            idents = [c for c in child.children if c.type == "identifier"]
+            if idents and _node_text(source_bytes, idents[0]) == target:
+                matched = True
+                break
+        if not matched:
             continue
-        for descendant in _walk(body):
-            if descendant.type != "macro_invocation":
-                continue
-            # First child identifier is the macro name.
-            macro_name = None
-            for child in descendant.children:
-                if child.type == "identifier":
-                    macro_name = _node_text(source_bytes, child)
-                    break
-            if macro_name != "wrap_pyfunction":
-                continue
-            # First identifier inside token_tree is the rust fn.
-            for child in descendant.children:
-                if child.type != "token_tree":
-                    continue
-                idents = [c for c in child.children if c.type == "identifier"]
-                if idents and _node_text(source_bytes, idents[0]) == target:
-                    span = unicode_span_from_bytes(text, descendant.start_byte, descendant.end_byte)
-                    return StructuralRegistrationProof(
-                        span=span,
-                        detail=f"wrap_pyfunction!({target}) inside #[pymodule] body",
-                    )
+        add_call = _ancestor_add_function_call(source_bytes, node)
+        if add_call is None:
+            continue
+        fn_item = _enclosing_function_item(add_call)
+        if fn_item is None or not _is_pymodule_function(source_bytes, fn_item):
+            continue
+        module = _function_item_name(source_bytes, fn_item)
+        if not module:
+            continue
+        span = unicode_span_from_bytes(text, add_call.start_byte, add_call.end_byte)
+        return StructuralRegistrationProof(
+            span=span,
+            detail=(f"add_function(wrap_pyfunction!({target})) inside #[pymodule] fn {module}"),
+            module=module,
+            binder=module,
+            python_name="",
+            native_name=target,
+            registration="add_function",
+        )
     return None
 
 
@@ -222,6 +299,7 @@ def pybind11_registration_proof(
     var: str,
     py_name: str,
     def_start: int,
+    native_name: str = "",
 ) -> Optional[StructuralRegistrationProof]:
     """Prove ``var.def("py_name", …)`` at ``def_start`` is inside that MODULE body."""
     for mod_name, binder, body_span in pybind11_module_bodies(text):
@@ -231,26 +309,40 @@ def pybind11_registration_proof(
             return StructuralRegistrationProof(
                 span=body_span,
                 detail=f'PYBIND11_MODULE({module}, {var}) contains .def("{py_name}")',
+                module=mod_name,
+                binder=binder,
+                python_name=py_name,
+                native_name=native_name,
+                registration="def",
             )
     return None
 
 
-def cpython_registration_proof(text: str, py_name: str) -> Optional[StructuralRegistrationProof]:
-    """Prove MethodDef row ``py_name`` is linked via ``m_methods`` + ``PyModule_Create``.
+def cpython_registration_proof(
+    text: str,
+    py_name: str | None = None,
+    *,
+    table_name: str = "",
+    native_fn: str = "",
+) -> Optional[StructuralRegistrationProof]:
+    """Prove a MethodDef row is linked via ``m_methods`` + ``PyModule_Create``.
 
-    Returns a proof spanning the ``PyModule_Create`` call when the full chain
-    is present in the CST.
+    R240: callers must pass the candidate ``table_name`` (and preferably
+    ``native_fn``) so duplicate ``py_name`` rows in other tables cannot
+    satisfy the proof. Positional ``py_name`` is retained for R226 callers.
     """
+    target = (py_name or "").strip()
+    table_want = table_name.strip()
+    native_want = native_fn.strip()
+    if not target or not table_want:
+        return None
     root = try_parse_root("cpp", text)
     if root is None:
         return None
     source_bytes = text.encode("utf-8")
-    target = py_name.strip()
-    if not target:
-        return None
 
-    # table_name → list of (py_name, row_span)
-    tables: dict[str, list[tuple[str, SourceSpan]]] = {}
+    # table_name → list of (py_name, native_fn, row_span)
+    tables: dict[str, list[tuple[str, str, SourceSpan]]] = {}
     for node in _walk(root):
         if node.type != "declaration":
             continue
@@ -261,17 +353,17 @@ def cpython_registration_proof(text: str, py_name: str) -> Optional[StructuralRe
         init = next((c for c in node.children if c.type == "init_declarator"), None)
         if init is None:
             continue
-        table_name = None
+        found_table = None
         for child in init.children:
             if child.type == "array_declarator":
                 ident = next((c for c in child.children if c.type == "identifier"), None)
                 if ident is not None:
-                    table_name = _node_text(source_bytes, ident)
-            elif child.type == "identifier" and table_name is None:
-                table_name = _node_text(source_bytes, child)
-        if not table_name:
+                    found_table = _node_text(source_bytes, ident)
+            elif child.type == "identifier" and found_table is None:
+                found_table = _node_text(source_bytes, child)
+        if not found_table:
             continue
-        rows: list[tuple[str, SourceSpan]] = []
+        rows: list[tuple[str, str, SourceSpan]] = []
         for child in _walk(init):
             if child.type != "initializer_list":
                 continue
@@ -280,7 +372,7 @@ def cpython_registration_proof(text: str, py_name: str) -> Optional[StructuralRe
                 if row.type != "initializer_list":
                     continue
                 named = [c for c in row.children if c.is_named]
-                if not named:
+                if len(named) < 2:
                     continue
                 first = named[0]
                 if first.type != "string_literal":
@@ -289,14 +381,37 @@ def cpython_registration_proof(text: str, py_name: str) -> Optional[StructuralRe
                 if content is None:
                     continue
                 name = _node_text(source_bytes, content)
+                native_node = named[1]
+                native = ""
+                if native_node.type == "identifier":
+                    native = _node_text(source_bytes, native_node)
+                else:
+                    ident = next((c for c in _walk(native_node) if c.type == "identifier"), None)
+                    if ident is not None:
+                        native = _node_text(source_bytes, ident)
                 rows.append(
                     (
                         name,
+                        native,
                         unicode_span_from_bytes(text, row.start_byte, row.end_byte),
                     )
                 )
         if rows:
-            tables.setdefault(table_name, []).extend(rows)
+            tables.setdefault(found_table, []).extend(rows)
+
+    if table_want not in tables:
+        return None
+    row_hit = None
+    for name, native, row_span in tables[table_want]:
+        if name != target:
+            continue
+        if native_want and native and native != native_want:
+            continue
+        row_hit = (name, native or native_want, row_span)
+        break
+    if row_hit is None:
+        return None
+    _py, native_resolved, _row_span = row_hit
 
     # def_name → table_name from .m_methods
     def_to_table: dict[str, str] = {}
@@ -337,7 +452,7 @@ def cpython_registration_proof(text: str, py_name: str) -> Optional[StructuralRe
             if value is not None and value.type == "identifier":
                 def_to_table[def_name] = _node_text(source_bytes, value)
 
-    # PyInit_* containing PyModule_Create(&def)
+    # PyInit_* containing PyModule_Create(&def) for the wanted table only.
     for node in _walk(root):
         if node.type != "function_definition":
             continue
@@ -370,18 +485,22 @@ def cpython_registration_proof(text: str, py_name: str) -> Optional[StructuralRe
                         def_ref = _node_text(source_bytes, ident)
                 elif arg.type == "identifier":
                     def_ref = _node_text(source_bytes, arg)
-            if def_ref is None or def_ref not in def_to_table:
+            if def_ref is None or def_to_table.get(def_ref) != table_want:
                 continue
-            table = def_to_table[def_ref]
-            for name, _row in tables.get(table, []):
-                if name == target:
-                    span = unicode_span_from_bytes(text, descendant.start_byte, descendant.end_byte)
-                    return StructuralRegistrationProof(
-                        span=span,
-                        detail=(
-                            f'PyMethodDef "{target}" via {table} → {def_ref}.m_methods → {fn_name}/PyModule_Create'
-                        ),
-                    )
+            module = fn_name[len("PyInit_") :]
+            span = unicode_span_from_bytes(text, descendant.start_byte, descendant.end_byte)
+            return StructuralRegistrationProof(
+                span=span,
+                detail=(
+                    f'PyMethodDef "{target}"/{native_resolved} via {table_want} → '
+                    f"{def_ref}.m_methods → {fn_name}/PyModule_Create"
+                ),
+                module=module,
+                binder=table_want,
+                python_name=target,
+                native_name=native_resolved,
+                registration="PyModule_Create",
+            )
     return None
 
 
