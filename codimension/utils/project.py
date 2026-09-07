@@ -827,6 +827,10 @@ class CodimensionProject(
         ``props`` keeps the loaded value; any other change is rejected (forced
         back to the loaded UUID). ``userProjectDir`` is never remounted here.
 
+        R228: when the blank came from an external `.cdm3` wipe, callers must
+        pass ``persist=True`` (see :meth:`onProjectFileUpdated`) so the restored
+        UUID is written back atomically.
+
         Rebuild-affecting keys (excludes, importdirs, interpreter) go through
         :meth:`__rebuildAfterPropertyChange` — shared with external `.cdm3` reload.
 
@@ -884,12 +888,15 @@ class CodimensionProject(
         self.__rebuildAfterPropertyChange(reattach_venv=False)
 
     def onProjectFileUpdated(self):
-        """Reload `.cdm3` from disk via ``updateProperties`` (R190 / R219).
+        """Reload `.cdm3` from disk via ``updateProperties`` (R190 / R219 / R228).
 
         Keeps last-known-good props on validation failure. Rejects a disk UUID
         that differs from the loaded project (close/reopen required). Same-UUID
         edits share the single Properties/rebuild pipeline without rewriting
         the file or remounting ``userProjectDir``.
+
+        R228: a blank UUID on disk after a successful load is restored
+        atomically to the loaded UUID (avoids identity drift on next open).
         """
         try:
             props = load_validated_project_props(self.fileName)
@@ -910,6 +917,20 @@ class CodimensionProject(
                 loaded_uuid,
                 disk_uuid,
             )
+            return
+        if loaded_uuid and not disk_uuid:
+            # External wipe of UUID would allocate a new one on next open and
+            # orphan ~/.codimension3/<old-uuid>/. Restore immediately (R228).
+            logging.warning(
+                "External project file update (%s) cleared UUID; restoring %s to disk",
+                self.fileName,
+                loaded_uuid,
+            )
+            props["uuid"] = loaded_uuid
+            self.updateProperties(props, persist=True)
+            # updateProperties may skip write when in-memory props already match;
+            # always rewrite so a blank UUID cannot remain on disk.
+            self.saveProject()
             return
         # Disk already has the payload — apply without rewriting (avoid churn).
         self.updateProperties(props, persist=False)
