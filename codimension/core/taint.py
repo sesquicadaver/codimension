@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - function-local taint / data-flow MVP (R143)
+# codimension - function-local taint / data-flow MVP (R143 / R227)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,27 +9,30 @@
 # (at your option) any later version.
 #
 
-"""Function-local taint / data-flow MVP (R143).
+"""Function-local taint / data-flow MVP (R143 / R227).
 
 **Documented subset** (intentionally narrow):
 
 * Scope: one ``FunctionDef`` / ``AsyncFunctionDef`` (by name, or the first
   in the module). Nested functions are analyzed separately when named;
   closures are not modeled.
-* Sources: every formal parameter; calls matching
-  ``DEFAULT_SOURCE_CALLS`` (e.g. ``input``).
+* Sources: every formal parameter (including ``posonlyargs`` — R227); calls
+  matching ``DEFAULT_SOURCE_CALLS`` (e.g. ``input``).
 * Sinks: calls matching ``DEFAULT_SINK_CALLS`` (e.g. ``eval``, ``exec``,
   ``os.system``, ``subprocess.run`` / ``call`` / ``Popen``).
-* Propagation (intra-procedural, name-based, path-insensitive union):
+* Propagation (intra-procedural, name-based):
   assignment targets from tainted expressions; ``for`` loop targets from
   tainted iterables; unary/binary/bool/compare/if-exp; containers;
   attribute/subscript of a tainted value; call returns are tainted if
   any argument is tainted (unknown callees).
-* Not modeled: interprocedural flow, field-sensitive keys, exceptions,
-  comprehensions as full CFG, ``*args``/``**kwargs`` unpacking fidelity,
-  import aliases beyond a simple dotted callee string.
+* Branches (R227): ``if`` / ``try`` / ``match`` clone the taint environment
+  per arm and **may-taint union** on join (a clean assignment on one path
+  must not erase taint from another feasible path).
+* Not modeled: interprocedural flow, field-sensitive keys, exceptions as
+  precise CFG, comprehensions as full CFG, ``*args``/``**kwargs`` unpacking
+  fidelity, import aliases beyond a simple dotted callee string.
 
-Pure stdlib ``ast``; no Qt.
+Pure stdlib ``ast``; no Qt. Absence of findings is **not** a security proof.
 """
 
 from __future__ import annotations
@@ -139,6 +142,30 @@ def _assign_targets(target: ast.AST) -> list[str]:
     return names
 
 
+def _formal_parameters(func: ast.AsyncFunctionDef | ast.FunctionDef) -> tuple[str, ...]:
+    """Return all formal parameter names, including positional-only (R227)."""
+    args = func.args
+    names: list[str] = [arg.arg for arg in list(args.posonlyargs or []) + list(args.args or [])]
+    if args.vararg is not None:
+        names.append(args.vararg.arg)
+    names.extend(arg.arg for arg in list(args.kwonlyargs or []))
+    if args.kwarg is not None:
+        names.append(args.kwarg.arg)
+    return tuple(names)
+
+
+def _join_may_taint(
+    *envs: dict[str, tuple[str, int]],
+) -> dict[str, tuple[str, int]]:
+    """May-taint lattice join: union of names; keep an origin from any arm (R227)."""
+    out: dict[str, tuple[str, int]] = {}
+    for env in envs:
+        for name, origin in env.items():
+            if name not in out:
+                out[name] = origin
+    return out
+
+
 class _FunctionTaint:
     """Mutable analyzer state for one function body."""
 
@@ -153,11 +180,7 @@ class _FunctionTaint:
         self.sources = sources
         self.sinks = sinks
         self.func_name = func.name
-        self.parameters = tuple(arg.arg for arg in func.args.args) + tuple(arg.arg for arg in func.args.kwonlyargs)
-        if func.args.vararg is not None:
-            self.parameters = self.parameters + (func.args.vararg.arg,)
-        if func.args.kwarg is not None:
-            self.parameters = self.parameters + (func.args.kwarg.arg,)
+        self.parameters = _formal_parameters(func)
         # name → source label that first tainted it
         self.origin: dict[str, tuple[str, int]] = {p: (f"param:{p}", _lineno(func)) for p in self.parameters}
         self.findings: list[TaintFinding] = []
@@ -170,6 +193,18 @@ class _FunctionTaint:
         """Mark ``name`` tainted if not already."""
         if name not in self.origin:
             self.origin[name] = (source, source_line)
+
+    def _analyze_branch(
+        self, stmts: Iterable[ast.stmt], base: dict[str, tuple[str, int]]
+    ) -> dict[str, tuple[str, int]]:
+        """Run ``stmts`` on a clone of ``base`` and return the resulting env."""
+        saved = self.origin
+        self.origin = dict(base)
+        try:
+            self.analyze_stmts(stmts)
+            return dict(self.origin)
+        finally:
+            self.origin = saved
 
     def expr_tainted(self, node: Optional[ast.AST]) -> Optional[tuple[str, int]]:
         """Return (source, source_line) if ``node`` may carry taint."""
@@ -329,8 +364,11 @@ class _FunctionTaint:
             return
         if isinstance(stmt, ast.If):
             self.visit_expr_calls(stmt.test)
-            self.analyze_stmts(stmt.body)
-            self.analyze_stmts(stmt.orelse)
+            base = dict(self.origin)
+            body_env = self._analyze_branch(stmt.body, base)
+            # Empty orelse still joins with the fall-through (skip) path.
+            else_env = self._analyze_branch(stmt.orelse, base) if stmt.orelse else dict(base)
+            self.origin = _join_may_taint(body_env, else_env)
             return
         if isinstance(stmt, (ast.For, ast.AsyncFor)):
             self.visit_expr_calls(stmt.iter)
@@ -338,13 +376,17 @@ class _FunctionTaint:
             if hit:
                 for name in _assign_targets(stmt.target):
                     self.mark(name, hit[0], hit[1])
-            self.analyze_stmts(stmt.body)
-            self.analyze_stmts(stmt.orelse)
+            base = dict(self.origin)
+            body_env = self._analyze_branch(stmt.body, base)
+            else_env = self._analyze_branch(stmt.orelse, base) if stmt.orelse else dict(base)
+            self.origin = _join_may_taint(body_env, else_env)
             return
         if isinstance(stmt, (ast.While,)):
             self.visit_expr_calls(stmt.test)
-            self.analyze_stmts(stmt.body)
-            self.analyze_stmts(stmt.orelse)
+            base = dict(self.origin)
+            body_env = self._analyze_branch(stmt.body, base)
+            else_env = self._analyze_branch(stmt.orelse, base) if stmt.orelse else dict(base)
+            self.origin = _join_may_taint(body_env, else_env)
             return
         if isinstance(stmt, (ast.With, ast.AsyncWith)):
             for item in stmt.items:
@@ -357,16 +399,23 @@ class _FunctionTaint:
             self.analyze_stmts(stmt.body)
             return
         if isinstance(stmt, ast.Try):
-            self.analyze_stmts(stmt.body)
-            for handler in stmt.handlers:
-                self.analyze_stmts(handler.body)
-            self.analyze_stmts(stmt.orelse)
-            self.analyze_stmts(stmt.finalbody)
+            base = dict(self.origin)
+            body_env = self._analyze_branch(stmt.body, base)
+            handler_envs = [self._analyze_branch(handler.body, base) for handler in stmt.handlers]
+            # orelse runs only when body succeeds without exception.
+            else_env = self._analyze_branch(stmt.orelse, body_env) if stmt.orelse else body_env
+            joined = _join_may_taint(else_env, *handler_envs)
+            if stmt.finalbody:
+                self.origin = joined
+                self.analyze_stmts(stmt.finalbody)
+            else:
+                self.origin = joined
             return
         if isinstance(stmt, ast.Match):  # py3.10+
             self.visit_expr_calls(stmt.subject)
-            for case in stmt.cases:
-                self.analyze_stmts(case.body)
+            base = dict(self.origin)
+            case_envs = [self._analyze_branch(case.body, base) for case in stmt.cases]
+            self.origin = _join_may_taint(*case_envs) if case_envs else base
             return
         # Nested def/class: ignore body (separate analysis unit).
         if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):

@@ -83,3 +83,31 @@ def test_from_file(tmp_path: Path) -> None:
     path.write_text("def f(a):\n    eval(a)\n", encoding="utf-8")
     report = analyze_function_taint_from_file(str(path), function="f")
     assert report.findings
+
+
+def test_r227_posonlyargs_flow_to_eval() -> None:
+    """Positional-only parameters must be taint sources (re-audit P1-08)."""
+    report = analyze_function_taint(
+        "def execute(command, /):\n    eval(command)\n",
+        function="execute",
+    )
+    assert report.parameters == ("command",)
+    assert not report.empty
+    assert report.findings[0].source == "param:command"
+
+
+def test_r227_branch_may_taint_join() -> None:
+    """Clean else must not erase taint from the then-arm (may-taint join)."""
+    src = "def f(cond):\n    if cond:\n        value = input()\n    else:\n        value = 'safe'\n    eval(value)\n"
+    report = analyze_function_taint(src, function="f")
+    assert not report.empty
+    assert report.findings[0].sink == "eval"
+    assert report.findings[0].source.startswith("call:input")
+
+
+def test_r227_both_arms_clean_clears_taint() -> None:
+    report = analyze_function_taint(
+        "def f(x):\n    if True:\n        x = 'safe'\n    else:\n        x = 'also-safe'\n    eval(x)\n",
+        function="f",
+    )
+    assert report.empty
