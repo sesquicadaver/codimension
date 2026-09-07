@@ -179,7 +179,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 36 | R224 | LSP DocumentStore for foreign URI spans | Cross-file definition/refs/rename use real ranges (no `SourceSpan(0,0)`) | L | DONE ([#183](https://github.com/sesquicadaver/codimension/pull/183)) |
 | 37 | R225 | Plugin manifest policy fail-closed | Third-party: required `.cdmp` Codimension block; unknown/invalid → deny (no legacy import) | M | DONE ([#185](https://github.com/sesquicadaver/codimension/pull/185)) |
 | 38 | R226 | FFI EXACT via structural parse | Tree-sitter/LSP evidence for registration chain; else BRIDGE/INFERRED | L | DONE ([#187](https://github.com/sesquicadaver/codimension/pull/187)) |
-| 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env per branch; may-taint join; cover positional-only params | M | DONE |
+| 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env per branch; may-taint join; cover positional-only params | M | DONE ([#189](https://github.com/sesquicadaver/codimension/pull/189)) |
 | 40 | R228 | Blank UUID after load | Reject empty disk UUID or atomically restore loaded UUID to `.cdm3` | S | OPEN |
 | 41 | R229 | Polyglot capabilities match providers | Advertise only implemented diagnostics/completion/tokens APIs | M | OPEN |
 | 42 | R230 | Wire LanguageServiceManager into IDE lifecycle | Compose into GlobalData/MainWindow workspace open/close | L | OPEN |
