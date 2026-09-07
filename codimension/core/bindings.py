@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - evidence-backed FFI BindingIndex (R206 / R217)
+# codimension - evidence-backed FFI BindingIndex (R206 / R217 / R226)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,14 +9,17 @@
 # (at your option) any later version.
 #
 
-"""BindingIndex + BindingProvider contracts (R206 / R217).
+"""BindingIndex + BindingProvider contracts (R206 / R217 / R226).
 
 Edges require **evidence** (attribute / ``m.def`` / ``PyMethodDef`` / stub span).
 Exact edges must never be invented from name equality alone.
 
-R217: ``BindingPrecision.EXACT`` is reserved for a **full registration chain**
+R217: ``BindingPrecision.EXACT`` requires a **full registration chain**
 (declaration + module registration evidence). Declaration-only exports use
 ``BRIDGE`` (or ``INLINE`` for pybind11 lambdas).
+
+R226: ``EXACT`` additionally requires :attr:`BindingEvidenceKind.STRUCTURAL_REGISTRATION`
+(Tree-sitter CST containment). Regex co-location alone is insufficient.
 """
 
 from __future__ import annotations
@@ -40,8 +43,8 @@ class BindingFramework(str, Enum):
 class BindingPrecision(str, Enum):
     """How precise the native target is.
 
-    ``EXACT`` — full registration chain proven (R217).
-    ``BRIDGE`` — declaration present; registration not proven.
+    ``EXACT`` — full registration chain **structurally** proven (R217 + R226).
+    ``BRIDGE`` — declaration present; registration not structurally proven.
     ``INLINE`` — inline/lambda body at the bind site.
     ``INFERRED`` — name/signature heuristic only (never preferred over evidence).
     """
@@ -67,21 +70,24 @@ class BindingEvidenceKind(str, Enum):
     PYMODULEDEF = "pymoduledef"
     PYI_DECL = "pyi_decl"
     PYTHON_IMPORT = "python_import"
+    STRUCTURAL_REGISTRATION = "structural_registration"
 
 
-#: Evidence kinds required for EXACT edges per framework (R217).
+#: Evidence kinds required for EXACT edges per framework (R217 + R226).
 _EXACT_REQUIRED_KINDS: dict[BindingFramework, frozenset[BindingEvidenceKind]] = {
     BindingFramework.PYO3: frozenset(
         {
             BindingEvidenceKind.PYFUNCTION_ATTR,
             BindingEvidenceKind.WRAP_PYFUNCTION,
             BindingEvidenceKind.PYMODULE_ATTR,
+            BindingEvidenceKind.STRUCTURAL_REGISTRATION,
         }
     ),
     BindingFramework.PYBIND11: frozenset(
         {
             BindingEvidenceKind.PYBIND11_DEF,
             BindingEvidenceKind.PYBIND11_MODULE,
+            BindingEvidenceKind.STRUCTURAL_REGISTRATION,
         }
     ),
     BindingFramework.CPYTHON: frozenset(
@@ -89,6 +95,7 @@ _EXACT_REQUIRED_KINDS: dict[BindingFramework, frozenset[BindingEvidenceKind]] = 
             BindingEvidenceKind.PYMETHODDEF,
             BindingEvidenceKind.PYMODULEDEF,
             BindingEvidenceKind.PYINIT,
+            BindingEvidenceKind.STRUCTURAL_REGISTRATION,
         }
     ),
 }
