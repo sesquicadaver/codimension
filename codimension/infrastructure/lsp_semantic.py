@@ -13,6 +13,9 @@
 
 R224: foreign-URI locations and workspace edits decode spans via
 :class:`~core.document_store.DocumentStore` (open buffers + ``file://`` load).
+
+R233: document sync tracks :meth:`LspProcess.ensure_initialized` generation so
+a crash+restart never reuses stale ``_opened`` state or skips handshake.
 """
 
 from __future__ import annotations
@@ -77,6 +80,8 @@ class LspSemanticProvider:
         self._readiness = readiness
         # uri → last version synced to the language server (didOpen / didChange).
         self._opened: dict[str, int] = {}
+        # Last LspProcess.generation observed; mismatch clears ``_opened`` (R233).
+        self._server_generation: int = 0
         self._documents = document_store or DocumentStore(loader=load_document_from_uri)
 
     @property
@@ -112,10 +117,11 @@ class LspSemanticProvider:
             self._config.command,
             allowlist=self._config.allowlist,
         )
-        if not proc.initialized:
-            # Server restart / first start: previous document state is gone.
+        generation = proc.ensure_initialized()
+        if generation != self._server_generation:
+            # Restart / first handshake: previous document state is gone.
             self._opened.clear()
-            proc.initialize()
+            self._server_generation = generation
         return proc
 
     def _ensure_open(self, document: DocumentSnapshot) -> LspProcess:
@@ -173,9 +179,12 @@ class LspSemanticProvider:
             self._config.command,
             allowlist=self._config.allowlist,
         )
-        if not proc.initialized:
+        prev_generation = self._server_generation
+        generation = proc.ensure_initialized()
+        if generation != prev_generation:
+            # Fresh server after crash — nothing to close on the new process.
             self._opened.clear()
-            proc.initialize()
+            self._server_generation = generation
             return
         proc.notify("textDocument/didClose", {"textDocument": {"uri": uri}})
 

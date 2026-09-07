@@ -1,5 +1,10 @@
 2026 Sep 07
 
+* R233: ``LspProcess.ensure_initialized()`` atomically restarts a dead
+  subprocess, runs initialize handshake under the lifecycle lock, and
+  bumps process generation; ``request``/``notify`` never skip handshake;
+  ``LspSemanticProvider`` clears ``_opened`` on generation change
+  (re-audit P1-02 @ 45e33f6)
 * R232: re-validate ``.cdmp`` policy + on-disk file identity
   (mtime/size/sha256) immediately before every ``loadPlugins()``,
   including ``materializePlugin`` enable — deferred plugins cannot
