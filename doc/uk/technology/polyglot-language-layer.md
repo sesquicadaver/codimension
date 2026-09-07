@@ -22,7 +22,7 @@ Codimension розширюється за межі Python через **унів�
 | Частина | Пакет |
 | ------- | ----- |
 | `LanguageDescriptor`, capabilities, Protocol, Registry | `codimension/core/language.py` |
-| Lifecycle manager | `codimension/app/language_services.py` |
+| Lifecycle manager | `codimension/app/language_services.py` (**R230**: `attach_workspace` / `detach_workspace`; хуки GlobalData + MainWindow `LanguageController`) |
 | LSP stdio / position codec I/O | `infrastructure` + тонкий `utils` |
 | UI controller | `ui/language_controller.py` (R204 + **R229**: лише capability checks; рекламувати лише API з `SemanticProvider` — без DIAGNOSTICS/COMPLETION/SEMANTIC_TOKENS до реалізації; diagnostics policy = UNAVAILABLE без cap) |
 | Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **не** compiler CFG) |

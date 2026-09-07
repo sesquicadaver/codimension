@@ -1,5 +1,9 @@
 2026 Sep 07
 
+* R230: wire ``LanguageServiceManager`` into IDE workspace lifecycle
+  (``attach_workspace`` / ``detach_workspace`` on GlobalData project
+  load/unload; MainWindow ``LanguageController``); LSP binaries via
+  ``CDM_RUST_ANALYZER`` / ``CDM_CLANGD`` (re-audit P1-05 @ 8824ff3c)
 * R229: advertise only language capabilities backed by real
   ``SemanticProvider`` APIs (no DIAGNOSTICS/COMPLETION/SEMANTIC_TOKENS);
   bare rust/cpp services claim no semantic caps until a provider is bound
