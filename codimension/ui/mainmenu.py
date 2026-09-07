@@ -893,7 +893,7 @@ class MainWindowMenuMixin:
                 prj = GlobalData().project
                 prj.tabsStatus = self.em.getTabsStatus()
                 self.em.closeAll()
-                GlobalData().project.createNew(
+                GlobalData().appServices.create_project(
                     project_file,
                     {
                         "scriptname": "",

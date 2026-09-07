@@ -1,5 +1,8 @@
 2026 Sep 07
 
+* R236: ``ApplicationServices`` owns create/load/switch/unload; UI no longer
+  calls ``project.createNew`` directly; loading over an open project unloads
+  first so R230 language detach/attach always runs (re-audit P1-05 @ 45e33f6)
 * R235: workspace ``DocumentStore`` stays truthy when empty; open-buffer vs
   disk provenance with mtime/size/inode invalidation; shared store on
   ``LanguageServiceManager.attach_workspace``; ``WorkspaceTextEdit`` carries

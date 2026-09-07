@@ -1321,14 +1321,14 @@ class CodimensionMainWindow(
         self.__loadProject(projectFile)
 
     def __loadProject(self, projectFile):
-        """Loads the given project via ApplicationServices (R102)."""
+        """Loads/switches project via ApplicationServices (R102 / R236)."""
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         if self.em.closeRequest():
             globalData = GlobalData()
             prj = globalData.project
             prj.tabsStatus = self.em.getTabsStatus()
             self.em.closeAll()
-            globalData.appServices.load_project(projectFile)
+            globalData.appServices.switch_project(projectFile)
             if not self._leftSideBar.isMinimized():
                 self.activateProjectTab()
         QApplication.restoreOverrideCursor()
@@ -1724,7 +1724,7 @@ class CodimensionMainWindow(
         prj.tabsStatus = self.em.getTabsStatus()
         self.em.closeAll()
 
-        GlobalData().project.createNew(
+        GlobalData().appServices.create_project(
             dialog.absProjectFileName,
             {
                 "scriptname": dialog.scriptEdit.text().strip(),

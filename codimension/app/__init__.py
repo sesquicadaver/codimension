@@ -12,6 +12,7 @@
 """Application layer façades (headless; no widgets).
 
 R101 introduces ``ApplicationServices`` for project load/unload hooks.
+R236 extends the façade with create/switch so UI never bypasses lifecycle.
 R102 routes UI open/unload through this package.
 """
 
