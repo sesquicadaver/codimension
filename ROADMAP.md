@@ -190,7 +190,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | # | ID | Task | Acceptance | Size | Status |
 |---|-----|------|------------|------|--------|
 | 44 | R232 | Plugin re-enable pre-import gate | Every `loadPlugins()` (incl. `materializePlugin`) re-checks manifest + file identity | M | DONE ([#196](https://github.com/sesquicadaver/codimension/pull/196)) |
-| 45 | R233 | LSP generation-safe lifecycle | Atomic restart+initialize; no requests before handshake; clear `_opened` on generation bump | M | DONE |
+| 45 | R233 | LSP generation-safe lifecycle | Atomic restart+initialize; no requests before handshake; clear `_opened` on generation bump | M | DONE ([#197](https://github.com/sesquicadaver/codimension/pull/197)) |
 | 46 | R234 | LSP pending synchronization | `_pending_lock`; `(generation, id)` keys; timeout/shutdown/old-reader race tests | L | OPEN |
 | 47 | R235 | Workspace DocumentStore | Single editor-backed store; versioned edits; deny unresolved/`(0,0)` apply; bounded loader | L | OPEN |
 | 48 | R236 | Project lifecycle façade | create/load/switch/unload only via `ApplicationServices` (fix `createNew` bypass) | M | OPEN |
