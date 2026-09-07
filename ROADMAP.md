@@ -197,7 +197,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 49 | R237 | AI redirect trust | Every redirect hop + final URL pass provider scheme/host policy | M | DONE ([#203](https://github.com/sesquicadaver/codimension/pull/203)) |
 | 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | DONE ([#205](https://github.com/sesquicadaver/codimension/pull/205)) |
 | 51 | R239 | Taint CFG worklist | Forward per-node lattice; no whole-list re-exec; exception/no-match/loop-else | L | DONE ([#207](https://github.com/sesquicadaver/codimension/pull/207)) |
-| 52 | R240 | FFI edge-specific structural proof | `EXACT` only with full registration-chain identity (module/binder/export/native) | L | DONE (PR pending) |
+| 52 | R240 | FFI edge-specific structural proof | `EXACT` only with full registration-chain identity (module/binder/export/native) | L | DONE ([#209](https://github.com/sesquicadaver/codimension/pull/209)) |
 | 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | OPEN |
 | 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | OPEN |
 | 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | OPEN |
