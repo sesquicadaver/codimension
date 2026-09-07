@@ -89,7 +89,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Taint MVP R143** | core.taint | Function-local sources→sinks; R194 `heuristic`+`confidence` | tests/test_taint.py; [taint-mvp.md](../../technology/taint-mvp.md) |
 | **Plugin capabilities R150** | plugins.capabilities + plugins.policy + pluginmanager | `PluginCapabilitySpec` / negotiate; **R220** fail-closed static policy before import; **R225** third-party requires complete ``[Codimension]`` (no legacy fallback); R191 user-disabled before import | tests/test_plugin_capabilities.py, test_plugin_policy.py, test_plugin_policy_r220.py, test_plugin_policy_r225.py |
 | **AI context R151** | core.ai_context | Pack SymbolIndex + CFG slice for a symbol; JSON-friendly; no network | tests/test_ai_context.py |
-| **AI UI R152** | core.ai_ui + core.ai_tasks + core.ai_http + core.ai_project_context + core.ai_docstring + ui.ai* + editor/Options | Analyze; Google docstring; Chat; R192 budgeted HTTP + cancel + base_url trust; **R218** versioned `DocstringTarget` (file/version/qualname/span/fingerprint) + post-patch `ast.parse` | tests/test_ai_ui.py, test_ai_tasks.py, test_ai_config.py, test_ai_http.py, test_ai_docstring_r218.py |
+| **AI UI R152** | core.ai_ui + core.ai_tasks + core.ai_http + core.ai_project_context + core.ai_docstring + core.ai_findings + core.ai_budget + ui.ai* + editor/Options | Analyze; Google docstring; Chat; R192 budgeted HTTP + cancel + base_url trust; **R218** versioned `DocstringTarget`; **R231** structured `AiFinding` + global token/cost budget on `ANALYZE_PROJECT` + SARIF-like export | tests/test_ai_ui.py, test_ai_tasks.py, test_ai_config.py, test_ai_http.py, test_ai_docstring_r218.py, test_ai_findings_r231.py |
 | **Feature flags R174** | core.feature_flags | Persistent JSON flags; env overrides; gates AI UI | tests/test_feature_flags.py |
 | **Safe mode R175** | core.safe_mode + codimension/pluginmanager/overlays | `--safe-mode` / `CDM_SAFE_MODE`; skip plugins + overlays | tests/test_safe_mode.py |
 | **Env overlay R160** | utils.environment_overlay + editor.flowuinavbar | `env:source` + path badges on flow nav via R135; status bar notifies `env` | tests/test_environment_overlay.py |
@@ -161,7 +161,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R231** (AI structured findings + global budgets); wave R221–R231 (`codi-last.md` @ 8824ff3c).
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — wave R221–R231 ✅ (`codi-last.md` @ 8824ff3c); see ROADMAP Next.
 
 ### Module boundary matrix (R103 / R195)
 

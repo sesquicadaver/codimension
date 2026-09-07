@@ -1,5 +1,9 @@
 2026 Sep 07
 
+* R231: structured ``AiFinding`` model (severity/confidence/evidence/spans),
+  validated parse + dedupe + SARIF-like export; global token/cost budget
+  (``CDM_AI_MAX_TOKENS`` / ``CDM_AI_MAX_COST_USD``) gates ``ANALYZE_PROJECT``
+  beyond per-file truncation (re-audit P1-AI @ 8824ff3c)
 * R230: wire ``LanguageServiceManager`` into IDE workspace lifecycle
   (``attach_workspace`` / ``detach_workspace`` on GlobalData project
   load/unload; MainWindow ``LanguageController``); LSP binaries via
