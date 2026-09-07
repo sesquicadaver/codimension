@@ -13,6 +13,9 @@ construct this backend after reading user config / API key.
 
 R192 / A220: response bodies are read in bounded chunks with an optional cancel
 callback; ``base_url`` must match a trust allowlist (provider defaults + env).
+
+R237: every HTTP redirect hop and the final ``response.geturl()`` are
+re-validated against the same scheme/host policy (provider-bound handler).
 """
 
 from __future__ import annotations
@@ -22,8 +25,10 @@ import os
 import urllib.error
 import urllib.request
 from contextlib import AbstractContextManager
+from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Optional, Sequence
 from urllib.parse import urljoin, urlparse
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from core.ai_config import (
     DEFAULT_BASE_URLS,
@@ -58,6 +63,76 @@ class AiHttpError(RuntimeError):
 
 class AiHttpCancelled(AiHttpError):
     """Raised when the caller cancels an in-flight AI HTTP read."""
+
+
+@dataclass(frozen=True, slots=True)
+class AiUrlTrust:
+    """Provider-bound URL trust inputs for redirect + final URL checks (R237)."""
+
+    provider: str
+    extra_allowlist: tuple[str, ...] = ()
+    environ: Mapping[str, str] | None = None
+
+
+class TrustedAiRedirectHandler(HTTPRedirectHandler):
+    """Fail closed on each redirect hop unless the new URL passes AI trust policy (R237)."""
+
+    def __init__(self, trust: AiUrlTrust) -> None:
+        """Bind hop validation to ``trust``."""
+        super().__init__()
+        self._trust = trust
+
+    def redirect_request(
+        self,
+        req: Request,
+        fp: Any,
+        code: int,
+        msg: str,
+        headers: Any,
+        newurl: str,
+    ) -> Optional[Request]:
+        """Validate ``newurl`` then defer to :class:`HTTPRedirectHandler`."""
+        assert_trusted_ai_url(
+            self._trust.provider,
+            newurl,
+            extra_allowlist=self._trust.extra_allowlist,
+            environ=self._trust.environ,
+        )
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def trusted_ai_urlopen(
+    req: Request,
+    *,
+    trust: AiUrlTrust,
+    timeout: float = DEFAULT_TIMEOUT_SEC,
+) -> Any:
+    """``urlopen`` that re-validates every redirect hop and the final URL (R237)."""
+    assert_trusted_ai_url(
+        trust.provider,
+        str(getattr(req, "full_url", None) or req.get_full_url()),
+        extra_allowlist=trust.extra_allowlist,
+        environ=trust.environ,
+    )
+    opener = build_opener(TrustedAiRedirectHandler(trust))
+    resp = opener.open(req, timeout=timeout)
+    geturl = getattr(resp, "geturl", None)
+    final_url = str(geturl()) if callable(geturl) else ""
+    if not final_url:
+        final_url = str(getattr(req, "full_url", None) or req.get_full_url())
+    try:
+        assert_trusted_ai_url(
+            trust.provider,
+            final_url,
+            extra_allowlist=trust.extra_allowlist,
+            environ=trust.environ,
+        )
+    except AiBackendConfigError:
+        close = getattr(resp, "close", None)
+        if callable(close):
+            close()
+        raise
+    return resp
 
 
 def _pack_prompt(action: str, pack: AiContextPack) -> str:
@@ -133,6 +208,37 @@ def default_trusted_hosts(provider: str) -> set[str]:
     return hosts
 
 
+def assert_trusted_ai_url(
+    provider: str,
+    url: str,
+    *,
+    extra_allowlist: Sequence[str] | None = None,
+    environ: Mapping[str, str] | None = None,
+) -> str:
+    """Validate any absolute AI URL (base, hop, or final) against scheme/host policy (R237)."""
+    text = (url or "").strip()
+    if not text:
+        raise AiBackendConfigError("AI URL is empty")
+    parsed = urlparse(text)
+    scheme = (parsed.scheme or "").lower()
+    host = _host_key(parsed.netloc)
+    if scheme not in ("https", "http") or not host:
+        raise AiBackendConfigError(f"AI URL must be an absolute http(s) URL with a host: {text!r}")
+    if scheme == "http" and host not in {"127.0.0.1", "localhost", "[::1]", "::1"}:
+        raise AiBackendConfigError(f"AI URL rejects cleartext http for non-loopback host: {text!r}")
+
+    trusted = default_trusted_hosts(provider)
+    env_map = environ if environ is not None else os.environ
+    trusted |= _parse_allowlist_entries(env_map.get(_ALLOWLIST_ENV))
+    if extra_allowlist:
+        for entry in extra_allowlist:
+            trusted |= _parse_allowlist_entries(entry)
+
+    if host not in trusted:
+        raise AiBackendConfigError(f"AI URL host {host!r} is not on the trust allowlist for provider {provider!r}")
+    return text
+
+
 def assert_trusted_base_url(
     provider: str,
     base_url: str,
@@ -144,27 +250,12 @@ def assert_trusted_base_url(
 
     Fail closed: unknown scheme/host raises ``AiBackendConfigError``.
     """
-    url = (base_url or "").strip()
-    if not url:
-        raise AiBackendConfigError("AI base_url is empty")
-    parsed = urlparse(url)
-    scheme = (parsed.scheme or "").lower()
-    host = _host_key(parsed.netloc)
-    if scheme not in ("https", "http") or not host:
-        raise AiBackendConfigError(f"AI base_url must be an absolute http(s) URL with a host: {url!r}")
-    if scheme == "http" and host not in {"127.0.0.1", "localhost", "[::1]", "::1"}:
-        raise AiBackendConfigError(f"AI base_url rejects cleartext http for non-loopback host: {url!r}")
-
-    trusted = default_trusted_hosts(provider)
-    env_map = environ if environ is not None else os.environ
-    trusted |= _parse_allowlist_entries(env_map.get(_ALLOWLIST_ENV))
-    if extra_allowlist:
-        for entry in extra_allowlist:
-            trusted |= _parse_allowlist_entries(entry)
-
-    if host not in trusted:
-        raise AiBackendConfigError(f"AI base_url host {host!r} is not on the trust allowlist for provider {provider!r}")
-    return url.rstrip("/")
+    return assert_trusted_ai_url(
+        provider,
+        base_url,
+        extra_allowlist=extra_allowlist,
+        environ=environ,
+    ).rstrip("/")
 
 
 def _read_budgeted(
@@ -210,6 +301,7 @@ def _http_json(
     *,
     timeout: float,
     opener: Optional[UrlOpener] = None,
+    trust: Optional[AiUrlTrust] = None,
     max_bytes: int = MAX_RESPONSE_BYTES,
     should_cancel: Optional[CancelCheck] = None,
 ) -> dict:
@@ -221,7 +313,15 @@ def _http_json(
         headers=dict(headers),
         method="POST",
     )
-    open_fn: UrlOpener = opener if opener is not None else urllib.request.urlopen
+    if opener is not None:
+        open_fn: UrlOpener = opener
+    elif trust is not None:
+
+        def open_fn(req: Request, timeout: float = DEFAULT_TIMEOUT_SEC) -> Any:
+            return trusted_ai_urlopen(req, trust=trust, timeout=timeout)
+
+    else:
+        raise AiHttpError("AI HTTP call missing opener or trust policy")
     try:
         with open_fn(request, timeout=timeout) as response:
             if should_cancel is not None and should_cancel():
@@ -234,6 +334,8 @@ def _http_json(
             status = getattr(response, "status", None) or response.getcode()
     except AiHttpCancelled:
         raise
+    except AiBackendConfigError as exc:
+        raise AiHttpError(f"AI provider URL rejected by trust policy: {exc}") from exc
     except urllib.error.HTTPError as exc:
         detail = ""
         try:
@@ -317,13 +419,16 @@ class HttpChatBackend:
             raise AiBackendConfigError(
                 f"API key required for provider {provider!r}. Set it in Options → AI → AI settings…"
             )
+        allow = tuple(extra_allowlist or ())
         # R192: refuse untrusted base_url before any network I/O.
         self._trusted_base = assert_trusted_base_url(
             provider,
             self._config.base_url,
-            extra_allowlist=extra_allowlist,
+            extra_allowlist=allow,
             environ=environ,
         )
+        # R237: production transport re-validates every redirect hop + final URL.
+        self._trust = AiUrlTrust(provider=provider, extra_allowlist=allow, environ=environ)
 
     @property
     def name(self) -> str:
@@ -375,6 +480,7 @@ class HttpChatBackend:
             headers,
             timeout=self._timeout,
             opener=self._opener,
+            trust=self._trust,
             max_bytes=self._max_response_bytes,
             should_cancel=self._should_cancel,
         )
@@ -401,6 +507,7 @@ class HttpChatBackend:
             headers,
             timeout=self._timeout,
             opener=self._opener,
+            trust=self._trust,
             max_bytes=self._max_response_bytes,
             should_cancel=self._should_cancel,
         )
@@ -411,8 +518,12 @@ __all__ = [
     "AiBackendConfigError",
     "AiHttpCancelled",
     "AiHttpError",
+    "AiUrlTrust",
     "HttpChatBackend",
     "MAX_RESPONSE_BYTES",
+    "TrustedAiRedirectHandler",
+    "assert_trusted_ai_url",
     "assert_trusted_base_url",
     "default_trusted_hosts",
+    "trusted_ai_urlopen",
 ]
