@@ -57,7 +57,6 @@ class GlobalDataWrapper:
 
     def __init__(self):
         # Heavy / Qt-touching imports deferred until first GlobalData() call (T084)
-        from app.language_services import LanguageServiceManager
         from app.services import ApplicationServices
         from plugins.manager.pluginmanager import CDMPluginManager
 
@@ -78,11 +77,12 @@ class GlobalDataWrapper:
         self.searchProviders = {}
         # T140: session-only interpreter when user declines saving to .cdm3
         self.sessionPythonInterpreter = ""
+        # R230: lazy — LanguageServiceManager pulls infrastructure and must not
+        # import during GlobalData construction (circular via utils ↔ app).
+        self._languageServices = None
 
         self.project = CodimensionProject()
         self.project.sigProjectAboutToUnload.connect(self.__clearSessionPythonInterpreter)
-        # R230: polyglot language services follow project load/unload
-        self.languageServices = LanguageServiceManager()
         # R102: UI / startup load+unload go through this façade → project port
         self.appServices = ApplicationServices(
             self.project,
@@ -103,6 +103,15 @@ class GlobalDataWrapper:
         self.javaAvailable = self.__checkJava()
         self.hexdumpAvailable = self.__checkHexdump()
 
+    @property
+    def languageServices(self):
+        """R230: polyglot LanguageServiceManager (created on first use)."""
+        if self._languageServices is None:
+            from app.language_services import LanguageServiceManager
+
+            self._languageServices = LanguageServiceManager()
+        return self._languageServices
+
     def __clearSessionPythonInterpreter(self):
         """Drop session venv overlay when the project is unloaded."""
         from .venvbootstrap import clearSessionPythonInterpreter
@@ -117,7 +126,9 @@ class GlobalDataWrapper:
 
     def __detachLanguageWorkspace(self) -> None:
         """R230: shut down language services before project unload."""
-        self.languageServices.detach_workspace()
+        if self._languageServices is None:
+            return
+        self._languageServices.detach_workspace()
 
     def getProfileOutputPath(self, procuuid):
         """Provides the path to the profile output file"""

@@ -76,7 +76,6 @@ from .floatingrendererwindow import DetachedRendererWindow
 from .functionsviewer import FunctionsViewer
 from .globalsviewer import GlobalsViewer
 from .gotolinewidget import GotoLineWidget
-from .language_controller import LanguageController
 from .logviewer import LogViewer
 from .mainmenu import MainWindowMenuMixin
 from .mainredirectedio import MainWindowRedirectedIOMixin
@@ -330,8 +329,10 @@ class CodimensionMainWindow(
         self.aiChatViewer = None  # created on demand
         self.aiController = AiWorkspaceController(self)
         self.aiResultViewer.applyDocstringAction().triggered.connect(self.aiController.applyLastDocstring)
-        # R230: capability UI over GlobalData.languageServices (workspace attach/detach)
-        self.languageController = LanguageController(GlobalData().languageServices)
+        # R230: LanguageController is created lazily (see languageController property)
+        # so MainWindow import/construct does not pull LanguageServiceManager →
+        # infrastructure under the offscreen smoke sys.path layout.
+        self._languageController = None
 
         # Create outline viewer
         self.outlineViewer = FileOutlineViewer(self.em, self)
@@ -663,6 +664,15 @@ class CodimensionMainWindow(
         if not self.__initialisation and not self.__guessMaximized():
             self.settings["xpos"] = self.x()
             self.settings["ypos"] = self.y()
+
+    @property
+    def languageController(self):
+        """R230: capability UI over GlobalData.languageServices (lazy)."""
+        if self._languageController is None:
+            from .language_controller import LanguageController
+
+            self._languageController = LanguageController(GlobalData().languageServices)
+        return self._languageController
 
     def onProjectChanged(self, what):
         """Slot to receive sigProjectChanged signal"""

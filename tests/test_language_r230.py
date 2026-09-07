@@ -170,7 +170,8 @@ def test_globals_wires_language_services_lifecycle() -> None:
         Path(__file__).resolve().parents[1].joinpath("codimension", "utils", "globals.py").read_text(encoding="utf-8")
     )
     assert "LanguageServiceManager" in text
-    assert "self.languageServices = LanguageServiceManager()" in text
+    assert "self._languageServices = None" in text
+    assert "def languageServices(self):" in text
     assert "after_load=self.__attachLanguageWorkspace" in text
     assert "before_unload=self.__detachLanguageWorkspace" in text
 
@@ -179,5 +180,6 @@ def test_mainwindow_wires_language_controller() -> None:
     text = (
         Path(__file__).resolve().parents[1].joinpath("codimension", "ui", "mainwindow.py").read_text(encoding="utf-8")
     )
-    assert "from .language_controller import LanguageController" in text
-    assert "self.languageController = LanguageController(GlobalData().languageServices)" in text
+    assert "def languageController(self):" in text
+    assert "LanguageController(GlobalData().languageServices)" in text
+    assert "self._languageController = None" in text
