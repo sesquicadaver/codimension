@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-07)
 
-Підтверджених **P0** немає. **P1: 3** відкритих (🔓 → R239–R241; P1-01…P1-05 + P1-08 + P1-09 ✅). **P2 групи: 7** (R242–R243 + backlog). Хвиля R221–R231 ✅ як happy-path; повторний аудит фіксує lifecycle/concurrency/stale-state/fail-closed залишки.
+Підтверджених **P0** немає. **P1: 2** відкритих (🔓 → R240–R241; P1-01…P1-05 + P1-07…P1-09 ✅). **P2 групи: 7** (R242–R243 + backlog). Хвиля R221–R231 ✅ як happy-path; повторний аудит фіксує lifecycle/concurrency/stale-state/fail-closed залишки.
 
 ### Повторний аудит 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 черга
 
@@ -20,7 +20,7 @@
 | P1-05 | Create Project обходить R230 lifecycle (`createNew` без ApplicationServices) | P1 | ✅ R236 |
 | P1-09 | AI HTTP: redirects без re-validate trust (як Updater R222) | P1 | ✅ R237 |
 | P1-08 | MCP walker: unbounded `listdir` + TOCTOU path escape | P1 | ✅ R238 |
-| P1-07 | Taint: whole-list re-exec → sink-before-source; exception/match/loop-else gaps | P1 | 🔓 OPEN → **R239** |
+| P1-07 | Taint: whole-list re-exec → sink-before-source; exception/match/loop-else gaps | P1 | ✅ R239 |
 | P1-06 | FFI `EXACT`: structural proof не завжди edge-specific identity | P1 | 🔓 OPEN → **R240** |
 | P1-10 | AI budgets soft; немає cancel/deadline/evidence hard validation | P1 | 🔓 OPEN → **R241** |
 

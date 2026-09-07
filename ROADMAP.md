@@ -196,7 +196,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 48 | R236 | Project lifecycle façade | create/load/switch/unload only via `ApplicationServices` (fix `createNew` bypass) | M | DONE ([#201](https://github.com/sesquicadaver/codimension/pull/201)) |
 | 49 | R237 | AI redirect trust | Every redirect hop + final URL pass provider scheme/host policy | M | DONE ([#203](https://github.com/sesquicadaver/codimension/pull/203)) |
 | 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | DONE ([#205](https://github.com/sesquicadaver/codimension/pull/205)) |
-| 51 | R239 | Taint CFG worklist | Forward per-node lattice; no whole-list re-exec; exception/no-match/loop-else | L | OPEN |
+| 51 | R239 | Taint CFG worklist | Forward per-node lattice; no whole-list re-exec; exception/no-match/loop-else | L | DONE (PR pending) |
 | 52 | R240 | FFI edge-specific structural proof | `EXACT` only with full registration-chain identity (module/binder/export/native) | L | OPEN |
 | 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | OPEN |
 | 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | OPEN |
@@ -206,7 +206,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R239** — Taint CFG worklist.
+**Next OPEN:** **R240** — FFI edge-specific structural proof.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

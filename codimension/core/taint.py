@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - function-local taint / data-flow MVP (R143 / R227)
+# codimension - function-local taint / data-flow MVP (R143 / R227 / R239)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Function-local taint / data-flow MVP (R143 / R227).
+"""Function-local taint / data-flow MVP (R143 / R227 / R239).
 
 **Documented subset** (intentionally narrow):
 
@@ -28,9 +28,16 @@
 * Branches (R227): ``if`` / ``try`` / ``match`` clone the taint environment
   per arm and **may-taint union** on join (a clean assignment on one path
   must not erase taint from another feasible path).
-* Not modeled: interprocedural flow, field-sensitive keys, exceptions as
-  precise CFG, comprehensions as full CFG, ``*args``/``**kwargs`` unpacking
-  fidelity, import aliases beyond a simple dotted callee string.
+* Forward CFG (R239): statement lists are analyzed **once** in source order
+  (no whole-list re-exec). Loop bodies use a local monotone worklist
+  fixpoint on the back-edge only. ``try`` handlers join environments from
+  pre-try and post-statement throw points; non-exhaustive ``match`` joins
+  the no-match fallthrough; loop ``else`` uses the normal-termination
+  lattice after the body (joined with the zero-iteration entry).
+* Not modeled: interprocedural flow, field-sensitive keys, precise
+  exception edges / ``break`` skipping ``else``, comprehensions as full
+  CFG, ``*args``/``**kwargs`` unpacking fidelity, import aliases beyond a
+  simple dotted callee string.
 
 Pure stdlib ``ast``; no Qt. Absence of findings is **not** a security proof.
 """
@@ -67,6 +74,9 @@ DEFAULT_SINK_CALLS: frozenset[str] = frozenset(
         "subprocess.check_call",
     }
 )
+
+# Max back-edge iterations for may-taint loop fixpoint (R239).
+_LOOP_FIXPOINT_FUEL = 8
 
 
 @dataclass(frozen=True)
@@ -166,6 +176,25 @@ def _join_may_taint(
     return out
 
 
+def _pattern_irrefutable(pattern: ast.pattern) -> bool:
+    """True when ``pattern`` always matches (irrefutable capture / wildcard)."""
+    if isinstance(pattern, ast.MatchAs) and pattern.pattern is None:
+        return True
+    if isinstance(pattern, ast.MatchOr):
+        return any(_pattern_irrefutable(part) for part in pattern.patterns)
+    return False
+
+
+def _match_is_exhaustive(stmt: ast.Match) -> bool:
+    """True when some unguarded case is irrefutable (no no-match fallthrough)."""
+    for case in stmt.cases:
+        if case.guard is not None:
+            continue
+        if _pattern_irrefutable(case.pattern):
+            return True
+    return False
+
+
 class _FunctionTaint:
     """Mutable analyzer state for one function body."""
 
@@ -205,6 +234,29 @@ class _FunctionTaint:
             return dict(self.origin)
         finally:
             self.origin = saved
+
+    def _fixpoint_loop_body(
+        self,
+        body: Sequence[ast.stmt],
+        entry: dict[str, tuple[str, int]],
+        *,
+        fuel: int = _LOOP_FIXPOINT_FUEL,
+    ) -> dict[str, tuple[str, int]]:
+        """Forward may-taint fixpoint for a loop body with a back-edge to the head.
+
+        ``IN[head] = join(entry, OUT[body])`` until stable; returns ``OUT[body]``
+        at the fixpoint (normal termination of one iteration under the joined
+        head environment).
+        """
+        head = dict(entry)
+        body_out = dict(entry)
+        for _ in range(max(1, fuel)):
+            body_out = self._analyze_branch(body, head)
+            new_head = _join_may_taint(entry, body_out)
+            if new_head == head:
+                return body_out
+            head = new_head
+        return self._analyze_branch(body, head)
 
     def expr_tainted(self, node: Optional[ast.AST]) -> Optional[tuple[str, int]]:
         """Return (source, source_line) if ``node`` may carry taint."""
@@ -327,17 +379,13 @@ class _FunctionTaint:
         for name in names:
             self.mark(name, source, source_line)
 
-    def analyze_stmts(self, stmts: Iterable[ast.stmt], *, _fuel: int = 8) -> None:
-        """Analyze a statement list; loops re-run until fixpoint or fuel out."""
-        for _ in range(max(1, _fuel)):
-            snapshot = frozenset(self.origin.items())
-            for stmt in stmts:
-                self.analyze_stmt(stmt)
-            if frozenset(self.origin.items()) == snapshot:
-                break
+    def analyze_stmts(self, stmts: Iterable[ast.stmt]) -> None:
+        """Forward-analyze a statement list once (R239: no whole-list re-exec)."""
+        for stmt in stmts:
+            self.analyze_stmt(stmt)
 
     def analyze_stmt(self, stmt: ast.stmt) -> None:
-        """Dispatch one statement."""
+        """Dispatch one statement (transfer function)."""
         if isinstance(stmt, ast.Assign):
             self.apply_assign(stmt.targets, stmt.value)
             return
@@ -371,22 +419,10 @@ class _FunctionTaint:
             self.origin = _join_may_taint(body_env, else_env)
             return
         if isinstance(stmt, (ast.For, ast.AsyncFor)):
-            self.visit_expr_calls(stmt.iter)
-            hit = self.expr_tainted(stmt.iter)
-            if hit:
-                for name in _assign_targets(stmt.target):
-                    self.mark(name, hit[0], hit[1])
-            base = dict(self.origin)
-            body_env = self._analyze_branch(stmt.body, base)
-            else_env = self._analyze_branch(stmt.orelse, base) if stmt.orelse else dict(base)
-            self.origin = _join_may_taint(body_env, else_env)
+            self._analyze_for_loop(stmt)
             return
-        if isinstance(stmt, (ast.While,)):
-            self.visit_expr_calls(stmt.test)
-            base = dict(self.origin)
-            body_env = self._analyze_branch(stmt.body, base)
-            else_env = self._analyze_branch(stmt.orelse, base) if stmt.orelse else dict(base)
-            self.origin = _join_may_taint(body_env, else_env)
+        if isinstance(stmt, ast.While):
+            self._analyze_while_loop(stmt)
             return
         if isinstance(stmt, (ast.With, ast.AsyncWith)):
             for item in stmt.items:
@@ -399,23 +435,10 @@ class _FunctionTaint:
             self.analyze_stmts(stmt.body)
             return
         if isinstance(stmt, ast.Try):
-            base = dict(self.origin)
-            body_env = self._analyze_branch(stmt.body, base)
-            handler_envs = [self._analyze_branch(handler.body, base) for handler in stmt.handlers]
-            # orelse runs only when body succeeds without exception.
-            else_env = self._analyze_branch(stmt.orelse, body_env) if stmt.orelse else body_env
-            joined = _join_may_taint(else_env, *handler_envs)
-            if stmt.finalbody:
-                self.origin = joined
-                self.analyze_stmts(stmt.finalbody)
-            else:
-                self.origin = joined
+            self._analyze_try(stmt)
             return
         if isinstance(stmt, ast.Match):  # py3.10+
-            self.visit_expr_calls(stmt.subject)
-            base = dict(self.origin)
-            case_envs = [self._analyze_branch(case.body, base) for case in stmt.cases]
-            self.origin = _join_may_taint(*case_envs) if case_envs else base
+            self._analyze_match(stmt)
             return
         # Nested def/class: ignore body (separate analysis unit).
         if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -424,6 +447,63 @@ class _FunctionTaint:
         for child in ast.walk(stmt):
             if isinstance(child, ast.Call):
                 self.check_sink(child)
+
+    def _analyze_for_loop(self, stmt: ast.For | ast.AsyncFor) -> None:
+        """For/AsyncFor: bind targets, fixpoint body, else from normal exit."""
+        self.visit_expr_calls(stmt.iter)
+        hit = self.expr_tainted(stmt.iter)
+        if hit:
+            for name in _assign_targets(stmt.target):
+                self.mark(name, hit[0], hit[1])
+        entry = dict(self.origin)
+        body_out = self._fixpoint_loop_body(stmt.body, entry)
+        # Zero iterations and completed body can reach else (break not modeled).
+        else_in = _join_may_taint(entry, body_out)
+        else_env = self._analyze_branch(stmt.orelse, else_in) if stmt.orelse else else_in
+        self.origin = _join_may_taint(body_out, else_env)
+
+    def _analyze_while_loop(self, stmt: ast.While) -> None:
+        """While: fixpoint body; else uses normal-termination join with entry."""
+        self.visit_expr_calls(stmt.test)
+        entry = dict(self.origin)
+        body_out = self._fixpoint_loop_body(stmt.body, entry)
+        else_in = _join_may_taint(entry, body_out)
+        else_env = self._analyze_branch(stmt.orelse, else_in) if stmt.orelse else else_in
+        self.origin = _join_may_taint(body_out, else_env)
+
+    def _analyze_try(self, stmt: ast.Try) -> None:
+        """Try/except/else/finally with throw-point joins for handlers (R239)."""
+        base = dict(self.origin)
+        throw_envs: list[dict[str, tuple[str, int]]] = [dict(base)]
+        saved = self.origin
+        self.origin = dict(base)
+        try:
+            for body_stmt in stmt.body:
+                self.analyze_stmt(body_stmt)
+                throw_envs.append(dict(self.origin))
+            body_env = dict(self.origin)
+        finally:
+            self.origin = saved
+        handler_in = _join_may_taint(*throw_envs)
+        handler_envs = [self._analyze_branch(handler.body, handler_in) for handler in stmt.handlers]
+        # orelse runs only when body succeeds without exception.
+        else_env = self._analyze_branch(stmt.orelse, body_env) if stmt.orelse else body_env
+        joined = _join_may_taint(else_env, *handler_envs) if handler_envs else else_env
+        if stmt.finalbody:
+            self.origin = joined
+            self.analyze_stmts(stmt.finalbody)
+        else:
+            self.origin = joined
+
+    def _analyze_match(self, stmt: ast.Match) -> None:
+        """Match/case may-taint join; non-exhaustive adds no-match fallthrough."""
+        self.visit_expr_calls(stmt.subject)
+        base = dict(self.origin)
+        case_envs = [self._analyze_branch(case.body, base) for case in stmt.cases]
+        join_envs: list[dict[str, tuple[str, int]]] = list(case_envs)
+        if not _match_is_exhaustive(stmt):
+            join_envs.append(dict(base))
+        self.origin = _join_may_taint(*join_envs) if join_envs else dict(base)
 
     def run(self) -> TaintReport:
         """Analyze the function and return a report."""

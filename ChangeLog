@@ -1,5 +1,10 @@
 2026 Sep 07
 
+* R239: taint analysis is forward CFG worklist — single-pass statement lists
+  (no whole-list re-exec / sink-before-source FP); local loop body fixpoint;
+  ``try`` handlers join mid-body throw points; non-exhaustive ``match``
+  no-match fallthrough; loop ``else`` uses normal-termination state
+  (re-audit P1-07 @ 45e33f6)
 * R238: MCP walker uses ``scandir`` (name-sorted), entry/directory budgets,
   fd-relative ``openat`` + ``O_NOFOLLOW``, and ``fstat`` inode/dev checks;
   symlinks skipped to close TOCTOU path escape (re-audit P1-08 @ 45e33f6)
