@@ -13,12 +13,17 @@ incompatible candidates before ``yapsy`` executes plugin modules.
 R225 / audit P1-07: third-party plugins require a complete ``[Codimension]``
 manifest block (category, API, capabilities, min IDE, entrypoint). Unknown or
 invalid manifests are denied — no legacy import fallback.
+
+R232 / audit P1-01: re-validate manifest + file identity immediately before
+every import (including enable / ``materializePlugin``), so a deferred
+candidate cannot bypass policy after on-disk mutation.
 """
 
 from __future__ import annotations
 
 import ast
 import configparser
+import hashlib
 import os
 import re
 from dataclasses import dataclass
@@ -76,6 +81,110 @@ class StaticPolicyDecision:
     reason: str = ""
     # Conflict codes match CDMPluginManager constants (imported lazily by callers).
     conflict_code: int = 0
+
+
+@dataclass(frozen=True)
+class PluginFileIdentity:
+    """On-disk identity of a plugin candidate's ``.cdmp`` + source files (R232).
+
+    Captured at collection / deferral time and compared again immediately before
+    import so enable-after-disable cannot load mutated or swapped files.
+    """
+
+    info_path: str
+    source_path: str
+    info_mtime_ns: int
+    info_size: int
+    info_sha256: str
+    source_mtime_ns: int
+    source_size: int
+    source_sha256: str
+
+
+def _file_digest_and_stat(path: str) -> tuple[str, int, int]:
+    """Return ``(sha256_hex, mtime_ns, size)`` for ``path``, or empty markers."""
+    if not path or not os.path.isfile(path):
+        return "", 0, 0
+    try:
+        st = os.stat(path)
+        with open(path, "rb") as handle:
+            digest = hashlib.sha256(handle.read()).hexdigest()
+        return digest, int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000))), int(st.st_size)
+    except OSError:
+        return "", 0, 0
+
+
+def capture_plugin_file_identity(
+    *,
+    info_path: str,
+    module_filepath: str,
+) -> PluginFileIdentity:
+    """Snapshot ``.cdmp`` + resolved source bytes/mtime/size for a candidate."""
+    source_path = resolve_plugin_source_path(module_filepath)
+    info_sha, info_mtime, info_size = _file_digest_and_stat(info_path or "")
+    src_sha, src_mtime, src_size = _file_digest_and_stat(source_path)
+    return PluginFileIdentity(
+        info_path=os.path.realpath(info_path) if info_path and os.path.isfile(info_path) else (info_path or ""),
+        source_path=os.path.realpath(source_path) if source_path else "",
+        info_mtime_ns=info_mtime,
+        info_size=info_size,
+        info_sha256=info_sha,
+        source_mtime_ns=src_mtime,
+        source_size=src_size,
+        source_sha256=src_sha,
+    )
+
+
+def validate_candidate_before_import(
+    *,
+    info_path: str,
+    module_filepath: str,
+    name: str = "",
+    version: str = "0",
+    plugin_path: str = "",
+    expected_identity: PluginFileIdentity | None = None,
+    ide_version: str,
+    require_manifest: bool | None = None,
+    bad_base_class: int = 4,
+    incompatible_ide: int = 2,
+    incompatible_capabilities: int = 8,
+) -> StaticPolicyDecision:
+    """Fail-closed gate: file identity (optional) + static policy before import.
+
+    Must run immediately before every ``loadPlugins()`` call, including the
+    enable path that materializes a previously deferred candidate.
+    """
+    current = capture_plugin_file_identity(
+        info_path=info_path,
+        module_filepath=module_filepath,
+    )
+    if expected_identity is not None and current != expected_identity:
+        return StaticPolicyDecision(
+            ok=False,
+            reason=(
+                "plugin files changed since collection "
+                f"(info={info_path!r}, source={current.source_path!r}); "
+                "re-enable denied (R232)"
+            ),
+            conflict_code=bad_base_class,
+        )
+    if require_manifest is None:
+        require_manifest = not is_trusted_bundled_plugin_path(plugin_path or info_path or module_filepath)
+    policy = build_static_plugin_policy(
+        info_path=info_path,
+        module_filepath=module_filepath,
+        name=name,
+        version=version,
+        plugin_path=plugin_path,
+        require_manifest=require_manifest,
+    )
+    return evaluate_static_plugin_policy(
+        policy,
+        ide_version=ide_version,
+        bad_base_class=bad_base_class,
+        incompatible_ide=incompatible_ide,
+        incompatible_capabilities=incompatible_capabilities,
+    )
 
 
 def _read_text(path: str) -> str:
@@ -575,9 +684,11 @@ def evaluate_static_plugin_policy(
 __all__ = [
     "KNOWN_CATEGORIES",
     "REQUIRED_MANIFEST_KEYS",
+    "PluginFileIdentity",
     "StaticPluginPolicy",
     "StaticPolicyDecision",
     "build_static_plugin_policy",
+    "capture_plugin_file_identity",
     "cdmplugins_package_roots",
     "evaluate_static_plugin_policy",
     "extract_capability_spec_from_source",
@@ -585,4 +696,5 @@ __all__ = [
     "guess_category_from_text",
     "is_trusted_bundled_plugin_path",
     "resolve_plugin_source_path",
+    "validate_candidate_before_import",
 ]

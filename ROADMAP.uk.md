@@ -185,19 +185,38 @@
 | 42 | R230 | Wire LanguageServiceManager в IDE lifecycle | Composition у GlobalData/MainWindow open/close | L | DONE ([#194](https://github.com/sesquicadaver/codimension/pull/194)) |
 | 43 | R231 | AI structured findings + global budgets | Finding model + total token/cost budget | L | DONE ([#195](https://github.com/sesquicadaver/codimension/pull/195)) |
 
+### Хвиля hardening після повторного аудиту 2026-09-07 (`codi-last.md` @ 45e33f6 / HEAD 4ff0207b)
+
+| # | ID | Задача | Acceptance | Size | Статус |
+|---|-----|--------|------------|------|--------|
+| 44 | R232 | Plugin re-enable pre-import gate | Кожен `loadPlugins()` (вкл. `materializePlugin`) повторно перевіряє manifest + file identity | M | DONE |
+| 45 | R233 | LSP generation-safe lifecycle | Atomic restart+initialize; жодних requests до handshake; clear `_opened` на generation bump | M | OPEN |
+| 46 | R234 | LSP pending synchronization | `_pending_lock`; ключі `(generation, id)`; race tests timeout/shutdown/old-reader | L | OPEN |
+| 47 | R235 | Workspace DocumentStore | Єдиний editor-backed store; versioned edits; deny unresolved/`(0,0)` apply; bounded loader | L | OPEN |
+| 48 | R236 | Project lifecycle façade | create/load/switch/unload лише через `ApplicationServices` (fix bypass `createNew`) | M | OPEN |
+| 49 | R237 | AI redirect trust | Кожен redirect hop + final URL проходять provider scheme/host policy | M | OPEN |
+| 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | OPEN |
+| 51 | R239 | Taint CFG worklist | Forward per-node lattice; без whole-list re-exec; exception/no-match/loop-else | L | OPEN |
+| 52 | R240 | FFI edge-specific structural proof | `EXACT` лише з повною identity registration chain | L | OPEN |
+| 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | OPEN |
+| 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | OPEN |
+| 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | OPEN |
+
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** _(хвиля R221–R231 завершена)_ — наступний пункт з ROADMAP / TODO після seed.
+**Наступний OPEN:** **R233** — LSP generation-safe lifecycle.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
 Хвиля **R209–R220** = hardening за аудитом `codi-last.md` @ 340e97dc (DONE).
 
-Хвиля **R221–R231** = hardening за повторним аудитом `codi-last.md` @ 8824ff3c (таблиця пріоритетів §1–11).
+Хвиля **R221–R231** = hardening за повторним аудитом `codi-last.md` @ 8824ff3c (DONE).
 
-**Поза цією хвилею:** DAP/native debug; власні Rust/C++ parsers; Yapsy language plugins; копіювання Python CFG pipeline на інші мови; HMAC-підпис binding (stretch після R221).
+Хвиля **R232–R243** = hardening за повторним аудитом `codi-last.md` @ 45e33f6 (master@4ff0207b; рекомендована черга §1–12).
+
+**Поза цією хвилею:** DAP/native debug; власні Rust/C++ parsers; Yapsy language plugins; копіювання Python CFG pipeline на інші мови; HMAC-підпис binding (stretch).
 
 Раніше відкладені R180–R182 і SSH Debug/Profile увійшли в активну чергу (2026-08-28) як атомарні задачі без окремого unlock.
 
@@ -218,5 +237,5 @@ Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
 MCP / agent: **R182** + **R214** (`mcp_backend`, stdio + token + workspace policy)
-Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220 DONE; R221–R231 re-audit wave
+Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R231 DONE; R232–R243 re-audit wave
 ```

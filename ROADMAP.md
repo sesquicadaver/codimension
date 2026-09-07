@@ -185,19 +185,38 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 42 | R230 | Wire LanguageServiceManager into IDE lifecycle | Compose into GlobalData/MainWindow workspace open/close | L | DONE ([#194](https://github.com/sesquicadaver/codimension/pull/194)) |
 | 43 | R231 | AI structured findings + global budgets | Finding model + total token/cost budget (beyond per-file truncate) | L | DONE ([#195](https://github.com/sesquicadaver/codimension/pull/195)) |
 
+### Hardening wave after re-audit 2026-09-07 (`codi-last.md` @ 45e33f6 / HEAD 4ff0207b)
+
+| # | ID | Task | Acceptance | Size | Status |
+|---|-----|------|------------|------|--------|
+| 44 | R232 | Plugin re-enable pre-import gate | Every `loadPlugins()` (incl. `materializePlugin`) re-checks manifest + file identity | M | DONE |
+| 45 | R233 | LSP generation-safe lifecycle | Atomic restart+initialize; no requests before handshake; clear `_opened` on generation bump | M | OPEN |
+| 46 | R234 | LSP pending synchronization | `_pending_lock`; `(generation, id)` keys; timeout/shutdown/old-reader race tests | L | OPEN |
+| 47 | R235 | Workspace DocumentStore | Single editor-backed store; versioned edits; deny unresolved/`(0,0)` apply; bounded loader | L | OPEN |
+| 48 | R236 | Project lifecycle façade | create/load/switch/unload only via `ApplicationServices` (fix `createNew` bypass) | M | OPEN |
+| 49 | R237 | AI redirect trust | Every redirect hop + final URL pass provider scheme/host policy | M | OPEN |
+| 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | OPEN |
+| 51 | R239 | Taint CFG worklist | Forward per-node lattice; no whole-list re-exec; exception/no-match/loop-else | L | OPEN |
+| 52 | R240 | FFI edge-specific structural proof | `EXACT` only with full registration-chain identity (module/binder/export/native) | L | OPEN |
+| 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | OPEN |
+| 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | OPEN |
+| 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | OPEN |
+
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** _(re-audit wave R221–R231 complete)_ — pick next from ROADMAP / TODO when seeded.
+**Next OPEN:** **R233** — LSP generation-safe lifecycle.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
 Wave **R209–R220** = hardening from audit `codi-last.md` @ 340e97dc (DONE).
 
-Wave **R221–R231** = hardening from re-audit `codi-last.md` @ 8824ff3c (priority table §1–11).
+Wave **R221–R231** = hardening from re-audit `codi-last.md` @ 8824ff3c (DONE).
 
-**Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages; HMAC-signed bindings (optional stretch after R221).
+Wave **R232–R243** = hardening from re-audit `codi-last.md` @ 45e33f6 (master@4ff0207b; recommended queue §1–12).
+
+**Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages; HMAC-signed bindings (optional stretch).
 
 Formerly deferred R180–R182 and SSH Debug/Profile entered the active queue (2026-08-28) as atomic tasks without a separate unlock gate.
 
@@ -218,5 +237,5 @@ Code → AST → CFG graph model → SymbolIndex → Metrics → Overlay → UI
 ExecutionTarget: local | docker | ssh | k8s
 Tooling: lint | test | profile | (AI via core context)
 MCP / agent: **R182** + **R214** (`mcp_backend`, stdio + token + workspace policy)
-Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R220 DONE; R221–R231 re-audit wave
+Polyglot: LanguageServiceRegistry → LSP + Tree-sitter + FFI BindingIndex + Tasks (R200–R208); hardening R209–R231 DONE; R232–R243 re-audit wave
 ```
