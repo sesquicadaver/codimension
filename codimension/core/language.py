@@ -158,12 +158,22 @@ SEMANTIC_PROVIDER_CAPABILITIES: frozenset[LanguageCapability] = frozenset(
 LSP_EDITOR_CAPABILITIES: frozenset[LanguageCapability] = SEMANTIC_PROVIDER_CAPABILITIES
 
 
-def make_python_language_service() -> LanguageService:
-    """Return the R200 Python stub service (no LSP providers)."""
+def make_python_language_service(
+    *,
+    semantic: SemanticProvider | None = None,
+) -> LanguageService:
+    """Return the Python language service (headless SymbolIndex / brief).
+
+    R242: when ``semantic`` is bound (default callers attach
+    :class:`~infrastructure.python_semantic.PythonHeadlessSemanticProvider`),
+    advertised ``OUTLINE`` / ``DEFINITION`` / ``REFERENCES`` are also
+    ``supports()``-true in :class:`~ui.language_controller.LanguageController`.
+    """
     return LanguageService(
         descriptor=PYTHON_DESCRIPTOR,
         capabilities=PYTHON_HEADLESS_CAPABILITIES,
         service_id="python.headless",
+        semantic=semantic,
     )
 
 

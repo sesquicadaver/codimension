@@ -13,7 +13,8 @@
 
 Headless: no Qt. When ``FLAG_LANGUAGE_SERVICES`` is off, :meth:`ensure_defaults`
 and :meth:`attach_workspace` are no-ops (empty registry). When on, registers
-the Python headless stub and optionally Rust/C++ services for the workspace.
+the Python headless service (R242: brief ``SemanticProvider``) and optionally
+Rust/C++ services for the workspace.
 
 Owns an :class:`~infrastructure.lsp_process.LspProcessRegistry` shut down on
 :meth:`detach_workspace` / :meth:`shutdown`. Rust/C++ LSP processes spawn only
@@ -65,6 +66,7 @@ from infrastructure.lsp_semantic import (
     build_clangd_semantic_provider,
     build_rust_semantic_provider,
 )
+from infrastructure.python_semantic import PythonHeadlessSemanticProvider
 from infrastructure.tree_sitter_structural import try_build_tree_sitter_structural_provider
 
 #: Absolute path to rust-analyzer (optional; spawn-gated).
@@ -157,7 +159,11 @@ class LanguageServiceManager:
         store: Optional[FeatureFlagsStore] = None,
         environ: Optional[Mapping[str, str]] = None,
     ) -> bool:
-        """Register built-in Python stub when the feature flag is enabled.
+        """Register built-in Python headless service when the feature flag is on.
+
+        R242: binds :class:`~infrastructure.python_semantic.PythonHeadlessSemanticProvider`
+        so advertised ``OUTLINE`` / ``DEFINITION`` / ``REFERENCES`` match
+        :meth:`~ui.language_controller.LanguageController.supports`.
 
         Returns:
             ``True`` when defaults were applied; ``False`` when the flag is off
@@ -165,8 +171,10 @@ class LanguageServiceManager:
         """
         if not is_language_services_enabled(store=store, environ=environ):
             return False
-        service = make_python_language_service()
+        service = make_python_language_service(semantic=PythonHeadlessSemanticProvider())
         if not self._registry.has(service.service_id):
+            self._registry.register(service)
+        elif self._registry.get(service.service_id).semantic is None:
             self._registry.register(service)
         return True
 

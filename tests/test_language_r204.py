@@ -201,13 +201,28 @@ def test_resolve_by_extension_and_capability_gate(tmp_path: Path, fake_lsp: Path
     mgr.shutdown()
 
 
-def test_python_headless_no_semantic_denies_hover() -> None:
+def test_python_stub_without_semantic_denies_outline() -> None:
     mgr = LanguageServiceManager()
     mgr.registry.register(make_python_language_service())
     ctrl = LanguageController(mgr)
     doc = DocumentSnapshot(uri="file:///a.py", text="x=1\n", language_id="python")
     assert ctrl.supports(doc, LanguageCapability.OUTLINE) is False
     assert ctrl.supports(doc, LanguageCapability.DEFINITION) is False
+    with pytest.raises(CapabilityDenied):
+        ctrl.hover(doc, 0)
+
+
+def test_python_headless_with_semantic_supports_outline() -> None:
+    from infrastructure.python_semantic import PythonHeadlessSemanticProvider
+
+    mgr = LanguageServiceManager()
+    mgr.registry.register(make_python_language_service(semantic=PythonHeadlessSemanticProvider()))
+    ctrl = LanguageController(mgr)
+    doc = DocumentSnapshot(uri="file:///a.py", text="def f():\n    pass\n", language_id="python")
+    assert ctrl.supports(doc, LanguageCapability.OUTLINE) is True
+    assert ctrl.supports(doc, LanguageCapability.DEFINITION) is True
+    assert ctrl.supports(doc, LanguageCapability.HOVER) is False
+    assert any(sym.name == "f" for sym in ctrl.outline(doc))
     with pytest.raises(CapabilityDenied):
         ctrl.hover(doc, 0)
 

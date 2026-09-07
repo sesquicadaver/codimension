@@ -68,6 +68,7 @@ def test_manager_registers_python_when_flag_on(tmp_path: Path) -> None:
     mgr = LanguageServiceManager()
     assert mgr.ensure_defaults(store=store, environ={}) is True
     assert mgr.registry.has("python.headless")
+    assert mgr.registry.get("python.headless").semantic is not None
     # Idempotent
     assert mgr.ensure_defaults(store=store, environ={}) is True
     assert len(mgr.registry.list_services()) == 1

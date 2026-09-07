@@ -1728,9 +1728,11 @@ class EditorsManager(QTabWidget):
         editor.textChanged.connect(self.__contentChanged)
         editor.cursorPositionChanged.connect(self.__cursorPositionChanged)
         editor.sigEscapePressed.connect(self.__onESC)
+        self.__publishLanguageBuffer(editorWidget, bump=False)
 
     def __disconnectEditorWidget(self, editorWidget):
         """Disconnects the editor's signals"""
+        self.__closeLanguageBuffer(editorWidget)
         editor = editorWidget.getEditor()
         editor.modificationChanged.disconnect(self.__modificationChanged)
         editor.textChanged.disconnect(self.__contentChanged)
@@ -1754,6 +1756,45 @@ class EditorsManager(QTabWidget):
         """Triggered when a buffer content is changed"""
         currentWidget = self.currentWidget()
         self.sigBufferModified.emit(currentWidget.getFileName(), currentWidget.getUUID())
+        if currentWidget.getType() in [
+            MainWindowTabWidgetBase.PlainTextEditor,
+            MainWindowTabWidgetBase.VCSAnnotateViewer,
+        ]:
+            self.__publishLanguageBuffer(currentWidget, bump=True)
+
+    def __publishLanguageBuffer(self, editorWidget, *, bump: bool) -> None:
+        """Sync open editor text into the workspace DocumentStore (R242)."""
+        try:
+            ctrl = self.__mainWindow.languageController
+        except Exception:
+            return
+        path = editorWidget.getFileName()
+        if not path or not os.path.isabs(path):
+            return
+        editor = editorWidget.getEditor()
+        version = None
+        if not bump:
+            version = 0
+        document = ctrl.snapshot_for_buffer(path=path, text=editor.text, version=version)
+        if document is None:
+            return
+        if bump:
+            ctrl.notify_buffer_changed(document)
+        else:
+            ctrl.notify_buffer_opened(document)
+
+    def __closeLanguageBuffer(self, editorWidget) -> None:
+        """Drop the editor buffer from the workspace DocumentStore (R242)."""
+        try:
+            ctrl = self.__mainWindow.languageController
+        except Exception:
+            return
+        path = editorWidget.getFileName()
+        if not path or not os.path.isabs(path):
+            return
+        from infrastructure.file_uri import path_to_file_uri
+
+        ctrl.notify_buffer_closed(path_to_file_uri(path))
 
     def __onESC(self):
         """The editor detected ESC pressed"""

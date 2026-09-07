@@ -21,10 +21,15 @@
 
 import logging
 import os.path
+from typing import cast
 
 from autocomplete.bufferutils import getContext
 from autocomplete.completelists import getCallSignatures, getCompletionList, getDefinitions, getOccurrences
 from cdmpyparser import getBriefModuleInfoFromMemory
+from core.document_snapshot import DocumentSnapshot
+from core.language import LanguageCapability
+from core.semantic import SymbolLocation
+from infrastructure.file_uri import file_uri_to_path
 from search.occurrencesprovider import OccurrencesSearchProvider
 from search.searchsupport import ItemToSearchIn, getSearchItemIndex
 from ui.calltip import Calltip
@@ -666,7 +671,15 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             self.cursorPosition = safeLastVisible, 0
 
     def onGotoDefinition(self):
-        """The user requested a jump to definition"""
+        """The user requested a jump to definition (capability-driven, R242)."""
+        locations = self.__language_definition_locations()
+        if locations:
+            self.__goto_symbol_locations(locations, empty_message="Definition is not found")
+            return
+        if locations is not None and not self.isPythonBuffer():
+            GlobalData().mainWindow.showStatusBarMessage("Definition is not found")
+            return
+
         if not self.isPythonBuffer():
             return
 
@@ -760,13 +773,22 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
                 self.__calltip.highlightParameter(signatures[0].index)
 
     def onOccurences(self):
-        """The user requested a list of occurences"""
-        if not self.isPythonBuffer():
-            return
+        """The user requested a list of occurences (capability-driven, R242)."""
         if self._parent.getType() == MainWindowTabWidgetBase.VCSAnnotateViewer:
             return
         if not os.path.isabs(self._parent.getFileName()):
             GlobalData().mainWindow.showStatusBarMessage("Please save the buffer and try again")
+            return
+
+        locations = self.__language_reference_locations()
+        if locations:
+            self.__display_symbol_locations(locations, empty_message="No occurences found")
+            return
+        if locations is not None and not self.isPythonBuffer():
+            GlobalData().mainWindow.showStatusBarMessage("No occurences found")
+            return
+
+        if not self.isPythonBuffer():
             return
 
         fileName = self._parent.getFileName()
@@ -812,6 +834,145 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
                 "column": self.cursorPosition[1],
             },
         )
+
+    def __language_document_snapshot(self) -> DocumentSnapshot | None:
+        """Build a DocumentSnapshot for the current absolute buffer, if any."""
+        path = self._parent.getFileName()
+        if not path or not os.path.isabs(path):
+            return None
+        try:
+            ctrl = GlobalData().mainWindow.languageController
+        except Exception:
+            return None
+        return ctrl.snapshot_for_buffer(path=path, text=self.text, version=0)
+
+    def __language_definition_locations(self) -> tuple[SymbolLocation, ...] | None:
+        """Return controller definitions when DEFINITION is supported, else None."""
+        document = self.__language_document_snapshot()
+        if document is None:
+            return None
+        try:
+            ctrl = GlobalData().mainWindow.languageController
+        except Exception:
+            return None
+        if not ctrl.supports(document, LanguageCapability.DEFINITION):
+            return None
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        try:
+            return cast(tuple[SymbolLocation, ...], ctrl.definition(document, self.absCursorPosition))
+        finally:
+            QApplication.restoreOverrideCursor()
+
+    def __language_reference_locations(self) -> tuple[SymbolLocation, ...] | None:
+        """Return controller references when REFERENCES is supported, else None."""
+        document = self.__language_document_snapshot()
+        if document is None:
+            return None
+        try:
+            ctrl = GlobalData().mainWindow.languageController
+        except Exception:
+            return None
+        if not ctrl.supports(document, LanguageCapability.REFERENCES):
+            return None
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        try:
+            return cast(tuple[SymbolLocation, ...], ctrl.references(document, self.absCursorPosition))
+        finally:
+            QApplication.restoreOverrideCursor()
+
+    def __goto_symbol_locations(
+        self,
+        locations: tuple[SymbolLocation, ...],
+        *,
+        empty_message: str,
+    ) -> None:
+        """Navigate to one or more SymbolLocation results."""
+        if not locations:
+            GlobalData().mainWindow.showStatusBarMessage(empty_message)
+            return
+        defs = []
+        for loc in locations:
+            path = file_uri_to_path(loc.uri)
+            if not path:
+                continue
+            line, col = self.__line_col_for_location(loc)
+            defs.append([path, line + 1, col, "", "", ""])
+        if not defs:
+            GlobalData().mainWindow.showStatusBarMessage(empty_message)
+            return
+        if len(defs) == 1:
+            GlobalData().mainWindow.openFile(defs[0][0], defs[0][1], defs[0][2] + 1)
+            return
+        if hasattr(self._parent, "importsBar"):
+            self._parent.importsBar.showDefinitions(defs)
+
+    def __display_symbol_locations(
+        self,
+        locations: tuple[SymbolLocation, ...],
+        *,
+        empty_message: str,
+    ) -> None:
+        """Show SymbolLocation hits in the Find-in-Files pane."""
+        if not locations:
+            GlobalData().mainWindow.showStatusBarMessage(empty_message)
+            return
+        fileName = self._parent.getFileName()
+        word = self.getCurrentWord() or ""
+        result: list[ItemToSearchIn] = []
+        for loc in locations:
+            path = file_uri_to_path(loc.uri) or fileName
+            line, _col = self.__line_col_for_location(loc)
+            lineno = line + 1
+            index = getSearchItemIndex(result, path)
+            if index < 0:
+                widget = GlobalData().mainWindow.getWidgetForFileName(path)
+                uuid = "" if widget is None else widget.getUUID()
+                result.append(ItemToSearchIn(path, uuid))
+                index = len(result) - 1
+            result[index].addMatch(word, lineno)
+        if not result:
+            GlobalData().mainWindow.showStatusBarMessage(empty_message)
+            return
+        GlobalData().mainWindow.showStatusBarMessage("")
+        GlobalData().mainWindow.displayFindInFiles(
+            OccurrencesSearchProvider().getName(),
+            result,
+            {
+                "name": word,
+                "filename": fileName,
+                "line": self.cursorPosition[0] + 1,
+                "column": self.cursorPosition[1],
+            },
+        )
+
+    def __line_col_for_location(self, location: SymbolLocation) -> tuple[int, int]:
+        """Map a SymbolLocation span to 0-based ``(line, col)``."""
+        path = file_uri_to_path(location.uri)
+        current = self._parent.getFileName()
+        if path and os.path.realpath(path) == os.path.realpath(current):
+            line, col = DocumentSnapshot(
+                uri=location.uri,
+                text=self.text,
+            ).offset_to_line_col(location.span.start)
+            return int(line), int(col)
+        try:
+            ctrl = GlobalData().mainWindow.languageController
+            store = ctrl.manager.document_store
+            snap = store.get(location.uri) if store is not None else None
+            if snap is not None:
+                line, col = snap.offset_to_line_col(location.span.start)
+                return int(line), int(col)
+        except Exception:
+            pass
+        if path and os.path.isfile(path):
+            try:
+                with open(path, encoding="utf-8", errors="replace") as handle:
+                    text = handle.read()
+                line, col = DocumentSnapshot(uri=location.uri, text=text).offset_to_line_col(location.span.start)
+                return int(line), int(col)
+            except OSError:
+                pass
+        return 0, 0
 
     def insertCompletion(self, text):
         """Triggered when a completion is selected"""

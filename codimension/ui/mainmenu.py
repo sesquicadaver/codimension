@@ -26,6 +26,7 @@ import pwd
 import socket
 import sys
 
+from core.language import LanguageCapability
 from utils.diskvaluesrelay import getRecentFiles
 from utils.globals import GlobalData
 from utils.misc import getIDETemplateFile, getLocaleDate, getProjectTemplateFile
@@ -928,7 +929,9 @@ class MainWindowMenuMixin:
         self.__saveFileAct.setEnabled(plainTextBuffer or isGeneratedDiagram or isProfileViewer)
         self.__saveFileAsAct.setEnabled(plainTextBuffer or isGeneratedDiagram or isProfileViewer)
         self.__closeTabAct.setEnabled(self.em.isTabClosable())
-        self.__tabJumpToDefAct.setEnabled(isPythonBuffer)
+        self.__tabJumpToDefAct.setEnabled(
+            isPythonBuffer or self._supportsLanguageCapability(LanguageCapability.DEFINITION)
+        )
         self.__calltipAct.setEnabled(isPythonBuffer)
         self.__tabJumpToScopeBeginAct.setEnabled(isPythonBuffer)
         self.__tabOpenImportAct.setEnabled(isPythonBuffer)
@@ -981,7 +984,10 @@ class MainWindowMenuMixin:
         isPythonBuffer = self._isPythonBuffer()
         currentWidget = self.em.currentWidget()
 
-        self.__findOccurencesAct.setEnabled(isPythonBuffer and os.path.isabs(currentWidget.getFileName()))
+        self.__findOccurencesAct.setEnabled(
+            (isPythonBuffer or self._supportsLanguageCapability(LanguageCapability.REFERENCES))
+            and os.path.isabs(currentWidget.getFileName())
+        )
         self.__goToLineAct.setEnabled(isPlainTextBuffer)
         self.__findAct.setEnabled(isPlainTextBuffer)
         self.__replaceAct.setEnabled(
