@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Optional, Sequence
 
 from core.document_snapshot import DocumentSnapshot, TextEdit
-from core.document_store import DocumentStore
+from core.document_store import DocumentStore, ResolutionStatus
 from core.semantic import (
     HoverInfo,
     OutlineSymbol,
@@ -33,7 +33,7 @@ from core.semantic import (
     WorkspaceTextEdit,
 )
 from core.symbol_index import SourceSpan
-from infrastructure.file_uri import load_document_from_uri
+from infrastructure.file_uri import make_workspace_document_loader
 from infrastructure.lsp_position_codec import LspPosition, LspRange
 from infrastructure.lsp_process import LspProcess, LspProcessKey, LspProcessRegistry
 
@@ -82,7 +82,11 @@ class LspSemanticProvider:
         self._opened: dict[str, int] = {}
         # Last LspProcess.generation observed; mismatch clears ``_opened`` (R233).
         self._server_generation: int = 0
-        self._documents = document_store or DocumentStore(loader=load_document_from_uri)
+        # R235: never use ``document_store or …``; identity check keeps empty shared stores.
+        if document_store is not None:
+            self._documents = document_store
+        else:
+            self._documents = DocumentStore(loader=make_workspace_document_loader(config.workspace_root))
 
     @property
     def document_store(self) -> DocumentStore:
@@ -302,25 +306,24 @@ def _span_for_uri(
     range_obj: Mapping[str, Any],
     *,
     store: DocumentStore | None,
-) -> SourceSpan:
-    """Decode ``range_obj`` against ``document`` or a resolved foreign snapshot (R224)."""
+) -> tuple[SourceSpan, ResolutionStatus, DocumentSnapshot | None]:
+    """Decode ``range_obj``; return span, resolution status, and target snapshot (R235)."""
     start_raw = range_obj.get("start")
     end_raw = range_obj.get("end")
     if not isinstance(start_raw, Mapping) or not isinstance(end_raw, Mapping):
-        return SourceSpan(0, 0)
+        return SourceSpan(0, 0), ResolutionStatus.UNRESOLVED, None
     lsp_range = LspRange(
         start=LspPosition(line=int(start_raw["line"]), character=int(start_raw["character"])),
         end=LspPosition(line=int(end_raw["line"]), character=int(end_raw["character"])),
     )
     if uri == document.uri:
-        return proc.codec.to_internal_span(document, lsp_range)
+        return proc.codec.to_internal_span(document, lsp_range), ResolutionStatus.RESOLVED, document
     target: Optional[DocumentSnapshot] = None
     if store is not None:
         target = store.resolve(uri)
     if target is not None:
-        return proc.codec.to_internal_span(target, lsp_range)
-    # Unresolvable foreign URI: keep a safe placeholder rather than wrong offsets.
-    return SourceSpan(0, 0)
+        return proc.codec.to_internal_span(target, lsp_range), ResolutionStatus.RESOLVED, target
+    return SourceSpan(0, 0), ResolutionStatus.UNRESOLVED, None
 
 
 def _parse_locations(
@@ -352,8 +355,8 @@ def _parse_locations(
             range_obj = item.get("range")
         if not isinstance(range_obj, Mapping):
             continue
-        span = _span_for_uri(proc, document, uri, range_obj, store=store)
-        out.append(SymbolLocation(uri=uri, span=span))
+        span, status, _target = _span_for_uri(proc, document, uri, range_obj, store=store)
+        out.append(SymbolLocation(uri=uri, span=span, resolution_status=status))
     return tuple(out)
 
 
@@ -395,6 +398,7 @@ def _parse_text_edits(
     result: Any,
     *,
     store: DocumentStore | None = None,
+    expected_version: int | None = None,
 ) -> tuple[WorkspaceTextEdit, ...]:
     if not result:
         return ()
@@ -408,8 +412,18 @@ def _parse_text_edits(
         new_text = item.get("newText")
         if not isinstance(range_obj, Mapping) or new_text is None:
             continue
-        span = _span_for_uri(proc, document, uri, range_obj, store=store)
-        out.append(WorkspaceTextEdit(uri=uri, edit=TextEdit(span=span, new_text=str(new_text))))
+        span, status, target = _span_for_uri(proc, document, uri, range_obj, store=store)
+        version = expected_version
+        if version is None and target is not None:
+            version = target.version
+        out.append(
+            WorkspaceTextEdit(
+                uri=uri,
+                edit=TextEdit(span=span, new_text=str(new_text)),
+                expected_version=version,
+                resolution_status=status,
+            )
+        )
     return tuple(out)
 
 
@@ -433,8 +447,22 @@ def _parse_workspace_edit(
             if not isinstance(change, Mapping):
                 continue
             if "textDocument" in change and "edits" in change:
-                uri = str((change.get("textDocument") or {}).get("uri", document.uri))
-                out.extend(_parse_text_edits(proc, document, uri, change.get("edits"), store=store))
+                td = change.get("textDocument") or {}
+                if not isinstance(td, Mapping):
+                    continue
+                uri = str(td.get("uri", document.uri))
+                raw_ver = td.get("version")
+                expected = raw_ver if isinstance(raw_ver, int) else None
+                out.extend(
+                    _parse_text_edits(
+                        proc,
+                        document,
+                        uri,
+                        change.get("edits"),
+                        store=store,
+                        expected_version=expected,
+                    )
+                )
     return tuple(out)
 
 
@@ -447,6 +475,7 @@ def build_rust_semantic_provider(
     readiness: SemanticReadiness,
     extra_args: Sequence[str] = (),
     toolchain: str = "",
+    document_store: DocumentStore | None = None,
 ) -> LspSemanticProvider:
     """Factory for rust-analyzer-backed provider."""
     cmd = (binary, *extra_args)
@@ -459,7 +488,7 @@ def build_rust_semantic_provider(
         provider_id="lsp.rust-analyzer",
         language_id_for_did_open="rust",
     )
-    return LspSemanticProvider(registry, config, readiness=readiness)
+    return LspSemanticProvider(registry, config, readiness=readiness, document_store=document_store)
 
 
 def build_clangd_semantic_provider(
@@ -471,6 +500,7 @@ def build_clangd_semantic_provider(
     readiness: SemanticReadiness,
     extra_args: Sequence[str] = (),
     toolchain: str = "",
+    document_store: DocumentStore | None = None,
 ) -> LspSemanticProvider:
     """Factory for clangd-backed provider."""
     cmd = (binary, *extra_args)
@@ -483,7 +513,7 @@ def build_clangd_semantic_provider(
         provider_id="lsp.clangd",
         language_id_for_did_open="cpp",
     )
-    return LspSemanticProvider(registry, config, readiness=readiness)
+    return LspSemanticProvider(registry, config, readiness=readiness, document_store=document_store)
 
 
 __all__ = [

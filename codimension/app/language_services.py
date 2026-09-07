@@ -32,6 +32,7 @@ import os
 from typing import Iterable, Mapping, Optional, Sequence
 
 from core.bindings import BindingProvider
+from core.document_store import DocumentStore
 from core.feature_flags import (
     FLAG_LANGUAGE_SERVICES,
     FeatureFlagsStore,
@@ -58,6 +59,7 @@ from infrastructure.ffi_bindings import (
     Pybind11BindingProvider,
     PyO3BindingProvider,
 )
+from infrastructure.file_uri import make_workspace_document_loader
 from infrastructure.lsp_process import LspProcessRegistry
 from infrastructure.lsp_semantic import (
     build_clangd_semantic_provider,
@@ -126,6 +128,8 @@ class LanguageServiceManager:
         self._registry = registry if registry is not None else LanguageServiceRegistry()
         self._lsp_processes = lsp_processes if lsp_processes is not None else LspProcessRegistry()
         self._workspace_root: str | None = None
+        # Shared across LSP providers for the active workspace (R235).
+        self._document_store: DocumentStore | None = None
 
     @property
     def registry(self) -> LanguageServiceRegistry:
@@ -136,6 +140,11 @@ class LanguageServiceManager:
     def lsp_processes(self) -> LspProcessRegistry:
         """LSP stdio process registry (R202)."""
         return self._lsp_processes
+
+    @property
+    def document_store(self) -> DocumentStore | None:
+        """Workspace :class:`DocumentStore` while a workspace is attached (R235)."""
+        return self._document_store
 
     @property
     def workspace_root(self) -> str | None:
@@ -221,6 +230,7 @@ class LanguageServiceManager:
             readiness=readiness,
             extra_args=extra_args,
             toolchain=toolchain,
+            document_store=self._document_store,
         )
         structural = self._optional_structural("rust", attach_structural)
         bindings = self._optional_bindings("rust", attach_bindings)
@@ -262,6 +272,7 @@ class LanguageServiceManager:
             readiness=readiness,
             extra_args=extra_args,
             toolchain=toolchain,
+            document_store=self._document_store,
         )
         structural = self._optional_structural("cpp", attach_structural)
         bindings = self._optional_bindings("cpp", attach_bindings)
@@ -342,6 +353,7 @@ class LanguageServiceManager:
             return False
 
         root = os.path.abspath(os.path.expanduser(workspace_root))
+        self._document_store = DocumentStore(loader=make_workspace_document_loader(root))
         rust_bin = rust_binary if rust_binary is not None else _env_absolute_binary(env, ENV_RUST_ANALYZER)
         cpp_bin = cpp_binary if cpp_binary is not None else _env_absolute_binary(env, ENV_CLANGD)
         if allowlist is None:
@@ -400,6 +412,7 @@ class LanguageServiceManager:
         self._lsp_processes.shutdown_all()
         self._registry.clear()
         self._workspace_root = None
+        self._document_store = None
 
 
 __all__ = [
