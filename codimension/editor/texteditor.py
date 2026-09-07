@@ -21,6 +21,7 @@
 
 import logging
 import os.path
+from typing import cast
 
 from autocomplete.bufferutils import getContext
 from autocomplete.completelists import getCallSignatures, getCompletionList, getDefinitions, getOccurrences
@@ -858,7 +859,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             return None
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
-            return ctrl.definition(document, self.absCursorPosition)
+            return cast(tuple[SymbolLocation, ...], ctrl.definition(document, self.absCursorPosition))
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -875,7 +876,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             return None
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
-            return ctrl.references(document, self.absCursorPosition)
+            return cast(tuple[SymbolLocation, ...], ctrl.references(document, self.absCursorPosition))
         finally:
             QApplication.restoreOverrideCursor()
 
@@ -917,7 +918,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             return
         fileName = self._parent.getFileName()
         word = self.getCurrentWord() or ""
-        result = []
+        result: list[ItemToSearchIn] = []
         for loc in locations:
             path = file_uri_to_path(loc.uri) or fileName
             line, _col = self.__line_col_for_location(loc)
@@ -949,23 +950,26 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         path = file_uri_to_path(location.uri)
         current = self._parent.getFileName()
         if path and os.path.realpath(path) == os.path.realpath(current):
-            return DocumentSnapshot(
+            line, col = DocumentSnapshot(
                 uri=location.uri,
                 text=self.text,
             ).offset_to_line_col(location.span.start)
+            return int(line), int(col)
         try:
             ctrl = GlobalData().mainWindow.languageController
             store = ctrl.manager.document_store
             snap = store.get(location.uri) if store is not None else None
             if snap is not None:
-                return snap.offset_to_line_col(location.span.start)
+                line, col = snap.offset_to_line_col(location.span.start)
+                return int(line), int(col)
         except Exception:
             pass
         if path and os.path.isfile(path):
             try:
                 with open(path, encoding="utf-8", errors="replace") as handle:
                     text = handle.read()
-                return DocumentSnapshot(uri=location.uri, text=text).offset_to_line_col(location.span.start)
+                line, col = DocumentSnapshot(uri=location.uri, text=text).offset_to_line_col(location.span.start)
+                return int(line), int(col)
             except OSError:
                 pass
         return 0, 0
