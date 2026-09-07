@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - FFI binding extractors (R206 / R217 / R226)
+# codimension - FFI binding extractors (R206 / R217 / R226 / R240)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Evidence-backed PyO3 / pybind11 / CPython / ``.pyi`` extractors (R206–R226).
+"""Evidence-backed PyO3 / pybind11 / CPython / ``.pyi`` extractors (R206–R240).
 
 Uses pattern matching on source text for discovery (not a compiler). Edges
 always carry :class:`~core.bindings.BindingEvidence`; name equality alone
@@ -21,6 +21,10 @@ R217: ``EXACT`` only when a full registration chain is present; otherwise
 R226: ``EXACT`` additionally requires a Tree-sitter CST containment proof
 (:attr:`~core.bindings.BindingEvidenceKind.STRUCTURAL_REGISTRATION`). Without
 Tree-sitter or without containment, precision stays ``BRIDGE``.
+
+R240: ``EXACT`` edges are built from the structural proof's identity
+(module / binder / export / native / registration call). Regex may only
+nominate candidates — never choose the module for an ``EXACT`` edge.
 """
 
 from __future__ import annotations
@@ -131,14 +135,14 @@ class PyO3BindingProvider:
     def extract(self, uri: str, text: str) -> tuple[BindingEdge, ...]:
         """Parse Rust source for evidence-backed PyO3 exports.
 
-        ``EXACT`` only when ``#[pyfunction]`` + ``wrap_pyfunction!`` +
-        ``#[pymodule]`` are present **and** Tree-sitter proves the wrap sits
-        inside the pymodule body (R217 + R226).
+        ``EXACT`` only when Tree-sitter proves ``add_function(wrap_pyfunction!(…))``
+        inside a specific ``#[pymodule]`` body; that pymodule name becomes the
+        edge module (R217 + R226 + R240). Regex discovers candidates only.
         """
-        module = "_native"
+        fallback_module = "_native"
         mod_m = _RE_PYMODULE.search(text)
         if mod_m is not None:
-            module = mod_m.group(1)
+            fallback_module = mod_m.group(1)
 
         edges: list[BindingEdge] = []
         wrapped = {m.group(1) for m in _RE_WRAP_PYFUNCTION.finditer(text)}
@@ -176,28 +180,38 @@ class PyO3BindingProvider:
                         detail=f"wrap_pyfunction!({rust_name})",
                     )
                 )
-            if mod_m is not None:
+            precision = BindingPrecision.BRIDGE
+            module = fallback_module
+            proof = pyo3_registration_proof(text, rust_name) if rust_name in wrapped else None
+            if proof is not None and proof.module:
+                # R240: EXACT module identity comes from the proof, not first regex hit.
+                module = proof.module
+                evidence.append(
+                    BindingEvidence(
+                        kind=BindingEvidenceKind.PYMODULE_ATTR,
+                        uri=uri,
+                        span=proof.span,
+                        detail=f"#[pymodule] fn {module}",
+                    )
+                )
+                evidence.append(
+                    BindingEvidence(
+                        kind=BindingEvidenceKind.STRUCTURAL_REGISTRATION,
+                        uri=uri,
+                        span=proof.span,
+                        detail=proof.detail,
+                    )
+                )
+                precision = BindingPrecision.EXACT
+            elif mod_m is not None:
                 evidence.append(
                     BindingEvidence(
                         kind=BindingEvidenceKind.PYMODULE_ATTR,
                         uri=uri,
                         span=_span_for_match(text, mod_m, 1),
-                        detail=f"#[pymodule] fn {module}",
+                        detail=f"#[pymodule] fn {fallback_module}",
                     )
                 )
-            precision = BindingPrecision.BRIDGE
-            if rust_name in wrapped and mod_m is not None:
-                proof = pyo3_registration_proof(text, rust_name)
-                if proof is not None:
-                    evidence.append(
-                        BindingEvidence(
-                            kind=BindingEvidenceKind.STRUCTURAL_REGISTRATION,
-                            uri=uri,
-                            span=proof.span,
-                            detail=proof.detail,
-                        )
-                    )
-                    precision = BindingPrecision.EXACT
             edges.append(
                 BindingEdge(
                     python_symbol=_python_symbol(module, py_name),
@@ -276,6 +290,7 @@ class Pybind11BindingProvider:
                         )
                     )
                 precision = BindingPrecision.BRIDGE
+                edge_module = module
                 if mod_match is not None:
                     proof = pybind11_registration_proof(
                         text,
@@ -283,6 +298,7 @@ class Pybind11BindingProvider:
                         var=var,
                         py_name=py_name,
                         def_start=match.start(),
+                        native_name=cpp_name,
                     )
                     if proof is not None:
                         evidence.append(
@@ -293,15 +309,17 @@ class Pybind11BindingProvider:
                                 detail=proof.detail,
                             )
                         )
+                        # R240: module identity from the structural MODULE proof.
+                        edge_module = proof.module or module
                         precision = BindingPrecision.EXACT
                 edges.append(
                     BindingEdge(
-                        python_symbol=_python_symbol(module, py_name),
+                        python_symbol=_python_symbol(edge_module, py_name),
                         native_symbol=_cpp_symbol(cpp_name),
                         framework=BindingFramework.PYBIND11,
                         precision=precision,
                         evidence=tuple(evidence),
-                        python_module=module,
+                        python_module=edge_module,
                         python_name=py_name,
                         native_language_id="cpp",
                         provider_id=self.provider_id,
@@ -467,9 +485,9 @@ class CPythonBindingProvider:
     def extract(self, uri: str, text: str) -> tuple[BindingEdge, ...]:
         """Parse C/C++ extension source for CPython method table exports.
 
-        ``EXACT`` only when the method table is referenced from a
-        ``PyModuleDef.m_methods`` used by ``PyInit_*`` via ``PyModule_Create``
-        **and** Tree-sitter proves the chain (R217 + R226). Otherwise ``BRIDGE``.
+        ``EXACT`` only when Tree-sitter proves the MethodDef row for this
+        **specific** method table is wired through ``m_methods`` and
+        ``PyModule_Create`` (R217 + R226 + R240). Otherwise ``BRIDGE``.
         """
         registered = _cpython_registered_tables(text)
         fallback_init = _RE_PYINIT.search(text)
@@ -491,7 +509,8 @@ class CPythonBindingProvider:
             precision = BindingPrecision.BRIDGE
             module = fallback_module
             if table is not None and table in registered:
-                module, def_m, init_m = registered[table]
+                reg_module, def_m, init_m = registered[table]
+                module = reg_module
                 evidence.append(
                     BindingEvidence(
                         kind=BindingEvidenceKind.PYMODULEDEF,
@@ -508,7 +527,12 @@ class CPythonBindingProvider:
                         detail=f"PyInit_{module}",
                     )
                 )
-                proof = cpython_registration_proof(text, py_name)
+                proof = cpython_registration_proof(
+                    text,
+                    py_name,
+                    table_name=table,
+                    native_fn=fn_name,
+                )
                 if proof is not None:
                     evidence.append(
                         BindingEvidence(
@@ -518,6 +542,8 @@ class CPythonBindingProvider:
                             detail=proof.detail,
                         )
                     )
+                    # R240: module / native identity from the matched registration chain.
+                    module = proof.module or module
                     precision = BindingPrecision.EXACT
             elif fallback_init is not None:
                 # Co-located PyInit without proven table link → BRIDGE only.

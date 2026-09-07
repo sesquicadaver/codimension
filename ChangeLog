@@ -1,5 +1,10 @@
 2026 Sep 07
 
+* R240: FFI ``EXACT`` edges require edge-specific structural identity —
+  PyO3 ``add_function(wrap_pyfunction!(…))`` inside the owning
+  ``#[pymodule]``; CPython proofs keyed by method table + native; module
+  identity taken from the proof, not the first regex hit
+  (re-audit P1-06 @ 45e33f6)
 * R239: taint analysis is forward CFG worklist — single-pass statement lists
   (no whole-list re-exec / sink-before-source FP); local loop body fixpoint;
   ``try`` handlers join mid-body throw points; non-exhaustive ``match``
