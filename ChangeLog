@@ -1,3 +1,10 @@
+2026 Sep 07
+
+* R229: advertise only language capabilities backed by real
+  ``SemanticProvider`` APIs (no DIAGNOSTICS/COMPLETION/SEMANTIC_TOKENS);
+  bare rust/cpp services claim no semantic caps until a provider is bound
+  (re-audit P1-05 @ 8824ff3c)
+
 2026 Sep 06
 
 * R228: blank UUID in an external `.cdm3` edit after load is atomically restored to the loaded UUID (re-audit P1-09 @ 8824ff3c)

@@ -181,7 +181,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 38 | R226 | FFI EXACT via structural parse | Tree-sitter/LSP evidence for registration chain; else BRIDGE/INFERRED | L | DONE ([#187](https://github.com/sesquicadaver/codimension/pull/187)) |
 | 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env per branch; may-taint join; cover positional-only params | M | DONE ([#189](https://github.com/sesquicadaver/codimension/pull/189)) |
 | 40 | R228 | Blank UUID after load | Reject empty disk UUID or atomically restore loaded UUID to `.cdm3` | S | DONE ([#191](https://github.com/sesquicadaver/codimension/pull/191)) |
-| 41 | R229 | Polyglot capabilities match providers | Advertise only implemented diagnostics/completion/tokens APIs | M | OPEN |
+| 41 | R229 | Polyglot capabilities match providers | Advertise only implemented diagnostics/completion/tokens APIs | M | DONE |
 | 42 | R230 | Wire LanguageServiceManager into IDE lifecycle | Compose into GlobalData/MainWindow workspace open/close | L | OPEN |
 | 43 | R231 | AI structured findings + global budgets | Finding model + total token/cost budget (beyond per-file truncate) | L | OPEN |
 
@@ -189,7 +189,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R229** — Polyglot capabilities match providers.
+**Next OPEN:** **R230** — Wire LanguageServiceManager into IDE lifecycle.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

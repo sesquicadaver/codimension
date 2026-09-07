@@ -9,15 +9,16 @@
 # (at your option) any later version.
 #
 
-"""LanguageController: polyglot editor actions via capabilities only (R204).
+"""LanguageController: polyglot editor actions via capabilities only (R204 / R229).
 
 No language-id branching in control flow. Actions resolve a
 :class:`~core.language.LanguageService` by ``language_id`` or file extension,
 then gate on :class:`~core.language.LanguageCapability` and an optional
 :class:`~core.semantic.SemanticProvider`.
 
-This module is Qt-free so unit tests and headless tooling can drive it; MainWindow
-wires results into widgets separately.
+R229: ``supports()`` requires a bound semantic provider for every
+semantic-backed capability (including ``DIAGNOSTICS``) — advertising alone
+is not enough when the provider cannot serve the API.
 """
 
 from __future__ import annotations
@@ -94,13 +95,22 @@ class LanguageController:
         return None
 
     def supports(self, document: DocumentSnapshot, capability: LanguageCapability) -> bool:
-        """True when a matching service advertises ``capability`` and can serve it."""
+        """True when a matching service advertises ``capability`` and can serve it.
+
+        Structural / FFI / build caps need only advertisement (providers are
+        bound when those caps are set). Semantic-backed caps require a bound
+        :class:`~core.semantic.SemanticProvider` (R229).
+        """
         service = self.service_for_document(document)
         if service is None:
             return False
         if not service.has_capability(capability):
             return False
-        if capability is LanguageCapability.DIAGNOSTICS:
+        if capability in {
+            LanguageCapability.STRUCTURAL_GRAPH,
+            LanguageCapability.FFI_BINDINGS,
+            LanguageCapability.BUILD_TASKS,
+        }:
             return True
         return service.semantic is not None
 
