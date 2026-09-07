@@ -161,7 +161,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R227** (taint posonlyargs); wave R221–R231 (`codi-last.md` @ 8824ff3c).
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — **R228** (blank UUID after load); wave R221–R231 (`codi-last.md` @ 8824ff3c).
 
 ### Module boundary matrix (R103 / R195)
 

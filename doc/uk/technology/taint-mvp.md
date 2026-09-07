@@ -1,6 +1,6 @@
 > **Language / Мова:** [English](../../technology/taint-mvp.md) | Українська
 
-# Function-local taint MVP (R143)
+# Function-local taint MVP (R143 / R227)
 
 Headless API: `core.taint.analyze_function_taint` /
 `analyze_function_taint_from_file`.

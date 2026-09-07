@@ -179,7 +179,7 @@
 | 36 | R224 | LSP DocumentStore для foreign URI spans | Cross-file definition/refs/rename з реальними ranges (не `SourceSpan(0,0)`) | L | DONE ([#183](https://github.com/sesquicadaver/codimension/pull/183)) |
 | 37 | R225 | Plugin manifest policy fail-closed | Third-party: обов’язковий `.cdmp` Codimension block; unknown/invalid → deny | M | DONE ([#185](https://github.com/sesquicadaver/codimension/pull/185)) |
 | 38 | R226 | FFI EXACT через structural parse | Tree-sitter/LSP evidence для registration chain; інакше BRIDGE/INFERRED | L | DONE ([#187](https://github.com/sesquicadaver/codimension/pull/187)) |
-| 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env на гілку; may-taint join; покрити positional-only | M | OPEN |
+| 39 | R227 | Taint: `posonlyargs` + branch lattice union | Clone env на гілку; may-taint join; покрити positional-only | M | DONE |
 | 40 | R228 | Blank UUID після load | Reject порожній disk UUID або атомарно відновити loaded UUID у `.cdm3` | S | OPEN |
 | 41 | R229 | Polyglot capabilities = providers | Рекламувати лише реалізовані diagnostics/completion/tokens API | M | OPEN |
 | 42 | R230 | Wire LanguageServiceManager в IDE lifecycle | Composition у GlobalData/MainWindow open/close | L | OPEN |
@@ -189,7 +189,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R227** — Taint: `posonlyargs` + branch lattice union.
+**Наступний OPEN:** **R228** — Blank UUID after load.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
