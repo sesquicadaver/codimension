@@ -1,5 +1,6 @@
 2026 Sep 06
 
+* R226: FFI ``EXACT`` requires Tree-sitter CST registration proof (``STRUCTURAL_REGISTRATION``); regex co-location alone → ``BRIDGE`` (re-audit P1-06 @ 8824ff3c)
 * R225: third-party plugins require a complete ``[Codimension]`` block in
   ``.cdmp`` (category/API/capabilities/min IDE/entrypoint); invalid or
   missing → deny before import (re-audit P1-07 @ 8824ff3c). Smoke uses a

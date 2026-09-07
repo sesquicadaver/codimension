@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - FFI binding extractors (R206 / R217)
+# codimension - FFI binding extractors (R206 / R217 / R226)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,14 +9,18 @@
 # (at your option) any later version.
 #
 
-"""Evidence-backed PyO3 / pybind11 / CPython / ``.pyi`` extractors (R206 / R217).
+"""Evidence-backed PyO3 / pybind11 / CPython / ``.pyi`` extractors (R206–R226).
 
-Uses pattern matching on source text (not a compiler). Edges always carry
-:class:`~core.bindings.BindingEvidence`; name equality alone never yields
-:attr:`~core.bindings.BindingPrecision.EXACT`.
+Uses pattern matching on source text for discovery (not a compiler). Edges
+always carry :class:`~core.bindings.BindingEvidence`; name equality alone
+never yields :attr:`~core.bindings.BindingPrecision.EXACT`.
 
 R217: ``EXACT`` only when a full registration chain is present; otherwise
 ``BRIDGE`` (or ``INLINE`` for pybind11 lambdas).
+
+R226: ``EXACT`` additionally requires a Tree-sitter CST containment proof
+(:attr:`~core.bindings.BindingEvidenceKind.STRUCTURAL_REGISTRATION`). Without
+Tree-sitter or without containment, precision stays ``BRIDGE``.
 """
 
 from __future__ import annotations
@@ -35,6 +39,12 @@ from core.bindings import (
     PyiStubSymbol,
 )
 from core.symbol_index import SourceSpan
+from infrastructure.ffi_structural import (
+    cpython_registration_proof,
+    pybind11_module_bodies,
+    pybind11_registration_proof,
+    pyo3_registration_proof,
+)
 
 _RE_PYO3_NAME = re.compile(
     r"#\s*\[\s*pyo3\s*\(\s*name\s*=\s*\"([^\"]+)\"\s*\)\s*\]",
@@ -122,7 +132,8 @@ class PyO3BindingProvider:
         """Parse Rust source for evidence-backed PyO3 exports.
 
         ``EXACT`` only when ``#[pyfunction]`` + ``wrap_pyfunction!`` +
-        ``#[pymodule]`` are all present for that function (R217).
+        ``#[pymodule]`` are present **and** Tree-sitter proves the wrap sits
+        inside the pymodule body (R217 + R226).
         """
         module = "_native"
         mod_m = _RE_PYMODULE.search(text)
@@ -155,7 +166,6 @@ class PyO3BindingProvider:
                         detail=f'pyo3(name="{py_name}")',
                     )
                 )
-            registered = rust_name in wrapped and mod_m is not None
             if rust_name in wrapped:
                 wrap_m = next(m for m in _RE_WRAP_PYFUNCTION.finditer(text) if m.group(1) == rust_name)
                 evidence.append(
@@ -175,7 +185,19 @@ class PyO3BindingProvider:
                         detail=f"#[pymodule] fn {module}",
                     )
                 )
-            precision = BindingPrecision.EXACT if registered else BindingPrecision.BRIDGE
+            precision = BindingPrecision.BRIDGE
+            if rust_name in wrapped and mod_m is not None:
+                proof = pyo3_registration_proof(text, rust_name)
+                if proof is not None:
+                    evidence.append(
+                        BindingEvidence(
+                            kind=BindingEvidenceKind.STRUCTURAL_REGISTRATION,
+                            uri=uri,
+                            span=proof.span,
+                            detail=proof.detail,
+                        )
+                    )
+                    precision = BindingPrecision.EXACT
             edges.append(
                 BindingEdge(
                     python_symbol=_python_symbol(module, py_name),
@@ -209,10 +231,11 @@ class Pybind11BindingProvider:
         """Parse C++ source for pybind11 exports.
 
         Supports arbitrary binder variable names from
-        ``PYBIND11_MODULE(name, var)`` (R217); ``EXACT`` requires both
-        ``var.def`` and the module macro.
+        ``PYBIND11_MODULE(name, var)``. ``EXACT`` requires ``var.def`` inside
+        that module's CST body (R217 + R226).
         """
         modules = list(_RE_PYBIND11_MODULE.finditer(text))
+        structural_bodies = {(m, v): span for m, v, span in pybind11_module_bodies(text)}
         # Fall back to scanning ``m.def`` if no macro (declaration-only → BRIDGE).
         binders: list[tuple[str, str, re.Match[str] | None]] = []
         if modules:
@@ -225,8 +248,12 @@ class Pybind11BindingProvider:
         seen_starts: set[int] = set()
         for module, var, mod_match in binders:
             symbol_re, inline_re = _pybind11_def_patterns(var)
+            body_span = structural_bodies.get((module, var))
             for match in symbol_re.finditer(text):
                 if match.start() in seen_starts:
+                    continue
+                # Prefer the MODULE whose CST body contains this .def.
+                if body_span is not None and not (body_span.start <= match.start() < body_span.end):
                     continue
                 seen_starts.add(match.start())
                 py_name = match.group("py")
@@ -248,7 +275,25 @@ class Pybind11BindingProvider:
                             detail=f"PYBIND11_MODULE({module})",
                         )
                     )
-                precision = BindingPrecision.EXACT if mod_match is not None else BindingPrecision.BRIDGE
+                precision = BindingPrecision.BRIDGE
+                if mod_match is not None:
+                    proof = pybind11_registration_proof(
+                        text,
+                        module=module,
+                        var=var,
+                        py_name=py_name,
+                        def_start=match.start(),
+                    )
+                    if proof is not None:
+                        evidence.append(
+                            BindingEvidence(
+                                kind=BindingEvidenceKind.STRUCTURAL_REGISTRATION,
+                                uri=uri,
+                                span=proof.span,
+                                detail=proof.detail,
+                            )
+                        )
+                        precision = BindingPrecision.EXACT
                 edges.append(
                     BindingEdge(
                         python_symbol=_python_symbol(module, py_name),
@@ -264,6 +309,8 @@ class Pybind11BindingProvider:
                 )
             for match in inline_re.finditer(text):
                 if match.start() in seen_starts:
+                    continue
+                if body_span is not None and not (body_span.start <= match.start() < body_span.end):
                     continue
                 seen_starts.add(match.start())
                 py_name = match.group("py")
@@ -300,6 +347,66 @@ class Pybind11BindingProvider:
                         provider_id=self.provider_id,
                     )
                 )
+
+        # Orphan ``var.def`` outside every MODULE body → BRIDGE (R226).
+        if modules:
+            known_vars = {m.group("var") for m in modules}
+            for var in known_vars:
+                symbol_re, inline_re = _pybind11_def_patterns(var)
+                for match in symbol_re.finditer(text):
+                    if match.start() in seen_starts:
+                        continue
+                    seen_starts.add(match.start())
+                    py_name = match.group("py")
+                    cpp_name = match.group("cpp")
+                    edges.append(
+                        BindingEdge(
+                            python_symbol=_python_symbol("_native", py_name),
+                            native_symbol=_cpp_symbol(cpp_name),
+                            framework=BindingFramework.PYBIND11,
+                            precision=BindingPrecision.BRIDGE,
+                            evidence=(
+                                BindingEvidence(
+                                    kind=BindingEvidenceKind.PYBIND11_DEF,
+                                    uri=uri,
+                                    span=_span_for_match(text, match),
+                                    detail=f'{var}.def("{py_name}", &{cpp_name}) (outside MODULE)',
+                                ),
+                            ),
+                            python_module="_native",
+                            python_name=py_name,
+                            native_language_id="cpp",
+                            provider_id=self.provider_id,
+                        )
+                    )
+                for match in inline_re.finditer(text):
+                    if match.start() in seen_starts:
+                        continue
+                    seen_starts.add(match.start())
+                    py_name = match.group("py")
+                    line = text.count("\n", 0, match.start()) + 1
+                    col = match.start() - (text.rfind("\n", 0, match.start()) + 1)
+                    native = f"cpp:{uri.rsplit('/', 1)[-1]}::<lambda@{line}:{col}>"
+                    edges.append(
+                        BindingEdge(
+                            python_symbol=_python_symbol("_native", py_name),
+                            native_symbol=native,
+                            framework=BindingFramework.PYBIND11,
+                            precision=BindingPrecision.INLINE,
+                            evidence=(
+                                BindingEvidence(
+                                    kind=BindingEvidenceKind.PYBIND11_INLINE,
+                                    uri=uri,
+                                    span=_span_for_match(text, match),
+                                    detail=f'{var}.def("{py_name}", []…) (outside MODULE)',
+                                ),
+                            ),
+                            python_module="_native",
+                            python_name=py_name,
+                            native_language_id="cpp",
+                            provider_id=self.provider_id,
+                        )
+                    )
         return tuple(edges)
 
 
@@ -312,8 +419,9 @@ def _cpython_registered_tables(text: str) -> dict[str, tuple[str, re.Match[str],
     def_to_table: dict[str, tuple[str, re.Match[str]]] = {}
     for def_m in _RE_PYMODULEDEF.finditer(text):
         def_name = def_m.group("def")
-        # Search for m_methods near this def (same file heuristic: next 800 chars).
-        window = text[def_m.start() : def_m.start() + 800]
+        # Search for m_methods in the remainder of the file (R226: EXACT still
+        # requires CST proof; this only discovers candidates beyond short windows).
+        window = text[def_m.start() :]
         mm = _RE_MMETHODS.search(window)
         if mm is not None:
             def_to_table[def_name] = (mm.group("table"), def_m)
@@ -321,8 +429,8 @@ def _cpython_registered_tables(text: str) -> dict[str, tuple[str, re.Match[str],
     registered: dict[str, tuple[str, re.Match[str], re.Match[str]]] = {}
     for init_m in _RE_PYINIT.finditer(text):
         module = init_m.group(1)
-        # Look inside the PyInit function body for PyModule_Create.
-        body = text[init_m.start() : init_m.start() + 1200]
+        # Look inside/after the PyInit function for PyModule_Create.
+        body = text[init_m.start() :]
         create = _RE_MODULE_CREATE.search(body)
         if create is None:
             continue
@@ -361,7 +469,7 @@ class CPythonBindingProvider:
 
         ``EXACT`` only when the method table is referenced from a
         ``PyModuleDef.m_methods`` used by ``PyInit_*`` via ``PyModule_Create``
-        (R217). Otherwise ``BRIDGE``.
+        **and** Tree-sitter proves the chain (R217 + R226). Otherwise ``BRIDGE``.
         """
         registered = _cpython_registered_tables(text)
         fallback_init = _RE_PYINIT.search(text)
@@ -400,7 +508,17 @@ class CPythonBindingProvider:
                         detail=f"PyInit_{module}",
                     )
                 )
-                precision = BindingPrecision.EXACT
+                proof = cpython_registration_proof(text, py_name)
+                if proof is not None:
+                    evidence.append(
+                        BindingEvidence(
+                            kind=BindingEvidenceKind.STRUCTURAL_REGISTRATION,
+                            uri=uri,
+                            span=proof.span,
+                            detail=proof.detail,
+                        )
+                    )
+                    precision = BindingPrecision.EXACT
             elif fallback_init is not None:
                 # Co-located PyInit without proven table link → BRIDGE only.
                 evidence.append(

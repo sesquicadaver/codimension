@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-08-28)
 
-Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Хвиля R209–R220 ✅. Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01…P1-04 → **R221–R224** ✅; P1-07 → **R225** ✅; наступний OPEN — **R226**.
+Підтверджених **P0** у переглянутому коді немає. P1 A201–A210 закриті. Хвиля R209–R220 ✅. Повторний аудит 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01…P1-04 → **R221–R224** ✅; P1-07 → **R225** ✅; P1-06 → **R226** ✅; наступний OPEN — **R227**.
 
 ### Аудит 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 черга (закрита)
 
@@ -35,7 +35,7 @@
 | P1-03 | MCP budgets після необмеженого traversal | P1 | ✅ R223 |
 | P1-04 | Cross-file LSP locations → `SourceSpan(0,0)` | P1 | ✅ R224 |
 | P1-07 | Plugin pre-import policy ще fail-open (legacy fallback) | P1 | ✅ R225 |
-| P1-06 | FFI `EXACT` без structural registration proof | P1 | 🔓 R226 |
+| P1-06 | FFI `EXACT` без structural registration proof | P1 | ✅ R226 |
 | P1-08 | Taint: немає `posonlyargs`; branch env overwrite | P1 | 🔓 R227 |
 | P1-09 | Blank UUID після load → identity drift | P1 | 🔓 R228 |
 | P1-05 | Polyglot capabilities ≠ provider API | P1 | 🔓 R229–R230 |

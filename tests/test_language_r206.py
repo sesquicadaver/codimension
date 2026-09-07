@@ -87,6 +87,7 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     assert BindingEvidenceKind.PYO3_NAME_ATTR in kinds
     assert BindingEvidenceKind.WRAP_PYFUNCTION in kinds
     assert BindingEvidenceKind.PYMODULE_ATTR in kinds
+    assert BindingEvidenceKind.STRUCTURAL_REGISTRATION in kinds
 
 
 def test_r217_pyo3_without_wrap_is_bridge() -> None:
@@ -162,6 +163,7 @@ PyMODINIT_FUNC PyInit__native(void) {
     assert BindingEvidenceKind.PYMETHODDEF in kinds
     assert BindingEvidenceKind.PYMODULEDEF in kinds
     assert BindingEvidenceKind.PYINIT in kinds
+    assert BindingEvidenceKind.STRUCTURAL_REGISTRATION in kinds
 
 
 def test_r217_cpython_unlinked_init_is_bridge() -> None:

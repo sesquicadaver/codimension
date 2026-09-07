@@ -13,6 +13,7 @@
 
 from . import (
     ffi_bindings,
+    ffi_structural,
     file_uri,
     filesystem,
     io,
@@ -26,6 +27,7 @@ from . import (
 
 __all__ = [
     "ffi_bindings",
+    "ffi_structural",
     "filesystem",
     "file_uri",
     "io",
