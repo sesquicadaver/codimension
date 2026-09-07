@@ -297,7 +297,9 @@ class LspProcess:
         try:
             self._write(message)
             return future.result(timeout=self._request_timeout if timeout is None else timeout)
-        except TimeoutError as exc:
+        except Exception as exc:
+            if not (isinstance(exc, TimeoutError) or type(exc).__name__ == "TimeoutError"):
+                raise
             self.cancel(request_id)
             pending = self._pop_pending(pending_key)
             self._settle_future(
@@ -341,6 +343,9 @@ class LspProcess:
                         self._request_while_running("shutdown", None, timeout=timeout)
                     except (LspProtocolError, TimeoutError, OSError):
                         pass
+                    except Exception as exc:  # noqa: BLE001 — futures TimeoutError alias drift
+                        if type(exc).__name__ != "TimeoutError":
+                            raise
                 try:
                     self._write({"jsonrpc": "2.0", "method": "exit"})
                 except (LspProtocolError, OSError, LspFramingError, BrokenPipeError):
@@ -454,7 +459,11 @@ class LspProcess:
         try:
             self._write(message)
             return future.result(timeout=timeout)
-        except TimeoutError as exc:
+        except Exception as exc:
+            # Py3.10+ usually aliases futures TimeoutError to builtins; still
+            # accept either so shutdown races never leak an uncaught timeout.
+            if not (isinstance(exc, TimeoutError) or type(exc).__name__ == "TimeoutError"):
+                raise
             self.cancel(request_id)
             pending = self._pop_pending(pending_key)
             self._settle_future(
@@ -535,10 +544,13 @@ class LspProcess:
                     pass
             proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
-            proc.kill()
+            try:
+                proc.kill()
+            except OSError:
+                pass
             try:
                 proc.wait(timeout=2.0)
-            except subprocess.TimeoutExpired:
+            except (subprocess.TimeoutExpired, OSError):
                 pass
         finally:
             self._cleanup_proc_unlocked()

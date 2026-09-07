@@ -205,7 +205,9 @@ def test_response_vs_shutdown_race(tmp_path: Path, controllable_lsp: tuple[Path,
     t.start()
     assert started.wait(5)
     time.sleep(0.05)
-    proc.shutdown()
+    # Fake server is blocked on slow/echo, so LSP shutdown RPC will time out —
+    # keep the wait short; terminate path must still settle the in-flight request.
+    proc.shutdown(timeout=0.3)
     control.write_text("release-echo\n", encoding="utf-8")
     t.join(timeout=10)
     assert t.is_alive() is False
