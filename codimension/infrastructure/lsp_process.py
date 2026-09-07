@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LspProcess: one language-server subprocess per process key (R202 / R210 / R233).
+"""LspProcess: one language-server subprocess per process key (R202 / R210 / R233 / R234).
 
 Key: ``(language_id, workspace_root, toolchain)``. Spawn is gated by
 :func:`core.language_policy.require_language_server_spawn` (absolute binary on
@@ -25,6 +25,11 @@ the reader thread so the language server does not hang waiting for a response.
 R233: :meth:`ensure_initialized` atomically restarts a dead subprocess, runs
 the LSP handshake, and bumps a process generation so callers can drop stale
 document sync state. ``request`` / ``notify`` never proceed before handshake.
+
+R234: pending Futures are keyed by ``(transport_generation, request_id)`` under
+``_pending_lock``; ownership is transferred via atomic ``pop`` so timeout /
+shutdown / reader races cannot raise ``InvalidStateError`` or let an old
+reader fail requests belonging to a newer subprocess.
 """
 
 from __future__ import annotations
@@ -34,10 +39,10 @@ import subprocess
 import threading
 import time
 from collections import deque
-from concurrent.futures import Future
+from concurrent.futures import Future, InvalidStateError
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 from core.language_policy import LanguageServerSpawnError, require_language_server_spawn
 from infrastructure.lsp_framing import (
@@ -138,7 +143,9 @@ class LspProcess:
         self._reader: threading.Thread | None = None
         self._write_lock = threading.Lock()
         self._lifecycle_lock = threading.Lock()
-        self._pending: MutableMapping[int | str, Future] = {}
+        # R234: (transport_generation, request_id) → Future
+        self._pending: dict[tuple[int, int | str], Future] = {}
+        self._pending_lock = threading.Lock()
         self._next_id = 1
         self._id_lock = threading.Lock()
         self._stderr_chunks: deque[bytes] = deque()
@@ -149,6 +156,8 @@ class LspProcess:
         self._initialized = False
         # Bumped after each successful initialize handshake (R233).
         self._generation = 0
+        # Bumped on every subprocess spawn; keys pending futures (R234).
+        self._transport_generation = 0
         self._last_initialize_result: dict[str, Any] = {}
         self._notifications: deque[dict[str, Any]] = deque(maxlen=256)
         self._apply_edit_previews: deque[dict[str, Any]] = deque(maxlen=64)
@@ -277,7 +286,7 @@ class LspProcess:
             self.ensure_started()
         request_id = self._allocate_id()
         future: Future = Future()
-        self._pending[request_id] = future
+        pending_key = self._put_pending(request_id, future)
         message: dict[str, Any] = {
             "jsonrpc": "2.0",
             "id": request_id,
@@ -288,14 +297,18 @@ class LspProcess:
         try:
             self._write(message)
             return future.result(timeout=self._request_timeout if timeout is None else timeout)
-        except TimeoutError as exc:
+        except Exception as exc:
+            if not (isinstance(exc, TimeoutError) or type(exc).__name__ == "TimeoutError"):
+                raise
             self.cancel(request_id)
-            pending = self._pending.pop(request_id, None)
-            if pending is not None and not pending.done():
-                pending.set_exception(LspProtocolError(f"LSP request timed out: {method}"))
+            pending = self._pop_pending(pending_key)
+            self._settle_future(
+                pending,
+                exception=LspProtocolError(f"LSP request timed out: {method}"),
+            )
             raise LspProtocolError(f"LSP request timed out: {method}") from exc
         finally:
-            self._pending.pop(request_id, None)
+            self._pop_pending(pending_key)
 
     def notify(self, method: str, params: Any = None) -> None:
         """Send a JSON-RPC notification (no response expected)."""
@@ -330,6 +343,9 @@ class LspProcess:
                         self._request_while_running("shutdown", None, timeout=timeout)
                     except (LspProtocolError, TimeoutError, OSError):
                         pass
+                    except Exception as exc:  # noqa: BLE001 — futures TimeoutError alias drift
+                        if type(exc).__name__ != "TimeoutError":
+                            raise
                 try:
                     self._write({"jsonrpc": "2.0", "method": "exit"})
                 except (LspProtocolError, OSError, LspFramingError, BrokenPipeError):
@@ -354,7 +370,7 @@ class LspProcess:
         if self._state is LspProcessState.RUNNING and self._proc is not None:
             if self._proc.poll() is None:
                 return
-            self._fail_pending("language server exited unexpectedly")
+            self._fail_pending("language server exited unexpectedly", generation=self._transport_generation)
             self._cleanup_proc_unlocked()
             self._restart_unlocked()
             return
@@ -396,6 +412,36 @@ class LspProcess:
             self._next_id += 1
             return rid
 
+    def _put_pending(self, request_id: int | str, future: Future) -> tuple[int, int | str]:
+        """Register ``future`` under the current transport generation (R234)."""
+        with self._pending_lock:
+            key = (self._transport_generation, request_id)
+            self._pending[key] = future
+            return key
+
+    def _pop_pending(self, key: tuple[int, int | str]) -> Future | None:
+        """Atomically take ownership of a pending future (or ``None``)."""
+        with self._pending_lock:
+            return self._pending.pop(key, None)
+
+    @staticmethod
+    def _settle_future(
+        future: Future | None,
+        *,
+        result: Any = None,
+        exception: BaseException | None = None,
+    ) -> None:
+        """Complete ``future`` once; ignore late races (R234)."""
+        if future is None or future.done():
+            return
+        try:
+            if exception is not None:
+                future.set_exception(exception)
+            else:
+                future.set_result(result)
+        except InvalidStateError:
+            return
+
     def _request_while_running(
         self,
         method: str,
@@ -406,18 +452,27 @@ class LspProcess:
         """Send a request without lazy-start / restart (used during shutdown)."""
         request_id = self._allocate_id()
         future: Future = Future()
-        self._pending[request_id] = future
+        pending_key = self._put_pending(request_id, future)
         message: dict[str, Any] = {"jsonrpc": "2.0", "id": request_id, "method": method}
         if params is not None:
             message["params"] = params
         try:
             self._write(message)
             return future.result(timeout=timeout)
-        except TimeoutError as exc:
+        except Exception as exc:
+            # Py3.10+ usually aliases futures TimeoutError to builtins; still
+            # accept either so shutdown races never leak an uncaught timeout.
+            if not (isinstance(exc, TimeoutError) or type(exc).__name__ == "TimeoutError"):
+                raise
             self.cancel(request_id)
+            pending = self._pop_pending(pending_key)
+            self._settle_future(
+                pending,
+                exception=LspProtocolError(f"LSP request timed out: {method}"),
+            )
             raise LspProtocolError(f"LSP request timed out: {method}") from exc
         finally:
-            self._pending.pop(request_id, None)
+            self._pop_pending(pending_key)
 
     def _start_unlocked(self) -> None:
         self._state = LspProcessState.STARTING
@@ -440,8 +495,11 @@ class LspProcess:
             self._state = LspProcessState.FAILED
             raise LspProtocolError(f"failed to spawn language server: {exc}") from exc
         self._proc = proc
+        self._transport_generation += 1
+        reader_generation = self._transport_generation
         self._reader = threading.Thread(
             target=self._reader_loop,
+            args=(proc, reader_generation),
             name=f"lsp-reader-{self.key.language_id}",
             daemon=True,
         )
@@ -486,10 +544,13 @@ class LspProcess:
                     pass
             proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
-            proc.kill()
+            try:
+                proc.kill()
+            except OSError:
+                pass
             try:
                 proc.wait(timeout=2.0)
-            except subprocess.TimeoutExpired:
+            except (subprocess.TimeoutExpired, OSError):
                 pass
         finally:
             self._cleanup_proc_unlocked()
@@ -511,9 +572,9 @@ class LspProcess:
             except BrokenPipeError as exc:
                 raise LspProtocolError("language server stdin closed") from exc
 
-    def _reader_loop(self) -> None:
-        proc = self._proc
-        if proc is None or proc.stdout is None:
+    def _reader_loop(self, proc: subprocess.Popen, generation: int) -> None:
+        """Read stdout for one subprocess generation (R234)."""
+        if proc.stdout is None:
             return
         try:
             while not self._closing:
@@ -522,12 +583,16 @@ class LspProcess:
                 except EOFError:
                     break
                 except LspFramingError as exc:
-                    self._fail_pending(str(exc))
+                    self._fail_pending(str(exc), generation=generation)
                     break
-                self._dispatch(message)
+                try:
+                    self._dispatch(message, generation)
+                except Exception:  # noqa: BLE001 — keep reader alive across settle races
+                    continue
         finally:
+            # Only settle futures for *this* subprocess; a newer restart must keep its pending.
             if not self._closing:
-                self._fail_pending("language server stdout closed")
+                self._fail_pending("language server stdout closed", generation=generation)
 
     def _stderr_loop(self) -> None:
         proc = self._proc
@@ -546,23 +611,25 @@ class LspProcess:
         except OSError:
             return
 
-    def _dispatch(self, message: Mapping[str, Any]) -> None:
+    def _dispatch(self, message: Mapping[str, Any], generation: int) -> None:
         if "id" in message and ("result" in message or "error" in message):
             request_id = message["id"]
-            future = self._pending.get(request_id)
-            if future is None or future.done():
+            # Atomic pop transfers ownership — timeout/shutdown cannot double-settle.
+            future = self._pop_pending((generation, request_id))
+            if future is None:
                 return
             if "error" in message:
                 err = message["error"] or {}
-                future.set_exception(
-                    LspProtocolError(
+                self._settle_future(
+                    future,
+                    exception=LspProtocolError(
                         str(err.get("message", "LSP error")),
                         code=err.get("code"),
                         data=err.get("data"),
-                    )
+                    ),
                 )
             else:
-                future.set_result(message.get("result"))
+                self._settle_future(future, result=message.get("result"))
             return
         if "method" in message and "id" in message:
             # Server → client request: must answer or the server may stall.
@@ -692,12 +759,18 @@ class LspProcess:
             return
         self.codec = LspPositionCodec(encoding)
 
-    def _fail_pending(self, reason: str) -> None:
-        pending = list(self._pending.items())
-        self._pending.clear()
-        for _, future in pending:
-            if not future.done():
-                future.set_exception(LspProtocolError(reason))
+    def _fail_pending(self, reason: str, *, generation: int | None = None) -> None:
+        """Fail pending futures; optionally scoped to one transport generation (R234)."""
+        with self._pending_lock:
+            if generation is None:
+                items = list(self._pending.items())
+                self._pending.clear()
+            else:
+                items = [(key, fut) for key, fut in self._pending.items() if key[0] == generation]
+                for key, _ in items:
+                    del self._pending[key]
+        for _, future in items:
+            self._settle_future(future, exception=LspProtocolError(reason))
 
 
 class LspProcessRegistry:

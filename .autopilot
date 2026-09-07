@@ -11,8 +11,8 @@ When the user says `autopilot` / `/autopilot` / `.autopilot`:
 4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
 5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
 
-Current pointer: **R234** — LSP pending synchronization (wave R232–R243 from `codi-last.md` @ 45e33f6 / master@4ff0207b).
-R209–R233 DONE.
+Current pointer: **R235** — Workspace DocumentStore (wave R232–R243 from `codi-last.md` @ 45e33f6 / master@4ff0207b).
+R209–R234 DONE.
 
 User standing order (2026-08-28): `/autopilot` means execute the next queue task and
 perform commit/push/merge/PR automatically without waiting for a separate ask.
