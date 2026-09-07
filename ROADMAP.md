@@ -183,13 +183,13 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 40 | R228 | Blank UUID after load | Reject empty disk UUID or atomically restore loaded UUID to `.cdm3` | S | DONE ([#191](https://github.com/sesquicadaver/codimension/pull/191)) |
 | 41 | R229 | Polyglot capabilities match providers | Advertise only implemented diagnostics/completion/tokens APIs | M | DONE ([#193](https://github.com/sesquicadaver/codimension/pull/193)) |
 | 42 | R230 | Wire LanguageServiceManager into IDE lifecycle | Compose into GlobalData/MainWindow workspace open/close | L | DONE ([#194](https://github.com/sesquicadaver/codimension/pull/194)) |
-| 43 | R231 | AI structured findings + global budgets | Finding model + total token/cost budget (beyond per-file truncate) | L | OPEN |
+| 43 | R231 | AI structured findings + global budgets | Finding model + total token/cost budget (beyond per-file truncate) | L | DONE |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R231** — AI structured findings + global budgets.
+**Next OPEN:** _(re-audit wave R221–R231 complete)_ — pick next from ROADMAP / TODO when seeded.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

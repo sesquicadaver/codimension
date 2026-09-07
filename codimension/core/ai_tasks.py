@@ -10,6 +10,9 @@
 Pure orchestration: callers supply a ``complete_fn(system, user) -> str``
 (usually a live LLM backend). Offline heuristics are intentionally not used
 for these tasks.
+
+R231: ``ANALYZE_PROJECT`` emits validated :class:`~core.ai_findings.AiFinding`
+records and enforces a global token/cost budget beyond per-file truncation.
 """
 
 from __future__ import annotations
@@ -17,13 +20,26 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Iterable, Optional, Sequence
+from typing import Callable, Iterable, Mapping, Optional, Sequence
 
+from core.ai_budget import (
+    DEFAULT_COMPLETION_RESERVE,
+    AiBudgetLimits,
+    AiBudgetTracker,
+    estimate_tokens,
+    load_ai_budget_limits,
+)
 from core.ai_context import AiContextPack, build_ai_context_from_source
 from core.ai_docstring import DocstringTarget, build_docstring_target
 from core.ai_docstring_context import (
     build_docstring_support_context,
     resolve_docstring_fragment,
+)
+from core.ai_findings import (
+    AiFinding,
+    AiFindingsReport,
+    dedupe_findings,
+    parse_findings_payload,
 )
 from core.ai_project_context import (
     assert_path_in_project,
@@ -69,7 +85,12 @@ class AiTaskRequest:
 
 @dataclass(frozen=True)
 class AiTaskResult:
-    """Text result for the AI Result / Chat panel."""
+    """Text result for the AI Result / Chat panel.
+
+    R231: project analysis may also carry validated ``findings`` and budget
+    accounting (tokens/cost estimates; ``budget_stopped`` when the global cap
+    halted further LLM calls).
+    """
 
     kind: AiTaskKind
     title: str
@@ -78,6 +99,11 @@ class AiTaskResult:
     file_path: str = ""
     symbol_name: str = ""
     docstring_target: Optional[DocstringTarget] = None
+    findings: tuple[AiFinding, ...] = ()
+    findings_report: Optional[AiFindingsReport] = None
+    budget_tokens_used: int = 0
+    budget_cost_usd: float = 0.0
+    budget_stopped: bool = False
 
 
 def list_project_py_files(files_list: Iterable[str], project_dir: str) -> tuple[str, ...]:
@@ -204,12 +230,16 @@ def build_docstring_prompt(
 
 
 def build_project_chunk_prompt(path: str, source: str, index: int, total: int) -> tuple[str, str]:
-    """Per-file project analysis chunk."""
+    """Per-file project analysis chunk requesting structured findings JSON."""
     user = (
         f"Project analysis chunk {index}/{total}.\n"
-        f"Summarize this module for a later project-wide synthesis "
-        f"(purpose, public API, risks, notable couplings).\n"
         f"File: {path}\n\n"
+        "Return a JSON object with a `findings` array. Each finding must include:\n"
+        "`title`, `message`, `severity` (error|warning|note|info), `confidence` (0..1),\n"
+        "`file_path`, optional `begin_line`/`end_line`, optional `evidence`, optional `rule_id`.\n"
+        "Only report issues evidenced in the source. If none, return "
+        '`"findings": []`. You may include a short `summary` string, but findings '
+        "are authoritative.\n\n"
         f"Source:\n{_truncate(source, MAX_MODULE_CHARS)}"
     )
     return _system_analyst(), user
@@ -223,7 +253,8 @@ def build_project_synthesis_prompt(chunk_reports: Sequence[tuple[str, str]]) -> 
     user = (
         "Synthesize a full-project analysis from the per-module notes below.\n"
         "Produce: architecture overview, cross-module coupling, hotspots, "
-        "risk themes, and prioritized recommendations.\n\n" + "\n\n".join(body_parts)
+        "risk themes, and prioritized recommendations.\n"
+        "Do not invent findings that contradict the structured notes.\n\n" + "\n\n".join(body_parts)
     )
     return _system_analyst(), user
 
@@ -256,8 +287,14 @@ def execute_ai_task(
     *,
     progress: Optional[ProgressFn] = None,
     backend_name: str = "http",
+    budget_limits: Optional[AiBudgetLimits] = None,
+    budget_environ: Optional[Mapping[str, str]] = None,
 ) -> AiTaskResult:
-    """Run ``request`` via ``complete_fn(system, user)`` and return text."""
+    """Run ``request`` via ``complete_fn(system, user)`` and return text.
+
+    ``budget_limits`` / ``budget_environ`` apply to ``ANALYZE_PROJECT`` (R231):
+    estimated tokens/cost gate further LLM calls after the global ceiling.
+    """
 
     def _progress(msg: str) -> None:
         if progress is not None:
@@ -383,33 +420,107 @@ def execute_ai_task(
         )
 
     if kind is AiTaskKind.ANALYZE_PROJECT:
-        files = list(request.project_files)
-        if not files:
-            raise ValueError("No Python files found in the project")
-        chunk_reports: list[tuple[str, str]] = []
-        total = len(files)
-        for index, path in enumerate(files, start=1):
-            _progress(f"Project analysis {index}/{total}: {path}")
-            try:
-                source = _read_text(path)
-            except OSError as exc:
-                chunk_reports.append((path, f"(unreadable: {exc})"))
-                continue
-            system, user = build_project_chunk_prompt(path, source, index, total)
-            report = complete_fn(system, user)
-            chunk_reports.append((path, report))
-        _progress("Synthesizing project-wide report…")
-        system, user = build_project_synthesis_prompt(chunk_reports)
-        text = complete_fn(system, user)
-        header = f"# Project analysis ({total} Python modules)\n\n"
-        return AiTaskResult(
-            kind=kind,
-            title=request.title,
-            text=header + text,
+        return _execute_analyze_project(
+            request,
+            complete_fn,
+            progress=_progress,
             backend_name=backend_name,
+            budget_limits=budget_limits,
+            budget_environ=budget_environ,
         )
 
     raise ValueError(f"unsupported AI task: {kind!r}")
+
+
+def _execute_analyze_project(
+    request: AiTaskRequest,
+    complete_fn: CompleteFn,
+    *,
+    progress: ProgressFn,
+    backend_name: str,
+    budget_limits: Optional[AiBudgetLimits],
+    budget_environ: Optional[Mapping[str, str]],
+) -> AiTaskResult:
+    """Run project analysis with structured findings + global budget (R231)."""
+    files = list(request.project_files)
+    if not files:
+        raise ValueError("No Python files found in the project")
+
+    limits = budget_limits if budget_limits is not None else load_ai_budget_limits(environ=budget_environ)
+    tracker = AiBudgetTracker(limits=limits)
+    chunk_reports: list[tuple[str, str]] = []
+    collected: list[AiFinding] = []
+    total = len(files)
+    analyzed = 0
+    skipped = 0
+    stopped = False
+
+    for index, path in enumerate(files, start=1):
+        progress(f"Project analysis {index}/{total}: {path}")
+        try:
+            source = _read_text(path)
+        except OSError as exc:
+            chunk_reports.append((path, f"(unreadable: {exc})"))
+            continue
+        system, user = build_project_chunk_prompt(path, source, index, total)
+        prompt_tokens = estimate_tokens(system) + estimate_tokens(user)
+        if not tracker.can_afford(prompt_tokens, DEFAULT_COMPLETION_RESERVE):
+            stopped = True
+            skipped = total - index + 1
+            progress(
+                f"AI budget exhausted after {analyzed}/{total} files "
+                f"(tokens≈{tracker.tokens_used}, cost≈${tracker.cost_usd:.4f})"
+            )
+            break
+        report = complete_fn(system, user)
+        tracker.record_texts(system + "\n" + user, report)
+        chunk_reports.append((path, report))
+        collected.extend(parse_findings_payload(report, default_file=path))
+        analyzed += 1
+
+    synthesis = ""
+    if chunk_reports and not stopped:
+        progress("Synthesizing project-wide report…")
+        system, user = build_project_synthesis_prompt(chunk_reports)
+        prompt_tokens = estimate_tokens(system) + estimate_tokens(user)
+        if tracker.can_afford(prompt_tokens, DEFAULT_COMPLETION_RESERVE):
+            synthesis = complete_fn(system, user)
+            tracker.record_texts(system + "\n" + user, synthesis)
+        else:
+            stopped = True
+            progress("Skipping synthesis: remaining AI budget insufficient")
+
+    findings = dedupe_findings(collected)
+    findings_report = AiFindingsReport(
+        findings=findings,
+        tokens_used=tracker.tokens_used,
+        cost_usd=tracker.cost_usd,
+        stopped_by_budget=stopped,
+        files_analyzed=analyzed,
+        files_skipped=skipped,
+    )
+    header = (
+        f"# Project analysis ({analyzed}/{total} Python modules analyzed)\n\n"
+        f"{findings_report.to_markdown()}\n"
+    )
+    if synthesis:
+        body = header + "## Narrative synthesis\n\n" + synthesis
+    else:
+        body = header + (
+            "## Narrative synthesis\n\n"
+            "_(skipped or empty — see structured findings above)_\n"
+        )
+    return AiTaskResult(
+        kind=AiTaskKind.ANALYZE_PROJECT,
+        title=request.title,
+        text=body,
+        backend_name=backend_name,
+        findings=findings,
+        findings_report=findings_report,
+        budget_tokens_used=tracker.tokens_used,
+        budget_cost_usd=tracker.cost_usd,
+        budget_stopped=stopped,
+    )
 
 
 __all__ = [
@@ -420,4 +531,6 @@ __all__ = [
     "CompleteFn",
     "execute_ai_task",
     "list_project_py_files",
+    "build_project_chunk_prompt",
+    "build_project_synthesis_prompt",
 ]

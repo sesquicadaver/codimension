@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-08-28 audit)
 
-No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R220 ✅. Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01…P1-04 → **R221–R224** ✅; P1-07 → **R225** ✅; P1-06 → **R226** ✅; P1-08 → **R227** ✅; P1-09 → **R228** ✅; P1-05 → **R229–R230** ✅; next OPEN — **R231**.
+No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R220 ✅. Re-audit 2026-09-06 (`codi-last.md` @ 8824ff3c): P1-01…P1-04 → **R221–R224** ✅; P1-07 → **R225** ✅; P1-06 → **R226** ✅; P1-08 → **R227** ✅; P1-09 → **R228** ✅; P1-05 → **R229–R230** ✅; P1-AI → **R231** ✅; wave R221–R231 closed.
 
 ### Audit 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 queue (closed)
 
@@ -39,7 +39,7 @@ No confirmed **P0** in the reviewed code. P1 A201–A210 closed. Wave R209–R22
 | P1-08 | Taint: missing `posonlyargs`; branch env overwrite | P1 | ✅ R227 |
 | P1-09 | Blank UUID after load → identity drift | P1 | ✅ R228 |
 | P1-05 | Polyglot capabilities ≠ provider API | P1 | ✅ R229–R230 |
-| P1-AI | AI prose synthesis without Finding/budgets | P1 | 🔓 R231 |
+| P1-AI | AI prose synthesis without Finding/budgets | P1 | ✅ R231 |
 
 ### UX hardening (outside ROADMAP queue)
 
