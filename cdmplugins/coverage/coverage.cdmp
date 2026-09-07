@@ -8,3 +8,10 @@ Version = 1.0.0
 Website = https://github.com/SergeySatskiy/codimension
 Description = Codimension IDE pytest coverage plugin (pytest-cov)
 License = GPL v.3
+
+[Codimension]
+Category = WizardInterface
+MinIDEVersion = 4.7.1
+MinPluginAPI = 1
+RequiredCapabilities = wizard
+Entrypoint = .

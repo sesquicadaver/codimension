@@ -8,3 +8,10 @@ Version = 1.0.5
 Website = http://codimension.org
 Description = Codimension IDE pylint plugin (bundled; toolbar-safe)
 License = GPL v.3
+
+[Codimension]
+Category = WizardInterface
+MinIDEVersion = 4.7.1
+MinPluginAPI = 1
+RequiredCapabilities = wizard
+Entrypoint = .

@@ -40,7 +40,7 @@ def plugin_manager_mod(monkeypatch, tmp_path):
     """Import pluginmanager with SETTINGS_DIR under tmp and empty search paths."""
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     pytest.importorskip("PyQt5.QtWidgets")
-    _purge_incomplete_stubs("utils", "ui", "plugins", "yapsy")
+    _purge_incomplete_stubs("utils", "ui", "plugins", "yapsy", "cdmplugins")
     codim = str(ROOT / "codimension")
     if codim not in sys.path:
         sys.path.insert(0, codim)
@@ -98,6 +98,13 @@ def _write_plugin_package(root: Path, name: str, marker_module: str) -> Path:
             Author = Test
             Version = 1.0.0
             Description = R191 test plugin
+
+            [Codimension]
+            Category = WizardInterface
+            MinIDEVersion = 4.0.0
+            MinPluginAPI = 1
+            RequiredCapabilities = wizard
+            Entrypoint = .
             """
         ),
         encoding="utf-8",
@@ -157,9 +164,10 @@ def test_r191_disabled_plugin_never_imported(plugin_manager_mod, tmp_path, monke
     assert marker_name not in sys.modules
 
 
-def test_r191_enabled_plugin_still_imports(plugin_manager_mod, tmp_path):
+def test_r191_enabled_plugin_still_imports(plugin_manager_mod, tmp_path, monkeypatch):
     """Non-disabled candidates are still imported by collectPlugins."""
     pm, _, disabled = plugin_manager_mod
+    monkeypatch.setattr(pm.CDMPluginManager, "_CDMPluginManager__hostIdeVersion", staticmethod(lambda: "5.0.0"))
     assert disabled == []
 
     marker_name = "cdm_r191_import_marker_ok"

@@ -1,5 +1,10 @@
 2026 Sep 06
 
+* R225: third-party plugins require a complete ``[Codimension]`` block in
+  ``.cdmp`` (category/API/capabilities/min IDE/entrypoint); invalid or
+  missing → deny before import (re-audit P1-07 @ 8824ff3c). Smoke uses a
+  real IDE version; bundled ``.cdmp`` files carry ``[Codimension]``;
+  trusted-path checks tolerate ``cdmplugins`` stubs without ``__file__``.
 * R224: ``DocumentStore`` resolves foreign LSP URIs so definition /
   references / rename decode real ``SourceSpan`` ranges (re-audit P1-04
   @ 8824ff3c)
