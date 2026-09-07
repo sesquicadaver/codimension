@@ -194,7 +194,7 @@
 | 46 | R234 | LSP pending synchronization | `_pending_lock`; ключі `(generation, id)`; race tests timeout/shutdown/old-reader | L | DONE ([#198](https://github.com/sesquicadaver/codimension/pull/198)) |
 | 47 | R235 | Workspace DocumentStore | Єдиний editor-backed store; versioned edits; deny unresolved/`(0,0)` apply; bounded loader | L | DONE ([#199](https://github.com/sesquicadaver/codimension/pull/199)) |
 | 48 | R236 | Project lifecycle façade | create/load/switch/unload лише через `ApplicationServices` (fix bypass `createNew`) | M | DONE ([#201](https://github.com/sesquicadaver/codimension/pull/201)) |
-| 49 | R237 | AI redirect trust | Кожен redirect hop + final URL проходять provider scheme/host policy | M | DONE (PR pending) |
+| 49 | R237 | AI redirect trust | Кожен redirect hop + final URL проходять provider scheme/host policy | M | DONE ([#203](https://github.com/sesquicadaver/codimension/pull/203)) |
 | 50 | R238 | MCP fd-safe bounded traversal | Entry/dir budgets; `scandir`; `O_NOFOLLOW`; deterministic walk | L | OPEN |
 | 51 | R239 | Taint CFG worklist | Forward per-node lattice; без whole-list re-exec; exception/no-match/loop-else | L | OPEN |
 | 52 | R240 | FFI edge-specific structural proof | `EXACT` лише з повною identity registration chain | L | OPEN |
