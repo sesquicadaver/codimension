@@ -22,7 +22,7 @@ clone the Python CFG pipeline per language; treat languages as VCS/Wizard plugin
 | Piece | Package |
 | ----- | ------- |
 | `LanguageDescriptor`, capabilities, `LanguageService` Protocol, Registry | `codimension/core/language.py` |
-| Lifecycle manager | `codimension/app/language_services.py` |
+| Lifecycle manager | `codimension/app/language_services.py` (**R230**: `attach_workspace` / `detach_workspace`; GlobalData hooks + MainWindow `LanguageController`) |
 | LSP stdio / position codec I/O | `infrastructure` + thin `utils` |
 | UI controller | `ui/language_controller.py` (R204 + **R229**: capability checks only; advertise only APIs on `SemanticProvider` — no DIAGNOSTICS/COMPLETION/SEMANTIC_TOKENS until implemented; diagnostics policy stays UNAVAILABLE without the cap) |
 | Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **not** compiler CFG) |

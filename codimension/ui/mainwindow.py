@@ -76,6 +76,7 @@ from .floatingrendererwindow import DetachedRendererWindow
 from .functionsviewer import FunctionsViewer
 from .globalsviewer import GlobalsViewer
 from .gotolinewidget import GotoLineWidget
+from .language_controller import LanguageController
 from .logviewer import LogViewer
 from .mainmenu import MainWindowMenuMixin
 from .mainredirectedio import MainWindowRedirectedIOMixin
@@ -329,6 +330,8 @@ class CodimensionMainWindow(
         self.aiChatViewer = None  # created on demand
         self.aiController = AiWorkspaceController(self)
         self.aiResultViewer.applyDocstringAction().triggered.connect(self.aiController.applyLastDocstring)
+        # R230: capability UI over GlobalData.languageServices (workspace attach/detach)
+        self.languageController = LanguageController(GlobalData().languageServices)
 
         # Create outline viewer
         self.outlineViewer = FileOutlineViewer(self.em, self)

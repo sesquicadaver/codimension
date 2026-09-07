@@ -56,7 +56,8 @@ def test_r102_globals_wires_application_services() -> None:
     """GlobalDataWrapper constructs ApplicationServices over the project port."""
     text = (_CODIM / "utils" / "globals.py").read_text(encoding="utf-8")
     assert "from app.services import ApplicationServices" in text
-    assert "self.appServices = ApplicationServices(self.project)" in text
+    assert "self.appServices = ApplicationServices(" in text
+    assert "self.project" in text
 
 
 def test_r102_services_still_owns_project_port_calls() -> None:

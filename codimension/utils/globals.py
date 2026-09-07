@@ -57,6 +57,7 @@ class GlobalDataWrapper:
 
     def __init__(self):
         # Heavy / Qt-touching imports deferred until first GlobalData() call (T084)
+        from app.language_services import LanguageServiceManager
         from app.services import ApplicationServices
         from plugins.manager.pluginmanager import CDMPluginManager
 
@@ -80,8 +81,14 @@ class GlobalDataWrapper:
 
         self.project = CodimensionProject()
         self.project.sigProjectAboutToUnload.connect(self.__clearSessionPythonInterpreter)
+        # R230: polyglot language services follow project load/unload
+        self.languageServices = LanguageServiceManager()
         # R102: UI / startup load+unload go through this façade → project port
-        self.appServices = ApplicationServices(self.project)
+        self.appServices = ApplicationServices(
+            self.project,
+            after_load=self.__attachLanguageWorkspace,
+            before_unload=self.__detachLanguageWorkspace,
+        )
 
         self.pluginManager = CDMPluginManager()
 
@@ -102,6 +109,15 @@ class GlobalDataWrapper:
 
         clearSessionPythonInterpreter()
         self.sessionPythonInterpreter = ""
+
+    def __attachLanguageWorkspace(self, project_file: str) -> None:
+        """R230: attach LanguageServiceManager to the loaded project directory."""
+        root = os.path.dirname(realpath(project_file))
+        self.languageServices.attach_workspace(root)
+
+    def __detachLanguageWorkspace(self) -> None:
+        """R230: shut down language services before project unload."""
+        self.languageServices.detach_workspace()
 
     def getProfileOutputPath(self, procuuid):
         """Provides the path to the profile output file"""
