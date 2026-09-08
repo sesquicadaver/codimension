@@ -208,13 +208,13 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 60 | R248 | SSH atomic replace | posix_rename or backup/swap/rollback; Fake matches SFTP | M | DONE ([#222](https://github.com/sesquicadaver/codimension/pull/222)) |
 | 61 | R249 | AI cost-aware provider cap | Provider max_tokens ≤ token/cost remainder | M | DONE ([#223](https://github.com/sesquicadaver/codimension/pull/223)) |
 | 62 | R250 | pybind11 CST-exact proof | EXACT only from real .def() call_expression | L | DONE ([#225](https://github.com/sesquicadaver/codimension/pull/225)) |
-| 63 | R251 | Residual correctness | AI finding source-bind; plugin package identity; transactional switch; terminal taint; CI floor | L | OPEN |
+| 63 | R251 | Residual correctness | AI finding source-bind; plugin package identity; transactional switch; terminal taint; CI floor | L | DONE |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R251** — residual P2 correctness wave.
+**Next OPEN:** queue empty for wave R244–R251 — await next audit seed.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

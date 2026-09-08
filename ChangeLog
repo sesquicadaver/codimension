@@ -1,5 +1,11 @@
 2026 Sep 08
 
+* R251: residual P2 — AI findings source-bound to chunk; plugin package
+  ``.py`` identity + bounded digests; ``before_load`` before unload;
+  taint stops after return/break/continue; editor buffer sync uses signal
+  sender; ``WorkspaceTextEdit.is_applicable(version)``; LSP ``rootUri`` via
+  ``path_to_file_uri``; CI Bandit includes ``cdmplugins``, coverage floor 30
+  (re-audit P2-01…06 @ 645d655)
 * R250: pybind11 ``EXACT`` requires a Tree-sitter ``call_expression`` for
   ``var.def("name", &native)`` — regex hits in comments/block comments stay
   ``BRIDGE`` (re-audit P1-07 @ 645d655)

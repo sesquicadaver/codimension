@@ -931,9 +931,10 @@ class LspProcessRegistry:
 
 
 def _path_to_uri(path: str) -> str:
-    """Minimal ``file://`` URI for local absolute paths."""
-    abs_path = os.path.abspath(path)
-    return "file://" + abs_path
+    """Canonical ``file://`` URI for local paths (R242 / R251)."""
+    from infrastructure.file_uri import path_to_file_uri
+
+    return path_to_file_uri(os.path.abspath(os.path.expanduser(path)))
 
 
 # Sentinel returned by ``_server_request_result`` for unknown methods.

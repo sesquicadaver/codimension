@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-08 audit)
 
-No confirmed **P0**. **P1: 0** open. **P2: 6** groups → **R251**. Wave R232–R250 ✅; slice `codi-last.md` @ 645d655.
+No confirmed **P0**. **P1: 0** open. **P2: 0** open in slice `codi-last.md` @ 645d655. Wave R232–R251 ✅.
 
 ### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue
 

@@ -80,9 +80,17 @@ class WorkspaceTextEdit:
     expected_version: int | None = None
     resolution_status: ResolutionStatus = ResolutionStatus.RESOLVED
 
-    def is_applicable(self) -> bool:
-        """True when this edit is resolved and safe to consider for apply (R235)."""
-        return self.resolution_status is ResolutionStatus.RESOLVED
+    def is_applicable(self, current_version: int | None = None) -> bool:
+        """True when resolved and ``expected_version`` matches the live document (R235 / R251).
+
+        ``expected_version`` must be set; callers pass the current DocumentStore
+        version. Missing version or mismatch → not applicable (fail-closed).
+        """
+        if self.resolution_status is not ResolutionStatus.RESOLVED:
+            return False
+        if self.expected_version is None or current_version is None:
+            return False
+        return int(self.expected_version) == int(current_version)
 
 
 @runtime_checkable

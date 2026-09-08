@@ -85,10 +85,14 @@ class StaticPolicyDecision:
 
 @dataclass(frozen=True)
 class PluginFileIdentity:
-    """On-disk identity of a plugin candidate's ``.cdmp`` + source files (R232).
+    """On-disk identity of a plugin candidate's ``.cdmp`` + package sources (R232 / R251).
 
     Captured at collection / deferral time and compared again immediately before
     import so enable-after-disable cannot load mutated or swapped files.
+
+    R251: ``package_sha256`` covers all ``.py`` files under the plugin package
+    root (not only the entry ``__init__.py`` / module), and digests are computed
+    from a single fd with a byte cap (no unbounded ``read()``).
     """
 
     info_path: str
@@ -99,19 +103,77 @@ class PluginFileIdentity:
     source_mtime_ns: int
     source_size: int
     source_sha256: str
+    package_sha256: str = ""
+
+
+#: Soft cap per plugin file hashed into identity (R251).
+_MAX_PLUGIN_FILE_BYTES = 2_000_000
 
 
 def _file_digest_and_stat(path: str) -> tuple[str, int, int]:
-    """Return ``(sha256_hex, mtime_ns, size)`` for ``path``, or empty markers."""
+    """Return ``(sha256_hex, mtime_ns, size)`` for ``path``, or empty markers.
+
+    Uses one ``open`` + ``fstat`` and a bounded chunked digest (R251).
+    Oversized files yield empty markers (fail-closed at identity compare).
+    """
     if not path or not os.path.isfile(path):
         return "", 0, 0
     try:
-        st = os.stat(path)
         with open(path, "rb") as handle:
-            digest = hashlib.sha256(handle.read()).hexdigest()
-        return digest, int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000))), int(st.st_size)
+            st = os.fstat(handle.fileno())
+            size = int(st.st_size)
+            if size > _MAX_PLUGIN_FILE_BYTES:
+                return "", 0, 0
+            hasher = hashlib.sha256()
+            remaining = size if size > 0 else _MAX_PLUGIN_FILE_BYTES
+            while remaining > 0:
+                chunk = handle.read(min(65_536, remaining))
+                if not chunk:
+                    break
+                hasher.update(chunk)
+                remaining -= len(chunk)
+            # Trailing bytes beyond stated size (TOCTOU grow) → fail closed.
+            if handle.read(1):
+                return "", 0, 0
+            mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
+            return hasher.hexdigest(), mtime_ns, size
     except OSError:
         return "", 0, 0
+
+
+def _plugin_package_root(source_path: str) -> str:
+    """Directory whose ``.py`` siblings belong to the plugin package identity."""
+    if not source_path:
+        return ""
+    real = os.path.realpath(source_path)
+    base = os.path.basename(real)
+    if base == "__init__.py":
+        return os.path.dirname(real)
+    # Single-module plugin: only the entry file (package digest empty / file-only).
+    return ""
+
+
+def _package_py_digest(source_path: str) -> str:
+    """Sorted merkle of ``relpath=sha256`` for every ``.py`` under the package root."""
+    root = _plugin_package_root(source_path)
+    if not root or not os.path.isdir(root):
+        return ""
+    rows: list[str] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in {".git", "__pycache__", ".venv", "venv"}]
+        for name in filenames:
+            if not name.endswith(".py"):
+                continue
+            full = os.path.join(dirpath, name)
+            rel = os.path.relpath(full, root).replace(os.sep, "/")
+            digest, _, _ = _file_digest_and_stat(full)
+            if not digest:
+                return ""
+            rows.append(f"{rel}={digest}")
+    rows.sort()
+    if not rows:
+        return ""
+    return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest()
 
 
 def capture_plugin_file_identity(
@@ -119,10 +181,11 @@ def capture_plugin_file_identity(
     info_path: str,
     module_filepath: str,
 ) -> PluginFileIdentity:
-    """Snapshot ``.cdmp`` + resolved source bytes/mtime/size for a candidate."""
+    """Snapshot ``.cdmp`` + entry + package ``.py`` digests for a candidate."""
     source_path = resolve_plugin_source_path(module_filepath)
     info_sha, info_mtime, info_size = _file_digest_and_stat(info_path or "")
     src_sha, src_mtime, src_size = _file_digest_and_stat(source_path)
+    package_sha = _package_py_digest(source_path)
     return PluginFileIdentity(
         info_path=os.path.realpath(info_path) if info_path and os.path.isfile(info_path) else (info_path or ""),
         source_path=os.path.realpath(source_path) if source_path else "",
@@ -132,6 +195,7 @@ def capture_plugin_file_identity(
         source_mtime_ns=src_mtime,
         source_size=src_size,
         source_sha256=src_sha,
+        package_sha256=package_sha,
     )
 
 

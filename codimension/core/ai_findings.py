@@ -17,6 +17,7 @@ entries are dropped, not silently trusted.
 
 R241: audit-level findings require a project-contained path, a valid line
 range against source, and evidence text that actually appears in that source.
+R251: findings must bind to the current chunk file (no cross-file evidence).
 Duplicate ``finding_id`` values with different content are re-keyed instead of
 silently collapsing distinct issues.
 """
@@ -287,10 +288,12 @@ def validate_audit_finding(
     project_dir: str,
     project_files: Sequence[str],
 ) -> AiFinding | None:
-    """Return ``finding`` when path/lines/evidence match project source (R241).
+    """Return ``finding`` when path/lines/evidence match **chunk** source (R241 / R251).
 
     Audit-level findings must:
     * resolve to a project-contained file;
+    * bind to the current chunk file (``default_file``) — not another project path
+      with evidence checked against the wrong ``source`` (R251 / P2-01);
     * use a line range within the source (when lines are set);
     * include non-empty ``evidence`` that occurs in the source text.
     """
@@ -299,7 +302,11 @@ def validate_audit_finding(
         return None
     try:
         abs_path = assert_path_in_project(candidate_path, project_dir, project_files)
+        chunk_path = assert_path_in_project(default_file, project_dir, project_files)
     except ValueError:
+        return None
+    # R251: evidence/lines are validated against ``source`` of this chunk only.
+    if os.path.realpath(abs_path) != os.path.realpath(chunk_path):
         return None
     text = source or ""
     lines = text.splitlines()

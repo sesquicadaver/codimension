@@ -123,7 +123,9 @@ def test_workspace_edit_keeps_version_and_denies_unresolved() -> None:
     )
     assert len(edits) == 1
     assert edits[0].expected_version == 7
-    assert edits[0].is_applicable()
+    assert edits[0].is_applicable(7)
+    assert edits[0].is_applicable(8) is False
+    assert edits[0].is_applicable() is False
     assert edits[0].edit.span == SourceSpan(3, 4)
 
     missing = _parse_text_edits(
@@ -143,4 +145,4 @@ def test_workspace_edit_keeps_version_and_denies_unresolved() -> None:
     )
     assert len(missing) == 1
     assert missing[0].resolution_status is ResolutionStatus.UNRESOLVED
-    assert missing[0].is_applicable() is False
+    assert missing[0].is_applicable(0) is False
