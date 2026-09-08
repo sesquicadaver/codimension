@@ -7,14 +7,14 @@
 
 ## Open blockers (2026-09-08 audit)
 
-No confirmed **P0**. **P1: 6** open groups → **R245–R250**. **P2: 6** groups → **R251**. Wave R232–R244 ✅; slice `codi-last.md` @ 645d655.
+No confirmed **P0**. **P1: 5** open groups → **R246–R250**. **P2: 6** groups → **R251**. Wave R232–R245 ✅; slice `codi-last.md` @ 645d655.
 
 ### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | P1-01 | LSP: pending+write not atomic with transport generation; stale server→client msgs pollute new process | P1 | ✅ R244 |
-| P1-02 | Editor semantic snapshot `version=0` regresses DocumentStore/LSP; Save As without close(old) | P1 | 🔓 OPEN → **R245** |
+| P1-02 | Editor semantic snapshot `version=0` regresses DocumentStore/LSP; Save As without close(old) | P1 | ✅ R245 |
 | P1-03 | UI ignores UNRESOLVED; percent-encoded URI stale disk; loader FIFO/TOCTOU | P1 | 🔓 OPEN → **R246** |
 | P1-04 | MCP: `sorted(scandir)` materializes entire directory before `max_entries` | P1 | 🔓 OPEN → **R247** |
 | P1-05 | SSH Save: Paramiko `rename` does not replace existing dest (need posix_rename/swap) | P1 | 🔓 OPEN → **R248** |

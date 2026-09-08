@@ -1,5 +1,8 @@
 2026 Sep 08
 
+* R245: editor-owned monotonic document versions; semantic queries no longer
+  force ``version=0``; Save As migrates ``close(old_uri)→open(new_uri)``;
+  LSP remigrates on regressive versions (re-audit P1-02 @ 645d655)
 * R244: LSP transport lease — pending Future registration and stdin write
   share one ``(proc, transport_generation)`` snapshot; server→client replies
   target the reader's pipe; stale-generation notifications / capability /

@@ -16,6 +16,8 @@ R224: foreign-URI locations and workspace edits decode spans via
 
 R233: document sync tracks :meth:`LspProcess.ensure_initialized` generation so
 a crash+restart never reuses stale ``_opened`` state or skips handshake.
+
+R245: refuse regressive ``didChange`` versions — remigrate via didClose+didOpen.
 """
 
 from __future__ import annotations
@@ -133,6 +135,16 @@ class LspSemanticProvider:
         self._documents.put(document)
         proc = self._process()
         uri = document.uri
+        opened_version = self._opened.get(uri)
+        # R245: never send a regressive didChange — remigrate via close+open.
+        if opened_version is not None and document.version < opened_version:
+            try:
+                proc.notify("textDocument/didClose", {"textDocument": {"uri": uri}})
+            except Exception:  # noqa: BLE001 — best-effort before reopen
+                pass
+            self._opened.pop(uri, None)
+            opened_version = None
+
         if uri not in self._opened:
             lang = document.language_id or self._config.language_id_for_did_open
             proc.notify(

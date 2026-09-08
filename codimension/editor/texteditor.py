@@ -77,6 +77,8 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
 
         self.onTextZoomChanged()
         self.__initMargins(debugger)
+        # Monotonic LSP/DocumentStore version for this buffer (R245).
+        self._language_document_version = 0
 
         self.cursorPositionChanged.connect(self._onCursorPositionChanged)
 
@@ -835,8 +837,26 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             },
         )
 
+    def language_document_version(self) -> int:
+        """Return the editor-owned monotonic document version (R245)."""
+        return int(self._language_document_version)
+
+    def reset_language_document_version(self) -> int:
+        """Reset the document version to ``0`` (open / Save As migrate)."""
+        self._language_document_version = 0
+        return 0
+
+    def bump_language_document_version(self) -> int:
+        """Increment and return the document version after an editor change."""
+        self._language_document_version = int(self._language_document_version) + 1
+        return int(self._language_document_version)
+
     def __language_document_snapshot(self) -> DocumentSnapshot | None:
-        """Build a DocumentSnapshot for the current absolute buffer, if any."""
+        """Build a DocumentSnapshot using the editor-owned version (R245).
+
+        Must never force ``version=0`` after prior edits — that regresses
+        DocumentStore and LSP ``didChange`` sequencing.
+        """
         path = self._parent.getFileName()
         if not path or not os.path.isabs(path):
             return None
@@ -844,7 +864,11 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
             ctrl = GlobalData().mainWindow.languageController
         except Exception:
             return None
-        return ctrl.snapshot_for_buffer(path=path, text=self.text, version=0)
+        return ctrl.snapshot_for_buffer(
+            path=path,
+            text=self.text,
+            version=self.language_document_version(),
+        )
 
     def __language_definition_locations(self) -> tuple[SymbolLocation, ...] | None:
         """Return controller definitions when DEFINITION is supported, else None."""
