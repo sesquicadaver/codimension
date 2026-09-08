@@ -202,7 +202,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | DONE ([#213](https://github.com/sesquicadaver/codimension/pull/213)) |
 | 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | DONE ([#215](https://github.com/sesquicadaver/codimension/pull/215)) |
 | 56 | R244 | LSP transport lease + generation isolation | Pending registration + write atomic; stale requests/notifications never hit new process | L | DONE ([#217](https://github.com/sesquicadaver/codimension/pull/217)) |
-| 57 | R245 | Editor-owned document versioning | No version regression; Save As close(old)→open(new) | M | DONE |
+| 57 | R245 | Editor-owned document versioning | No version regression; Save As close(old)→open(new) | M | DONE ([#219](https://github.com/sesquicadaver/codimension/pull/219)) |
 | 58 | R246 | Foreign URI boundary | Reject UNRESOLVED opens; canonical URI; fd-rooted loader | L | OPEN |
 | 59 | R247 | MCP pre-materialization budgets | max_entries before full collection/sort | M | OPEN |
 | 60 | R248 | SSH atomic replace | posix_rename or backup/swap/rollback; Fake matches SFTP | M | OPEN |
