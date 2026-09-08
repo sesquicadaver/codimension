@@ -1164,10 +1164,14 @@ class CodimensionMainWindow(
             return False
         try:
             ctrl = self.languageController
+            editor = currentWidget.getEditor()
+            version = 0
+            if hasattr(editor, "language_document_version"):
+                version = int(editor.language_document_version())
             document = ctrl.snapshot_for_buffer(
                 path=path,
-                text=currentWidget.getEditor().text,
-                version=0,
+                text=editor.text,
+                version=version,
             )
         except Exception:
             return False

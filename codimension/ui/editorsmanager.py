@@ -1452,6 +1452,11 @@ class EditorsManager(QTabWidget):
 
         oldType = widget.getMime()
         existedBefore = os.path.exists(fileName)
+        # Capture URI before writeFile → setFileName (R245 Save As migrate).
+        oldPath = widget.getFileName()
+        oldAbsPath = ""
+        if oldPath and str(oldPath).lower() not in ["", "n/a"] and os.path.isabs(oldPath):
+            oldAbsPath = os.path.abspath(oldPath)
 
         # OK, the file name was properly selected
         if self.__debugMode and self.__debugScript == fileName:
@@ -1461,6 +1466,9 @@ class EditorsManager(QTabWidget):
         if not widget.writeFile(fileName):
             # Failed to write, inform and exit
             return False
+
+        if widgetType != MainWindowTabWidgetBase.VCSAnnotateViewer:
+            self.__migrateLanguageBufferUri(widget, oldAbsPath, os.path.abspath(fileName))
 
         for callback in getattr(GlobalData(), "afterSaveCallbacks", []):
             try:
@@ -1763,7 +1771,7 @@ class EditorsManager(QTabWidget):
             self.__publishLanguageBuffer(currentWidget, bump=True)
 
     def __publishLanguageBuffer(self, editorWidget, *, bump: bool) -> None:
-        """Sync open editor text into the workspace DocumentStore (R242)."""
+        """Sync open editor text into the workspace DocumentStore (R242 / R245)."""
         try:
             ctrl = self.__mainWindow.languageController
         except Exception:
@@ -1772,9 +1780,16 @@ class EditorsManager(QTabWidget):
         if not path or not os.path.isabs(path):
             return
         editor = editorWidget.getEditor()
-        version = None
-        if not bump:
-            version = 0
+        if bump:
+            if hasattr(editor, "bump_language_document_version"):
+                version = int(editor.bump_language_document_version())
+            else:
+                version = None
+        else:
+            if hasattr(editor, "reset_language_document_version"):
+                version = int(editor.reset_language_document_version())
+            else:
+                version = 0
         document = ctrl.snapshot_for_buffer(path=path, text=editor.text, version=version)
         if document is None:
             return
@@ -1782,6 +1797,31 @@ class EditorsManager(QTabWidget):
             ctrl.notify_buffer_changed(document)
         else:
             ctrl.notify_buffer_opened(document)
+
+    def __migrateLanguageBufferUri(self, editorWidget, oldPath: str, newPath: str) -> None:
+        """Close old URI and open the new one after Save As (R245)."""
+        if not newPath or not os.path.isabs(newPath):
+            return
+        try:
+            ctrl = self.__mainWindow.languageController
+        except Exception:
+            return
+        from infrastructure.file_uri import path_to_file_uri
+
+        oldNorm = os.path.normpath(oldPath) if oldPath else ""
+        newNorm = os.path.normpath(newPath)
+        if oldNorm and oldNorm == newNorm:
+            return
+        editor = editorWidget.getEditor()
+        if hasattr(editor, "reset_language_document_version"):
+            version = int(editor.reset_language_document_version())
+        else:
+            version = 0
+        document = ctrl.snapshot_for_buffer(path=newNorm, text=editor.text, version=version)
+        if document is None:
+            return
+        oldUri = path_to_file_uri(oldNorm) if oldNorm and os.path.isabs(oldNorm) else None
+        ctrl.migrate_buffer(old_uri=oldUri, document=document)
 
     def __closeLanguageBuffer(self, editorWidget) -> None:
         """Drop the editor buffer from the workspace DocumentStore (R242)."""

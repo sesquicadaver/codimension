@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LanguageController: polyglot editor actions via capabilities only (R204 / R229 / R242).
+"""LanguageController: polyglot editor actions via capabilities only (R204 / R229 / R242 / R245).
 
 No language-id branching in control flow. Actions resolve a
 :class:`~core.language.LanguageService` by ``language_id`` or file extension,
@@ -23,6 +23,9 @@ is not enough when the provider cannot serve the API.
 R242: buffer open/change/close sync into the workspace
 :class:`~core.document_store.DocumentStore` and optional
 ``sync_document`` / ``close_document`` on the bound provider.
+
+R245: editor-owned monotonic versions; query snapshots must not regress to
+``0``; Save As migrates ``close(old_uri) → open(new_uri)``.
 """
 
 from __future__ import annotations
@@ -213,7 +216,12 @@ class LanguageController:
         version: int | None = None,
         language_id: str = "",
     ) -> DocumentSnapshot | None:
-        """Build a :class:`DocumentSnapshot` for an absolute editor path."""
+        """Build a :class:`DocumentSnapshot` for an absolute editor path.
+
+        When ``version`` is ``None``, bump from the store (change path). Callers
+        that only *query* semantics must pass the editor-owned version (R245)
+        — never hardcode ``0`` after prior edits.
+        """
         if not path or not os.path.isabs(path):
             return None
         uri = path_to_file_uri(path)
@@ -223,6 +231,28 @@ class LanguageController:
             prev = store.get(uri) if store is not None else None
             version = (prev.version + 1) if prev is not None else 0
         return DocumentSnapshot(uri=uri, text=text, version=int(version), language_id=lid)
+
+    def current_snapshot_for_buffer(
+        self,
+        *,
+        path: str,
+        text: str,
+        language_id: str = "",
+    ) -> DocumentSnapshot | None:
+        """Build a snapshot that reuses the store version without bumping (R245).
+
+        Used for capability probes and read-only semantic queries when the
+        caller has no editor-owned counter. Never invents a regressive ``0``
+        when the store already holds a higher version.
+        """
+        if not path or not os.path.isabs(path):
+            return None
+        uri = path_to_file_uri(path)
+        lid = (language_id or "").strip() or self.language_id_for_uri(uri)
+        store = self._manager.document_store
+        prev = store.get(uri) if store is not None else None
+        version = int(prev.version) if prev is not None else 0
+        return DocumentSnapshot(uri=uri, text=text, version=version, language_id=lid)
 
     def notify_buffer_opened(self, document: DocumentSnapshot) -> None:
         """Publish an open buffer into the workspace store and sync the provider."""
@@ -248,6 +278,17 @@ class LanguageController:
                 store.discard(prev.uri)
         if prev is not None:
             self._notify_semantic_close(prev)
+
+    def migrate_buffer(self, *, old_uri: str | None, document: DocumentSnapshot) -> None:
+        """Atomically move an open buffer to a new URI (Save As / rename, R245).
+
+        Closes ``old_uri`` when it differs from ``document.uri``, then opens
+        the new snapshot. Same-URI calls are a no-op close and a fresh open.
+        """
+        old = (old_uri or "").strip()
+        if old and old != document.uri:
+            self.notify_buffer_closed(old)
+        self.notify_buffer_opened(document)
 
     def _notify_semantic_sync(self, document: DocumentSnapshot) -> None:
         service = self.service_for_document(document)
