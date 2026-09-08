@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-08)
 
-Підтверджених **P0** немає. **P1: 4** відкритих груп → **R247–R250**. **P2: 6** груп → **R251**. Хвиля R232–R246 ✅; зріз `codi-last.md` @ 645d655.
+Підтверджених **P0** немає. **P1: 3** відкритих груп → **R248–R250**. **P2: 6** груп → **R251**. Хвиля R232–R247 ✅; зріз `codi-last.md` @ 645d655.
 
 ### Повторний аудит 2026-09-08 (`codi-last.md` @ 645d655) — P1 черга
 
@@ -16,7 +16,7 @@
 | P1-01 | LSP: pending+write не атомарні з transport generation; старі server→client msgs забруднюють новий process | P1 | ✅ R244 |
 | P1-02 | Editor semantic snapshot `version=0` регресує DocumentStore/LSP; Save As без close(old) | P1 | ✅ R245 |
 | P1-03 | UI ігнорує UNRESOLVED; percent-encoded URI stale disk; loader FIFO/TOCTOU | P1 | ✅ R246 |
-| P1-04 | MCP: `sorted(scandir)` матеріалізує весь каталог до `max_entries` | P1 | 🔓 OPEN → **R247** |
+| P1-04 | MCP: `sorted(scandir)` матеріалізує весь каталог до `max_entries` | P1 | ✅ R247 |
 | P1-05 | SSH Save: Paramiko `rename` не замінює існуючий dest (потрібен posix_rename/swap) | P1 | 🔓 OPEN → **R248** |
 | P1-06 | AI cost budget: provider `max_tokens` може перевищити cost remainder | P1 | 🔓 OPEN → **R249** |
 | P1-07 | pybind11 EXACT без CST `.def()` call_expression (regex у module body) | P1 | 🔓 OPEN → **R250** |
