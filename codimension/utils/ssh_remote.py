@@ -1014,7 +1014,8 @@ def upload_file(
 
     Streams the local file in ``chunk_size`` blocks, enforces a byte cap
     (default :data:`MAX_REMOTE_BYTES` / env), writes to a temporary remote
-    sibling, then renames into place. ``cancel()`` returning True aborts.
+    sibling, then renames into place when the session supports ``rename``.
+    ``cancel()`` returning True aborts.
     """
     path = Path(local_path)
     if not path.is_file():
@@ -1029,7 +1030,8 @@ def upload_file(
             raise RuntimeError(f"upload exceeds size limit ({limit} bytes)")
 
     dest = _norm_remote(remote_path)
-    staging = dest + ".cdm-upload-partial"
+    can_rename = callable(getattr(session, "rename", None))
+    staging = dest + ".cdm-upload-partial" if can_rename else dest
     size = max(1, int(chunk_size))
 
     def _chunks() -> Iterator[bytes]:
@@ -1046,24 +1048,29 @@ def upload_file(
                     raise RuntimeError(f"upload exceeds size limit ({limit} bytes)")
                 yield chunk
 
-    try:
+    def _safe_remove(target: str) -> None:
+        rem = getattr(session, "remove", None)
+        if not callable(rem):
+            return
         try:
-            session.remove(staging)
+            rem(target)
         except (OSError, FileNotFoundError, RuntimeError):
-            pass
+            return
+
+    try:
+        if can_rename:
+            _safe_remove(staging)
         write_chunks = getattr(session, "write_file_chunks", None)
         if callable(write_chunks):
             write_chunks(staging, _chunks(), max_bytes=limit if limit > 0 else None)
         else:
-            # Protocol fallback for older fakes: buffer then write_bytes.
             data = b"".join(_chunks())
             session.write_bytes(staging, data)
-        session.rename(staging, dest)
+        if can_rename and staging != dest:
+            session.rename(staging, dest)
     except Exception:
-        try:
-            session.remove(staging)
-        except Exception:
-            pass
+        if can_rename and staging != dest:
+            _safe_remove(staging)
         raise
 
 
