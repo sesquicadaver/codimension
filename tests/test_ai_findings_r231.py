@@ -134,8 +134,9 @@ def test_analyze_project_collects_findings_and_respects_budget(tmp_path: Path) -
                 )
         return "narrative synthesis ok"
 
-    # First chunk fits (prompt + completion reserve); second does not.
-    limits = AiBudgetLimits(max_tokens=2_500, max_cost_usd=10.0, usd_per_1k_tokens=0.0)
+    # After the first chunk (~259 est. tokens), remaining budget cannot cover
+    # the next prompt under R249 (out_cap from token remainder, not a fixed 2k reserve).
+    limits = AiBudgetLimits(max_tokens=400, max_cost_usd=10.0, usd_per_1k_tokens=0.0)
     result = execute_ai_task(
         AiTaskRequest(
             kind=AiTaskKind.ANALYZE_PROJECT,
