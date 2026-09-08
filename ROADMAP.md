@@ -205,7 +205,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 57 | R245 | Editor-owned document versioning | No version regression; Save As close(old)→open(new) | M | DONE ([#219](https://github.com/sesquicadaver/codimension/pull/219)) |
 | 58 | R246 | Foreign URI boundary | Reject UNRESOLVED opens; canonical URI; fd-rooted loader | L | DONE ([#220](https://github.com/sesquicadaver/codimension/pull/220)) |
 | 59 | R247 | MCP pre-materialization budgets | max_entries before full collection/sort | M | DONE ([#221](https://github.com/sesquicadaver/codimension/pull/221)) |
-| 60 | R248 | SSH atomic replace | posix_rename or backup/swap/rollback; Fake matches SFTP | M | OPEN |
+| 60 | R248 | SSH atomic replace | posix_rename or backup/swap/rollback; Fake matches SFTP | M | DONE ([#222](https://github.com/sesquicadaver/codimension/pull/222)) |
 | 61 | R249 | AI cost-aware provider cap | Provider max_tokens ≤ token/cost remainder | M | OPEN |
 | 62 | R250 | pybind11 CST-exact proof | EXACT only from real .def() call_expression | L | OPEN |
 | 63 | R251 | Residual correctness | AI finding source-bind; plugin package identity; transactional switch; terminal taint; CI floor | L | OPEN |
@@ -214,7 +214,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R248** — SSH atomic replace (`posix_rename` / backup-swap).
+**Next OPEN:** **R249** — AI cost-aware provider output cap.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

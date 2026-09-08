@@ -1,5 +1,8 @@
 2026 Sep 08
 
+* R248: SSH Save atomic replace — prefer ``posix_rename``; fallback
+  backup/swap/rollback; ``FakeSftpSession.rename`` matches standard SFTP
+  (dest must not exist) (re-audit P1-05 @ 645d655)
 * R247: MCP walker applies ``max_entries`` while consuming ``scandir`` —
   at most ``remaining + 1`` DirEntry objects before sort, so huge directories
   are not fully materialized first (re-audit P1-04 @ 645d655)
