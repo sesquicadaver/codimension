@@ -198,7 +198,7 @@ class WebResourceCache(QObject):
         if url in self.__urlToFileName:
             return self.__urlToFileName[url]
 
-        fName = self.__cacheDir + hashlib.md5(url.encode("utf-8")).hexdigest()
+        fName = self.__cacheDir + hashlib.md5(url.encode("utf-8"), usedforsecurity=False).hexdigest()
         if fName in self.__threads:
             # Reject double request
             return None

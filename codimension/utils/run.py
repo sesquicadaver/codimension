@@ -727,7 +727,7 @@ def checkOutput(cmdLine, useShell=False):
     else:
         if not isinstance(cmdLine, list):
             raise Exception("Running without shell requires the command line as a list")
-    return check_output(cmdLine, stderr=STDOUT, shell=useShell).decode(DEFAULT_ENCODING)
+    return check_output(cmdLine, stderr=STDOUT, shell=useShell).decode(DEFAULT_ENCODING)  # nosec B602
 
 
 if __name__ == "__main__":

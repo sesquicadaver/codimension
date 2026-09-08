@@ -200,13 +200,13 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 52 | R240 | FFI edge-specific structural proof | `EXACT` only with full registration-chain identity (module/binder/export/native) | L | DONE ([#209](https://github.com/sesquicadaver/codimension/pull/209)) |
 | 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | DONE ([#211](https://github.com/sesquicadaver/codimension/pull/211)) |
 | 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | DONE ([#213](https://github.com/sesquicadaver/codimension/pull/213)) |
-| 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | OPEN |
+| 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | DONE |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R243** — CI/release/docs hardening.
+**Next OPEN:** wave R232–R243 complete — pick next from [TODO_FIXME.md](TODO_FIXME.md) / new audit.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

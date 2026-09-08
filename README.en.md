@@ -15,22 +15,21 @@ Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codi
 - Python editing with a synchronized control-flow diagram
 - Import / class / dependency diagrams; dead code, complexity, pyflakes in the editor
 - `.cdm3` projects (no auto-load of the last project on startup)
-- Remote SSH projects: Open/Create + Browse…; Save→upload; Run on host (debug deferred); see [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md)
+- Remote SSH projects: Open/Create + Browse…; Save→upload; Run / Debug / Profile on host; see [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md)
 - Local Project VENV (Tools → **VENV…** / **Update VENV…**; **Env:** status)
 - Pure-Python AST parsers exposed under the compatibility names `cdmpyparser` / `cdmcfparser` (no C extension required)
 - Plugin UI in `cdmplugins/` (Ruff, Mypy, Pytest, … need optional extras)
 - Debugger (breakpoints, watchpoints); debugger session tests in CI
 - Help → Check for updates (GitHub Releases; verified download + optional apply/rollback; ``CDM_HOME``)
-- CI on **Ubuntu**: Ruff, format, Mypy, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen bootstrap smoke, `pip-audit`
+- CI on **Ubuntu**: Ruff, format, Mypy, Bandit (high), coverage floor, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen MainWindow+plugins smoke, `pip-audit`
 
 ## Limitations
 
 - Not a production-ready IDE
 - **Linux** is the only CI-verified platform; Windows / macOS are **unverified** (no compatibility guarantee)
 - Git plugin is MVP; PRs are created via the **GitHub REST API** (token: `gh auth` → OS keyring → `0600` file)
-- Qt offscreen smoke in PR CI only constructs a bare `QApplication` (not MainWindow / plugins)
-- Full MainWindow smoke is a weekly workflow, not a PR blocker
-- Audit backlog closed in [TODO_FIXME.en.md](TODO_FIXME.en.md); active queue in [ROADMAP.md](ROADMAP.md) empty (deferred R180–R182); safe-mode: `--safe-mode` / `CDM_SAFE_MODE=1`
+- Qt offscreen smoke in PR CI builds `CodimensionApplication` + `CodimensionMainWindow` and loads bundled plugins (after `_shutdown_smoke`, exit uses `os._exit(0)` to avoid PyQt atexit segfaults on some CI builds)
+- Active hardening queue: [ROADMAP.md](ROADMAP.md) / [TODO_FIXME.en.md](TODO_FIXME.en.md); safe-mode: `--safe-mode` / `CDM_SAFE_MODE=1`
 
 ## Requirements
 
