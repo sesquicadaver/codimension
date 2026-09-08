@@ -849,7 +849,7 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
     def bump_language_document_version(self) -> int:
         """Increment and return the document version after an editor change."""
         self._language_document_version = int(self._language_document_version) + 1
-        return self._language_document_version
+        return int(self._language_document_version)
 
     def __language_document_snapshot(self) -> DocumentSnapshot | None:
         """Build a DocumentSnapshot using the editor-owned version (R245).
