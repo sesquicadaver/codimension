@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Global (per-job) AI token/cost budgets beyond per-file truncation (R231 / R241).
+"""Global (per-job) AI token/cost budgets beyond per-file truncation (R231 / R241 / R249).
 
 Token counts are **estimates** (``chars / 4``) suitable for fail-closed
 caps — not billing-grade metering. Cost uses a configurable USD-per-1k-tokens
@@ -18,6 +18,9 @@ rate so offline/fake backends still exercise the same gates.
 R241: invalid environment values fail closed; ``record`` rejects over-budget
 completions; :class:`AiJobContract` adds file/request/source/output/deadline
 ceilings for project analysis.
+
+R249: ``remaining_output_tokens`` also respects remaining cost (converted to
+tokens); callers must preflight with that provider cap, not a fixed reserve.
 """
 
 from __future__ import annotations
@@ -230,10 +233,26 @@ class AiBudgetTracker:
         return max(0.0, self.limits.max_cost_usd - self.cost_usd)
 
     def remaining_output_tokens(self, prompt_tokens: int = 0, *, cap: int | None = None) -> int:
-        """Output tokens still affordable after ``prompt_tokens``, optionally capped."""
-        left = self.remaining_tokens() - max(0, int(prompt_tokens))
+        """Output tokens still affordable after ``prompt_tokens``, optionally capped.
+
+        R249: the result is the minimum of (1) remaining token budget after the
+        prompt, (2) remaining cost converted to tokens after the prompt, and
+        (3) optional ``cap`` (typically ``contract.max_output_tokens``).
+        """
+        prompt = max(0, int(prompt_tokens))
+        left = self.remaining_tokens() - prompt
         if left <= 0:
             return 0
+
+        rate = float(self.limits.usd_per_1k_tokens)
+        if rate > 0:
+            # How many total tokens (prompt+output) the remaining USD can buy.
+            affordable_total = int(self.remaining_cost_usd() * 1000.0 / rate + 1e-12)
+            left_cost = affordable_total - prompt
+            if left_cost <= 0:
+                return 0
+            left = min(left, left_cost)
+
         if cap is not None:
             left = min(left, max(0, int(cap)))
         return left

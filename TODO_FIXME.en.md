@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-08 audit)
 
-No confirmed **P0**. **P1: 2** open groups → **R249–R250**. **P2: 6** groups → **R251**. Wave R232–R248 ✅; slice `codi-last.md` @ 645d655.
+No confirmed **P0**. **P1: 1** open group → **R250**. **P2: 6** groups → **R251**. Wave R232–R249 ✅; slice `codi-last.md` @ 645d655.
 
 ### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue
 
@@ -18,7 +18,7 @@ No confirmed **P0**. **P1: 2** open groups → **R249–R250**. **P2: 6** groups
 | P1-03 | UI ignores UNRESOLVED; percent-encoded URI stale disk; loader FIFO/TOCTOU | P1 | ✅ R246 |
 | P1-04 | MCP: `sorted(scandir)` materializes entire directory before `max_entries` | P1 | ✅ R247 |
 | P1-05 | SSH Save: Paramiko `rename` does not replace existing dest (need posix_rename/swap) | P1 | ✅ R248 |
-| P1-06 | AI cost budget: provider `max_tokens` may exceed cost remainder | P1 | 🔓 OPEN → **R249** |
+| P1-06 | AI cost budget: provider `max_tokens` may exceed cost remainder | P1 | ✅ R249 |
 | P1-07 | pybind11 EXACT without CST `.def()` call_expression (regex in module body) | P1 | 🔓 OPEN → **R250** |
 
 ### P2 / tech debt (2026-09-08 audit)
