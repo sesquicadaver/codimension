@@ -34,6 +34,9 @@ nonzero default file/byte caps, streamed reads, staging + atomic swap into
 the local cache.
 
 Paramiko is optional at import time; call :func:`require_paramiko` before live use.
+
+R243: ``upload_file`` streams local bytes with the same size budget as download,
+writes a ``*.cdm-upload-partial`` remote staging file, then renames into place.
 """
 
 from __future__ import annotations
@@ -49,7 +52,7 @@ import tempfile
 import time
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Any, Iterator, Mapping, Optional, Protocol, Sequence, runtime_checkable
+from typing import Any, Callable, Iterator, Mapping, Optional, Protocol, Sequence, runtime_checkable
 
 from utils.atomic_io import atomic_write_text
 from utils.settings import SETTINGS_DIR
@@ -179,6 +182,21 @@ class SftpSession(Protocol):
 
     def write_bytes(self, path: str, data: bytes) -> None:
         """Write/replace an entire file."""
+
+    def write_file_chunks(
+        self,
+        path: str,
+        chunks: Iterator[bytes],
+        *,
+        max_bytes: int | None = None,
+    ) -> int:
+        """Stream ``chunks`` into ``path``; return bytes written (R243)."""
+
+    def rename(self, src: str, dst: str) -> None:
+        """Atomic rename/move of a remote path."""
+
+    def remove(self, path: str) -> None:
+        """Remove a remote file."""
 
     def close(self) -> None:
         """Release the session."""
@@ -318,6 +336,46 @@ class FakeSftpSession:
         self.symlinks.pop(path, None)
         self.files[path] = data
 
+    def write_file_chunks(
+        self,
+        path: str,
+        chunks: Iterator[bytes],
+        *,
+        max_bytes: int | None = None,
+    ) -> int:
+        """Write ``chunks`` to ``path`` (overwrite); return bytes written."""
+        buf = bytearray()
+        limit = None if max_bytes is None else int(max_bytes)
+        for chunk in chunks:
+            if not chunk:
+                continue
+            buf.extend(chunk)
+            if limit is not None and limit > 0 and len(buf) > limit:
+                raise RuntimeError(f"upload exceeds size limit ({limit} bytes)")
+        self.write_bytes(path, bytes(buf))
+        return len(buf)
+
+    def rename(self, src: str, dst: str) -> None:
+        """Rename/move ``src`` to ``dst`` (files only)."""
+        src_n = _norm_remote(src)
+        dst_n = _norm_remote(dst)
+        if src_n not in self.files:
+            raise FileNotFoundError(src_n)
+        parent = _norm_remote(posixpath.dirname(dst_n) or "/")
+        if parent not in self.dirs:
+            self.makedirs(parent)
+        self.files[dst_n] = self.files.pop(src_n)
+        self.symlinks.pop(src_n, None)
+        self.symlinks.pop(dst_n, None)
+
+    def remove(self, path: str) -> None:
+        """Remove a file."""
+        path = _norm_remote(path)
+        if path not in self.files:
+            raise FileNotFoundError(path)
+        del self.files[path]
+        self.symlinks.pop(path, None)
+
     def close(self) -> None:
         return None
 
@@ -386,6 +444,38 @@ class ParamikoSftpSession:
             self.makedirs(parent)
         with self._sftp.open(path, "wb") as handle:
             handle.write(data)
+
+    def write_file_chunks(
+        self,
+        path: str,
+        chunks: Iterator[bytes],
+        *,
+        max_bytes: int | None = None,
+    ) -> int:
+        """Write ``chunks`` to ``path`` (overwrite); return bytes written."""
+        path = _norm_remote(path)
+        parent = _norm_remote(posixpath.dirname(path) or "/")
+        if parent != "/" and not self.isdir(parent):
+            self.makedirs(parent)
+        written = 0
+        limit = None if max_bytes is None else int(max_bytes)
+        with self._sftp.open(path, "wb") as handle:
+            for chunk in chunks:
+                if not chunk:
+                    continue
+                written += len(chunk)
+                if limit is not None and limit > 0 and written > limit:
+                    raise RuntimeError(f"upload exceeds size limit ({limit} bytes)")
+                handle.write(chunk)
+        return written
+
+    def rename(self, src: str, dst: str) -> None:
+        """Rename/move ``src`` to ``dst`` on the remote filesystem."""
+        self._sftp.rename(_norm_remote(src), _norm_remote(dst))
+
+    def remove(self, path: str) -> None:
+        """Remove a remote file."""
+        self._sftp.remove(_norm_remote(path))
 
     def close(self) -> None:
         try:
@@ -911,10 +1001,70 @@ def download_remote_tree(
     return count
 
 
-def upload_file(session: SftpSession, local_path: str, remote_path: str) -> None:
-    """Upload one local file to ``remote_path``."""
-    data = Path(local_path).read_bytes()
-    session.write_bytes(_norm_remote(remote_path), data)
+def upload_file(
+    session: SftpSession,
+    local_path: str,
+    remote_path: str,
+    *,
+    max_bytes: int | None = None,
+    chunk_size: int = DOWNLOAD_CHUNK_BYTES,
+    cancel: Callable[[], bool] | None = None,
+) -> None:
+    """Upload one local file to ``remote_path`` with chunked I/O (R243).
+
+    Streams the local file in ``chunk_size`` blocks, enforces a byte cap
+    (default :data:`MAX_REMOTE_BYTES` / env), writes to a temporary remote
+    sibling, then renames into place. ``cancel()`` returning True aborts.
+    """
+    path = Path(local_path)
+    if not path.is_file():
+        raise FileNotFoundError(local_path)
+    limit = MAX_REMOTE_BYTES if max_bytes is None else int(max_bytes)
+    if limit > 0:
+        try:
+            size = path.stat().st_size
+        except OSError as exc:
+            raise RuntimeError(f"cannot stat local upload path: {local_path}") from exc
+        if size > limit:
+            raise RuntimeError(f"upload exceeds size limit ({limit} bytes)")
+
+    dest = _norm_remote(remote_path)
+    staging = dest + ".cdm-upload-partial"
+    size = max(1, int(chunk_size))
+
+    def _chunks() -> Iterator[bytes]:
+        written = 0
+        with path.open("rb") as handle:
+            while True:
+                if cancel is not None and cancel():
+                    raise RuntimeError("SSH upload cancelled")
+                chunk = handle.read(size)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if limit > 0 and written > limit:
+                    raise RuntimeError(f"upload exceeds size limit ({limit} bytes)")
+                yield chunk
+
+    try:
+        try:
+            session.remove(staging)
+        except (OSError, FileNotFoundError, RuntimeError):
+            pass
+        write_chunks = getattr(session, "write_file_chunks", None)
+        if callable(write_chunks):
+            write_chunks(staging, _chunks(), max_bytes=limit if limit > 0 else None)
+        else:
+            # Protocol fallback for older fakes: buffer then write_bytes.
+            data = b"".join(_chunks())
+            session.write_bytes(staging, data)
+        session.rename(staging, dest)
+    except Exception:
+        try:
+            session.remove(staging)
+        except Exception:
+            pass
+        raise
 
 
 def write_binding(binding: RemoteProjectBinding) -> None:

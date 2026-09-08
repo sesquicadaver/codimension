@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-07 audit)
 
-No confirmed **P0**. **P1: 0** open (P1-01…P1-10 ✅). **P2 groups: 7** (R242–R243 + backlog). Wave R221–R231 ✅ as happy-path; re-audit finds remaining lifecycle/concurrency/stale-state/fail-closed gaps.
+No confirmed **P0**. **P1: 0** open (P1-01…P1-10 ✅). **P2 groups: 0** open (R242–R243 ✅). Wave R221–R231 ✅; R232–R243 ✅ (`codi-last.md` @ 45e33f6).
 
 ### Re-audit 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 queue
 
@@ -29,7 +29,7 @@ No confirmed **P0**. **P1: 0** open (P1-01…P1-10 ✅). **P2 groups: 7** (R242�
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | P2-01 | Polyglot controller not wired to editor actions; Python stub vs `supports()` | P2 | ✅ R242 |
-| P2-02…07 | File URI encoding; risk confidence vs custom weights; SSH upload unbounded; CI coverage/Bandit; Actions pins; docs drift | P2 | 🔓 OPEN → **R243** (+ backlog) |
+| P2-02…07 | File URI encoding; risk confidence vs custom weights; SSH upload unbounded; CI coverage/Bandit; Actions pins; docs drift | P2 | ✅ R243 |
 
 ### Audit 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 queue (closed)
 

@@ -132,7 +132,7 @@ class RemoteProcessWrapper(QObject):
             self.profileWaitDeadline = time.time() + PROFILE_COMPLETION_TIMEOUT_SEC
         cmd, environment, use_shell = getCwdCmdEnv(self.kind, self.path, params, self.__serverPort, self.procuuid)
 
-        self.__proc = Popen(
+        self.__proc = Popen(  # nosec B602
             cmd,
             shell=use_shell,
             cwd=getWorkingDir(self.path, params),

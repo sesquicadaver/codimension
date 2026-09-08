@@ -1,5 +1,10 @@
-2026 Sep 07
+2026 Sep 08
 
+* R243: CI/release/docs hardening — Bandit high gate + coverage floor
+  (``--cov-fail-under=28``); SHA-pin Actions; publish ``environment: pypi``;
+  chunked/capped SSH upload with staging rename; risk confidence follows
+  custom weights; README drift fixed; LSP concurrent request stress
+  (re-audit P2-02…07 @ 45e33f6)
 * R242: polyglot editor integration — Python headless binds brief
   ``SemanticProvider`` so ``supports(OUTLINE/DEFINITION/REFERENCES)`` matches
   advertised caps; EditorsManager syncs open/change/close into workspace

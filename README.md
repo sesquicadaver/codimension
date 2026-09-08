@@ -15,22 +15,21 @@
 - Редагування Python і синхронізована control-flow діаграма
 - Діаграми імпортів / класів / залежностей; dead code, складність, pyflakes у редакторі
 - Проєкти `.cdm3` (без автозавантаження останнього проєкту)
-- Віддалені проєкти по SSH: Open/Create + Browse…; Save→upload; Run на хості (debug deferred); див. [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md)
+- Віддалені проєкти по SSH: Open/Create + Browse…; Save→upload; Run / Debug / Profile на хості; див. [doc/user/ssh-remote-projects.md](doc/user/ssh-remote-projects.md)
 - Локальний Project VENV (Tools → **VENV…** / **Update VENV…**; status **Env:**)
 - Pure-Python AST-парсери під compatibility-іменами `cdmpyparser` / `cdmcfparser` (C-extension не потрібен)
 - UI плагінів у `cdmplugins/` (Ruff, Mypy, Pytest тощо потребують optional extras)
 - Debugger (breakpoints, watchpoints); debugger session tests у CI
 - Help → Check for updates (GitHub Releases; verified download + optional apply/rollback; ``CDM_HOME``)
-- CI на **Ubuntu**: Ruff, format, Mypy, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen bootstrap smoke, `pip-audit`
+- CI на **Ubuntu**: Ruff, format, Mypy, Bandit (high), coverage floor, pytest matrix **Python 3.10–3.13**, wheel + `pip check`, Qt offscreen MainWindow+plugins smoke, `pip-audit`
 
 ## Обмеження
 
 - Не production-ready IDE
 - **Linux** — єдина CI-верифікована платформа; Windows / macOS — **unverified** (немає гарантій)
 - Git-плагін — MVP; PR створюється через **GitHub REST API** (токен: `gh auth` → keyring → файл `0600`)
-- Qt offscreen smoke у PR CI створює лише `QApplication` (не MainWindow / plugins)
-- Full MainWindow smoke — weekly workflow, не PR-blocker
-- Технічний борг аудиту закрито в [TODO_FIXME.md](TODO_FIXME.md); активна черга [ROADMAP.uk.md](ROADMAP.uk.md) порожня (відкладено R180–R182); safe-mode: `--safe-mode` / `CDM_SAFE_MODE=1`
+- Qt offscreen smoke у PR CI створює `CodimensionApplication` + `CodimensionMainWindow` і завантажує bundled plugins (після `_shutdown_smoke` процес завершується через `os._exit(0)` через PyQt atexit на деяких CI builds)
+- Активна черга hardening: [ROADMAP.uk.md](ROADMAP.uk.md) / [TODO_FIXME.md](TODO_FIXME.md); safe-mode: `--safe-mode` / `CDM_SAFE_MODE=1`
 
 ## Вимоги
 

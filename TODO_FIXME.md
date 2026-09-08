@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-07)
 
-Підтверджених **P0** немає. **P1: 0** відкритих (P1-01…P1-10 ✅). **P2 групи: 7** (R242–R243 + backlog). Хвиля R221–R231 ✅ як happy-path; повторний аудит фіксує lifecycle/concurrency/stale-state/fail-closed залишки.
+Підтверджених **P0** немає. **P1: 0** відкритих (P1-01…P1-10 ✅). **P2 групи: 0** відкритих (R242–R243 ✅). Хвиля R221–R231 ✅; R232–R243 ✅ (`codi-last.md` @ 45e33f6).
 
 ### Повторний аудит 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 черга
 
@@ -29,7 +29,7 @@
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
 | P2-01 | Polyglot controller не підключений до editor actions; Python stub vs `supports()` | P2 | ✅ R242 |
-| P2-02…07 | File URI encoding; risk confidence vs custom weights; SSH upload unbounded; CI coverage/Bandit; Actions pins; docs drift | P2 | 🔓 OPEN → **R243** (+ backlog) |
+| P2-02…07 | File URI encoding; risk confidence vs custom weights; SSH upload unbounded; CI coverage/Bandit; Actions pins; docs drift | P2 | ✅ R243 |
 
 ### Аудит 2026-09-05 (`codi-last.md` @ 340e97dc) — P1 черга (закрита)
 

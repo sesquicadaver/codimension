@@ -165,14 +165,30 @@ def git_factor(git_churn: int, *, churn_cap: float = DEFAULT_CAPS["churn"]) -> f
     return clamp01(git_churn / churn_cap)
 
 
-def _confidence(*, metrics_coverage: float, git_provided: bool, include_git_weight: bool) -> float:
-    """Estimate input completeness in ``[0, 1]`` (R194)."""
+def _confidence(
+    *,
+    metrics_coverage: float,
+    git_provided: bool,
+    include_git_weight: bool,
+    weights: Mapping[str, float] | None = None,
+) -> float:
+    """Estimate input completeness in ``[0, 1]`` (R194 / R243).
+
+    When ``weights`` are supplied, metrics/git shares follow those weights
+    (custom models stay consistent with the score). Otherwise default mass
+    ``0.45`` / ``0.20`` is used.
+    """
     # Lint is always supplied as a count (including 0) → always "known".
     # Metrics: coverage of CC/MI sub-weights. Git: known only when provided.
     if include_git_weight:
-        # Relative importance mirrors default weight mass (lint ignored as always present).
-        metrics_share = 0.45 / (0.45 + 0.20)
-        git_share = 0.20 / (0.45 + 0.20)
+        w = dict(DEFAULT_WEIGHTS if weights is None else weights)
+        metrics_w = float(w.get("metrics", 0.0))
+        git_w = float(w.get("git", 0.0))
+        denom = metrics_w + git_w
+        if denom <= 0:
+            return clamp01(metrics_coverage)
+        metrics_share = metrics_w / denom
+        git_share = git_w / denom
         git_cov = 1.0 if git_provided else 0.0
         return clamp01(metrics_share * metrics_coverage + git_share * git_cov)
     return clamp01(metrics_coverage)
@@ -221,6 +237,7 @@ def compute_risk_score(
             metrics_coverage=metrics.coverage,
             git_provided=False,
             include_git_weight=False,
+            weights=w,
         )
     else:
         total = w["lint"] + w["metrics"] + w["git"]
@@ -235,6 +252,7 @@ def compute_risk_score(
             metrics_coverage=metrics.coverage,
             git_provided=True,
             include_git_weight=True,
+            weights=w,
         )
 
     return RiskBreakdown(
