@@ -27,14 +27,17 @@ PYBIND11_MODULE(_native, m) {
     assert by_name["unsafe"].precision is BindingPrecision.BRIDGE
     assert BindingEvidenceKind.STRUCTURAL_REGISTRATION not in {e.kind for e in by_name["unsafe"].evidence}
 
-    assert pybind11_registration_proof(
-        src,
-        module="_native",
-        var="m",
-        py_name="unsafe",
-        def_start=src.index('m.def("unsafe"'),
-        native_name="engine::unsafe",
-    ) is None
+    assert (
+        pybind11_registration_proof(
+            src,
+            module="_native",
+            var="m",
+            py_name="unsafe",
+            def_start=src.index('m.def("unsafe"'),
+            native_name="engine::unsafe",
+        )
+        is None
+    )
     proof = pybind11_registration_proof(
         src,
         module="_native",

@@ -322,9 +322,7 @@ def _pybind11_native_arg_name(source_bytes: bytes, arg: Any) -> str:
     return ""
 
 
-def _pybind11_def_call_identity(
-    source_bytes: bytes, call_node: Any
-) -> tuple[str, str, str] | None:
+def _pybind11_def_call_identity(source_bytes: bytes, call_node: Any) -> tuple[str, str, str] | None:
     """Parse ``binder.def("py_name", native…)`` → ``(binder, py_name, native)``."""
     if call_node.type != "call_expression" or len(call_node.children) < 2:
         return None
@@ -390,10 +388,7 @@ def pybind11_registration_proof(
             span = unicode_span_from_bytes(text, node.start_byte, node.end_byte)
             candidate = StructuralRegistrationProof(
                 span=span,
-                detail=(
-                    f"PYBIND11_MODULE({mod_name}, {binder}) "
-                    f'call {binder}.def("{call_py}", &{native_resolved})'
-                ),
+                detail=(f'PYBIND11_MODULE({mod_name}, {binder}) call {binder}.def("{call_py}", &{native_resolved})'),
                 module=mod_name,
                 binder=binder,
                 python_name=call_py,
