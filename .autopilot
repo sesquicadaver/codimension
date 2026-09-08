@@ -1,18 +1,2 @@
-# Autopilot queue policy (Codimension)
-
-When the user says `autopilot` / `/autopilot` / `.autopilot`:
-
-1. Do **not** ask which PR or task to pick.
-2. Resolve the work queue in this order:
-   - [TODO_FIXME.md](TODO_FIXME.md) — first 🔓 OPEN or PARTIAL row (P0 before P1 before P2)
-   - If TODO has no open P0/P1, still prefer first 🔓 P2 that maps to the first **OPEN** ROADMAP row
-   - Else [ROADMAP.uk.md](ROADMAP.uk.md) / [ROADMAP.md](ROADMAP.md) — first **OPEN** atomic task (`Rxxx`)
-3. Implement that item on a feature branch, open a PR to `sesquicadaver/codimension`, drive CI green.
-4. After green CI + clean review of this cycle’s changes: commit/push as needed, then **merge the PR yourself** (standing order 2026-08-06). Do not leave merge to the user; babysit-only skills do not override this.
-5. Update TODO_FIXME (if used) + Living Spec + ChangeLog + mark the ROADMAP row `DONE` with PR/SHA.
-
-Current pointer: **R244** — LSP transport lease + generation isolation (wave R244–R251 from `codi-last.md` @ 645d655 / master@cf241873).
-R209–R243 DONE.
-
-User standing order (2026-08-28): `/autopilot` means execute the next queue task and
-perform commit/push/merge/PR automatically without waiting for a separate ask.
+Current pointer: **R245** — Editor-owned document versioning / Save As URI migrate (wave R244–R251 from `codi-last.md` @ 645d655 / master@cf241873).
+R209–R244 DONE.
