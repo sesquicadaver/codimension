@@ -37,10 +37,14 @@ Paramiko is optional at import time; call :func:`require_paramiko` before live u
 
 R243: ``upload_file`` streams local bytes with the same size budget as download,
 writes a ``*.cdm-upload-partial`` remote staging file, then renames into place.
+
+R248: replace uses ``posix_rename`` when available; otherwise backup/swap/rollback.
+``FakeSftpSession.rename`` matches standard SFTP (dest must not exist).
 """
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import logging
@@ -193,7 +197,10 @@ class SftpSession(Protocol):
         """Stream ``chunks`` into ``path``; return bytes written (R243)."""
 
     def rename(self, src: str, dst: str) -> None:
-        """Atomic rename/move of a remote path."""
+        """Atomic rename/move of a remote path (dest must not exist — SFTP)."""
+
+    def posix_rename(self, src: str, dst: str) -> None:
+        """POSIX rename that may replace an existing destination (R248)."""
 
     def remove(self, path: str) -> None:
         """Remove a remote file."""
@@ -356,17 +363,34 @@ class FakeSftpSession:
         return len(buf)
 
     def rename(self, src: str, dst: str) -> None:
-        """Rename/move ``src`` to ``dst`` (files only)."""
+        """Rename/move ``src`` to ``dst`` (files only; dest must not exist — R248)."""
         src_n = _norm_remote(src)
         dst_n = _norm_remote(dst)
         if src_n not in self.files:
             raise FileNotFoundError(src_n)
+        if dst_n in self.files or dst_n in self.dirs or dst_n in self.symlinks:
+            raise OSError(errno.EEXIST, os.strerror(errno.EEXIST), dst_n)
         parent = _norm_remote(posixpath.dirname(dst_n) or "/")
         if parent not in self.dirs:
             self.makedirs(parent)
         self.files[dst_n] = self.files.pop(src_n)
         self.symlinks.pop(src_n, None)
+
+    def posix_rename(self, src: str, dst: str) -> None:
+        """Rename ``src`` onto ``dst``, replacing an existing file (R248)."""
+        src_n = _norm_remote(src)
+        dst_n = _norm_remote(dst)
+        if src_n not in self.files:
+            raise FileNotFoundError(src_n)
+        if dst_n in self.dirs and dst_n != src_n:
+            raise OSError(errno.EISDIR, os.strerror(errno.EISDIR), dst_n)
+        parent = _norm_remote(posixpath.dirname(dst_n) or "/")
+        if parent not in self.dirs:
+            self.makedirs(parent)
+        self.files.pop(dst_n, None)
         self.symlinks.pop(dst_n, None)
+        self.files[dst_n] = self.files.pop(src_n)
+        self.symlinks.pop(src_n, None)
 
     def remove(self, path: str) -> None:
         """Remove a file."""
@@ -470,8 +494,15 @@ class ParamikoSftpSession:
         return written
 
     def rename(self, src: str, dst: str) -> None:
-        """Rename/move ``src`` to ``dst`` on the remote filesystem."""
+        """Rename/move ``src`` to ``dst`` on the remote filesystem (no overwrite)."""
         self._sftp.rename(_norm_remote(src), _norm_remote(dst))
+
+    def posix_rename(self, src: str, dst: str) -> None:
+        """POSIX rename that may replace an existing destination (R248)."""
+        posix = getattr(self._sftp, "posix_rename", None)
+        if not callable(posix):
+            raise OSError(errno.ENOTSUP, "SFTP posix_rename is not available")
+        posix(_norm_remote(src), _norm_remote(dst))
 
     def remove(self, path: str) -> None:
         """Remove a remote file."""
@@ -1001,6 +1032,76 @@ def download_remote_tree(
     return count
 
 
+def _safe_remove_remote(session: SftpSession, target: str) -> None:
+    """Best-effort remove of a remote path."""
+    rem = getattr(session, "remove", None)
+    if not callable(rem):
+        return
+    try:
+        rem(target)
+    except (OSError, FileNotFoundError, RuntimeError):
+        return
+
+
+def _remote_path_exists(session: SftpSession, path: str) -> bool:
+    """True when ``path`` exists (file/dir/symlink) on the session."""
+    try:
+        if callable(getattr(session, "lstat", None)):
+            session.lstat(path)
+            return True
+    except (OSError, FileNotFoundError):
+        return False
+    isfile = getattr(session, "isfile", None)
+    isdir = getattr(session, "isdir", None)
+    try:
+        if callable(isfile) and isfile(path):
+            return True
+        if callable(isdir) and isdir(path):
+            return True
+    except (OSError, FileNotFoundError):
+        return False
+    return False
+
+
+def atomic_replace_remote(session: SftpSession, staging: str, dest: str) -> None:
+    """Move ``staging`` onto ``dest``, replacing an existing file when needed (R248).
+
+    Prefers ``posix_rename`` (atomic overwrite). Falls back to
+    ``dest → backup``, ``staging → dest``, then delete backup — with rollback
+    if the second rename fails. Plain ``rename`` is used when ``dest`` is absent.
+    """
+    staging_n = _norm_remote(staging)
+    dest_n = _norm_remote(dest)
+    if staging_n == dest_n:
+        return
+
+    posix = getattr(session, "posix_rename", None)
+    if callable(posix):
+        try:
+            posix(staging_n, dest_n)
+            return
+        except (OSError, IOError, AttributeError, NotImplementedError, RuntimeError):
+            # Server may lack the extension; continue with backup-swap / rename.
+            pass
+
+    if not _remote_path_exists(session, dest_n):
+        session.rename(staging_n, dest_n)
+        return
+
+    backup = dest_n + ".cdm-upload-bak"
+    _safe_remove_remote(session, backup)
+    session.rename(dest_n, backup)
+    try:
+        session.rename(staging_n, dest_n)
+    except Exception:
+        try:
+            session.rename(backup, dest_n)
+        except (OSError, FileNotFoundError, RuntimeError):
+            pass
+        raise
+    _safe_remove_remote(session, backup)
+
+
 def upload_file(
     session: SftpSession,
     local_path: str,
@@ -1010,12 +1111,12 @@ def upload_file(
     chunk_size: int = DOWNLOAD_CHUNK_BYTES,
     cancel: Callable[[], bool] | None = None,
 ) -> None:
-    """Upload one local file to ``remote_path`` with chunked I/O (R243).
+    """Upload one local file to ``remote_path`` with chunked I/O (R243 / R248).
 
     Streams the local file in ``chunk_size`` blocks, enforces a byte cap
     (default :data:`MAX_REMOTE_BYTES` / env), writes to a temporary remote
-    sibling, then renames into place when the session supports ``rename``.
-    ``cancel()`` returning True aborts.
+    sibling, then atomically replaces ``remote_path`` via
+    :func:`atomic_replace_remote`. ``cancel()`` returning True aborts.
     """
     path = Path(local_path)
     if not path.is_file():
@@ -1048,18 +1149,9 @@ def upload_file(
                     raise RuntimeError(f"upload exceeds size limit ({limit} bytes)")
                 yield chunk
 
-    def _safe_remove(target: str) -> None:
-        rem = getattr(session, "remove", None)
-        if not callable(rem):
-            return
-        try:
-            rem(target)
-        except (OSError, FileNotFoundError, RuntimeError):
-            return
-
     try:
         if can_rename:
-            _safe_remove(staging)
+            _safe_remove_remote(session, staging)
         write_chunks = getattr(session, "write_file_chunks", None)
         if callable(write_chunks):
             write_chunks(staging, _chunks(), max_bytes=limit if limit > 0 else None)
@@ -1067,10 +1159,10 @@ def upload_file(
             data = b"".join(_chunks())
             session.write_bytes(staging, data)
         if can_rename and staging != dest:
-            session.rename(staging, dest)
+            atomic_replace_remote(session, staging, dest)
     except Exception:
         if can_rename and staging != dest:
-            _safe_remove(staging)
+            _safe_remove_remote(session, staging)
         raise
 
 
@@ -1449,6 +1541,7 @@ __all__ = [
     "UnknownHostKeyError",
     "assert_local_path_under",
     "assert_remote_path_under",
+    "atomic_replace_remote",
     "commit_staged_download",
     "connect_paramiko_sftp",
     "create_remote_project",
