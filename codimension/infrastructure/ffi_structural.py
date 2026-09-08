@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - FFI structural registration proofs (R226 / R240)
+# codimension - FFI structural registration proofs (R226 / R240 / R250)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Tree-sitter CST proofs for FFI registration chains (R226 / R240).
+"""Tree-sitter CST proofs for FFI registration chains (R226 / R240 / R250).
 
 Regex/text discovery (R206/R217) still finds candidates. ``EXACT`` precision
 requires a **structural** containment proof from this module that carries
@@ -26,8 +26,9 @@ Framework rules:
 
 * PyO3 — ``wrap_pyfunction!(fn, …)`` is an argument of ``*.add_function(…)``
   inside a ``#[pymodule]`` function body (not merely co-located).
-* pybind11 — ``var.def("name", …)`` lies inside the ``compound_statement`` of
-  the matching ``PYBIND11_MODULE(mod, var)``.
+* pybind11 — a real ``call_expression`` ``var.def("name", &native)`` inside the
+  matching ``PYBIND11_MODULE(mod, var)`` body (R250: offset-in-body alone is
+  not enough; comments / string literals must not promote to ``EXACT``).
 * CPython — ``PyMethodDef`` row for a **specific** method table ↔ that table
   on ``PyModuleDef.m_methods`` ↔ ``PyInit_*`` / ``PyModule_Create``.
 
@@ -241,13 +242,13 @@ def pyo3_registration_proof(text: str, rust_fn: str) -> Optional[StructuralRegis
     return None
 
 
-def pybind11_module_bodies(text: str) -> tuple[tuple[str, str, SourceSpan], ...]:
-    """Return ``(module, var, body_span)`` for each ``PYBIND11_MODULE`` CST node."""
+def _pybind11_module_entries(text: str) -> tuple[tuple[str, str, Any, SourceSpan], ...]:
+    """Return ``(module, var, body_node, body_span)`` for each ``PYBIND11_MODULE``."""
     root = try_parse_root("cpp", text)
     if root is None:
         return ()
     source_bytes = text.encode("utf-8")
-    out: list[tuple[str, str, SourceSpan]] = []
+    out: list[tuple[str, str, Any, SourceSpan]] = []
     for node in _walk(root):
         if node.type != "function_definition":
             continue
@@ -288,8 +289,64 @@ def pybind11_module_bodies(text: str) -> tuple[tuple[str, str, SourceSpan], ...]
             continue
         module, var = param_ids[0], param_ids[1]
         span = unicode_span_from_bytes(text, body.start_byte, body.end_byte)
-        out.append((module, var, span))
+        out.append((module, var, body, span))
     return tuple(out)
+
+
+def pybind11_module_bodies(text: str) -> tuple[tuple[str, str, SourceSpan], ...]:
+    """Return ``(module, var, body_span)`` for each ``PYBIND11_MODULE`` CST node."""
+    return tuple((module, var, span) for module, var, _body, span in _pybind11_module_entries(text))
+
+
+def _pybind11_string_literal_content(source_bytes: bytes, node: Any) -> str | None:
+    """Return decoded content of a C++ ``string_literal`` node, or ``None``."""
+    if node.type != "string_literal":
+        return None
+    content = next((c for c in node.children if c.type == "string_content"), None)
+    if content is None:
+        return None
+    return _node_text(source_bytes, content)
+
+
+def _pybind11_native_arg_name(source_bytes: bytes, arg: Any) -> str:
+    """Best-effort native symbol text from a ``.def`` second argument."""
+    if arg.type == "identifier":
+        return _node_text(source_bytes, arg)
+    # Prefer fully-qualified names (&engine::fn → engine::fn).
+    for child in _walk(arg):
+        if child.type == "qualified_identifier":
+            return _node_text(source_bytes, child)
+    for child in _walk(arg):
+        if child.type == "identifier":
+            return _node_text(source_bytes, child)
+    return ""
+
+
+def _pybind11_def_call_identity(source_bytes: bytes, call_node: Any) -> tuple[str, str, str] | None:
+    """Parse ``binder.def("py_name", native…)`` → ``(binder, py_name, native)``."""
+    if call_node.type != "call_expression" or len(call_node.children) < 2:
+        return None
+    head = call_node.children[0]
+    args = next((c for c in call_node.children if c.type == "argument_list"), None)
+    if head.type != "field_expression" or args is None:
+        return None
+    binder = None
+    method = None
+    for child in head.children:
+        if child.type == "identifier" and binder is None:
+            binder = _node_text(source_bytes, child)
+        elif child.type == "field_identifier":
+            method = _node_text(source_bytes, child)
+    if not binder or method != "def":
+        return None
+    named_args = [c for c in args.children if c.is_named]
+    if len(named_args) < 2:
+        return None
+    py_name = _pybind11_string_literal_content(source_bytes, named_args[0])
+    if not py_name:
+        return None
+    native = _pybind11_native_arg_name(source_bytes, named_args[1])
+    return binder, py_name, native
 
 
 def pybind11_registration_proof(
@@ -301,21 +358,49 @@ def pybind11_registration_proof(
     def_start: int,
     native_name: str = "",
 ) -> Optional[StructuralRegistrationProof]:
-    """Prove ``var.def("py_name", …)`` at ``def_start`` is inside that MODULE body."""
-    for mod_name, binder, body_span in pybind11_module_bodies(text):
+    """Prove a concrete ``var.def("py_name", …)`` ``call_expression`` (R250).
+
+    Regex may nominate ``def_start`` / names, but ``EXACT`` identity comes only
+    from a Tree-sitter ``call_expression`` whose binder, export string, and
+    native argument match inside the matching ``PYBIND11_MODULE`` body.
+    """
+    want_py = py_name.strip()
+    want_native = native_name.strip()
+    if not want_py:
+        return None
+    source_bytes = text.encode("utf-8")
+    best: StructuralRegistrationProof | None = None
+    for mod_name, binder, body, _body_span in _pybind11_module_entries(text):
         if mod_name != module or binder != var:
             continue
-        if body_span.start <= def_start < body_span.end:
-            return StructuralRegistrationProof(
-                span=body_span,
-                detail=f'PYBIND11_MODULE({module}, {var}) contains .def("{py_name}")',
+        for node in _walk(body):
+            if node.type != "call_expression":
+                continue
+            parts = _pybind11_def_call_identity(source_bytes, node)
+            if parts is None:
+                continue
+            call_binder, call_py, call_native = parts
+            if call_binder != var or call_py != want_py:
+                continue
+            if want_native and call_native and call_native != want_native:
+                continue
+            native_resolved = call_native or want_native
+            span = unicode_span_from_bytes(text, node.start_byte, node.end_byte)
+            candidate = StructuralRegistrationProof(
+                span=span,
+                detail=(f'PYBIND11_MODULE({mod_name}, {binder}) call {binder}.def("{call_py}", &{native_resolved})'),
                 module=mod_name,
                 binder=binder,
-                python_name=py_name,
-                native_name=native_name,
+                python_name=call_py,
+                native_name=native_resolved,
                 registration="def",
             )
-    return None
+            # Prefer the call that covers the regex offset when several match.
+            if node.start_byte <= def_start < node.end_byte:
+                return candidate
+            if best is None:
+                best = candidate
+    return best
 
 
 def cpython_registration_proof(

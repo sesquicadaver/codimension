@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - FFI binding extractors (R206 / R217 / R226 / R240)
+# codimension - FFI binding extractors (R206 / R217 / R226 / R240 / R250)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Evidence-backed PyO3 / pybind11 / CPython / ``.pyi`` extractors (R206–R240).
+"""Evidence-backed PyO3 / pybind11 / CPython / ``.pyi`` extractors (R206–R250).
 
 Uses pattern matching on source text for discovery (not a compiler). Edges
 always carry :class:`~core.bindings.BindingEvidence`; name equality alone
@@ -25,6 +25,9 @@ Tree-sitter or without containment, precision stays ``BRIDGE``.
 R240: ``EXACT`` edges are built from the structural proof's identity
 (module / binder / export / native / registration call). Regex may only
 nominate candidates — never choose the module for an ``EXACT`` edge.
+
+R250: pybind11 ``EXACT`` requires a real ``call_expression`` for ``var.def``;
+a regex offset inside a MODULE body alone is insufficient.
 """
 
 from __future__ import annotations
@@ -245,8 +248,9 @@ class Pybind11BindingProvider:
         """Parse C++ source for pybind11 exports.
 
         Supports arbitrary binder variable names from
-        ``PYBIND11_MODULE(name, var)``. ``EXACT`` requires ``var.def`` inside
-        that module's CST body (R217 + R226).
+        ``PYBIND11_MODULE(name, var)``. ``EXACT`` requires a Tree-sitter
+        ``call_expression`` for ``var.def`` inside that module body (R217 +
+        R226 + R240 + R250); regex only nominates candidates.
         """
         modules = list(_RE_PYBIND11_MODULE.finditer(text))
         structural_bodies = {(m, v): span for m, v, span in pybind11_module_bodies(text)}
@@ -291,6 +295,8 @@ class Pybind11BindingProvider:
                     )
                 precision = BindingPrecision.BRIDGE
                 edge_module = module
+                edge_py = py_name
+                edge_native = cpp_name
                 if mod_match is not None:
                     proof = pybind11_registration_proof(
                         text,
@@ -300,7 +306,7 @@ class Pybind11BindingProvider:
                         def_start=match.start(),
                         native_name=cpp_name,
                     )
-                    if proof is not None:
+                    if proof is not None and proof.python_name and proof.native_name:
                         evidence.append(
                             BindingEvidence(
                                 kind=BindingEvidenceKind.STRUCTURAL_REGISTRATION,
@@ -309,18 +315,20 @@ class Pybind11BindingProvider:
                                 detail=proof.detail,
                             )
                         )
-                        # R240: module identity from the structural MODULE proof.
+                        # R240/R250: edge identity from the .def call proof.
                         edge_module = proof.module or module
+                        edge_py = proof.python_name
+                        edge_native = proof.native_name
                         precision = BindingPrecision.EXACT
                 edges.append(
                     BindingEdge(
-                        python_symbol=_python_symbol(edge_module, py_name),
-                        native_symbol=_cpp_symbol(cpp_name),
+                        python_symbol=_python_symbol(edge_module, edge_py),
+                        native_symbol=_cpp_symbol(edge_native),
                         framework=BindingFramework.PYBIND11,
                         precision=precision,
                         evidence=tuple(evidence),
                         python_module=edge_module,
-                        python_name=py_name,
+                        python_name=edge_py,
                         native_language_id="cpp",
                         provider_id=self.provider_id,
                     )

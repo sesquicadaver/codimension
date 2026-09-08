@@ -1,5 +1,8 @@
 2026 Sep 08
 
+* R250: pybind11 ``EXACT`` requires a Tree-sitter ``call_expression`` for
+  ``var.def("name", &native)`` — regex hits in comments/block comments stay
+  ``BRIDGE`` (re-audit P1-07 @ 645d655)
 * R249: AI provider ``max_output_tokens`` is ``min(token remainder, cost
   remainder, contract cap)``; project analysis preflights that cap instead
   of a fixed completion reserve (re-audit P1-06 @ 645d655)

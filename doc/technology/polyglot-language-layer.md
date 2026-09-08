@@ -27,7 +27,7 @@ clone the Python CFG pipeline per language; treat languages as VCS/Wizard plugin
 | UI controller | `ui/language_controller.py` (R204 + **R229** + **R242**: capability checks; buffer open/change/close → workspace `DocumentStore`; editor goto-def / occurrences via controller with Python jedi fallback) |
 | Python headless semantic | `infrastructure/python_semantic.py` (**R242**: brief/`SymbolIndex` `SemanticProvider` so advertised OUTLINE/DEFINITION/REFERENCES match `supports()`) |
 | Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **not** compiler CFG) |
-| FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206 + **R217** + **R226** + **R240**: PyO3 / pybind11 / CPython / `.pyi`; `EXACT` only with edge-specific Tree-sitter registration identity; else `BRIDGE`/`INLINE`) |
+| FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206 + **R217** + **R226** + **R240** + **R250**: PyO3 / pybind11 / CPython / `.pyi`; `EXACT` only with edge-specific Tree-sitter registration identity; pybind11 requires a real `.def` `call_expression`; else `BRIDGE`/`INLINE`) |
 | Typed deps + cross-nav | `core/dependency_edges.py` + `core/cross_language_nav.py` (R207: `DependencyEdgeKind`, FFI hops; utils graph keeps `PYTHON_IMPORT`) |
 | Build tasks | `core/tasks.py` + `infrastructure/build_tasks.py` (R208: Cargo / CMake / Ninja / CTest; explicit discovery; `BUILD_TASK_EXEC`) |
 

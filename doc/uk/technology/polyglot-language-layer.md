@@ -27,7 +27,7 @@ Codimension розширюється за межі Python через **унів�
 | UI controller | `ui/language_controller.py` (R204 + **R229** + **R242**: capability checks; open/change/close буферів → workspace `DocumentStore`; editor goto-def / occurrences через controller з jedi fallback для Python) |
 | Python headless semantic | `infrastructure/python_semantic.py` (**R242**: brief/`SymbolIndex` `SemanticProvider`, щоб OUTLINE/DEFINITION/REFERENCES збігалися з `supports()`) |
 | Structural graph | `core/structural.py` + `infrastructure/tree_sitter_structural.py` (R205: Tree-sitter Rust/C++; `semantic_role`; **не** compiler CFG) |
-| FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206 + **R217** + **R226** + **R240**: PyO3 / pybind11 / CPython / `.pyi`; `EXACT` лише з edge-specific Tree-sitter registration identity; інакше `BRIDGE`/`INLINE`) |
+| FFI Binding Index | `core/bindings.py` + `infrastructure/ffi_bindings.py` (R206 + **R217** + **R226** + **R240** + **R250**: PyO3 / pybind11 / CPython / `.pyi`; `EXACT` лише з edge-specific Tree-sitter registration identity; pybind11 — реальний `.def` `call_expression`; інакше `BRIDGE`/`INLINE`) |
 | Typed deps + cross-nav | `core/dependency_edges.py` + `core/cross_language_nav.py` (R207: `DependencyEdgeKind`, FFI hops; utils graph лишає `PYTHON_IMPORT`) |
 | Build tasks | `core/tasks.py` + `infrastructure/build_tasks.py` (R208: Cargo / CMake / Ninja / CTest; лише explicit discovery; `BUILD_TASK_EXEC`) |
 
