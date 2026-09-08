@@ -1,5 +1,8 @@
 2026 Sep 08
 
+* R249: AI provider ``max_output_tokens`` is ``min(token remainder, cost
+  remainder, contract cap)``; project analysis preflights that cap instead
+  of a fixed completion reserve (re-audit P1-06 @ 645d655)
 * R248: SSH Save atomic replace — prefer ``posix_rename``; fallback
   backup/swap/rollback; ``FakeSftpSession.rename`` matches standard SFTP
   (dest must not exist) (re-audit P1-05 @ 645d655)

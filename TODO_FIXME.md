@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-08)
 
-Підтверджених **P0** немає. **P1: 2** відкритих груп → **R249–R250**. **P2: 6** груп → **R251**. Хвиля R232–R248 ✅; зріз `codi-last.md` @ 645d655.
+Підтверджених **P0** немає. **P1: 1** відкрита група → **R250**. **P2: 6** груп → **R251**. Хвиля R232–R249 ✅; зріз `codi-last.md` @ 645d655.
 
 ### Повторний аудит 2026-09-08 (`codi-last.md` @ 645d655) — P1 черга
 
@@ -18,7 +18,7 @@
 | P1-03 | UI ігнорує UNRESOLVED; percent-encoded URI stale disk; loader FIFO/TOCTOU | P1 | ✅ R246 |
 | P1-04 | MCP: `sorted(scandir)` матеріалізує весь каталог до `max_entries` | P1 | ✅ R247 |
 | P1-05 | SSH Save: Paramiko `rename` не замінює існуючий dest (потрібен posix_rename/swap) | P1 | ✅ R248 |
-| P1-06 | AI cost budget: provider `max_tokens` може перевищити cost remainder | P1 | 🔓 OPEN → **R249** |
+| P1-06 | AI cost budget: provider `max_tokens` може перевищити cost remainder | P1 | ✅ R249 |
 | P1-07 | pybind11 EXACT без CST `.def()` call_expression (regex у module body) | P1 | 🔓 OPEN → **R250** |
 
 ### P2 / технічний борг (аудит 2026-09-08)

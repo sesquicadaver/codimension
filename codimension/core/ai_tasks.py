@@ -17,6 +17,9 @@ records and enforces a global token/cost budget beyond per-file truncation.
 R241: immutable :class:`~core.ai_budget.AiJobContract` (files/requests/source
 bytes/output tokens/deadline), cancellation token, provider output caps,
 post-response hard budget checks, and audit-level finding validation.
+
+R249: provider ``max_output_tokens`` is the cost- and token-aware remainder
+(not a fixed completion reserve that under-reserves relative to the actual cap).
 """
 
 from __future__ import annotations
@@ -28,7 +31,6 @@ from enum import Enum
 from typing import Callable, Iterable, Mapping, Optional, Sequence
 
 from core.ai_budget import (
-    DEFAULT_COMPLETION_RESERVE,
     AiBudgetExceeded,
     AiBudgetLimits,
     AiBudgetTracker,
@@ -556,21 +558,15 @@ def _execute_analyze_project(
             continue
         system, user = build_project_chunk_prompt(path, source, index, total)
         prompt_tokens = estimate_tokens(system) + estimate_tokens(user)
-        # Preflight uses a conservative completion reserve; the provider still
-        # receives the tighter remaining/output cap (R231 + R241).
-        if not tracker.can_afford(prompt_tokens, DEFAULT_COMPLETION_RESERVE):
+        # R249: provider cap = min(token remainder, cost remainder, contract max).
+        out_cap = tracker.remaining_output_tokens(prompt_tokens, cap=contract.max_output_tokens)
+        if out_cap <= 0 or not tracker.can_afford(prompt_tokens, out_cap):
             stopped = True
             skipped = total - index + 1
             progress(
                 f"AI budget exhausted after {analyzed}/{total} files "
                 f"(tokens≈{tracker.tokens_used}, cost≈${tracker.cost_usd:.4f})"
             )
-            break
-        out_cap = tracker.remaining_output_tokens(prompt_tokens, cap=contract.max_output_tokens)
-        if out_cap <= 0:
-            stopped = True
-            skipped = total - index + 1
-            progress("AI output budget exhausted before next request")
             break
         report = _invoke_complete(complete_fn, system, user, max_output_tokens=out_cap)
         requests_used += 1
@@ -604,23 +600,19 @@ def _execute_analyze_project(
             progress("Synthesizing project-wide report…")
             system, user = build_project_synthesis_prompt(chunk_reports)
             prompt_tokens = estimate_tokens(system) + estimate_tokens(user)
-            if not tracker.can_afford(prompt_tokens, DEFAULT_COMPLETION_RESERVE):
+            out_cap = tracker.remaining_output_tokens(prompt_tokens, cap=contract.max_output_tokens)
+            if out_cap <= 0 or not tracker.can_afford(prompt_tokens, out_cap):
                 stopped = True
                 progress("Skipping synthesis: remaining AI budget insufficient")
             else:
-                out_cap = tracker.remaining_output_tokens(prompt_tokens, cap=contract.max_output_tokens)
-                if out_cap <= 0:
+                synthesis = _invoke_complete(complete_fn, system, user, max_output_tokens=out_cap)
+                requests_used += 1
+                try:
+                    tracker.record_texts(system + "\n" + user, synthesis, hard=True)
+                except AiBudgetExceeded:
+                    synthesis = ""
                     stopped = True
-                    progress("Skipping synthesis: remaining AI output budget insufficient")
-                else:
-                    synthesis = _invoke_complete(complete_fn, system, user, max_output_tokens=out_cap)
-                    requests_used += 1
-                    try:
-                        tracker.record_texts(system + "\n" + user, synthesis, hard=True)
-                    except AiBudgetExceeded:
-                        synthesis = ""
-                        stopped = True
-                        progress("AI budget exceeded by synthesis response; discarding")
+                    progress("AI budget exceeded by synthesis response; discarding")
 
     findings = dedupe_findings(collected)
     findings_report = AiFindingsReport(
