@@ -201,7 +201,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | DONE ([#211](https://github.com/sesquicadaver/codimension/pull/211)) |
 | 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | DONE ([#213](https://github.com/sesquicadaver/codimension/pull/213)) |
 | 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | DONE ([#215](https://github.com/sesquicadaver/codimension/pull/215)) |
-| 56 | R244 | LSP transport lease + generation isolation | Pending registration + write atomic; stale requests/notifications never hit new process | L | OPEN |
+| 56 | R244 | LSP transport lease + generation isolation | Pending registration + write atomic; stale requests/notifications never hit new process | L | DONE ([#217](https://github.com/sesquicadaver/codimension/pull/217)) |
 | 57 | R245 | Editor-owned document versioning | No version regression; Save As close(old)→open(new) | M | OPEN |
 | 58 | R246 | Foreign URI boundary | Reject UNRESOLVED opens; canonical URI; fd-rooted loader | L | OPEN |
 | 59 | R247 | MCP pre-materialization budgets | max_entries before full collection/sort | M | OPEN |
@@ -214,7 +214,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R244** — LSP transport lease + generation isolation.
+**Next OPEN:** **R245** — Editor-owned document versioning / Save As URI migrate.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
