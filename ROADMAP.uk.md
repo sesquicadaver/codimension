@@ -203,7 +203,7 @@
 | 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | DONE ([#215](https://github.com/sesquicadaver/codimension/pull/215)) |
 | 56 | R244 | LSP transport lease + generation isolation | Pending registration + write atomic; stale requests/notifications never hit new process | L | DONE ([#217](https://github.com/sesquicadaver/codimension/pull/217)) |
 | 57 | R245 | Editor-owned document versioning | No version regression; Save As close(old)→open(new) | M | DONE ([#219](https://github.com/sesquicadaver/codimension/pull/219)) |
-| 58 | R246 | Foreign URI boundary | Reject UNRESOLVED opens; canonical URI; fd-rooted loader | L | OPEN |
+| 58 | R246 | Foreign URI boundary | Reject UNRESOLVED opens; canonical URI; fd-rooted loader | L | DONE ([#220](https://github.com/sesquicadaver/codimension/pull/220)) |
 | 59 | R247 | MCP pre-materialization budgets | max_entries before full collection/sort | M | OPEN |
 | 60 | R248 | SSH atomic replace | posix_rename or backup/swap/rollback; Fake matches SFTP | M | OPEN |
 | 61 | R249 | AI cost-aware provider cap | Provider max_tokens ≤ token/cost remainder | M | OPEN |
@@ -214,7 +214,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R246** — Foreign URI boundary + canonical URI + fd-rooted loader.
+**Наступний OPEN:** **R247** — MCP pre-materialization budgets (`max_entries` before full sort).
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

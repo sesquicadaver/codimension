@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""DocumentStore: resolve URI → :class:`DocumentSnapshot` (R224 / R235).
+"""DocumentStore: resolve URI → :class:`DocumentSnapshot` (R224 / R235 / R246).
 
 LSP definition / references / rename often target a URI other than the
 request document. Spans must be decoded against that target's text — not
@@ -20,6 +20,10 @@ identity (mtime/size/inode) so stale disk snapshots are reloaded; empty
 stores stay truthy so ``document_store or DocumentStore(...)`` cannot
 replace a shared workspace store; loaders are expected to be
 workspace-bounded.
+
+R246: ``file://`` path parsing percent-decodes so disk identity works for
+canonical ``Path.as_uri()`` keys; disk entries without identity are not
+treated as permanently fresh.
 """
 
 from __future__ import annotations
@@ -28,6 +32,7 @@ import os
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Optional
+from urllib.parse import unquote, urlparse
 
 from .document_snapshot import DocumentSnapshot
 
@@ -186,7 +191,12 @@ class DocumentStore:
     @staticmethod
     def _disk_entry_is_current(entry: StoredDocument) -> bool:
         if entry.disk_identity is None:
-            return True
+            # R246: file:// without identity must not freeze as forever-fresh
+            # (e.g. failed capture after percent-encoded path). Synthetic /
+            # non-file URIs have no disk identity to refresh.
+            if _path_from_uri(entry.snapshot.uri) is None:
+                return True
+            return False
         current = capture_disk_identity(entry.disk_identity.path)
         if current is None:
             return False
@@ -202,22 +212,23 @@ class DocumentStore:
 
 
 def _path_from_uri(uri: str) -> str | None:
-    """Minimal ``file://`` / absolute path parse (kept in-core to avoid import cycles)."""
+    """Parse ``file://`` / absolute path with percent-decoding (R246).
+
+    Kept in-core (no infrastructure import) to avoid cycles; semantics match
+    :func:`infrastructure.file_uri.file_uri_to_path`.
+    """
     text = (uri or "").strip()
     if not text:
         return None
     if text.startswith("file:"):
-        # file:///abs/path → /abs/path
-        if text.startswith("file://"):
-            rest = text[7:]
-            # Drop authority (host); require empty / localhost only at loader layer.
-            if rest.startswith("/"):
-                return rest
-            slash = rest.find("/")
-            if slash < 0:
-                return None
-            return rest[slash:]
-        return None
+        parsed = urlparse(text)
+        if parsed.scheme != "file":
+            return None
+        authority = (parsed.netloc or "").strip().lower()
+        if authority not in ("", "localhost"):
+            return None
+        path = unquote(parsed.path or "")
+        return path or None
     if os.path.isabs(text):
         return text
     return None

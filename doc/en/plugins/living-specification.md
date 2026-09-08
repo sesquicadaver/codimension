@@ -161,7 +161,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Further queue: [ROADMAP.md](../../../ROADMAP.md) — wave R221–R231 ✅; **R232–R245** ✅; wave **R246–R251** (`codi-last.md` @ 645d655); Next = **R246** foreign URI boundary.
+Further queue: [ROADMAP.md](../../../ROADMAP.md) — wave R221–R231 ✅; **R232–R246** ✅; wave **R247–R251** (`codi-last.md` @ 645d655); Next = **R247** MCP entry budgets.
 
 ### Module boundary matrix (R103 / R195)
 

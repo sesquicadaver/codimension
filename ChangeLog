@@ -1,5 +1,9 @@
 2026 Sep 08
 
+* R246: foreign URI boundary — UI rejects ``UNRESOLVED`` locations; core
+  ``file://`` parse percent-decodes for disk identity; workspace loader uses
+  preopened-root ``openat`` + ``O_NOFOLLOW|O_NONBLOCK`` and rejects FIFO/
+  symlink-escape (re-audit P1-03 @ 645d655)
 * R245: editor-owned monotonic document versions; semantic queries no longer
   force ``version=0``; Save As migrates ``close(old_uri)→open(new_uri)``;
   LSP remigrates on regressive versions (re-audit P1-02 @ 645d655)
