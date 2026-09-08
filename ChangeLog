@@ -1,5 +1,8 @@
 2026 Sep 08
 
+* R247: MCP walker applies ``max_entries`` while consuming ``scandir`` —
+  at most ``remaining + 1`` DirEntry objects before sort, so huge directories
+  are not fully materialized first (re-audit P1-04 @ 645d655)
 * R246: foreign URI boundary — UI rejects ``UNRESOLVED`` locations; core
   ``file://`` parse percent-decodes for disk identity; workspace loader uses
   preopened-root ``openat`` + ``O_NOFOLLOW|O_NONBLOCK`` and rejects FIFO/

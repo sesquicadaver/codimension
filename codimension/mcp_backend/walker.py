@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Budget-aware directory walk for MCP ``open_workspace`` (R223 / R238).
+"""Budget-aware directory walk for MCP ``open_workspace`` (R223 / R238 / R247).
 
 Unlike :func:`utils.project_scan.scan_project_files`, this walker applies
 depth / file-count / byte budgets *during* traversal: it does not materialize
@@ -19,6 +19,10 @@ single oversized file cannot be fully loaded before the byte limit fires.
 R238: ``os.scandir`` with deterministic name order, entry/directory budgets,
 fd-relative ``openat`` + ``O_NOFOLLOW``, and ``fstat`` inode/device checks so
 symlink TOCTOU cannot escape the workspace after the path was validated.
+
+R247: entry budget is applied *while* consuming ``scandir`` — at most
+``remaining_budget + 1`` DirEntry objects are kept before sorting, so a
+million-entry directory cannot be fully materialized into RAM first.
 """
 
 from __future__ import annotations
@@ -78,6 +82,32 @@ def _open_nofollow(dir_fd: int, name: str, flags: int) -> int:
     return os.open(name, flags | _O_NOFOLLOW, dir_fd=dir_fd)
 
 
+def bounded_sorted_scandir_entries(
+    scanner,
+    *,
+    remaining_budget: Optional[int],
+) -> list:
+    """Materialize at most ``remaining_budget + 1`` scandir entries, then sort (R247).
+
+    When ``remaining_budget`` is ``None`` (unlimited), the full directory is
+    collected and name-sorted. When budgeted, collecting one past the remainder
+    lets the caller raise ``ResourceBudgetError`` without holding every entry.
+    """
+    limit: Optional[int]
+    if remaining_budget is None:
+        limit = None
+    else:
+        limit = max(0, int(remaining_budget)) + 1
+
+    collected: list = []
+    for entry in scanner:
+        collected.append(entry)
+        if limit is not None and len(collected) >= limit:
+            break
+    collected.sort(key=lambda item: item.name)
+    return collected
+
+
 def walk_workspace_sources(
     root: str,
     policy: WorkspacePolicy,
@@ -120,11 +150,19 @@ def walk_workspace_sources(
         if max_entries > 0 and entries_seen > max_entries:
             raise ResourceBudgetError(f"workspace exceeds max_entries={max_entries} (CDM_MCP_MAX_ENTRIES)")
 
+    def _entry_remaining() -> Optional[int]:
+        if max_entries <= 0:
+            return None
+        return max(0, int(max_entries) - int(entries_seen))
+
     def _walk(dir_fd: int, dir_path: str) -> None:
         nonlocal total_bytes, directories_opened
         try:
             with os.scandir(dir_fd) as scanner:
-                entries = sorted(scanner, key=lambda item: item.name)
+                entries = bounded_sorted_scandir_entries(
+                    scanner,
+                    remaining_budget=_entry_remaining(),
+                )
         except OSError:
             return
 
@@ -284,5 +322,6 @@ def walk_workspace_sources(
 
 __all__ = [
     "WorkspaceWalkResult",
+    "bounded_sorted_scandir_entries",
     "walk_workspace_sources",
 ]
