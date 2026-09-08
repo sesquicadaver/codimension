@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-08 audit)
 
-No confirmed **P0**. **P1: 0** open. **P2: 6** groups → **R251**. Wave R232–R250 ✅; slice `codi-last.md` @ 645d655.
+No confirmed **P0**. **P1: 0** open. **P2: 0** open in slice `codi-last.md` @ 645d655. Wave R232–R251 ✅.
 
 ### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue
 
@@ -25,7 +25,7 @@ No confirmed **P0**. **P1: 0** open. **P2: 6** groups → **R251**. Wave R232–
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
-| P2-01…06 | AI finding wrong file; plugin package identity; non-transactional switch; terminal taint; R242 editor gaps; CI floor | P2 | 🔓 OPEN → **R251** |
+| P2-01…06 | AI finding wrong file; plugin package identity; non-transactional switch; terminal taint; R242 editor gaps; CI floor | P2 | ✅ R251 |
 
 ### Re-audit 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 queue (closed)
 

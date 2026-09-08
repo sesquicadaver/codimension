@@ -1750,25 +1750,43 @@ class EditorsManager(QTabWidget):
     # Arguments: modified
     def __modificationChanged(self, _=None):
         """Triggered when the file is changed"""
-        index = self.currentIndex()
-        currentWidget = self.currentWidget()
+        editorWidget, index = self.__widget_for_editor_signal()
+        if editorWidget is None:
+            return
         # Sometimes a signal comes from a tab which has already been closed
-        # so the check is done for the current widget
-        if currentWidget.isModified():
-            title = Settings()["modifiedFormat"] % currentWidget.getShortName()
+        if editorWidget.isModified():
+            title = Settings()["modifiedFormat"] % editorWidget.getShortName()
             self.setTabText(index, title)
         else:
-            self.setTabText(index, currentWidget.getShortName())
+            self.setTabText(index, editorWidget.getShortName())
 
     def __contentChanged(self):
-        """Triggered when a buffer content is changed"""
-        currentWidget = self.currentWidget()
-        self.sigBufferModified.emit(currentWidget.getFileName(), currentWidget.getUUID())
-        if currentWidget.getType() in [
+        """Triggered when a buffer content is changed (R251: use signal sender)."""
+        editorWidget, _index = self.__widget_for_editor_signal()
+        if editorWidget is None:
+            return
+        self.sigBufferModified.emit(editorWidget.getFileName(), editorWidget.getUUID())
+        if editorWidget.getType() in [
             MainWindowTabWidgetBase.PlainTextEditor,
             MainWindowTabWidgetBase.VCSAnnotateViewer,
         ]:
-            self.__publishLanguageBuffer(currentWidget, bump=True)
+            self.__publishLanguageBuffer(editorWidget, bump=True)
+
+    def __widget_for_editor_signal(self):
+        """Resolve the tab widget that owns ``sender()`` (R251 / P2-05).
+
+        Falls back to the current tab when the sender is unknown.
+        """
+        editor = self.sender()
+        if editor is not None:
+            for index in range(self.count()):
+                widget = self.widget(index)
+                try:
+                    if widget is not None and widget.getEditor() is editor:
+                        return widget, index
+                except Exception:
+                    continue
+        return self.currentWidget(), self.currentIndex()
 
     def __publishLanguageBuffer(self, editorWidget, *, bump: bool) -> None:
         """Sync open editor text into the workspace DocumentStore (R242 / R245)."""

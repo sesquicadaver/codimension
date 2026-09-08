@@ -145,8 +145,8 @@ jobs:
           . .venv/bin/activate
           pip install --upgrade pip
           pip install -c constraints.txt -e ".[security]"
-          # High severity only — medium/low tracked in plugin UI / backlog.
-          bandit -r codimension -lll -ii -q
+          # High severity only — include shipped plugins (R251).
+          bandit -r codimension cdmplugins -lll -ii -q
 
   # R243: coverage floor for the installable package (one Python version).
   coverage:
@@ -172,7 +172,7 @@ jobs:
           QT_QPA_PLATFORM=offscreen pytest tests/ -q --tb=line \
             --cov=codimension \
             --cov-report=term \
-            --cov-fail-under=28
+            --cov-fail-under=30
 
   test:
     runs-on: ubuntu-latest

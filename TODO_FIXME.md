@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-08)
 
-Підтверджених **P0** немає. **P1: 0** відкритих. **P2: 6** груп → **R251**. Хвиля R232–R250 ✅; зріз `codi-last.md` @ 645d655.
+Підтверджених **P0** немає. **P1: 0** відкритих. **P2: 0** відкритих у зрізі `codi-last.md` @ 645d655. Хвиля R232–R251 ✅.
 
 ### Повторний аудит 2026-09-08 (`codi-last.md` @ 645d655) — P1 черга
 
@@ -25,7 +25,7 @@
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
-| P2-01…06 | AI finding wrong file; plugin package identity; non-transactional switch; terminal taint; R242 editor gaps; CI floor | P2 | 🔓 OPEN → **R251** |
+| P2-01…06 | AI finding wrong file; plugin package identity; non-transactional switch; terminal taint; R242 editor gaps; CI floor | P2 | ✅ R251 |
 
 ### Повторний аудит 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 черга (закрита)
 

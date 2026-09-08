@@ -379,19 +379,27 @@ class _FunctionTaint:
         for name in names:
             self.mark(name, source, source_line)
 
-    def analyze_stmts(self, stmts: Iterable[ast.stmt]) -> None:
-        """Forward-analyze a statement list once (R239: no whole-list re-exec)."""
-        for stmt in stmts:
-            self.analyze_stmt(stmt)
+    def analyze_stmts(self, stmts: Iterable[ast.stmt]) -> bool:
+        """Forward-analyze a statement list; stop after terminal flow (R239 / R251).
 
-    def analyze_stmt(self, stmt: ast.stmt) -> None:
-        """Dispatch one statement (transfer function)."""
+        Returns True when the list ended via ``return`` / ``break`` / ``continue``.
+        """
+        for stmt in stmts:
+            if self.analyze_stmt(stmt):
+                return True
+        return False
+
+    def analyze_stmt(self, stmt: ast.stmt) -> bool:
+        """Dispatch one statement (transfer function).
+
+        Returns True when control does not fall through (terminal statement).
+        """
         if isinstance(stmt, ast.Assign):
             self.apply_assign(stmt.targets, stmt.value)
-            return
+            return False
         if isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
             self.apply_assign([stmt.target], stmt.value)
-            return
+            return False
         if isinstance(stmt, ast.AugAssign):
             # x += y : tainted if x or y tainted
             self.visit_expr_calls(stmt.value)
@@ -402,14 +410,16 @@ class _FunctionTaint:
             if hit:
                 for name in names:
                     self.mark(name, hit[0], hit[1])
-            return
+            return False
         if isinstance(stmt, ast.Expr):
             self.visit_expr_calls(stmt.value)
-            return
+            return False
         if isinstance(stmt, ast.Return):
             if stmt.value is not None:
                 self.visit_expr_calls(stmt.value)
-            return
+            return True
+        if isinstance(stmt, (ast.Break, ast.Continue)):
+            return True
         if isinstance(stmt, ast.If):
             self.visit_expr_calls(stmt.test)
             base = dict(self.origin)
@@ -417,13 +427,13 @@ class _FunctionTaint:
             # Empty orelse still joins with the fall-through (skip) path.
             else_env = self._analyze_branch(stmt.orelse, base) if stmt.orelse else dict(base)
             self.origin = _join_may_taint(body_env, else_env)
-            return
+            return False
         if isinstance(stmt, (ast.For, ast.AsyncFor)):
             self._analyze_for_loop(stmt)
-            return
+            return False
         if isinstance(stmt, ast.While):
             self._analyze_while_loop(stmt)
-            return
+            return False
         if isinstance(stmt, (ast.With, ast.AsyncWith)):
             for item in stmt.items:
                 self.visit_expr_calls(item.context_expr)
@@ -433,20 +443,21 @@ class _FunctionTaint:
                         for name in _assign_targets(item.optional_vars):
                             self.mark(name, hit[0], hit[1])
             self.analyze_stmts(stmt.body)
-            return
+            return False
         if isinstance(stmt, ast.Try):
             self._analyze_try(stmt)
-            return
+            return False
         if isinstance(stmt, ast.Match):  # py3.10+
             self._analyze_match(stmt)
-            return
+            return False
         # Nested def/class: ignore body (separate analysis unit).
         if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            return
+            return False
         # Fallback: still scan for sink calls inside the statement.
         for child in ast.walk(stmt):
             if isinstance(child, ast.Call):
                 self.check_sink(child)
+        return False
 
     def _analyze_for_loop(self, stmt: ast.For | ast.AsyncFor) -> None:
         """For/AsyncFor: bind targets, fixpoint body, else from normal exit."""
@@ -479,7 +490,9 @@ class _FunctionTaint:
         self.origin = dict(base)
         try:
             for body_stmt in stmt.body:
-                self.analyze_stmt(body_stmt)
+                if self.analyze_stmt(body_stmt):
+                    throw_envs.append(dict(self.origin))
+                    break
                 throw_envs.append(dict(self.origin))
             body_env = dict(self.origin)
         finally:
