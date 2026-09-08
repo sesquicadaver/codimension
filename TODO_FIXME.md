@@ -25,7 +25,7 @@
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
-| P2-01…06 | AI finding wrong file; plugin package identity; non-transactional switch; terminal taint; R242 editor gaps; CI floor | P2 | 🔓 OPEN → **R251** |
+| P2-01…06 | AI finding wrong file; plugin package identity; non-transactional switch; terminal taint; R242 editor gaps; CI floor | P2 | ✅ R251 |
 
 ### Повторний аудит 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 черга (закрита)
 
