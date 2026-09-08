@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LspProcess: one language-server subprocess per process key (R202 / R210 / R233 / R234).
+"""LspProcess: one language-server subprocess per process key (R202–R234 / R244).
 
 Key: ``(language_id, workspace_root, toolchain)``. Spawn is gated by
 :func:`core.language_policy.require_language_server_spawn` (absolute binary on
@@ -30,6 +30,12 @@ R234: pending Futures are keyed by ``(transport_generation, request_id)`` under
 ``_pending_lock``; ownership is transferred via atomic ``pop`` so timeout /
 shutdown / reader races cannot raise ``InvalidStateError`` or let an old
 reader fail requests belonging to a newer subprocess.
+
+R244: outbound requests bind pending registration + stdin write under one
+transport lease ``(proc, transport_generation)`` so a restart cannot register
+against gen N and write to gen N+1. Server→client replies write to the
+*reader's* ``proc``; stale-generation notifications and capability side
+effects never mutate the live process state.
 """
 
 from __future__ import annotations
@@ -100,6 +106,14 @@ class LspProcessKey:
             raise ValueError("language_id must be non-empty")
         root = os.path.abspath(os.path.expanduser(self.workspace_root))
         object.__setattr__(self, "workspace_root", root)
+
+
+@dataclass(frozen=True, slots=True)
+class _TransportLease:
+    """Snapshot of the live subprocess + its transport generation (R244)."""
+
+    proc: subprocess.Popen
+    generation: int
 
 
 class LspProcess:
@@ -227,6 +241,7 @@ class LspProcess:
 
         Handshake I/O uses :meth:`_request_while_running` / :meth:`_write` so it
         does not re-enter :meth:`ensure_started` while the lock is held.
+        Outbound RPC binds pending + write on one transport lease (R244).
         """
         with self._lifecycle_lock:
             self._ensure_alive_unlocked()
@@ -286,7 +301,6 @@ class LspProcess:
             self.ensure_started()
         request_id = self._allocate_id()
         future: Future = Future()
-        pending_key = self._put_pending(request_id, future)
         message: dict[str, Any] = {
             "jsonrpc": "2.0",
             "id": request_id,
@@ -294,8 +308,9 @@ class LspProcess:
         }
         if params is not None:
             message["params"] = params
+        # R244: register pending under the same generation that receives the write.
+        pending_key = self._bind_pending_and_write(request_id, future, message)
         try:
-            self._write(message)
             return future.result(timeout=self._request_timeout if timeout is None else timeout)
         except Exception as exc:
             if not (isinstance(exc, TimeoutError) or type(exc).__name__ == "TimeoutError"):
@@ -319,6 +334,7 @@ class LspProcess:
         message: dict[str, Any] = {"jsonrpc": "2.0", "method": method}
         if params is not None:
             message["params"] = params
+        # R244: write under a transport lease so restart cannot retarget stdin.
         self._write(message)
 
     def cancel(self, request_id: int | str) -> None:
@@ -413,7 +429,11 @@ class LspProcess:
             return rid
 
     def _put_pending(self, request_id: int | str, future: Future) -> tuple[int, int | str]:
-        """Register ``future`` under the current transport generation (R234)."""
+        """Register ``future`` under the current transport generation (R234).
+
+        Prefer :meth:`_bind_pending_and_write` for live RPC so generation and
+        stdin target cannot diverge (R244).
+        """
         with self._pending_lock:
             key = (self._transport_generation, request_id)
             self._pending[key] = future
@@ -442,6 +462,54 @@ class LspProcess:
         except InvalidStateError:
             return
 
+    def _require_running_proc_unlocked(self) -> subprocess.Popen:
+        """Return the live subprocess; caller must hold :attr:`_write_lock`."""
+        proc = self._proc
+        if proc is None or proc.stdin is None or proc.poll() is not None:
+            raise LspProtocolError("language server is not running")
+        return proc
+
+    def _lease_unlocked(self) -> _TransportLease:
+        """Capture ``(proc, generation)`` under :attr:`_write_lock` (R244)."""
+        proc = self._require_running_proc_unlocked()
+        return _TransportLease(proc=proc, generation=self._transport_generation)
+
+    def _encode_and_write_unlocked(self, proc: subprocess.Popen, message: Mapping[str, Any]) -> None:
+        """Write a framed message to ``proc.stdin``; caller holds :attr:`_write_lock`."""
+        frame = encode_message(message)
+        body = frame.split(b"\r\n\r\n", 1)[1]
+        if len(body) > self._max_message_bytes:
+            raise LspFramingError(
+                f"outbound LSP message {len(body)} exceeds max_message_bytes={self._max_message_bytes}"
+            )
+        if proc.stdin is None or proc.poll() is not None:
+            raise LspProtocolError("language server is not running")
+        try:
+            proc.stdin.write(frame)
+            proc.stdin.flush()
+        except BrokenPipeError as exc:
+            raise LspProtocolError("language server stdin closed") from exc
+
+    def _bind_pending_and_write(
+        self,
+        request_id: int | str,
+        future: Future,
+        message: Mapping[str, Any],
+    ) -> tuple[int, int | str]:
+        """Register pending under the lease generation and write to that proc (R244)."""
+        with self._write_lock:
+            lease = self._lease_unlocked()
+            with self._pending_lock:
+                key = (lease.generation, request_id)
+                self._pending[key] = future
+            self._encode_and_write_unlocked(lease.proc, message)
+            return key
+
+    def _write_to_proc(self, proc: subprocess.Popen, message: Mapping[str, Any]) -> None:
+        """Serialize a write to a specific subprocess (reader replies / lease)."""
+        with self._write_lock:
+            self._encode_and_write_unlocked(proc, message)
+
     def _request_while_running(
         self,
         method: str,
@@ -452,12 +520,11 @@ class LspProcess:
         """Send a request without lazy-start / restart (used during shutdown)."""
         request_id = self._allocate_id()
         future: Future = Future()
-        pending_key = self._put_pending(request_id, future)
         message: dict[str, Any] = {"jsonrpc": "2.0", "id": request_id, "method": method}
         if params is not None:
             message["params"] = params
+        pending_key = self._bind_pending_and_write(request_id, future, message)
         try:
-            self._write(message)
             return future.result(timeout=timeout)
         except Exception as exc:
             # Py3.10+ usually aliases futures TimeoutError to builtins; still
@@ -497,6 +564,9 @@ class LspProcess:
         self._proc = proc
         self._transport_generation += 1
         reader_generation = self._transport_generation
+        # Stale capability tables belong to the previous subprocess (R244).
+        with self._registrations_lock:
+            self._dynamic_registrations.clear()
         self._reader = threading.Thread(
             target=self._reader_loop,
             args=(proc, reader_generation),
@@ -556,24 +626,13 @@ class LspProcess:
             self._cleanup_proc_unlocked()
 
     def _write(self, message: Mapping[str, Any]) -> None:
-        frame = encode_message(message)
-        body = frame.split(b"\r\n\r\n", 1)[1]
-        if len(body) > self._max_message_bytes:
-            raise LspFramingError(
-                f"outbound LSP message {len(body)} exceeds max_message_bytes={self._max_message_bytes}"
-            )
+        """Write ``message`` to the *current* subprocess under a transport lease (R244)."""
         with self._write_lock:
-            proc = self._proc
-            if proc is None or proc.stdin is None or proc.poll() is not None:
-                raise LspProtocolError("language server is not running")
-            try:
-                proc.stdin.write(frame)
-                proc.stdin.flush()
-            except BrokenPipeError as exc:
-                raise LspProtocolError("language server stdin closed") from exc
+            lease = self._lease_unlocked()
+            self._encode_and_write_unlocked(lease.proc, message)
 
     def _reader_loop(self, proc: subprocess.Popen, generation: int) -> None:
-        """Read stdout for one subprocess generation (R234)."""
+        """Read stdout for one subprocess generation (R234 / R244)."""
         if proc.stdout is None:
             return
         try:
@@ -586,7 +645,7 @@ class LspProcess:
                     self._fail_pending(str(exc), generation=generation)
                     break
                 try:
-                    self._dispatch(message, generation)
+                    self._dispatch(message, generation, proc)
                 except Exception:  # noqa: BLE001 — keep reader alive across settle races
                     continue
         finally:
@@ -611,7 +670,13 @@ class LspProcess:
         except OSError:
             return
 
-    def _dispatch(self, message: Mapping[str, Any], generation: int) -> None:
+    def _dispatch(
+        self,
+        message: Mapping[str, Any],
+        generation: int,
+        proc: subprocess.Popen,
+    ) -> None:
+        """Handle one inbound frame scoped to the reader's transport lease (R244)."""
         if "id" in message and ("result" in message or "error" in message):
             request_id = message["id"]
             # Atomic pop transfers ownership — timeout/shutdown cannot double-settle.
@@ -632,24 +697,40 @@ class LspProcess:
                 self._settle_future(future, result=message.get("result"))
             return
         if "method" in message and "id" in message:
-            # Server → client request: must answer or the server may stall.
-            self._handle_server_request(message)
+            # Server → client request: reply on *this* reader's pipe (R244).
+            self._handle_server_request(message, generation=generation, reply_proc=proc)
             return
         if "method" in message:
+            # Drop notifications from a superseded transport generation (R244).
+            if generation != self._transport_generation:
+                return
             self._notifications.append(dict(message))
 
-    def _handle_server_request(self, message: Mapping[str, Any]) -> None:
+    def _handle_server_request(
+        self,
+        message: Mapping[str, Any],
+        *,
+        generation: int,
+        reply_proc: subprocess.Popen,
+    ) -> None:
         """Answer a JSON-RPC request originating from the language server."""
         request_id = message["id"]
         method = str(message.get("method") or "")
         params = message.get("params")
+        # Side effects only when this reader still owns the live transport (R244).
+        apply_side_effects = generation == self._transport_generation
         try:
-            result = self._server_request_result(method, params)
+            result = self._server_request_result(
+                method,
+                params,
+                apply_side_effects=apply_side_effects,
+            )
         except Exception as exc:  # noqa: BLE001 — map to JSON-RPC error response
             self._reply_error(
                 request_id,
                 code=-32603,
                 message=f"internal error handling {method}: {exc}",
+                reply_proc=reply_proc,
             )
             return
         if result is _METHOD_NOT_FOUND:
@@ -657,11 +738,18 @@ class LspProcess:
                 request_id,
                 code=_JSONRPC_METHOD_NOT_FOUND,
                 message=f"Method not found: {method}",
+                reply_proc=reply_proc,
             )
             return
-        self._reply_result(request_id, result)
+        self._reply_result(request_id, result, reply_proc=reply_proc)
 
-    def _server_request_result(self, method: str, params: Any) -> Any:
+    def _server_request_result(
+        self,
+        method: str,
+        params: Any,
+        *,
+        apply_side_effects: bool = True,
+    ) -> Any:
         """Compute the JSON-RPC ``result`` for a known server→client method."""
         if method == "workspace/configuration":
             items = ()
@@ -681,11 +769,12 @@ class LspProcess:
                 raw = params.get("registrations")
                 if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
                     registrations = [r for r in raw if isinstance(r, Mapping)]
-            with self._registrations_lock:
-                for reg in registrations:
-                    reg_id = str(reg.get("id", ""))
-                    if reg_id:
-                        self._dynamic_registrations[reg_id] = dict(reg)
+            if apply_side_effects:
+                with self._registrations_lock:
+                    for reg in registrations:
+                        reg_id = str(reg.get("id", ""))
+                        if reg_id:
+                            self._dynamic_registrations[reg_id] = dict(reg)
             return None
 
         if method == "client/unregisterCapability":
@@ -694,18 +783,20 @@ class LspProcess:
                 raw = params.get("unregisterations") or params.get("unregistrations")
                 if isinstance(raw, Sequence) and not isinstance(raw, (str, bytes)):
                     unregister = [r for r in raw if isinstance(r, Mapping)]
-            with self._registrations_lock:
-                for reg in unregister:
-                    reg_id = str(reg.get("id", ""))
-                    if reg_id:
-                        self._dynamic_registrations.pop(reg_id, None)
+            if apply_side_effects:
+                with self._registrations_lock:
+                    for reg in unregister:
+                        reg_id = str(reg.get("id", ""))
+                        if reg_id:
+                            self._dynamic_registrations.pop(reg_id, None)
             return None
 
         if method == "workspace/applyEdit":
             preview: dict[str, Any] = {}
             if isinstance(params, Mapping):
                 preview = dict(params)
-            self._apply_edit_previews.append(preview)
+            if apply_side_effects:
+                self._apply_edit_previews.append(preview)
             return {
                 "applied": False,
                 "failureReason": _APPLY_EDIT_REFUSE_REASON,
@@ -717,10 +808,19 @@ class LspProcess:
 
         return _METHOD_NOT_FOUND
 
-    def _reply_result(self, request_id: int | str, result: Any) -> None:
+    def _reply_result(
+        self,
+        request_id: int | str,
+        result: Any,
+        *,
+        reply_proc: subprocess.Popen | None = None,
+    ) -> None:
         """Send a successful JSON-RPC response for a server request."""
+        target = reply_proc if reply_proc is not None else self._proc
+        if target is None:
+            return
         try:
-            self._write({"jsonrpc": "2.0", "id": request_id, "result": result})
+            self._write_to_proc(target, {"jsonrpc": "2.0", "id": request_id, "result": result})
         except (LspProtocolError, OSError, LspFramingError, BrokenPipeError):
             return
 
@@ -730,15 +830,20 @@ class LspProcess:
         *,
         code: int,
         message: str,
+        reply_proc: subprocess.Popen | None = None,
     ) -> None:
         """Send a JSON-RPC error response for a server request."""
+        target = reply_proc if reply_proc is not None else self._proc
+        if target is None:
+            return
         try:
-            self._write(
+            self._write_to_proc(
+                target,
                 {
                     "jsonrpc": "2.0",
                     "id": request_id,
                     "error": {"code": code, "message": message},
-                }
+                },
             )
         except (LspProtocolError, OSError, LspFramingError, BrokenPipeError):
             return
