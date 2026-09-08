@@ -51,6 +51,10 @@ class SymbolLocation:
     span: SourceSpan
     resolution_status: ResolutionStatus = ResolutionStatus.RESOLVED
 
+    def is_navigable(self) -> bool:
+        """True when UI may open this location (R246 — reject UNRESOLVED)."""
+        return self.resolution_status is ResolutionStatus.RESOLVED
+
 
 @dataclass(frozen=True, slots=True)
 class OutlineSymbol:

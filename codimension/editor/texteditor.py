@@ -27,6 +27,7 @@ from autocomplete.bufferutils import getContext
 from autocomplete.completelists import getCallSignatures, getCompletionList, getDefinitions, getOccurrences
 from cdmpyparser import getBriefModuleInfoFromMemory
 from core.document_snapshot import DocumentSnapshot
+from core.document_store import ResolutionStatus
 from core.language import LanguageCapability
 from core.semantic import SymbolLocation
 from infrastructure.file_uri import file_uri_to_path
@@ -910,12 +911,18 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         *,
         empty_message: str,
     ) -> None:
-        """Navigate to one or more SymbolLocation results."""
+        """Navigate to one or more SymbolLocation results.
+
+        R246: skip ``UNRESOLVED`` locations — DocumentStore already refused
+        them; do not open the path via an unbounded filesystem fallback.
+        """
         if not locations:
             GlobalData().mainWindow.showStatusBarMessage(empty_message)
             return
         defs = []
         for loc in locations:
+            if not loc.is_navigable():
+                continue
             path = file_uri_to_path(loc.uri)
             if not path:
                 continue
@@ -944,6 +951,8 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         word = self.getCurrentWord() or ""
         result: list[ItemToSearchIn] = []
         for loc in locations:
+            if not loc.is_navigable():
+                continue
             path = file_uri_to_path(loc.uri) or fileName
             line, _col = self.__line_col_for_location(loc)
             lineno = line + 1
@@ -970,7 +979,13 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         )
 
     def __line_col_for_location(self, location: SymbolLocation) -> tuple[int, int]:
-        """Map a SymbolLocation span to 0-based ``(line, col)``."""
+        """Map a SymbolLocation span to 0-based ``(line, col)``.
+
+        R246: only use the current buffer or DocumentStore resolution — never
+        an unbounded ``open()`` that bypasses workspace containment.
+        """
+        if location.resolution_status is not ResolutionStatus.RESOLVED:
+            return 0, 0
         path = file_uri_to_path(location.uri)
         current = self._parent.getFileName()
         if path and os.path.realpath(path) == os.path.realpath(current):
@@ -982,20 +997,12 @@ class TextEditor(QutepartWrapper, EditorContextMenuMixin):
         try:
             ctrl = GlobalData().mainWindow.languageController
             store = ctrl.manager.document_store
-            snap = store.get(location.uri) if store is not None else None
+            snap = store.resolve(location.uri) if store is not None else None
             if snap is not None:
                 line, col = snap.offset_to_line_col(location.span.start)
                 return int(line), int(col)
         except Exception:
             pass
-        if path and os.path.isfile(path):
-            try:
-                with open(path, encoding="utf-8", errors="replace") as handle:
-                    text = handle.read()
-                line, col = DocumentSnapshot(uri=location.uri, text=text).offset_to_line_col(location.span.start)
-                return int(line), int(col)
-            except OSError:
-                pass
         return 0, 0
 
     def insertCompletion(self, text):
