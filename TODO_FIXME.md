@@ -2,14 +2,32 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-09-07 (статичний аудит @ `master@4ff0207b` / `codi-last.md` @ 45e33f6; попередні хвилі R209–R231 закриті)  
+**Дата перевірки:** 2026-09-08 (статичний аудит @ `master@cf241873` / `codi-last.md` @ 645d655; хвилі R209–R243 закриті)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
-## Відкриті блокери (аудит 2026-09-07)
+## Відкриті блокери (аудит 2026-09-08)
 
-Підтверджених **P0** немає. **P1: 0** відкритих (P1-01…P1-10 ✅). **P2 групи: 0** відкритих (R242–R243 ✅). Хвиля R221–R231 ✅; R232–R243 ✅ (`codi-last.md` @ 45e33f6).
+Підтверджених **P0** немає. **P1: 7** відкритих груп → **R244–R250**. **P2: 6** груп → **R251**. Хвиля R232–R243 ✅; новий зріз `codi-last.md` @ 645d655.
 
-### Повторний аудит 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 черга
+### Повторний аудит 2026-09-08 (`codi-last.md` @ 645d655) — P1 черга
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P1-01 | LSP: pending+write не атомарні з transport generation; старі server→client msgs забруднюють новий process | P1 | 🔓 OPEN → **R244** |
+| P1-02 | Editor semantic snapshot `version=0` регресує DocumentStore/LSP; Save As без close(old) | P1 | 🔓 OPEN → **R245** |
+| P1-03 | UI ігнорує UNRESOLVED; percent-encoded URI stale disk; loader FIFO/TOCTOU | P1 | 🔓 OPEN → **R246** |
+| P1-04 | MCP: `sorted(scandir)` матеріалізує весь каталог до `max_entries` | P1 | 🔓 OPEN → **R247** |
+| P1-05 | SSH Save: Paramiko `rename` не замінює існуючий dest (потрібен posix_rename/swap) | P1 | 🔓 OPEN → **R248** |
+| P1-06 | AI cost budget: provider `max_tokens` може перевищити cost remainder | P1 | 🔓 OPEN → **R249** |
+| P1-07 | pybind11 EXACT без CST `.def()` call_expression (regex у module body) | P1 | 🔓 OPEN → **R250** |
+
+### P2 / технічний борг (аудит 2026-09-08)
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P2-01…06 | AI finding wrong file; plugin package identity; non-transactional switch; terminal taint; R242 editor gaps; CI floor | P2 | 🔓 OPEN → **R251** |
+
+### Повторний аудит 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 черга (закрита)
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
@@ -24,7 +42,7 @@
 | P1-06 | FFI `EXACT`: structural proof не завжди edge-specific identity | P1 | ✅ R240 |
 | P1-10 | AI budgets soft; немає cancel/deadline/evidence hard validation | P1 | ✅ R241 |
 
-### P2 / технічний борг (аудит 2026-09-07)
+### P2 / технічний борг (аудит 2026-09-07) — закритий
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|

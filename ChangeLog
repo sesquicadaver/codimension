@@ -1,5 +1,13 @@
 2026 Sep 08
 
+* R244: LSP transport lease — pending Future registration and stdin write
+  share one ``(proc, transport_generation)`` snapshot; server→client replies
+  target the reader's pipe; stale-generation notifications / capability /
+  applyEdit side effects never mutate the live process; spawn clears
+  dynamic registrations (re-audit P1-01 @ 645d655)
+* Queue seed: re-audit ``codi-last.md`` @ 645d655 (master@cf241873) → ROADMAP
+  **R244–R251** (LSP lease, editor versioning, URI boundary, MCP scandir,
+  SSH atomic replace, AI cost cap, pybind11 CST, residual P2)
 * R243: CI/release/docs hardening — Bandit high gate + coverage floor
   (``--cov-fail-under=28``); SHA-pin Actions; publish ``environment: pypi``;
   chunked/capped SSH upload with staging rename; risk confidence follows

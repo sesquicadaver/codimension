@@ -2,14 +2,32 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-09-07 (static audit @ `master@4ff0207b` / `codi-last.md` @ 45e33f6; prior waves R209–R231 closed)  
+**Last review:** 2026-09-08 (static audit @ `master@cf241873` / `codi-last.md` @ 645d655; waves R209–R243 closed)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Open blockers (2026-09-07 audit)
+## Open blockers (2026-09-08 audit)
 
-No confirmed **P0**. **P1: 0** open (P1-01…P1-10 ✅). **P2 groups: 0** open (R242–R243 ✅). Wave R221–R231 ✅; R232–R243 ✅ (`codi-last.md` @ 45e33f6).
+No confirmed **P0**. **P1: 7** open groups → **R244–R250**. **P2: 6** groups → **R251**. Wave R232–R243 ✅; new slice `codi-last.md` @ 645d655.
 
-### Re-audit 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 queue
+### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P1-01 | LSP: pending+write not atomic with transport generation; stale server→client msgs pollute new process | P1 | 🔓 OPEN → **R244** |
+| P1-02 | Editor semantic snapshot `version=0` regresses DocumentStore/LSP; Save As without close(old) | P1 | 🔓 OPEN → **R245** |
+| P1-03 | UI ignores UNRESOLVED; percent-encoded URI stale disk; loader FIFO/TOCTOU | P1 | 🔓 OPEN → **R246** |
+| P1-04 | MCP: `sorted(scandir)` materializes entire directory before `max_entries` | P1 | 🔓 OPEN → **R247** |
+| P1-05 | SSH Save: Paramiko `rename` does not replace existing dest (need posix_rename/swap) | P1 | 🔓 OPEN → **R248** |
+| P1-06 | AI cost budget: provider `max_tokens` may exceed cost remainder | P1 | 🔓 OPEN → **R249** |
+| P1-07 | pybind11 EXACT without CST `.def()` call_expression (regex in module body) | P1 | 🔓 OPEN → **R250** |
+
+### P2 / tech debt (2026-09-08 audit)
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P2-01…06 | AI finding wrong file; plugin package identity; non-transactional switch; terminal taint; R242 editor gaps; CI floor | P2 | 🔓 OPEN → **R251** |
+
+### Re-audit 2026-09-07 (`codi-last.md` @ 45e33f6) — P1 queue (closed)
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
@@ -24,7 +42,7 @@ No confirmed **P0**. **P1: 0** open (P1-01…P1-10 ✅). **P2 groups: 0** open (
 | P1-06 | FFI `EXACT`: structural proof not always edge-specific identity | P1 | ✅ R240 |
 | P1-10 | AI budgets soft; no cancel/deadline/evidence hard validation | P1 | ✅ R241 |
 
-### P2 / tech debt (2026-09-07 audit)
+### P2 / tech debt (2026-09-07 audit) — closed
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|

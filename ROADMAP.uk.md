@@ -201,12 +201,31 @@
 | 53 | R241 | AI hard budgets + cancellation | Provider output caps; post-check; deadline; cancel; evidence/path validation | L | DONE ([#211](https://github.com/sesquicadaver/codimension/pull/211)) |
 | 54 | R242 | Polyglot editor integration | Buffer open/change/close snapshots; capability-driven IDE actions | L | DONE ([#213](https://github.com/sesquicadaver/codimension/pull/213)) |
 | 55 | R243 | CI/release/docs hardening | Coverage; Bandit gate; LSP race tests; SHA-pinned Actions; docs sync | M | DONE ([#215](https://github.com/sesquicadaver/codimension/pull/215)) |
+| 56 | R244 | LSP transport lease + generation isolation | Pending registration + write atomic; stale requests/notifications never hit new process | L | OPEN |
+| 57 | R245 | Editor-owned document versioning | No version regression; Save As close(old)→open(new) | M | OPEN |
+| 58 | R246 | Foreign URI boundary | Reject UNRESOLVED opens; canonical URI; fd-rooted loader | L | OPEN |
+| 59 | R247 | MCP pre-materialization budgets | max_entries before full collection/sort | M | OPEN |
+| 60 | R248 | SSH atomic replace | posix_rename or backup/swap/rollback; Fake matches SFTP | M | OPEN |
+| 61 | R249 | AI cost-aware provider cap | Provider max_tokens ≤ token/cost remainder | M | OPEN |
+| 62 | R250 | pybind11 CST-exact proof | EXACT only from real .def() call_expression | L | OPEN |
+| 63 | R251 | Residual correctness | AI finding source-bind; plugin package identity; transactional switch; terminal taint; CI floor | L | OPEN |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** хвиля R232–R243 завершена — наступне з [TODO_FIXME.md](TODO_FIXME.md) / новий аудит.
+**Наступний OPEN:** **R244** — LSP transport lease + generation isolation.
+
+Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
+
+Wave **R209–R220** = hardening from audit `codi-last.md` @ 340e97dc (DONE).
+
+Wave **R221–R231** = hardening from re-audit `codi-last.md` @ 8824ff3c (DONE).
+
+Wave **R232–R243** = hardening from re-audit `codi-last.md` @ 45e33f6 (DONE).
+
+Хвиля **R244–R251** = hardening з повторного аудиту `codi-last.md` @ 645d655 (master@cf241873; черга §1–8).
+
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

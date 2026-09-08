@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — хвиля R221–R231 ✅; **R232–R243** ✅ (`codi-last.md` @ 45e33f6); Next = новий аудит / TODO.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — хвиля R221–R231 ✅; **R232–R243** ✅; хвиля **R244–R251** (`codi-last.md` @ 645d655); Next = **R244** LSP transport lease.
 
 ### Матриця меж модулів (R103 / R195)
 
