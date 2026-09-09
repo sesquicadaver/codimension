@@ -24,6 +24,10 @@ tokens); callers must preflight with that provider cap, not a fixed reserve.
 
 R259: float parsers and budget dataclasses reject non-finite values (``NaN`` /
 ``±Inf``) so cost comparisons cannot fail open.
+
+R268: explicit kwargs to :func:`load_ai_budget_limits` / :func:`load_ai_job_contract`
+use the same fail-closed validators as environment parsing (not only
+``__post_init__`` on dataclasses).
 """
 
 from __future__ import annotations
@@ -168,6 +172,29 @@ def _env_float_strict(environ: Mapping[str, str], key: str, default: float) -> f
     return value
 
 
+def _kw_int_strict(value: int, field: str) -> int:
+    """Validate an explicit non-negative int kwarg (R268).
+
+    Rejects ``bool`` (subclass of ``int``) and negative values with the same
+    fail-closed posture as :func:`_env_int_strict`.
+    """
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise AiBudgetConfigError(f"invalid {field}={value!r}; expected non-negative integer")
+    if value < 0:
+        raise AiBudgetConfigError(f"invalid {field}={value!r}; expected non-negative integer")
+    return value
+
+
+def _kw_float_strict(value: float, field: str) -> float:
+    """Validate an explicit non-negative finite float kwarg (R268)."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise AiBudgetConfigError(f"invalid {field}={value!r}; expected non-negative finite number")
+    fvalue = float(value)
+    if not math.isfinite(fvalue) or fvalue < 0:
+        raise AiBudgetConfigError(f"invalid {field}={value!r}; expected non-negative finite number")
+    return fvalue
+
+
 def load_ai_budget_limits(
     *,
     environ: Optional[Mapping[str, str]] = None,
@@ -179,14 +206,24 @@ def load_ai_budget_limits(
 
     R241: malformed environment values raise :class:`AiBudgetConfigError`
     (fail-closed) instead of silently falling back to defaults.
+
+    R268: explicit kwargs use the same validators as environment parsing.
     """
     env = environ if environ is not None else os.environ
-    tokens = _env_int_strict(env, ENV_AI_MAX_TOKENS, DEFAULT_MAX_TOKENS) if max_tokens is None else max_tokens
-    cost = _env_float_strict(env, ENV_AI_MAX_COST_USD, DEFAULT_MAX_COST_USD) if max_cost_usd is None else max_cost_usd
+    tokens = (
+        _env_int_strict(env, ENV_AI_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        if max_tokens is None
+        else _kw_int_strict(max_tokens, "max_tokens")
+    )
+    cost = (
+        _env_float_strict(env, ENV_AI_MAX_COST_USD, DEFAULT_MAX_COST_USD)
+        if max_cost_usd is None
+        else _kw_float_strict(max_cost_usd, "max_cost_usd")
+    )
     rate = (
         _env_float_strict(env, ENV_AI_USD_PER_1K_TOKENS, DEFAULT_USD_PER_1K)
         if usd_per_1k_tokens is None
-        else usd_per_1k_tokens
+        else _kw_float_strict(usd_per_1k_tokens, "usd_per_1k_tokens")
     )
     return AiBudgetLimits(max_tokens=tokens, max_cost_usd=cost, usd_per_1k_tokens=rate)
 
@@ -198,7 +235,7 @@ def load_ai_job_contract(
     deadline_sec: Optional[float] = None,
     now: float | None = None,
 ) -> AiJobContract:
-    """Load an :class:`AiJobContract` from environment / defaults (R241)."""
+    """Load an :class:`AiJobContract` from environment / defaults (R241 / R268)."""
     env = environ if environ is not None else os.environ
     budget = limits if limits is not None else load_ai_budget_limits(environ=env)
     max_files = _env_int_strict(env, ENV_AI_MAX_FILES, DEFAULT_MAX_FILES)
@@ -207,6 +244,8 @@ def load_ai_job_contract(
     max_output_tokens = _env_int_strict(env, ENV_AI_MAX_OUTPUT_TOKENS, DEFAULT_MAX_OUTPUT_TOKENS)
     if deadline_sec is None:
         deadline_sec = _env_float_strict(env, ENV_AI_DEADLINE_SEC, float(DEFAULT_DEADLINE_SEC))
+    else:
+        deadline_sec = _kw_float_strict(deadline_sec, "deadline_sec")
     deadline_monotonic: float | None = None
     if deadline_sec and deadline_sec > 0:
         clock = time.monotonic() if now is None else now

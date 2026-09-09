@@ -225,27 +225,15 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 77 | R265 | Full project lifecycle transaction | Rollback covers detach/unload/load/attach; clean partial load without prior project | L | DONE |
 | 78 | R266 | LSP worker and payload hardening | Immutable transport lease for workers; reader death invalidates; strict range decode | L | DONE |
 | 79 | R267 | Multi-exit taint environments | ExitKind→env map; finally per edge; nested loop exit stack | L | DONE |
-| 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; reliability coverage precision; TODO sync | M | OPEN |
+| 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; reliability coverage precision; TODO sync | M | DONE |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R268** — Runtime invariants and CI precision.
+**Next OPEN:** *(хвиля R261–R268 закрита @ f44c8dc4; наступна черга — новий аудит / ROADMAP)*
 
-Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
-
-Wave **R209–R220** = hardening from audit `codi-last.md` @ 340e97dc (DONE).
-
-Wave **R221–R231** = hardening from re-audit `codi-last.md` @ 8824ff3c (DONE).
-
-Wave **R232–R243** = hardening from re-audit `codi-last.md` @ 45e33f6 (DONE).
-
-Wave **R244–R251** = hardening from re-audit `codi-last.md` @ 645d655 (master@cf241873; DONE).
-
-Wave **R252–R260** = hardening from re-audit `codi-last.md` @ master@eaa3dfee (DONE; residuals → R261–R268).
-
-Wave **R261–R268** = hardening from re-audit `codi-last.md` @ master@f44c8dc4 (recommended queue §1–8).
+Wave **R261–R268** = hardening from re-audit `codi-last.md` @ master@f44c8dc4 (**DONE**).
 
 
 **Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages; HMAC-signed bindings (optional stretch).
