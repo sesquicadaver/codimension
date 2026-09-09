@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-09 audit @ f44c8dc4)
 
-No confirmed **P0**. **P1: 0**. **P2: 4** groups → **R266–R268**. Wave R252–R260 integrated with residuals; slice `codi-last.md` @ master@f44c8dc4.
+No confirmed **P0**. **P1: 0**. **P2: 2** groups → **R267–R268**. Wave R252–R260 integrated with residuals; slice `codi-last.md` @ master@f44c8dc4.
 
 ### Re-audit 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 queue
 
@@ -23,8 +23,8 @@ No confirmed **P0**. **P1: 0**. **P2: 4** groups → **R266–R268**. Wave R252�
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | P2-01 | Project lifecycle: `unload` outside rollback `try`; `before_unload` may detach workspace without restore | P2 | ✅ R265 |
-| P2-02 | LSP reader EOF does not invalidate transport; workers hold mutable `self._proc` | P2 | 🔓 OPEN → **R266** |
-| P2-03 | LSP range decoder throws on malformed position instead of `UNRESOLVED` | P2 | 🔓 OPEN → **R266** |
+| P2-02 | LSP reader EOF does not invalidate transport; workers hold mutable `self._proc` | P2 | ✅ R266 |
+| P2-03 | LSP range decoder throws on malformed position instead of `UNRESOLVED` | P2 | ✅ R266 |
 | P2-04 | Taint: single ExitKind/env; terminal envs lost before `finally`; nested loop collectors | P2 | 🔓 OPEN → **R267** |
 | P2-05 | AI explicit kwargs (`deadline_sec=NaN`/negative) not fail-closed like env parser | P2 | 🔓 OPEN → **R268** |
 

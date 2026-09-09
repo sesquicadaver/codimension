@@ -50,6 +50,11 @@ R262: ``notify(..., expect_generation=N)`` shares the same pin so a restart
 inside document sync cannot silently deliver ``didChange`` to a virgin
 generation without a preceding ``didOpen``.
 
+R266: reader and stderr workers bind an immutable ``(proc, transport_generation)``
+lease; reader EOF / framing failure invalidates that transport so the next
+``ensure_alive`` restarts instead of writing to a live process with a dead
+stdout reader.
+
 R256: ``_bind_pending_and_write`` rolls back the pending Future if encode/write
 fails so timeout/shutdown cannot settle a leaked registration.
 """
@@ -195,6 +200,9 @@ class LspProcess:
         self._generation = 0
         # Bumped on every subprocess spawn; keys pending futures (R234).
         self._transport_generation = 0
+        # R266: set to the live transport generation when its reader dies while
+        # the subprocess may still be alive (closed stdout / framing failure).
+        self._broken_transport_generation = 0
         self._last_initialize_result: dict[str, Any] = {}
         self._notifications: deque[dict[str, Any]] = deque(maxlen=256)
         self._apply_edit_previews: deque[dict[str, Any]] = deque(maxlen=64)
@@ -440,10 +448,26 @@ class LspProcess:
         ):
             raise LspProtocolError("LspProcess is closing")
         if self._state is LspProcessState.RUNNING and self._proc is not None:
-            if self._proc.poll() is None:
+            broken = self._broken_transport_generation == self._transport_generation
+            alive = self._proc.poll() is None
+            if alive and not broken:
                 return
-            self._fail_pending("language server exited unexpectedly", generation=self._transport_generation)
+            reason = (
+                "language server transport broken (reader died)" if broken else "language server exited unexpectedly"
+            )
+            self._fail_pending(reason, generation=self._transport_generation)
+            proc = self._proc
+            if proc is not None and proc.poll() is None:
+                try:
+                    proc.kill()
+                except OSError:
+                    pass
+                try:
+                    proc.wait(timeout=2.0)
+                except (subprocess.TimeoutExpired, OSError):
+                    pass
             self._cleanup_proc_unlocked()
+            self._broken_transport_generation = 0
             self._restart_unlocked()
             return
         self._start_unlocked()
@@ -637,6 +661,7 @@ class LspProcess:
             raise LspProtocolError(f"failed to spawn language server: {exc}") from exc
         self._proc = proc
         self._transport_generation += 1
+        self._broken_transport_generation = 0
         reader_generation = self._transport_generation
         # Stale capability tables belong to the previous subprocess (R244).
         with self._registrations_lock:
@@ -649,6 +674,7 @@ class LspProcess:
         )
         self._stderr_thread = threading.Thread(
             target=self._stderr_loop,
+            args=(proc, reader_generation),
             name=f"lsp-stderr-{self.key.language_id}",
             daemon=True,
         )
@@ -705,8 +731,31 @@ class LspProcess:
             lease = self._lease_unlocked(require_initialized=require_initialized)
             self._encode_and_write_unlocked(lease.proc, message)
 
+    def _invalidate_transport(self, proc: subprocess.Popen, generation: int, reason: str) -> None:
+        """Fail pending for ``generation`` and mark that transport broken (R266).
+
+        A live subprocess with a dead stdout reader must not accept further app
+        RPC until :meth:`_ensure_alive_unlocked` restarts it.
+        """
+        with self._lifecycle_lock:
+            self._fail_pending(reason, generation=generation)
+            if self._closing:
+                return
+            if generation != self._transport_generation or self._proc is not proc:
+                return
+            # Do not clear ``_initialized`` here: a crashed subprocess can leave
+            # that flag True until ``_ensure_alive_unlocked`` restarts (R233).
+            # The broken-generation marker alone forces restart even when poll()
+            # still reports alive (reader died first).
+            self._broken_transport_generation = generation
+            try:
+                if proc.poll() is None:
+                    proc.kill()
+            except OSError:
+                return
+
     def _reader_loop(self, proc: subprocess.Popen, generation: int) -> None:
-        """Read stdout for one subprocess generation (R234 / R244)."""
+        """Read stdout for one subprocess generation (R234 / R244 / R266)."""
         if proc.stdout is None:
             return
         try:
@@ -716,20 +765,21 @@ class LspProcess:
                 except EOFError:
                     break
                 except LspFramingError as exc:
-                    self._fail_pending(str(exc), generation=generation)
-                    break
+                    self._invalidate_transport(proc, generation, str(exc))
+                    return
                 try:
                     self._dispatch(message, generation, proc)
                 except Exception:  # noqa: BLE001 — keep reader alive across settle races
                     continue
         finally:
-            # Only settle futures for *this* subprocess; a newer restart must keep its pending.
+            # Only settle / invalidate *this* subprocess; a newer restart keeps its pending.
             if not self._closing:
-                self._fail_pending("language server stdout closed", generation=generation)
+                self._invalidate_transport(proc, generation, "language server stdout closed")
 
-    def _stderr_loop(self) -> None:
-        proc = self._proc
-        if proc is None or proc.stderr is None:
+    def _stderr_loop(self, proc: subprocess.Popen, generation: int) -> None:
+        """Drain stderr for one subprocess lease (R266); ignore superseded procs."""
+        del generation  # lease identity; stderr is best-effort for this proc only
+        if proc.stderr is None:
             return
         try:
             while True:

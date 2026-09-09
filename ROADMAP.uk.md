@@ -223,7 +223,7 @@
 | 75 | R263 | Canonical DocumentStore identity | URI aliases спілять стан; OPEN_BUFFER ніколи не замінюється DISK | L | DONE ([#245](https://github.com/sesquicadaver/codimension/pull/245)) |
 | 76 | R264 | Plugin fd-relative identity walk | Symlink files/dirs fail-closed; весь executable content у identity | L | DONE ([#246](https://github.com/sesquicadaver/codimension/pull/246)) |
 | 77 | R265 | Full project lifecycle transaction | Rollback охоплює detach/unload/load/attach; cleanup без попереднього project | L | DONE |
-| 78 | R266 | LSP worker and payload hardening | Immutable transport lease; reader death invalidates; strict range decode | L | OPEN |
+| 78 | R266 | LSP worker and payload hardening | Immutable transport lease; reader death invalidates; strict range decode | L | DONE |
 | 79 | R267 | Multi-exit taint environments | ExitKind→env; finally per edge; nested loop exit stack | L | OPEN |
 | 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; precision coverage; sync TODO | M | OPEN |
 
@@ -231,7 +231,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R266** — LSP worker and payload hardening.
+**Наступний OPEN:** **R267** — Multi-exit taint environments.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

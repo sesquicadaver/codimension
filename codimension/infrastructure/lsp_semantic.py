@@ -26,6 +26,9 @@ between sync and request retries sync before the query.
 R262: document ``notify`` is generation-pinned too — a restart during sync
 clears ``_opened`` and re-``didOpen`` instead of sending ``didChange`` to a
 virgin process.
+
+R266: server ranges decode via ``try_parse_lsp_range`` (never raises); bad
+payloads become ``UNRESOLVED`` / omitted hover spans.
 """
 
 from __future__ import annotations
@@ -44,7 +47,7 @@ from core.semantic import (
 )
 from core.symbol_index import SourceSpan
 from infrastructure.file_uri import make_workspace_document_loader
-from infrastructure.lsp_position_codec import LspPosition, LspRange
+from infrastructure.lsp_position_codec import try_parse_lsp_range
 from infrastructure.lsp_process import LspProcess, LspProcessKey, LspProcessRegistry, LspProtocolError
 
 # Restarts between sync and request are rare; bound retries to avoid livelock.
@@ -337,7 +340,9 @@ class LspSemanticProvider:
         contents = _markup_to_text(result.get("contents"))
         span = None
         if "range" in result and result["range"]:
-            span = proc.codec.to_internal_span(document, LspRange.from_dict(result["range"]))
+            lsp_range = try_parse_lsp_range(result["range"])
+            if lsp_range is not None:
+                span = proc.codec.to_internal_span(document, lsp_range)
         return HoverInfo(contents=contents, span=span)
 
     def definition(self, document: DocumentSnapshot, offset: int) -> tuple[SymbolLocation, ...]:
@@ -438,15 +443,13 @@ def _span_for_uri(
     *,
     store: DocumentStore | None,
 ) -> tuple[SourceSpan, ResolutionStatus, DocumentSnapshot | None]:
-    """Decode ``range_obj``; return span, resolution status, and target snapshot (R235)."""
-    start_raw = range_obj.get("start")
-    end_raw = range_obj.get("end")
-    if not isinstance(start_raw, Mapping) or not isinstance(end_raw, Mapping):
+    """Decode ``range_obj``; return span, resolution status, and target snapshot (R235 / R266).
+
+    Malformed ranges never raise — they map to ``UNRESOLVED`` (R266).
+    """
+    lsp_range = try_parse_lsp_range(range_obj)
+    if lsp_range is None:
         return SourceSpan(0, 0), ResolutionStatus.UNRESOLVED, None
-    lsp_range = LspRange(
-        start=LspPosition(line=int(start_raw["line"]), character=int(start_raw["character"])),
-        end=LspPosition(line=int(end_raw["line"]), character=int(end_raw["character"])),
-    )
     if canonicalize_document_uri(uri) == canonicalize_document_uri(document.uri):
         return proc.codec.to_internal_span(document, lsp_range), ResolutionStatus.RESOLVED, document
     target: Optional[DocumentSnapshot] = None
@@ -504,13 +507,16 @@ def _parse_outline(
         if isinstance(loc, Mapping):
             range_obj = loc.get("range")
     sel = item.get("selectionRange") or range_obj
+    span = SourceSpan(0, 0)
     if isinstance(range_obj, Mapping):
-        span = proc.codec.to_internal_span(document, LspRange.from_dict(range_obj))
-    else:
-        span = SourceSpan(0, 0)
+        lsp_range = try_parse_lsp_range(range_obj)
+        if lsp_range is not None:
+            span = proc.codec.to_internal_span(document, lsp_range)
     selection = None
     if isinstance(sel, Mapping):
-        selection = proc.codec.to_internal_span(document, LspRange.from_dict(sel))
+        lsp_sel = try_parse_lsp_range(sel)
+        if lsp_sel is not None:
+            selection = proc.codec.to_internal_span(document, lsp_sel)
     children_raw = item.get("children") or ()
     children = tuple(_parse_outline(proc, document, child) for child in children_raw if isinstance(child, Mapping))
     return OutlineSymbol(

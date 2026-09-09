@@ -1,5 +1,9 @@
 2026 Sep 09
 
+* R266: LSP worker/payload hardening — reader/stderr bind immutable
+  ``(proc, transport_generation)``; reader EOF/framing invalidates transport
+  and forces restart; ``try_parse_lsp_range`` maps malformed server ranges to
+  ``UNRESOLVED`` (re-audit P2-02/P2-03 @ f44c8dc4)
 * R265: full project lifecycle transaction — detach/unload/load/attach share
   one rollback; unload-phase failures reattach previous; no-previous failures
   abandon partial load (re-audit P2-01 @ f44c8dc4)
