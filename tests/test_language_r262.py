@@ -117,6 +117,17 @@ def _wait_events(log: Path, count: int, *, timeout: float = 5.0) -> list[dict]:
     return events
 
 
+def _wait_for_method(log: Path, method: str, *, timeout: float = 5.0) -> list[dict]:
+    deadline = time.monotonic() + timeout
+    events: list[dict] = []
+    while time.monotonic() < deadline:
+        events = _read_events(log)
+        if any(e.get("method") == method for e in events):
+            return events
+        time.sleep(0.02)
+    return events
+
+
 def _provider(tmp_path: Path, script: Path, log: Path) -> LspSemanticProvider:
     registry = LspProcessRegistry()
     config = LspSemanticConfig(
@@ -210,7 +221,7 @@ def test_r262_crash_between_attach_and_did_change_reopens(
     assert crash_budget["left"] == 0
     assert provider._server_generation > gen_before
 
-    events = _wait_events(log, 3)
+    events = _wait_for_method(log, "textDocument/didOpen")
     methods = [e["method"] for e in events]
     assert "initialize" in methods
     assert "textDocument/didOpen" in methods
@@ -272,9 +283,11 @@ def test_r262_sync_document_alone_reopens_after_mid_sync_restart(
 
     assert crash_budget["left"] == 0
     assert provider._opened.get(doc_v2.uri) == 2
-    events = _wait_events(log, 2)
+    events = _wait_for_method(log, "textDocument/didOpen")
     methods = [e["method"] for e in events]
     assert "initialize" in methods
     assert "textDocument/didOpen" in methods
     assert "textDocument/didChange" not in methods
+    open_events = [e for e in events if e.get("method") == "textDocument/didOpen"]
+    assert open_events[-1]["params"]["textDocument"]["version"] == 2
     provider._registry.shutdown_all()
