@@ -453,9 +453,7 @@ class LspProcess:
             if alive and not broken:
                 return
             reason = (
-                "language server transport broken (reader died)"
-                if broken
-                else "language server exited unexpectedly"
+                "language server transport broken (reader died)" if broken else "language server exited unexpectedly"
             )
             self._fail_pending(reason, generation=self._transport_generation)
             proc = self._proc
@@ -745,7 +743,10 @@ class LspProcess:
                 return
             if generation != self._transport_generation or self._proc is not proc:
                 return
-            self._initialized = False
+            # Do not clear ``_initialized`` here: a crashed subprocess can leave
+            # that flag True until ``_ensure_alive_unlocked`` restarts (R233).
+            # The broken-generation marker alone forces restart even when poll()
+            # still reports alive (reader died first).
             self._broken_transport_generation = generation
             try:
                 if proc.poll() is None:
