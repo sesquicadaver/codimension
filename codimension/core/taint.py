@@ -51,7 +51,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from enum import Enum
-from typing import Iterable, Optional, Sequence
+from typing import Iterable, Optional, Sequence, cast
 
 # Qualname suffixes / exact names treated as sources when called.
 DEFAULT_SOURCE_CALLS: frozenset[str] = frozenset(
@@ -614,8 +614,11 @@ class _FunctionTaint:
         else:
             else_map = {}
 
-        body_terminals = {kind: env for kind, env in body_exits.items() if kind is not ExitKind.NORMAL}
-        before_finally = _merge_exits(body_terminals, handlers_merged, else_map)
+        body_terminals: ExitMap = {}
+        for kind, env in body_exits.items():
+            if kind is not ExitKind.NORMAL:
+                body_terminals[kind] = env
+        before_finally = _merge_exits(cast(ExitMap, body_terminals), handlers_merged, else_map)
 
         if not stmt.finalbody:
             if ExitKind.NORMAL in before_finally:
