@@ -247,9 +247,7 @@ class _FunctionTaint:
         if name not in self.origin:
             self.origin[name] = (source, source_line)
 
-    def _analyze_branch(
-        self, stmts: Iterable[ast.stmt], base: dict[str, tuple[str, int]]
-    ) -> BranchResult:
+    def _analyze_branch(self, stmts: Iterable[ast.stmt], base: dict[str, tuple[str, int]]) -> BranchResult:
         """Run ``stmts`` on a clone of ``base``; return env + exit kind (R258)."""
         saved = self.origin
         self.origin = dict(base)
@@ -309,9 +307,7 @@ class _FunctionTaint:
                     break_envs.append(dict(result.env))
                 break_envs.extend(dict(env) for env in self._loop_break_envs)
 
-                back_envs: list[dict[str, tuple[str, int]]] = [
-                    dict(env) for env in self._loop_continue_envs
-                ]
+                back_envs: list[dict[str, tuple[str, int]]] = [dict(env) for env in self._loop_continue_envs]
                 if result.exit == ExitKind.NORMAL:
                     body_out = dict(result.env)
                     back_envs.append(body_out)
@@ -542,11 +538,7 @@ class _FunctionTaint:
         self.visit_expr_calls(stmt.test)
         base = dict(self.origin)
         body = self._analyze_branch(stmt.body, base)
-        else_arm = (
-            self._analyze_branch(stmt.orelse, base)
-            if stmt.orelse
-            else BranchResult(dict(base), ExitKind.NORMAL)
-        )
+        else_arm = self._analyze_branch(stmt.orelse, base) if stmt.orelse else BranchResult(dict(base), ExitKind.NORMAL)
         self._record_arm_exit(body)
         self._record_arm_exit(else_arm)
         joined = self._join_normal_arms(body, else_arm)

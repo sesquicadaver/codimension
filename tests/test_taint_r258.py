@@ -23,13 +23,7 @@ def test_r258_return_arm_excluded_from_join() -> None:
 
 def test_r258_return_without_else_keeps_skip_path() -> None:
     """Bare ``if cond: return`` still falls through on the false path."""
-    src = (
-        "def f(cond):\n"
-        "    value = input()\n"
-        "    if cond:\n"
-        "        return\n"
-        "    eval(value)\n"
-    )
+    src = "def f(cond):\n    value = input()\n    if cond:\n        return\n    eval(value)\n"
     report = analyze_function_taint(src, function="f")
     assert not report.empty
     assert report.findings[0].source.startswith("call:input")
@@ -37,14 +31,7 @@ def test_r258_return_without_else_keeps_skip_path() -> None:
 
 def test_r258_both_arms_return_skips_after() -> None:
     """When every arm returns, code after the ``if`` is unreachable."""
-    src = (
-        "def f(cond, x):\n"
-        "    if cond:\n"
-        "        return\n"
-        "    else:\n"
-        "        return\n"
-        "    eval(x)\n"
-    )
+    src = "def f(cond, x):\n    if cond:\n        return\n    else:\n        return\n    eval(x)\n"
     report = analyze_function_taint(src, function="f")
     assert report.empty
 
