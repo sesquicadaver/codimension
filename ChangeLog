@@ -1,5 +1,8 @@
 2026 Sep 09
 
+* R263: DocumentStore canonical URI identity — ``localhost`` / percent /
+  realpath aliases share one key; ``DISK`` never replaces ``OPEN_BUFFER``
+  (re-audit P1-03 @ f44c8dc4)
 * R262: generation-pinned LSP notifications — ``notify(..., expect_generation)``;
   mid-sync restart clears ``_opened`` and re-``didOpen`` (never ``didChange``
   on a virgin generation) (re-audit P1-02 @ f44c8dc4)

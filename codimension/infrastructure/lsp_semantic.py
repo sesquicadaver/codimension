@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Mapping, Optional, Sequence
 
 from core.document_snapshot import DocumentSnapshot, TextEdit
-from core.document_store import DocumentStore, ResolutionStatus
+from core.document_store import DocumentStore, ResolutionStatus, canonicalize_document_uri
 from core.semantic import (
     HoverInfo,
     OutlineSymbol,
@@ -447,7 +447,7 @@ def _span_for_uri(
         start=LspPosition(line=int(start_raw["line"]), character=int(start_raw["character"])),
         end=LspPosition(line=int(end_raw["line"]), character=int(end_raw["character"])),
     )
-    if uri == document.uri:
+    if canonicalize_document_uri(uri) == canonicalize_document_uri(document.uri):
         return proc.codec.to_internal_span(document, lsp_range), ResolutionStatus.RESOLVED, document
     target: Optional[DocumentSnapshot] = None
     if store is not None:

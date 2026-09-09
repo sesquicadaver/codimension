@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - multi-document snapshot store (R224 / R235)
+# codimension - multi-document snapshot store (R224 / R235 / R263)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -8,8 +8,9 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
+#
 
-"""DocumentStore: resolve URI → :class:`DocumentSnapshot` (R224 / R235 / R246).
+"""DocumentStore: resolve URI → :class:`DocumentSnapshot` (R224 / R235 / R246 / R263).
 
 LSP definition / references / rename often target a URI other than the
 request document. Spans must be decoded against that target's text — not
@@ -24,13 +25,18 @@ workspace-bounded.
 R246: ``file://`` path parsing percent-decodes so disk identity works for
 canonical ``Path.as_uri()`` keys; disk entries without identity are not
 treated as permanently fresh.
+
+R263: lookup keys use :func:`canonicalize_document_uri` so
+``file://localhost/...``, percent-encoded aliases, and realpath collisions
+share one identity; a ``DISK`` load never replaces an ``OPEN_BUFFER``.
 """
 
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
+from pathlib import Path
 from typing import Callable, Optional
 from urllib.parse import unquote, urlparse
 
@@ -88,6 +94,28 @@ def capture_disk_identity(path: str) -> DiskIdentity | None:
     )
 
 
+def canonicalize_document_uri(uri: str) -> str:
+    """Return the stable document identity key for ``uri`` (R263).
+
+    Local ``file://`` / absolute paths collapse ``localhost`` authority,
+    percent-encoding variants, ``.`` / ``..`` segments, and existing symlink
+    components (via :func:`os.path.realpath`) onto one ``Path.as_uri()`` key.
+    Non-file URIs are returned stripped unchanged.
+    """
+    text = (uri or "").strip()
+    if not text:
+        return ""
+    path = _path_from_uri(text)
+    if path is None:
+        return text
+    abs_path = os.path.abspath(os.path.expanduser(path))
+    try:
+        abs_path = os.path.realpath(abs_path)
+    except OSError:
+        pass
+    return Path(abs_path).as_uri()
+
+
 class DocumentStore:
     """In-memory URI → snapshot map with optional on-demand loading."""
 
@@ -106,8 +134,11 @@ class DocumentStore:
 
     def put_buffer(self, document: DocumentSnapshot) -> None:
         """Insert/replace ``document`` as :attr:`DocumentSource.OPEN_BUFFER`."""
-        self._docs[document.uri] = StoredDocument(
-            snapshot=document,
+        key, snap = self._keyed_snapshot(document)
+        if not key:
+            return
+        self._docs[key] = StoredDocument(
+            snapshot=snap,
             source=DocumentSource.OPEN_BUFFER,
             disk_identity=None,
         )
@@ -118,16 +149,27 @@ class DocumentStore:
         *,
         identity: DiskIdentity | None = None,
     ) -> None:
-        """Insert/replace a disk-backed snapshot (may be invalidated on resolve)."""
-        self._docs[document.uri] = StoredDocument(
-            snapshot=document,
+        """Insert/replace a disk-backed snapshot (may be invalidated on resolve).
+
+        R263: never overwrite an authoritative :attr:`DocumentSource.OPEN_BUFFER`.
+        """
+        key, snap = self._keyed_snapshot(document)
+        if not key:
+            return
+        existing = self._docs.get(key)
+        if existing is not None and existing.source is DocumentSource.OPEN_BUFFER:
+            return
+        self._docs[key] = StoredDocument(
+            snapshot=snap,
             source=DocumentSource.DISK,
             disk_identity=identity,
         )
 
     def discard(self, uri: str) -> None:
         """Drop a cached snapshot (e.g. after ``didClose``)."""
-        self._docs.pop(uri, None)
+        key = canonicalize_document_uri(uri)
+        if key:
+            self._docs.pop(key, None)
 
     def clear(self) -> None:
         """Remove all cached snapshots."""
@@ -135,43 +177,51 @@ class DocumentStore:
 
     def get(self, uri: str) -> DocumentSnapshot | None:
         """Return a cached snapshot only (no loader / no disk revalidation)."""
-        entry = self._docs.get(uri)
+        entry = self.get_entry(uri)
         return None if entry is None else entry.snapshot
 
     def get_entry(self, uri: str) -> StoredDocument | None:
         """Return the full stored entry, if any."""
-        return self._docs.get(uri)
+        key = canonicalize_document_uri(uri)
+        if not key:
+            return None
+        return self._docs.get(key)
 
     def resolve(self, uri: str) -> DocumentSnapshot | None:
         """Return a snapshot for ``uri``, revalidating disk entries and loading misses."""
-        text = (uri or "").strip()
-        if not text:
+        key = canonicalize_document_uri(uri)
+        if not key:
             return None
-        entry = self._docs.get(text)
+        entry = self._docs.get(key)
         if entry is not None:
             if entry.source is DocumentSource.OPEN_BUFFER:
                 return entry.snapshot
             if entry.source is DocumentSource.DISK:
                 if self._disk_entry_is_current(entry):
                     return entry.snapshot
-                self._docs.pop(text, None)
-                if entry.snapshot.uri != text:
-                    self._docs.pop(entry.snapshot.uri, None)
+                self._docs.pop(key, None)
         if self._loader is None:
             return None
-        loaded = self._loader(text)
+        # Prefer the caller's URI for loader containment checks; loader may
+        # return a differently spelled canonical snapshot URI.
+        loaded = self._loader(uri.strip() if uri else key)
         if loaded is None:
             return None
-        identity = self._identity_for_loaded(loaded.uri, text)
+        loaded_key, loaded_snap = self._keyed_snapshot(loaded)
+        if not loaded_key:
+            return None
+        # R263: a concurrent/open buffer under the canonical key wins.
+        existing = self._docs.get(loaded_key)
+        if existing is not None and existing.source is DocumentSource.OPEN_BUFFER:
+            return existing.snapshot
+        identity = self._identity_for_loaded(loaded_snap.uri, uri)
         stored = StoredDocument(
-            snapshot=loaded,
+            snapshot=loaded_snap,
             source=DocumentSource.DISK,
             disk_identity=identity,
         )
-        self._docs[loaded.uri] = stored
-        if loaded.uri != text:
-            self._docs[text] = stored
-        return loaded
+        self._docs[loaded_key] = stored
+        return loaded_snap
 
     def resolve_status(self, uri: str) -> tuple[DocumentSnapshot | None, ResolutionStatus]:
         """Resolve ``uri`` and return ``(snapshot, status)`` (R235)."""
@@ -179,6 +229,16 @@ class DocumentStore:
         if snap is None:
             return None, ResolutionStatus.UNRESOLVED
         return snap, ResolutionStatus.RESOLVED
+
+    @staticmethod
+    def _keyed_snapshot(document: DocumentSnapshot) -> tuple[str, DocumentSnapshot]:
+        """Canonicalize ``document.uri`` for map keys (R263)."""
+        key = canonicalize_document_uri(document.uri)
+        if not key:
+            return "", document
+        if document.uri == key:
+            return key, document
+        return key, replace(document, uri=key)
 
     @staticmethod
     def _identity_for_loaded(loaded_uri: str, requested_uri: str) -> DiskIdentity | None:
@@ -204,7 +264,10 @@ class DocumentStore:
 
     def __contains__(self, uri: object) -> bool:
         """True when ``uri`` is already cached (loader not consulted)."""
-        return isinstance(uri, str) and uri in self._docs
+        if not isinstance(uri, str):
+            return False
+        key = canonicalize_document_uri(uri)
+        return bool(key) and key in self._docs
 
     def __len__(self) -> int:
         """Number of cached documents."""
@@ -241,5 +304,6 @@ __all__ = [
     "DocumentStore",
     "ResolutionStatus",
     "StoredDocument",
+    "canonicalize_document_uri",
     "capture_disk_identity",
 ]
