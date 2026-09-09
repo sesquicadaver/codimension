@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-09 @ f44c8dc4)
 
-Підтверджених **P0** немає. **P1: 1** група → **R264**. **P2: 5** груп → **R265–R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
+Підтверджених **P0** немає. **P1: 0**. **P2: 5** груп → **R265–R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
 
 ### Повторний аудит 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 черга
 
@@ -16,7 +16,7 @@
 | P1-01 | SSH replace: crash між `dest→backup` і `dest_moved` → recovery `staged` знищує єдину valid copy | P1 | ✅ R261 |
 | P1-02 | R253: `notify()` без `expect_generation` → `didChange` на новій generation без `didOpen` | P1 | ✅ R262 |
 | P1-03 | DocumentStore: URI alias (`file://localhost`) може замінити `OPEN_BUFFER` дисковим `DISK` | P1 | ✅ R263 |
-| P1-04 | Plugin identity: symlinked directories не в `package_sha256`, але імпортуються | P1 | 🔓 OPEN → **R264** |
+| P1-04 | Plugin identity: symlinked directories не в `package_sha256`, але імпортуються | P1 | ✅ R264 |
 
 ### P2 / технічний борг (аудит 2026-09-09 @ f44c8dc4)
 
@@ -34,7 +34,7 @@
 |------|-----------|
 | R252 | ✅ Закрито |
 | R253 | ✅ Закрито (залишок R262) |
-| R254 | ⚠️ Частково → залишок **R264** |
+| R254 | ✅ Закрито (залишок R264) |
 | R255 | ⚠️ Не повністю → залишок **R261** |
 | R256 | ✅ Закрито |
 | R257 | ⚠️ Частково → залишок **R265** |
@@ -48,7 +48,7 @@
 |----|----------|-----------|--------|
 | P1-01 | LSP: application request після `ensure_initialized` може піти в новий transport до handshake | P1 | ✅ R252 |
 | P1-02 | LSP semantic: `didOpen/didChange` і `request` не в одній generation | P1 | ✅ R253 + ✅ R262 |
-| P1-03 | Plugin package identity fail-open для oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 (залишок → R264) |
+| P1-03 | Plugin package identity fail-open для oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 + ✅ R264 |
 | P1-04 | SSH fallback replace: фіксовані staging/backup імена; не crash/concurrency-safe | P1 | ✅ R255 (залишок → R261) |
 
 ### P2 / технічний борг (аудит 2026-09-09 @ eaa3dfee) — інтегрований

@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-09 audit @ f44c8dc4)
 
-No confirmed **P0**. **P1: 1** group → **R264**. **P2: 5** groups → **R265–R268**. Wave R252–R260 integrated with residuals; slice `codi-last.md` @ master@f44c8dc4.
+No confirmed **P0**. **P1: 0**. **P2: 5** groups → **R265–R268**. Wave R252–R260 integrated with residuals; slice `codi-last.md` @ master@f44c8dc4.
 
 ### Re-audit 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 queue
 
@@ -16,7 +16,7 @@ No confirmed **P0**. **P1: 1** group → **R264**. **P2: 5** groups → **R265�
 | P1-01 | SSH replace: crash between `dest→backup` and `dest_moved` → `staged` recovery destroys sole valid copy | P1 | ✅ R261 |
 | P1-02 | R253: `notify()` lacks `expect_generation` → `didChange` on new generation without `didOpen` | P1 | ✅ R262 |
 | P1-03 | DocumentStore: URI alias (`file://localhost`) can replace `OPEN_BUFFER` with disk `DISK` | P1 | ✅ R263 |
-| P1-04 | Plugin identity: symlinked directories omitted from `package_sha256` but still importable | P1 | 🔓 OPEN → **R264** |
+| P1-04 | Plugin identity: symlinked directories omitted from `package_sha256` but still importable | P1 | ✅ R264 |
 
 ### P2 / tech debt (2026-09-09 audit @ f44c8dc4)
 
@@ -34,7 +34,7 @@ No confirmed **P0**. **P1: 1** group → **R264**. **P2: 5** groups → **R265�
 |------|--------|
 | R252 | ✅ Closed |
 | R253 | ✅ Closed (residual R262) |
-| R254 | ⚠️ Partial → residual **R264** |
+| R254 | ✅ Closed (residual R264) |
 | R255 | ⚠️ Incomplete → residual **R261** |
 | R256 | ✅ Closed |
 | R257 | ⚠️ Partial → residual **R265** |
@@ -48,7 +48,7 @@ No confirmed **P0**. **P1: 1** group → **R264**. **P2: 5** groups → **R265�
 |----|-------|----------|--------|
 | P1-01 | LSP: application request after `ensure_initialized` may hit new transport before handshake | P1 | ✅ R252 |
 | P1-02 | LSP semantic: `didOpen/didChange` and `request` not in one generation | P1 | ✅ R253 + ✅ R262 |
-| P1-03 | Plugin package identity fail-open for oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 (residual → R264) |
+| P1-03 | Plugin package identity fail-open for oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 + ✅ R264 |
 | P1-04 | SSH fallback replace: fixed staging/backup names; not crash/concurrency-safe | P1 | ✅ R255 (residual → R261) |
 
 ### P2 / tech debt (2026-09-09 audit @ eaa3dfee) — integrated

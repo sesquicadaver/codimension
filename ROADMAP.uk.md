@@ -220,8 +220,8 @@
 | 72 | R260 | Reliability test wave | Barriers, SSH crash phases, oversized plugin, lifecycle rollback; coverage climb | L | DONE ([#240](https://github.com/sesquicadaver/codimension/pull/240)) |
 | 73 | R261 | SSH replace state machine hardening | Немає crash з втратою єдиної valid copy; atomic bound marker; fault tests | L | DONE ([#243](https://github.com/sesquicadaver/codimension/pull/243)) |
 | 74 | R262 | Generation-pinned LSP notifications | didOpen/didChange/request в одній generation; restart з didOpen | L | DONE ([#244](https://github.com/sesquicadaver/codimension/pull/244)) |
-| 75 | R263 | Canonical DocumentStore identity | URI aliases спілять стан; OPEN_BUFFER ніколи не замінюється DISK | L | DONE |
-| 76 | R264 | Plugin fd-relative identity walk | Symlink files/dirs fail-closed; весь executable content у identity | L | OPEN |
+| 75 | R263 | Canonical DocumentStore identity | URI aliases спілять стан; OPEN_BUFFER ніколи не замінюється DISK | L | DONE ([#245](https://github.com/sesquicadaver/codimension/pull/245)) |
+| 76 | R264 | Plugin fd-relative identity walk | Symlink files/dirs fail-closed; весь executable content у identity | L | DONE |
 | 77 | R265 | Full project lifecycle transaction | Rollback охоплює detach/unload/load/attach; cleanup без попереднього project | L | OPEN |
 | 78 | R266 | LSP worker and payload hardening | Immutable transport lease; reader death invalidates; strict range decode | L | OPEN |
 | 79 | R267 | Multi-exit taint environments | ExitKind→env; finally per edge; nested loop exit stack | L | OPEN |
@@ -231,7 +231,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R264** — Plugin fd-relative identity walk.
+**Наступний OPEN:** **R265** — Full project lifecycle transaction.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
