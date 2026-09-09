@@ -1,5 +1,8 @@
 2026 Sep 09
 
+* R259: AI validation hardening — audit evidence must lie in declared
+  ``begin_line``..``end_line`` (positive coords); budget float parsers and
+  dataclasses reject ``NaN``/``±Inf`` (re-audit P2-05/P2-06 @ eaa3dfee)
 * R258: taint terminal-edge lattice — ``ExitKind`` / ``BranchResult``; may-taint
   join only NORMAL arms (``return`` / ``break`` / ``continue`` / ``raise``
   excluded); loop else uses iteration-boundary head; break skips else

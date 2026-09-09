@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - structured AI findings (R231 / R241)
+# codimension - structured AI findings (R231 / R241 / R259)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Structured AI finding model, validation, dedupe, and SARIF-like export (R231 / R241).
+"""Structured AI finding model, validation, dedupe, and SARIF-like export (R231 / R241 / R259).
 
 Findings are evidence-oriented records (severity, confidence, optional spans).
 LLM prose is accepted only after deterministic schema validation — invalid
@@ -18,6 +18,8 @@ entries are dropped, not silently trusted.
 R241: audit-level findings require a project-contained path, a valid line
 range against source, and evidence text that actually appears in that source.
 R251: findings must bind to the current chunk file (no cross-file evidence).
+R259: audit findings require positive ``begin_line``/``end_line`` and evidence
+that occurs inside that declared line slice (not merely somewhere in the file).
 Duplicate ``finding_id`` values with different content are re-keyed instead of
 silently collapsing distinct issues.
 """
@@ -26,6 +28,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 from dataclasses import dataclass, replace
@@ -75,8 +78,9 @@ class AiFinding:
     rule_id: str = ""
 
     def __post_init__(self) -> None:
-        """Reject out-of-range confidence."""
-        if not 0.0 <= float(self.confidence) <= 1.0:
+        """Reject non-finite or out-of-range confidence (R259)."""
+        confidence = float(self.confidence)
+        if not math.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
             raise ValueError(f"confidence must be in [0, 1], got {self.confidence!r}")
 
 
@@ -155,7 +159,7 @@ def validate_finding_dict(raw: Mapping[str, Any], *, default_file: str = "") -> 
         confidence = float(raw.get("confidence", 0.5))
     except (TypeError, ValueError):
         return None
-    if not 0.0 <= confidence <= 1.0:
+    if not math.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
         return None
     file_path = str(raw.get("file_path") or raw.get("file") or default_file or "").strip()
     begin_line = _nonneg_int(raw.get("begin_line", raw.get("line", 0)))
@@ -288,14 +292,15 @@ def validate_audit_finding(
     project_dir: str,
     project_files: Sequence[str],
 ) -> AiFinding | None:
-    """Return ``finding`` when path/lines/evidence match **chunk** source (R241 / R251).
+    """Return ``finding`` when path/lines/evidence match **chunk** source (R241 / R251 / R259).
 
     Audit-level findings must:
     * resolve to a project-contained file;
     * bind to the current chunk file (``default_file``) — not another project path
       with evidence checked against the wrong ``source`` (R251 / P2-01);
-    * use a line range within the source (when lines are set);
-    * include non-empty ``evidence`` that occurs in the source text.
+    * declare a positive line range within the source (R259);
+    * include non-empty ``evidence`` that occurs in that declared line slice
+      (not merely somewhere else in the file) (R259 / P2-05).
     """
     candidate_path = (finding.file_path or default_file or "").strip()
     if not candidate_path or not (project_dir or "").strip():
@@ -312,19 +317,21 @@ def validate_audit_finding(
     lines = text.splitlines()
     begin = int(finding.begin_line or 0)
     end = int(finding.end_line or 0)
-    if begin < 0 or end < 0:
+    # R259: audit findings require explicit positive coordinates.
+    if begin <= 0:
         return None
-    if begin > 0:
-        if begin > len(lines):
-            return None
-        if end == 0:
-            end = begin
-        if end < begin or end > len(lines):
-            return None
+    if begin > len(lines):
+        return None
+    if end <= 0:
+        end = begin
+    if end < begin or end > len(lines):
+        return None
     evidence = (finding.evidence or "").strip()
     if not evidence:
         return None
-    if evidence not in text:
+    # Rebuild the declared span with ``\\n`` separators (splitlines strips EOL).
+    span_text = "\n".join(lines[begin - 1 : end])
+    if evidence not in span_text:
         return None
     display = abs_path
     if project_dir:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - AI session token/cost budgets (R231 / R241)
+# codimension - AI session token/cost budgets (R231 / R241 / R259)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""Global (per-job) AI token/cost budgets beyond per-file truncation (R231 / R241 / R249).
+"""Global (per-job) AI token/cost budgets beyond per-file truncation (R231 / R241 / R249 / R259).
 
 Token counts are **estimates** (``chars / 4``) suitable for fail-closed
 caps — not billing-grade metering. Cost uses a configurable USD-per-1k-tokens
@@ -21,10 +21,14 @@ ceilings for project analysis.
 
 R249: ``remaining_output_tokens`` also respects remaining cost (converted to
 tokens); callers must preflight with that provider cap, not a fixed reserve.
+
+R259: float parsers and budget dataclasses reject non-finite values (``NaN`` /
+``±Inf``) so cost comparisons cannot fail open.
 """
 
 from __future__ import annotations
 
+import math
 import os
 import time
 from dataclasses import dataclass
@@ -82,10 +86,10 @@ class AiBudgetLimits:
     def __post_init__(self) -> None:
         if self.max_tokens < 0:
             raise ValueError("max_tokens must be >= 0")
-        if self.max_cost_usd < 0:
-            raise ValueError("max_cost_usd must be >= 0")
-        if self.usd_per_1k_tokens < 0:
-            raise ValueError("usd_per_1k_tokens must be >= 0")
+        if not math.isfinite(self.max_cost_usd) or self.max_cost_usd < 0:
+            raise ValueError("max_cost_usd must be a finite number >= 0")
+        if not math.isfinite(self.usd_per_1k_tokens) or self.usd_per_1k_tokens < 0:
+            raise ValueError("usd_per_1k_tokens must be a finite number >= 0")
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,12 +116,16 @@ class AiJobContract:
             raise ValueError("max_source_bytes must be >= 0")
         if self.max_output_tokens < 0:
             raise ValueError("max_output_tokens must be >= 0")
+        if self.deadline_monotonic is not None and not math.isfinite(self.deadline_monotonic):
+            raise ValueError("deadline_monotonic must be finite when set")
 
     def deadline_exceeded(self, *, now: float | None = None) -> bool:
         """True when a deadline is set and ``now`` is past it."""
         if self.deadline_monotonic is None:
             return False
         clock = time.monotonic() if now is None else now
+        if not math.isfinite(clock):
+            return True
         return clock >= self.deadline_monotonic
 
 
@@ -144,7 +152,10 @@ def _env_int_strict(environ: Mapping[str, str], key: str, default: int) -> int:
 
 
 def _env_float_strict(environ: Mapping[str, str], key: str, default: float) -> float:
-    """Parse a non-negative float; empty → default; invalid → :class:`AiBudgetConfigError`."""
+    """Parse a non-negative finite float; empty → default; invalid → :class:`AiBudgetConfigError`.
+
+    R259: ``NaN`` / ``±Inf`` fail closed (``value < 0`` alone is not enough).
+    """
     raw = (environ.get(key) or "").strip()
     if not raw:
         return default
@@ -152,8 +163,8 @@ def _env_float_strict(environ: Mapping[str, str], key: str, default: float) -> f
         value = float(raw)
     except ValueError as exc:
         raise AiBudgetConfigError(f"invalid {key}={raw!r}; expected non-negative number") from exc
-    if value < 0:
-        raise AiBudgetConfigError(f"invalid {key}={raw!r}; expected non-negative number")
+    if not math.isfinite(value) or value < 0:
+        raise AiBudgetConfigError(f"invalid {key}={raw!r}; expected non-negative finite number")
     return value
 
 
