@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-09 audit)
 
-No confirmed **P0**. **P1** open groups: none. **P2: 5** groups → **R257–R260**. Wave R232–R256 ✅; slice `codi-last.md` @ master@eaa3dfee.
+No confirmed **P0**. **P1** open groups: none. **P2: 4** groups → **R258–R260**. Wave R232–R257 ✅; slice `codi-last.md` @ master@eaa3dfee.
 
 ### Re-audit 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 queue
 
@@ -24,7 +24,7 @@ No confirmed **P0**. **P1** open groups: none. **P2: 5** groups → **R257–R26
 |----|-------|----------|--------|
 | P2-01 | LSP pending leak on encode/write failure | P2 | ✅ R256 |
 | P2-02 | URI: NUL in percent-decode; direct loader may bypass `O_NOFOLLOW` | P2 | ✅ R256 |
-| P2-03 | Project switch: unload without rollback after `before_load` | P2 | 🔓 OPEN → **R257** |
+| P2-03 | Project switch: unload without rollback after `before_load` | P2 | ✅ R257 |
 | P2-04 | Taint: terminal branch env in normal join | P2 | 🔓 OPEN → **R258** |
 | P2-05 | AI evidence not bound to declared line range | P2 | 🔓 OPEN → **R259** |
 | P2-06 | AI budget parser accepts `NaN` / non-finite | P2 | 🔓 OPEN → **R259** |
