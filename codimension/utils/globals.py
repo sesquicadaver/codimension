@@ -88,6 +88,7 @@ class GlobalDataWrapper:
             self.project,
             after_load=self.__attachLanguageWorkspace,
             before_unload=self.__detachLanguageWorkspace,
+            prevalidate=True,
         )
 
         self.pluginManager = CDMPluginManager()

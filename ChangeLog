@@ -1,5 +1,8 @@
 2026 Sep 09
 
+* R257: transactional project switch — pre-validate ``.cdm3`` target before
+  unload; restore previous project on load/create/after_load failure
+  (re-audit P2-03 @ eaa3dfee)
 * R256: LSP pending rollback on encode/write failure; ``file_uri_to_path``
   rejects embedded NUL; direct document loader never retries without
   ``O_NOFOLLOW`` (re-audit P2-01/P2-02 @ eaa3dfee)

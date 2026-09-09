@@ -36,7 +36,7 @@
 | **Shim identity T071–T073** | parsers / bootstrap | parsers/__init__.py, check_package_relative_imports.py | unified cdmpyparser/cdmcfparser aliases; T072 CI gate |
 | **Headless core T080–T082** | core / infrastructure | core/syntax.py, core/flow.py, infrastructure/* | tests/test_core_headless.py |
 | **ApplicationServices R101 / R236** | app | app/__init__.py, app/services.py | headless façade + fakes; create/load/switch/unload; tests/test_app_services.py; test_app_services_r236.py; T085 covers `codimension/app` |
-| **App routing R102 / R236** | ui + globals + startup | globals.py `appServices`; mainwindow / mainmenu / projectviewer / recentprojectsviewer / codimension.py | UI→app→project (no direct createNew/load/unload); tests/test_r102_app_routing.py |
+| **App routing R102 / R236** | ui + globals + startup | globals.py `appServices`; mainwindow / mainmenu / projectviewer / recentprojectsviewer / codimension.py | UI→app→project (no direct createNew/load/unload); **R257** prevalidate + rollback on switch failure; tests/test_r102_app_routing.py, test_app_services_r257.py |
 | **Smoke + wrapt R197** | scripts/offscreen_gui_smoke + inspect_compat | graceful Qt teardown; formatargspec for wrapt 1.12 | tests/test_r197_smoke_wrapt.py |
 | **Core import graph T085 / R100** | CI + utils | scripts/check_core_import_graph.py; utils/importutils.py | no Qt/UI in core/infrastructure/app; `importutils` Qt-free + progress callback; tests/test_importutils.py, test_t085_core_import_graph.py |
 | **MainWindow routing T083** | ui.mainwindow / mainwindow_debug | mainwindow.py, mainwindow_debug.py | MRO mixins; no extendInstance; DebuggerMixin |
@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — хвиля R221–R231 ✅; **R232–R256** ✅; хвиля **R252–R260** (`codi-last.md` @ eaa3dfee); Next = **R257** transactional project switch.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — хвиля R221–R231 ✅; **R232–R257** ✅; хвиля **R252–R260** (`codi-last.md` @ eaa3dfee); Next = **R258** taint terminal-edge lattice.
 
 ### Матриця меж модулів (R103 / R195)
 
