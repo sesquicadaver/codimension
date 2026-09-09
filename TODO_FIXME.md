@@ -2,14 +2,35 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-09-08 (статичний аудит @ `master@cf241873` / `codi-last.md` @ 645d655; хвилі R209–R243 закриті)  
+**Дата перевірки:** 2026-09-09 (статичний аудит @ `master@eaa3dfee` / `codi-last.md`; хвилі R209–R251 закриті)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
-## Відкриті блокери (аудит 2026-09-08)
+## Відкриті блокери (аудит 2026-09-09)
 
-Підтверджених **P0** немає. **P1: 0** відкритих. **P2: 0** відкритих у зрізі `codi-last.md` @ 645d655. Хвиля R232–R251 ✅.
+Підтверджених **P0** немає. **P1: 4** відкритих груп → **R252–R255**. **P2: 7** груп → **R256–R260**. Хвиля R232–R251 ✅; зріз `codi-last.md` @ master@eaa3dfee.
 
-### Повторний аудит 2026-09-08 (`codi-last.md` @ 645d655) — P1 черга
+### Повторний аудит 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 черга
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P1-01 | LSP: application request після `ensure_initialized` може піти в новий transport до handshake | P1 | 🔓 OPEN → **R252** |
+| P1-02 | LSP semantic: `didOpen/didChange` і `request` не в одній generation | P1 | 🔓 OPEN → **R253** |
+| P1-03 | Plugin package identity fail-open для oversized/unreadable member (`package_sha256=""`) | P1 | 🔓 OPEN → **R254** |
+| P1-04 | SSH fallback replace: фіксовані staging/backup імена; не crash/concurrency-safe | P1 | 🔓 OPEN → **R255** |
+
+### P2 / технічний борг (аудит 2026-09-09)
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P2-01 | LSP pending leak при encode/write failure | P2 | 🔓 OPEN → **R256** |
+| P2-02 | URI: NUL у percent-decode; direct loader може обійти `O_NOFOLLOW` | P2 | 🔓 OPEN → **R256** |
+| P2-03 | Project switch: unload без rollback після `before_load` | P2 | 🔓 OPEN → **R257** |
+| P2-04 | Taint: terminal branch environment у звичайному join | P2 | 🔓 OPEN → **R258** |
+| P2-05 | AI evidence не прив’язане до declared line range | P2 | 🔓 OPEN → **R259** |
+| P2-06 | AI budget parser приймає `NaN` / non-finite | P2 | 🔓 OPEN → **R259** |
+| P2-07 | CI coverage floor 30% все ще низький | P2 | 🔓 OPEN → **R260** |
+
+### Повторний аудит 2026-09-08 (`codi-last.md` @ 645d655) — P1 черга (закрита)
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
@@ -21,7 +42,7 @@
 | P1-06 | AI cost budget: provider `max_tokens` може перевищити cost remainder | P1 | ✅ R249 |
 | P1-07 | pybind11 EXACT без CST `.def()` call_expression (regex у module body) | P1 | ✅ R250 |
 
-### P2 / технічний борг (аудит 2026-09-08)
+### P2 / технічний борг (аудит 2026-09-08) — закритий
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|

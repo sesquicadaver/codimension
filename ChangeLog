@@ -1,3 +1,10 @@
+2026 Sep 09
+
+* Queue seed: re-audit ``codi-last.md`` @ master@eaa3dfee → ROADMAP
+  **R252–R260** (LSP handshake lease, generation-atomic doc request,
+  fail-closed plugin identity, durable SSH replace, URI/pending residual,
+  transactional switch, taint lattice, AI validation, reliability tests)
+
 2026 Sep 08
 
 * R251: residual P2 — AI findings source-bound to chunk; plugin package
