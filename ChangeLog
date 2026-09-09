@@ -1,5 +1,8 @@
 2026 Sep 09
 
+* R253: LSP semantic ``didOpen``/``didChange`` + ``request`` share one
+  handshake generation — ``expect_generation`` refuses post-restart writes;
+  provider retries sync before the query (re-audit P1-02 @ eaa3dfee)
 * R252: LSP application ``request`` / ``notify`` take an initialized
   transport lease — ``ensure_alive`` + handshake + pending bind/write under
   ``_lifecycle_lock``; lease carries ``initialized_generation`` (re-audit
