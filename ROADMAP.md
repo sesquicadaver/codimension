@@ -218,12 +218,20 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 70 | R258 | Taint terminal-edge lattice | Separate normal/return/break/continue/raise; join only normal paths | L | DONE ([#236](https://github.com/sesquicadaver/codimension/pull/236)) |
 | 71 | R259 | AI validation hardening | Finite numeric config; evidence in declared line range | M | DONE ([#238](https://github.com/sesquicadaver/codimension/pull/238)) |
 | 72 | R260 | Reliability test wave | Barriers, SSH crash phases, oversized plugin, lifecycle rollback; coverage climb | L | DONE ([#240](https://github.com/sesquicadaver/codimension/pull/240)) |
+| 73 | R261 | SSH replace state machine hardening | No crash loses sole valid copy; atomic bound marker; fault tests per op | L | OPEN |
+| 74 | R262 | Generation-pinned LSP notifications | didOpen/didChange/request stay on one generation; restart starts with didOpen | L | OPEN |
+| 75 | R263 | Canonical DocumentStore identity | URI aliases share state; OPEN_BUFFER never replaced by DISK | L | OPEN |
+| 76 | R264 | Plugin fd-relative identity walk | Symlink files/dirs fail-closed; all executable package content in identity | L | OPEN |
+| 77 | R265 | Full project lifecycle transaction | Rollback covers detach/unload/load/attach; clean partial load without prior project | L | OPEN |
+| 78 | R266 | LSP worker and payload hardening | Immutable transport lease for workers; reader death invalidates; strict range decode | L | OPEN |
+| 79 | R267 | Multi-exit taint environments | ExitKind→env map; finally per edge; nested loop exit stack | L | OPEN |
+| 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; reliability coverage precision; TODO sync | M | OPEN |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** none in wave R252–R260 — queue complete (re-seed from next audit).
+**Next OPEN:** **R261** — SSH replace state machine hardening.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
@@ -235,7 +243,9 @@ Wave **R232–R243** = hardening from re-audit `codi-last.md` @ 45e33f6 (DONE).
 
 Wave **R244–R251** = hardening from re-audit `codi-last.md` @ 645d655 (master@cf241873; DONE).
 
-Wave **R252–R260** = hardening from re-audit `codi-last.md` @ master@eaa3dfee (recommended queue §1–9).
+Wave **R252–R260** = hardening from re-audit `codi-last.md` @ master@eaa3dfee (DONE; residuals → R261–R268).
+
+Wave **R261–R268** = hardening from re-audit `codi-last.md` @ master@f44c8dc4 (recommended queue §1–8).
 
 
 **Out of this wave:** DAP/native debug; own Rust/C++ parsers; Yapsy language plugins; copying the Python CFG pipeline to other languages; HMAC-signed bindings (optional stretch).

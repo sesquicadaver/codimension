@@ -2,32 +2,65 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-09-09 (статичний аудит @ `master@eaa3dfee` / `codi-last.md`; хвилі R209–R251 закриті)  
+**Дата перевірки:** 2026-09-09 (статичний аудит @ `master@f44c8dc4` / `codi-last.md`; хвилі R209–R260 інтегровані)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
-## Відкриті блокери (аудит 2026-09-09)
+## Відкриті блокери (аудит 2026-09-09 @ f44c8dc4)
 
-Підтверджених **P0** немає. **P1** відкритих немає. **P2** відкритих немає (хвиля R252–R260 ✅). Зріз `codi-last.md` @ master@eaa3dfee.
+Підтверджених **P0** немає. **P1: 4** групи → **R261–R264**. **P2: 5** груп → **R265–R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
 
-### Повторний аудит 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 черга
+### Повторний аудит 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 черга
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P1-01 | SSH replace: crash між `dest→backup` і `dest_moved` → recovery `staged` знищує єдину valid copy | P1 | 🔓 OPEN → **R261** |
+| P1-02 | R253: `notify()` без `expect_generation` → `didChange` на новій generation без `didOpen` | P1 | 🔓 OPEN → **R262** |
+| P1-03 | DocumentStore: URI alias (`file://localhost`) може замінити `OPEN_BUFFER` дисковим `DISK` | P1 | 🔓 OPEN → **R263** |
+| P1-04 | Plugin identity: symlinked directories не в `package_sha256`, але імпортуються | P1 | 🔓 OPEN → **R264** |
+
+### P2 / технічний борг (аудит 2026-09-09 @ f44c8dc4)
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P2-01 | Project lifecycle: `unload` поза rollback `try`; `before_unload` може від’єднати workspace без restore | P2 | 🔓 OPEN → **R265** |
+| P2-02 | LSP reader EOF не invalidує transport; workers тримають mutable `self._proc` | P2 | 🔓 OPEN → **R266** |
+| P2-03 | LSP range decoder кидає на malformed position замість `UNRESOLVED` | P2 | 🔓 OPEN → **R266** |
+| P2-04 | Taint: один ExitKind/env; terminal envs губляться перед `finally`; nested loop collectors | P2 | 🔓 OPEN → **R267** |
+| P2-05 | AI explicit kwargs (`deadline_sec=NaN`/negative) не fail-closed як env parser | P2 | 🔓 OPEN → **R268** |
+
+### Стан хвилі R252–R260 (зріз f44c8dc4)
+
+| Task | Результат |
+|------|-----------|
+| R252 | ✅ Закрито |
+| R253 | ⚠️ Частково → залишок **R262** |
+| R254 | ⚠️ Частково → залишок **R264** |
+| R255 | ⚠️ Не повністю → залишок **R261** |
+| R256 | ✅ Закрито |
+| R257 | ⚠️ Частково → залишок **R265** |
+| R258 | ⚠️ Частково → залишок **R267** |
+| R259 | ⚠️ Основне ✅; explicit API → **R268** |
+| R260 | ✅ Закрито за обсягом |
+
+### Повторний аудит 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 черга (інтегрована; див. залишки вище)
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
 | P1-01 | LSP: application request після `ensure_initialized` може піти в новий transport до handshake | P1 | ✅ R252 |
-| P1-02 | LSP semantic: `didOpen/didChange` і `request` не в одній generation | P1 | ✅ R253 |
-| P1-03 | Plugin package identity fail-open для oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 |
-| P1-04 | SSH fallback replace: фіксовані staging/backup імена; не crash/concurrency-safe | P1 | ✅ R255 |
+| P1-02 | LSP semantic: `didOpen/didChange` і `request` не в одній generation | P1 | ✅ R253 (залишок → R262) |
+| P1-03 | Plugin package identity fail-open для oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 (залишок → R264) |
+| P1-04 | SSH fallback replace: фіксовані staging/backup імена; не crash/concurrency-safe | P1 | ✅ R255 (залишок → R261) |
 
-### P2 / технічний борг (аудит 2026-09-09)
+### P2 / технічний борг (аудит 2026-09-09 @ eaa3dfee) — інтегрований
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
 | P2-01 | LSP pending leak при encode/write failure | P2 | ✅ R256 |
 | P2-02 | URI: NUL у percent-decode; direct loader може обійти `O_NOFOLLOW` | P2 | ✅ R256 |
-| P2-03 | Project switch: unload без rollback після `before_load` | P2 | ✅ R257 |
-| P2-04 | Taint: terminal branch environment у звичайному join | P2 | ✅ R258 |
+| P2-03 | Project switch: unload без rollback після `before_load` | P2 | ✅ R257 (залишок → R265) |
+| P2-04 | Taint: terminal branch environment у звичайному join | P2 | ✅ R258 (залишок → R267) |
 | P2-05 | AI evidence не прив’язане до declared line range | P2 | ✅ R259 |
-| P2-06 | AI budget parser приймає `NaN` / non-finite | P2 | ✅ R259 |
+| P2-06 | AI budget parser приймає `NaN` / non-finite | P2 | ✅ R259 (залишок → R268) |
 | P2-07 | CI coverage floor 30% все ще низький | P2 | ✅ R260 |
 
 ### Повторний аудит 2026-09-08 (`codi-last.md` @ 645d655) — P1 черга (закрита)

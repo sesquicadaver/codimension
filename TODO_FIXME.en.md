@@ -2,32 +2,65 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-09-09 (static audit @ `master@eaa3dfee` / `codi-last.md`; waves R209–R251 closed)  
+**Last review:** 2026-09-09 (static audit @ `master@f44c8dc4` / `codi-last.md`; waves R209–R260 integrated)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Open blockers (2026-09-09 audit)
+## Open blockers (2026-09-09 audit @ f44c8dc4)
 
-No confirmed **P0**. **P1** open groups: none. **P2** open groups: none (wave R252–R260 ✅). Slice `codi-last.md` @ master@eaa3dfee.
+No confirmed **P0**. **P1: 4** groups → **R261–R264**. **P2: 5** groups → **R265–R268**. Wave R252–R260 integrated with residuals; slice `codi-last.md` @ master@f44c8dc4.
 
-### Re-audit 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 queue
+### Re-audit 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 queue
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P1-01 | SSH replace: crash between `dest→backup` and `dest_moved` → `staged` recovery destroys sole valid copy | P1 | 🔓 OPEN → **R261** |
+| P1-02 | R253: `notify()` lacks `expect_generation` → `didChange` on new generation without `didOpen` | P1 | 🔓 OPEN → **R262** |
+| P1-03 | DocumentStore: URI alias (`file://localhost`) can replace `OPEN_BUFFER` with disk `DISK` | P1 | 🔓 OPEN → **R263** |
+| P1-04 | Plugin identity: symlinked directories omitted from `package_sha256` but still importable | P1 | 🔓 OPEN → **R264** |
+
+### P2 / tech debt (2026-09-09 audit @ f44c8dc4)
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P2-01 | Project lifecycle: `unload` outside rollback `try`; `before_unload` may detach workspace without restore | P2 | 🔓 OPEN → **R265** |
+| P2-02 | LSP reader EOF does not invalidate transport; workers hold mutable `self._proc` | P2 | 🔓 OPEN → **R266** |
+| P2-03 | LSP range decoder throws on malformed position instead of `UNRESOLVED` | P2 | 🔓 OPEN → **R266** |
+| P2-04 | Taint: single ExitKind/env; terminal envs lost before `finally`; nested loop collectors | P2 | 🔓 OPEN → **R267** |
+| P2-05 | AI explicit kwargs (`deadline_sec=NaN`/negative) not fail-closed like env parser | P2 | 🔓 OPEN → **R268** |
+
+### Wave R252–R260 status (slice f44c8dc4)
+
+| Task | Result |
+|------|--------|
+| R252 | ✅ Closed |
+| R253 | ⚠️ Partial → residual **R262** |
+| R254 | ⚠️ Partial → residual **R264** |
+| R255 | ⚠️ Incomplete → residual **R261** |
+| R256 | ✅ Closed |
+| R257 | ⚠️ Partial → residual **R265** |
+| R258 | ⚠️ Partial → residual **R267** |
+| R259 | ⚠️ Core ✅; explicit API → **R268** |
+| R260 | ✅ Closed as scoped |
+
+### Re-audit 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 queue (integrated; see residuals above)
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | P1-01 | LSP: application request after `ensure_initialized` may hit new transport before handshake | P1 | ✅ R252 |
-| P1-02 | LSP semantic: `didOpen/didChange` and `request` not in one generation | P1 | ✅ R253 |
-| P1-03 | Plugin package identity fail-open for oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 |
-| P1-04 | SSH fallback replace: fixed staging/backup names; not crash/concurrency-safe | P1 | ✅ R255 |
+| P1-02 | LSP semantic: `didOpen/didChange` and `request` not in one generation | P1 | ✅ R253 (residual → R262) |
+| P1-03 | Plugin package identity fail-open for oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 (residual → R264) |
+| P1-04 | SSH fallback replace: fixed staging/backup names; not crash/concurrency-safe | P1 | ✅ R255 (residual → R261) |
 
-### P2 / tech debt (2026-09-09 audit)
+### P2 / tech debt (2026-09-09 audit @ eaa3dfee) — integrated
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | P2-01 | LSP pending leak on encode/write failure | P2 | ✅ R256 |
 | P2-02 | URI: NUL in percent-decode; direct loader may bypass `O_NOFOLLOW` | P2 | ✅ R256 |
-| P2-03 | Project switch: unload without rollback after `before_load` | P2 | ✅ R257 |
-| P2-04 | Taint: terminal branch env in normal join | P2 | ✅ R258 |
+| P2-03 | Project switch: unload without rollback after `before_load` | P2 | ✅ R257 (residual → R265) |
+| P2-04 | Taint: terminal branch env in normal join | P2 | ✅ R258 (residual → R267) |
 | P2-05 | AI evidence not bound to declared line range | P2 | ✅ R259 |
-| P2-06 | AI budget parser accepts `NaN` / non-finite | P2 | ✅ R259 |
+| P2-06 | AI budget parser accepts `NaN` / non-finite | P2 | ✅ R259 (residual → R268) |
 | P2-07 | CI coverage floor 30% still low | P2 | ✅ R260 |
 
 ### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue (closed)
