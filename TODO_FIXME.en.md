@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-09 audit)
 
-No confirmed **P0**. **P1: 1** open group → **R255**. **P2: 7** groups → **R256–R260**. Wave R232–R254 ✅; slice `codi-last.md` @ master@eaa3dfee.
+No confirmed **P0**. **P1** open groups: none. **P2: 7** groups → **R256–R260**. Wave R232–R255 ✅; slice `codi-last.md` @ master@eaa3dfee.
 
 ### Re-audit 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 queue
 
@@ -16,7 +16,7 @@ No confirmed **P0**. **P1: 1** open group → **R255**. **P2: 7** groups → **R
 | P1-01 | LSP: application request after `ensure_initialized` may hit new transport before handshake | P1 | ✅ R252 |
 | P1-02 | LSP semantic: `didOpen/didChange` and `request` not in one generation | P1 | ✅ R253 |
 | P1-03 | Plugin package identity fail-open for oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 |
-| P1-04 | SSH fallback replace: fixed staging/backup names; not crash/concurrency-safe | P1 | 🔓 OPEN → **R255** |
+| P1-04 | SSH fallback replace: fixed staging/backup names; not crash/concurrency-safe | P1 | ✅ R255 |
 
 ### P2 / tech debt (2026-09-09 audit)
 

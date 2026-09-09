@@ -55,7 +55,8 @@ def test_ssh_upload_chunked_atomic_and_capped(tmp_path: Path) -> None:
     local.write_bytes(b"abcdefghij" * 100)  # 1000 bytes
     upload_file(session, str(local), "/proj/payload.bin", max_bytes=10_000, chunk_size=64)
     assert session.files["/proj/payload.bin"] == local.read_bytes()
-    assert "/proj/payload.bin.cdm-upload-partial" not in session.files
+    leftovers = [p for p in session.files if "cdm-upload" in p or p.endswith(".cdm-replace-txn")]
+    assert leftovers == []
 
     oversized = tmp_path / "big.bin"
     oversized.write_bytes(b"x" * 200)

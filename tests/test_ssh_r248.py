@@ -36,8 +36,8 @@ def test_upload_overwrites_existing_via_posix_rename(tmp_path: Path) -> None:
     local.write_bytes(b"v2-content")
     upload_file(session, str(local), "/proj/file.txt", max_bytes=10_000, chunk_size=8)
     assert session.files["/proj/file.txt"] == b"v2-content"
-    assert "/proj/file.txt.cdm-upload-partial" not in session.files
-    assert "/proj/file.txt.cdm-upload-bak" not in session.files
+    leftovers = [p for p in session.files if "cdm-upload" in p or p.endswith(".cdm-replace-txn")]
+    assert leftovers == []
 
 
 def test_upload_backup_swap_without_posix_rename(tmp_path: Path) -> None:
@@ -53,8 +53,8 @@ def test_upload_backup_swap_without_posix_rename(tmp_path: Path) -> None:
     local.write_bytes(b"v2-via-swap")
     upload_file(session, str(local), "/proj/file.txt", max_bytes=10_000, chunk_size=8)
     assert session.files["/proj/file.txt"] == b"v2-via-swap"
-    assert "/proj/file.txt.cdm-upload-partial" not in session.files
-    assert "/proj/file.txt.cdm-upload-bak" not in session.files
+    leftovers = [p for p in session.files if "cdm-upload" in p or p.endswith(".cdm-replace-txn")]
+    assert leftovers == []
 
 
 def test_atomic_replace_rollback_restores_dest_on_second_rename_failure() -> None:
@@ -78,4 +78,6 @@ def test_atomic_replace_rollback_restores_dest_on_second_rename_failure() -> Non
     with pytest.raises(OSError, match="simulated"):
         atomic_replace_remote(session, "/staging.txt", "/dest.txt")
     assert session.files.get("/dest.txt") == b"keep"
-    assert "/staging.txt" in session.files
+    # R255: successful rollback clears staging + marker after restoring dest.
+    assert "/staging.txt" not in session.files
+    assert "/dest.txt.cdm-replace-txn" not in session.files

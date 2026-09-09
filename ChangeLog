@@ -1,5 +1,8 @@
 2026 Sep 09
 
+* R255: durable SSH replace — UUID staging/backup, per-dest lock, phase
+  marker + orphan recovery, classified ``posix_rename`` (no blind fallback
+  on ambiguous I/O) (re-audit P1-04 @ eaa3dfee)
 * R254: plugin package identity fail-closed — ``PluginFileIdentity.valid``;
   oversized/unreadable members and walk budgets (files/entries/depth/bytes)
   deny import; bounded ``.cdmp``/source reads (re-audit P1-03 @ eaa3dfee)
