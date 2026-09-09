@@ -1,5 +1,8 @@
 2026 Sep 09
 
+* R256: LSP pending rollback on encode/write failure; ``file_uri_to_path``
+  rejects embedded NUL; direct document loader never retries without
+  ``O_NOFOLLOW`` (re-audit P2-01/P2-02 @ eaa3dfee)
 * R255: durable SSH replace — UUID staging/backup, per-dest lock, phase
   marker + orphan recovery, classified ``posix_rename`` (no blind fallback
   on ambiguous I/O) (re-audit P1-04 @ eaa3dfee)

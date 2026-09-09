@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# codimension - file URI ↔ path helpers for DocumentStore (R224 / R235 / R246)
+# codimension - file URI ↔ path helpers for DocumentStore (R224 / R235 / R246 / R256)
 # Copyright (C) 2026  Codimension
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,6 +14,8 @@
 R235: workspace-bounded, size-capped loader with realpath containment checks.
 R246: fd-relative ``openat`` from a preopened workspace root, ``O_NOFOLLOW`` /
 ``O_NONBLOCK``, reject non-regular files before read, canonical URI output.
+R256: reject embedded NUL in URIs/paths; never retry ``open`` without
+``O_NOFOLLOW`` on the direct-loader path.
 """
 
 from __future__ import annotations
@@ -49,10 +51,12 @@ def file_uri_to_path(uri: str) -> str | None:
     """Parse a ``file://`` (or bare absolute) URI into a filesystem path.
 
     Rejects non-local authorities (anything other than empty / ``localhost``).
-    Percent-encoded path segments are decoded (R246).
+    Percent-encoded path segments are decoded (R246). Embedded NUL (literal or
+    ``%00``) yields ``None`` so callers map to ``UNRESOLVED`` instead of
+    raising ``ValueError`` from ``os.open`` (R256).
     """
     text = (uri or "").strip()
-    if not text:
+    if not text or "\x00" in text:
         return None
     if text.startswith("file:"):
         parsed = urlparse(text)
@@ -62,10 +66,12 @@ def file_uri_to_path(uri: str) -> str | None:
         if authority not in ("", "localhost"):
             return None
         path = unquote(parsed.path or "")
-        if not path:
+        if not path or "\x00" in path:
             return None
         return path
     if os.path.isabs(text):
+        if "\x00" in text:
+            return None
         return text
     return None
 
@@ -155,15 +161,13 @@ def _open_fd_under_root(root: str, abs_path: str) -> int | None:
 
 
 def _open_fd_direct(path: str) -> int | None:
-    """Open ``path`` with ``O_NOFOLLOW|O_NONBLOCK`` when no workspace root is set."""
+    """Open ``path`` with ``O_NOFOLLOW|O_NONBLOCK``; never strip NOFOLLOW (R256)."""
     flags = _O_RDONLY | _O_NOFOLLOW | _O_NONBLOCK
     try:
         return os.open(path, flags)
-    except OSError:
-        try:
-            return os.open(path, _O_RDONLY | _O_NONBLOCK)
-        except OSError:
-            return None
+    except (OSError, ValueError):
+        # ValueError: embedded NUL in path on some platforms.
+        return None
 
 
 def _read_capped(fd: int, max_bytes: int) -> bytes | None:
@@ -193,7 +197,8 @@ def load_document_from_uri(
     When ``workspace_root`` (and optional ``extra_roots``) are set, the file is
     opened via fd-relative ``openat`` under a preopened root (R246). Non-regular
     files (FIFO/socket/dir) are rejected after ``fstat`` without blocking the
-    GUI. Reads are capped at ``max_bytes``.
+    GUI. Reads are capped at ``max_bytes``. Malformed URIs (NUL) return ``None``
+    (R256).
     """
     path = file_uri_to_path(uri)
     if path is None:
