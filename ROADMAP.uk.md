@@ -217,13 +217,13 @@
 | 69 | R257 | Transactional project switch | Pre-validate + rollback previous project on any failure | L | DONE ([#235](https://github.com/sesquicadaver/codimension/pull/235)) |
 | 70 | R258 | Taint terminal-edge lattice | Separate normal/return/break/continue/raise; join only normal paths | L | DONE ([#236](https://github.com/sesquicadaver/codimension/pull/236)) |
 | 71 | R259 | AI validation hardening | Finite numeric config; evidence in declared line range | M | DONE ([#238](https://github.com/sesquicadaver/codimension/pull/238)) |
-| 72 | R260 | Reliability test wave | Barriers, SSH crash phases, oversized plugin, lifecycle rollback; coverage climb | L | OPEN |
+| 72 | R260 | Reliability test wave | Barriers, SSH crash phases, oversized plugin, lifecycle rollback; coverage climb | L | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R260** — Reliability test wave.
+**Наступний OPEN:** немає у хвилі R252–R260 — черга завершена (наступний аудит).
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

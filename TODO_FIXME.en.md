@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-09 audit)
 
-No confirmed **P0**. **P1** open groups: none. **P2: 1** group → **R260**. Wave R232–R259 ✅; slice `codi-last.md` @ master@eaa3dfee.
+No confirmed **P0**. **P1** open groups: none. **P2** open groups: none (wave R252–R260 ✅). Slice `codi-last.md` @ master@eaa3dfee.
 
 ### Re-audit 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 queue
 
@@ -28,7 +28,7 @@ No confirmed **P0**. **P1** open groups: none. **P2: 1** group → **R260**. Wav
 | P2-04 | Taint: terminal branch env in normal join | P2 | ✅ R258 |
 | P2-05 | AI evidence not bound to declared line range | P2 | ✅ R259 |
 | P2-06 | AI budget parser accepts `NaN` / non-finite | P2 | ✅ R259 |
-| P2-07 | CI coverage floor 30% still low | P2 | 🔓 OPEN → **R260** |
+| P2-07 | CI coverage floor 30% still low | P2 | ✅ R260 |
 
 ### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue (closed)
 
