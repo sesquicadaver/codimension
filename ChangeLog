@@ -1,5 +1,11 @@
 2026 Sep 09
 
+* Queue seed: re-audit ``codi-last.md`` @ master@f44c8dc4 → ROADMAP
+  **R261–R268** (SSH replace state machine; generation-pinned LSP notify;
+  DocumentStore canonical identity; plugin fd-relative walk; full project
+  lifecycle transaction; LSP worker/payload; multi-exit taint; runtime
+  invariants / CI precision). Wave R252–R260 residual defects tracked as
+  P1-01…04 / P2-01…05.
 * R260: reliability test wave — LSP write/notify barriers, SSH replace crash
   phases (staged/committed/finalize), oversized plugin deny, lifecycle
   create rollback; CI coverage gate now scopes core/infra/app/plugins/utils/
