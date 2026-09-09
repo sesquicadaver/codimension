@@ -1,5 +1,9 @@
 2026 Sep 09
 
+* R252: LSP application ``request`` / ``notify`` take an initialized
+  transport lease — ``ensure_alive`` + handshake + pending bind/write under
+  ``_lifecycle_lock``; lease carries ``initialized_generation`` (re-audit
+  P1-01 @ eaa3dfee)
 * Queue seed: re-audit ``codi-last.md`` @ master@eaa3dfee → ROADMAP
   **R252–R260** (LSP handshake lease, generation-atomic doc request,
   fail-closed plugin identity, durable SSH replace, URI/pending residual,

@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LspProcess: one language-server subprocess per process key (R202–R234 / R244).
+"""LspProcess: one language-server subprocess per process key (R202–R234 / R244 / R252).
 
 Key: ``(language_id, workspace_root, toolchain)``. Spawn is gated by
 :func:`core.language_policy.require_language_server_spawn` (absolute binary on
@@ -36,6 +36,11 @@ transport lease ``(proc, transport_generation)`` so a restart cannot register
 against gen N and write to gen N+1. Server→client replies write to the
 *reader's* ``proc``; stale-generation notifications and capability side
 effects never mutate the live process state.
+
+R252: application ``request`` / ``notify`` obtain an *initialized* transport
+lease — ``ensure_alive`` + handshake + pending bind/write run under
+:attr:`_lifecycle_lock` so a restart cannot accept app RPC on a transport
+whose handshake is still in flight.
 """
 
 from __future__ import annotations
@@ -110,10 +115,17 @@ class LspProcessKey:
 
 @dataclass(frozen=True, slots=True)
 class _TransportLease:
-    """Snapshot of the live subprocess + its transport generation (R244)."""
+    """Snapshot of the live subprocess + transport / handshake generations.
+
+    R244: ``proc`` + ``generation`` (transport) for pending+write atomicity.
+    R252: ``initialized_generation`` is the handshake generation when the lease
+    was taken after a completed ``initialize``/``initialized``; ``0`` means
+    the lease is not app-ready (handshake-only I/O).
+    """
 
     proc: subprocess.Popen
     generation: int
+    initialized_generation: int = 0
 
 
 class LspProcess:
@@ -292,13 +304,12 @@ class LspProcess:
         *,
         timeout: float | None = None,
     ) -> Any:
-        """Send a JSON-RPC request and wait for the matching response."""
-        # R233: never send app-level requests before handshake (except initialize
-        # itself, which goes through :meth:`_handshake_unlocked`).
-        if method != "initialize":
-            self.ensure_initialized()
-        else:
-            self.ensure_started()
+        """Send a JSON-RPC request and wait for the matching response.
+
+        R252: for application methods, alive-check + handshake + pending bind
+        and stdin write occur under :attr:`_lifecycle_lock` so a concurrent
+        restart cannot register/write against an uninitialized transport.
+        """
         request_id = self._allocate_id()
         future: Future = Future()
         message: dict[str, Any] = {
@@ -308,8 +319,17 @@ class LspProcess:
         }
         if params is not None:
             message["params"] = params
-        # R244: register pending under the same generation that receives the write.
-        pending_key = self._bind_pending_and_write(request_id, future, message)
+        if method == "initialize":
+            # Handshake path uses :meth:`_handshake_unlocked`; public initialize
+            # RPC still requires a live process but not a prior handshake.
+            self.ensure_started()
+            pending_key = self._bind_pending_and_write(request_id, future, message, require_initialized=False)
+        else:
+            with self._lifecycle_lock:
+                self._ensure_alive_unlocked()
+                if not self._initialized:
+                    self._handshake_unlocked()
+                pending_key = self._bind_pending_and_write(request_id, future, message, require_initialized=True)
         try:
             return future.result(timeout=self._request_timeout if timeout is None else timeout)
         except Exception as exc:
@@ -326,16 +346,23 @@ class LspProcess:
             self._pop_pending(pending_key)
 
     def notify(self, method: str, params: Any = None) -> None:
-        """Send a JSON-RPC notification (no response expected)."""
-        if method != "initialized":
-            self.ensure_initialized()
-        else:
-            self.ensure_started()
+        """Send a JSON-RPC notification (no response expected).
+
+        R252: application notifications share the initialized-lease barrier
+        with :meth:`request` (``initialized`` itself is handshake-only).
+        """
         message: dict[str, Any] = {"jsonrpc": "2.0", "method": method}
         if params is not None:
             message["params"] = params
-        # R244: write under a transport lease so restart cannot retarget stdin.
-        self._write(message)
+        if method == "initialized":
+            self.ensure_started()
+            self._write(message, require_initialized=False)
+            return
+        with self._lifecycle_lock:
+            self._ensure_alive_unlocked()
+            if not self._initialized:
+                self._handshake_unlocked()
+            self._write(message, require_initialized=True)
 
     def cancel(self, request_id: int | str) -> None:
         """Send ``$/cancelRequest`` for ``request_id`` (best-effort)."""
@@ -469,10 +496,20 @@ class LspProcess:
             raise LspProtocolError("language server is not running")
         return proc
 
-    def _lease_unlocked(self) -> _TransportLease:
-        """Capture ``(proc, generation)`` under :attr:`_write_lock` (R244)."""
+    def _lease_unlocked(self, *, require_initialized: bool = False) -> _TransportLease:
+        """Capture ``(proc, transport_generation[, initialized_generation])`` (R244 / R252).
+
+        Caller must hold :attr:`_write_lock`. When ``require_initialized`` is
+        true, refuse leases for transports that have not finished handshake.
+        """
         proc = self._require_running_proc_unlocked()
-        return _TransportLease(proc=proc, generation=self._transport_generation)
+        if require_initialized and not self._initialized:
+            raise LspProtocolError("language server is not initialized")
+        return _TransportLease(
+            proc=proc,
+            generation=self._transport_generation,
+            initialized_generation=self._generation if self._initialized else 0,
+        )
 
     def _encode_and_write_unlocked(self, proc: subprocess.Popen, message: Mapping[str, Any]) -> None:
         """Write a framed message to ``proc.stdin``; caller holds :attr:`_write_lock`."""
@@ -495,14 +532,22 @@ class LspProcess:
         request_id: int | str,
         future: Future,
         message: Mapping[str, Any],
+        *,
+        require_initialized: bool = False,
     ) -> tuple[int, int | str]:
-        """Register pending under the lease generation and write to that proc (R244)."""
+        """Register pending under the lease generation and write to that proc (R244 / R252)."""
         with self._write_lock:
-            lease = self._lease_unlocked()
+            lease = self._lease_unlocked(require_initialized=require_initialized)
             with self._pending_lock:
                 key = (lease.generation, request_id)
                 self._pending[key] = future
-            self._encode_and_write_unlocked(lease.proc, message)
+            try:
+                self._encode_and_write_unlocked(lease.proc, message)
+            except Exception:
+                # R256 precursor: drop pending if write fails so futures do not leak.
+                with self._pending_lock:
+                    self._pending.pop(key, None)
+                raise
             return key
 
     def _write_to_proc(self, proc: subprocess.Popen, message: Mapping[str, Any]) -> None:
@@ -625,10 +670,10 @@ class LspProcess:
         finally:
             self._cleanup_proc_unlocked()
 
-    def _write(self, message: Mapping[str, Any]) -> None:
-        """Write ``message`` to the *current* subprocess under a transport lease (R244)."""
+    def _write(self, message: Mapping[str, Any], *, require_initialized: bool = False) -> None:
+        """Write ``message`` to the *current* subprocess under a transport lease (R244 / R252)."""
         with self._write_lock:
-            lease = self._lease_unlocked()
+            lease = self._lease_unlocked(require_initialized=require_initialized)
             self._encode_and_write_unlocked(lease.proc, message)
 
     def _reader_loop(self, proc: subprocess.Popen, generation: int) -> None:

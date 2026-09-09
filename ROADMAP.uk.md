@@ -209,7 +209,7 @@
 | 61 | R249 | AI cost-aware provider cap | Provider max_tokens ≤ token/cost remainder | M | DONE ([#223](https://github.com/sesquicadaver/codimension/pull/223)) |
 | 62 | R250 | pybind11 CST-exact proof | EXACT only from real .def() call_expression | L | DONE ([#225](https://github.com/sesquicadaver/codimension/pull/225)) |
 | 63 | R251 | Residual correctness | AI finding source-bind; plugin package identity; transactional switch; terminal taint; CI floor | L | DONE ([#227](https://github.com/sesquicadaver/codimension/pull/227)) |
-| 64 | R252 | LSP initialized transport lease | No application write until handshake complete for that generation | L | OPEN |
+| 64 | R252 | LSP initialized transport lease | No application write until handshake complete for that generation | L | DONE |
 | 65 | R253 | Generation-atomic document request | didOpen/didChange + semantic request on one lease; restart re-syncs | L | OPEN |
 | 66 | R254 | Fail-closed plugin package identity | Oversized/unreadable member always deny; bounded entries/depth/bytes | L | OPEN |
 | 67 | R255 | Durable SSH replace transaction | Unique temps, serialized dest, phase recovery, crash/fault tests | L | OPEN |
@@ -223,7 +223,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R252** — LSP initialized transport lease.
+**Наступний OPEN:** **R253** — Generation-atomic document request.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
