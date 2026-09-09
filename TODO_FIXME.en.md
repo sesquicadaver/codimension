@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-09 audit @ f44c8dc4)
 
-No confirmed **P0**. **P1: 0**. **P2: 1** group → **R268**. Wave R252–R260 integrated with residuals; slice `codi-last.md` @ master@f44c8dc4.
+No confirmed **P0**. **P1: 0**. **P2: 0** (wave R261–R268 closed @ f44c8dc4). Wave R252–R260 integrated; slice `codi-last.md` @ master@f44c8dc4.
 
 ### Re-audit 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 queue
 
@@ -26,7 +26,7 @@ No confirmed **P0**. **P1: 0**. **P2: 1** group → **R268**. Wave R252–R260 i
 | P2-02 | LSP reader EOF does not invalidate transport; workers hold mutable `self._proc` | P2 | ✅ R266 |
 | P2-03 | LSP range decoder throws on malformed position instead of `UNRESOLVED` | P2 | ✅ R266 |
 | P2-04 | Taint: single ExitKind/env; terminal envs lost before `finally`; nested loop collectors | P2 | ✅ R267 |
-| P2-05 | AI explicit kwargs (`deadline_sec=NaN`/negative) not fail-closed like env parser | P2 | 🔓 OPEN → **R268** |
+| P2-05 | AI explicit kwargs (`deadline_sec=NaN`/negative) not fail-closed like env parser | P2 | ✅ R268 |
 
 ### Wave R252–R260 status (slice f44c8dc4)
 
@@ -39,7 +39,7 @@ No confirmed **P0**. **P1: 0**. **P2: 1** group → **R268**. Wave R252–R260 i
 | R256 | ✅ Closed |
 | R257 | ✅ Closed (residual R265) |
 | R258 | ✅ Closed (residual R267 ✅) |
-| R259 | ⚠️ Core ✅; explicit API → **R268** |
+| R259 | ✅ Closed (residual R268 ✅) |
 | R260 | ✅ Closed as scoped |
 
 ### Re-audit 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 queue (integrated; see residuals above)

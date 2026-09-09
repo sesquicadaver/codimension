@@ -225,27 +225,15 @@
 | 77 | R265 | Full project lifecycle transaction | Rollback охоплює detach/unload/load/attach; cleanup без попереднього project | L | DONE |
 | 78 | R266 | LSP worker and payload hardening | Immutable transport lease; reader death invalidates; strict range decode | L | DONE |
 | 79 | R267 | Multi-exit taint environments | ExitKind→env; finally per edge; nested loop exit stack | L | DONE |
-| 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; precision coverage; sync TODO | M | OPEN |
+| 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; precision coverage; sync TODO | M | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R268** — Runtime invariants and CI precision.
+**Наступний OPEN:** *(хвиля R261–R268 закрита @ f44c8dc4; наступна черга — новий аудит / ROADMAP)*
 
-Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
-
-Хвиля **R209–R220** = hardening з аудиту `codi-last.md` @ 340e97dc (DONE).
-
-Хвиля **R221–R231** = hardening з повторного аудиту `codi-last.md` @ 8824ff3c (DONE).
-
-Хвиля **R232–R243** = hardening з повторного аудиту `codi-last.md` @ 45e33f6 (DONE).
-
-Хвиля **R244–R251** = hardening з повторного аудиту `codi-last.md` @ 645d655 (master@cf241873; DONE).
-
-Хвиля **R252–R260** = hardening з повторного аудиту `codi-last.md` @ master@eaa3dfee (DONE; залишки → R261–R268).
-
-Хвиля **R261–R268** = hardening з повторного аудиту `codi-last.md` @ master@f44c8dc4 (черга §1–8).
+Хвиля **R261–R268** = hardening з повторного аудиту `codi-last.md` @ master@f44c8dc4 (**DONE**).
 
 **Поза цією хвилею:** DAP/native debug; власні Rust/C++ parsers; Yapsy language plugins; копіювання Python CFG pipeline на інші мови; HMAC-підпис binding (stretch).
 
