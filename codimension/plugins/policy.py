@@ -17,6 +17,10 @@ invalid manifests are denied — no legacy import fallback.
 R232 / audit P1-01: re-validate manifest + file identity immediately before
 every import (including enable / ``materializePlugin``), so a deferred
 candidate cannot bypass policy after on-disk mutation.
+
+R251 / R254: package identity digests all importable ``.py`` members under
+bounded per-file / walk budgets. Unreadable or oversized members yield
+``PluginFileIdentity.valid is False`` (never a stable empty digest).
 """
 
 from __future__ import annotations
@@ -85,7 +89,7 @@ class StaticPolicyDecision:
 
 @dataclass(frozen=True)
 class PluginFileIdentity:
-    """On-disk identity of a plugin candidate's ``.cdmp`` + package sources (R232 / R251).
+    """On-disk identity of a plugin candidate's ``.cdmp`` + package sources.
 
     Captured at collection / deferral time and compared again immediately before
     import so enable-after-disable cannot load mutated or swapped files.
@@ -93,6 +97,9 @@ class PluginFileIdentity:
     R251: ``package_sha256`` covers all ``.py`` files under the plugin package
     root (not only the entry ``__init__.py`` / module), and digests are computed
     from a single fd with a byte cap (no unbounded ``read()``).
+
+    R254: ``valid`` is explicit — oversized / unreadable members or walk-budget
+    violations never produce a stable empty digest that would compare equal.
     """
 
     info_path: str
@@ -104,26 +111,41 @@ class PluginFileIdentity:
     source_size: int
     source_sha256: str
     package_sha256: str = ""
+    valid: bool = True
+    invalid_reason: str = ""
 
 
-#: Soft cap per plugin file hashed into identity (R251).
+#: Soft cap per plugin file hashed into identity / text parse (R251 / R254).
 _MAX_PLUGIN_FILE_BYTES = 2_000_000
+#: Walk budgets for package identity (R254).
+_MAX_PLUGIN_PACKAGE_FILES = 256
+_MAX_PLUGIN_PACKAGE_ENTRIES = 2_048
+_MAX_PLUGIN_PACKAGE_DEPTH = 8
+_MAX_PLUGIN_PACKAGE_TOTAL_BYTES = 8_000_000
+
+
+class _PluginIdentityError(Exception):
+    """Internal: identity capture failed fail-closed (R254)."""
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__(reason)
 
 
 def _file_digest_and_stat(path: str) -> tuple[str, int, int]:
-    """Return ``(sha256_hex, mtime_ns, size)`` for ``path``, or empty markers.
+    """Return ``(sha256_hex, mtime_ns, size)`` for ``path``.
 
     Uses one ``open`` + ``fstat`` and a bounded chunked digest (R251).
-    Oversized files yield empty markers (fail-closed at identity compare).
+    Oversized or unreadable files raise :class:`_PluginIdentityError` (R254).
     """
     if not path or not os.path.isfile(path):
-        return "", 0, 0
+        raise _PluginIdentityError(f"plugin file missing or not a regular file: {path!r}")
     try:
         with open(path, "rb") as handle:
             st = os.fstat(handle.fileno())
             size = int(st.st_size)
             if size > _MAX_PLUGIN_FILE_BYTES:
-                return "", 0, 0
+                raise _PluginIdentityError(f"plugin file exceeds {_MAX_PLUGIN_FILE_BYTES} bytes: {path!r}")
             hasher = hashlib.sha256()
             remaining = size if size > 0 else _MAX_PLUGIN_FILE_BYTES
             while remaining > 0:
@@ -134,11 +156,11 @@ def _file_digest_and_stat(path: str) -> tuple[str, int, int]:
                 remaining -= len(chunk)
             # Trailing bytes beyond stated size (TOCTOU grow) → fail closed.
             if handle.read(1):
-                return "", 0, 0
+                raise _PluginIdentityError(f"plugin file grew during hash: {path!r}")
             mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
             return hasher.hexdigest(), mtime_ns, size
-    except OSError:
-        return "", 0, 0
+    except OSError as exc:
+        raise _PluginIdentityError(f"plugin file unreadable: {path!r} ({exc})") from exc
 
 
 def _plugin_package_root(source_path: str) -> str:
@@ -154,26 +176,69 @@ def _plugin_package_root(source_path: str) -> str:
 
 
 def _package_py_digest(source_path: str) -> str:
-    """Sorted merkle of ``relpath=sha256`` for every ``.py`` under the package root."""
+    """Sorted merkle of ``relpath=sha256`` for every ``.py`` under the package root.
+
+    Enforces entry / file / depth / total-byte budgets (R254). Empty package
+    directory yields ``""`` only when no ``.py`` members exist (still ``valid``).
+    """
     root = _plugin_package_root(source_path)
     if not root or not os.path.isdir(root):
         return ""
     rows: list[str] = []
-    for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in {".git", "__pycache__", ".venv", "venv"}]
-        for name in filenames:
+    entries_seen = 0
+    files_seen = 0
+    total_bytes = 0
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        rel_dir = os.path.relpath(dirpath, root)
+        depth = 0 if rel_dir == os.curdir else rel_dir.count(os.sep) + 1
+        if depth > _MAX_PLUGIN_PACKAGE_DEPTH:
+            raise _PluginIdentityError(f"plugin package depth exceeds {_MAX_PLUGIN_PACKAGE_DEPTH}: {root!r}")
+        dirnames[:] = sorted(d for d in dirnames if d not in {".git", "__pycache__", ".venv", "venv"})
+        entries_seen += len(dirnames) + len(filenames)
+        if entries_seen > _MAX_PLUGIN_PACKAGE_ENTRIES:
+            raise _PluginIdentityError(f"plugin package entry count exceeds {_MAX_PLUGIN_PACKAGE_ENTRIES}: {root!r}")
+        for name in sorted(filenames):
             if not name.endswith(".py"):
                 continue
             full = os.path.join(dirpath, name)
+            if os.path.islink(full):
+                raise _PluginIdentityError(f"plugin package rejects symlinked .py: {full!r}")
+            files_seen += 1
+            if files_seen > _MAX_PLUGIN_PACKAGE_FILES:
+                raise _PluginIdentityError(f"plugin package .py count exceeds {_MAX_PLUGIN_PACKAGE_FILES}: {root!r}")
+            digest, _, size = _file_digest_and_stat(full)
+            total_bytes += size
+            if total_bytes > _MAX_PLUGIN_PACKAGE_TOTAL_BYTES:
+                raise _PluginIdentityError(
+                    f"plugin package total bytes exceed {_MAX_PLUGIN_PACKAGE_TOTAL_BYTES}: {root!r}"
+                )
             rel = os.path.relpath(full, root).replace(os.sep, "/")
-            digest, _, _ = _file_digest_and_stat(full)
-            if not digest:
-                return ""
             rows.append(f"{rel}={digest}")
-    rows.sort()
     if not rows:
         return ""
     return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest()
+
+
+def _invalid_plugin_identity(
+    *,
+    info_path: str,
+    source_path: str,
+    reason: str,
+) -> PluginFileIdentity:
+    """Build an explicit invalid identity snapshot (R254)."""
+    return PluginFileIdentity(
+        info_path=info_path,
+        source_path=source_path,
+        info_mtime_ns=0,
+        info_size=0,
+        info_sha256="",
+        source_mtime_ns=0,
+        source_size=0,
+        source_sha256="",
+        package_sha256="",
+        valid=False,
+        invalid_reason=reason,
+    )
 
 
 def capture_plugin_file_identity(
@@ -181,14 +246,31 @@ def capture_plugin_file_identity(
     info_path: str,
     module_filepath: str,
 ) -> PluginFileIdentity:
-    """Snapshot ``.cdmp`` + entry + package ``.py`` digests for a candidate."""
+    """Snapshot ``.cdmp`` + entry + package ``.py`` digests for a candidate.
+
+    Always returns a :class:`PluginFileIdentity`. On any member/budget failure
+    ``valid`` is ``False`` and digests are empty (R254 fail-closed).
+    """
     source_path = resolve_plugin_source_path(module_filepath)
-    info_sha, info_mtime, info_size = _file_digest_and_stat(info_path or "")
-    src_sha, src_mtime, src_size = _file_digest_and_stat(source_path)
-    package_sha = _package_py_digest(source_path)
+    info_real = os.path.realpath(info_path) if info_path and os.path.isfile(info_path) else (info_path or "")
+    source_real = os.path.realpath(source_path) if source_path else ""
+    try:
+        if not info_path:
+            raise _PluginIdentityError("plugin .cdmp path is empty")
+        if module_filepath and not source_path:
+            raise _PluginIdentityError(f"plugin source could not be resolved from {module_filepath!r}")
+        info_sha, info_mtime, info_size = _file_digest_and_stat(info_path)
+        src_sha, src_mtime, src_size = _file_digest_and_stat(source_path)
+        package_sha = _package_py_digest(source_path)
+    except _PluginIdentityError as exc:
+        return _invalid_plugin_identity(
+            info_path=info_real,
+            source_path=source_real,
+            reason=exc.reason,
+        )
     return PluginFileIdentity(
-        info_path=os.path.realpath(info_path) if info_path and os.path.isfile(info_path) else (info_path or ""),
-        source_path=os.path.realpath(source_path) if source_path else "",
+        info_path=info_real,
+        source_path=source_real,
         info_mtime_ns=info_mtime,
         info_size=info_size,
         info_sha256=info_sha,
@@ -196,6 +278,8 @@ def capture_plugin_file_identity(
         source_size=src_size,
         source_sha256=src_sha,
         package_sha256=package_sha,
+        valid=True,
+        invalid_reason="",
     )
 
 
@@ -222,16 +306,33 @@ def validate_candidate_before_import(
         info_path=info_path,
         module_filepath=module_filepath,
     )
-    if expected_identity is not None and current != expected_identity:
+    if not current.valid:
         return StaticPolicyDecision(
             ok=False,
             reason=(
-                "plugin files changed since collection "
-                f"(info={info_path!r}, source={current.source_path!r}); "
-                "re-enable denied (R232)"
+                "plugin identity invalid "
+                f"(info={info_path!r}, source={current.source_path!r}): "
+                f"{current.invalid_reason or 'unreadable or oversized member'} (R254)"
             ),
             conflict_code=bad_base_class,
         )
+    if expected_identity is not None:
+        if not expected_identity.valid:
+            return StaticPolicyDecision(
+                ok=False,
+                reason=("stored plugin identity was invalid at collection; re-enable denied (R254)"),
+                conflict_code=bad_base_class,
+            )
+        if current != expected_identity:
+            return StaticPolicyDecision(
+                ok=False,
+                reason=(
+                    "plugin files changed since collection "
+                    f"(info={info_path!r}, source={current.source_path!r}); "
+                    "re-enable denied (R232)"
+                ),
+                conflict_code=bad_base_class,
+            )
     if require_manifest is None:
         require_manifest = not is_trusted_bundled_plugin_path(plugin_path or info_path or module_filepath)
     policy = build_static_plugin_policy(
@@ -251,12 +352,19 @@ def validate_candidate_before_import(
     )
 
 
-def _read_text(path: str) -> str:
+def _read_text(path: str, *, max_bytes: int | None = None) -> str:
+    """Read UTF-8 text up to ``max_bytes``; oversized / unreadable → ``\"\"`` (R254)."""
+    limit = _MAX_PLUGIN_FILE_BYTES if max_bytes is None else max_bytes
+    if not path or not os.path.isfile(path):
+        return ""
     try:
-        with open(path, "r", encoding="utf-8", errors="replace") as handle:
-            return handle.read()
+        with open(path, "rb") as handle:
+            raw = handle.read(limit + 1)
     except OSError:
         return ""
+    if len(raw) > limit:
+        return ""
+    return raw.decode("utf-8", errors="replace")
 
 
 def resolve_plugin_source_path(module_filepath: str) -> str:
@@ -424,16 +532,27 @@ def _parse_cdmp_sections(info_path: str) -> tuple[dict[str, str], dict[str, str]
     """Return ``(core_keys, codimension_keys, error)`` from a ``.cdmp`` file.
 
     Errors are candidate-local (invalid file / section) and never raise.
+    Content is size-capped before ``ConfigParser`` (R254).
     """
     if not info_path or not os.path.isfile(info_path):
         return {}, {}, "plugin .cdmp info file is missing"
+    text = _read_text(info_path)
+    if not text:
+        # Distinguish empty vs oversized/unreadable via a second size probe.
+        try:
+            size = os.path.getsize(info_path)
+        except OSError:
+            size = -1
+        if size > _MAX_PLUGIN_FILE_BYTES:
+            return {}, {}, f"plugin .cdmp exceeds {_MAX_PLUGIN_FILE_BYTES} bytes"
+        if size == 0:
+            return {}, {}, "plugin .cdmp is empty"
+        return {}, {}, "plugin .cdmp could not be read"
     parser = configparser.ConfigParser()
     try:
-        read_ok = parser.read(info_path, encoding="utf-8")
-    except (OSError, configparser.Error) as exc:
+        parser.read_string(text)
+    except configparser.Error as exc:
         return {}, {}, f"plugin .cdmp could not be parsed: {exc}"
-    if not read_ok:
-        return {}, {}, "plugin .cdmp could not be read"
     core = {key.lower(): value.strip() for key, value in parser.items("Core")} if parser.has_section("Core") else {}
     if not parser.has_section("Codimension"):
         return core, {}, ""

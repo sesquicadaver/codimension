@@ -175,6 +175,18 @@ class CDMPluginManager(PluginManager, QObject):
                 info_path=str(info_file or ""),
                 module_filepath=str(filepath or ""),
             )
+            if not identity.valid:
+                logging.info(
+                    "Skipping import of plugin at %s: %s (invalid identity; R254)",
+                    norm,
+                    identity.invalid_reason or "unreadable or oversized member",
+                )
+                self._policySkippedCandidates.append(candidate)
+                self._preImportRejects[norm] = (
+                    CDMPluginManager.BAD_BASE_CLASS,
+                    identity.invalid_reason or "plugin identity invalid (R254)",
+                )
+                continue
             if norm in disabled_paths:
                 logging.info(
                     "Skipping import of disabled plugin at %s (manifest-only; R191/A210)",
