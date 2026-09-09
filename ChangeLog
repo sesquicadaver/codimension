@@ -1,5 +1,10 @@
 2026 Sep 09
 
+* R260: reliability test wave — LSP write/notify barriers, SSH replace crash
+  phases (staged/committed/finalize), oversized plugin deny, lifecycle
+  create rollback; CI coverage gate now scopes core/infra/app/plugins/utils/
+  mcp_backend at ``--cov-fail-under=65`` (was diluted 30% whole-package)
+  (re-audit P2-07 @ eaa3dfee)
 * R259: AI validation hardening — audit evidence must lie in declared
   ``begin_line``..``end_line`` (positive coords); budget float parsers and
   dataclasses reject ``NaN``/``±Inf`` (re-audit P2-05/P2-06 @ eaa3dfee)

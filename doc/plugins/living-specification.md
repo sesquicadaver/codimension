@@ -32,7 +32,7 @@
 | **qutepart drawLine float** | editor.qutepart_compat / qpartwrap / texteditor | Override indent paint with int coords (never monkeypatch ``QPainter.drawLine`` — breaks ``QLineF``); tests/test_qutepart_compat.py |
 | **flow_ast docstring spans** | parsers.flow_ast | `_DocstringFrag` body/beginLine for hide-comments scroll; tests/conformance/test_flow_docstrings.py |
 | **Pylint toolbar (Import DGM)** | cdmplugins.pylint + editor_toolbar | Bundled 1.0.5; skip non-PlainTextEditor; tests/test_editor_toolbar_helper.py |
-| Packaging / CI T060–T067 | pyproject / CI | pyproject.toml, requirements.txt, requirements-runtime.txt, constraints.txt, ci.yml, release.yml, scripts/offscreen_gui_smoke.py | deps groups; matrix 3.10–3.13; constraints gate; wheel; offscreen smoke; release verify |
+| Packaging / CI T060–T067 | pyproject / CI | pyproject.toml, requirements.txt, requirements-runtime.txt, constraints.txt, ci.yml, release.yml, scripts/offscreen_gui_smoke.py | deps groups; matrix 3.10–3.13; constraints gate; wheel; offscreen smoke; release verify; **R260** coverage gate on core/infra/app/plugins/utils/mcp (≥65%) + `tests/test_reliability_r260.py` |
 | **Shim identity T071–T073** | parsers / bootstrap | parsers/__init__.py, check_package_relative_imports.py | unified cdmpyparser/cdmcfparser aliases; T072 CI gate |
 | **Headless core T080–T082** | core / infrastructure | core/syntax.py, core/flow.py, infrastructure/* | tests/test_core_headless.py |
 | **ApplicationServices R101 / R236** | app | app/__init__.py, app/services.py | headless façade + fakes; create/load/switch/unload; tests/test_app_services.py; test_app_services_r236.py; T085 covers `codimension/app` |
@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — хвиля R221–R231 ✅; **R232–R259** ✅; хвиля **R252–R260** (`codi-last.md` @ eaa3dfee); Next = **R260** reliability test wave.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — хвиля R221–R231 ✅; **R232–R260** ✅; хвиля **R252–R260** (`codi-last.md` @ eaa3dfee) **закрита**.
 
 ### Матриця меж модулів (R103 / R195)
 

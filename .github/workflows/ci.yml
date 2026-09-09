@@ -148,7 +148,7 @@ jobs:
           # High severity only — include shipped plugins (R251).
           bandit -r codimension cdmplugins -lll -ii -q
 
-  # R243: coverage floor for the installable package (one Python version).
+  # R243 / R260: coverage floor for reliability-critical packages (UI Qt excluded).
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -170,9 +170,14 @@ jobs:
           pip install --upgrade pip
           pip install -c constraints.txt -e ".[test,tools,security]"
           QT_QPA_PLATFORM=offscreen pytest tests/ -q --tb=line \
-            --cov=codimension \
+            --cov=codimension/core \
+            --cov=codimension/infrastructure \
+            --cov=codimension/app \
+            --cov=codimension/plugins \
+            --cov=codimension/utils \
+            --cov=codimension/mcp_backend \
             --cov-report=term \
-            --cov-fail-under=30
+            --cov-fail-under=65
 
   test:
     runs-on: ubuntu-latest
