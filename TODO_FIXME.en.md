@@ -2,14 +2,35 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-09-08 (static audit @ `master@cf241873` / `codi-last.md` @ 645d655; waves R209–R243 closed)  
+**Last review:** 2026-09-09 (static audit @ `master@eaa3dfee` / `codi-last.md`; waves R209–R251 closed)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Open blockers (2026-09-08 audit)
+## Open blockers (2026-09-09 audit)
 
-No confirmed **P0**. **P1: 0** open. **P2: 0** open in slice `codi-last.md` @ 645d655. Wave R232–R251 ✅.
+No confirmed **P0**. **P1: 4** open groups → **R252–R255**. **P2: 7** groups → **R256–R260**. Wave R232–R251 ✅; slice `codi-last.md` @ master@eaa3dfee.
 
-### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue
+### Re-audit 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 queue
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P1-01 | LSP: application request after `ensure_initialized` may hit new transport before handshake | P1 | 🔓 OPEN → **R252** |
+| P1-02 | LSP semantic: `didOpen/didChange` and `request` not in one generation | P1 | 🔓 OPEN → **R253** |
+| P1-03 | Plugin package identity fail-open for oversized/unreadable member (`package_sha256=""`) | P1 | 🔓 OPEN → **R254** |
+| P1-04 | SSH fallback replace: fixed staging/backup names; not crash/concurrency-safe | P1 | 🔓 OPEN → **R255** |
+
+### P2 / tech debt (2026-09-09 audit)
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P2-01 | LSP pending leak on encode/write failure | P2 | 🔓 OPEN → **R256** |
+| P2-02 | URI: NUL in percent-decode; direct loader may bypass `O_NOFOLLOW` | P2 | 🔓 OPEN → **R256** |
+| P2-03 | Project switch: unload without rollback after `before_load` | P2 | 🔓 OPEN → **R257** |
+| P2-04 | Taint: terminal branch env in normal join | P2 | 🔓 OPEN → **R258** |
+| P2-05 | AI evidence not bound to declared line range | P2 | 🔓 OPEN → **R259** |
+| P2-06 | AI budget parser accepts `NaN` / non-finite | P2 | 🔓 OPEN → **R259** |
+| P2-07 | CI coverage floor 30% still low | P2 | 🔓 OPEN → **R260** |
+
+### Re-audit 2026-09-08 (`codi-last.md` @ 645d655) — P1 queue (closed)
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
@@ -21,7 +42,7 @@ No confirmed **P0**. **P1: 0** open. **P2: 0** open in slice `codi-last.md` @ 64
 | P1-06 | AI cost budget: provider `max_tokens` may exceed cost remainder | P1 | ✅ R249 |
 | P1-07 | pybind11 EXACT without CST `.def()` call_expression (regex in module body) | P1 | ✅ R250 |
 
-### P2 / tech debt (2026-09-08 audit)
+### P2 / tech debt (2026-09-08 audit) — closed
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
