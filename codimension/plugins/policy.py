@@ -18,9 +18,11 @@ R232 / audit P1-01: re-validate manifest + file identity immediately before
 every import (including enable / ``materializePlugin``), so a deferred
 candidate cannot bypass policy after on-disk mutation.
 
-R251 / R254: package identity digests all importable ``.py`` members under
-bounded per-file / walk budgets. Unreadable or oversized members yield
-``PluginFileIdentity.valid is False`` (never a stable empty digest).
+R251 / R254 / R264: package identity digests all importable ``.py`` members under
+bounded per-file / walk budgets via fd-relative ``listdir`` / ``lstat`` /
+``openat`` (``O_NOFOLLOW``). Symlinked files *and* directories fail closed.
+Unreadable or oversized members yield ``PluginFileIdentity.valid is False``
+(never a stable empty digest).
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ import configparser
 import hashlib
 import os
 import re
+import stat as stat_mod
 from dataclasses import dataclass
 from typing import Optional
 
@@ -59,6 +62,12 @@ _VERSION_GE_RE = re.compile(
     r"""Version\(\s*ideVersion\s*\)\s*>=\s*Version\(\s*['\"]([^'\"]+)['\"]\s*\)""",
     re.MULTILINE,
 )
+
+_O_RDONLY = getattr(os, "O_RDONLY", 0)
+_O_DIRECTORY = getattr(os, "O_DIRECTORY", 0)
+_O_NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
+_O_NONBLOCK = getattr(os, "O_NONBLOCK", 0)
+_SKIP_PACKAGE_DIR_NAMES = frozenset({".git", "__pycache__", ".venv", "venv"})
 
 
 @dataclass(frozen=True)
@@ -100,6 +109,9 @@ class PluginFileIdentity:
 
     R254: ``valid`` is explicit — oversized / unreadable members or walk-budget
     violations never produce a stable empty digest that would compare equal.
+
+    R264: package walks are fd-relative; symlinked files and directories are
+    rejected (importer could otherwise execute code omitted from the digest).
     """
 
     info_path: str
@@ -163,6 +175,36 @@ def _file_digest_and_stat(path: str) -> tuple[str, int, int]:
         raise _PluginIdentityError(f"plugin file unreadable: {path!r} ({exc})") from exc
 
 
+def _digest_regular_file_fd(fd: int, *, label: str) -> tuple[str, int]:
+    """Hash an already-open regular file fd; return ``(sha256_hex, size)`` (R264)."""
+    try:
+        st = os.fstat(fd)
+    except OSError as exc:
+        raise _PluginIdentityError(f"plugin file unreadable: {label!r} ({exc})") from exc
+    if not stat_mod.S_ISREG(st.st_mode):
+        raise _PluginIdentityError(f"plugin package member is not a regular file: {label!r}")
+    size = int(st.st_size)
+    if size > _MAX_PLUGIN_FILE_BYTES:
+        raise _PluginIdentityError(f"plugin file exceeds {_MAX_PLUGIN_FILE_BYTES} bytes: {label!r}")
+    hasher = hashlib.sha256()
+    remaining = size if size > 0 else _MAX_PLUGIN_FILE_BYTES
+    while remaining > 0:
+        try:
+            chunk = os.read(fd, min(65_536, remaining))
+        except OSError as exc:
+            raise _PluginIdentityError(f"plugin file unreadable: {label!r} ({exc})") from exc
+        if not chunk:
+            break
+        hasher.update(chunk)
+        remaining -= len(chunk)
+    try:
+        if os.read(fd, 1):
+            raise _PluginIdentityError(f"plugin file grew during hash: {label!r}")
+    except OSError as exc:
+        raise _PluginIdentityError(f"plugin file unreadable: {label!r} ({exc})") from exc
+    return hasher.hexdigest(), size
+
+
 def _plugin_package_root(source_path: str) -> str:
     """Directory whose ``.py`` siblings belong to the plugin package identity."""
     if not source_path:
@@ -178,45 +220,125 @@ def _plugin_package_root(source_path: str) -> str:
 def _package_py_digest(source_path: str) -> str:
     """Sorted merkle of ``relpath=sha256`` for every ``.py`` under the package root.
 
-    Enforces entry / file / depth / total-byte budgets (R254). Empty package
-    directory yields ``""`` only when no ``.py`` members exist (still ``valid``).
+    R264: walk via fd-relative ``listdir`` / ``lstat`` / ``openat`` with
+    ``O_NOFOLLOW``. Any symlink (file or directory) fails closed so importable
+    code cannot live outside the digest. Enforces entry / file / depth /
+    total-byte budgets (R254). Empty package directory yields ``""`` only when
+    no ``.py`` members exist (still ``valid``).
     """
     root = _plugin_package_root(source_path)
-    if not root or not os.path.isdir(root):
+    if not root:
         return ""
+    try:
+        root_real = os.path.realpath(root)
+        root_fd = os.open(root_real, _O_RDONLY | _O_DIRECTORY)
+    except OSError as exc:
+        raise _PluginIdentityError(f"plugin package root unreadable: {root!r} ({exc})") from exc
+
     rows: list[str] = []
-    entries_seen = 0
-    files_seen = 0
-    total_bytes = 0
-    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
-        rel_dir = os.path.relpath(dirpath, root)
-        depth = 0 if rel_dir == os.curdir else rel_dir.count(os.sep) + 1
-        if depth > _MAX_PLUGIN_PACKAGE_DEPTH:
-            raise _PluginIdentityError(f"plugin package depth exceeds {_MAX_PLUGIN_PACKAGE_DEPTH}: {root!r}")
-        dirnames[:] = sorted(d for d in dirnames if d not in {".git", "__pycache__", ".venv", "venv"})
-        entries_seen += len(dirnames) + len(filenames)
-        if entries_seen > _MAX_PLUGIN_PACKAGE_ENTRIES:
-            raise _PluginIdentityError(f"plugin package entry count exceeds {_MAX_PLUGIN_PACKAGE_ENTRIES}: {root!r}")
-        for name in sorted(filenames):
-            if not name.endswith(".py"):
-                continue
-            full = os.path.join(dirpath, name)
-            if os.path.islink(full):
-                raise _PluginIdentityError(f"plugin package rejects symlinked .py: {full!r}")
-            files_seen += 1
-            if files_seen > _MAX_PLUGIN_PACKAGE_FILES:
-                raise _PluginIdentityError(f"plugin package .py count exceeds {_MAX_PLUGIN_PACKAGE_FILES}: {root!r}")
-            digest, _, size = _file_digest_and_stat(full)
-            total_bytes += size
-            if total_bytes > _MAX_PLUGIN_PACKAGE_TOTAL_BYTES:
-                raise _PluginIdentityError(
-                    f"plugin package total bytes exceed {_MAX_PLUGIN_PACKAGE_TOTAL_BYTES}: {root!r}"
-                )
-            rel = os.path.relpath(full, root).replace(os.sep, "/")
-            rows.append(f"{rel}={digest}")
+    state = {"entries": 0, "files": 0, "bytes": 0}
+    try:
+        _walk_package_py_fd(
+            root_fd,
+            rel_dir="",
+            depth=0,
+            rows=rows,
+            state=state,
+            root_label=root_real,
+        )
+    finally:
+        try:
+            os.close(root_fd)
+        except OSError:
+            pass
     if not rows:
         return ""
+    rows.sort()
     return hashlib.sha256("\n".join(rows).encode("utf-8")).hexdigest()
+
+
+def _walk_package_py_fd(
+    dir_fd: int,
+    *,
+    rel_dir: str,
+    depth: int,
+    rows: list[str],
+    state: dict[str, int],
+    root_label: str,
+) -> None:
+    """Recurse one package directory opened as ``dir_fd`` (R264)."""
+    if depth > _MAX_PLUGIN_PACKAGE_DEPTH:
+        raise _PluginIdentityError(f"plugin package depth exceeds {_MAX_PLUGIN_PACKAGE_DEPTH}: {root_label!r}")
+    try:
+        names = sorted(os.listdir(dir_fd))
+    except OSError as exc:
+        label = rel_dir or "."
+        raise _PluginIdentityError(f"plugin package directory unreadable: {label!r} ({exc})") from exc
+
+    for name in names:
+        state["entries"] += 1
+        if state["entries"] > _MAX_PLUGIN_PACKAGE_ENTRIES:
+            raise _PluginIdentityError(
+                f"plugin package entry count exceeds {_MAX_PLUGIN_PACKAGE_ENTRIES}: {root_label!r}"
+            )
+        rel = name if not rel_dir else f"{rel_dir}/{name}"
+        try:
+            st = os.lstat(name, dir_fd=dir_fd)
+        except OSError as exc:
+            raise _PluginIdentityError(f"plugin package entry unreadable: {rel!r} ({exc})") from exc
+
+        if stat_mod.S_ISLNK(st.st_mode):
+            raise _PluginIdentityError(f"plugin package rejects symlink entry: {rel!r}")
+
+        if stat_mod.S_ISDIR(st.st_mode):
+            if name in _SKIP_PACKAGE_DIR_NAMES:
+                continue
+            try:
+                child_fd = os.open(name, _O_RDONLY | _O_DIRECTORY | _O_NOFOLLOW, dir_fd=dir_fd)
+            except OSError as exc:
+                raise _PluginIdentityError(f"plugin package directory unreadable: {rel!r} ({exc})") from exc
+            try:
+                _walk_package_py_fd(
+                    child_fd,
+                    rel_dir=rel,
+                    depth=depth + 1,
+                    rows=rows,
+                    state=state,
+                    root_label=root_label,
+                )
+            finally:
+                try:
+                    os.close(child_fd)
+                except OSError:
+                    pass
+            continue
+
+        if not stat_mod.S_ISREG(st.st_mode):
+            # Sockets/FIFOs/devices are not importable package sources — ignore.
+            continue
+        if not name.endswith(".py"):
+            continue
+
+        state["files"] += 1
+        if state["files"] > _MAX_PLUGIN_PACKAGE_FILES:
+            raise _PluginIdentityError(f"plugin package .py count exceeds {_MAX_PLUGIN_PACKAGE_FILES}: {root_label!r}")
+        try:
+            file_fd = os.open(name, _O_RDONLY | _O_NOFOLLOW | _O_NONBLOCK, dir_fd=dir_fd)
+        except OSError as exc:
+            raise _PluginIdentityError(f"plugin package rejects unreadable .py: {rel!r} ({exc})") from exc
+        try:
+            digest, size = _digest_regular_file_fd(file_fd, label=rel)
+        finally:
+            try:
+                os.close(file_fd)
+            except OSError:
+                pass
+        state["bytes"] += size
+        if state["bytes"] > _MAX_PLUGIN_PACKAGE_TOTAL_BYTES:
+            raise _PluginIdentityError(
+                f"plugin package total bytes exceed {_MAX_PLUGIN_PACKAGE_TOTAL_BYTES}: {root_label!r}"
+            )
+        rows.append(f"{rel}={digest}")
 
 
 def _invalid_plugin_identity(

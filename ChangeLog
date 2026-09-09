@@ -1,5 +1,9 @@
 2026 Sep 09
 
+* R264: plugin package identity — fd-relative ``listdir``/``lstat``/``openat``
+  walk; symlink files *and* directories fail-closed (re-audit P1-04 @ f44c8dc4)
+* Autopilot queue: ``.autopilot`` deprecated; canonical source is
+  ``TODO_FIXME.md`` / ROADMAP only (``/autopilot``)
 * R263: DocumentStore canonical URI identity — ``localhost`` / percent /
   realpath aliases share one key; ``DISK`` never replaces ``OPEN_BUFFER``
   (re-audit P1-03 @ f44c8dc4)
