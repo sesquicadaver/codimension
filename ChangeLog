@@ -1,5 +1,9 @@
 2026 Sep 09
 
+* R267: multi-exit taint environments — ``ExitKind→env`` maps bubble through
+  statement lists; ``finally`` runs per reaching edge; nested loops no longer
+  clear outer break/continue via a shared collector flag (re-audit P2-04 @
+  f44c8dc4)
 * R266: LSP worker/payload hardening — reader/stderr bind immutable
   ``(proc, transport_generation)``; reader EOF/framing invalidates transport
   and forces restart; ``try_parse_lsp_range`` maps malformed server ranges to
