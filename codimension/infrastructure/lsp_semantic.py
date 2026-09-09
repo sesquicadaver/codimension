@@ -22,6 +22,10 @@ R245: refuse regressive ``didChange`` versions — remigrate via didClose+didOpe
 R253: semantic RPC is generation-atomic — ``didOpen``/``didChange`` and the
 following ``request`` must land on the same handshake generation; a restart
 between sync and request retries sync before the query.
+
+R262: document ``notify`` is generation-pinned too — a restart during sync
+clears ``_opened`` and re-``didOpen`` instead of sending ``didChange`` to a
+virgin process.
 """
 
 from __future__ import annotations
@@ -142,14 +146,39 @@ class LspSemanticProvider:
         """Compatibility alias for tests that reach into the attached process."""
         return self._attach_process()
 
-    def _sync_document(self, proc: LspProcess, document: DocumentSnapshot) -> None:
-        """Push ``document`` to ``proc`` (didOpen / didChange / remigrate)."""
+    def _forget_opened(self, proc: LspProcess) -> None:
+        """Drop local open tracking after a handshake generation change (R262)."""
+        self._opened.clear()
+        self._server_generation = proc.generation
+
+    def _generation_resync_needed(self, exc: BaseException, proc: LspProcess, gen: int) -> bool:
+        """True when sync/request must clear opens and retry on a new generation."""
+        if proc.generation != gen:
+            return True
+        return isinstance(exc, LspProtocolError) and "generation changed" in str(exc)
+
+    def _sync_document(
+        self,
+        proc: LspProcess,
+        document: DocumentSnapshot,
+        *,
+        expect_generation: int,
+    ) -> None:
+        """Push ``document`` to ``proc`` (didOpen / didChange / remigrate).
+
+        R262: every notify is pinned to ``expect_generation`` so a mid-sync
+        restart cannot deliver ``didChange`` to a virgin language server.
+        """
         uri = document.uri
         opened_version = self._opened.get(uri)
         # R245: never send a regressive didChange — remigrate via close+open.
         if opened_version is not None and document.version < opened_version:
             try:
-                proc.notify("textDocument/didClose", {"textDocument": {"uri": uri}})
+                proc.notify(
+                    "textDocument/didClose",
+                    {"textDocument": {"uri": uri}},
+                    expect_generation=expect_generation,
+                )
             except Exception:  # noqa: BLE001 — best-effort before reopen
                 pass
             self._opened.pop(uri, None)
@@ -167,6 +196,7 @@ class LspSemanticProvider:
                         "text": document.text,
                     }
                 },
+                expect_generation=expect_generation,
             )
             self._opened[uri] = document.version
             return
@@ -178,19 +208,32 @@ class LspSemanticProvider:
                     "textDocument": {"uri": uri, "version": document.version},
                     "contentChanges": [{"text": document.text}],
                 },
+                expect_generation=expect_generation,
             )
             self._opened[uri] = document.version
 
     def _ensure_open(self, document: DocumentSnapshot) -> LspProcess:
         """Ensure the server has the current document text (didOpen or didChange)."""
         self._documents.put(document)
-        proc = self._attach_process()
-        self._sync_document(proc, document)
-        # Sync notify may itself restart; adopt the live generation so callers
-        # that only sync (no request) do not leave stale ``_server_generation``.
-        if proc.generation != self._server_generation:
-            self._server_generation = proc.generation
-        return proc
+        last_error: LspProtocolError | None = None
+        for _ in range(_SYNC_REQUEST_ATTEMPTS):
+            proc = self._attach_process()
+            gen = proc.generation
+            try:
+                self._sync_document(proc, document, expect_generation=gen)
+            except LspProtocolError as exc:
+                last_error = exc
+                if self._generation_resync_needed(exc, proc, gen):
+                    self._forget_opened(proc)
+                    continue
+                raise
+            if proc.generation != gen:
+                self._forget_opened(proc)
+                continue
+            return proc
+        if last_error is not None:
+            raise last_error
+        raise LspProtocolError("LSP document sync raced with process restart")
 
     def _sync_and_request(
         self,
@@ -200,22 +243,28 @@ class LspSemanticProvider:
         *,
         timeout: float | None = None,
     ) -> tuple[Any, LspProcess]:
-        """Sync the document then request on the same handshake generation (R253).
+        """Sync the document then request on the same handshake generation (R253 / R262).
 
-        If ``request`` (or a concurrent peer) restarts the language server after
-        ``didOpen``/``didChange``, discard the attempt and resync before retrying
-        the semantic query so the server never sees a request for a closed buffer.
+        If ``notify``/``request`` (or a concurrent peer) restarts the language
+        server after attach, clear open tracking and re-``didOpen`` before the
+        semantic query so a virgin generation never sees ``didChange`` first.
         """
         self._documents.put(document)
         last_error: LspProtocolError | None = None
         for _ in range(_SYNC_REQUEST_ATTEMPTS):
             proc = self._attach_process()
             gen = proc.generation
-            self._sync_document(proc, document)
+            try:
+                self._sync_document(proc, document, expect_generation=gen)
+            except LspProtocolError as exc:
+                last_error = exc
+                if self._generation_resync_needed(exc, proc, gen):
+                    self._forget_opened(proc)
+                    continue
+                raise
             if proc.generation != gen:
-                # Sync path restarted the transport — keep opens, adopt generation.
-                self._server_generation = proc.generation
-                gen = proc.generation
+                self._forget_opened(proc)
+                continue
             params = params_for(proc)
             try:
                 result = proc.request(
@@ -226,13 +275,13 @@ class LspSemanticProvider:
                 )
             except LspProtocolError as exc:
                 last_error = exc
-                if proc.generation != gen:
-                    continue
-                if "generation changed" in str(exc):
+                if self._generation_resync_needed(exc, proc, gen):
+                    self._forget_opened(proc)
                     continue
                 raise
             if proc.generation != gen:
                 # Concurrent peer restarted after our write — retry.
+                self._forget_opened(proc)
                 continue
             return result, proc
         if last_error is not None:
@@ -269,7 +318,11 @@ class LspSemanticProvider:
             self._opened.clear()
             self._server_generation = generation
             return
-        proc.notify("textDocument/didClose", {"textDocument": {"uri": uri}})
+        proc.notify(
+            "textDocument/didClose",
+            {"textDocument": {"uri": uri}},
+            expect_generation=generation,
+        )
 
     def hover(self, document: DocumentSnapshot, offset: int) -> HoverInfo | None:
         """LSP ``textDocument/hover`` → :class:`HoverInfo`."""
