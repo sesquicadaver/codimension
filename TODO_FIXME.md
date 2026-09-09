@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-09 @ f44c8dc4)
 
-Підтверджених **P0** немає. **P1: 0**. **P2: 2** групи → **R267–R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
+Підтверджених **P0** немає. **P1: 0**. **P2: 1** група → **R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
 
 ### Повторний аудит 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 черга
 
@@ -25,7 +25,7 @@
 | P2-01 | Project lifecycle: `unload` поза rollback `try`; `before_unload` може від’єднати workspace без restore | P2 | ✅ R265 |
 | P2-02 | LSP reader EOF не invalidує transport; workers тримають mutable `self._proc` | P2 | ✅ R266 |
 | P2-03 | LSP range decoder кидає на malformed position замість `UNRESOLVED` | P2 | ✅ R266 |
-| P2-04 | Taint: один ExitKind/env; terminal envs губляться перед `finally`; nested loop collectors | P2 | 🔓 OPEN → **R267** |
+| P2-04 | Taint: один ExitKind/env; terminal envs губляться перед `finally`; nested loop collectors | P2 | ✅ R267 |
 | P2-05 | AI explicit kwargs (`deadline_sec=NaN`/negative) не fail-closed як env parser | P2 | 🔓 OPEN → **R268** |
 
 ### Стан хвилі R252–R260 (зріз f44c8dc4)
@@ -38,7 +38,7 @@
 | R255 | ⚠️ Не повністю → залишок **R261** |
 | R256 | ✅ Закрито |
 | R257 | ✅ Закрито (залишок R265) |
-| R258 | ⚠️ Частково → залишок **R267** |
+| R258 | ✅ Закрито (залишок R267 ✅) |
 | R259 | ⚠️ Основне ✅; explicit API → **R268** |
 | R260 | ✅ Закрито за обсягом |
 
