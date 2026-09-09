@@ -1,5 +1,8 @@
 2026 Sep 09
 
+* R254: plugin package identity fail-closed — ``PluginFileIdentity.valid``;
+  oversized/unreadable members and walk budgets (files/entries/depth/bytes)
+  deny import; bounded ``.cdmp``/source reads (re-audit P1-03 @ eaa3dfee)
 * R253: LSP semantic ``didOpen``/``didChange`` + ``request`` share one
   handshake generation — ``expect_generation`` refuses post-restart writes;
   provider retries sync before the query (re-audit P1-02 @ eaa3dfee)
