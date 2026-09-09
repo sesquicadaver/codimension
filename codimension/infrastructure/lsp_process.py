@@ -46,6 +46,10 @@ R253: ``request(..., expect_generation=N)`` refuses to write when handshake
 generation is no longer ``N``, so semantic callers can resync ``didOpen``
 before retrying instead of querying a virgin process.
 
+R262: ``notify(..., expect_generation=N)`` shares the same pin so a restart
+inside document sync cannot silently deliver ``didChange`` to a virgin
+generation without a preceding ``didOpen``.
+
 R256: ``_bind_pending_and_write`` rolls back the pending Future if encode/write
 fails so timeout/shutdown cannot settle a leaked registration.
 """
@@ -358,11 +362,21 @@ class LspProcess:
         finally:
             self._pop_pending(pending_key)
 
-    def notify(self, method: str, params: Any = None) -> None:
+    def notify(
+        self,
+        method: str,
+        params: Any = None,
+        *,
+        expect_generation: int | None = None,
+    ) -> None:
         """Send a JSON-RPC notification (no response expected).
 
         R252: application notifications share the initialized-lease barrier
         with :meth:`request` (``initialized`` itself is handshake-only).
+
+        R262: when ``expect_generation`` is set, refuse to write if the live
+        handshake generation differs (caller must clear open tracking and
+        re-``didOpen`` before retrying).
         """
         message: dict[str, Any] = {"jsonrpc": "2.0", "method": method}
         if params is not None:
@@ -375,6 +389,8 @@ class LspProcess:
             self._ensure_alive_unlocked()
             if not self._initialized:
                 self._handshake_unlocked()
+            if expect_generation is not None and self._generation != expect_generation:
+                raise LspProtocolError("language server generation changed; resync documents before retry")
             self._write(message, require_initialized=True)
 
     def cancel(self, request_id: int | str) -> None:
