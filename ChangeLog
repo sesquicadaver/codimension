@@ -1,5 +1,9 @@
 2026 Sep 09
 
+* R258: taint terminal-edge lattice — ``ExitKind`` / ``BranchResult``; may-taint
+  join only NORMAL arms (``return`` / ``break`` / ``continue`` / ``raise``
+  excluded); loop else uses iteration-boundary head; break skips else
+  (re-audit P2-04 @ eaa3dfee)
 * R257: transactional project switch — pre-validate ``.cdm3`` target before
   unload; restore previous project on load/create/after_load failure
   (re-audit P2-03 @ eaa3dfee)
