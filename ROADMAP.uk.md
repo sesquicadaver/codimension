@@ -212,7 +212,7 @@
 | 64 | R252 | LSP initialized transport lease | No application write until handshake complete for that generation | L | DONE ([#230](https://github.com/sesquicadaver/codimension/pull/230)) |
 | 65 | R253 | Generation-atomic document request | didOpen/didChange + semantic request on one lease; restart re-syncs | L | DONE ([#231](https://github.com/sesquicadaver/codimension/pull/231)) |
 | 66 | R254 | Fail-closed plugin package identity | Oversized/unreadable member always deny; bounded entries/depth/bytes | L | DONE ([#232](https://github.com/sesquicadaver/codimension/pull/232)) |
-| 67 | R255 | Durable SSH replace transaction | Unique temps, serialized dest, phase recovery, crash/fault tests | L | DONE |
+| 67 | R255 | Durable SSH replace transaction | Unique temps, serialized dest, phase recovery, crash/fault tests | L | DONE ([#233](https://github.com/sesquicadaver/codimension/pull/233)) |
 | 68 | R256 | LSP/URI residual hardening | Pending rollback on write fail; NUL reject; no O_NOFOLLOW bypass | M | OPEN |
 | 69 | R257 | Transactional project switch | Pre-validate + rollback previous project on any failure | L | OPEN |
 | 70 | R258 | Taint terminal-edge lattice | Separate normal/return/break/continue/raise; join only normal paths | L | OPEN |
