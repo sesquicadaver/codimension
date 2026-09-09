@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-09)
 
-Підтверджених **P0** немає. **P1: 1** відкрита група → **R255**. **P2: 7** груп → **R256–R260**. Хвиля R232–R254 ✅; зріз `codi-last.md` @ master@eaa3dfee.
+Підтверджених **P0** немає. **P1** відкритих немає. **P2: 7** груп → **R256–R260**. Хвиля R232–R255 ✅; зріз `codi-last.md` @ master@eaa3dfee.
 
 ### Повторний аудит 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 черга
 
@@ -16,7 +16,7 @@
 | P1-01 | LSP: application request після `ensure_initialized` може піти в новий transport до handshake | P1 | ✅ R252 |
 | P1-02 | LSP semantic: `didOpen/didChange` і `request` не в одній generation | P1 | ✅ R253 |
 | P1-03 | Plugin package identity fail-open для oversized/unreadable member (`package_sha256=""`) | P1 | ✅ R254 |
-| P1-04 | SSH fallback replace: фіксовані staging/backup імена; не crash/concurrency-safe | P1 | 🔓 OPEN → **R255** |
+| P1-04 | SSH fallback replace: фіксовані staging/backup імена; не crash/concurrency-safe | P1 | ✅ R255 |
 
 ### P2 / технічний борг (аудит 2026-09-09)
 

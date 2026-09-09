@@ -36,10 +36,15 @@ the local cache.
 Paramiko is optional at import time; call :func:`require_paramiko` before live use.
 
 R243: ``upload_file`` streams local bytes with the same size budget as download,
-writes a ``*.cdm-upload-partial`` remote staging file, then renames into place.
+writes a unique ``*.cdm-upload-<op>.partial`` remote staging file, then renames
+into place.
 
 R248: replace uses ``posix_rename`` when available; otherwise backup/swap/rollback.
 ``FakeSftpSession.rename`` matches standard SFTP (dest must not exist).
+
+R255: durable replace — UUID staging/backup names, per-dest serialization,
+posix_rename capability classification (no blind fallback on ambiguous I/O),
+phase marker + orphan recovery before each upload.
 """
 
 from __future__ import annotations
@@ -53,7 +58,9 @@ import posixpath
 import re
 import stat as statmod
 import tempfile
+import threading
 import time
+import uuid
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Callable, Iterator, Mapping, Optional, Protocol, Sequence, runtime_checkable
@@ -1038,7 +1045,7 @@ def _safe_remove_remote(session: SftpSession, target: str) -> None:
     if not callable(rem):
         return
     try:
-        rem(target)
+        rem(_norm_remote(target))
     except (OSError, FileNotFoundError, RuntimeError):
         return
 
@@ -1063,43 +1070,262 @@ def _remote_path_exists(session: SftpSession, path: str) -> bool:
     return False
 
 
-def atomic_replace_remote(session: SftpSession, staging: str, dest: str) -> None:
-    """Move ``staging`` onto ``dest``, replacing an existing file when needed (R248).
+# R255: one active replace per destination inside this process.
+_REPLACE_LOCKS_GUARD = threading.Lock()
+_DEST_REPLACE_LOCKS: dict[str, threading.RLock] = {}
 
-    Prefers ``posix_rename`` (atomic overwrite). Falls back to
-    ``dest → backup``, ``staging → dest``, then delete backup — with rollback
-    if the second rename fails. Plain ``rename`` is used when ``dest`` is absent.
+REPLACE_MARKER_SUFFIX = ".cdm-replace-txn"
+_PHASE_STAGED = "staged"
+_PHASE_DEST_MOVED = "dest_moved"
+_PHASE_COMMITTED = "committed"
+
+
+def _lock_for_dest(dest: str) -> threading.RLock:
+    """Return the process-local reentrant mutex for ``dest`` (R255)."""
+    key = _norm_remote(dest)
+    with _REPLACE_LOCKS_GUARD:
+        lock = _DEST_REPLACE_LOCKS.get(key)
+        if lock is None:
+            lock = threading.RLock()
+            _DEST_REPLACE_LOCKS[key] = lock
+        return lock
+
+
+def _replace_marker_path(dest: str) -> str:
+    return _norm_remote(dest) + REPLACE_MARKER_SUFFIX
+
+
+def _posix_rename_unsupported(exc: BaseException) -> bool:
+    """True when ``posix_rename`` is definitively unavailable (safe to fallback)."""
+    if isinstance(exc, (AttributeError, NotImplementedError)):
+        return True
+    if isinstance(exc, OSError):
+        unsupported = {errno.ENOTSUP, errno.EOPNOTSUPP}
+        enosys = getattr(errno, "ENOSYS", None)
+        if enosys is not None:
+            unsupported.add(enosys)
+        if exc.errno in unsupported:
+            return True
+        msg = str(exc).lower()
+        if "not available" in msg or "not supported" in msg or "unsupported" in msg:
+            return True
+    if isinstance(exc, RuntimeError):
+        msg = str(exc).lower()
+        if "not available" in msg or "not supported" in msg:
+            return True
+    return False
+
+
+def _try_posix_rename(session: SftpSession, src: str, dst: str) -> bool:
+    """Attempt ``posix_rename``; True on success, False if unsupported.
+
+    Ambiguous I/O failures propagate so backup-swap is not run after a possible
+    replace (R255).
     """
+    cached = getattr(session, "_cdm_posix_rename_supported", None)
+    if cached is False:
+        return False
+    posix = getattr(session, "posix_rename", None)
+    if not callable(posix):
+        setattr(session, "_cdm_posix_rename_supported", False)
+        return False
+    try:
+        posix(src, dst)
+    except Exception as exc:
+        if _posix_rename_unsupported(exc):
+            setattr(session, "_cdm_posix_rename_supported", False)
+            return False
+        raise
+    setattr(session, "_cdm_posix_rename_supported", True)
+    return True
+
+
+@dataclass(frozen=True)
+class ReplaceTransaction:
+    """Durable replace journal entry written beside the destination (R255)."""
+
+    op_id: str
+    dest: str
+    staging: str
+    backup: str
+    phase: str
+
+    def to_json_bytes(self) -> bytes:
+        """Serialize the marker payload."""
+        return (
+            json.dumps(
+                {
+                    "op_id": self.op_id,
+                    "dest": self.dest,
+                    "staging": self.staging,
+                    "backup": self.backup,
+                    "phase": self.phase,
+                },
+                separators=(",", ":"),
+            )
+            + "\n"
+        ).encode("utf-8")
+
+    @staticmethod
+    def from_json_bytes(raw: bytes) -> Optional["ReplaceTransaction"]:
+        """Parse a marker; return ``None`` when malformed."""
+        try:
+            data = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
+            return None
+        if not isinstance(data, Mapping):
+            return None
+        try:
+            return ReplaceTransaction(
+                op_id=str(data["op_id"]),
+                dest=_norm_remote(str(data["dest"])),
+                staging=_norm_remote(str(data["staging"])),
+                backup=_norm_remote(str(data["backup"])),
+                phase=str(data["phase"]),
+            )
+        except (KeyError, TypeError, ValueError):
+            return None
+
+
+def _write_replace_marker(session: SftpSession, txn: ReplaceTransaction) -> None:
+    session.write_bytes(_replace_marker_path(txn.dest), txn.to_json_bytes())
+
+
+def _read_replace_marker(session: SftpSession, dest: str) -> ReplaceTransaction | None:
+    marker = _replace_marker_path(dest)
+    if not _remote_path_exists(session, marker):
+        return None
+    try:
+        raw = session.read_bytes(marker)
+    except (OSError, FileNotFoundError, RuntimeError):
+        return None
+    return ReplaceTransaction.from_json_bytes(raw)
+
+
+def _clear_replace_artifacts(session: SftpSession, txn: ReplaceTransaction) -> None:
+    _safe_remove_remote(session, txn.staging)
+    _safe_remove_remote(session, txn.backup)
+    _safe_remove_remote(session, _replace_marker_path(txn.dest))
+
+
+def recover_replace_transaction(session: SftpSession, dest: str) -> str:
+    """Recover or finalize an orphaned replace for ``dest`` (R255).
+
+    Returns ``noop``, ``restored_backup``, ``finalize``, ``abandoned``, or ``cleanup``.
+    """
+    dest_n = _norm_remote(dest)
+    txn = _read_replace_marker(session, dest_n)
+    if txn is None:
+        return "noop"
+
+    if txn.phase == _PHASE_DEST_MOVED:
+        dest_exists = _remote_path_exists(session, dest_n)
+        backup_exists = _remote_path_exists(session, txn.backup)
+        if not dest_exists and backup_exists:
+            session.rename(txn.backup, dest_n)
+            _safe_remove_remote(session, txn.staging)
+            _safe_remove_remote(session, _replace_marker_path(dest_n))
+            return "restored_backup"
+        if dest_exists:
+            _clear_replace_artifacts(session, txn)
+            return "finalize"
+        _clear_replace_artifacts(session, txn)
+        return "cleanup"
+
+    if txn.phase in {_PHASE_STAGED, _PHASE_COMMITTED}:
+        _clear_replace_artifacts(session, txn)
+        return "abandoned" if txn.phase == _PHASE_STAGED else "cleanup"
+
+    _clear_replace_artifacts(session, txn)
+    return "cleanup"
+
+
+def make_upload_staging_path(dest: str, *, op_id: str | None = None) -> tuple[str, str]:
+    """Return ``(staging_path, op_id)`` with a UUID suffix (R255)."""
+    oid = (op_id or uuid.uuid4().hex).strip() or uuid.uuid4().hex
+    dest_n = _norm_remote(dest)
+    return f"{dest_n}.cdm-upload-{oid}.partial", oid
+
+
+def _atomic_replace_remote_unlocked(
+    session: SftpSession,
+    staging: str,
+    dest: str,
+    *,
+    op_id: str,
+) -> None:
+    """Replace ``dest`` with ``staging``; caller holds the destination lock."""
     staging_n = _norm_remote(staging)
     dest_n = _norm_remote(dest)
     if staging_n == dest_n:
         return
 
-    posix = getattr(session, "posix_rename", None)
-    if callable(posix):
-        try:
-            posix(staging_n, dest_n)
-            return
-        except (OSError, IOError, AttributeError, NotImplementedError, RuntimeError):
-            # Server may lack the extension; continue with backup-swap / rename.
-            pass
+    backup = f"{dest_n}.cdm-upload-{op_id}.bak"
+    txn = ReplaceTransaction(
+        op_id=op_id,
+        dest=dest_n,
+        staging=staging_n,
+        backup=backup,
+        phase=_PHASE_STAGED,
+    )
+    _write_replace_marker(session, txn)
+
+    if _try_posix_rename(session, staging_n, dest_n):
+        _safe_remove_remote(session, backup)
+        _safe_remove_remote(session, _replace_marker_path(dest_n))
+        return
 
     if not _remote_path_exists(session, dest_n):
         session.rename(staging_n, dest_n)
+        _safe_remove_remote(session, _replace_marker_path(dest_n))
         return
 
-    backup = dest_n + ".cdm-upload-bak"
     _safe_remove_remote(session, backup)
     session.rename(dest_n, backup)
+    txn = ReplaceTransaction(
+        op_id=op_id,
+        dest=dest_n,
+        staging=staging_n,
+        backup=backup,
+        phase=_PHASE_DEST_MOVED,
+    )
+    _write_replace_marker(session, txn)
     try:
         session.rename(staging_n, dest_n)
     except Exception:
         try:
-            session.rename(backup, dest_n)
+            if not _remote_path_exists(session, dest_n) and _remote_path_exists(session, backup):
+                session.rename(backup, dest_n)
+                _safe_remove_remote(session, staging_n)
+                _safe_remove_remote(session, _replace_marker_path(dest_n))
         except (OSError, FileNotFoundError, RuntimeError):
             pass
         raise
     _safe_remove_remote(session, backup)
+    _safe_remove_remote(session, _replace_marker_path(dest_n))
+
+
+def atomic_replace_remote(
+    session: SftpSession,
+    staging: str,
+    dest: str,
+    *,
+    op_id: str | None = None,
+) -> None:
+    """Move ``staging`` onto ``dest``, replacing an existing file when needed.
+
+    R248 / R255: prefers classified ``posix_rename``; otherwise durable
+    backup/swap with a phase marker and UUID backup name. Per-destination
+    locking serializes concurrent replaces in-process.
+    """
+    staging_n = _norm_remote(staging)
+    dest_n = _norm_remote(dest)
+    if staging_n == dest_n:
+        return
+    oid = (op_id or uuid.uuid4().hex).strip() or uuid.uuid4().hex
+    with _lock_for_dest(dest_n):
+        recover_replace_transaction(session, dest_n)
+        _atomic_replace_remote_unlocked(session, staging_n, dest_n, op_id=oid)
 
 
 def upload_file(
@@ -1111,10 +1337,10 @@ def upload_file(
     chunk_size: int = DOWNLOAD_CHUNK_BYTES,
     cancel: Callable[[], bool] | None = None,
 ) -> None:
-    """Upload one local file to ``remote_path`` with chunked I/O (R243 / R248).
+    """Upload one local file to ``remote_path`` with chunked I/O (R243 / R248 / R255).
 
     Streams the local file in ``chunk_size`` blocks, enforces a byte cap
-    (default :data:`MAX_REMOTE_BYTES` / env), writes to a temporary remote
+    (default :data:`MAX_REMOTE_BYTES` / env), writes to a unique remote
     sibling, then atomically replaces ``remote_path`` via
     :func:`atomic_replace_remote`. ``cancel()`` returning True aborts.
     """
@@ -1132,7 +1358,7 @@ def upload_file(
 
     dest = _norm_remote(remote_path)
     can_rename = callable(getattr(session, "rename", None))
-    staging = dest + ".cdm-upload-partial" if can_rename else dest
+    staging, op_id = make_upload_staging_path(dest) if can_rename else (dest, "")
     size = max(1, int(chunk_size))
 
     def _chunks() -> Iterator[bytes]:
@@ -1149,8 +1375,9 @@ def upload_file(
                     raise RuntimeError(f"upload exceeds size limit ({limit} bytes)")
                 yield chunk
 
-    try:
+    def _do_upload() -> None:
         if can_rename:
+            recover_replace_transaction(session, dest)
             _safe_remove_remote(session, staging)
         write_chunks = getattr(session, "write_file_chunks", None)
         if callable(write_chunks):
@@ -1159,10 +1386,20 @@ def upload_file(
             data = b"".join(_chunks())
             session.write_bytes(staging, data)
         if can_rename and staging != dest:
-            atomic_replace_remote(session, staging, dest)
+            # Already holding the dest lock — call unlocked replace.
+            recover_replace_transaction(session, dest)
+            _atomic_replace_remote_unlocked(session, staging, dest, op_id=op_id)
+
+    try:
+        if can_rename:
+            with _lock_for_dest(dest):
+                _do_upload()
+        else:
+            _do_upload()
     except Exception:
         if can_rename and staging != dest:
             _safe_remove_remote(session, staging)
+            _safe_remove_remote(session, _replace_marker_path(dest))
         raise
 
 
@@ -1555,13 +1792,17 @@ __all__ = [
     "load_ssh_client_host_keys",
     "load_ssh_password",
     "make_download_staging_dir",
+    "make_upload_staging_path",
     "normalize_host_key_fingerprint",
     "open_paramiko_ssh_client",
     "open_remote_project",
     "read_binding",
+    "recover_replace_transaction",
     "remote_cache_dir",
     "remote_projects_root",
     "remote_relpath",
+    "REPLACE_MARKER_SUFFIX",
+    "ReplaceTransaction",
     "require_paramiko",
     "resolve_download_limits",
     "sanitize_remote_project_name",
