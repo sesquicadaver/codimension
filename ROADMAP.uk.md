@@ -218,7 +218,7 @@
 | 70 | R258 | Taint terminal-edge lattice | Separate normal/return/break/continue/raise; join only normal paths | L | DONE ([#236](https://github.com/sesquicadaver/codimension/pull/236)) |
 | 71 | R259 | AI validation hardening | Finite numeric config; evidence in declared line range | M | DONE ([#238](https://github.com/sesquicadaver/codimension/pull/238)) |
 | 72 | R260 | Reliability test wave | Barriers, SSH crash phases, oversized plugin, lifecycle rollback; coverage climb | L | DONE ([#240](https://github.com/sesquicadaver/codimension/pull/240)) |
-| 73 | R261 | SSH replace state machine hardening | Немає crash з втратою єдиної valid copy; atomic bound marker; fault tests | L | OPEN |
+| 73 | R261 | SSH replace state machine hardening | Немає crash з втратою єдиної valid copy; atomic bound marker; fault tests | L | DONE |
 | 74 | R262 | Generation-pinned LSP notifications | didOpen/didChange/request в одній generation; restart з didOpen | L | OPEN |
 | 75 | R263 | Canonical DocumentStore identity | URI aliases спілять стан; OPEN_BUFFER ніколи не замінюється DISK | L | OPEN |
 | 76 | R264 | Plugin fd-relative identity walk | Symlink files/dirs fail-closed; весь executable content у identity | L | OPEN |
@@ -231,7 +231,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R261** — SSH replace state machine hardening.
+**Наступний OPEN:** **R262** — Generation-pinned LSP notifications.
 
 Хвиля **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). Див. [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

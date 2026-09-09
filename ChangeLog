@@ -1,5 +1,9 @@
 2026 Sep 09
 
+* R261: SSH replace state machine — intent phase before dest→backup; atomic
+  marker publish; recovery never deletes sole valid copy; remote lock file;
+  sibling-path marker validation; fault-injection checkpoints
+  (re-audit P1-01 @ f44c8dc4)
 * Queue seed: re-audit ``codi-last.md`` @ master@f44c8dc4 → ROADMAP
   **R261–R268** (SSH replace state machine; generation-pinned LSP notify;
   DocumentStore canonical identity; plugin fd-relative walk; full project

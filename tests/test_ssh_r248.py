@@ -63,6 +63,10 @@ def test_atomic_replace_rollback_restores_dest_on_second_rename_failure() -> Non
     real_rename = session.rename
 
     def flaky_rename(src: str, dst: str) -> None:
+        # R261: lock/marker renames are journal plumbing — only count payload moves.
+        if "cdm-replace" in src or "cdm-replace" in dst:
+            real_rename(src, dst)
+            return
         calls.append((src, dst))
         if len(calls) == 2:
             raise OSError(errno.EIO, "simulated second rename failure")
@@ -74,10 +78,11 @@ def test_atomic_replace_rollback_restores_dest_on_second_rename_failure() -> Non
         raise OSError(errno.ENOTSUP, "posix_rename unsupported")
 
     session.posix_rename = _unsupported  # type: ignore[method-assign]
+    session._cdm_posix_rename_supported = False  # type: ignore[attr-defined]
 
     with pytest.raises(OSError, match="simulated"):
         atomic_replace_remote(session, "/staging.txt", "/dest.txt")
     assert session.files.get("/dest.txt") == b"keep"
-    # R255: successful rollback clears staging + marker after restoring dest.
+    # R255/R261: successful rollback clears staging + marker after restoring dest.
     assert "/staging.txt" not in session.files
     assert "/dest.txt.cdm-replace-txn" not in session.files

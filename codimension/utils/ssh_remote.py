@@ -42,9 +42,10 @@ into place.
 R248: replace uses ``posix_rename`` when available; otherwise backup/swap/rollback.
 ``FakeSftpSession.rename`` matches standard SFTP (dest must not exist).
 
-R255: durable replace — UUID staging/backup names, per-dest serialization,
-posix_rename capability classification (no blind fallback on ambiguous I/O),
-phase marker + orphan recovery before each upload.
+R255 / R261: durable replace — UUID staging/backup names, process-local and
+remote locks, atomic marker writes, **intent phase before each destructive
+rename**, recovery that never deletes the sole valid copy, and sibling-path
+validation on markers.
 """
 
 from __future__ import annotations
@@ -1070,14 +1071,36 @@ def _remote_path_exists(session: SftpSession, path: str) -> bool:
     return False
 
 
-# R255: one active replace per destination inside this process.
+# R255 / R261: replace serialization (process-local + remote lock file).
 _REPLACE_LOCKS_GUARD = threading.Lock()
 _DEST_REPLACE_LOCKS: dict[str, threading.RLock] = {}
 
 REPLACE_MARKER_SUFFIX = ".cdm-replace-txn"
-_PHASE_STAGED = "staged"
+REPLACE_LOCK_SUFFIX = ".cdm-replace-lock"
+_PHASE_PREPARE = "prepare"
+_PHASE_STAGED = "staged"  # legacy alias of prepare (R255 markers)
+_PHASE_INTENT_BACKUP = "intent_backup"
 _PHASE_DEST_MOVED = "dest_moved"
 _PHASE_COMMITTED = "committed"
+_KNOWN_REPLACE_PHASES = frozenset(
+    {
+        _PHASE_PREPARE,
+        _PHASE_STAGED,
+        _PHASE_INTENT_BACKUP,
+        _PHASE_DEST_MOVED,
+        _PHASE_COMMITTED,
+    }
+)
+
+# Optional fault-injection hook for tests: ``hook(checkpoint_name)``.
+_replace_checkpoint_hook: Callable[[str], None] | None = None
+
+
+def _replace_checkpoint(name: str) -> None:
+    """Invoke the optional R261 fault-injection hook."""
+    hook = _replace_checkpoint_hook
+    if hook is not None:
+        hook(name)
 
 
 def _lock_for_dest(dest: str) -> threading.RLock:
@@ -1093,6 +1116,18 @@ def _lock_for_dest(dest: str) -> threading.RLock:
 
 def _replace_marker_path(dest: str) -> str:
     return _norm_remote(dest) + REPLACE_MARKER_SUFFIX
+
+
+def _replace_lock_path(dest: str) -> str:
+    return _norm_remote(dest) + REPLACE_LOCK_SUFFIX
+
+
+def _expected_backup_path(dest: str, op_id: str) -> str:
+    return f"{_norm_remote(dest)}.cdm-upload-{op_id}.bak"
+
+
+def _same_parent(left: str, right: str) -> bool:
+    return _norm_remote(posixpath.dirname(left) or "/") == _norm_remote(posixpath.dirname(right) or "/")
 
 
 def _posix_rename_unsupported(exc: BaseException) -> bool:
@@ -1142,7 +1177,7 @@ def _try_posix_rename(session: SftpSession, src: str, dst: str) -> bool:
 
 @dataclass(frozen=True)
 class ReplaceTransaction:
-    """Durable replace journal entry written beside the destination (R255)."""
+    """Durable replace journal entry written beside the destination (R255 / R261)."""
 
     op_id: str
     dest: str
@@ -1187,8 +1222,43 @@ class ReplaceTransaction:
             return None
 
 
+def _validate_txn_for_dest(txn: ReplaceTransaction, dest: str) -> bool:
+    """True when marker is bound to ``dest`` with safe sibling artifact paths (R261)."""
+    dest_n = _norm_remote(dest)
+    if txn.dest != dest_n:
+        return False
+    if not txn.op_id or any(ch in txn.op_id for ch in "/\\"):
+        return False
+    if txn.phase not in _KNOWN_REPLACE_PHASES:
+        return False
+    if txn.backup != _expected_backup_path(dest_n, txn.op_id):
+        return False
+    if not _same_parent(txn.staging, dest_n):
+        return False
+    if not _same_parent(txn.backup, dest_n):
+        return False
+    if txn.staging == dest_n or txn.backup == dest_n:
+        return False
+    return True
+
+
 def _write_replace_marker(session: SftpSession, txn: ReplaceTransaction) -> None:
-    session.write_bytes(_replace_marker_path(txn.dest), txn.to_json_bytes())
+    """Atomically publish the marker via temp sibling + rename (R261)."""
+    marker = _replace_marker_path(txn.dest)
+    tmp = f"{marker}.{txn.op_id}.partial"
+    try:
+        session.write_bytes(tmp, txn.to_json_bytes())
+        _replace_checkpoint("after_marker_write_tmp")
+        if _try_posix_rename(session, tmp, marker):
+            _replace_checkpoint("after_marker_publish")
+            return
+        if _remote_path_exists(session, marker):
+            _safe_remove_remote(session, marker)
+        session.rename(tmp, marker)
+        _replace_checkpoint("after_marker_publish")
+    except Exception:
+        _safe_remove_remote(session, tmp)
+        raise
 
 
 def _read_replace_marker(session: SftpSession, dest: str) -> ReplaceTransaction | None:
@@ -1202,41 +1272,144 @@ def _read_replace_marker(session: SftpSession, dest: str) -> ReplaceTransaction 
     return ReplaceTransaction.from_json_bytes(raw)
 
 
-def _clear_replace_artifacts(session: SftpSession, txn: ReplaceTransaction) -> None:
+def _clear_staging_and_marker(session: SftpSession, txn: ReplaceTransaction) -> None:
+    """Remove staging + marker; never touches backup (R261)."""
     _safe_remove_remote(session, txn.staging)
-    _safe_remove_remote(session, txn.backup)
     _safe_remove_remote(session, _replace_marker_path(txn.dest))
 
 
-def recover_replace_transaction(session: SftpSession, dest: str) -> str:
-    """Recover or finalize an orphaned replace for ``dest`` (R255).
+def _clear_replace_artifacts(
+    session: SftpSession,
+    txn: ReplaceTransaction,
+    *,
+    allow_backup_delete: bool,
+) -> None:
+    """Clear replace siblings; backup deleted only when explicitly allowed (R261)."""
+    _safe_remove_remote(session, txn.staging)
+    if allow_backup_delete:
+        _safe_remove_remote(session, txn.backup)
+    _safe_remove_remote(session, _replace_marker_path(txn.dest))
 
-    Returns ``noop``, ``restored_backup``, ``finalize``, ``abandoned``, or ``cleanup``.
+
+def _acquire_remote_replace_lock(session: SftpSession, dest: str, op_id: str) -> str:
+    """Create an exclusive remote lock file beside ``dest`` (R261).
+
+    Returns the lock path. Stale locks older than one hour are replaced.
+    """
+    dest_n = _norm_remote(dest)
+    lock_path = _replace_lock_path(dest_n)
+    now = time.time()
+    if _remote_path_exists(session, lock_path):
+        try:
+            raw = session.read_bytes(lock_path)
+            data = json.loads(raw.decode("utf-8"))
+            ts = float(data.get("ts", 0))
+        except (
+            OSError,
+            FileNotFoundError,
+            RuntimeError,
+            UnicodeDecodeError,
+            json.JSONDecodeError,
+            TypeError,
+            ValueError,
+        ):
+            ts = 0.0
+        if ts and (now - ts) < 3600:
+            raise RuntimeError(f"remote replace lock held: {lock_path}")
+        _safe_remove_remote(session, lock_path)
+    payload = (json.dumps({"op_id": op_id, "pid": os.getpid(), "ts": now}, separators=(",", ":")) + "\n").encode(
+        "utf-8"
+    )
+    tmp = f"{lock_path}.{op_id}.partial"
+    session.write_bytes(tmp, payload)
+    if _remote_path_exists(session, lock_path):
+        _safe_remove_remote(session, tmp)
+        raise RuntimeError(f"remote replace lock held: {lock_path}")
+    try:
+        session.rename(tmp, lock_path)
+    except OSError as exc:
+        _safe_remove_remote(session, tmp)
+        if getattr(exc, "errno", None) == errno.EEXIST:
+            raise RuntimeError(f"remote replace lock held: {lock_path}") from exc
+        raise
+    return lock_path
+
+
+def _release_remote_replace_lock(session: SftpSession, dest: str) -> None:
+    """Best-effort removal of the remote replace lock."""
+    _safe_remove_remote(session, _replace_lock_path(dest))
+
+
+def recover_replace_transaction(session: SftpSession, dest: str) -> str:
+    """Recover or finalize an orphaned replace for ``dest`` (R255 / R261).
+
+    Returns ``noop``, ``restored_backup``, ``finalize``, ``abandoned``,
+    ``cleanup``, ``invalid_marker``, or ``promoted_staging``.
+
+    R261: never deletes ``backup`` while ``dest`` is absent. Legacy ``staged``
+    markers that already moved ``dest→backup`` are treated as restore cases.
     """
     dest_n = _norm_remote(dest)
     txn = _read_replace_marker(session, dest_n)
     if txn is None:
         return "noop"
+    if not _validate_txn_for_dest(txn, dest_n):
+        # Refuse to act on crafted / foreign paths.
+        return "invalid_marker"
 
-    if txn.phase == _PHASE_DEST_MOVED:
-        dest_exists = _remote_path_exists(session, dest_n)
-        backup_exists = _remote_path_exists(session, txn.backup)
+    dest_exists = _remote_path_exists(session, dest_n)
+    backup_exists = _remote_path_exists(session, txn.backup)
+    staging_exists = _remote_path_exists(session, txn.staging)
+
+    def _restore_backup() -> str:
+        session.rename(txn.backup, dest_n)
+        _clear_staging_and_marker(session, txn)
+        return "restored_backup"
+
+    if txn.phase in {_PHASE_PREPARE, _PHASE_STAGED}:
+        # Critical R261 window: dest already renamed but marker never advanced.
         if not dest_exists and backup_exists:
-            session.rename(txn.backup, dest_n)
-            _safe_remove_remote(session, txn.staging)
+            return _restore_backup()
+        if not dest_exists and staging_exists and not backup_exists:
+            session.rename(txn.staging, dest_n)
             _safe_remove_remote(session, _replace_marker_path(dest_n))
-            return "restored_backup"
+            return "promoted_staging"
+        _clear_replace_artifacts(session, txn, allow_backup_delete=dest_exists)
+        return "abandoned"
+
+    if txn.phase == _PHASE_INTENT_BACKUP:
+        if not dest_exists and backup_exists:
+            # Destructive rename completed; roll back to last known good.
+            return _restore_backup()
         if dest_exists:
-            _clear_replace_artifacts(session, txn)
-            return "finalize"
-        _clear_replace_artifacts(session, txn)
+            _clear_replace_artifacts(session, txn, allow_backup_delete=True)
+            return "abandoned"
+        if staging_exists:
+            session.rename(txn.staging, dest_n)
+            _safe_remove_remote(session, _replace_marker_path(dest_n))
+            return "promoted_staging"
+        _clear_staging_and_marker(session, txn)
         return "cleanup"
 
-    if txn.phase in {_PHASE_STAGED, _PHASE_COMMITTED}:
-        _clear_replace_artifacts(session, txn)
-        return "abandoned" if txn.phase == _PHASE_STAGED else "cleanup"
+    if txn.phase == _PHASE_DEST_MOVED:
+        if not dest_exists and backup_exists:
+            return _restore_backup()
+        if dest_exists:
+            _clear_replace_artifacts(session, txn, allow_backup_delete=True)
+            return "finalize"
+        if staging_exists:
+            session.rename(txn.staging, dest_n)
+            _safe_remove_remote(session, _replace_marker_path(dest_n))
+            # backup absent — nothing else to delete
+            return "promoted_staging"
+        _clear_staging_and_marker(session, txn)
+        return "cleanup"
 
-    _clear_replace_artifacts(session, txn)
+    if txn.phase == _PHASE_COMMITTED:
+        _clear_replace_artifacts(session, txn, allow_backup_delete=dest_exists)
+        return "cleanup"
+
+    _clear_replace_artifacts(session, txn, allow_backup_delete=dest_exists)
     return "cleanup"
 
 
@@ -1254,55 +1427,64 @@ def _atomic_replace_remote_unlocked(
     *,
     op_id: str,
 ) -> None:
-    """Replace ``dest`` with ``staging``; caller holds the destination lock."""
+    """Replace ``dest`` with ``staging``; caller holds local + remote locks."""
     staging_n = _norm_remote(staging)
     dest_n = _norm_remote(dest)
     if staging_n == dest_n:
         return
 
-    backup = f"{dest_n}.cdm-upload-{op_id}.bak"
-    txn = ReplaceTransaction(
-        op_id=op_id,
-        dest=dest_n,
-        staging=staging_n,
-        backup=backup,
-        phase=_PHASE_STAGED,
-    )
-    _write_replace_marker(session, txn)
-
+    # Prefer true atomic replace without a journal. Ambiguous posix failures
+    # must propagate before any backup/swap side effects (R255 / R261).
     if _try_posix_rename(session, staging_n, dest_n):
-        _safe_remove_remote(session, backup)
-        _safe_remove_remote(session, _replace_marker_path(dest_n))
+        _replace_checkpoint("after_posix_rename")
         return
 
     if not _remote_path_exists(session, dest_n):
         session.rename(staging_n, dest_n)
-        _safe_remove_remote(session, _replace_marker_path(dest_n))
+        _replace_checkpoint("after_staging_to_dest_fresh")
         return
 
-    _safe_remove_remote(session, backup)
-    session.rename(dest_n, backup)
+    backup = _expected_backup_path(dest_n, op_id)
     txn = ReplaceTransaction(
         op_id=op_id,
         dest=dest_n,
         staging=staging_n,
         backup=backup,
-        phase=_PHASE_DEST_MOVED,
+        phase=_PHASE_PREPARE,
     )
+    if not _validate_txn_for_dest(txn, dest_n):
+        raise ValueError("replace artifacts must be siblings of destination")
     _write_replace_marker(session, txn)
+    _replace_checkpoint("after_prepare_marker")
+
+    # Intent BEFORE destroying dest (R261).
+    txn = replace(txn, phase=_PHASE_INTENT_BACKUP)
+    _write_replace_marker(session, txn)
+    _replace_checkpoint("after_intent_backup_marker")
+
+    _safe_remove_remote(session, backup)
+    session.rename(dest_n, backup)
+    _replace_checkpoint("after_dest_to_backup")
+
+    txn = replace(txn, phase=_PHASE_DEST_MOVED)
+    _write_replace_marker(session, txn)
+    _replace_checkpoint("after_dest_moved_marker")
+
     try:
         session.rename(staging_n, dest_n)
+        _replace_checkpoint("after_staging_to_dest")
     except Exception:
         try:
             if not _remote_path_exists(session, dest_n) and _remote_path_exists(session, backup):
                 session.rename(backup, dest_n)
-                _safe_remove_remote(session, staging_n)
-                _safe_remove_remote(session, _replace_marker_path(dest_n))
+                _clear_staging_and_marker(session, txn)
         except (OSError, FileNotFoundError, RuntimeError):
             pass
         raise
+
     _safe_remove_remote(session, backup)
     _safe_remove_remote(session, _replace_marker_path(dest_n))
+    _replace_checkpoint("after_cleanup")
 
 
 def atomic_replace_remote(
@@ -1314,9 +1496,9 @@ def atomic_replace_remote(
 ) -> None:
     """Move ``staging`` onto ``dest``, replacing an existing file when needed.
 
-    R248 / R255: prefers classified ``posix_rename``; otherwise durable
-    backup/swap with a phase marker and UUID backup name. Per-destination
-    locking serializes concurrent replaces in-process.
+    R248 / R255 / R261: prefers classified ``posix_rename``; otherwise durable
+    backup/swap with intent-phased markers, atomic marker publish, sibling
+    validation, and process-local + remote locks.
     """
     staging_n = _norm_remote(staging)
     dest_n = _norm_remote(dest)
@@ -1324,8 +1506,23 @@ def atomic_replace_remote(
         return
     oid = (op_id or uuid.uuid4().hex).strip() or uuid.uuid4().hex
     with _lock_for_dest(dest_n):
-        recover_replace_transaction(session, dest_n)
-        _atomic_replace_remote_unlocked(session, staging_n, dest_n, op_id=oid)
+        status = recover_replace_transaction(session, dest_n)
+        if status == "invalid_marker":
+            raise RuntimeError(f"invalid replace marker for {dest_n}")
+        lock_path = _acquire_remote_replace_lock(session, dest_n, oid)
+        try:
+            status = recover_replace_transaction(session, dest_n)
+            if status == "invalid_marker":
+                raise RuntimeError(f"invalid replace marker for {dest_n}")
+            _atomic_replace_remote_unlocked(session, staging_n, dest_n, op_id=oid)
+        except Exception:
+            # Journaled mid-flight failures: restore sole valid copy. Do not
+            # delete staging on pre-journal failures (e.g. ambiguous posix EIO).
+            recover_replace_transaction(session, dest_n)
+            raise
+        finally:
+            _release_remote_replace_lock(session, dest_n)
+            del lock_path
 
 
 def upload_file(
@@ -1337,7 +1534,7 @@ def upload_file(
     chunk_size: int = DOWNLOAD_CHUNK_BYTES,
     cancel: Callable[[], bool] | None = None,
 ) -> None:
-    """Upload one local file to ``remote_path`` with chunked I/O (R243 / R248 / R255).
+    """Upload one local file to ``remote_path`` with chunked I/O (R243 / R248 / R255 / R261).
 
     Streams the local file in ``chunk_size`` blocks, enforces a byte cap
     (default :data:`MAX_REMOTE_BYTES` / env), writes to a unique remote
@@ -1377,7 +1574,9 @@ def upload_file(
 
     def _do_upload() -> None:
         if can_rename:
-            recover_replace_transaction(session, dest)
+            status = recover_replace_transaction(session, dest)
+            if status == "invalid_marker":
+                raise RuntimeError(f"invalid replace marker for {dest}")
             _safe_remove_remote(session, staging)
         write_chunks = getattr(session, "write_file_chunks", None)
         if callable(write_chunks):
@@ -1386,20 +1585,28 @@ def upload_file(
             data = b"".join(_chunks())
             session.write_bytes(staging, data)
         if can_rename and staging != dest:
-            # Already holding the dest lock — call unlocked replace.
-            recover_replace_transaction(session, dest)
+            status = recover_replace_transaction(session, dest)
+            if status == "invalid_marker":
+                raise RuntimeError(f"invalid replace marker for {dest}")
             _atomic_replace_remote_unlocked(session, staging, dest, op_id=op_id)
 
     try:
         if can_rename:
             with _lock_for_dest(dest):
-                _do_upload()
+                lock_path = _acquire_remote_replace_lock(session, dest, op_id or uuid.uuid4().hex)
+                try:
+                    _do_upload()
+                finally:
+                    _release_remote_replace_lock(session, dest)
+                    del lock_path
         else:
             _do_upload()
     except Exception:
         if can_rename and staging != dest:
-            _safe_remove_remote(session, staging)
-            _safe_remove_remote(session, _replace_marker_path(dest))
+            # Never delete the journal blindly — recover may need backup/staging.
+            recover_replace_transaction(session, dest)
+            if _remote_path_exists(session, staging) and _remote_path_exists(session, dest):
+                _safe_remove_remote(session, staging)
         raise
 
 
@@ -1801,6 +2008,7 @@ __all__ = [
     "remote_cache_dir",
     "remote_projects_root",
     "remote_relpath",
+    "REPLACE_LOCK_SUFFIX",
     "REPLACE_MARKER_SUFFIX",
     "ReplaceTransaction",
     "require_paramiko",
