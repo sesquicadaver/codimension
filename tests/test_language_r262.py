@@ -128,6 +128,23 @@ def _wait_for_method(log: Path, method: str, *, timeout: float = 5.0) -> list[di
     return events
 
 
+def _wait_for_did_open_version(log: Path, version: int, *, timeout: float = 5.0) -> list[dict]:
+    """Wait until a didOpen for ``version`` appears (ignore stale earlier opens)."""
+    deadline = time.monotonic() + timeout
+    events: list[dict] = []
+    while time.monotonic() < deadline:
+        events = _read_events(log)
+        for event in events:
+            if event.get("method") != "textDocument/didOpen":
+                continue
+            params = event.get("params") or {}
+            td = params.get("textDocument") or {}
+            if td.get("version") == version:
+                return events
+        time.sleep(0.02)
+    return events
+
+
 def _provider(tmp_path: Path, script: Path, log: Path) -> LspSemanticProvider:
     registry = LspProcessRegistry()
     config = LspSemanticConfig(
@@ -221,7 +238,7 @@ def test_r262_crash_between_attach_and_did_change_reopens(
     assert crash_budget["left"] == 0
     assert provider._server_generation > gen_before
 
-    events = _wait_for_method(log, "textDocument/didOpen")
+    events = _wait_for_did_open_version(log, 2)
     methods = [e["method"] for e in events]
     assert "initialize" in methods
     assert "textDocument/didOpen" in methods
@@ -229,14 +246,15 @@ def test_r262_crash_between_attach_and_did_change_reopens(
     # Virgin generation must not see didChange before didOpen.
     assert "textDocument/didChange" not in methods
     init_idx = methods.index("initialize")
-    open_idx = methods.index("textDocument/didOpen")
+    open_events = [e for e in events if e.get("method") == "textDocument/didOpen"]
+    assert open_events
+    open_v2 = [e for e in open_events if e["params"]["textDocument"]["version"] == 2]
+    assert open_v2
+    open_idx = events.index(open_v2[0])
     hover_indices = [i for i, m in enumerate(methods) if m == "textDocument/hover"]
     assert hover_indices
     assert init_idx < open_idx < hover_indices[0]
-    open_events = [e for e in events if e.get("method") == "textDocument/didOpen"]
-    assert open_events
-    assert open_events[0]["params"]["textDocument"]["version"] == 2
-    assert open_events[0]["params"]["textDocument"]["text"] == doc_v2.text
+    assert open_v2[0]["params"]["textDocument"]["text"] == doc_v2.text
 
     provider._registry.shutdown_all()
 
@@ -283,11 +301,16 @@ def test_r262_sync_document_alone_reopens_after_mid_sync_restart(
 
     assert crash_budget["left"] == 0
     assert provider._opened.get(doc_v2.uri) == 2
-    events = _wait_for_method(log, "textDocument/didOpen")
+    events = _wait_for_did_open_version(log, 2)
     methods = [e["method"] for e in events]
     assert "initialize" in methods
     assert "textDocument/didOpen" in methods
     assert "textDocument/didChange" not in methods
-    open_events = [e for e in events if e.get("method") == "textDocument/didOpen"]
-    assert open_events[-1]["params"]["textDocument"]["version"] == 2
+    open_v2 = [
+        e
+        for e in events
+        if e.get("method") == "textDocument/didOpen" and e["params"]["textDocument"]["version"] == 2
+    ]
+    assert open_v2
+    assert open_v2[-1]["params"]["textDocument"]["text"] == doc_v2.text
     provider._registry.shutdown_all()
