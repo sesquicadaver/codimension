@@ -8,8 +8,9 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
+#
 
-"""ApplicationServices — project create/load/switch/unload façade (R101 / R236 / R257)."""
+"""ApplicationServices — project create/load/switch/unload façade (R101 / R236 / R257 / R265)."""
 
 from __future__ import annotations
 
@@ -112,6 +113,10 @@ class ApplicationServices:
     R257: pre-validate the target before unload; on ``loadProject`` /
     ``createNew`` / ``after_load`` failure restore the previous project
     (reload + ``after_load``) when one was loaded.
+
+    R265: the transaction boundary covers detach → unload → load/create →
+    attach. Failures during unload restore / reattach the previous project;
+    failures with no previous project abandon any partially loaded new one.
     """
 
     def __init__(
@@ -177,14 +182,69 @@ class ApplicationServices:
             logging.exception("R257: failed to restore previous project %s", previous)
             raise
 
+    def _rollback_switch(self, previous: str) -> None:
+        """Restore ``previous`` after any failure inside the switch transaction (R265).
+
+        If the port still holds ``previous`` (e.g. ``before_unload`` detached the
+        language workspace but ``unloadProject`` failed), only re-run
+        ``after_load`` to reattach. Otherwise reload from disk.
+        """
+        try:
+            if self._project.isLoaded() and current_project_path(self._project) == previous:
+                try:
+                    self._run_after_load(previous)
+                    return
+                except Exception:  # noqa: BLE001 — fall through to full restore
+                    logging.exception("R265: after_load reattach of %s failed; full restore", previous)
+            self._restore_previous_project(previous)
+        except Exception:
+            logging.exception("R265: rollback to previous project %s failed", previous)
+            raise
+
+    def _abandon_partial_project(self) -> None:
+        """Clear a partially loaded project when there was no previous one (R265)."""
+        if not self._project.isLoaded():
+            return
+        try:
+            if self._before_unload is not None:
+                try:
+                    self._before_unload()
+                except Exception:  # noqa: BLE001 — still drop the port
+                    logging.exception("R265: before_unload during abandon failed")
+            try:
+                self._project.unloadProject(False)
+            except Exception:  # noqa: BLE001 — best-effort
+                logging.exception("R265: unloadProject during abandon failed")
+            if self._after_unload is not None:
+                try:
+                    self._after_unload()
+                except Exception:  # noqa: BLE001 — workspace already clearing
+                    logging.exception("R265: after_unload during abandon failed")
+        except Exception:
+            logging.exception("R265: abandon partial project failed")
+
+    def _run_switch_transaction(self, project_file: str, previous: str, apply: Callable[[], None]) -> None:
+        """Unload (if needed) then ``apply`` + ``after_load`` under one rollback (R265)."""
+        try:
+            if self._project.isLoaded():
+                self.unload_project()
+            apply()
+            self._run_after_load(project_file)
+        except Exception:
+            if previous:
+                self._rollback_switch(previous)
+            else:
+                self._abandon_partial_project()
+            raise
+
     def load_project(self, project_file: str) -> bool:
         """Load ``project_file`` via the project port.
 
         R251: ``before_load`` runs **before** unloading the current project so a
         veto cannot leave an empty workspace.
 
-        R257: pre-validate the target before unload; on load / ``after_load``
-        failure restore the previous project when one was loaded.
+        R257 / R265: pre-validate before unload; detach → unload → load → attach
+        share one rollback boundary (restore previous, or abandon partial new).
 
         Returns:
             ``False`` if ``before_load`` aborted; ``True`` after a successful
@@ -200,27 +260,22 @@ class ApplicationServices:
         if self._prevalidate:
             self._validate_load_target(project_file)
 
-        if self._project.isLoaded():
-            self.unload_project()
-
-        try:
-            self._project.loadProject(project_file)
-            self._run_after_load(project_file)
-        except Exception:
-            if previous:
-                self._restore_previous_project(previous)
-            raise
+        self._run_switch_transaction(
+            project_file,
+            previous,
+            lambda: self._project.loadProject(project_file),
+        )
         return True
 
     def switch_project(self, project_file: str) -> bool:
-        """Replace the current project with ``project_file`` (R236 / R251 / R257).
+        """Replace the current project with ``project_file`` (R236 / R251 / R257 / R265).
 
         Equivalent to :meth:`load_project` (validate-before-unload + rollback).
         """
         return self.load_project(project_file)
 
     def create_project(self, project_file: str, props: Mapping[str, Any]) -> bool:
-        """Create a new project and run the same load lifecycle hooks (R236 / R257).
+        """Create a new project and run the same load lifecycle hooks (R236 / R257 / R265).
 
         ``before_load`` and create-target prevalidation run before unload so
         abort / invalid targets keep the previous project.
@@ -235,16 +290,11 @@ class ApplicationServices:
         if self._prevalidate:
             self._validate_create_target(project_file, props)
 
-        if self._project.isLoaded():
-            self.unload_project()
-
-        try:
-            self._project.createNew(project_file, props)
-            self._run_after_load(project_file)
-        except Exception:
-            if previous:
-                self._restore_previous_project(previous)
-            raise
+        self._run_switch_transaction(
+            project_file,
+            previous,
+            lambda: self._project.createNew(project_file, props),
+        )
         return True
 
     def unload_project(self, *, emit_signal: bool = True) -> None:

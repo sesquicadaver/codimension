@@ -1,5 +1,8 @@
 2026 Sep 09
 
+* R265: full project lifecycle transaction — detach/unload/load/attach share
+  one rollback; unload-phase failures reattach previous; no-previous failures
+  abandon partial load (re-audit P2-01 @ f44c8dc4)
 * R264: plugin package identity — fd-relative ``listdir``/``lstat``/``openat``
   walk; symlink files *and* directories fail-closed (re-audit P1-04 @ f44c8dc4)
 * Autopilot queue: ``.autopilot`` deprecated; canonical source is
