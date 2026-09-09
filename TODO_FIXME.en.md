@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-09 audit @ f44c8dc4)
 
-No confirmed **P0**. **P1: 2** groups → **R263–R264**. **P2: 5** groups → **R265–R268**. Wave R252–R260 integrated with residuals; slice `codi-last.md` @ master@f44c8dc4.
+No confirmed **P0**. **P1: 1** group → **R264**. **P2: 5** groups → **R265–R268**. Wave R252–R260 integrated with residuals; slice `codi-last.md` @ master@f44c8dc4.
 
 ### Re-audit 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 queue
 
@@ -15,7 +15,7 @@ No confirmed **P0**. **P1: 2** groups → **R263–R264**. **P2: 5** groups → 
 |----|-------|----------|--------|
 | P1-01 | SSH replace: crash between `dest→backup` and `dest_moved` → `staged` recovery destroys sole valid copy | P1 | ✅ R261 |
 | P1-02 | R253: `notify()` lacks `expect_generation` → `didChange` on new generation without `didOpen` | P1 | ✅ R262 |
-| P1-03 | DocumentStore: URI alias (`file://localhost`) can replace `OPEN_BUFFER` with disk `DISK` | P1 | 🔓 OPEN → **R263** |
+| P1-03 | DocumentStore: URI alias (`file://localhost`) can replace `OPEN_BUFFER` with disk `DISK` | P1 | ✅ R263 |
 | P1-04 | Plugin identity: symlinked directories omitted from `package_sha256` but still importable | P1 | 🔓 OPEN → **R264** |
 
 ### P2 / tech debt (2026-09-09 audit @ f44c8dc4)

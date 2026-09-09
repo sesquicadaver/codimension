@@ -219,8 +219,8 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 71 | R259 | AI validation hardening | Finite numeric config; evidence in declared line range | M | DONE ([#238](https://github.com/sesquicadaver/codimension/pull/238)) |
 | 72 | R260 | Reliability test wave | Barriers, SSH crash phases, oversized plugin, lifecycle rollback; coverage climb | L | DONE ([#240](https://github.com/sesquicadaver/codimension/pull/240)) |
 | 73 | R261 | SSH replace state machine hardening | No crash loses sole valid copy; atomic bound marker; fault tests per op | L | DONE ([#243](https://github.com/sesquicadaver/codimension/pull/243)) |
-| 74 | R262 | Generation-pinned LSP notifications | didOpen/didChange/request stay on one generation; restart starts with didOpen | L | DONE |
-| 75 | R263 | Canonical DocumentStore identity | URI aliases share state; OPEN_BUFFER never replaced by DISK | L | OPEN |
+| 74 | R262 | Generation-pinned LSP notifications | didOpen/didChange/request stay on one generation; restart starts with didOpen | L | DONE ([#244](https://github.com/sesquicadaver/codimension/pull/244)) |
+| 75 | R263 | Canonical DocumentStore identity | URI aliases share state; OPEN_BUFFER never replaced by DISK | L | DONE |
 | 76 | R264 | Plugin fd-relative identity walk | Symlink files/dirs fail-closed; all executable package content in identity | L | OPEN |
 | 77 | R265 | Full project lifecycle transaction | Rollback covers detach/unload/load/attach; clean partial load without prior project | L | OPEN |
 | 78 | R266 | LSP worker and payload hardening | Immutable transport lease for workers; reader death invalidates; strict range decode | L | OPEN |
@@ -231,7 +231,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R263** — Canonical DocumentStore identity.
+**Next OPEN:** **R264** — Plugin fd-relative identity walk.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 

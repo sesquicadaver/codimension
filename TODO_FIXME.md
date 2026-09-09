@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-09 @ f44c8dc4)
 
-Підтверджених **P0** немає. **P1: 2** групи → **R263–R264**. **P2: 5** груп → **R265–R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
+Підтверджених **P0** немає. **P1: 1** група → **R264**. **P2: 5** груп → **R265–R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
 
 ### Повторний аудит 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 черга
 
@@ -15,7 +15,7 @@
 |----|----------|-----------|--------|
 | P1-01 | SSH replace: crash між `dest→backup` і `dest_moved` → recovery `staged` знищує єдину valid copy | P1 | ✅ R261 |
 | P1-02 | R253: `notify()` без `expect_generation` → `didChange` на новій generation без `didOpen` | P1 | ✅ R262 |
-| P1-03 | DocumentStore: URI alias (`file://localhost`) може замінити `OPEN_BUFFER` дисковим `DISK` | P1 | 🔓 OPEN → **R263** |
+| P1-03 | DocumentStore: URI alias (`file://localhost`) може замінити `OPEN_BUFFER` дисковим `DISK` | P1 | ✅ R263 |
 | P1-04 | Plugin identity: symlinked directories не в `package_sha256`, але імпортуються | P1 | 🔓 OPEN → **R264** |
 
 ### P2 / технічний борг (аудит 2026-09-09 @ f44c8dc4)
