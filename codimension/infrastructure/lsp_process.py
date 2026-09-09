@@ -45,6 +45,9 @@ whose handshake is still in flight.
 R253: ``request(..., expect_generation=N)`` refuses to write when handshake
 generation is no longer ``N``, so semantic callers can resync ``didOpen``
 before retrying instead of querying a virgin process.
+
+R256: ``_bind_pending_and_write`` rolls back the pending Future if encode/write
+fails so timeout/shutdown cannot settle a leaked registration.
 """
 
 from __future__ import annotations
@@ -545,7 +548,7 @@ class LspProcess:
         *,
         require_initialized: bool = False,
     ) -> tuple[int, int | str]:
-        """Register pending under the lease generation and write to that proc (R244 / R252)."""
+        """Register pending under the lease generation and write to that proc (R244 / R252 / R256)."""
         with self._write_lock:
             lease = self._lease_unlocked(require_initialized=require_initialized)
             with self._pending_lock:
@@ -554,7 +557,7 @@ class LspProcess:
             try:
                 self._encode_and_write_unlocked(lease.proc, message)
             except Exception:
-                # R256 precursor: drop pending if write fails so futures do not leak.
+                # R256: drop pending if write fails so futures do not leak.
                 with self._pending_lock:
                     self._pending.pop(key, None)
                 raise

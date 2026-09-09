@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-09)
 
-Підтверджених **P0** немає. **P1** відкритих немає. **P2: 7** груп → **R256–R260**. Хвиля R232–R255 ✅; зріз `codi-last.md` @ master@eaa3dfee.
+Підтверджених **P0** немає. **P1** відкритих немає. **P2: 5** груп → **R257–R260**. Хвиля R232–R256 ✅; зріз `codi-last.md` @ master@eaa3dfee.
 
 ### Повторний аудит 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 черга
 
@@ -22,8 +22,8 @@
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
-| P2-01 | LSP pending leak при encode/write failure | P2 | 🔓 OPEN → **R256** |
-| P2-02 | URI: NUL у percent-decode; direct loader може обійти `O_NOFOLLOW` | P2 | 🔓 OPEN → **R256** |
+| P2-01 | LSP pending leak при encode/write failure | P2 | ✅ R256 |
+| P2-02 | URI: NUL у percent-decode; direct loader може обійти `O_NOFOLLOW` | P2 | ✅ R256 |
 | P2-03 | Project switch: unload без rollback після `before_load` | P2 | 🔓 OPEN → **R257** |
 | P2-04 | Taint: terminal branch environment у звичайному join | P2 | 🔓 OPEN → **R258** |
 | P2-05 | AI evidence не прив’язане до declared line range | P2 | 🔓 OPEN → **R259** |
