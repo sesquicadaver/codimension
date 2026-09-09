@@ -18,12 +18,16 @@ R233: document sync tracks :meth:`LspProcess.ensure_initialized` generation so
 a crash+restart never reuses stale ``_opened`` state or skips handshake.
 
 R245: refuse regressive ``didChange`` versions — remigrate via didClose+didOpen.
+
+R253: semantic RPC is generation-atomic — ``didOpen``/``didChange`` and the
+following ``request`` must land on the same handshake generation; a restart
+between sync and request retries sync before the query.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Optional, Sequence
+from typing import Any, Callable, Iterable, Mapping, Optional, Sequence
 
 from core.document_snapshot import DocumentSnapshot, TextEdit
 from core.document_store import DocumentStore, ResolutionStatus
@@ -37,7 +41,10 @@ from core.semantic import (
 from core.symbol_index import SourceSpan
 from infrastructure.file_uri import make_workspace_document_loader
 from infrastructure.lsp_position_codec import LspPosition, LspRange
-from infrastructure.lsp_process import LspProcess, LspProcessKey, LspProcessRegistry
+from infrastructure.lsp_process import LspProcess, LspProcessKey, LspProcessRegistry, LspProtocolError
+
+# Restarts between sync and request are rare; bound retries to avoid livelock.
+_SYNC_REQUEST_ATTEMPTS = 5
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,7 +119,8 @@ class LspSemanticProvider:
         """Update readiness after workspace probe."""
         self._readiness = readiness
 
-    def _process(self) -> LspProcess:
+    def _attach_process(self) -> LspProcess:
+        """Return a live initialized process; clear ``_opened`` on generation bump."""
         key = LspProcessKey(
             self._config.language_id,
             self._config.workspace_root,
@@ -130,10 +138,12 @@ class LspSemanticProvider:
             self._server_generation = generation
         return proc
 
-    def _ensure_open(self, document: DocumentSnapshot) -> LspProcess:
-        """Ensure the server has the current document text (didOpen or didChange)."""
-        self._documents.put(document)
-        proc = self._process()
+    def _process(self) -> LspProcess:
+        """Compatibility alias for tests that reach into the attached process."""
+        return self._attach_process()
+
+    def _sync_document(self, proc: LspProcess, document: DocumentSnapshot) -> None:
+        """Push ``document`` to ``proc`` (didOpen / didChange / remigrate)."""
         uri = document.uri
         opened_version = self._opened.get(uri)
         # R245: never send a regressive didChange — remigrate via close+open.
@@ -159,7 +169,7 @@ class LspSemanticProvider:
                 },
             )
             self._opened[uri] = document.version
-            return proc
+            return
 
         if self._opened[uri] != document.version:
             proc.notify(
@@ -170,7 +180,64 @@ class LspSemanticProvider:
                 },
             )
             self._opened[uri] = document.version
+
+    def _ensure_open(self, document: DocumentSnapshot) -> LspProcess:
+        """Ensure the server has the current document text (didOpen or didChange)."""
+        self._documents.put(document)
+        proc = self._attach_process()
+        self._sync_document(proc, document)
+        # Sync notify may itself restart; adopt the live generation so callers
+        # that only sync (no request) do not leave stale ``_server_generation``.
+        if proc.generation != self._server_generation:
+            self._server_generation = proc.generation
         return proc
+
+    def _sync_and_request(
+        self,
+        document: DocumentSnapshot,
+        method: str,
+        params_for: Callable[[LspProcess], Any],
+        *,
+        timeout: float | None = None,
+    ) -> tuple[Any, LspProcess]:
+        """Sync the document then request on the same handshake generation (R253).
+
+        If ``request`` (or a concurrent peer) restarts the language server after
+        ``didOpen``/``didChange``, discard the attempt and resync before retrying
+        the semantic query so the server never sees a request for a closed buffer.
+        """
+        self._documents.put(document)
+        last_error: LspProtocolError | None = None
+        for _ in range(_SYNC_REQUEST_ATTEMPTS):
+            proc = self._attach_process()
+            gen = proc.generation
+            self._sync_document(proc, document)
+            if proc.generation != gen:
+                # Sync path restarted the transport — keep opens, adopt generation.
+                self._server_generation = proc.generation
+                gen = proc.generation
+            params = params_for(proc)
+            try:
+                result = proc.request(
+                    method,
+                    params,
+                    timeout=timeout,
+                    expect_generation=gen,
+                )
+            except LspProtocolError as exc:
+                last_error = exc
+                if proc.generation != gen:
+                    continue
+                if "generation changed" in str(exc):
+                    continue
+                raise
+            if proc.generation != gen:
+                # Concurrent peer restarted after our write — retry.
+                continue
+            return result, proc
+        if last_error is not None:
+            raise last_error
+        raise LspProtocolError(f"LSP document sync raced with process restart for {method}")
 
     def sync_document(self, document: DocumentSnapshot) -> None:
         """Push buffer text to the language server (didOpen or full didChange)."""
@@ -206,12 +273,12 @@ class LspSemanticProvider:
 
     def hover(self, document: DocumentSnapshot, offset: int) -> HoverInfo | None:
         """LSP ``textDocument/hover`` → :class:`HoverInfo`."""
-        proc = self._ensure_open(document)
-        pos = proc.codec.to_lsp_position(document, offset)
-        result = proc.request(
-            "textDocument/hover",
-            {"textDocument": {"uri": document.uri}, "position": pos.to_dict()},
-        )
+
+        def params(proc: LspProcess) -> dict[str, Any]:
+            pos = proc.codec.to_lsp_position(document, offset)
+            return {"textDocument": {"uri": document.uri}, "position": pos.to_dict()}
+
+        result, proc = self._sync_and_request(document, "textDocument/hover", params)
         if not result:
             return None
         contents = _markup_to_text(result.get("contents"))
@@ -226,39 +293,39 @@ class LspSemanticProvider:
 
     def references(self, document: DocumentSnapshot, offset: int) -> tuple[SymbolLocation, ...]:
         """LSP ``textDocument/references``."""
-        proc = self._ensure_open(document)
-        pos = proc.codec.to_lsp_position(document, offset)
-        result = proc.request(
-            "textDocument/references",
-            {
+
+        def params(proc: LspProcess) -> dict[str, Any]:
+            pos = proc.codec.to_lsp_position(document, offset)
+            return {
                 "textDocument": {"uri": document.uri},
                 "position": pos.to_dict(),
                 "context": {"includeDeclaration": True},
-            },
-        )
+            }
+
+        result, proc = self._sync_and_request(document, "textDocument/references", params)
         return _parse_locations(proc, document, result, store=self._documents)
 
     def document_symbols(self, document: DocumentSnapshot) -> tuple[OutlineSymbol, ...]:
         """LSP ``textDocument/documentSymbol``."""
-        proc = self._ensure_open(document)
-        result = proc.request(
-            "textDocument/documentSymbol",
-            {"textDocument": {"uri": document.uri}},
-        )
+
+        def params(_proc: LspProcess) -> dict[str, Any]:
+            return {"textDocument": {"uri": document.uri}}
+
+        result, proc = self._sync_and_request(document, "textDocument/documentSymbol", params)
         if not result:
             return ()
         return tuple(_parse_outline(proc, document, item) for item in result)
 
     def format_document(self, document: DocumentSnapshot) -> tuple[WorkspaceTextEdit, ...]:
         """LSP ``textDocument/formatting`` → preview edits."""
-        proc = self._ensure_open(document)
-        result = proc.request(
-            "textDocument/formatting",
-            {
+
+        def params(_proc: LspProcess) -> dict[str, Any]:
+            return {
                 "textDocument": {"uri": document.uri},
                 "options": {"tabSize": 4, "insertSpaces": True},
-            },
-        )
+            }
+
+        result, proc = self._sync_and_request(document, "textDocument/formatting", params)
         return _parse_text_edits(proc, document, document.uri, result, store=self._documents)
 
     def rename_preview(
@@ -268,16 +335,16 @@ class LspSemanticProvider:
         new_name: str,
     ) -> tuple[WorkspaceTextEdit, ...]:
         """LSP ``textDocument/rename`` → preview edits (caller applies)."""
-        proc = self._ensure_open(document)
-        pos = proc.codec.to_lsp_position(document, offset)
-        result = proc.request(
-            "textDocument/rename",
-            {
+
+        def params(proc: LspProcess) -> dict[str, Any]:
+            pos = proc.codec.to_lsp_position(document, offset)
+            return {
                 "textDocument": {"uri": document.uri},
                 "position": pos.to_dict(),
                 "newName": new_name,
-            },
-        )
+            }
+
+        result, proc = self._sync_and_request(document, "textDocument/rename", params)
         return _parse_workspace_edit(proc, document, result, store=self._documents)
 
     def _locations(
@@ -286,12 +353,11 @@ class LspSemanticProvider:
         offset: int,
         method: str,
     ) -> tuple[SymbolLocation, ...]:
-        proc = self._ensure_open(document)
-        pos = proc.codec.to_lsp_position(document, offset)
-        result = proc.request(
-            method,
-            {"textDocument": {"uri": document.uri}, "position": pos.to_dict()},
-        )
+        def params(proc: LspProcess) -> dict[str, Any]:
+            pos = proc.codec.to_lsp_position(document, offset)
+            return {"textDocument": {"uri": document.uri}, "position": pos.to_dict()}
+
+        result, proc = self._sync_and_request(document, method, params)
         return _parse_locations(proc, document, result, store=self._documents)
 
 

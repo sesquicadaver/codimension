@@ -41,6 +41,10 @@ R252: application ``request`` / ``notify`` obtain an *initialized* transport
 lease — ``ensure_alive`` + handshake + pending bind/write run under
 :attr:`_lifecycle_lock` so a restart cannot accept app RPC on a transport
 whose handshake is still in flight.
+
+R253: ``request(..., expect_generation=N)`` refuses to write when handshake
+generation is no longer ``N``, so semantic callers can resync ``didOpen``
+before retrying instead of querying a virgin process.
 """
 
 from __future__ import annotations
@@ -303,12 +307,16 @@ class LspProcess:
         params: Any = None,
         *,
         timeout: float | None = None,
+        expect_generation: int | None = None,
     ) -> Any:
         """Send a JSON-RPC request and wait for the matching response.
 
         R252: for application methods, alive-check + handshake + pending bind
         and stdin write occur under :attr:`_lifecycle_lock` so a concurrent
         restart cannot register/write against an uninitialized transport.
+
+        R253: when ``expect_generation`` is set, refuse to write if the live
+        handshake generation differs (caller must resync documents first).
         """
         request_id = self._allocate_id()
         future: Future = Future()
@@ -329,6 +337,8 @@ class LspProcess:
                 self._ensure_alive_unlocked()
                 if not self._initialized:
                     self._handshake_unlocked()
+                if expect_generation is not None and self._generation != expect_generation:
+                    raise LspProtocolError("language server generation changed; resync documents before retry")
                 pending_key = self._bind_pending_and_write(request_id, future, message, require_initialized=True)
         try:
             return future.result(timeout=self._request_timeout if timeout is None else timeout)
