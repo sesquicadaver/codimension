@@ -9,7 +9,7 @@
 # (at your option) any later version.
 #
 
-"""LspPositionCodec: per-process LSP encoding ↔ Unicode offsets (R201).
+"""LspPositionCodec: per-process LSP encoding ↔ Unicode offsets (R201 / R266).
 
 Codimension internals use Unicode character offsets exclusively
 (:class:`~core.document_snapshot.DocumentSnapshot`,
@@ -17,15 +17,24 @@ Codimension internals use Unicode character offsets exclusively
 that converts to/from LSP ``Position`` / ``Range`` using a fixed encoding
 negotiated for one language-server process (UTF-16 by default; UTF-8 / UTF-32
 when negotiated).
+
+R266: server payloads are decoded via :func:`try_parse_lsp_range` /
+:func:`try_parse_lsp_position` (non-throwing, integer-only, non-negative,
+bounded) so malformed responses map to ``UNRESOLVED`` instead of escaping
+as ``KeyError`` / ``TypeError`` / ``ValueError``.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Mapping, Optional
 
 from core.document_snapshot import DocumentSnapshot
 from core.symbol_index import SourceSpan
+
+#: Soft upper bound for LSP line / character coordinates from the server (R266).
+_MAX_LSP_COORD = 10_000_000
 
 
 class LspPositionEncoding(str, Enum):
@@ -34,6 +43,40 @@ class LspPositionEncoding(str, Enum):
     UTF8 = "utf-8"
     UTF16 = "utf-16"
     UTF32 = "utf-32"
+
+
+def _as_bounded_nonneg_int(value: Any) -> int | None:
+    """Return ``value`` when it is a real non-negative ``int`` within bounds (R266).
+
+    Rejects ``bool`` (subclass of ``int``), floats, and strings.
+    """
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    if value < 0 or value > _MAX_LSP_COORD:
+        return None
+    return value
+
+
+def try_parse_lsp_position(data: Any) -> Optional[LspPosition]:
+    """Parse an LSP Position mapping or return ``None`` (never raises) (R266)."""
+    if not isinstance(data, Mapping):
+        return None
+    line = _as_bounded_nonneg_int(data.get("line"))
+    character = _as_bounded_nonneg_int(data.get("character"))
+    if line is None or character is None:
+        return None
+    return LspPosition(line=line, character=character)
+
+
+def try_parse_lsp_range(data: Any) -> Optional[LspRange]:
+    """Parse an LSP Range mapping or return ``None`` (never raises) (R266)."""
+    if not isinstance(data, Mapping):
+        return None
+    start = try_parse_lsp_position(data.get("start"))
+    end = try_parse_lsp_position(data.get("end"))
+    if start is None or end is None:
+        return None
+    return LspRange(start=start, end=end)
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,7 +99,7 @@ class LspPosition:
 
     @classmethod
     def from_dict(cls, data: dict[str, int]) -> LspPosition:
-        """Build from an LSP Position mapping."""
+        """Build from an LSP Position mapping (raises on malformed input)."""
         return cls(line=int(data["line"]), character=int(data["character"]))
 
 
@@ -73,7 +116,7 @@ class LspRange:
 
     @classmethod
     def from_dict(cls, data: dict[str, dict[str, int]]) -> LspRange:
-        """Build from an LSP Range mapping."""
+        """Build from an LSP Range mapping (raises on malformed input)."""
         return cls(
             start=LspPosition.from_dict(data["start"]),
             end=LspPosition.from_dict(data["end"]),
