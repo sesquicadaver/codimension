@@ -215,7 +215,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 67 | R255 | Durable SSH replace transaction | Unique temps, serialized dest, phase recovery, crash/fault tests | L | DONE ([#233](https://github.com/sesquicadaver/codimension/pull/233)) |
 | 68 | R256 | LSP/URI residual hardening | Pending rollback on write fail; NUL reject; no O_NOFOLLOW bypass | M | DONE ([#234](https://github.com/sesquicadaver/codimension/pull/234)) |
 | 69 | R257 | Transactional project switch | Pre-validate + rollback previous project on any failure | L | DONE ([#235](https://github.com/sesquicadaver/codimension/pull/235)) |
-| 70 | R258 | Taint terminal-edge lattice | Separate normal/return/break/continue/raise; join only normal paths | L | OPEN |
+| 70 | R258 | Taint terminal-edge lattice | Separate normal/return/break/continue/raise; join only normal paths | L | DONE |
 | 71 | R259 | AI validation hardening | Finite numeric config; evidence in declared line range | M | OPEN |
 | 72 | R260 | Reliability test wave | Barriers, SSH crash phases, oversized plugin, lifecycle rollback; coverage climb | L | OPEN |
 
@@ -223,7 +223,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R258** — Taint terminal-edge lattice.
+**Next OPEN:** **R259** — AI validation hardening.
 
 Wave **R200–R208** = polyglot language layer (LSP + Tree-sitter + FFI + Tasks). See [polyglot-language-layer.md](doc/technology/polyglot-language-layer.md).
 
