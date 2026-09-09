@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-09 @ f44c8dc4)
 
-Підтверджених **P0** немає. **P1: 0**. **P2: 5** груп → **R265–R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
+Підтверджених **P0** немає. **P1: 0**. **P2: 4** групи → **R266–R268**. Хвиля R252–R260 інтегрована з залишковими дефектами; зріз `codi-last.md` @ master@f44c8dc4.
 
 ### Повторний аудит 2026-09-09 (`codi-last.md` @ f44c8dc4) — P1 черга
 
@@ -22,7 +22,7 @@
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
-| P2-01 | Project lifecycle: `unload` поза rollback `try`; `before_unload` може від’єднати workspace без restore | P2 | 🔓 OPEN → **R265** |
+| P2-01 | Project lifecycle: `unload` поза rollback `try`; `before_unload` може від’єднати workspace без restore | P2 | ✅ R265 |
 | P2-02 | LSP reader EOF не invalidує transport; workers тримають mutable `self._proc` | P2 | 🔓 OPEN → **R266** |
 | P2-03 | LSP range decoder кидає на malformed position замість `UNRESOLVED` | P2 | 🔓 OPEN → **R266** |
 | P2-04 | Taint: один ExitKind/env; terminal envs губляться перед `finally`; nested loop collectors | P2 | 🔓 OPEN → **R267** |
@@ -37,7 +37,7 @@
 | R254 | ✅ Закрито (залишок R264) |
 | R255 | ⚠️ Не повністю → залишок **R261** |
 | R256 | ✅ Закрито |
-| R257 | ⚠️ Частково → залишок **R265** |
+| R257 | ✅ Закрито (залишок R265) |
 | R258 | ⚠️ Частково → залишок **R267** |
 | R259 | ⚠️ Основне ✅; explicit API → **R268** |
 | R260 | ✅ Закрито за обсягом |
@@ -57,7 +57,7 @@
 |----|----------|-----------|--------|
 | P2-01 | LSP pending leak при encode/write failure | P2 | ✅ R256 |
 | P2-02 | URI: NUL у percent-decode; direct loader може обійти `O_NOFOLLOW` | P2 | ✅ R256 |
-| P2-03 | Project switch: unload без rollback після `before_load` | P2 | ✅ R257 (залишок → R265) |
+| P2-03 | Project switch: unload без rollback після `before_load` | P2 | ✅ R257 + ✅ R265 |
 | P2-04 | Taint: terminal branch environment у звичайному join | P2 | ✅ R258 (залишок → R267) |
 | P2-05 | AI evidence не прив’язане до declared line range | P2 | ✅ R259 |
 | P2-06 | AI budget parser приймає `NaN` / non-finite | P2 | ✅ R259 (залишок → R268) |
