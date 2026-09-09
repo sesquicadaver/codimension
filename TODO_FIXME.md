@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-09)
 
-Підтверджених **P0** немає. **P1** відкритих немає. **P2: 3** групи → **R259–R260**. Хвиля R232–R258 ✅; зріз `codi-last.md` @ master@eaa3dfee.
+Підтверджених **P0** немає. **P1** відкритих немає. **P2: 1** група → **R260**. Хвиля R232–R259 ✅; зріз `codi-last.md` @ master@eaa3dfee.
 
 ### Повторний аудит 2026-09-09 (`codi-last.md` @ eaa3dfee) — P1 черга
 
@@ -26,8 +26,8 @@
 | P2-02 | URI: NUL у percent-decode; direct loader може обійти `O_NOFOLLOW` | P2 | ✅ R256 |
 | P2-03 | Project switch: unload без rollback після `before_load` | P2 | ✅ R257 |
 | P2-04 | Taint: terminal branch environment у звичайному join | P2 | ✅ R258 |
-| P2-05 | AI evidence не прив’язане до declared line range | P2 | 🔓 OPEN → **R259** |
-| P2-06 | AI budget parser приймає `NaN` / non-finite | P2 | 🔓 OPEN → **R259** |
+| P2-05 | AI evidence не прив’язане до declared line range | P2 | ✅ R259 |
+| P2-06 | AI budget parser приймає `NaN` / non-finite | P2 | ✅ R259 |
 | P2-07 | CI coverage floor 30% все ще низький | P2 | 🔓 OPEN → **R260** |
 
 ### Повторний аудит 2026-09-08 (`codi-last.md` @ 645d655) — P1 черга (закрита)
