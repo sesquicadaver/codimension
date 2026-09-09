@@ -139,7 +139,7 @@
 | 6 | R197 | Smoke: graceful shutdown замість `os._exit(0)`; wrapt/constraints (A224) | Нормальний teardown у smoke; constraints резолвляться без ручного wrapt hack | M | DONE |
 | 7 | R198 | SSH remote Debug session MVP | Stop-at-first-line / continue через remote; contract Fake/інтеграція; docs | L | DONE ([#121](https://github.com/sesquicadaver/codimension/pull/121)) |
 | 8 | R199 | SSH remote Profile MVP | Profile run remote + артефакт локально; cancel/timeout; docs | M | DONE |
-| 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | DONE |
+| 9 | R180 | Auto-apply оновлення + rollback / portable profiles | Apply з verified cache; rollback; fail-closed; тести | L | DONE ([#238](https://github.com/sesquicadaver/codimension/pull/238)) |
 | 10 | R181 | Автоматизація promotion каналів (`dev`→`beta`→`stable` / tags) | Документований pipeline + скрипт/CI; без зайвого theatre | M | DONE |
 | 11 | R182 | MCP / remote agent backend | MCP surface над headless core; auth fail-closed; smoke | L | DONE ([#126](https://github.com/sesquicadaver/codimension/pull/126)) |
 | 12 | R200 | Polyglot: LanguageDescriptor + Registry + PythonService stub | `core/language.py` Protocol/Registry; `FLAG_LANGUAGE_SERVICES`; Python stub над існуючим SymbolIndex/brief/flow; без LSP; Living Spec | M | DONE ([#129](https://github.com/sesquicadaver/codimension/pull/129)) |
@@ -216,7 +216,7 @@
 | 68 | R256 | LSP/URI residual hardening | Pending rollback on write fail; NUL reject; no O_NOFOLLOW bypass | M | DONE ([#234](https://github.com/sesquicadaver/codimension/pull/234)) |
 | 69 | R257 | Transactional project switch | Pre-validate + rollback previous project on any failure | L | DONE ([#235](https://github.com/sesquicadaver/codimension/pull/235)) |
 | 70 | R258 | Taint terminal-edge lattice | Separate normal/return/break/continue/raise; join only normal paths | L | DONE ([#236](https://github.com/sesquicadaver/codimension/pull/236)) |
-| 71 | R259 | AI validation hardening | Finite numeric config; evidence in declared line range | M | DONE |
+| 71 | R259 | AI validation hardening | Finite numeric config; evidence in declared line range | M | DONE ([#238](https://github.com/sesquicadaver/codimension/pull/238)) |
 | 72 | R260 | Reliability test wave | Barriers, SSH crash phases, oversized plugin, lifecycle rollback; coverage climb | L | OPEN |
 
 ---
