@@ -6,7 +6,10 @@ from __future__ import annotations
 import threading
 import time
 
-from utils.background_task_registry import BackgroundTaskRegistry, get_background_task_registry
+from codimension.utils.background_task_registry import (
+    BackgroundTaskRegistry,
+    get_background_task_registry,
+)
 
 
 def test_r271_registry_wait_all_idle() -> None:
