@@ -28,6 +28,7 @@
 | P2-05 | VCS `thread.wait()` без timeout → hang на close | P2 | ✅ R275 |
 | P2-06 | IDE pylint subprocess: `python -m pylint` → wrapt/`formatargspec` на 3.11+ | P2 | ✅ R276 |
 | P2-07 | Import diagram: `build/lib` дзеркало дублює всі ModuleOfInterest | P2 | ✅ R277 |
+| P2-08 | Update VENV: `pip install native` з optional ImportError-імпорту | P2 | ✅ R278 |
 
 ### Історія: аудит 2026-09-09 @ f44c8dc4 (хвиля R261–R268 ✅)
 

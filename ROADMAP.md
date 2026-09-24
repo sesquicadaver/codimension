@@ -235,12 +235,13 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 87 | R275 | VCS bounded shutdown | stop + wait(timeout); no infinite GUI block | S | DONE |
 | 88 | R276 | Pylint wrapt subprocess | ``pylint_python_argv`` applies inspect_compat before wrapt | S | DONE |
 | 89 | R277 | Skip packaging artifact trees | ``build``/``dist``/egg-info not scanned; import diagram undoubled | S | DONE |
+| 90 | R278 | Skip optional ImportError imports in VENV | ``native``-style try/except not pip-installed | S | DONE |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** queue empty after **R277**.
+**Next OPEN:** queue empty after **R278**.
 
 Wave **R269–R275** = hardening from re-audit `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
