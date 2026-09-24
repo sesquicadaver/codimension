@@ -82,6 +82,14 @@ class AiChatViewer(QWidget):
         """Focus the prompt field."""
         self.__input.setFocus()
 
+    def isBusy(self) -> bool:
+        """True while a chat reply is running (R269)."""
+        return self.__driver.isInProcess()
+
+    def shutdown(self, timeout_ms: int = 5000) -> bool:
+        """Cancel and wait for the chat worker thread (R269)."""
+        return self.__driver.shutdown(timeout_ms)
+
     def __append(self, role: str, text: str) -> None:
         self.__log.appendPlainText(f"{role}: {text}\n")
 

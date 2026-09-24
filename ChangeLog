@@ -1,3 +1,12 @@
+2026 Sep 24
+
+* R269: AI deterministic QThread lifecycle — worker/thread ``deleteLater``;
+  ``AiTaskDriver.shutdown`` (cancel→quit→wait); MainWindow close refuses
+  teardown while AI threads are still live (re-audit P1-01/P2-04 @ fdb29cad)
+* Queue seed: re-audit ``codi-last.md`` @ master@fdb29cad → ROADMAP
+  **R269–R275** (AI lifecycle; project scan ownership; shutdown barrier;
+  exception containment; crash telemetry; lifecycle stress; VCS bounded wait)
+
 2026 Sep 09
 
 * R268: AI explicit kwargs fail-closed — ``load_ai_budget_limits`` /

@@ -878,6 +878,12 @@ class CodimensionMainWindow(
             else:
                 self.settings.tabsStatus = self.em.getTabsStatus()
 
+        # R269: AI QThread must stop before parent destruction / forced GC.
+        if not self.aiController.shutdown(timeout_ms=5000):
+            logging.error("AI worker still running; aborting IDE close")
+            event.ignore()
+            return
+
         if self.em.closeEvent(event):
             # The IDE is going to be closed just now
             if self.debugMode:
