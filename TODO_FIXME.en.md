@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-24 audit @ fdb29cad)
 
-No confirmed **P0**. **P1: 0**. **P2: 2** groups (P2-03 → R274; P2-05 → R275) → **R273–R275**. Wave R261–R268 closed; slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
+No confirmed **P0**. **P1: 0**. **P2: 2** groups (P2-03 → R274; P2-05 → R275) → **R274–R275**. Wave R261–R268 closed; slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
 
 ### Re-audit 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 queue
 
