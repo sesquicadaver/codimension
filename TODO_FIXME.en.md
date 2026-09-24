@@ -7,14 +7,14 @@
 
 ## Open blockers (2026-09-24 audit @ fdb29cad)
 
-No confirmed **P0**. **P1: 2**. **P2: 4** groups (P2-04 ✅ R269) → **R270–R275**. Wave R261–R268 closed; slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
+No confirmed **P0**. **P1: 1**. **P2: 4** groups (P2-04 ✅ R269) → **R271–R275**. Wave R261–R268 closed; slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
 
 ### Re-audit 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 queue
 
 | ID | Issue | Priority | Status |
 |----|-------|----------|--------|
 | P1-01 | `AiTaskDriver`: no `deleteLater` / `shutdown` / wait; IDE close during AI → QThread destroyed | P1 | ✅ R269 |
-| P1-02 | Project scan: 5s timeout drops handle of a still-live `QThread` | P1 | 🔓 OPEN → **R270** |
+| P1-02 | Project scan: 5s timeout drops handle of a still-live `QThread` | P1 | ✅ R270 |
 | P1-03 | Global `exceptionHook` → `application.exit(1)` for any uncaught callback | P1 | 🔓 OPEN → **R272** |
 
 ### P2 / tech debt (2026-09-24 audit @ fdb29cad)
