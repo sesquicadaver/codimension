@@ -585,6 +585,157 @@ def getUnresolvedPackageNames(errors):
     return names
 
 
+def _except_handler_names(handler) -> set[str]:
+    """Collect exception class names referenced by an ``except`` handler."""
+    import ast
+
+    names: set[str] = set()
+
+    def _walk(node) -> None:
+        if node is None:
+            return
+        if isinstance(node, ast.Name):
+            names.add(node.id)
+        elif isinstance(node, ast.Attribute):
+            names.add(node.attr)
+        elif isinstance(node, ast.Tuple):
+            for elt in node.elts:
+                _walk(elt)
+
+    _walk(handler.type)
+    return names
+
+
+def _import_names_from_stmt(stmt) -> set[str]:
+    """Top-level package names from a single Import / ImportFrom statement."""
+    import ast
+
+    names: set[str] = set()
+    if isinstance(stmt, ast.Import):
+        for alias in stmt.names:
+            top = _top_level_import_name(alias.name)
+            if top:
+                names.add(top)
+    elif isinstance(stmt, ast.ImportFrom):
+        if getattr(stmt, "level", 0):
+            return names
+        if stmt.module:
+            top = _top_level_import_name(stmt.module)
+            if top:
+                names.add(top)
+    return names
+
+
+def collectOptionalImportNames(source: str) -> set[str]:
+    """Return top-level names imported only under ``try``/``except ImportError``.
+
+    Used so Generate requirements / Update VENV do not treat optional local
+    extensions (e.g. ``import native`` behind ImportError) as pip packages (R278).
+    """
+    import ast
+
+    if not source:
+        return set()
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return set()
+
+    optional: set[str] = set()
+    import_error_names = {"ImportError", "ModuleNotFoundError"}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Try):
+            continue
+        if not any(_except_handler_names(handler) & import_error_names for handler in node.handlers):
+            continue
+        for stmt in node.body:
+            optional |= _import_names_from_stmt(stmt)
+    return optional
+
+
+def collectOptionalImportNamesFromFiles(filesList) -> set[str]:
+    """Union of optional import names across project Python files."""
+    from .config import DEFAULT_ENCODING
+    from .fileutils import isPythonFile
+
+    optional: set[str] = set()
+    for item in filesList:
+        if item.endswith(os.sep) or not isPythonFile(item):
+            continue
+        try:
+            with open(item, "r", encoding=DEFAULT_ENCODING, errors="replace") as handle:
+                optional |= collectOptionalImportNames(handle.read())
+        except OSError:
+            continue
+    return optional
+
+
+def filterRequirementLines(text: str, skip_packages) -> tuple[str, list[str]]:
+    """Drop requirements lines whose package name is in ``skip_packages``.
+
+    Returns ``(filtered_text, skipped_package_names)``.
+    """
+    skip = {str(name).lower() for name in (skip_packages or ()) if name}
+    if not skip:
+        return text, []
+    kept: list[str] = []
+    skipped: list[str] = []
+    for line in text.splitlines(keepends=True):
+        pkg = _parseRequirementsPackageName(line)
+        if pkg and pkg.lower() in skip:
+            skipped.append(pkg)
+            continue
+        kept.append(line)
+    return "".join(kept), skipped
+
+
+def prepareRequirementFilesForInstall(requirement_files, skip_packages, *, temp_dir: str):
+    """Write filtered requirement files, omitting packages in ``skip_packages``.
+
+    Returns ``(paths_for_pip, skipped_package_names)``. Empty filtered files are
+    dropped so ``pip install -r`` is not invoked with a blank requirements file.
+    """
+    from .config import DEFAULT_ENCODING
+
+    skip = {str(name) for name in (skip_packages or ()) if name}
+    if not requirement_files:
+        return [], []
+    if not skip:
+        return list(requirement_files), []
+
+    os.makedirs(temp_dir, exist_ok=True)
+    prepared: list[str] = []
+    skipped_all: list[str] = []
+    for index, path in enumerate(requirement_files):
+        try:
+            with open(path, "r", encoding=DEFAULT_ENCODING, errors="replace") as handle:
+                original = handle.read()
+        except OSError:
+            prepared.append(path)
+            continue
+        filtered, skipped = filterRequirementLines(original, skip)
+        skipped_all.extend(skipped)
+        if not skipped:
+            prepared.append(path)
+            continue
+        if not any(line.strip() and not line.strip().startswith("#") for line in filtered.splitlines()):
+            continue
+        out_path = os.path.join(temp_dir, f"requirements_filtered_{index}.txt")
+        with open(out_path, "w", encoding=DEFAULT_ENCODING) as handle:
+            handle.write(filtered)
+        prepared.append(out_path)
+    # Preserve order, unique skip names
+    seen: set[str] = set()
+    unique_skipped: list[str] = []
+    for name in skipped_all:
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_skipped.append(name)
+    return prepared, unique_skipped
+
+
 def getRequirementsHint(projectDir, unresolvedPackages):
     """Return hint string for missing dependencies, or None."""
     packages = sorted({name for name in unresolvedPackages if name})
@@ -614,10 +765,12 @@ def generateRequirementsFromProject(filesList, progressCallback=None):
 
     Returns:
         (packages_set, error_count): Set of top-level package names, count of resolved errors.
+        Optional ``try``/``except ImportError`` imports are excluded (R278).
     """
     from .fileutils import isPythonFile
 
     allErrors = []
+    optionalNames: set[str] = set()
     pythonFiles = []
     for item in filesList:
         if item.endswith(os.sep):
@@ -635,8 +788,15 @@ def generateRequirementsFromProject(filesList, progressCallback=None):
             allErrors.extend(errors)
         except Exception:
             pass
+        try:
+            from .config import DEFAULT_ENCODING
 
-    packages = getUnresolvedPackageNames(allErrors)
+            with open(fName, "r", encoding=DEFAULT_ENCODING, errors="replace") as handle:
+                optionalNames |= collectOptionalImportNames(handle.read())
+        except OSError:
+            pass
+
+    packages = getUnresolvedPackageNames(allErrors) - optionalNames
     return packages, len(allErrors)
 
 

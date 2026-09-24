@@ -39,7 +39,12 @@ from ui.qt import (
 )
 from utils.fileutils import isPythonFile
 from utils.globals import GlobalData
-from utils.importutils import getRequirementsHint, getUnresolvedPackageNames, resolveImports
+from utils.importutils import (
+    collectOptionalImportNamesFromFiles,
+    getRequirementsHint,
+    getUnresolvedPackageNames,
+    resolveImports,
+)
 from utils.pixmapcache import getPixmap
 from utils.project_scan import is_packaging_artifact_basename, path_has_packaging_artifact
 
@@ -787,7 +792,10 @@ class ImportsDiagramProgress(QDialog):
         self.__inProgress = False
 
         if self.__allImportErrors:
-            unresolved = getUnresolvedPackageNames(self.__allImportErrors)
+            optional = set()
+            if GlobalData().project.isLoaded():
+                optional = collectOptionalImportNamesFromFiles(GlobalData().project.filesList)
+            unresolved = getUnresolvedPackageNames(self.__allImportErrors) - optional
             hint = getRequirementsHint(
                 GlobalData().project.getProjectDir() if GlobalData().project.isLoaded() else None,
                 unresolved,

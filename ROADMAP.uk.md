@@ -235,12 +235,13 @@
 | 87 | R275 | VCS bounded shutdown | stop + wait(timeout); без infinite GUI block | S | DONE |
 | 88 | R276 | Pylint wrapt subprocess | ``pylint_python_argv`` застосовує inspect_compat до wrapt | S | DONE |
 | 89 | R277 | Skip packaging artifact trees | ``build``/``dist``/egg-info не скануються; діаграма без дублів | S | DONE |
+| 90 | R278 | Skip optional ImportError imports in VENV | ``native``-style try/except не ставляться через pip | S | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** черга порожня після **R277**.
+**Наступний OPEN:** черга порожня після **R278**.
 
 Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
