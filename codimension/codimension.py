@@ -76,6 +76,7 @@ if "pkg_resources" not in sys.modules:
 
 # Install cdmpyparser/cdmcfparser fallbacks for Python 3.11+ (before any imports)
 import parsers  # noqa: F401, E402
+from core.exception_containment import classify_uncaught, is_process_fatal  # noqa: E402
 from ui.application import CodimensionApplication  # noqa: E402
 from ui.qt import QMessageBox, QTimer  # noqa: E402
 from ui.splashscreen import SplashScreen  # noqa: E402
@@ -344,7 +345,12 @@ class CodimensionUILauncher:
 
 
 def exceptionHook(excType, excValue, tracebackObj):
-    """Catches unhandled exceptions"""
+    """Catches unhandled exceptions with R272 containment.
+
+    Recoverable Qt/plugin/callback exceptions are logged and shown but must not
+    call ``application.exit(1)``. Process exit remains for pre-GUI bootstrap
+    failures and explicitly classified unrecoverable types.
+    """
     globalData = GlobalData()
 
     # Keyboard interrupt is a special case
@@ -352,6 +358,10 @@ def exceptionHook(excType, excValue, tracebackObj):
         if globalData.application is not None:
             globalData.application.quit()
         return
+
+    application_ready = globalData.application is not None and globalData.mainWindow is not None
+    kind = classify_uncaught(excType, application_ready=application_ready)
+    fatal = is_process_fatal(excType, application_ready=application_ready)
 
     error = "%s: %s" % (excType.__name__, excValue)
     stackTraceString = "".join(traceback.format_exception(excType, excValue, tracebackObj))
@@ -363,6 +373,7 @@ def exceptionHook(excType, excValue, tracebackObj):
         savedOK = True
         with open(excptFileName, "a", encoding=DEFAULT_ENCODING) as diskfile:
             diskfile.write("------ Unhandled exception report at " + str(datetime.datetime.now()) + "\n")
+            diskfile.write("Classification: " + kind + "\n")
             diskfile.write("Traceback:\n")
             diskfile.write(stackTraceString)
 
@@ -384,7 +395,14 @@ def exceptionHook(excType, excValue, tracebackObj):
 
     # This output will be to a console if the application has not started yet
     # or to a log window otherwise.
-    logging.error("Unhandled exception is caught\n%s", stackTraceString)
+    if fatal:
+        logging.error("Unhandled exception is caught (%s)\n%s", kind, stackTraceString)
+    else:
+        logging.error(
+            "Unhandled exception contained (%s); IDE continues\n%s",
+            kind,
+            stackTraceString,
+        )
 
     # Display the message as a QT modal dialog box if the application
     # has started
@@ -395,6 +413,12 @@ def exceptionHook(excType, excValue, tracebackObj):
         else:
             message += "Failed to save stack trace and log window content in " + excptFileName + ".<br>"
 
+        if not fatal:
+            message += (
+                "This error was contained; Codimension will keep running. "
+                "Save your work and restart if the UI looks unstable.<br>"
+            )
+
         lines = stackTraceString.split("\n")
         if len(lines) > 32:
             message += (
@@ -403,8 +427,12 @@ def exceptionHook(excType, excValue, tracebackObj):
         else:
             message += "Stack trace:" + "<pre>" + stackTraceString + "</pre>"
         message += "</body></html>"
-        QMessageBox.critical(None, "Unhandled exception: " + error, message)
-        globalData.application.exit(1)
+        title = ("Unhandled exception (continuing): " if not fatal else "Unhandled exception: ") + error
+        if fatal:
+            QMessageBox.critical(None, title, message)
+            globalData.application.exit(1)
+        else:
+            QMessageBox.warning(None, title, message)
 
 
 def main():

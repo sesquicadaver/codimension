@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-24 @ fdb29cad)
 
-Підтверджених **P0** немає. **P1: 1**. **P2: 2** групи (P2-01/P2-02 ✅ R271; P2-04 ✅ R269) → **R272–R275**. Хвиля R261–R268 закрита; зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
+Підтверджених **P0** немає. **P1: 0**. **P2: 2** групи (P2-03 → R274; P2-05 → R275) → **R273–R275**. Хвиля R261–R268 закрита; зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
 
 ### Повторний аудит 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 черга
 
@@ -15,7 +15,7 @@
 |----|----------|-----------|--------|
 | P1-01 | `AiTaskDriver`: немає `deleteLater` / `shutdown` / wait; close IDE під час AI → QThread destroyed | P1 | ✅ R269 |
 | P1-02 | Project scan: timeout 5s скидає handle активного `QThread` | P1 | ✅ R270 |
-| P1-03 | Global `exceptionHook` → `application.exit(1)` для будь-якого uncaught callback | P1 | 🔓 OPEN → **R272** |
+| P1-03 | Global `exceptionHook` → `application.exit(1)` для будь-якого uncaught callback | P1 | ✅ R272 |
 
 ### P2 / технічний борг (аудит 2026-09-24 @ fdb29cad)
 

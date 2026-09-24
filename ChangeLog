@@ -1,5 +1,9 @@
 2026 Sep 24
 
+* R272: exception containment — once the main window is up, recoverable
+  uncaught callback exceptions are logged/shown without ``application.exit(1)``;
+  ``UnrecoverableError`` / MemoryError / pre-GUI failures stay fatal (re-audit
+  P1-03 @ fdb29cad)
 * R271: ``BackgroundTaskRegistry`` — MainWindow ``closeEvent`` cancels then
   waits for registered AI + project-scan probes before forced ``gc.collect``
   (re-audit P2-01/P2-02 @ fdb29cad)
