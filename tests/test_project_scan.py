@@ -394,3 +394,32 @@ def test_t050_watcher_path_aware_exclude(tmp_path: Path) -> None:
     blob = repr(snap)
     assert "x.py" not in blob
     assert "y.py" in blob
+
+
+def test_r277_scan_skips_top_level_build_mirror(tmp_path: Path) -> None:
+    """setuptools build/lib mirrors must not enter filesList (R277)."""
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    (pkg / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    mirrored = tmp_path / "build" / "lib" / "pkg"
+    mirrored.mkdir(parents=True)
+    (mirrored / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    nested_ok = tmp_path / "src" / "build"
+    nested_ok.mkdir(parents=True)
+    (nested_ok / "helper.py").write_text("h = 1\n", encoding="utf-8")
+
+    files = scan_project_files(str(tmp_path) + sep)
+    paths = {realpath(p.rstrip(sep)) for p in files}
+    assert realpath(pkg / "mod.py") in paths
+    assert realpath(mirrored / "mod.py") not in paths
+    assert realpath(nested_ok / "helper.py") in paths
+
+
+def test_r277_path_has_packaging_artifact() -> None:
+    from codimension.utils.project_scan import path_has_packaging_artifact
+
+    root = "/proj"
+    assert path_has_packaging_artifact("/proj/build/lib/a.py", root)
+    assert path_has_packaging_artifact("/proj/dist/pkg.whl", root)
+    assert not path_has_packaging_artifact("/proj/src/build/helper.py", root)
+    assert path_has_packaging_artifact("/proj/pkg/__pycache__/x.pyc", root)

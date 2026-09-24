@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-24 audit @ fdb29cad)
 
-No confirmed **P0**. **P1: 0**. **P2: 0** — wave **R269–R275** ✅; **R276** (pylint subprocess wrapt) DONE with this fix. Slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) closed.
+No confirmed **P0**. **P1: 0**. **P2: 0** — wave **R269–R275** ✅; **R276**/**R277** ✅. Slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) closed.
 
 ### Re-audit 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 queue
 
@@ -27,6 +27,7 @@ No confirmed **P0**. **P1: 0**. **P2: 0** — wave **R269–R275** ✅; **R276**
 | P2-04 | AI worker/thread without `deleteLater` can accumulate | P2 | ✅ R269 |
 | P2-05 | VCS `thread.wait()` without timeout → hang on close | P2 | ✅ R275 |
 | P2-06 | IDE pylint subprocess: `python -m pylint` → wrapt/`formatargspec` on 3.11+ | P2 | ✅ R276 |
+| P2-07 | Import diagram: `build/lib` mirror duplicates every ModuleOfInterest | P2 | ✅ R277 |
 
 ### History: audit 2026-09-09 @ f44c8dc4 (wave R261–R268 ✅)
 

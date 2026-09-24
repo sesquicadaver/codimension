@@ -234,12 +234,13 @@
 | 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke без os._exit | L | DONE |
 | 87 | R275 | VCS bounded shutdown | stop + wait(timeout); без infinite GUI block | S | DONE |
 | 88 | R276 | Pylint wrapt subprocess | ``pylint_python_argv`` застосовує inspect_compat до wrapt | S | DONE |
+| 89 | R277 | Skip packaging artifact trees | ``build``/``dist``/egg-info не скануються; діаграма без дублів | S | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** черга порожня після **R276**. Хвиля **R269–R275** (аудит @ fdb29cad) лишається закритою.
+**Наступний OPEN:** черга порожня після **R277**.
 
 Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 

@@ -27,7 +27,7 @@ Requirements-to-module-to-tests matrix. Updated with every plugin change.
 | **Base class** | cdmplugins.lintdriverbase | lintdriverbase.py, process_env.py | systemEnvironment + non-blocking stop |
 | **Git VCS / PAT** | cdmplugins.git | gitconfig.py, credentials.py, githubapi.py | gh→keyring→0600; tests/test_credentials_and_atomic.py |
 | **Atomic `.cdm3`** | utils.atomic_io / project_schema | atomic_io.py, project_schema.py, project.py | atomic save; schema on load/update/reload; R190/R219 external reload=`updateProperties` + `__rebuildAfterPropertyChange`; UUID immutable; **R228** blank disk UUID restored atomically; `userProjectDir` never remounted mid-session |
-| **Project scan T050–T052** | utils.project_scan / project / watcher | project_scan.py, project.py, watcher.py | path-aware exclude; symlink visited; async scan; tests/test_project_scan.py |
+| **Project scan T050–T052 / R277** | utils.project_scan / project / watcher | project_scan.py, project.py, watcher.py | path-aware exclude; packaging ``build``/``dist`` skip; symlink visited; async scan; tests/test_project_scan.py, tests/test_import_diagram_r277.py |
 | **Slow-scan ignore prompt** | utils.slow_scan_prompt / ui.slowscanignoredlg / project | 30s → hot dir + ancestor combo (top-level default); Continue does not persist seen; Accept applies; tests/test_slow_scan_prompt.py |
 | **qutepart drawLine float** | editor.qutepart_compat / qpartwrap / texteditor | Override indent paint with int coords (never monkeypatch ``QPainter.drawLine`` — breaks ``QLineF``); tests/test_qutepart_compat.py |
 | **flow_ast docstring spans** | parsers.flow_ast | `_DocstringFrag` body/beginLine for hide-comments scroll; tests/conformance/test_flow_docstrings.py |
