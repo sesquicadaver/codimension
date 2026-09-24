@@ -37,7 +37,7 @@
 | **Headless core T080–T082** | core / infrastructure | core/syntax.py, core/flow.py, infrastructure/* | tests/test_core_headless.py |
 | **ApplicationServices R101 / R236** | app | app/__init__.py, app/services.py | headless façade + fakes; create/load/switch/unload; tests/test_app_services.py; test_app_services_r236.py; T085 covers `codimension/app` |
 | **App routing R102 / R236** | ui + globals + startup | globals.py `appServices`; mainwindow / mainmenu / projectviewer / recentprojectsviewer / codimension.py | UI→app→project (no direct createNew/load/unload); **R257**/**R265** prevalidate + full detach/unload/load/attach transaction + rollback; tests/test_r102_app_routing.py, test_app_services_r257.py, test_app_services_r265.py |
-| **Smoke + wrapt R197** | scripts/offscreen_gui_smoke + inspect_compat | graceful Qt teardown; formatargspec for wrapt 1.12 | tests/test_r197_smoke_wrapt.py |
+| **Smoke + wrapt R197/R276** | scripts/offscreen_gui_smoke + inspect_compat + pylintdriver | graceful Qt teardown; formatargspec for wrapt 1.12; pylint subprocess via ``pylint_python_argv`` | tests/test_r197_smoke_wrapt.py |
 | **Core import graph T085 / R100** | CI + utils | scripts/check_core_import_graph.py; utils/importutils.py | no Qt/UI in core/infrastructure/app; `importutils` Qt-free + progress callback; tests/test_importutils.py, test_t085_core_import_graph.py |
 | **MainWindow routing T083** | ui.mainwindow / mainwindow_debug | mainwindow.py, mainwindow_debug.py | MRO mixins; no extendInstance; DebuggerMixin |
 | **Lazy GlobalData T084** | utils.globals | globals.py | create-on-first-call; tests/test_globals_lazy.py |

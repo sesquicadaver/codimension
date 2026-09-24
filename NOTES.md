@@ -47,6 +47,9 @@ Bundled ``cdmplugins.pylint`` pulls ``pylint==2.5.3`` → `astroid==2.5` → `wr
 імпортує видалений `inspect.formatargspec`. **R197:** shim
 `codimension.inspect_compat` відновлює API при `import codimension` /
 старті IDE — окремий `pip install wrapt>=1.14 --no-deps` більше не потрібен.
+**R276:** `PylintDriver` запускає pylint через `python -c` +
+`pylint_python_argv` (shim **до** імпорту wrapt). Голий `python -m pylint`
+у subprocess IDE все ще падає на 3.11+ — це очікувано.
 
 ---
 

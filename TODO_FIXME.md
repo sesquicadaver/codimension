@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-24 @ fdb29cad)
 
-Підтверджених **P0** немає. **P1: 0**. **P2: 0** — хвиля **R269–R275** ✅. Зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) закритий.
+Підтверджених **P0** немає. **P1: 0**. **P2: 0** — хвиля **R269–R275** ✅; **R276** (pylint subprocess wrapt) ✅. Зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) закритий.
 
 ### Повторний аудит 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 черга
 
@@ -26,6 +26,7 @@
 | P2-03 | CI smoke `os._exit(0)` маскує interpreter teardown | P2 | ✅ R274 |
 | P2-04 | AI worker/thread без `deleteLater` можуть накопичуватися | P2 | ✅ R269 |
 | P2-05 | VCS `thread.wait()` без timeout → hang на close | P2 | ✅ R275 |
+| P2-06 | IDE pylint subprocess: `python -m pylint` → wrapt/`formatargspec` на 3.11+ | P2 | ✅ R276 |
 
 ### Історія: аудит 2026-09-09 @ f44c8dc4 (хвиля R261–R268 ✅)
 

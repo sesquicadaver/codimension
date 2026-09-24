@@ -233,12 +233,13 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | DONE |
 | 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke without os._exit | L | DONE |
 | 87 | R275 | VCS bounded shutdown | stop + wait(timeout); no infinite GUI block | S | DONE |
+| 88 | R276 | Pylint wrapt subprocess | ``pylint_python_argv`` applies inspect_compat before wrapt | S | DONE |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** wave **R269–R275** queue empty (audit @ fdb29cad closed).
+**Next OPEN:** queue empty after **R276** (pylint wrapt subprocess). Wave **R269–R275** audit @ fdb29cad remains closed.
 
 Wave **R269–R275** = hardening from re-audit `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
