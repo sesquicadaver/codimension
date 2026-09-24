@@ -229,7 +229,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 81 | R269 | AI deterministic QThread lifecycle | deleteLater + shutdown wait; MainWindow close barrier | M | DONE |
 | 82 | R270 | Project scan ownership | Timeout keeps retired scan handles until finished | M | DONE |
 | 83 | R271 | Global shutdown barrier | closeEvent waits for BackgroundTaskRegistry quiescence | L | DONE |
-| 84 | R272 | Exception containment | Recoverable Qt/plugin callbacks must not exit(1) | M | OPEN |
+| 84 | R272 | Exception containment | Recoverable Qt/plugin callbacks must not exit(1) | M | DONE |
 | 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | OPEN |
 | 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke without os._exit | L | OPEN |
 | 87 | R275 | VCS bounded shutdown | stop + wait(timeout); no infinite GUI block | S | OPEN |
@@ -238,7 +238,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R272** — Exception containment.
+**Next OPEN:** **R273** — Native crash telemetry.
 
 Wave **R269–R275** = hardening from re-audit `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
