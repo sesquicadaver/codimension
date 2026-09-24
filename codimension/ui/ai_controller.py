@@ -57,7 +57,7 @@ class AiWorkspaceController:
         chat = getattr(self._mw, "aiChatViewer", None)
         if chat is not None and hasattr(chat, "shutdown"):
             # Split remaining budget roughly; chat is usually idle.
-            ok = chat.shutdown(timeout_ms) and ok
+            ok = bool(chat.shutdown(timeout_ms)) and ok
         return ok
 
     def ensureResultTab(self) -> None:
