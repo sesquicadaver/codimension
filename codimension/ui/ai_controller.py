@@ -38,6 +38,28 @@ class AiWorkspaceController:
         self._driver.sigFinished.connect(self._onFinished)
         self._driver.sigFailed.connect(self._onFailed)
 
+    def isBusy(self) -> bool:
+        """True when the primary AI driver or chat driver has a live thread."""
+        if self._driver.isInProcess():
+            return True
+        chat = getattr(self._mw, "aiChatViewer", None)
+        if chat is not None and hasattr(chat, "isBusy") and chat.isBusy():
+            return True
+        return False
+
+    def shutdown(self, timeout_ms: int = 5000) -> bool:
+        """Cancel and wait for all AI worker threads before window teardown (R269).
+
+        Returns ``True`` only when every known AI driver has stopped. MainWindow
+        must not continue destruction when this returns ``False``.
+        """
+        ok = bool(self._driver.shutdown(timeout_ms))
+        chat = getattr(self._mw, "aiChatViewer", None)
+        if chat is not None and hasattr(chat, "shutdown"):
+            # Split remaining budget roughly; chat is usually idle.
+            ok = bool(chat.shutdown(timeout_ms)) and ok
+        return ok
+
     def ensureResultTab(self) -> None:
         """Show the AI Result bottom tab."""
         self._mw.activateBottomTab("airesult")

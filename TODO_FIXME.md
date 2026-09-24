@@ -2,10 +2,34 @@
 
 > **Мова / Language:** Українська | [English](TODO_FIXME.en.md)
 
-**Дата перевірки:** 2026-09-09 (статичний аудит @ `master@f44c8dc4` / `codi-last.md`; хвилі R209–R260 інтегровані)  
+**Дата перевірки:** 2026-09-24 (статичний аудит @ `master@fdb29cad` / `codi-last.md`)  
 **Проєкт:** форк [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Активний: https://github.com/sesquicadaver/codimension
 
-## Відкриті блокери (аудит 2026-09-09 @ f44c8dc4)
+## Відкриті блокери (аудит 2026-09-24 @ fdb29cad)
+
+Підтверджених **P0** немає. **P1: 2**. **P2: 4** групи (P2-04 ✅ R269) → **R270–R275**. Хвиля R261–R268 закрита; зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
+
+### Повторний аудит 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 черга
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P1-01 | `AiTaskDriver`: немає `deleteLater` / `shutdown` / wait; close IDE під час AI → QThread destroyed | P1 | ✅ R269 |
+| P1-02 | Project scan: timeout 5s скидає handle активного `QThread` | P1 | 🔓 OPEN → **R270** |
+| P1-03 | Global `exceptionHook` → `application.exit(1)` для будь-якого uncaught callback | P1 | 🔓 OPEN → **R272** |
+
+### P2 / технічний борг (аудит 2026-09-24 @ fdb29cad)
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| P2-01 | Shutdown без централізованого quiescence barrier | P2 | 🔓 OPEN → **R271** |
+| P2-02 | Примусовий `gc.collect()` на close проявляє Qt ownership defects | P2 | 🔓 OPEN → **R271** |
+| P2-03 | CI smoke `os._exit(0)` маскує interpreter teardown | P2 | 🔓 OPEN → **R274** |
+| P2-04 | AI worker/thread без `deleteLater` можуть накопичуватися | P2 | ✅ R269 |
+| P2-05 | VCS `thread.wait()` без timeout → hang на close | P2 | 🔓 OPEN → **R275** |
+
+### Історія: аудит 2026-09-09 @ f44c8dc4 (хвиля R261–R268 ✅)
+
+**Дата перевірки (історія):** 2026-09-09 (статичний аудит @ `master@f44c8dc4` / `codi-last.md`; хвилі R209–R260 інтегровані)
 
 Підтверджених **P0** немає. **P1: 0**. **P2: 0** (хвиля R261–R268 закрита @ f44c8dc4). Хвиля R252–R260 інтегрована; зріз `codi-last.md` @ master@f44c8dc4.
 

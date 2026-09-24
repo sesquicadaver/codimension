@@ -2,10 +2,34 @@
 
 > **Language / Мова:** English | [Українська](TODO_FIXME.md)
 
-**Last review:** 2026-09-09 (static audit @ `master@f44c8dc4` / `codi-last.md`; waves R209–R260 integrated)  
+**Last review:** 2026-09-24 (static audit @ `master@fdb29cad` / `codi-last.md`)  
 **Project:** fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codimension). Active: https://github.com/sesquicadaver/codimension
 
-## Open blockers (2026-09-09 audit @ f44c8dc4)
+## Open blockers (2026-09-24 audit @ fdb29cad)
+
+No confirmed **P0**. **P1: 2**. **P2: 4** groups (P2-04 ✅ R269) → **R270–R275**. Wave R261–R268 closed; slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
+
+### Re-audit 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 queue
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P1-01 | `AiTaskDriver`: no `deleteLater` / `shutdown` / wait; IDE close during AI → QThread destroyed | P1 | ✅ R269 |
+| P1-02 | Project scan: 5s timeout drops handle of a still-live `QThread` | P1 | 🔓 OPEN → **R270** |
+| P1-03 | Global `exceptionHook` → `application.exit(1)` for any uncaught callback | P1 | 🔓 OPEN → **R272** |
+
+### P2 / tech debt (2026-09-24 audit @ fdb29cad)
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| P2-01 | Shutdown lacks a central quiescence barrier | P2 | 🔓 OPEN → **R271** |
+| P2-02 | Forced `gc.collect()` on close surfaces Qt ownership defects | P2 | 🔓 OPEN → **R271** |
+| P2-03 | CI smoke `os._exit(0)` masks interpreter teardown | P2 | 🔓 OPEN → **R274** |
+| P2-04 | AI worker/thread without `deleteLater` can accumulate | P2 | ✅ R269 |
+| P2-05 | VCS `thread.wait()` without timeout → hang on close | P2 | 🔓 OPEN → **R275** |
+
+### History: audit 2026-09-09 @ f44c8dc4 (wave R261–R268 ✅)
+
+**Last review (history):** 2026-09-09 (static audit @ `master@f44c8dc4` / `codi-last.md`; waves R209–R260 integrated)
 
 No confirmed **P0**. **P1: 0**. **P2: 0** (wave R261–R268 closed @ f44c8dc4). Wave R252–R260 integrated; slice `codi-last.md` @ master@f44c8dc4.
 

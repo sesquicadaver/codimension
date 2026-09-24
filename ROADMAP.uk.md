@@ -226,12 +226,21 @@
 | 78 | R266 | LSP worker and payload hardening | Immutable transport lease; reader death invalidates; strict range decode | L | DONE |
 | 79 | R267 | Multi-exit taint environments | ExitKind→env; finally per edge; nested loop exit stack | L | DONE |
 | 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; precision coverage; sync TODO | M | DONE |
+| 81 | R269 | AI deterministic QThread lifecycle | deleteLater + shutdown wait; бар’єр close MainWindow | M | DONE |
+| 82 | R270 | Project scan ownership | Timeout зберігає retired scan handles до finished | M | OPEN |
+| 83 | R271 | Global shutdown barrier | closeEvent чекає quiescence BackgroundTaskRegistry | L | OPEN |
+| 84 | R272 | Exception containment | Recoverable Qt/plugin callbacks не роблять exit(1) | M | OPEN |
+| 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | OPEN |
+| 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke без os._exit | L | OPEN |
+| 87 | R275 | VCS bounded shutdown | stop + wait(timeout); без infinite GUI block | S | OPEN |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** *(хвиля R261–R268 закрита @ f44c8dc4; наступна черга — новий аудит / ROADMAP)*
+**Наступний OPEN:** **R270** — Project scan ownership.
+
+Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
 Хвиля **R261–R268** = hardening з повторного аудиту `codi-last.md` @ master@f44c8dc4 (**DONE**).
 
