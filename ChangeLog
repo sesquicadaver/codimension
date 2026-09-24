@@ -1,5 +1,8 @@
 2026 Sep 24
 
+* R277: skip packaging artifact trees (``build/``, ``dist/``, ``*.egg-info``, …)
+  in project scan and import-diagram participants so setuptools mirrors do not
+  duplicate every ModuleOfInterest node
 * R276: pylint subprocess applies ``inspect_compat`` before wrapt import
   (``pylint_python_argv`` / ``python -c``); bare ``-m pylint`` still fails on
   Py3.11+ by design

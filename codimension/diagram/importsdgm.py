@@ -41,6 +41,7 @@ from utils.fileutils import isPythonFile
 from utils.globals import GlobalData
 from utils.importutils import getRequirementsHint, getUnresolvedPackageNames, resolveImports
 from utils.pixmapcache import getPixmap
+from utils.project_scan import is_packaging_artifact_basename, path_has_packaging_artifact
 
 from .importsdgmgraphics import (
     ImportsDgmBuiltInModule,
@@ -175,7 +176,9 @@ class DgmModule:
     def __eq__(self, other):
         """Compares two module boxes when they are added to the data model"""
         if self.isProjectModule() and other.isProjectModule():
-            return self.refFile == other.refFile
+            left = os.path.realpath(self.refFile) if self.refFile else ""
+            right = os.path.realpath(other.refFile) if other.refFile else ""
+            return left == right
         return self.refFile == other.refFile and self.kind == other.kind and self.title == other.title
 
     def getTooltip(self):
@@ -527,8 +530,13 @@ class ImportsDiagramProgress(QDialog):
 
     def __scanDirForPythonFiles(self, path):
         """Scans the directory for the python files recursively"""
+        at_root = False
+        try:
+            at_root = os.path.realpath(path.rstrip(os.path.sep)) == os.path.realpath(self.__path)
+        except OSError:
+            at_root = False
         for item in os.listdir(path):
-            if item in [".svn", ".cvs", ".git", ".hg"]:
+            if is_packaging_artifact_basename(item, at_project_root=at_root):
                 continue
             if os.path.isdir(path + item):
                 self.__scanDirForPythonFiles(path + item + os.path.sep)
@@ -538,9 +546,19 @@ class ImportsDiagramProgress(QDialog):
 
     def __scanProjectDirs(self):
         """Populates participant lists from the project files"""
-        for fName in GlobalData().project.filesList:
-            if isPythonFile(fName):
-                self.__participantFiles.append(fName)
+        project = GlobalData().project
+        project_dir = project.getProjectDir() if project.isLoaded() else None
+        seen: set[str] = set()
+        for fName in project.filesList:
+            if not isPythonFile(fName):
+                continue
+            if path_has_packaging_artifact(fName, project_dir):
+                continue
+            real = os.path.realpath(fName)
+            if real in seen:
+                continue
+            seen.add(real)
+            self.__participantFiles.append(real)
 
     def __addBoxInfo(self, box, info):
         """Adds information to the given box if so configured"""
@@ -631,10 +649,10 @@ class ImportsDiagramProgress(QDialog):
                 return
 
         modBox = DgmModule()
-        modBox.refFile = fName
+        modBox.refFile = os.path.realpath(fName) if fName else fName
 
         modBox.kind = DgmModule.ModuleOfInterest
-        modBox.title = self.__getModuleTitle(fName)
+        modBox.title = self.__getModuleTitle(modBox.refFile)
 
         self.__addBoxInfo(modBox, info)
         modBoxName = self.dataModel.addModule(modBox)
@@ -655,7 +673,7 @@ class ImportsDiagramProgress(QDialog):
 
             if self.__isLocalOrProject(fName, resolvedPath):
                 impBox.kind = DgmModule.OtherProjectModule
-                impBox.refFile = resolvedPath
+                impBox.refFile = os.path.realpath(resolvedPath)
                 if isPythonFile(resolvedPath):
                     otherInfo = GlobalData().briefModinfoCache.get(resolvedPath)
                     self.__addBoxInfo(impBox, otherInfo)
@@ -665,7 +683,7 @@ class ImportsDiagramProgress(QDialog):
                     impBox.kind = DgmModule.UnknownModule
                 elif os.path.isabs(resolvedPath):
                     impBox.kind = DgmModule.SystemWideModule
-                    impBox.refFile = resolvedPath
+                    impBox.refFile = os.path.realpath(resolvedPath)
                     impBox.docstring = self.__getSytemWideImportDocstring(resolvedPath)
                 else:
                     # e.g. 'import time' will have 'built-in' in the path

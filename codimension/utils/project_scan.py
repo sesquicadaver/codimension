@@ -18,9 +18,81 @@ import re
 from collections.abc import Callable, Iterable, Sequence
 from os.path import isdir, islink, realpath, sep
 
+# Packaging / tool output that mirrors the source tree (setuptools ``build/lib``,
+# wheel ``dist``, coverage HTML, etc.). Skipping these prevents import-diagram
+# and analysis from treating every module as two ModuleOfInterest nodes (R277).
+_TOP_LEVEL_ARTIFACT_DIRS = frozenset({"build", "dist", "htmlcov", ".eggs"})
+_ANY_LEVEL_ARTIFACT_DIRS = frozenset(
+    {
+        "__pycache__",
+        ".tox",
+        ".nox",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".svn",
+        ".cvs",
+        ".git",
+        ".hg",
+    }
+)
+_ARTIFACT_DIR_SUFFIXES = (".egg-info",)
+
 
 class ScanCancelled(Exception):
     """Raised when ``should_cancel`` returns true during a project scan (B03)."""
+
+
+def is_packaging_artifact_basename(name: str, *, at_project_root: bool = False) -> bool:
+    """True if a directory/file basename is a known packaging or tool artifact.
+
+    ``build`` / ``dist`` / ``htmlcov`` / ``.eggs`` are only treated as artifacts
+    at the project root so a legitimate nested package named ``build`` is kept.
+    """
+    if not name:
+        return False
+    if name in _ANY_LEVEL_ARTIFACT_DIRS:
+        return True
+    if name.endswith(_ARTIFACT_DIR_SUFFIXES):
+        return True
+    if at_project_root and name in _TOP_LEVEL_ARTIFACT_DIRS:
+        return True
+    return False
+
+
+def path_has_packaging_artifact(path: str, project_dir: str | None = None) -> bool:
+    """True if ``path`` lies under a packaging artifact directory.
+
+    When ``project_dir`` is set, top-level-only names (``build``, ``dist``, …)
+    match solely as direct children of that project root. Nested packages named
+    ``build`` are kept. Without a project root, top-level artifact names match
+    at any depth (conservative filter for absolute paths already on disk).
+    """
+    if not path:
+        return False
+    try:
+        cand = realpath(path)
+    except OSError:
+        cand = path.replace("\\", "/")
+
+    root = ""
+    if project_dir:
+        try:
+            root = realpath(project_dir).rstrip(sep)
+        except OSError:
+            root = project_dir.replace("\\", "/").rstrip("/").rstrip("\\")
+
+    if root and (cand == root or cand.startswith(root + sep)):
+        rel = cand[len(root) :].lstrip(sep)
+        parts = [p for p in rel.split(sep) if p]
+        if not parts:
+            return False
+        if is_packaging_artifact_basename(parts[0], at_project_root=True):
+            return True
+        return any(is_packaging_artifact_basename(p, at_project_root=False) for p in parts[1:])
+
+    parts = [p for p in cand.split(sep) if p]
+    return any(is_packaging_artifact_basename(p, at_project_root=True) for p in parts)
 
 
 def path_is_under_or_equal(candidate: str, root: str) -> bool:
@@ -84,6 +156,9 @@ def scan_project_files(
     """Scan ``project_dir`` into a set of absolute file/dir paths (dirs end with sep).
 
     - Basename filters apply to entry names only (legacy Settings filters).
+    - Packaging artifact dirs (``build``, ``dist``, ``*.egg-info``, …) are
+      skipped unconditionally (R277) so mirrored setuptools trees do not
+      duplicate every module in analysis / import diagrams.
     - ``exclude_absolute_paths`` are path-aware (T050).
     - Symlink cycles / out-of-tree links are bounded via visited realpaths (T051).
     - ``should_cancel`` is checked cooperatively during the walk (audit B03);
@@ -108,7 +183,9 @@ def scan_project_files(
     files: set[str] = {root_sep}
     visited: set[str] = {root}
 
-    def _exclude_name(name: str) -> bool:
+    def _exclude_name(name: str, *, at_project_root: bool) -> bool:
+        if is_packaging_artifact_basename(name, at_project_root=at_project_root):
+            return True
         if should_exclude is not None:
             return should_exclude(name)
         return should_exclude_basename(name, filters)
@@ -125,9 +202,10 @@ def scan_project_files(
             entries = os.listdir(path)
         except OSError:
             return
+        at_root = path == root_sep
         for item in entries:
             _check_cancel()
-            if _exclude_name(item):
+            if _exclude_name(item, at_project_root=at_root):
                 continue
             candidate = path + item
             try:
