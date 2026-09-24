@@ -17,6 +17,7 @@ pytest.importorskip("PyQt5")
 
 from core.ai_tasks import AiTaskKind, AiTaskRequest  # noqa: E402
 from PyQt5.QtWidgets import QApplication  # noqa: E402
+from ui import aiworker as aiworker_mod  # noqa: E402
 from ui.aiworker import AiTaskDriver  # noqa: E402
 from utils.background_task_registry import BackgroundTaskRegistry  # noqa: E402
 
@@ -113,7 +114,7 @@ def test_r274_ai_active_then_shutdown_quiesces(ai_driver, qapp, monkeypatch: pyt
             time.sleep(0.01)
         return _ok_result()
 
-    monkeypatch.setattr("ui.aiworker.run_ai_task", slow_run)
+    monkeypatch.setattr(aiworker_mod, "run_ai_task", slow_run)
     assert ai_driver.start(AiTaskRequest(kind=AiTaskKind.CHAT, title="t", chat_message="x")) is None
     assert started.wait(5)
     _pump(qapp, 0.05)
@@ -135,7 +136,7 @@ def test_r274_ai_cancel_then_immediate_shutdown(ai_driver, qapp, monkeypatch: py
                 return _ok_result()
             time.sleep(0.01)
 
-    monkeypatch.setattr("ui.aiworker.run_ai_task", slow_run)
+    monkeypatch.setattr(aiworker_mod, "run_ai_task", slow_run)
     assert ai_driver.start(AiTaskRequest(kind=AiTaskKind.CHAT, title="t", chat_message="x")) is None
     assert started.wait(5)
     ai_driver.cancel()
@@ -151,7 +152,7 @@ def test_r274_many_ai_tasks_leave_no_live_thread(ai_driver, qapp, monkeypatch: p
         del request, progress, should_cancel
         return _ok_result()
 
-    monkeypatch.setattr("ui.aiworker.run_ai_task", instant_run)
+    monkeypatch.setattr(aiworker_mod, "run_ai_task", instant_run)
     for i in range(_AI_STRESS_COUNT):
         err = ai_driver.start(AiTaskRequest(kind=AiTaskKind.CHAT, title=f"t{i}", chat_message="x"))
         assert err is None
