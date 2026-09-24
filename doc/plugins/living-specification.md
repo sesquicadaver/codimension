@@ -161,7 +161,7 @@
 | B09 / B10 / C05 | schema on all update paths; atomic settings flush; uuid4 + immediate persist; R193 non-dict reject + lazy Settings() | ✅ |
 | D08 / E03 / G01 | constraints snapshot; release verify + OIDC publish; `ci-gate` + master protection | ✅ |
 
-Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R232–R273** ✅; хвиля **R269–R275** (`codi-last.md` @ fdb29cad); Next = **R274** lifecycle stress suite.
+Подальша черга: [ROADMAP.uk.md](../../ROADMAP.uk.md) — **R232–R274** ✅; хвиля **R269–R275** (`codi-last.md` @ fdb29cad); Next = **R275** VCS bounded shutdown.
 
 ### Матриця меж модулів (R103 / R195)
 

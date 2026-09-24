@@ -34,16 +34,16 @@ def test_wrapt_imports_after_compat() -> None:
     assert wrapt.__version__.startswith("1.12")
 
 
-def test_smoke_script_shutdown_before_hard_exit() -> None:
-    """R197: ``_shutdown_smoke`` must run; ``os._exit`` only after cleanup."""
+def test_smoke_script_prefers_normal_exit() -> None:
+    """R274: default smoke path must not hard-exit; cleanup still runs first."""
     text = (ROOT / "scripts" / "offscreen_gui_smoke.py").read_text(encoding="utf-8")
     assert "_shutdown_smoke" in text
-    # Call sites in ``finally`` (ignore docstring mentions of os._exit).
     finally_idx = text.index("finally:")
     assert "_shutdown_smoke(app, main_window)" in text[finally_idx:]
-    assert "os._exit(0)" in text[finally_idx:]
+    # Hard exit is opt-in via CDM_SMOKE_HARD_EXIT, not the default success path.
+    assert "CDM_SMOKE_HARD_EXIT" in text[finally_idx:]
     assert text.index("_shutdown_smoke(app, main_window)", finally_idx) < text.index(
-        "os._exit(0)", finally_idx
+        "CDM_SMOKE_HARD_EXIT", finally_idx
     )
 
 

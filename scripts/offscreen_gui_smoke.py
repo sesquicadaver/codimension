@@ -6,9 +6,9 @@ Creates CodimensionApplication + CodimensionMainWindow and loads plugins.
 Exit 0 only when at least one bundled plugin activates.
 
 R197 runs normal Python/Qt cleanup (``_shutdown_smoke``) before process exit.
-A final ``os._exit(0)`` remains **after** that cleanup to avoid PyQt atexit
-segfaults on some CI Python builds (historically rc=-11 after a successful
-smoke). Failure paths return normally so traceback/atexit can run.
+R274: success path returns normally so interpreter teardown is exercised in CI
+(no ``os._exit``). Set ``CDM_SMOKE_HARD_EXIT=1`` only as a last-resort escape
+on hosts that still segfault in PyQt atexit after a green smoke.
 """
 
 from __future__ import annotations
@@ -133,8 +133,8 @@ def main() -> int:
     finally:
         sys.stdout, sys.stderr = saved_out, saved_err
         _shutdown_smoke(app, main_window)
-        if rc == 0:
-            # Cleanup already ran; skip fragile PyQt interpreter shutdown.
+        if rc == 0 and os.environ.get("CDM_SMOKE_HARD_EXIT") == "1":
+            # Escape hatch only — default R274 path is normal interpreter exit.
             os._exit(0)
 
 

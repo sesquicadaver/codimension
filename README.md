@@ -28,7 +28,7 @@
 - Не production-ready IDE
 - **Linux** — єдина CI-верифікована платформа; Windows / macOS — **unverified** (немає гарантій)
 - Git-плагін — MVP; PR створюється через **GitHub REST API** (токен: `gh auth` → keyring → файл `0600`)
-- Qt offscreen smoke у PR CI створює `CodimensionApplication` + `CodimensionMainWindow` і завантажує bundled plugins (після `_shutdown_smoke` процес завершується через `os._exit(0)` через PyQt atexit на деяких CI builds)
+- Qt offscreen smoke у PR CI створює `CodimensionApplication` + `CodimensionMainWindow` і завантажує bundled plugins; після `_shutdown_smoke` процес завершується звичайним interpreter exit (R274; опційно `CDM_SMOKE_HARD_EXIT=1`)
 - Активна черга hardening: [ROADMAP.uk.md](ROADMAP.uk.md) / [TODO_FIXME.md](TODO_FIXME.md); safe-mode: `--safe-mode` / `CDM_SAFE_MODE=1`
 
 ## Вимоги
