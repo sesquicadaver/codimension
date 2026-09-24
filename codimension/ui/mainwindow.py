@@ -47,6 +47,7 @@ from search.searchresultsviewer import SearchResultsViewer, hideSearchTooltip
 from search.searchsupport import ItemToSearchIn, getSearchItemIndex
 from search.vultureprovider import VultureSearchProvider
 from utils.background_task_registry import get_background_task_registry
+from utils.crash_telemetry import note_lifecycle, write_crash_context
 from utils.diskvaluesrelay import getRunParameters
 from utils.fileutils import (
     getFileProperties,
@@ -884,6 +885,10 @@ class CodimensionMainWindow(
                 self.settings.tabsStatus = []
             else:
                 self.settings.tabsStatus = self.em.getTabsStatus()
+
+        # R273: refresh breadcrumbs before quiescence / teardown.
+        note_lifecycle("closeEvent")
+        write_crash_context()
 
         # R271: central quiescence barrier — cancel then wait before teardown/GC.
         registry = get_background_task_registry()

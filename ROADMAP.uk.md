@@ -230,7 +230,7 @@
 | 82 | R270 | Project scan ownership | Timeout зберігає retired scan handles до finished | M | DONE |
 | 83 | R271 | Global shutdown barrier | closeEvent чекає quiescence BackgroundTaskRegistry | L | DONE |
 | 84 | R272 | Exception containment | Recoverable Qt/plugin callbacks не роблять exit(1) | M | DONE |
-| 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | OPEN |
+| 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | DONE |
 | 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke без os._exit | L | OPEN |
 | 87 | R275 | VCS bounded shutdown | stop + wait(timeout); без infinite GUI block | S | OPEN |
 
@@ -238,7 +238,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R273** — Native crash telemetry.
+**Наступний OPEN:** **R274** — Lifecycle stress suite.
 
 Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 

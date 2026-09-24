@@ -81,6 +81,11 @@ from ui.application import CodimensionApplication  # noqa: E402
 from ui.qt import QMessageBox, QTimer  # noqa: E402
 from ui.splashscreen import SplashScreen  # noqa: E402
 from utils.config import DEFAULT_ENCODING  # noqa: E402
+from utils.crash_telemetry import (  # noqa: E402
+    enable_crash_telemetry,
+    note_lifecycle,
+    write_crash_context,
+)
 from utils.globals import GlobalData  # noqa: E402
 from utils.project import CodimensionProject  # noqa: E402
 from utils.settings import SETTINGS_DIR, Settings  # noqa: E402
@@ -96,6 +101,21 @@ try:
     VER = cdmverspec.version
 except ImportError:
     VER = "0.0.0"
+
+# R273: dump native thread stacks on abort; keep a sibling crash_context.txt.
+try:
+    from PyQt5.QtCore import PYQT_VERSION_STR as _PYQT_VER
+    from PyQt5.QtCore import QT_VERSION_STR as _QT_VER
+except Exception:
+    _PYQT_VER = "unknown"
+    _QT_VER = "unknown"
+enable_crash_telemetry(
+    SETTINGS_DIR,
+    version=VER,
+    pyqt_version=str(_PYQT_VER),
+    qt_version=str(_QT_VER),
+)
+note_lifecycle("entrypoint")
 
 
 class CodimensionUILauncher:
@@ -342,6 +362,8 @@ class CodimensionUILauncher:
         # Some startup time objects could be collected here. In my test runs
         # there were around 700 objects.
         gc.collect()
+        note_lifecycle("ui_ready")
+        write_crash_context()
 
 
 def exceptionHook(excType, excValue, tracebackObj):

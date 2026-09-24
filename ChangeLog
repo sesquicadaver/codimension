@@ -1,5 +1,8 @@
 2026 Sep 24
 
+* R273: native crash telemetry — ``faulthandler.enable`` into
+  ``SETTINGS_DIR/native_crashes.log`` plus ``crash_context.txt`` breadcrumbs
+  (commit/Python/Qt/PID/threads/registry/lifecycle) (re-audit @ fdb29cad)
 * R272: exception containment — once the main window is up, recoverable
   uncaught callback exceptions are logged/shown without ``application.exit(1)``;
   ``UnrecoverableError`` / MemoryError / pre-GUI failures stay fatal (re-audit
