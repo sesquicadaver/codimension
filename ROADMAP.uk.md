@@ -232,13 +232,13 @@
 | 84 | R272 | Exception containment | Recoverable Qt/plugin callbacks не роблять exit(1) | M | DONE |
 | 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | DONE |
 | 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke без os._exit | L | DONE |
-| 87 | R275 | VCS bounded shutdown | stop + wait(timeout); без infinite GUI block | S | OPEN |
+| 87 | R275 | VCS bounded shutdown | stop + wait(timeout); без infinite GUI block | S | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R275** — VCS bounded shutdown.
+**Наступний OPEN:** черга хвилі **R269–R275** порожня (аудит @ fdb29cad закритий).
 
 Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 

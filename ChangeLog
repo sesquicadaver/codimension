@@ -1,5 +1,7 @@
 2026 Sep 24
 
+* R275: VCS bounded shutdown — ``stopThread(timeout_ms)`` + degraded report;
+  register VCS with ``BackgroundTaskRegistry`` (re-audit P2-05 @ fdb29cad)
 * R274: lifecycle stress suite — AI/scan close+GC paths; CI smoke defaults to
   normal interpreter exit (``CDM_SMOKE_HARD_EXIT=1`` escape only) (re-audit
   P2-03 @ fdb29cad)
