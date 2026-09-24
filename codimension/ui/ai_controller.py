@@ -53,7 +53,7 @@ class AiWorkspaceController:
         Returns ``True`` only when every known AI driver has stopped. MainWindow
         must not continue destruction when this returns ``False``.
         """
-        ok = self._driver.shutdown(timeout_ms)
+        ok = bool(self._driver.shutdown(timeout_ms))
         chat = getattr(self._mw, "aiChatViewer", None)
         if chat is not None and hasattr(chat, "shutdown"):
             # Split remaining budget roughly; chat is usually idle.

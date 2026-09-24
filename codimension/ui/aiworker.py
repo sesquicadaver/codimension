@@ -72,7 +72,7 @@ class AiTaskDriver(QObject):
 
     def isInProcess(self) -> bool:
         """True while a background AI task is running."""
-        return self.__thread is not None and self.__thread.isRunning()
+        return bool(self.__thread is not None and self.__thread.isRunning())
 
     def cancel(self) -> None:
         """Request cooperative cancellation of the in-flight AI task (R241)."""
@@ -100,7 +100,7 @@ class AiTaskDriver(QObject):
         # :meth:`__onThreadFinished` (also invoked when wait succeeds).
         if self.__thread is thread and not thread.isRunning():
             self.__clearThreadRefs()
-        return not (self.__thread is not None and self.__thread.isRunning())
+        return not bool(self.__thread is not None and self.__thread.isRunning())
 
     def start(self, request: AiTaskRequest) -> str | None:
         """Start ``request``. Returns an error string if already busy."""
