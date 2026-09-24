@@ -23,9 +23,12 @@ manager to keep track of the VCS plugins and file status"""
 import datetime
 import logging
 import os.path
+import time
 
 from plugins.categories.vcsiface import VersionControlSystemInterface
 from ui.qt import QObject, QTimer, pyqtSignal
+from utils.background_task_registry import get_background_task_registry
+from utils.crash_telemetry import note_lifecycle
 from utils.globals import GlobalData
 from utils.project import CodimensionProject
 from utils.settings import Settings
@@ -33,6 +36,9 @@ from utils.settings import Settings
 from .indicator import VCSIndicator
 from .statuscache import VCSStatus, VCSStatusCache
 from .vcspluginthread import IND_VCS_ERROR, VCSPluginThread
+
+# Bounded join when dismissing VCS plugin threads on IDE close (R275).
+_VCS_JOIN_TIMEOUT_MS = 5000
 
 
 class VCSPluginDescriptor(QObject):
@@ -53,10 +59,34 @@ class VCSPluginDescriptor(QObject):
 
         self.thread.VCSStatus.connect(self.__onStatus)
 
-    def stopThread(self):
-        """Stops the plugin thread synchronously"""
-        self.thread.stop()  # Sends request
-        self.thread.wait()  # Joins the thread
+    def stopThread(self, timeout_ms: int = _VCS_JOIN_TIMEOUT_MS) -> bool:
+        """Stop the plugin thread with a bounded wait (R275).
+
+        Returns ``True`` when the thread is not running afterwards. A timeout
+        logs a degraded-component warning and returns ``False`` so IDE close
+        can continue without an infinite GUI block.
+        """
+        thread = self.thread
+        if thread is None:
+            return True
+        try:
+            thread.clearRequestQueue()
+        except Exception:
+            logging.debug("VCS clearRequestQueue failed", exc_info=True)
+        thread.stop()
+        if timeout_ms <= 0:
+            return not bool(thread.isRunning())
+        finished = bool(thread.wait(max(0, int(timeout_ms))))
+        if not finished and thread.isRunning():
+            logging.warning(
+                "VCS plugin thread '%s' did not finish within %sms; "
+                "continuing shutdown in degraded mode (R275)",
+                self.getPluginName(),
+                timeout_ms,
+            )
+            note_lifecycle("vcs_shutdown_degraded", detail=self.getPluginName())
+            return False
+        return True
 
     def requestStatus(self, path, flag, urgent=False):
         """Requests the item status asynchronously"""
@@ -134,7 +164,48 @@ class VCSManager(QObject):
         GlobalData().pluginManager.sigPluginActivated.connect(self.__onPluginActivated)
 
         # Plugin deactivation must be done via dismissPlugin(...)
-        return
+        get_background_task_registry().register(
+            "vcs",
+            cancel=self.requestShutdown,
+            wait=self.waitForShutdown,
+            is_active=self.hasLiveThreads,
+        )
+
+    def hasLiveThreads(self) -> bool:
+        """True while any VCS plugin QThread is still running (R275)."""
+        for descriptor in self.activePlugins.values():
+            thread = getattr(descriptor, "thread", None)
+            if thread is not None and bool(thread.isRunning()):
+                return True
+        return False
+
+    def requestShutdown(self) -> None:
+        """Cooperative stop of all VCS plugin threads (R275 / R271)."""
+        self.__dirRequestLoopTimer.stop()
+        for descriptor in list(self.activePlugins.values()):
+            thread = getattr(descriptor, "thread", None)
+            if thread is None:
+                continue
+            try:
+                thread.clearRequestQueue()
+            except Exception:
+                logging.debug("VCS clearRequestQueue failed", exc_info=True)
+            thread.stop()
+
+    def waitForShutdown(self, timeout_ms: int = _VCS_JOIN_TIMEOUT_MS) -> bool:
+        """Wait until VCS plugin threads stop; shared budget across plugins."""
+        remaining_ms = max(0, int(timeout_ms))
+        for descriptor in list(self.activePlugins.values()):
+            thread = getattr(descriptor, "thread", None)
+            if thread is None or not thread.isRunning():
+                continue
+            if remaining_ms <= 0:
+                break
+            started = time.monotonic()
+            thread.wait(remaining_ms)
+            elapsed_ms = int((time.monotonic() - started) * 1000)
+            remaining_ms = max(0, remaining_ms - max(elapsed_ms, 0))
+        return not self.hasLiveThreads()
 
     def __getNewPluginIndex(self):
         """Provides a new plugin index"""
@@ -263,26 +334,50 @@ class VCSManager(QObject):
                 for _, descriptor in self.activePlugins.items():
                     descriptor.requestStatus(path, VersionControlSystemInterface.REQUEST_DIRECTORY)
 
-    def dismissAllPlugins(self):
-        """Stops all the plugin threads"""
-        self.__dirRequestLoopTimer.stop()
+    def dismissAllPlugins(self, timeout_ms: int = _VCS_JOIN_TIMEOUT_MS) -> list[str]:
+        """Stop all plugin threads with a bounded wait (R275).
 
-        for identifier, descriptor in self.activePlugins.items():
-            descriptor.plugin.getObject().PathChanged.disconnect(self.__onPathChanged)
-            descriptor.stopThread()
+        Returns the names of plugins that did not stop within ``timeout_ms``
+        (degraded components). IDE close must not block forever on a hung
+        ``getStatus()`` inside a VCS plugin.
+        """
+        self.__dirRequestLoopTimer.stop()
+        degraded: list[str] = []
+        remaining_ms = max(0, int(timeout_ms))
+        for _identifier, descriptor in list(self.activePlugins.items()):
+            try:
+                descriptor.plugin.getObject().PathChanged.disconnect(self.__onPathChanged)
+            except Exception:
+                logging.debug("VCS PathChanged disconnect failed", exc_info=True)
+            started = time.monotonic()
+            budget = remaining_ms
+            if not descriptor.stopThread(timeout_ms=budget):
+                degraded.append(descriptor.getPluginName())
+            elapsed_ms = int((time.monotonic() - started) * 1000)
+            remaining_ms = max(0, remaining_ms - max(elapsed_ms, 0))
 
         self.dirCache.clear()
         self.fileCache.clear()
         self.activePlugins = {}
+        if degraded:
+            logging.warning(
+                "VCS shutdown degraded for: %s",
+                ", ".join(degraded),
+            )
+            note_lifecycle("vcs_dismiss_degraded", detail=",".join(degraded))
+        return degraded
 
-    def dismissPlugin(self, plugin):
+    def dismissPlugin(self, plugin, timeout_ms: int = _VCS_JOIN_TIMEOUT_MS):
         """Stops the plugin thread and cleans the plugin data"""
         pluginID = None
         for identifier, descriptor in self.activePlugins.items():
             if descriptor.getPluginName() == plugin.getName():
-                descriptor.plugin.getObject().PathChanged.disconnect(self.__onPathChanged)
+                try:
+                    descriptor.plugin.getObject().PathChanged.disconnect(self.__onPathChanged)
+                except Exception:
+                    logging.debug("VCS PathChanged disconnect failed", exc_info=True)
                 pluginID = identifier
-                descriptor.stopThread()
+                descriptor.stopThread(timeout_ms=timeout_ms)
                 self.fileCache.dismissPlugin(pluginID, self.sendFileStatusNotification)
                 self.dirCache.dismissPlugin(pluginID, self.sendDirStatusNotification)
 
