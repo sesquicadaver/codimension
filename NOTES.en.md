@@ -48,6 +48,9 @@ Bundled ``cdmplugins.pylint`` pulls ``pylint==2.5.3`` → `astroid==2.5` → `wr
 removed `inspect.formatargspec`. **R197:** `codimension.inspect_compat`
 restores the API on `import codimension` / IDE startup — no
 `pip install wrapt>=1.14 --no-deps` override.
+**R276:** `PylintDriver` launches pylint via `python -c` +
+`pylint_python_argv` (shim **before** wrapt import). Bare `python -m pylint`
+in an IDE subprocess still fails on 3.11+ — that is expected.
 
 ---
 

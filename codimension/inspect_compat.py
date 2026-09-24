@@ -93,3 +93,26 @@ def ensure_wrapt_compat() -> bool:
         return False
     setattr(inspect, "formatargspec", formatargspec)
     return True
+
+
+# Bootstrap for ``python -c …`` pylint subprocesses (R276).
+# ``python -m pylint`` imports wrapt before any ``--init-hook``, so the IDE
+# startup shim never applies. Patch first, then hand off to ``run_pylint``.
+_PYLINT_BOOTSTRAP = (
+    "from codimension.inspect_compat import ensure_wrapt_compat;"
+    "ensure_wrapt_compat();"
+    "import sys;"
+    "from pylint import run_pylint;"
+    "sys.argv[0]='pylint';"
+    "run_pylint()"
+)
+
+
+def pylint_python_argv(pylint_args: Sequence[str]) -> list[str]:
+    """Build argv *after* the interpreter for a wrapt-safe pylint subprocess.
+
+    Example::
+
+        QProcess.start(sys.executable, pylint_python_argv(["--version"]))
+    """
+    return ["-c", _PYLINT_BOOTSTRAP, *list(pylint_args)]

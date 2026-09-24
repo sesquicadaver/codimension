@@ -1,5 +1,8 @@
 2026 Sep 24
 
+* R276: pylint subprocess applies ``inspect_compat`` before wrapt import
+  (``pylint_python_argv`` / ``python -c``); bare ``-m pylint`` still fails on
+  Py3.11+ by design
 * R275: VCS bounded shutdown — ``stopThread(timeout_ms)`` + degraded report;
   register VCS with ``BackgroundTaskRegistry`` (re-audit P2-05 @ fdb29cad)
 * R274: lifecycle stress suite — AI/scan close+GC paths; CI smoke defaults to

@@ -59,7 +59,8 @@ python -m pip install -e ".[tools,lint,test,security,ssh]"
 ```
 
 На Python 3.11+ wrapt 1.12 (pylint-стек) працює через `codimension.inspect_compat`
-(R197) — окремий `pip install wrapt --no-deps` не потрібен.
+(R197) — окремий `pip install wrapt --no-deps` не потрібен. IDE pylint
+subprocess (Ctrl+L) додатково бутстрапить shim через `pylint_python_argv` (R276).
 
 Не запускайте IDE з checkout у **Trash** (desktop-ярлик і `run_codimension.sh`
 відмовляють). Після переміщення репозиторію: `cd -P /path/to/codimension` —

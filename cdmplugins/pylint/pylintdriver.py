@@ -19,11 +19,17 @@
 
 """Codimension pylint driver implementation"""
 
-import sys
-import re
 import os.path
-from ui.qt import QWidget, pyqtSignal, QProcess, QProcessEnvironment, QByteArray
+import re
+import sys
+
+from ui.qt import QByteArray, QProcess, QProcessEnvironment, QWidget, pyqtSignal
 from utils.misc import getLocaleDateTime
+
+try:
+    from codimension.inspect_compat import pylint_python_argv
+except ImportError:  # pragma: no cover - flat layout / editable path
+    from inspect_compat import pylint_python_argv  # type: ignore[no-redef]
 
 MSG_REGEXP = re.compile(r"^[CRWE]+([0-9]{4})?:")
 
@@ -65,9 +71,8 @@ class PylintDriver(QWidget):
         self.__stdout = ""
         self.__stderr = ""
 
-        self.__args = [
-            "-m",
-            "pylint",
+        # R276: do not use ``python -m pylint`` — wrapt imports before init-hook.
+        pylint_cli = [
             "--output-format",
             "text",
             "--msg-template",
@@ -76,12 +81,11 @@ class PylintDriver(QWidget):
         ]
         rcfile = PylintDriver.getPylintrc(self.__ide, self.__fileName)
         if rcfile:
-            self.__args.append("--rcfile")
-            self.__args.append(rcfile)
+            pylint_cli.extend(["--rcfile", rcfile])
         initHook = self.getInitHook()
         if initHook:
-            self.__args.append("--init-hook")
-            self.__args.append(initHook)
+            pylint_cli.extend(["--init-hook", initHook])
+        self.__args = pylint_python_argv(pylint_cli)
 
         processEnvironment = QProcessEnvironment()
         processEnvironment.insert("PYTHONIOENCODING", self.__encoding)
@@ -112,7 +116,7 @@ class PylintDriver(QWidget):
 
         process = QProcess(self)
         process.setStandardOutputFile(rcfile)
-        process.start(sys.executable, ["-m", "pylint", "--generate-rcfile"])
+        process.start(sys.executable, pylint_python_argv(["--generate-rcfile"]))
         process.waitForFinished()
         return rcfile
 
