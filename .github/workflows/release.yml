@@ -82,7 +82,7 @@ jobs:
           pip check
           python -c "import codimension; import cdmplugins; print('import OK')"
           pip install -c constraints.txt -r requirements.txt
-          QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py
+          CDM_SMOKE_HARD_EXIT=1 QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2

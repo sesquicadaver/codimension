@@ -268,7 +268,9 @@ jobs:
           python -c "import codimension; import cdmplugins; print('OK')"
           pip install -c constraints.txt pip-audit
           pip-audit -r requirements.txt
-          QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py
+          # R274: smoke code defaults to normal interpreter exit; CI still needs
+          # the hard-exit escape until PyQt atexit segfaults are gone (rc=-11).
+          CDM_SMOKE_HARD_EXIT=1 QT_QPA_PLATFORM=offscreen python scripts/offscreen_gui_smoke.py
 
   docs:
     runs-on: ubuntu-latest

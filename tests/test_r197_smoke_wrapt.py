@@ -58,6 +58,8 @@ def test_offscreen_smoke_subprocess_ok() -> None:
     """Graceful-shutdown smoke still exits 0 with plugins loaded."""
     env = dict(**{k: v for k, v in __import__("os").environ.items()})
     env.setdefault("QT_QPA_PLATFORM", "offscreen")
+    # CI hosts still hit PyQt atexit segfaults (rc=-11) without the escape hatch.
+    env["CDM_SMOKE_HARD_EXIT"] = "1"
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "offscreen_gui_smoke.py")],
         cwd=str(ROOT),

@@ -28,7 +28,7 @@ Active fork of [SergeySatskiy/codimension](https://github.com/SergeySatskiy/codi
 - Not a production-ready IDE
 - **Linux** is the only CI-verified platform; Windows / macOS are **unverified** (no compatibility guarantee)
 - Git plugin is MVP; PRs are created via the **GitHub REST API** (token: `gh auth` → OS keyring → `0600` file)
-- Qt offscreen smoke in PR CI builds `CodimensionApplication` + `CodimensionMainWindow` and loads bundled plugins; after `_shutdown_smoke` the process uses a normal interpreter exit (R274; optional `CDM_SMOKE_HARD_EXIT=1`)
+- Qt offscreen smoke in PR CI builds `CodimensionApplication` + `CodimensionMainWindow` and loads bundled plugins; the script defaults to a normal interpreter exit (R274), while CI sets `CDM_SMOKE_HARD_EXIT=1` until PyQt atexit is stable
 - Active hardening queue: [ROADMAP.md](ROADMAP.md) / [TODO_FIXME.en.md](TODO_FIXME.en.md); safe-mode: `--safe-mode` / `CDM_SAFE_MODE=1`
 
 ## Requirements
