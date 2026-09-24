@@ -86,6 +86,10 @@ class AiChatViewer(QWidget):
         """True while a chat reply is running (R269)."""
         return bool(self.__driver.isInProcess())
 
+    def requestCancel(self) -> None:
+        """Cooperative cancel of the chat worker (R271)."""
+        self.__driver.cancel()
+
     def shutdown(self, timeout_ms: int = 5000) -> bool:
         """Cancel and wait for the chat worker thread (R269)."""
         return bool(self.__driver.shutdown(timeout_ms))

@@ -1,5 +1,8 @@
 2026 Sep 24
 
+* R271: ``BackgroundTaskRegistry`` — MainWindow ``closeEvent`` cancels then
+  waits for registered AI + project-scan probes before forced ``gc.collect``
+  (re-audit P2-01/P2-02 @ fdb29cad)
 * R270: project scan ownership — cancel join timeout retires the live
   ``QThread`` (detach parent + keep until ``finished``); new scans coalesce
   instead of walking in parallel with retired workers; ``waitForScans`` hook

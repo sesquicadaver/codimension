@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-24 @ fdb29cad)
 
-Підтверджених **P0** немає. **P1: 1**. **P2: 4** групи (P2-04 ✅ R269) → **R271–R275**. Хвиля R261–R268 закрита; зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
+Підтверджених **P0** немає. **P1: 1**. **P2: 2** групи (P2-01/P2-02 ✅ R271; P2-04 ✅ R269) → **R272–R275**. Хвиля R261–R268 закрита; зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
 
 ### Повторний аудит 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 черга
 
@@ -21,8 +21,8 @@
 
 | ID | Проблема | Пріоритет | Статус |
 |----|----------|-----------|--------|
-| P2-01 | Shutdown без централізованого quiescence barrier | P2 | 🔓 OPEN → **R271** |
-| P2-02 | Примусовий `gc.collect()` на close проявляє Qt ownership defects | P2 | 🔓 OPEN → **R271** |
+| P2-01 | Shutdown без централізованого quiescence barrier | P2 | ✅ R271 |
+| P2-02 | Примусовий `gc.collect()` на close проявляє Qt ownership defects | P2 | ✅ R271 |
 | P2-03 | CI smoke `os._exit(0)` маскує interpreter teardown | P2 | 🔓 OPEN → **R274** |
 | P2-04 | AI worker/thread без `deleteLater` можуть накопичуватися | P2 | ✅ R269 |
 | P2-05 | VCS `thread.wait()` без timeout → hang на close | P2 | 🔓 OPEN → **R275** |
