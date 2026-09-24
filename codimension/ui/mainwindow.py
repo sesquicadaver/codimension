@@ -46,6 +46,7 @@ from search.occurrencesprovider import OccurrencesSearchProvider
 from search.searchresultsviewer import SearchResultsViewer, hideSearchTooltip
 from search.searchsupport import ItemToSearchIn, getSearchItemIndex
 from search.vultureprovider import VultureSearchProvider
+from utils.background_task_registry import get_background_task_registry
 from utils.diskvaluesrelay import getRunParameters
 from utils.fileutils import (
     getFileProperties,
@@ -329,6 +330,12 @@ class CodimensionMainWindow(
         self.aiChatViewer = None  # created on demand
         self.aiController = AiWorkspaceController(self)
         self.aiResultViewer.applyDocstringAction().triggered.connect(self.aiController.applyLastDocstring)
+        get_background_task_registry().register(
+            "ai",
+            cancel=self.aiController.requestCancel,
+            wait=self.aiController.shutdown,
+            is_active=self.aiController.isBusy,
+        )
         # R230: LanguageController is created lazily (see languageController property)
         # so MainWindow import/construct does not pull LanguageServiceManager →
         # infrastructure under the offscreen smoke sys.path layout.
@@ -878,9 +885,12 @@ class CodimensionMainWindow(
             else:
                 self.settings.tabsStatus = self.em.getTabsStatus()
 
-        # R269: AI QThread must stop before parent destruction / forced GC.
-        if not self.aiController.shutdown(timeout_ms=5000):
-            logging.error("AI worker still running; aborting IDE close")
+        # R271: central quiescence barrier — cancel then wait before teardown/GC.
+        registry = get_background_task_registry()
+        registry.request_shutdown()
+        if not registry.wait_all(timeout_ms=5000):
+            active = ", ".join(registry.active_tasks()) or "?"
+            logging.error("Background tasks still running (%s); aborting IDE close", active)
             event.ignore()
             return
 
@@ -904,6 +914,7 @@ class CodimensionMainWindow(
             # - the IDE is closed via Alt+F4
             # It seems that python GC conflicts with QT at finishing. Explicit
             # call of GC resolves the problem.
+            # R271: only reach forced GC after BackgroundTaskRegistry quiescence.
             while gc.collect():
                 pass
 

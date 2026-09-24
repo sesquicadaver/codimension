@@ -47,6 +47,13 @@ class AiWorkspaceController:
             return True
         return False
 
+    def requestCancel(self) -> None:
+        """Cooperative cancel of AI analysis and chat workers (R271)."""
+        self._driver.cancel()
+        chat = getattr(self._mw, "aiChatViewer", None)
+        if chat is not None and hasattr(chat, "requestCancel"):
+            chat.requestCancel()
+
     def shutdown(self, timeout_ms: int = 5000) -> bool:
         """Cancel and wait for all AI worker threads before window teardown (R269).
 

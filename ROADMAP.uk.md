@@ -228,7 +228,7 @@
 | 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; precision coverage; sync TODO | M | DONE |
 | 81 | R269 | AI deterministic QThread lifecycle | deleteLater + shutdown wait; бар’єр close MainWindow | M | DONE |
 | 82 | R270 | Project scan ownership | Timeout зберігає retired scan handles до finished | M | DONE |
-| 83 | R271 | Global shutdown barrier | closeEvent чекає quiescence BackgroundTaskRegistry | L | OPEN |
+| 83 | R271 | Global shutdown barrier | closeEvent чекає quiescence BackgroundTaskRegistry | L | DONE |
 | 84 | R272 | Exception containment | Recoverable Qt/plugin callbacks не роблять exit(1) | M | OPEN |
 | 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | OPEN |
 | 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke без os._exit | L | OPEN |
@@ -238,7 +238,7 @@
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** **R271** — Shutdown quiescence barrier.
+**Наступний OPEN:** **R272** — Exception containment.
 
 Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 

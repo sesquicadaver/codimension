@@ -38,6 +38,7 @@ from PyQt5.QtWidgets import QApplication, QDialog
 from ui.qt import QObject, pyqtSignal
 
 from .atomic_io import atomic_write_text
+from .background_task_registry import get_background_task_registry
 from .config import DEFAULT_ENCODING
 from .debugenv import DebuggerEnvironment
 from .filepositions import FilePositions
@@ -213,6 +214,13 @@ class CodimensionProject(
         self.__pendingRestoreExpanded = False
         self.__slowScanTimer = None
         self.__slowScanPromptOpen = False
+
+        get_background_task_registry().register(
+            "project_scan",
+            cancel=self.requestScanCancel,
+            wait=self.waitForScans,
+            is_active=self.hasLiveScanThreads,
+        )
 
         # Avoid pylint complains
         self.fileName = ""
@@ -706,6 +714,18 @@ class CodimensionProject(
         self.__pruneRetiredScans()
         return any(thread.isRunning() for thread in self.__retiredScanThreads)
 
+    def requestScanCancel(self) -> None:
+        """Cooperative interrupt of active and retired scan threads (R271)."""
+        self.__stopSlowScanTimer()
+        thread = self.__scanThread
+        if thread is not None:
+            thread.requestInterruption()
+        for retired in list(self.__retiredScanThreads):
+            try:
+                retired.requestInterruption()
+            except Exception:
+                logging.debug("Failed to interrupt retired scan thread", exc_info=True)
+
     def hasLiveScanThreads(self) -> bool:
         """True while the active or any retired project-scan QThread is running."""
         active = self.__scanThread is not None and bool(self.__scanThread.isRunning())
@@ -752,14 +772,16 @@ class CodimensionProject(
         if thread is None:
             return
         thread.requestInterruption()
-        if join_ms > 0:
-            if not thread.wait(join_ms):
-                logging.warning(
-                    "Project scan thread did not finish within %sms; retiring handle (R270)",
-                    join_ms,
-                )
-                self.__retireScanThread(thread)
-                return
+        if join_ms <= 0:
+            # Interrupt-only: keep the active handle for a later wait (R270/R271).
+            return
+        if not thread.wait(join_ms):
+            logging.warning(
+                "Project scan thread did not finish within %sms; retiring handle (R270)",
+                join_ms,
+            )
+            self.__retireScanThread(thread)
+            return
         if thread is self.__scanThread:
             self.__scanThread = None
 
