@@ -1,5 +1,8 @@
 2026 Sep 24
 
+* R278: skip ``try``/``except ImportError`` imports (e.g. ``native``) in
+  Generate requirements and Update VENV so pip is not asked for non-PyPI
+  optional extensions
 * R277: skip packaging artifact trees (``build/``, ``dist/``, ``*.egg-info``, …)
   in project scan and import-diagram participants so setuptools mirrors do not
   duplicate every ModuleOfInterest node

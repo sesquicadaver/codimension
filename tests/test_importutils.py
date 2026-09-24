@@ -112,6 +112,39 @@ def test_get_requirements_hint_returns_none_for_relative_only_errors(tmp_path):
     assert getRequirementsHint(str(tmp_path), unresolved) is None
 
 
+def test_r278_collect_optional_import_names_try_except_importerror():
+    """try/except ImportError imports are optional and not pip packages."""
+    collect = _importutils.collectOptionalImportNames
+    source = (
+        "try:\n"
+        "    import native as _native_mod\n"
+        "except (ImportError, AttributeError, RuntimeError, OSError):\n"
+        "    _native_mod = None\n"
+        "import requests\n"
+    )
+    assert collect(source) == {"native"}
+
+
+def test_r278_filter_requirement_lines_skips_optional_packages():
+    """requirements.txt lines for optional imports are dropped before pip."""
+    filter_lines = _importutils.filterRequirementLines
+    text = "native\nrequests>=2.0\n"
+    filtered, skipped = filter_lines(text, {"native"})
+    assert skipped == ["native"]
+    assert "requests" in filtered
+    assert "native" not in filtered.splitlines()
+
+
+def test_r278_prepare_requirement_files_drops_empty_after_filter(tmp_path):
+    prepare = _importutils.prepareRequirementFilesForInstall
+    req = tmp_path / "requirements.txt"
+    req.write_text("native\n", encoding="utf-8")
+    out_dir = tmp_path / "out"
+    paths, skipped = prepare([str(req)], {"native"}, temp_dir=str(out_dir))
+    assert paths == []
+    assert skipped == ["native"]
+
+
 def test_build_dir_modules_reports_progress_without_qt(tmp_path):
     """buildDirModules uses a callable progress hook, not Qt widgets."""
     pkg = tmp_path / "pkg"

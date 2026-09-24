@@ -117,6 +117,24 @@ def _selected_sources(req_checks, pyproject_cb, unresolved_cb, pkg_list):
     return reqs, pkgs, pyproject_cb.isChecked()
 
 
+def _filter_optional_install_sources(project, reqs, packages):
+    """Drop try/except-ImportError packages from requirements and unresolved lists (R278)."""
+    import tempfile
+
+    from utils.importutils import collectOptionalImportNamesFromFiles, prepareRequirementFilesForInstall
+
+    files = list(getattr(project, "filesList", []) or [])
+    optional = collectOptionalImportNamesFromFiles(files)
+    filtered_packages = [name for name in packages if name and name not in optional]
+    temp_dir = tempfile.mkdtemp(prefix="cdm-req-filter-")
+    prepared_reqs, skipped = prepareRequirementFilesForInstall(reqs, optional, temp_dir=temp_dir)
+    # Also count unresolved packages we dropped
+    for name in packages:
+        if name in optional and name not in skipped:
+            skipped.append(name)
+    return prepared_reqs, filtered_packages, skipped
+
+
 def selectedBaseInterpreter(combo: QComboBox, *, fallback: str | None = None) -> str:
     """Resolve base Python from an editable combo (audit D01 @ 8c60ad5c).
 
@@ -236,6 +254,14 @@ class VenvSetupDialog(QDialog):
                 self._unresolved_check,
                 self._pkg_list,
             )
+            reqs, packages, skipped_optional = _filter_optional_install_sources(self._project, reqs, packages)
+            if skipped_optional:
+                QMessageBox.information(
+                    self,
+                    "VENV",
+                    "Skipped optional imports (try/except ImportError; not pip packages):\n"
+                    + ", ".join(skipped_optional),
+                )
             if reqs or packages or install_proj:
                 from utils.venvbootstrap import assertSafeMutableProjectPython
 
@@ -248,15 +274,22 @@ class VenvSetupDialog(QDialog):
                     install_project=install_proj,
                     project_dir=self._project_dir,
                 )
-                reply = QMessageBox.question(
-                    self,
-                    "Confirm pip install",
-                    "Run:\n" + " ".join(cmd),
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.No,
-                )
-                if reply == QMessageBox.Yes:
-                    run_pip_with_progress(self, cmd, cwd=self._project_dir, project_dir=self._project_dir)
+                if len(cmd) <= 4 and not install_proj:
+                    QMessageBox.information(
+                        self,
+                        "VENV",
+                        "No remaining install sources after skipping optional imports.",
+                    )
+                else:
+                    reply = QMessageBox.question(
+                        self,
+                        "Confirm pip install",
+                        "Run:\n" + " ".join(cmd),
+                        QMessageBox.Yes | QMessageBox.No,
+                        QMessageBox.No,
+                    )
+                    if reply == QMessageBox.Yes:
+                        run_pip_with_progress(self, cmd, cwd=self._project_dir, project_dir=self._project_dir)
 
             persist = (
                 QMessageBox.question(
@@ -352,6 +385,13 @@ class VenvUpdateDialog(QDialog):
             self._unresolved_check,
             self._pkg_list,
         )
+        reqs, packages, skipped_optional = _filter_optional_install_sources(self._project, reqs, packages)
+        if skipped_optional:
+            QMessageBox.information(
+                self,
+                "Update VENV",
+                "Skipped optional imports (try/except ImportError; not pip packages):\n" + ", ".join(skipped_optional),
+            )
         try:
             if mode == MODE_RECREATE:
                 venv_dir = venvDirFromPython(self._python)
@@ -360,6 +400,13 @@ class VenvUpdateDialog(QDialog):
                     return
                 if not isPathInsideProject(venv_dir, self._project_dir):
                     QMessageBox.warning(self, "Update VENV", "Recreate refused: venv is outside the project.")
+                    return
+                if not (reqs or packages or install_proj):
+                    QMessageBox.information(
+                        self,
+                        "Update VENV",
+                        "No remaining install sources after skipping optional imports.",
+                    )
                     return
                 base = resolveRecreateBasePython(self._python)
                 current = probePythonInterpreter(self._python)
@@ -401,7 +448,12 @@ class VenvUpdateDialog(QDialog):
                     project_dir=self._project_dir,
                 )
                 if len(cmd) <= 4:
-                    QMessageBox.information(self, "Update VENV", "No install sources selected.")
+                    QMessageBox.information(
+                        self,
+                        "Update VENV",
+                        "No install sources selected"
+                        + (" after skipping optional imports." if skipped_optional else "."),
+                    )
                     return
                 reply = QMessageBox.question(
                     self,
