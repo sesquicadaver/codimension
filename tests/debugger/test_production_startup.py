@@ -27,6 +27,7 @@ def test_mainwindow_bootstrap_loads_at_least_one_plugin():
     """Run production smoke in a subprocess so CodimensionApplication does not poison later tests."""
     env = os.environ.copy()
     env.setdefault("QT_QPA_PLATFORM", "offscreen")
+    env["CDM_SMOKE_HARD_EXIT"] = "1"
     # Prefer the repo venv interpreter that pytest is using.
     script = ROOT / "scripts" / "offscreen_gui_smoke.py"
     result = subprocess.run(

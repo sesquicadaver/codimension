@@ -1,5 +1,8 @@
 2026 Sep 24
 
+* R274: lifecycle stress suite — AI/scan close+GC paths; CI smoke defaults to
+  normal interpreter exit (``CDM_SMOKE_HARD_EXIT=1`` escape only) (re-audit
+  P2-03 @ fdb29cad)
 * R273: native crash telemetry — ``faulthandler.enable`` into
   ``SETTINGS_DIR/native_crashes.log`` plus ``crash_context.txt`` breadcrumbs
   (commit/Python/Qt/PID/threads/registry/lifecycle) (re-audit @ fdb29cad)

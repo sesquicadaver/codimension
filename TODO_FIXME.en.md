@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-24 audit @ fdb29cad)
 
-No confirmed **P0**. **P1: 0**. **P2: 2** groups (P2-03 → R274; P2-05 → R275) → **R274–R275**. Wave R261–R268 closed; slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
+No confirmed **P0**. **P1: 0**. **P2: 1** group (P2-05 → R275) → **R275**. Wave R261–R268 closed; slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle).
 
 ### Re-audit 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 queue
 
@@ -23,7 +23,7 @@ No confirmed **P0**. **P1: 0**. **P2: 2** groups (P2-03 → R274; P2-05 → R275
 |----|-------|----------|--------|
 | P2-01 | Shutdown lacks a central quiescence barrier | P2 | ✅ R271 |
 | P2-02 | Forced `gc.collect()` on close surfaces Qt ownership defects | P2 | ✅ R271 |
-| P2-03 | CI smoke `os._exit(0)` masks interpreter teardown | P2 | 🔓 OPEN → **R274** |
+| P2-03 | CI smoke `os._exit(0)` masks interpreter teardown | P2 | ✅ R274 |
 | P2-04 | AI worker/thread without `deleteLater` can accumulate | P2 | ✅ R269 |
 | P2-05 | VCS `thread.wait()` without timeout → hang on close | P2 | 🔓 OPEN → **R275** |
 

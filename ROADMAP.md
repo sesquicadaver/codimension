@@ -231,14 +231,14 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 83 | R271 | Global shutdown barrier | closeEvent waits for BackgroundTaskRegistry quiescence | L | DONE |
 | 84 | R272 | Exception containment | Recoverable Qt/plugin callbacks must not exit(1) | M | DONE |
 | 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | DONE |
-| 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke without os._exit | L | OPEN |
+| 86 | R274 | Lifecycle stress suite | AI/scan close paths; smoke without os._exit | L | DONE |
 | 87 | R275 | VCS bounded shutdown | stop + wait(timeout); no infinite GUI block | S | OPEN |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R274** — Lifecycle stress suite.
+**Next OPEN:** **R275** — VCS bounded shutdown.
 
 Wave **R269–R275** = hardening from re-audit `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
