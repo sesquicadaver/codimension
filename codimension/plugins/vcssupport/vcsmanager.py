@@ -28,7 +28,6 @@ import time
 from plugins.categories.vcsiface import VersionControlSystemInterface
 from ui.qt import QObject, QTimer, pyqtSignal
 from utils.background_task_registry import get_background_task_registry
-from utils.crash_telemetry import note_lifecycle
 from utils.globals import GlobalData
 from utils.project import CodimensionProject
 from utils.settings import Settings
@@ -39,6 +38,15 @@ from .vcspluginthread import IND_VCS_ERROR, VCSPluginThread
 
 # Bounded join when dismissing VCS plugin threads on IDE close (R275).
 _VCS_JOIN_TIMEOUT_MS = 5000
+
+
+def _note_lifecycle(event: str, *, detail: str = "") -> None:
+    """Best-effort crash-context breadcrumb (optional if telemetry unavailable)."""
+    try:
+        from utils.crash_telemetry import note_lifecycle
+    except Exception:
+        return
+    note_lifecycle(event, detail=detail)
 
 
 class VCSPluginDescriptor(QObject):
@@ -79,12 +87,11 @@ class VCSPluginDescriptor(QObject):
         finished = bool(thread.wait(max(0, int(timeout_ms))))
         if not finished and thread.isRunning():
             logging.warning(
-                "VCS plugin thread '%s' did not finish within %sms; "
-                "continuing shutdown in degraded mode (R275)",
+                "VCS plugin thread '%s' did not finish within %sms; continuing shutdown in degraded mode (R275)",
                 self.getPluginName(),
                 timeout_ms,
             )
-            note_lifecycle("vcs_shutdown_degraded", detail=self.getPluginName())
+            _note_lifecycle("vcs_shutdown_degraded", detail=self.getPluginName())
             return False
         return True
 
@@ -364,7 +371,7 @@ class VCSManager(QObject):
                 "VCS shutdown degraded for: %s",
                 ", ".join(degraded),
             )
-            note_lifecycle("vcs_dismiss_degraded", detail=",".join(degraded))
+            _note_lifecycle("vcs_dismiss_degraded", detail=",".join(degraded))
         return degraded
 
     def dismissPlugin(self, plugin, timeout_ms: int = _VCS_JOIN_TIMEOUT_MS):

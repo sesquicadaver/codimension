@@ -44,7 +44,7 @@ def test_r275_stop_thread_timeout_returns_false_and_does_not_block(monkeypatch) 
     descriptor.indicators = {}
 
     notes: list[str] = []
-    monkeypatch.setattr(vcsmanager_mod, "note_lifecycle", lambda ev, detail="": notes.append(f"{ev}:{detail}"))
+    monkeypatch.setattr(vcsmanager_mod, "_note_lifecycle", lambda ev, detail="": notes.append(f"{ev}:{detail}"))
 
     assert descriptor.stopThread(timeout_ms=100) is False
     assert stuck.stopped is True
