@@ -29,6 +29,7 @@ import logging
 import os
 import re
 import shutil
+import time
 import uuid
 from os.path import basename, dirname, exists, isabs, isfile, join, realpath, relpath, sep
 
@@ -204,6 +205,8 @@ class CodimensionProject(
 
         self.__dirWatcher = None
         self.__scanThread = None
+        # R270: threads that outlived cancel/join stay owned here until finished.
+        self.__retiredScanThreads: set[QThread] = set()
         self.__scanGeneration = 0
         self.__scanOnComplete = None
         self.__scanCoalesce = False
@@ -676,12 +679,70 @@ class CodimensionProject(
             updated["importdirs"] = list(paths)
             self.updateProperties(updated)
 
+    def __pruneRetiredScans(self) -> None:
+        """Drop finished retired scan threads from the ownership set (R270)."""
+        dead = {thread for thread in self.__retiredScanThreads if not thread.isRunning()}
+        self.__retiredScanThreads.difference_update(dead)
+
+    def __retireScanThread(self, thread: QThread | None) -> None:
+        """Keep a still-live scan thread owned until ``finished`` (R270).
+
+        Detaches the QThread from the Project QObject tree so unload/teardown
+        cannot destroy a running child while cooperative cancel is still
+        blocked inside filesystem I/O.
+        """
+        if thread is None:
+            return
+        if thread is self.__scanThread:
+            self.__scanThread = None
+        try:
+            thread.setParent(None)
+        except Exception:
+            logging.debug("Failed to detach retired scan thread parent", exc_info=True)
+        self.__retiredScanThreads.add(thread)
+
+    def __retiredScansRunning(self) -> bool:
+        """True when any cancel-timed-out scan thread is still alive (R270)."""
+        self.__pruneRetiredScans()
+        return any(thread.isRunning() for thread in self.__retiredScanThreads)
+
+    def hasLiveScanThreads(self) -> bool:
+        """True while the active or any retired project-scan QThread is running."""
+        active = self.__scanThread is not None and bool(self.__scanThread.isRunning())
+        return bool(active or self.__retiredScansRunning())
+
+    def waitForScans(self, timeout_ms: int = _SCAN_JOIN_TIMEOUT_MS) -> bool:
+        """Wait until active and retired scan threads stop (R270 / R271 hook).
+
+        Returns ``True`` when no scan thread is running afterwards.
+        """
+        remaining_ms = max(0, int(timeout_ms))
+        threads: list[QThread] = []
+        if self.__scanThread is not None:
+            threads.append(self.__scanThread)
+        threads.extend(list(self.__retiredScanThreads))
+        for thread in threads:
+            if not thread.isRunning():
+                continue
+            if remaining_ms <= 0:
+                break
+            started = time.monotonic()
+            thread.wait(remaining_ms)
+            elapsed_ms = int((time.monotonic() - started) * 1000)
+            remaining_ms = max(0, remaining_ms - max(elapsed_ms, 0))
+        self.__pruneRetiredScans()
+        if self.__scanThread is not None and not self.__scanThread.isRunning():
+            self.__scanThread = None
+        return not self.hasLiveScanThreads()
+
     def __cancelScan(self, *, join_ms: int = _SCAN_JOIN_TIMEOUT_MS):
-        """Interrupt any in-flight background scan (audit B03).
+        """Interrupt any in-flight background scan (audit B03 / R270).
 
         Drops the post-scan callback, invalidates the generation counter, requests
-        cooperative interruption, and optionally waits a bounded time. The
-        thread is cleaned via ``finished`` → ``deleteLater``.
+        cooperative interruption, and optionally waits a bounded time. If the
+        thread outlives ``join_ms``, it is moved to ``__retiredScanThreads``
+        (still owned until ``finished`` → ``deleteLater``) instead of dropping
+        the last operational handle.
         """
         self.__stopSlowScanTimer()
         self.__scanGeneration += 1
@@ -693,7 +754,12 @@ class CodimensionProject(
         thread.requestInterruption()
         if join_ms > 0:
             if not thread.wait(join_ms):
-                logging.warning("Project scan thread did not finish within %sms", join_ms)
+                logging.warning(
+                    "Project scan thread did not finish within %sms; retiring handle (R270)",
+                    join_ms,
+                )
+                self.__retireScanThread(thread)
+                return
         if thread is self.__scanThread:
             self.__scanThread = None
 
@@ -737,11 +803,20 @@ class CodimensionProject(
         thread.start()
 
     def __onScanThreadFinished(self) -> None:
-        """Clear thread ref and start a coalesced rescan if one was queued (B03)."""
+        """Clear thread ref and start a coalesced rescan if one was queued (B03/R270)."""
         thread = self.sender()
         if thread is self.__scanThread:
             self.__scanThread = None
+        if isinstance(thread, QThread):
+            self.__retiredScanThreads.discard(thread)
+        self.__pruneRetiredScans()
         if not self.__scanCoalesce:
+            return
+        # R270: do not start a replacement while a retired cancel-timeout
+        # thread is still running (avoids parallel walks on the same tree).
+        if self.__retiredScansRunning():
+            return
+        if self.__scanThread is not None and self.__scanThread.isRunning():
             return
         if not self.isLoaded() or QApplication.instance() is None:
             self.__scanCoalesce = False
@@ -750,12 +825,15 @@ class CodimensionProject(
         self.__startScanThread(self.__scanGeneration)
 
     def __generateFilesList(self, *, sync=None, on_complete=None):
-        """Generate filesList; async when QApplication exists (T052 / B03).
+        """Generate filesList; async when QApplication exists (T052 / B03 / R270).
 
         Concurrent requests coalesce: the in-flight scan is interrupted and a
         single replacement scan runs after it finishes. ``on_complete`` runs
         only after ``filesList`` is populated so callers can emit
         ``CompleteProject`` with a consistent project tree.
+
+        R270 policy: if only retired (cancel-timeout) threads are still alive,
+        queue a coalesced replacement instead of starting a parallel walk.
         """
         if sync is None:
             sync = QApplication.instance() is None
@@ -773,6 +851,12 @@ class CodimensionProject(
             self.__scanGeneration += 1
             self.__scanCoalesce = True
             self.__scanThread.requestInterruption()
+            return
+
+        if self.__retiredScansRunning():
+            self.__stopSlowScanTimer()
+            self.__scanGeneration += 1
+            self.__scanCoalesce = True
             return
 
         self.__scanGeneration += 1

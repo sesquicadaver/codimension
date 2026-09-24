@@ -1,5 +1,9 @@
 2026 Sep 24
 
+* R270: project scan ownership — cancel join timeout retires the live
+  ``QThread`` (detach parent + keep until ``finished``); new scans coalesce
+  instead of walking in parallel with retired workers; ``waitForScans`` hook
+  for shutdown (re-audit P1-02 @ fdb29cad)
 * R269: AI deterministic QThread lifecycle — worker/thread ``deleteLater``;
   ``AiTaskDriver.shutdown`` (cancel→quit→wait); MainWindow close refuses
   teardown while AI threads are still live (re-audit P1-01/P2-04 @ fdb29cad)

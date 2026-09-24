@@ -227,7 +227,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 79 | R267 | Multi-exit taint environments | ExitKind→env map; finally per edge; nested loop exit stack | L | DONE |
 | 80 | R268 | Runtime invariants and CI precision | Strict explicit AI config; reliability coverage precision; TODO sync | M | DONE |
 | 81 | R269 | AI deterministic QThread lifecycle | deleteLater + shutdown wait; MainWindow close barrier | M | DONE |
-| 82 | R270 | Project scan ownership | Timeout keeps retired scan handles until finished | M | OPEN |
+| 82 | R270 | Project scan ownership | Timeout keeps retired scan handles until finished | M | DONE |
 | 83 | R271 | Global shutdown barrier | closeEvent waits for BackgroundTaskRegistry quiescence | L | OPEN |
 | 84 | R272 | Exception containment | Recoverable Qt/plugin callbacks must not exit(1) | M | OPEN |
 | 85 | R273 | Native crash telemetry | faulthandler + lifecycle dump on abort | S | OPEN |
@@ -238,7 +238,7 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 
 ## Next autopilot pointer
 
-**Next OPEN:** **R270** — Project scan ownership.
+**Next OPEN:** **R271** — Shutdown quiescence barrier.
 
 Wave **R269–R275** = hardening from re-audit `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
