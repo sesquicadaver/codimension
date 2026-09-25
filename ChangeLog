@@ -1,5 +1,8 @@
 2026 Sep 25
 
+* R281: import resolution prefers project paths / PathFinder over IDE
+  ``utils``/``core`` shadowing; nested dirs no longer hide top-level packages;
+  ``third_party/*/src`` auto-added; pip hints skip in-tree package names
 * R280: drop legacy PyPI ``cdmgcplugin`` / ``cdmsysinfoplugin`` — their
   ``.cdmp`` lack ``[Codimension]`` so R225 correctly refuse import; IDE GC is
   built-in (``ui.garbagecollector``)

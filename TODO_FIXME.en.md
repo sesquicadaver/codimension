@@ -7,7 +7,7 @@
 
 ## Open blockers (2026-09-24 audit @ fdb29cad)
 
-No confirmed **P0**. **P1: 0**. **P2: 0** — wave **R269–R275** ✅; **R276**/**R277**/**R278**/**R279**/**R280** ✅. Slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) closed.
+No confirmed **P0**. **P1: 0**. **P2: 0** — wave **R269–R275** ✅; **R276**–**R281** ✅. Slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) closed.
 
 ### Re-audit 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 queue
 
@@ -31,6 +31,7 @@ No confirmed **P0**. **P1: 0**. **P2: 0** — wave **R269–R275** ✅; **R276**
 | P2-08 | Update VENV: `pip install native` from optional ImportError import | P2 | ✅ R278 |
 | P2-09 | GUI launch: `Could not find the Qt platform plugin "xcb" in ""` | P2 | ✅ R279 |
 | P2-10 | Legacy PyPI `cdmgcplugin`/`cdmsysinfoplugin` fail R225 `[Codimension]` gate | P2 | ✅ R280 |
+| P2-11 | Import resolve: IDE `utils`/`core` + nested dirs false-unresolved project pkgs | P2 | ✅ R281 |
 
 ### History: audit 2026-09-09 @ f44c8dc4 (wave R261–R268 ✅)
 

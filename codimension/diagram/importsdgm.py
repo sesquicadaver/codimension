@@ -795,7 +795,13 @@ class ImportsDiagramProgress(QDialog):
             optional = set()
             if GlobalData().project.isLoaded():
                 optional = collectOptionalImportNamesFromFiles(GlobalData().project.filesList)
-            unresolved = getUnresolvedPackageNames(self.__allImportErrors) - optional
+            unresolved = (
+                getUnresolvedPackageNames(
+                    self.__allImportErrors,
+                    project_dir=GlobalData().project.getProjectDir() if GlobalData().project.isLoaded() else None,
+                )
+                - optional
+            )
             hint = getRequirementsHint(
                 GlobalData().project.getProjectDir() if GlobalData().project.isLoaded() else None,
                 unresolved,

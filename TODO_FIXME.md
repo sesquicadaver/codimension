@@ -7,7 +7,7 @@
 
 ## Відкриті блокери (аудит 2026-09-24 @ fdb29cad)
 
-Підтверджених **P0** немає. **P1: 0**. **P2: 0** — хвиля **R269–R275** ✅; **R276**/**R277**/**R278**/**R279**/**R280** ✅. Зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) закритий.
+Підтверджених **P0** немає. **P1: 0**. **P2: 0** — хвиля **R269–R275** ✅; **R276**–**R281** ✅. Зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) закритий.
 
 ### Повторний аудит 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 черга
 
@@ -31,6 +31,7 @@
 | P2-08 | Update VENV: `pip install native` з optional ImportError-імпорту | P2 | ✅ R278 |
 | P2-09 | GUI launch: `Could not find the Qt platform plugin "xcb" in ""` | P2 | ✅ R279 |
 | P2-10 | Legacy PyPI `cdmgcplugin`/`cdmsysinfoplugin` fail R225 `[Codimension]` gate | P2 | ✅ R280 |
+| P2-11 | Import resolve: IDE `utils`/`core` + nested dirs false-unresolved project pkgs | P2 | ✅ R281 |
 
 ### Історія: аудит 2026-09-09 @ f44c8dc4 (хвиля R261–R268 ✅)
 

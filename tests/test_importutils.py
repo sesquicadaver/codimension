@@ -188,3 +188,85 @@ def test_import_resolution_visible_name_with_import_what():
     imp.what.append(what)
     resolution = ImportResolution(imp, 0, False, "/tmp/pkg/sub.py", None)
     assert resolution.getVisibleName() == "pkg.sub"
+
+
+def test_r281_project_paths_precede_ide_and_file_dir(tmp_path, monkeypatch):
+    """R281: project root wins over nested same-name dirs and IDE ``utils``."""
+    import cdmpyparser
+
+    project = tmp_path / "proj"
+    nested = project / "interceptor" / "vision"
+    top_vision = project / "vision"
+    nested.mkdir(parents=True)
+    top_vision.mkdir()
+    (nested / "__init__.py").write_text("", encoding="utf-8")
+    (top_vision / "__init__.py").write_text("", encoding="utf-8")
+    (top_vision / "horizon_line.py").write_text("def estimate():\n    return 1\n", encoding="utf-8")
+    utils_pkg = project / "utils"
+    utils_pkg.mkdir()
+    (utils_pkg / "__init__.py").write_text("", encoding="utf-8")
+    (utils_pkg / "anomaly_detectors.py").write_text("X = 1\n", encoding="utf-8")
+    core_pkg = project / "core"
+    core_pkg.mkdir()
+    (core_pkg / "control_adapter.py").write_text("class C: pass\n", encoding="utf-8")
+    vendor_src = project / "third_party" / "freeyams" / "src"
+    (vendor_src / "freeyams").mkdir(parents=True)
+    (vendor_src / "freeyams" / "__init__.py").write_text("", encoding="utf-8")
+    (vendor_src / "freeyams" / "messages.py").write_text("M = 1\n", encoding="utf-8")
+
+    src = project / "interceptor" / "mod.py"
+    src.write_text(
+        "from vision.horizon_line import estimate\n"
+        "from utils.anomaly_detectors import X\n"
+        "from core.control_adapter import C\n"
+        "from freeyams.messages import M\n",
+        encoding="utf-8",
+    )
+
+    # Pretend the IDE already imported a colliding ``utils`` package.
+    ide_utils = types.ModuleType("utils")
+    ide_utils.__file__ = os.path.join(ROOT, "codimension", "utils", "__init__.py")
+    ide_utils.__path__ = [os.path.join(ROOT, "codimension", "utils")]
+    monkeypatch.setitem(sys.modules, "utils", ide_utils)
+
+    class _Project:
+        @staticmethod
+        def isLoaded():
+            return True
+
+        @staticmethod
+        def getProjectDir():
+            return str(project) + os.sep
+
+        @staticmethod
+        def getImportDirsAsAbsolutePaths():
+            return []
+
+    class _GlobalData:
+        originalSysPath = list(sys.path)
+        project = _Project()
+
+    monkeypatch.setattr(_importutils, "GlobalData", lambda: _GlobalData())
+
+    info = cdmpyparser.getBriefModuleInfoFromMemory(src.read_text(encoding="utf-8"))
+    resolved, errors = _importutils.resolveImports(str(src), info.imports)
+    assert not errors, errors
+    by_name = {name: path for name, path, _what in resolved}
+    assert by_name["vision.horizon_line"].endswith(os.path.join("vision", "horizon_line.py"))
+    assert "interceptor" not in by_name["vision.horizon_line"]
+    assert by_name["utils.anomaly_detectors"].endswith(os.path.join("utils", "anomaly_detectors.py"))
+    assert by_name["core.control_adapter"].endswith(os.path.join("core", "control_adapter.py"))
+    assert by_name["freeyams.messages"].endswith(os.path.join("freeyams", "messages.py"))
+
+
+def test_r281_unresolved_skips_project_local_packages(tmp_path):
+    """pip hint must not list in-tree packages such as ``app`` / ``core``."""
+    project = tmp_path / "proj"
+    (project / "app").mkdir(parents=True)
+    (project / "app" / "__init__.py").write_text("", encoding="utf-8")
+    errors = [
+        "Could not resolve 'from app.engine import ...' at line 2",
+        "Could not resolve 'import requests' at line 3",
+    ]
+    names = getUnresolvedPackageNames(errors, project_dir=str(project))
+    assert names == {"requests"}

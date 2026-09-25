@@ -26,6 +26,8 @@ import importlib
 import os
 import os.path
 import sys
+from importlib.machinery import PathFinder
+from importlib.util import find_spec as _stdlib_find_spec
 
 from cdmpyparser import getBriefModuleInfoFromMemory
 
@@ -186,6 +188,10 @@ def __resolution_from_spec(importObj, spec, *, what=None, item_index=None):
     Python 3.11+ ships many stdlib modules as frozen (``origin='frozen'``,
     ``has_location=False``). Treating those as unresolved produced false
     WARNINGs for ``import os`` / ``import io`` on import diagrams.
+
+    R281: PEP 420 namespace packages (no ``__init__.py``) expose
+    ``submodule_search_locations`` without ``has_location``; treat them as
+    resolved so project trees like ``core/`` are not false-unresolved.
     """
     if spec is None:
         return None
@@ -194,7 +200,150 @@ def __resolution_from_spec(importObj, spec, *, what=None, item_index=None):
         return ImportResolution(importObj, item_index, True, None, what)
     if spec.has_location and origin:
         return ImportResolution(importObj, item_index, False, origin, what)
+    locations = getattr(spec, "submodule_search_locations", None)
+    if locations is not None:
+        loc = None
+        try:
+            loc = os.path.abspath(str(next(iter(locations))))
+        except StopIteration:
+            loc = None
+        return ImportResolution(importObj, item_index, False, loc, what)
     return None
+
+
+def __find_spec(name: str, search_paths: list[str] | None = None):
+    """Resolve a module spec, preferring ``search_paths`` via PathFinder (R281).
+
+    ``importlib.util.find_spec`` consults ``sys.modules`` and editable
+    ``meta_path`` finders first, so IDE packages named ``utils`` / ``core``
+    shadow the opened project. ``PathFinder.find_spec(name, search_paths)``
+    only walks the given directories.
+
+    Dotted names under PEP 420 namespace packages need a piecewise walk:
+    ``PathFinder.find_spec('core.control_adapter', roots)`` returns ``None``.
+    """
+    if search_paths:
+        try:
+            spec = PathFinder.find_spec(name, search_paths)
+            if spec is not None:
+                return spec
+            parts = name.split(".")
+            if len(parts) > 1:
+                locations = list(search_paths)
+                spec = None
+                for index, part in enumerate(parts):
+                    spec = PathFinder.find_spec(part, locations)
+                    if spec is None:
+                        break
+                    if index == len(parts) - 1:
+                        return spec
+                    locations = list(getattr(spec, "submodule_search_locations", None) or [])
+                    if not locations:
+                        break
+        except Exception:
+            pass
+    return _stdlib_find_spec(name)
+
+
+def __resolution_sys_path(baseAndProjectPaths):
+    """Project / venv paths must precede the IDE ``sys.path`` (R281).
+
+    Codimension's editable install exposes top-level names such as ``utils``
+    and ``core``. Putting the IDE path first made ``find_spec`` bind those
+    instead of same-named packages inside the opened project.
+    """
+    return list(baseAndProjectPaths) + __getBaseSysPath()
+
+
+def __path_is_under(path: str, root: str) -> bool:
+    """True when ``path`` is ``root`` or a descendant (realpath)."""
+    if not path or not root:
+        return False
+    real = os.path.realpath(path)
+    base = os.path.realpath(root)
+    if not base.endswith(os.sep):
+        base = base + os.sep
+    return real == os.path.realpath(root) or real.startswith(base)
+
+
+def __evict_shadowing_modules(top_levels, project_dir: str) -> dict:
+    """Remove IDE-loaded packages that would shadow project packages (R281).
+
+    ``importlib.util.find_spec`` returns entries already in ``sys.modules``.
+    After the IDE imported ``utils`` / ``core``, project modules with the same
+    top-level names never resolve. Evict only names that also exist under the
+    project root (avoid touching third-party modules such as ``numpy``).
+    """
+    if not project_dir or not top_levels:
+        return {}
+    local = projectLocalPackageNames(project_dir)
+    collide = {name for name in top_levels if name and name in local}
+    if not collide:
+        return {}
+    saved: dict = {}
+    for name in collide:
+        keys = [key for key in list(sys.modules) if key == name or key.startswith(name + ".")]
+        for key in keys:
+            mod = sys.modules.get(key)
+            if mod is None:
+                continue
+            origin = getattr(mod, "__file__", None) or ""
+            if origin and __path_is_under(origin, project_dir):
+                continue
+            paths = getattr(mod, "__path__", None)
+            if paths and any(__path_is_under(str(entry), project_dir) for entry in paths):
+                continue
+            saved[key] = sys.modules.pop(key)
+    return saved
+
+
+def __discover_third_party_src_dirs(project_dir: str) -> list[str]:
+    """Return ``third_party/<name>/src`` layout roots (src-layout vendors)."""
+    extras: list[str] = []
+    root = os.path.join(project_dir, "third_party")
+    if not os.path.isdir(root):
+        return extras
+    try:
+        for name in sorted(os.listdir(root)):
+            src = os.path.join(root, name, "src")
+            if os.path.isdir(src):
+                extras.append(src)
+    except OSError:
+        return extras
+    return extras
+
+
+def projectLocalPackageNames(project_dir: str) -> set[str]:
+    """Top-level package/module names that live under the project root (R281)."""
+    if not project_dir or not os.path.isdir(project_dir):
+        return set()
+    names: set[str] = set()
+    roots = [project_dir] + __discover_third_party_src_dirs(project_dir)
+    for root in roots:
+        try:
+            for entry in os.listdir(root):
+                if entry.startswith(".") or not entry.isidentifier():
+                    continue
+                full = os.path.join(root, entry)
+                if os.path.isfile(full) and entry.endswith(".py"):
+                    names.add(entry[:-3])
+                    continue
+                if not os.path.isdir(full):
+                    continue
+                if os.path.isfile(os.path.join(full, "__init__.py")):
+                    names.add(entry)
+                    continue
+                # Namespace-style dirs (``.py`` files, no ``__init__.py``).
+                try:
+                    if any(
+                        name.endswith(".py") and os.path.isfile(os.path.join(full, name)) for name in os.listdir(full)
+                    ):
+                        names.add(entry)
+                except OSError:
+                    continue
+        except OSError:
+            continue
+    return names
 
 
 def __resolveImport(importObj, baseAndProjectPaths, result):
@@ -210,10 +359,10 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
         return
 
     oldSysPath = sys.path
-    sys.path = __getBaseSysPath() + baseAndProjectPaths
+    sys.path = __resolution_sys_path(baseAndProjectPaths)
 
     try:
-        spec = importlib.util.find_spec(importObj.name)
+        spec = __find_spec(importObj.name, baseAndProjectPaths)
         resolved = __resolution_from_spec(importObj, spec)
         if resolved is not None:
             result.append(resolved)
@@ -235,12 +384,11 @@ def __resolveImport(importObj, baseAndProjectPaths, result):
     )
 
 
-def __resolveFrom(importObj, importName, result):
+def __resolveFrom(importObj, importName, result, search_paths: list[str] | None = None):
     """Common resolution imports like 'from [.]x import y.
 
-    Resolution uses sys.path (set by caller). The package parameter to
-    find_spec must be None for absolute resolution - passing a path causes
-    incorrect behavior (e.g. 'import os' fails).
+    When ``search_paths`` is set (absolute project resolve), use PathFinder on
+    those directories before the IDE-aware ``find_spec`` (R281).
     """
     what_names = [what.name for what in importObj.what]
     if importObj.name in sys.builtin_module_names:
@@ -248,7 +396,7 @@ def __resolveFrom(importObj, importName, result):
         return
 
     try:
-        spec = importlib.util.find_spec(importName)
+        spec = __find_spec(importName, search_paths)
         resolved = __resolution_from_spec(importObj, spec, what=what_names)
         if resolved is not None:
             result.append(resolved)
@@ -275,7 +423,7 @@ def __resolveFrom(importObj, importName, result):
                 impName = importName + "." + what.name
                 found = False
                 try:
-                    sub_spec = importlib.util.find_spec(impName)
+                    sub_spec = __find_spec(impName, search_paths)
                     sub_resolved = __resolution_from_spec(importObj, sub_spec, item_index=index)
                     if sub_resolved is not None:
                         result.append(sub_resolved)
@@ -325,9 +473,9 @@ def __resolveFromImport(importObj, basePath, baseAndProjectPaths, result):
     # IV:   <dir>/x/y/z.py
 
     oldSysPath = sys.path
-    sys.path = __getBaseSysPath() + baseAndProjectPaths
+    sys.path = __resolution_sys_path(baseAndProjectPaths)
 
-    __resolveFrom(importObj, importObj.name, result)
+    __resolveFrom(importObj, importObj.name, result, search_paths=baseAndProjectPaths)
 
     sys.path = oldSysPath
 
@@ -405,39 +553,53 @@ def getImportResolutions(fileName, imports):
     origImporterCacheKeys = set(sys.path_importer_cache.keys())
     origSysModulesKeys = set(sys.modules.keys())
 
-    if fileName:
-        basePath = os.path.dirname(fileName)  # no '/' at the end
-        baseAndProjectPaths = [basePath]
-    else:
-        basePath = None
-        baseAndProjectPaths = []
+    basePath = os.path.dirname(fileName) if fileName else None
+    # R281: project root and vendor src dirs first; file directory last so a
+    # nested ``interceptor/vision`` cannot shadow top-level ``vision/``.
+    baseAndProjectPaths: list[str] = []
+    project_dir = ""
 
     project = GlobalData().project
     if project.isLoaded():
-        # Add project root for project-internal imports
-        proj_dir = project.getProjectDir()
-        if proj_dir and proj_dir not in baseAndProjectPaths:
-            baseAndProjectPaths.append(proj_dir)
+        project_dir = project.getProjectDir() or ""
+        if project_dir and project_dir not in baseAndProjectPaths:
+            baseAndProjectPaths.append(project_dir)
         for importDir in project.getImportDirsAsAbsolutePaths():
             if importDir not in baseAndProjectPaths:
                 baseAndProjectPaths.append(importDir)
+        for vendor_src in __discover_third_party_src_dirs(project_dir.rstrip(os.sep)):
+            if vendor_src not in baseAndProjectPaths:
+                baseAndProjectPaths.append(vendor_src)
         # Add project venv site-packages for third-party imports (numpy, etc.)
         proj_python = getProjectPythonPath(project)
         site_pkg = getVenvSitePackages(proj_python)
         if site_pkg and site_pkg not in baseAndProjectPaths:
             baseAndProjectPaths.append(site_pkg)
 
+    if basePath and basePath not in baseAndProjectPaths:
+        baseAndProjectPaths.append(basePath)
+
+    top_levels = set()
     for importObj in imports:
-        if not importObj.what:
-            # case 1: import x1, y1
-            __resolveImport(importObj, baseAndProjectPaths, result)
-        elif not importObj.name.startswith("."):
-            # case 2: from i2 import x2, y2
-            __resolveFromImport(importObj, basePath, baseAndProjectPaths, result)
-        else:
-            # case 3: from .i3 import x3, y3
-            #      or from . import x4, y4
-            __resolveRelativeImport(importObj, basePath, result)
+        top = _top_level_import_name(importObj.name)
+        if top:
+            top_levels.add(top)
+    saved_modules = __evict_shadowing_modules(top_levels, project_dir.rstrip(os.sep))
+
+    try:
+        for importObj in imports:
+            if not importObj.what:
+                # case 1: import x1, y1
+                __resolveImport(importObj, baseAndProjectPaths, result)
+            elif not importObj.name.startswith("."):
+                # case 2: from i2 import x2, y2
+                __resolveFromImport(importObj, basePath, baseAndProjectPaths, result)
+            else:
+                # case 3: from .i3 import x3, y3
+                #      or from . import x4, y4
+                __resolveRelativeImport(importObj, basePath, result)
+    finally:
+        sys.modules.update(saved_modules)
 
     importlib.invalidate_caches()
 
@@ -561,11 +723,12 @@ def _top_level_import_name(import_name):
     return top
 
 
-def getUnresolvedPackageNames(errors):
+def getUnresolvedPackageNames(errors, *, project_dir: str | None = None):
     """Extract top-level package names from resolveImports error messages.
 
     Returns set of names (e.g. {'numpy', 'cryptography', 'pymavlink'}).
-    Excludes known stdlib modules and relative imports.
+    Excludes known stdlib modules, relative imports, and (R281) packages that
+    already exist as directories under ``project_dir`` (not pip-installable).
     """
     import re
 
@@ -582,6 +745,8 @@ def getUnresolvedPackageNames(errors):
             top = _top_level_import_name(m.group(1))
             if top and top not in _STDLIB_MODULES:
                 names.add(top)
+    if project_dir:
+        names -= projectLocalPackageNames(project_dir)
     return names
 
 
@@ -796,7 +961,11 @@ def generateRequirementsFromProject(filesList, progressCallback=None):
         except OSError:
             pass
 
-    packages = getUnresolvedPackageNames(allErrors) - optionalNames
+    project_dir = None
+    project = GlobalData().project
+    if project is not None and project.isLoaded():
+        project_dir = project.getProjectDir()
+    packages = getUnresolvedPackageNames(allErrors, project_dir=project_dir) - optionalNames
     return packages, len(allErrors)
 
 
