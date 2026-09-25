@@ -26,6 +26,8 @@ import importlib
 import os
 import os.path
 import sys
+from importlib.machinery import PathFinder
+from importlib.util import find_spec as _stdlib_find_spec
 
 from cdmpyparser import getBriefModuleInfoFromMemory
 
@@ -222,8 +224,6 @@ def __find_spec(name: str, search_paths: list[str] | None = None):
     """
     if search_paths:
         try:
-            from importlib.machinery import PathFinder
-
             spec = PathFinder.find_spec(name, search_paths)
             if spec is not None:
                 return spec
@@ -242,7 +242,7 @@ def __find_spec(name: str, search_paths: list[str] | None = None):
                         break
         except Exception:
             pass
-    return importlib.util.find_spec(name)
+    return _stdlib_find_spec(name)
 
 
 def __resolution_sys_path(baseAndProjectPaths):
@@ -336,8 +336,7 @@ def projectLocalPackageNames(project_dir: str) -> set[str]:
                 # Namespace-style dirs (``.py`` files, no ``__init__.py``).
                 try:
                     if any(
-                        name.endswith(".py") and os.path.isfile(os.path.join(full, name))
-                        for name in os.listdir(full)
+                        name.endswith(".py") and os.path.isfile(os.path.join(full, name)) for name in os.listdir(full)
                     ):
                         names.add(entry)
                 except OSError:
