@@ -237,12 +237,13 @@ Linear **non-blocking** queue: one task = one PR; no artificial `BLOCKED`/`DEFER
 | 89 | R277 | Skip packaging artifact trees | ``build``/``dist``/egg-info not scanned; import diagram undoubled | S | DONE |
 | 90 | R278 | Skip optional ImportError imports in VENV | ``native``-style try/except not pip-installed | S | DONE |
 | 91 | R279 | Qt platform plugins bootstrap | ``QT_PLUGIN_PATH`` + ``ensure_qt_platform_plugins`` before QApplication | S | DONE |
+| 92 | R280 | Drop legacy PyPI GC/sysinfo plugins | No ``[Codimension]`` .cdmp; IDE GC is built-in | S | DONE |
 
 ---
 
 ## Next autopilot pointer
 
-**Next OPEN:** queue empty after **R279**.
+**Next OPEN:** queue empty after **R280**.
 
 Wave **R269–R275** = hardening from re-audit `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 

@@ -237,12 +237,13 @@
 | 89 | R277 | Skip packaging artifact trees | ``build``/``dist``/egg-info не скануються; діаграма без дублів | S | DONE |
 | 90 | R278 | Skip optional ImportError imports in VENV | ``native``-style try/except не ставляться через pip | S | DONE |
 | 91 | R279 | Qt platform plugins bootstrap | ``QT_PLUGIN_PATH`` + ``ensure_qt_platform_plugins`` перед QApplication | S | DONE |
+| 92 | R280 | Drop legacy PyPI GC/sysinfo plugins | Немає ``[Codimension]`` .cdmp; IDE GC вбудований | S | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** черга порожня після **R279**.
+**Наступний OPEN:** черга порожня після **R280**.
 
 Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
