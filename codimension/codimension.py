@@ -254,6 +254,12 @@ class CodimensionUILauncher:
         # global menu bar for codimension and makes it working properly.
         os.environ["QT_X11_NO_NATIVE_MENUBAR"] = "1"
 
+        # R279: empty QT_PLUGIN_PATH / cleared libraryPaths →
+        # "Could not find the Qt platform plugin \"xcb\" in \"\""
+        from ui.qt_bootstrap import ensure_qt_platform_plugins
+
+        ensure_qt_platform_plugins()
+
         # Create QT application
         codimensionApp = CodimensionApplication(sys.argv, settings["style"])
         globalData.application = codimensionApp
