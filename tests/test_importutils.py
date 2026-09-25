@@ -190,6 +190,44 @@ def test_import_resolution_visible_name_with_import_what():
     assert resolution.getVisibleName() == "pkg.sub"
 
 
+def test_import_label_text_and_join_connection_labels_accept_import_what():
+    """Graphviz connection labels must coerce ImportWhat to str (diagram build)."""
+    import cdmpyparser
+
+    what = cdmpyparser.ImportWhat("estimate", 1, 5, 5)
+    assert _importutils.import_label_text(what) == "estimate"
+    assert _importutils.import_label_text("plain") == "plain"
+    assert _importutils.import_label_text(None) == ""
+    joined = _importutils.join_connection_labels([what, "horizon", what])
+    assert joined == "estimate\\nhorizon\\nestimate"
+    # Exact historical failure mode: str + ImportWhat
+    label = ""
+    for part in joined.split("\\n"):
+        if label:
+            label += "\\n"
+        label += part
+    assert "estimate" in label
+
+
+def test_resolve_imports_what_list_is_always_str(tmp_path):
+    """resolveImports triple[2] must be list[str], never ImportWhat objects."""
+    import cdmpyparser
+
+    pkg = tmp_path / "mypkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    (pkg / "sub.py").write_text("X = 1\n", encoding="utf-8")
+    src = tmp_path / "mod.py"
+    src.write_text("from mypkg import sub\nfrom mypkg.sub import X\n", encoding="utf-8")
+    info = cdmpyparser.getBriefModuleInfoFromMemory(src.read_text(encoding="utf-8"), str(src))
+    resolved, errors = _importutils.resolveImports(str(src), info.imports)
+    assert not errors, errors
+    for _name, _path, what in resolved:
+        assert isinstance(what, list)
+        for item in what:
+            assert isinstance(item, str), f"expected str label, got {type(item)!r}: {item!r}"
+
+
 def test_r281_project_paths_precede_ide_and_file_dir(tmp_path, monkeypatch):
     """R281: project root wins over nested same-name dirs and IDE ``utils``."""
     import cdmpyparser

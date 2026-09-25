@@ -36,6 +36,36 @@ from .globals import GlobalData
 from .run import getProjectPythonPath, getVenvSitePackages
 
 
+def import_label_text(obj) -> str:
+    """Normalize an import ``what`` item to a plain string label.
+
+    Brief-model ``Import.what`` holds ``ImportWhat`` objects (with ``.name``),
+    while diagram / resolve APIs must expose strings. Concatenating an
+    ``ImportWhat`` into graphviz DOT raises
+    ``TypeError: can only concatenate str (not "ImportWhat") to str``.
+    """
+    if obj is None:
+        return ""
+    if isinstance(obj, str):
+        return obj
+    name = getattr(obj, "name", None)
+    if isinstance(name, str):
+        return name
+    if name is not None:
+        return str(name)
+    return str(obj)
+
+
+def join_connection_labels(labels) -> str:
+    """Join connection labels for graphviz (``\\n``-separated, ImportWhat-safe)."""
+    parts: list[str] = []
+    for item in labels or ():
+        text = import_label_text(item)
+        if text:
+            parts.append(text)
+    return "\\n".join(parts)
+
+
 def getImportsList(fileContent):
     """Parses a python file and provides a list imports in it"""
     info = getBriefModuleInfoFromMemory(fileContent)
@@ -168,9 +198,7 @@ class ImportResolution:
         name = self.importObj.name
         if self.itemIndex is not None:
             # ``Import.what`` holds ``ImportWhat`` objects (brief model), not bare strings.
-            what_item = self.importObj.what[self.itemIndex]
-            what_name = what_item if isinstance(what_item, str) else what_item.name
-            name += "." + what_name
+            name += "." + import_label_text(self.importObj.what[self.itemIndex])
         return name
 
 
@@ -390,7 +418,7 @@ def __resolveFrom(importObj, importName, result, search_paths: list[str] | None 
     When ``search_paths`` is set (absolute project resolve), use PathFinder on
     those directories before the IDE-aware ``find_spec`` (R281).
     """
-    what_names = [what.name for what in importObj.what]
+    what_names = [import_label_text(what) for what in importObj.what]
     if importObj.name in sys.builtin_module_names:
         result.append(ImportResolution(importObj, None, True, None, what_names))
         return
@@ -636,10 +664,8 @@ def resolveImports(fileName, imports):
                 path = "built-in"
             else:
                 path = resolution.path
-            if resolution.what is None:
-                what = []
-            else:
-                what = resolution.what
+            # Always coerce to str — callers (import diagram DOT) concatenate labels.
+            what = [import_label_text(item) for item in (resolution.what or [])]
             result.append((resolution.getVisibleName(), path, what))
         else:
             msg = resolution.errMessage or "Could not resolve import"
