@@ -1,5 +1,8 @@
 2026 Sep 25
 
+* R280: drop legacy PyPI ``cdmgcplugin`` / ``cdmsysinfoplugin`` — their
+  ``.cdmp`` lack ``[Codimension]`` so R225 correctly refuse import; IDE GC is
+  built-in (``ui.garbagecollector``)
 * R279: Qt platform plugins bootstrap — ``run_codimension.sh`` sets
   ``QT_PLUGIN_PATH`` to PyQt5 ``Qt5/plugins`` and unsets empty
   ``QT_QPA_PLATFORM_PLUGIN_PATH``; ``ui.qt_bootstrap.ensure_qt_platform_plugins``

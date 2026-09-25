@@ -28,8 +28,6 @@ classifiers = [
 dependencies = [
   "setuptools>=65.0; python_version >= '3.12'",
   "pylint==2.5.3",
-  "cdmgcplugin>=1.0.4",
-  "cdmsysinfoplugin>=1.0.0",
   "pyflakes>=2.1.1",
   "flake8>=3.7.7",
   "radon>=4.1.0",
