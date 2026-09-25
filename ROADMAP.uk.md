@@ -236,12 +236,13 @@
 | 88 | R276 | Pylint wrapt subprocess | ``pylint_python_argv`` застосовує inspect_compat до wrapt | S | DONE |
 | 89 | R277 | Skip packaging artifact trees | ``build``/``dist``/egg-info не скануються; діаграма без дублів | S | DONE |
 | 90 | R278 | Skip optional ImportError imports in VENV | ``native``-style try/except не ставляться через pip | S | DONE |
+| 91 | R279 | Qt platform plugins bootstrap | ``QT_PLUGIN_PATH`` + ``ensure_qt_platform_plugins`` перед QApplication | S | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** черга порожня після **R278**.
+**Наступний OPEN:** черга порожня після **R279**.
 
 Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 

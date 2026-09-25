@@ -1,3 +1,10 @@
+2026 Sep 25
+
+* R279: Qt platform plugins bootstrap — ``run_codimension.sh`` sets
+  ``QT_PLUGIN_PATH`` to PyQt5 ``Qt5/plugins`` and unsets empty
+  ``QT_QPA_PLATFORM_PLUGIN_PATH``; ``ensure_qt_platform_plugins`` restores
+  library paths before ``QApplication`` (fixes ``xcb`` in ``""``)
+
 2026 Sep 24
 
 * R278: skip ``try``/``except ImportError`` imports (e.g. ``native``) in
