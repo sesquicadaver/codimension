@@ -62,7 +62,7 @@
 | **Recent files prune** | utils.fsenv + recent viewer + IDE smoke | Drop missing/`pytest-of-*`/`t130-script`; smoke uses temp Settings dir | tests/test_fsenv.py |
 | **Recent projects prune** | utils.settings + recentprojectsviewer + ui.filedialogs | Native dir pickers; QFileSystemModel completers; prune/clear recent `.cdm3` | tests/test_recent_projects_prune.py |
 | **Local deploy ctl** | scripts/codimension_ctl.sh + run_codimension.sh | install/uninstall for `.venv`; optional desktop; `--purge-config`; launch via run script | manual smoke after install |
-| **Qt plugins R279** | utils.qt_bootstrap + run_codimension.sh | ``QT_PLUGIN_PATH`` → PyQt5 ``Qt5/plugins``; restore cleared ``libraryPaths`` before QApplication | tests/test_qt_bootstrap_r279.py |
+| **Qt plugins R279** | ui.qt_bootstrap + run_codimension.sh | ``QT_PLUGIN_PATH`` → PyQt5 ``Qt5/plugins``; restore cleared ``libraryPaths`` before QApplication | tests/test_qt_bootstrap_r279.py |
 | **DependencyManifest R120** | utils.dependency_manifest | `buildDependencyManifest`; lock_hint; export script; collectInstallSources delegate | tests/test_dependency_manifest.py |
 | **ExecutionTarget R121** | core.execution | Protocol `run`/`debug`/`profile`/`which_python`; ExecutionRequest/Result/Plan (R187) | tests/test_execution_target.py |
 | **LocalExecutionTarget R122** | utils.local_execution + utils.run | `prepare_*` для IDE argv; `run` виконує (R187); `getCwdCmdEnv` | tests/test_local_execution.py, test_run_argv.py |

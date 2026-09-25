@@ -14,7 +14,7 @@ def test_ensure_restores_library_paths_after_clear(monkeypatch) -> None:
     """Cleared libraryPaths must regain PyQt5 plugins before QApplication."""
     from PyQt5.QtCore import QCoreApplication, QLibraryInfo
 
-    from codimension.utils.qt_bootstrap import ensure_qt_platform_plugins, pyqt5_plugins_dir
+    from codimension.ui.qt_bootstrap import ensure_qt_platform_plugins, pyqt5_plugins_dir
 
     plugins = pyqt5_plugins_dir()
     assert plugins is not None
@@ -34,7 +34,7 @@ def test_ensure_restores_library_paths_after_clear(monkeypatch) -> None:
 
 def test_pyqt5_plugins_dir_has_platforms() -> None:
     """Vendored PyQt5 wheel must expose platforms/libqxcb (or offscreen)."""
-    from codimension.utils.qt_bootstrap import pyqt5_plugins_dir
+    from codimension.ui.qt_bootstrap import pyqt5_plugins_dir
 
     plugins = pyqt5_plugins_dir()
     assert plugins is not None

@@ -256,7 +256,7 @@ class CodimensionUILauncher:
 
         # R279: empty QT_PLUGIN_PATH / cleared libraryPaths →
         # "Could not find the Qt platform plugin \"xcb\" in \"\""
-        from utils.qt_bootstrap import ensure_qt_platform_plugins
+        from ui.qt_bootstrap import ensure_qt_platform_plugins
 
         ensure_qt_platform_plugins()
 
