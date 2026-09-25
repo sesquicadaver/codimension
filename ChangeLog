@@ -1,5 +1,9 @@
 2026 Sep 25
 
+* Fix: import diagram graphviz labels coerce ``ImportWhat`` to ``.name``
+  (``import_label_text`` / ``join_connection_labels``) so building the
+  imports graph no longer raises ``can only concatenate str (not
+  "ImportWhat") to str`` when connection labels are shown
 * R281: import resolution prefers project paths / PathFinder over IDE
   ``utils``/``core`` shadowing; nested dirs no longer hide top-level packages;
   ``third_party/*/src`` auto-added; pip hints skip in-tree package names

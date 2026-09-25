@@ -9,6 +9,12 @@
 
 No confirmed **P0**. **P1: 0**. **P2: 0** — wave **R269–R275** ✅; **R276**–**R281** ✅. Slice `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) closed.
 
+### Hotfix (outside ROADMAP queue)
+
+| ID | Issue | Priority | Status |
+|----|-------|----------|--------|
+| HF-01 | Import diagram: ``str + ImportWhat`` when building graphviz labels | P1 | ✅ (import_label_text) |
+
 ### Re-audit 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 queue
 
 | ID | Issue | Priority | Status |

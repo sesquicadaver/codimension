@@ -43,6 +43,8 @@ from utils.importutils import (
     collectOptionalImportNamesFromFiles,
     getRequirementsHint,
     getUnresolvedPackageNames,
+    import_label_text,
+    join_connection_labels,
     resolveImports,
 )
 from utils.pixmapcache import getPixmap
@@ -79,11 +81,8 @@ class DgmConnection:
     def toGraphviz(self):
         """Serialize the connection in graphviz format"""
         attributes = 'id="' + self.objName + '", arrowhead=none'
-        label = ""
-        for what in self.labels:
-            if label != "":
-                label += "\\n"
-            label += what
+        # Labels may historically hold ImportWhat objects from brief_ast; coerce.
+        label = join_connection_labels(self.labels)
         if label != "":
             attributes += ', label="' + label + '", fontname=Arial, fontsize=10'
 
@@ -703,8 +702,9 @@ class ImportsDiagramProgress(QDialog):
 
             if self.__options.includeConnText:
                 for impWhat in importedNames:
-                    if impWhat:
-                        impConn.labels.append(impWhat)
+                    text = import_label_text(impWhat)
+                    if text:
+                        impConn.labels.append(text)
             self.dataModel.addConnection(impConn)
 
     def __process(self):

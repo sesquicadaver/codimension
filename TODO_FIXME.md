@@ -9,6 +9,12 @@
 
 Підтверджених **P0** немає. **P1: 0**. **P2: 0** — хвиля **R269–R275** ✅; **R276**–**R281** ✅. Зріз `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle) закритий.
 
+### Hotfix (поза ROADMAP-чергою)
+
+| ID | Проблема | Пріоритет | Статус |
+|----|----------|-----------|--------|
+| HF-01 | Import diagram: ``str + ImportWhat`` при побудові graphviz labels | P1 | ✅ (import_label_text) |
+
 ### Повторний аудит 2026-09-24 (`codi-last.md` @ fdb29cad) — P1 черга
 
 | ID | Проблема | Пріоритет | Статус |
