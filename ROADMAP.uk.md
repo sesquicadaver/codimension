@@ -238,12 +238,13 @@
 | 90 | R278 | Skip optional ImportError imports in VENV | ``native``-style try/except не ставляться через pip | S | DONE |
 | 91 | R279 | Qt platform plugins bootstrap | ``QT_PLUGIN_PATH`` + ``ensure_qt_platform_plugins`` перед QApplication | S | DONE |
 | 92 | R280 | Drop legacy PyPI GC/sysinfo plugins | Немає ``[Codimension]`` .cdmp; IDE GC вбудований | S | DONE |
+| 93 | R281 | Project-first import resolution | PathFinder над IDE shadowing; third_party/src; локальні pkg не в pip-hint | M | DONE |
 
 ---
 
 ## Вказівник autopilot
 
-**Наступний OPEN:** черга порожня після **R280**.
+**Наступний OPEN:** черга порожня після **R281**.
 
 Хвиля **R269–R275** = hardening з повторного аудиту `codi-last.md` @ master@fdb29cad (Qt/QThread lifecycle / crash reliability).
 
